@@ -34,7 +34,7 @@ assumes that it is being run in the context of a Github Actions workflow.`,
 
 			p, err := slsa.HostedActionsProvenance(slsa.WorkflowRun{
 				Subjects:      parsedSubjects,
-				BuildType:     "",
+				BuildType:     provenanceOnlyBuildType,
 				BuildConfig:   nil,
 				GithubContext: ghContext,
 			})

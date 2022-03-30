@@ -16,6 +16,8 @@ import (
 	"github.com/slsa-framework/slsa-github-generator/slsa"
 )
 
+const provenanceOnlyBuildType = "https://github.com/slsa-framework/slsa-github-generator@v1"
+
 func parseSubjects(subjects []string) ([]intoto.Subject, error) {
 	var parsed []intoto.Subject
 	for _, s := range subjects {
@@ -68,7 +70,7 @@ run in the context of a Github Actions workflow.`,
 
 			p, err := slsa.HostedActionsProvenance(slsa.WorkflowRun{
 				Subjects:      parsedSubjects,
-				BuildType:     "",
+				BuildType:     provenanceOnlyBuildType,
 				BuildConfig:   nil,
 				GithubContext: ghContext,
 			})
