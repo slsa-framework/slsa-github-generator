@@ -18,8 +18,10 @@ import (
 
 const provenanceOnlyBuildType = "https://github.com/slsa-framework/slsa-github-generator@v1"
 
-func parseSubjects(subjects []string) ([]intoto.Subject, error) {
+func parseSubjects(subjectsCSV string) ([]intoto.Subject, error) {
 	var parsed []intoto.Subject
+
+	subjects := strings.Split(subjectsCSV, ",")
 	for _, s := range subjects {
 		subject := intoto.Subject{}
 		parts := strings.SplitN(s, "@", 2)
@@ -48,7 +50,7 @@ func getFile(path string) (io.Writer, error) {
 // attestCmd returns the 'attest' command.
 func attestCmd() *cobra.Command {
 	var attPath string
-	var subjects []string
+	var subjects string
 
 	c := &cobra.Command{
 		Use:   "attest",
@@ -96,9 +98,8 @@ run in the context of a Github Actions workflow.`,
 		},
 	}
 
-	// TODO: add flag for config file
 	c.Flags().StringVarP(&attPath, "signature", "g", "attestation.intoto.jsonl", "Path to write the signed attestation")
-	c.Flags().StringSliceVarP(&subjects, "subject", "j", nil, "Subject of the form NAME[@SHA256HEX]")
+	c.Flags().StringVarP(&subjects, "subjects", "s", "", "Comma separated list of subjects of the form NAME@SHA256")
 
 	return c
 }

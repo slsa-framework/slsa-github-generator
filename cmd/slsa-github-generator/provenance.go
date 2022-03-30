@@ -13,7 +13,7 @@ import (
 // provenanceCmd returns the 'generate' command.
 func provenanceCmd() *cobra.Command {
 	var provPath string
-	var subjects []string
+	var subjects string
 
 	c := &cobra.Command{
 		Use:   "provenance",
@@ -51,9 +51,8 @@ assumes that it is being run in the context of a Github Actions workflow.`,
 		},
 	}
 
-	// TODO: add flag for config file
 	c.Flags().StringVarP(&provPath, "provenance", "p", "provenance.intoto.json", "path to output the SLSA provenance JSON")
-	c.Flags().StringSliceVarP(&subjects, "subject", "j", nil, "Subject of the form NAME[@SHA256HEX]")
+	c.Flags().StringVarP(&subjects, "subjects", "s", "", "Comma separated list of subjects of the form NAME@SHA256")
 
 	return c
 }
