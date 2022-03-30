@@ -10,7 +10,7 @@ import (
 	"github.com/slsa-framework/slsa-github-generator/slsa"
 )
 
-// provenanceCmd returns the 'generate' command.
+// provenanceCmd returns the 'provenance' command.
 func provenanceCmd() *cobra.Command {
 	var provPath string
 	var subjects string
