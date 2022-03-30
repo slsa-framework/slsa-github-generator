@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"encoding/json"
 	"errors"
 
@@ -14,7 +13,6 @@ import (
 // provenanceCmd returns the 'generate' command.
 func provenanceCmd() *cobra.Command {
 	var provPath string
-	var pretty bool
 	var subjects []string
 
 	c := &cobra.Command{
@@ -45,12 +43,6 @@ assumes that it is being run in the context of a Github Actions workflow.`,
 			b, err := json.Marshal(p)
 			check(err)
 
-			if pretty {
-				var out bytes.Buffer
-				json.Indent(&out, b, "", "  ")
-				b = out.Bytes()
-			}
-
 			f, err := getFile(provPath)
 			check(err)
 
@@ -61,7 +53,6 @@ assumes that it is being run in the context of a Github Actions workflow.`,
 
 	// TODO: add flag for config file
 	c.Flags().StringVarP(&provPath, "provenance", "p", "provenance.intoto.json", "path to output the SLSA provenance JSON")
-	c.Flags().BoolVarP(&pretty, "indent", "i", false, "format JSON for readability")
 	c.Flags().StringSliceVarP(&subjects, "subject", "j", nil, "Subject of the form NAME[@SHA256HEX]")
 
 	return c
