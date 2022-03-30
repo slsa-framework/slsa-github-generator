@@ -1,8 +1,6 @@
 package slsa
 
 import (
-	"fmt"
-
 	intoto "github.com/in-toto/in-toto-golang/in_toto"
 	slsa "github.com/in-toto/in-toto-golang/in_toto/slsa_provenance/v0.2"
 
@@ -82,12 +80,7 @@ func HostedActionsProvenance(w WorkflowRun) (intoto.ProvenanceStatement, error) 
 			Invocation: slsa.ProvenanceInvocation{
 				ConfigSource: slsa.ConfigSource{
 					EntryPoint: w.GithubContext.Workflow,
-					URI: fmt.Sprintf(
-						"git+%s%s@%s.git",
-						w.GithubContext.ServerURL,
-						w.GithubContext.Repository,
-						w.GithubContext.Ref,
-					),
+					URI:        w.GithubContext.RepositoryURI(),
 					Digest: slsa.DigestSet{
 						"sha1": w.GithubContext.SHA,
 					},
@@ -117,7 +110,7 @@ func HostedActionsProvenance(w WorkflowRun) (intoto.ProvenanceStatement, error) 
 			BuildConfig: w.BuildConfig,
 			Materials: []slsa.ProvenanceMaterial{
 				{
-					URI: fmt.Sprintf("git+%s.git", w.GithubContext.Repository),
+					URI: w.GithubContext.RepositoryURI(),
 					Digest: slsa.DigestSet{
 						"sha1": w.GithubContext.SHA,
 					},

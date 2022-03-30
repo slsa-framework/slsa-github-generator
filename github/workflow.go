@@ -3,6 +3,7 @@ package github
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"os"
 )
 
@@ -29,6 +30,23 @@ type WorkflowContext struct {
 	// TODO: try removing this token:
 	// `omitting Token from the struct causes an unexpected end of line from encoding/json`
 	// Token string `json:"token,omitempty"`
+}
+
+// RepositoryURI returns a full repository URI for the repo that triggered the workflow.
+func (c WorkflowContext) RepositoryURI() string {
+	if c.ServerURL == "" || c.Repository == "" {
+		return ""
+	}
+	var ref string
+	if c.Ref != "" {
+		ref = "@" + c.Ref
+	}
+	return fmt.Sprintf(
+		"git+%s/%s%s.git",
+		c.ServerURL,
+		c.Repository,
+		ref,
+	)
 }
 
 // GetWorkflowContext returns the current Github Actions 'github' context.
