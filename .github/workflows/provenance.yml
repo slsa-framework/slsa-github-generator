@@ -19,7 +19,7 @@ permissions:
 
 env:
   # This repo.
-  GENERATOR_REPOSITORY: slsa-framework/slsa-github-generator
+  GENERATOR_REPOSITORY: ianlewis/slsa-github-generator
   GENERATOR_REF: main
 
 ###################################################################
