@@ -79,7 +79,7 @@ jobs:
           set -euo pipefail
 
           # https://go.dev/ref/mod#build-commands.
-          go build -mod=vendor -o slsa-github-generator
+          go build -mod=vendor -o slsa-github-generator github.com/slsa-framework/slsa-github-generator/cmd/slsa-github-generator
           GENERATOR_DIGEST=$(sha256sum slsa-github-generator | awk '{print $1}')
           echo "::set-output name=go-generator-sha256::$GENERATOR_DIGEST"
           echo "hash of slsa-github-generator is $GENERATOR_DIGEST"
