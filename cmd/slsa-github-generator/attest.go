@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"errors"
+	"fmt"
 	"io"
 	"os"
 	"strings"
@@ -23,19 +24,20 @@ func parseSubjects(subjectsCSV string) ([]intoto.Subject, error) {
 
 	subjects := strings.Split(subjectsCSV, ",")
 	for _, s := range subjects {
-		subject := intoto.Subject{}
 		parts := strings.SplitN(s, "@", 2)
 		if len(parts) == 0 {
 			return nil, errors.New("missing subject name")
 		}
-
-		subject.Name = parts[0]
-		if len(parts) > 1 {
-			subject.Digest = slsav02.DigestSet{
-				"sha256": parts[1],
-			}
+		if len(parts) == 1 {
+			return nil, fmt.Errorf("expected sha256 hash for subject %q", parts[0])
 		}
-		parsed = append(parsed, subject)
+
+		parsed = append(parsed, intoto.Subject{
+			Name: parts[0],
+			Digest: slsav02.DigestSet{
+				"sha256": parts[1],
+			},
+		})
 	}
 	return parsed, nil
 }
