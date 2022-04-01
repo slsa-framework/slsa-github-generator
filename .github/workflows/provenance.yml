@@ -31,7 +31,7 @@ on:
   workflow_call:
     inputs:
       artifacts:
-        description: "A comma delimited list of artifacts of the form NAME@SHA256"
+        description: "Formatted list of artifacts of the form NAME:SHA256[|NAME:SHA256[|...]]"
         required: true
         type: string
     outputs:
