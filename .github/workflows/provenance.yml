@@ -119,8 +119,9 @@ jobs:
           COMPUTED_HASH=$(sha256sum slsa-github-generator | awk '{print $1}')
           echo "slsa-github-generator hash computed is $COMPUTED_HASH"
 
-          # Compare hashes. Explicit exit to be safe.
-          # TODO: remove the generator as well.
+          # Perform hash check to ensure slsa-github-generator artifact has not
+          # been modified by the calling workflow. Reusable workflow job
+          # outputs cannot be modified. Explicit exit to be safe.
           echo "$GENERATOR_HASH slsa-github-generator" | sha256sum --strict --check --status || exit -2
 
           # Make the binary executable.
