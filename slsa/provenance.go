@@ -2,7 +2,6 @@ package slsa
 
 import (
 	"fmt"
-	"runtime"
 
 	intoto "github.com/in-toto/in-toto-golang/in_toto"
 	slsa "github.com/in-toto/in-toto-golang/in_toto/slsa_provenance/v0.2"
@@ -96,8 +95,7 @@ func HostedActionsProvenance(w WorkflowRun) (*intoto.ProvenanceStatement, error)
 				},
 				// Non user-controllable environment vars needed to reproduce the build.
 				Environment: map[string]interface{}{
-					// NOTE: Hosted runners are always amd64.
-					"arch":               runtime.GOARCH,
+					// TODO(https://github.com/slsa-framework/slsa-github-generator/issues/5): set "arch"
 					"github_event_name":  w.GithubContext.EventName,
 					"github_run_number":  w.GithubContext.RunNumber,
 					"github_run_id":      w.GithubContext.RunID,
