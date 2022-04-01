@@ -7,6 +7,10 @@ import (
 	"os"
 )
 
+const (
+	githubContextEnvKey = "GITHUB_CONTEXT"
+)
+
 // WorkflowContext is the 'github' context given to workflows that contains
 // information about the Github Actions workflow run.
 //
@@ -52,7 +56,7 @@ func (c WorkflowContext) RepositoryURI() string {
 // GetWorkflowContext returns the current Github Actions 'github' context.
 func GetWorkflowContext() (WorkflowContext, error) {
 	w := WorkflowContext{}
-	ghContext, ok := os.LookupEnv("GITHUB_CONTEXT")
+	ghContext, ok := os.LookupEnv(githubContextEnvKey)
 	if !ok {
 		return w, errors.New("GITHUB_CONTEXT environment variable not set")
 	}

@@ -65,7 +65,7 @@ func NewSigner(fulcioAddr, rekorAddr, oidcIssuer, oidcClientID string) Signer {
 
 // Sign signs the given provenance statement and returns the signed
 // attestation.
-func (s *Signer) Sign(ctx context.Context, p intoto.ProvenanceStatement) (*Attestation, error) {
+func (s *Signer) Sign(ctx context.Context, p *intoto.ProvenanceStatement) (*Attestation, error) {
 	// Get Fulcio signer
 	if !providers.Enabled(ctx) {
 		return nil, fmt.Errorf("no auth provider is enabled. Are you running outside of Github Actions?")

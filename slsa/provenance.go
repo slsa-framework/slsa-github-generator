@@ -1,6 +1,7 @@
 package slsa
 
 import (
+	"fmt"
 	"runtime"
 
 	intoto "github.com/in-toto/in-toto-golang/in_toto"
@@ -28,10 +29,6 @@ type WorkflowRun struct {
 	// GithubContext is the context for the workflow run.
 	GithubContext github.WorkflowContext
 }
-
-var (
-	parametersVersion = 1
-)
 
 // WorkflowParametersV1 contains parameters given to the workflow invocation in v1 format.
 type WorkflowParametersV1 struct {
@@ -65,10 +62,20 @@ type WorkflowParametersV1 struct {
 	SHA1 string `json:"sha1,omitempty"`
 }
 
+var (
+	parametersVersion = 1
+	audience          = "slsa-framework"
+)
+
 // HostedActionsProvenance generates an in-toto provenance statement in the SLSA
 // v0.2 format for a workflow run on a Github actions hosted runner.
-func HostedActionsProvenance(w WorkflowRun) (intoto.ProvenanceStatement, error) {
-	return intoto.ProvenanceStatement{
+func HostedActionsProvenance(w WorkflowRun) (*intoto.ProvenanceStatement, error) {
+	t, err := github.RequestOIDCToken(audience)
+	if err != nil {
+		return nil, err
+	}
+
+	return &intoto.ProvenanceStatement{
 		StatementHeader: intoto.StatementHeader{
 			Type:          intoto.StatementInTotoV01,
 			PredicateType: slsa.PredicateSLSAProvenance,
@@ -77,7 +84,7 @@ func HostedActionsProvenance(w WorkflowRun) (intoto.ProvenanceStatement, error) 
 		Predicate: slsa.ProvenancePredicate{
 			BuildType: w.BuildType,
 			Builder: slsa.ProvenanceBuilder{
-				ID: GithubHostedActionsBuilderID,
+				ID: fmt.Sprintf("https://github.com/%s", t.JobWorkflowRef),
 			},
 			Invocation: slsa.ProvenanceInvocation{
 				ConfigSource: slsa.ConfigSource{
