@@ -51,6 +51,7 @@ func getFile(path string) (io.Writer, error) {
 
 // attestCmd returns the 'attest' command.
 func attestCmd() *cobra.Command {
+	var buildType string
 	var attPath string
 	var subjects string
 
@@ -74,7 +75,7 @@ run in the context of a Github Actions workflow.`,
 
 			p, err := slsa.HostedActionsProvenance(slsa.WorkflowRun{
 				Subjects:      parsedSubjects,
-				BuildType:     provenanceOnlyBuildType,
+				BuildType:     buildType,
 				BuildConfig:   nil,
 				GithubContext: ghContext,
 			})
@@ -101,6 +102,7 @@ run in the context of a Github Actions workflow.`,
 	}
 
 	c.Flags().StringVarP(&attPath, "signature", "g", "attestation.intoto.jsonl", "Path to write the signed attestation")
+	c.Flags().StringVarP(&buildType, "build-type", "b", provenanceOnlyBuildType, "The SLSA buildType.")
 	c.Flags().StringVarP(&subjects, "subjects", "s", "", "Comma separated list of subjects of the form NAME@SHA256")
 
 	return c

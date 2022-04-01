@@ -12,6 +12,7 @@ import (
 
 // provenanceCmd returns the 'provenance' command.
 func provenanceCmd() *cobra.Command {
+	var buildType string
 	var provPath string
 	var subjects string
 
@@ -52,6 +53,7 @@ assumes that it is being run in the context of a Github Actions workflow.`,
 	}
 
 	c.Flags().StringVarP(&provPath, "provenance", "p", "provenance.intoto.json", "path to output the SLSA provenance JSON")
+	c.Flags().StringVarP(&buildType, "build-type", "b", provenanceOnlyBuildType, "The build type to use.")
 	c.Flags().StringVarP(&subjects, "subjects", "s", "", "Comma separated list of subjects of the form NAME@SHA256")
 
 	return c
