@@ -25,8 +25,8 @@ func rootCmd() *cobra.Command {
 		Short: "Generate SLSA provenance for Github Actions",
 		Long: `Generate SLSA provenance for Github Actions.
 For more information on SLSA, visit https://slsa.dev`,
-		Run: func(cmd *cobra.Command, args []string) {
-			check(errors.New("expected command"))
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return errors.New("expected command")
 		},
 	}
 	c.AddCommand(versionCmd())
