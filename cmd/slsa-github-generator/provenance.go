@@ -35,7 +35,7 @@ assumes that it is being run in the context of a Github Actions workflow.`,
 
 			p, err := slsa.HostedActionsProvenance(slsa.WorkflowRun{
 				Subjects:      parsedSubjects,
-				BuildType:     provenanceOnlyBuildType,
+				BuildType:     buildType,
 				BuildConfig:   nil,
 				GithubContext: ghContext,
 			})
@@ -53,8 +53,8 @@ assumes that it is being run in the context of a Github Actions workflow.`,
 	}
 
 	c.Flags().StringVarP(&provPath, "provenance", "p", "provenance.intoto.json", "path to output the SLSA provenance JSON")
-	c.Flags().StringVarP(&buildType, "build-type", "b", provenanceOnlyBuildType, "The build type to use.")
-	c.Flags().StringVarP(&subjects, "subjects", "s", "", "Comma separated list of subjects of the form NAME@SHA256")
+	c.Flags().StringVarP(&buildType, "build-type", "b", provenanceOnlyBuildType, "The SLSA buildType.")
+	c.Flags().StringVarP(&subjects, "subjects", "s", "", "Formatted list of subjects of the form NAME:SHA256[|NAME:SHA256[|...]]")
 
 	return c
 }

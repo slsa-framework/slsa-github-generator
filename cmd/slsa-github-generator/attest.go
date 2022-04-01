@@ -22,9 +22,9 @@ const provenanceOnlyBuildType = "https://github.com/slsa-framework/slsa-github-g
 func parseSubjects(subjectsCSV string) ([]intoto.Subject, error) {
 	var parsed []intoto.Subject
 
-	subjects := strings.Split(subjectsCSV, ",")
+	subjects := strings.Split(subjectsCSV, "|")
 	for _, s := range subjects {
-		parts := strings.SplitN(s, "@", 2)
+		parts := strings.SplitN(s, ":", 2)
 		if len(parts) == 0 {
 			return nil, errors.New("missing subject name")
 		}
@@ -103,7 +103,7 @@ run in the context of a Github Actions workflow.`,
 
 	c.Flags().StringVarP(&attPath, "signature", "g", "attestation.intoto.jsonl", "Path to write the signed attestation")
 	c.Flags().StringVarP(&buildType, "build-type", "b", provenanceOnlyBuildType, "The SLSA buildType.")
-	c.Flags().StringVarP(&subjects, "subjects", "s", "", "Comma separated list of subjects of the form NAME@SHA256")
+	c.Flags().StringVarP(&subjects, "subjects", "s", "", "Formatted list of subjects of the form NAME:SHA256[|NAME:SHA256[|...]]")
 
 	return c
 }
