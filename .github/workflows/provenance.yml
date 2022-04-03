@@ -96,9 +96,6 @@ jobs:
           GITHUB_CONTEXT: "${{ toJSON(github) }}"
         run: |
           set -euo pipefail
-
-          echo "provenance generator is slsa-github-generator"
-
           # Create and sign provenance
           # This sets signed-provenance-name to the name of the signed DSSE envelope.
           ./slsa-github-generator attest --subjects "${SUBJECTS}" -g attestation.intoto.jsonl
