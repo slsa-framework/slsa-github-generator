@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"regexp"
 	"strings"
 
 	intoto "github.com/in-toto/in-toto-golang/in_toto"
@@ -31,6 +32,12 @@ import (
 	"github.com/slsa-framework/slsa-github-generator/slsa"
 )
 
+var (
+	// shaCheck verifies a hash is has only hexidecimal digits and is 64
+	// characters long.
+	shaCheck = regexp.MustCompile(`^[a-fA-F0-9]{64}$`)
+)
+
 func parseSubjects(subjectsCSV string) ([]intoto.Subject, error) {
 	var parsed []intoto.Subject
 
@@ -40,14 +47,21 @@ func parseSubjects(subjectsCSV string) ([]intoto.Subject, error) {
 		if len(parts) == 0 {
 			return nil, errors.New("missing subject name")
 		}
+		name := parts[0]
 		if len(parts) == 1 {
-			return nil, fmt.Errorf("expected sha256 hash for subject %q", parts[0])
+			return nil, fmt.Errorf("expected sha256 hash for subject %q", name)
 		}
+		// Do a sanity check on the SHA to make sure it's a proper hex digest.
+		if !shaCheck.MatchString(parts[1]) {
+			return nil, fmt.Errorf("unexpected sha256 hash %q for subject %q", parts[1], name)
+		}
+		// Lowercase the sha digest to comply with the SLSA spec.
+		shaDigest := strings.ToLower(parts[1])
 
 		parsed = append(parsed, intoto.Subject{
-			Name: parts[0],
+			Name: name,
 			Digest: slsav02.DigestSet{
-				"sha256": parts[1],
+				"sha256": shaDigest,
 			},
 		})
 	}
