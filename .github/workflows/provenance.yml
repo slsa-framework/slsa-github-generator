@@ -50,6 +50,9 @@ jobs:
       go-generator-sha256: ${{ steps.generator-gen.outputs.go-generator-sha256 }}
       go-prov-sha256: ${{ steps.generator-gen.outputs.go-prov-sha256 }}
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write # Needed for keyless.
+      contents: read
     steps:
       - name: Checkout the repository
         uses: actions/checkout@ec3a7ce113134d7a93b817d10a8272cb61118579 # v2.3.4
@@ -80,51 +83,6 @@ jobs:
 
           # https://go.dev/ref/mod#build-commands.
           go build -mod=vendor -o slsa-github-generator github.com/slsa-framework/slsa-github-generator/cmd/slsa-github-generator
-          GENERATOR_DIGEST=$(sha256sum slsa-github-generator | awk '{print $1}')
-          echo "::set-output name=go-generator-sha256::$GENERATOR_DIGEST"
-          echo "hash of slsa-github-generator is $GENERATOR_DIGEST"
-
-      - name: Upload slsa-github-generator
-        uses: actions/upload-artifact@82c141cc518b40d92cc801eee768e7aafc9c2fa2 # v2.3.1
-        with:
-          name: "slsa-github-generator"
-          path: "slsa-github-generator"
-          if-no-files-found: error
-          retention-days: 5
-
-  ###################################################################
-  #                                                                 #
-  #                 Generate the SLSA provenance                    #
-  #                                                                 #
-  ###################################################################
-  provenance:
-    runs-on: ubuntu-latest
-    needs: [generator]
-    permissions:
-      id-token: write # Needed for keyless.
-      contents: read
-    steps:
-      - name: Download generator
-        uses: actions/download-artifact@f023be2c48cc18debc3bacd34cb396e0295e2869 # v2.1.0
-        with:
-          name: "slsa-github-generator"
-
-      - name: Verify slsa-github-generator
-        env:
-          GENERATOR_HASH: "${{ needs.generator.outputs.go-generator-sha256 }}"
-        run: |
-          set -euo pipefail
-
-          echo "hash of slsa-github-generator should be $GENERATOR_HASH"
-          COMPUTED_HASH=$(sha256sum slsa-github-generator | awk '{print $1}')
-          echo "slsa-github-generator hash computed is $COMPUTED_HASH"
-
-          # Perform hash check to ensure slsa-github-generator artifact has not
-          # been modified by the calling workflow. Reusable workflow job
-          # outputs cannot be modified. Explicit exit to be safe.
-          echo "$GENERATOR_HASH slsa-github-generator" | sha256sum --strict --check --status || exit -2
-
-          # Make the binary executable.
           chmod a+x slsa-github-generator
 
       - name: Create and sign provenance
@@ -144,7 +102,6 @@ jobs:
           # Create and sign provenance
           # This sets signed-provenance-name to the name of the signed DSSE envelope.
           ./slsa-github-generator attest --subjects "${SUBJECTS}" -g attestation.intoto.jsonl
-
           echo "::set-output name=signed-provenance-name::attestation.intoto.jsonl"
 
       - name: Upload the signed provenance
