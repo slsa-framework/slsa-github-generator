@@ -1,10 +1,26 @@
+// Copyright 2022 SLSA Authors
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     https://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package main
 
 import (
 	"context"
 	"errors"
+	"fmt"
 	"io"
 	"os"
+	"regexp"
 	"strings"
 
 	intoto "github.com/in-toto/in-toto-golang/in_toto"
@@ -16,26 +32,38 @@ import (
 	"github.com/slsa-framework/slsa-github-generator/slsa"
 )
 
-const provenanceOnlyBuildType = "https://github.com/slsa-framework/slsa-github-generator@v1"
+var (
+	// shaCheck verifies a hash is has only hexidecimal digits and is 64
+	// characters long.
+	shaCheck = regexp.MustCompile(`^[a-fA-F0-9]{64}$`)
+)
 
 func parseSubjects(subjectsCSV string) ([]intoto.Subject, error) {
 	var parsed []intoto.Subject
 
-	subjects := strings.Split(subjectsCSV, ",")
+	subjects := strings.Split(subjectsCSV, "|")
 	for _, s := range subjects {
-		subject := intoto.Subject{}
-		parts := strings.SplitN(s, "@", 2)
+		parts := strings.SplitN(s, ":", 2)
 		if len(parts) == 0 {
 			return nil, errors.New("missing subject name")
 		}
-
-		subject.Name = parts[0]
-		if len(parts) > 1 {
-			subject.Digest = slsav02.DigestSet{
-				"sha256": parts[1],
-			}
+		name := parts[0]
+		if len(parts) == 1 {
+			return nil, fmt.Errorf("expected sha256 hash for subject %q", name)
 		}
-		parsed = append(parsed, subject)
+		// Do a sanity check on the SHA to make sure it's a proper hex digest.
+		if !shaCheck.MatchString(parts[1]) {
+			return nil, fmt.Errorf("unexpected sha256 hash %q for subject %q", parts[1], name)
+		}
+		// Lowercase the sha digest to comply with the SLSA spec.
+		shaDigest := strings.ToLower(parts[1])
+
+		parsed = append(parsed, intoto.Subject{
+			Name: name,
+			Digest: slsav02.DigestSet{
+				"sha256": shaDigest,
+			},
+		})
 	}
 	return parsed, nil
 }
@@ -70,12 +98,7 @@ run in the context of a Github Actions workflow.`,
 				check(errors.New("expected at least one subject"))
 			}
 
-			p, err := slsa.HostedActionsProvenance(slsa.WorkflowRun{
-				Subjects:      parsedSubjects,
-				BuildType:     provenanceOnlyBuildType,
-				BuildConfig:   nil,
-				GithubContext: ghContext,
-			})
+			p, err := slsa.HostedActionsProvenance(slsa.NewWorkflowRun(parsedSubjects, ghContext))
 			check(err)
 
 			if attPath != "" {
@@ -85,8 +108,7 @@ run in the context of a Github Actions workflow.`,
 				att, err := s.Sign(ctx, p)
 				check(err)
 
-				_, err = s.Upload(ctx, att)
-				check(err)
+				check(s.Upload(ctx, att))
 
 				f, err := getFile(attPath)
 				check(err)
@@ -99,7 +121,7 @@ run in the context of a Github Actions workflow.`,
 	}
 
 	c.Flags().StringVarP(&attPath, "signature", "g", "attestation.intoto.jsonl", "Path to write the signed attestation")
-	c.Flags().StringVarP(&subjects, "subjects", "s", "", "Comma separated list of subjects of the form NAME@SHA256")
+	c.Flags().StringVarP(&subjects, "subjects", "s", "", "Formatted list of subjects of the form NAME:SHA256[|NAME:SHA256[|...]]")
 
 	return c
 }

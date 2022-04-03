@@ -1,3 +1,17 @@
+// Copyright 2022 SLSA Authors
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     https://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package sigstore
 
 import (
@@ -10,7 +24,6 @@ import (
 	"github.com/sigstore/cosign/cmd/cosign/cli/rekor"
 	"github.com/sigstore/cosign/pkg/cosign"
 	"github.com/sigstore/cosign/pkg/providers"
-	"github.com/sigstore/rekor/pkg/generated/models"
 	"github.com/sigstore/sigstore/pkg/signature/dsse"
 
 	intoto "github.com/in-toto/in-toto-golang/in_toto"
@@ -65,7 +78,7 @@ func NewSigner(fulcioAddr, rekorAddr, oidcIssuer, oidcClientID string) Signer {
 
 // Sign signs the given provenance statement and returns the signed
 // attestation.
-func (s *Signer) Sign(ctx context.Context, p intoto.ProvenanceStatement) (*Attestation, error) {
+func (s *Signer) Sign(ctx context.Context, p *intoto.ProvenanceStatement) (*Attestation, error) {
 	// Get Fulcio signer
 	if !providers.Enabled(ctx) {
 		return nil, fmt.Errorf("no auth provider is enabled. Are you running outside of Github Actions?")
@@ -102,16 +115,15 @@ func (s *Signer) Sign(ctx context.Context, p intoto.ProvenanceStatement) (*Attes
 }
 
 // Upload uploads the signed attestation to the rekor transparency log.
-func (s *Signer) Upload(ctx context.Context, att *Attestation) (*models.LogEntryAnon, error) {
+func (s *Signer) Upload(ctx context.Context, att *Attestation) error {
 	rekorClient, err := rekor.NewClient(s.rekorAddr)
 	if err != nil {
-		return nil, fmt.Errorf("creating rekor client: %w", err)
+		return fmt.Errorf("creating rekor client: %w", err)
 	}
 	// TODO: Is it a bug that we need []byte(string(k.Cert)) or else we hit invalid PEM?
-	entry, err := cosign.TLogUploadInTotoAttestation(ctx, rekorClient, att.att, []byte(string(att.cert)))
-	if err != nil {
-		return nil, fmt.Errorf("uploading attestation: %w", err)
+	if _, err := cosign.TLogUploadInTotoAttestation(ctx, rekorClient, att.att, []byte(string(att.cert))); err != nil {
+		return fmt.Errorf("uploading attestation: %w", err)
 	}
 
-	return entry, nil
+	return nil
 }
