@@ -9,9 +9,6 @@ import (
 	"github.com/slsa-framework/slsa-github-generator/github"
 )
 
-// GithubHostedActionsBuilderID is the builder ID for Github hosted actions.
-const GithubHostedActionsBuilderID = "https://github.com/Attestations/GitHubHostedActions@v1"
-
 // WorkflowRun contains information about the build run including the builder,
 // build invocation, materials, and environment.
 type WorkflowRun struct {
@@ -45,8 +42,10 @@ type WorkflowParameters struct {
 	EventInputs interface{} `json:"event_inputs,omitempty"`
 }
 
-var (
-	audience = "slsa-framework"
+const (
+	// GithubHostedActionsBuilderID is the builder ID for Github hosted actions.
+	GithubHostedActionsBuilderID = "https://github.com/Attestations/GitHubHostedActions@v1"
+	audience                     = "slsa-framework"
 )
 
 // HostedActionsProvenance generates an in-toto provenance statement in the SLSA
@@ -55,6 +54,11 @@ func HostedActionsProvenance(w WorkflowRun) (*intoto.ProvenanceStatement, error)
 	t, err := github.RequestOIDCToken(audience)
 	if err != nil {
 		return nil, err
+	}
+
+	builderID := GithubHostedActionsBuilderID
+	if t.JobWorkflowRef != "" {
+		builderID = fmt.Sprintf("https://github.com/%s", t.JobWorkflowRef)
 	}
 
 	return &intoto.ProvenanceStatement{
@@ -66,11 +70,12 @@ func HostedActionsProvenance(w WorkflowRun) (*intoto.ProvenanceStatement, error)
 		Predicate: slsa.ProvenancePredicate{
 			BuildType: w.BuildType,
 			Builder: slsa.ProvenanceBuilder{
-				ID: fmt.Sprintf("https://github.com/%s", t.JobWorkflowRef),
+				ID: builderID,
 			},
 			Invocation:  w.Invocation,
 			BuildConfig: w.BuildConfig,
 			Materials:   w.Materials,
+			// TODO(https://github.com/slsa-framework/slsa-github-generator/issues/8): support more metadata fields.
 			Metadata: &slsa.ProvenanceMetadata{
 				Completeness: w.Completeness,
 			},

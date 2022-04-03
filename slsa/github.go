@@ -6,7 +6,9 @@ import (
 	"github.com/slsa-framework/slsa-github-generator/github"
 )
 
-const provenanceOnlyBuildType = "https://github.com/slsa-framework/slsa-github-generator@v1"
+const (
+	provenanceOnlyBuildType = "https://github.com/slsa-framework/slsa-github-generator@v1"
+)
 
 // NewWorkflowRun returns a basic WorkflowRun based on the
 // github context without special knowledge of the build.
