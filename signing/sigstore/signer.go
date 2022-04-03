@@ -24,7 +24,6 @@ import (
 	"github.com/sigstore/cosign/cmd/cosign/cli/rekor"
 	"github.com/sigstore/cosign/pkg/cosign"
 	"github.com/sigstore/cosign/pkg/providers"
-	"github.com/sigstore/rekor/pkg/generated/models"
 	"github.com/sigstore/sigstore/pkg/signature/dsse"
 
 	intoto "github.com/in-toto/in-toto-golang/in_toto"
@@ -116,16 +115,15 @@ func (s *Signer) Sign(ctx context.Context, p *intoto.ProvenanceStatement) (*Atte
 }
 
 // Upload uploads the signed attestation to the rekor transparency log.
-func (s *Signer) Upload(ctx context.Context, att *Attestation) (*models.LogEntryAnon, error) {
+func (s *Signer) Upload(ctx context.Context, att *Attestation) error {
 	rekorClient, err := rekor.NewClient(s.rekorAddr)
 	if err != nil {
-		return nil, fmt.Errorf("creating rekor client: %w", err)
+		return fmt.Errorf("creating rekor client: %w", err)
 	}
 	// TODO: Is it a bug that we need []byte(string(k.Cert)) or else we hit invalid PEM?
-	entry, err := cosign.TLogUploadInTotoAttestation(ctx, rekorClient, att.att, []byte(string(att.cert)))
-	if err != nil {
-		return nil, fmt.Errorf("uploading attestation: %w", err)
+	if _, err := cosign.TLogUploadInTotoAttestation(ctx, rekorClient, att.att, []byte(string(att.cert))); err != nil {
+		return fmt.Errorf("uploading attestation: %w", err)
 	}
 
-	return entry, nil
+	return nil
 }

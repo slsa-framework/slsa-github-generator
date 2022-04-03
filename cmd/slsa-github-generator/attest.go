@@ -108,8 +108,7 @@ run in the context of a Github Actions workflow.`,
 				att, err := s.Sign(ctx, p)
 				check(err)
 
-				_, err = s.Upload(ctx, att)
-				check(err)
+				check(s.Upload(ctx, att))
 
 				f, err := getFile(attPath)
 				check(err)
