@@ -13,7 +13,7 @@ import (
 const GithubHostedActionsBuilderID = "https://github.com/Attestations/GitHubHostedActions@v1"
 
 // WorkflowRun contains information about the build run including the builder,
-// build invocation, and parameters.
+// build invocation, materials, and environment.
 type WorkflowRun struct {
 	// Subjects is information about the generated artifacts.
 	Subjects []intoto.Subject
@@ -25,45 +25,28 @@ type WorkflowRun struct {
 	// BuildConfig is metadata about the build.
 	BuildConfig interface{}
 
+	// Invocation is the provenance invocation.
+	Invocation slsa.ProvenanceInvocation
+
+	// Materials is the materials used in the build run.
+	Materials []slsa.ProvenanceMaterial
+
+	// Completeness holds info on the completeness of
+	// provenance data.
+	Completeness slsa.ProvenanceComplete
+
 	// GithubContext is the context for the workflow run.
 	GithubContext github.WorkflowContext
 }
 
-// WorkflowParametersV1 contains parameters given to the workflow invocation in v1 format.
-type WorkflowParametersV1 struct {
-	// Version is the version of the
-	Version int `json:"version"`
-
-	// EventName is the name of the event that initiated the workflow run.
-	EventName string `json:"event_name,omitempty"`
-
-	// EventPayload is the full event payload.
-	// See: https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows
-	EventPayload interface{} `json:"event_payload,omitempty"`
-
-	// RefType is type of ref that triggered the workflow run.
-	RefType string `json:"ref_type,omitempty"`
-
-	// Ref is the ref that triggered the workflow run.
-	Ref string `json:"ref,omitempty"`
-
-	// BaseRef is the base ref or base branch of the pull request in a workflow
-	// run.
-	BaseRef string `json:"base_ref,omitempty"`
-
-	// HeadRef is ref or source branch of the pull request in a workflow run.
-	HeadRef string `json:"head_ref,omitempty"`
-
-	// Actor is the username of the user that initiated the workflow run.
-	Actor string `json:"actor,omitempty"`
-
-	// SHA1 is the commit SHA that triggered the workflow run.
-	SHA1 string `json:"sha1,omitempty"`
+// WorkflowParameters contains parameters given to the workflow invocation.
+type WorkflowParameters struct {
+	// EventInputs is the inputs for the event that triggered the workflow.
+	EventInputs interface{} `json:"event_inputs,omitempty"`
 }
 
 var (
-	parametersVersion = 1
-	audience          = "slsa-framework"
+	audience = "slsa-framework"
 )
 
 // HostedActionsProvenance generates an in-toto provenance statement in the SLSA
@@ -85,43 +68,11 @@ func HostedActionsProvenance(w WorkflowRun) (*intoto.ProvenanceStatement, error)
 			Builder: slsa.ProvenanceBuilder{
 				ID: fmt.Sprintf("https://github.com/%s", t.JobWorkflowRef),
 			},
-			Invocation: slsa.ProvenanceInvocation{
-				ConfigSource: slsa.ConfigSource{
-					EntryPoint: w.GithubContext.Workflow,
-					URI:        w.GithubContext.RepositoryURI(),
-					Digest: slsa.DigestSet{
-						"sha1": w.GithubContext.SHA,
-					},
-				},
-				// Non user-controllable environment vars needed to reproduce the build.
-				Environment: map[string]interface{}{
-					// TODO(https://github.com/slsa-framework/slsa-github-generator/issues/5): set "arch"
-					"github_event_name":  w.GithubContext.EventName,
-					"github_run_number":  w.GithubContext.RunNumber,
-					"github_run_id":      w.GithubContext.RunID,
-					"github_run_attempt": w.GithubContext.RunAttempt,
-				},
-				// Parameters coming from the trigger event.
-				Parameters: WorkflowParametersV1{
-					Version:      parametersVersion,
-					EventName:    w.GithubContext.EventName,
-					Ref:          w.GithubContext.Ref,
-					BaseRef:      w.GithubContext.BaseRef,
-					HeadRef:      w.GithubContext.HeadRef,
-					RefType:      w.GithubContext.RefType,
-					Actor:        w.GithubContext.Actor,
-					SHA1:         w.GithubContext.SHA,
-					EventPayload: w.GithubContext.Event,
-				},
-			},
+			Invocation:  w.Invocation,
 			BuildConfig: w.BuildConfig,
-			Materials: []slsa.ProvenanceMaterial{
-				{
-					URI: w.GithubContext.RepositoryURI(),
-					Digest: slsa.DigestSet{
-						"sha1": w.GithubContext.SHA,
-					},
-				},
+			Materials:   w.Materials,
+			Metadata: &slsa.ProvenanceMetadata{
+				Completeness: w.Completeness,
 			},
 		},
 	}, nil

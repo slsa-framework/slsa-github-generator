@@ -17,8 +17,6 @@ import (
 	"github.com/slsa-framework/slsa-github-generator/slsa"
 )
 
-const provenanceOnlyBuildType = "https://github.com/slsa-framework/slsa-github-generator@v1"
-
 func parseSubjects(subjectsCSV string) ([]intoto.Subject, error) {
 	var parsed []intoto.Subject
 
@@ -51,7 +49,6 @@ func getFile(path string) (io.Writer, error) {
 
 // attestCmd returns the 'attest' command.
 func attestCmd() *cobra.Command {
-	var buildType string
 	var attPath string
 	var subjects string
 
@@ -73,12 +70,7 @@ run in the context of a Github Actions workflow.`,
 				check(errors.New("expected at least one subject"))
 			}
 
-			p, err := slsa.HostedActionsProvenance(slsa.WorkflowRun{
-				Subjects:      parsedSubjects,
-				BuildType:     buildType,
-				BuildConfig:   nil,
-				GithubContext: ghContext,
-			})
+			p, err := slsa.HostedActionsProvenance(slsa.NewWorkflowRun(parsedSubjects, ghContext))
 			check(err)
 
 			if attPath != "" {
@@ -102,7 +94,6 @@ run in the context of a Github Actions workflow.`,
 	}
 
 	c.Flags().StringVarP(&attPath, "signature", "g", "attestation.intoto.jsonl", "Path to write the signed attestation")
-	c.Flags().StringVarP(&buildType, "build-type", "b", provenanceOnlyBuildType, "The SLSA buildType.")
 	c.Flags().StringVarP(&subjects, "subjects", "s", "", "Formatted list of subjects of the form NAME:SHA256[|NAME:SHA256[|...]]")
 
 	return c

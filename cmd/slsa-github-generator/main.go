@@ -31,7 +31,6 @@ For more information on SLSA, visit https://slsa.dev`,
 	}
 	c.AddCommand(versionCmd())
 	c.AddCommand(attestCmd())
-	c.AddCommand(provenanceCmd())
 	return c
 }
 
