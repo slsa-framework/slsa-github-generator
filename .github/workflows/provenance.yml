@@ -1,0 +1,109 @@
+# Copyright 2022 SLSA Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+name: SLSA provenance generator
+
+permissions:
+  contents: read
+
+env:
+  # This repo.
+  GENERATOR_REPOSITORY: slsa-framework/slsa-github-generator
+  GENERATOR_REF: main
+
+###################################################################
+#                                                                 #
+#            Input and output argument definitions                #
+#                                                                 #
+###################################################################
+on:
+  workflow_call:
+    inputs:
+      subjects:
+        description: "Artifacts for which to generate provenance, formatted the same as the output of sha256sum (SHA256 NAME\\n[...])"
+        required: true
+        type: string
+    outputs:
+      attestation-name:
+        description: "The artifact name of the signed provenance"
+        value: ${{ jobs.generator.outputs.signed-provenance-name }}
+
+jobs:
+  ###################################################################
+  #                                                                 #
+  #                       Build the generator                       #
+  #                                                                 #
+  ###################################################################
+  generator:
+    outputs:
+      signed-provenance-name: ${{ steps.sign-prov.outputs.signed-provenance-name }}
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write # Needed for keyless.
+      contents: read
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@ec3a7ce113134d7a93b817d10a8272cb61118579 # v2.3.4
+        with:
+          fetch-depth: 0
+          repository: "${{ env.GENERATOR_REPOSITORY }}"
+          ref: "${{ env.GENERATOR_REF }}"
+
+      - name: Set up golang environment
+        uses: actions/setup-go@424fc82d43fa5a37540bae62709ddcc23d9520d4 # v2.1.3
+        with:
+          go-version: 1.18
+
+      - name: Download dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          #TODO(reproducible)
+          go mod vendor
+
+      # TODO(hermeticity) OS-level.
+
+      - name: Build slsa-github-generator
+        shell: bash
+        id: generator-gen
+        run: |
+          set -euo pipefail
+
+          # https://go.dev/ref/mod#build-commands.
+          go build -mod=vendor -o slsa-github-generator github.com/slsa-framework/slsa-github-generator/cmd/slsa-github-generator
+          chmod a+x slsa-github-generator
+
+      - name: Create and sign provenance
+        id: sign-prov
+        shell: bash
+        # NOTE: Inputs and github context are set to environment variables in
+        # order to avoid script injection.
+        # See: https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions#understanding-the-risk-of-script-injections
+        env:
+          SUBJECTS: "${{ inputs.subjects }}"
+          GITHUB_CONTEXT: "${{ toJSON(github) }}"
+        run: |
+          set -euo pipefail
+          # Create and sign provenance
+          # This sets signed-provenance-name to the name of the signed DSSE envelope.
+          ./slsa-github-generator attest --subjects "${SUBJECTS}" -g attestation.intoto.jsonl
+          echo "::set-output name=signed-provenance-name::attestation.intoto.jsonl"
+
+      - name: Upload the signed provenance
+        uses: actions/upload-artifact@82c141cc518b40d92cc801eee768e7aafc9c2fa2 # v2.3.1
+        with:
+          name: "${{ steps.sign-prov.outputs.signed-provenance-name }}"
+          path: "${{ steps.sign-prov.outputs.signed-provenance-name }}"
+          if-no-files-found: error
+          retention-days: 5
