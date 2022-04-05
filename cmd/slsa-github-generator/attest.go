@@ -38,29 +38,41 @@ var (
 	shaCheck = regexp.MustCompile(`^[a-fA-F0-9]{64}$`)
 )
 
+// parseSubjects parses the value given to the subjects option.
 func parseSubjects(subjectsStr string) ([]intoto.Subject, error) {
 	var parsed []intoto.Subject
 
 	subjects := strings.Split(subjectsStr, "\n")
 	for _, s := range subjects {
-		parts := strings.SplitN(s, " ", 2)
-		if len(parts) == 0 {
-			return nil, errors.New("missing subject name")
+		// Split by whitespace, and get values.
+		fields := strings.Fields(s)
+
+		// Check for the sha256 digest.
+		if len(fields) == 0 {
+			// NOTE: Ignore blank or whitespace only lines.
+			continue
 		}
+		// Lowercase the sha digest to comply with the SLSA spec.
+		shaDigest := strings.ToLower(fields[0])
 		// Do a sanity check on the SHA to make sure it's a proper hex digest.
-		shaDigest := strings.TrimSpace(parts[0])
 		if !shaCheck.MatchString(shaDigest) {
 			return nil, fmt.Errorf("unexpected sha256 hash %q", shaDigest)
 		}
-		if len(parts) == 1 {
+
+		// Check for the subject name.
+		if len(fields) == 1 {
 			return nil, fmt.Errorf("expected subject name for hash %q", shaDigest)
 		}
-		name := strings.TrimSpace(parts[1])
+		name := fields[1]
+
+		if len(fields) > 2 {
+			return nil, fmt.Errorf("unexpected extra values: %v", fields[2:])
+		}
+
 		parsed = append(parsed, intoto.Subject{
 			Name: name,
 			Digest: slsav02.DigestSet{
-				// Lowercase the sha digest to comply with the SLSA spec.
-				"sha256": strings.ToLower(shaDigest),
+				"sha256": shaDigest,
 			},
 		})
 	}
