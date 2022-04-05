@@ -30,8 +30,8 @@ env:
 on:
   workflow_call:
     inputs:
-      artifacts:
-        description: "Formatted list of artifacts of the form NAME:SHA256[|NAME:SHA256[|...]]"
+      subjects:
+        description: "Artifacts for which to generate provenance, formatted the same as the output of sha256sum (SHA256 NAME\\n[...])"
         required: true
         type: string
     outputs:

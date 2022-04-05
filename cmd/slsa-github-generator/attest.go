@@ -38,30 +38,29 @@ var (
 	shaCheck = regexp.MustCompile(`^[a-fA-F0-9]{64}$`)
 )
 
-func parseSubjects(subjectsCSV string) ([]intoto.Subject, error) {
+func parseSubjects(subjectsStr string) ([]intoto.Subject, error) {
 	var parsed []intoto.Subject
 
-	subjects := strings.Split(subjectsCSV, "|")
+	subjects := strings.Split(subjectsStr, "\n")
 	for _, s := range subjects {
-		parts := strings.SplitN(s, ":", 2)
+		parts := strings.SplitN(s, " ", 2)
 		if len(parts) == 0 {
 			return nil, errors.New("missing subject name")
 		}
-		name := parts[0]
+		name := strings.TrimSpace(parts[0])
 		if len(parts) == 1 {
 			return nil, fmt.Errorf("expected sha256 hash for subject %q", name)
 		}
 		// Do a sanity check on the SHA to make sure it's a proper hex digest.
-		if !shaCheck.MatchString(parts[1]) {
-			return nil, fmt.Errorf("unexpected sha256 hash %q for subject %q", parts[1], name)
+		shaDigest := strings.TrimSpace(parts[1])
+		if !shaCheck.MatchString(shaDigest) {
+			return nil, fmt.Errorf("unexpected sha256 hash %q for subject %q", shaDigest, name)
 		}
-		// Lowercase the sha digest to comply with the SLSA spec.
-		shaDigest := strings.ToLower(parts[1])
-
 		parsed = append(parsed, intoto.Subject{
 			Name: name,
 			Digest: slsav02.DigestSet{
-				"sha256": shaDigest,
+				// Lowercase the sha digest to comply with the SLSA spec.
+				"sha256": strings.ToLower(shaDigest),
 			},
 		})
 	}
@@ -121,7 +120,7 @@ run in the context of a Github Actions workflow.`,
 	}
 
 	c.Flags().StringVarP(&attPath, "signature", "g", "attestation.intoto.jsonl", "Path to write the signed attestation")
-	c.Flags().StringVarP(&subjects, "subjects", "s", "", "Formatted list of subjects of the form NAME:SHA256[|NAME:SHA256[|...]]")
+	c.Flags().StringVarP(&subjects, "subjects", "s", "", "Formatted list of subjects in the same format as sha256sum")
 
 	return c
 }
