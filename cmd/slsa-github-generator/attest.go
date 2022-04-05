@@ -47,15 +47,15 @@ func parseSubjects(subjectsStr string) ([]intoto.Subject, error) {
 		if len(parts) == 0 {
 			return nil, errors.New("missing subject name")
 		}
-		name := strings.TrimSpace(parts[0])
-		if len(parts) == 1 {
-			return nil, fmt.Errorf("expected sha256 hash for subject %q", name)
-		}
 		// Do a sanity check on the SHA to make sure it's a proper hex digest.
-		shaDigest := strings.TrimSpace(parts[1])
+		shaDigest := strings.TrimSpace(parts[0])
 		if !shaCheck.MatchString(shaDigest) {
-			return nil, fmt.Errorf("unexpected sha256 hash %q for subject %q", shaDigest, name)
+			return nil, fmt.Errorf("unexpected sha256 hash %q", shaDigest)
 		}
+		if len(parts) == 1 {
+			return nil, fmt.Errorf("expected subject name for hash %q", shaDigest)
+		}
+		name := strings.TrimSpace(parts[1])
 		parsed = append(parsed, intoto.Subject{
 			Name: name,
 			Digest: slsav02.DigestSet{
