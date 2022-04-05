@@ -91,7 +91,7 @@ jobs:
         # order to avoid script injection.
         # See: https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions#understanding-the-risk-of-script-injections
         env:
-          SUBJECTS: "${{ inputs.artifacts }}"
+          SUBJECTS: "${{ inputs.subjects }}"
           GITHUB_CONTEXT: "${{ toJSON(github) }}"
         run: |
           set -euo pipefail
