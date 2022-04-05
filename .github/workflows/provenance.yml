@@ -37,7 +37,7 @@ on:
     outputs:
       attestation-name:
         description: "The artifact name of the signed provenance"
-        value: ${{ jobs.sign-prov.outputs.prov-name }}
+        value: ${{ jobs.generator.outputs.signed-provenance-name }}
 
 jobs:
   ###################################################################
@@ -47,8 +47,7 @@ jobs:
   ###################################################################
   generator:
     outputs:
-      go-generator-sha256: ${{ steps.generator-gen.outputs.go-generator-sha256 }}
-      go-prov-sha256: ${{ steps.generator-gen.outputs.go-prov-sha256 }}
+      signed-provenance-name: ${{ steps.sign-prov.outputs.signed-provenance-name }}
     runs-on: ubuntu-latest
     permissions:
       id-token: write # Needed for keyless.
