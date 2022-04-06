@@ -68,6 +68,11 @@ func parseSubjects(subjectsStr string) ([]intoto.Subject, error) {
 		if len(fields) > 2 {
 			return nil, fmt.Errorf("unexpected extra values: %v", fields[2:])
 		}
+		for _, p := range parsed {
+			if p.Name == name {
+				return nil, fmt.Errorf("duplicate subject: %q", name)
+			}
+		}
 
 		parsed = append(parsed, intoto.Subject{
 			Name: name,
