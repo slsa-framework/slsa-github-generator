@@ -57,7 +57,7 @@ jobs:
     permissions:
       id-token: write
       contents: read
-    uses: slsa-framework/slsa-github-generator/.github/workflows/provenance.yml@main
+    uses: slsa-framework/slsa-github-generator/.github/workflows/slsa2_provenance.yml@main
     with:
       subjects: "${{ needs.build.outputs.digest }}"
 ```
