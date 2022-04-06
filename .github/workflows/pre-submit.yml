@@ -15,7 +15,7 @@ jobs:
         with:
           go-version: "1.18"
 
-      - name: Run tests for builder
+      - name: Run tests
         run: |
           set -euo pipefail
 
