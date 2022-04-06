@@ -29,6 +29,31 @@ func TestParseSubjects(t *testing.T) {
 			},
 		},
 		{
+			name: "name has spaces",
+			str:  "2e0390eb024a52963db7b95e84a9c2b12c004054a7bad9a97ec0c7c89d4681d2 hoge fuga",
+			expected: []intoto.Subject{
+				{
+					Name: "hoge fuga",
+					Digest: slsav02.DigestSet{
+						"sha256": "2e0390eb024a52963db7b95e84a9c2b12c004054a7bad9a97ec0c7c89d4681d2",
+					},
+				},
+			},
+		},
+		{
+			name: "extra whitespace",
+			str:  "\t  2e0390eb024a52963db7b95e84a9c2b12c004054a7bad9a97ec0c7c89d4681d2 \t hoge fuga  \t  ",
+			expected: []intoto.Subject{
+				{
+					Name: "hoge fuga",
+					Digest: slsav02.DigestSet{
+						"sha256": "2e0390eb024a52963db7b95e84a9c2b12c004054a7bad9a97ec0c7c89d4681d2",
+					},
+				},
+			},
+		},
+
+		{
 			name: "multiple",
 			str: `2e0390eb024a52963db7b95e84a9c2b12c004054a7bad9a97ec0c7c89d4681d2 hoge
 e712aff3705ac314b9a890e0ec208faa20054eee514d86ab913d768f94e01279 fuga`,
@@ -75,11 +100,6 @@ e712aff3705ac314b9a890e0ec208faa20054eee514d86ab913d768f94e01279 fuga`,
 		{
 			name: "sha only",
 			str:  "2e0390eb024a52963db7b95e84a9c2b12c004054a7bad9a97ec0c7c89d4681d2",
-			err:  true,
-		},
-		{
-			name: "extra fields",
-			str:  "2e0390eb024a52963db7b95e84a9c2b12c004054a7bad9a97ec0c7c89d4681d2 hoge   extra    fields",
 			err:  true,
 		},
 		{
