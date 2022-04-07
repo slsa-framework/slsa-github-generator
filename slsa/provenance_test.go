@@ -15,7 +15,6 @@ func TestHostedActionsProvenance(t *testing.T) {
 		name     string
 		r        WorkflowRun
 		expected *intoto.ProvenanceStatement
-		err      bool
 	}{
 		{
 			name: "empty",
@@ -41,15 +40,8 @@ func TestHostedActionsProvenance(t *testing.T) {
 
 		t.Run(tc.name, func(t *testing.T) {
 			if p, err := HostedActionsProvenance(tc.r); err != nil {
-				if tc.err {
-					// Error was expected.
-					return
-				}
 				t.Fatalf("unexpected error: %v", err)
 			} else {
-				if tc.err {
-					t.Fatalf("expected error but got %#v", p)
-				}
 				if want, got := tc.expected, p; !reflect.DeepEqual(want, got) {
 					t.Errorf("unexpected result, want: %#v, got: %#v", want, got)
 				}
