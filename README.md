@@ -12,9 +12,6 @@ workflow](https://docs.github.com/en/actions/using-workflows/reusing-workflows).
   - [Getting Started](#getting-started)
   - [Workflow Inputs](#workflow-inputs)
   - [Provenance Example](#provenance-example)
-- [Verification of Provenance](#verification-of-provenance)
-  - [Inputs](#inputs)
-  - [Command-line Examples](#command-line-examples)
 
 ---
 
@@ -135,44 +132,4 @@ generated as an [in-toto](https://in-toto.io/) statement with a SLSA predecate.
     ]
   }
 }
-```
-
-## Verification of Provenance
-
-To verify the provenance, use the
-[github.com/slsa-framework/slsa-verifier](https://github.com/slsa-framework/slsa-verifier)
-project.
-
-### Inputs
-
-```shell
-$ git clone git@github.com:slsa-framework/slsa-verifier.git
-$ go run . --help
-    -binary string
-    	path to a binary to verify
-    -provenance string
-    	path to a provenance file
-    -source string
-        expected source repository that should have produced the binary, e.g. github.com/org/example
-    -tag string
-       expected tag or version the build was generated for
-    -branch
-      expected branch the build was generated from
-```
-
-### Command-line Examples
-
-```shell
-$ go run . --binary binary-linux-amd64 --provenance binary-linux-amd64.intoto.jsonl --source github.com/origin/repo
-
-Verified against tlog entry 1544571
-verified SLSA provenance produced at
- {
-        "caller": "origin/repo",
-        "commit": "0dfcd24824432c4ce587f79c918eef8fc2c44d7b",
-        "job_workflow_ref": "/slsa-framework/slsa-github-generator-go/.github/workflows/builder.yml@refs/heads/main",
-        "trigger": "workflow_dispatch",
-        "issuer": "https://token.actions.githubusercontent.com"
-}
-successfully verified SLSA provenance
 ```
