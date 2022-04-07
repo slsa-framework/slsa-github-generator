@@ -17,9 +17,15 @@ func NewTestOIDCServer(t *OIDCToken) (*httptest.Server, func()) {
 	if err != nil {
 		panic(err)
 	}
+
+	rawResponse := fmt.Sprintf(`{"value": "part1.%s.part3"}`, base64.RawURLEncoding.EncodeToString(b))
+	return newRawTestOIDCServer(rawResponse)
+}
+
+func newRawTestOIDCServer(raw string) (*httptest.Server, func()) {
 	s := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Respond with a very basic 3-part JWT token.
-		fmt.Fprintln(w, fmt.Sprintf(`{"value": "part1.%s.part3"}`, base64.RawURLEncoding.EncodeToString(b)))
+		fmt.Fprintln(w, raw)
 	}))
 	oldEnv, ok := os.LookupEnv(requestURLEnvKey)
 	// NOTE: httptest.Server.URL has no trailing slash.
