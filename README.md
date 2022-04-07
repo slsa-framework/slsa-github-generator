@@ -11,6 +11,7 @@ workflow](https://docs.github.com/en/actions/using-workflows/reusing-workflows).
 - [Generating Provenance](#generating-provenance)
   - [Getting Started](#getting-started)
   - [Workflow Inputs](#workflow-inputs)
+  - [Workflow Outputs](#workflow-outputs)
   - [Provenance Example](#provenance-example)
 
 ---
@@ -62,12 +63,22 @@ jobs:
 ### Workflow Inputs
 
 The builder workflow
-[.github/workflows/provenance.yml](.github/workflows/provenance.yml) accepts
+[.github/workflows/slsa2_provenance.yml](.github/workflows/slsa2_provenance.yml) accepts
 the following inputs:
 
 | Name       | Required | Description                                                                                                    |
 | ---------- | -------- | -------------------------------------------------------------------------------------------------------------- |
 | `subjects` | yes      | Artifacts for which to generate provenance, formatted the same as the output of sha256sum (SHA256 NAME\n[...]) |
+
+### Workflow Outputs
+
+The builder workflow
+[.github/workflows/slsa2_provenance.yml](.github/workflows/slsa2_provenance.yml)
+produces the following outputs:
+
+| Name               | Description                                |
+| ------------------ | ------------------------------------------ |
+| `attestation-name` | The artifact name of the signed provenance |
 
 ### Provenance Example
 
@@ -88,7 +99,7 @@ generated as an [in-toto](https://in-toto.io/) statement with a SLSA predecate.
   ],
   "predicate": {
     "builder": {
-      "id": "https://github.com/slsa-framework/slsa-github-generator/.github/workflows/provenance.yml@refs/heads/main"
+      "id": "https://github.com/slsa-framework/slsa-github-generator/.github/workflows/slsa2_provenance.yml@refs/heads/main"
     },
     "buildType": "https://github.com/slsa-framework/slsa-github-generator@v1",
     "invocation": {
