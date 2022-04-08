@@ -79,12 +79,14 @@ func RequestOIDCToken(ctx context.Context, audience string) (*OIDCToken, error) 
 	verifier := provider.Verifier(&oidc.Config{ClientID: audience})
 	idToken, err := verifier.Verify(ctx, string(rawIDToken))
 	if err != nil {
-		return nil, errInvalidTokenJSON
+		return nil, fmt.Errorf("could not verify token: %w", err)
+		// return nil, errInvalidTokenJSON
 	}
 
 	var token OIDCToken
 	if err := idToken.Claims(&token); err != nil {
-		return nil, errInvalidTokenJSON
+		return nil, fmt.Errorf("invalid claims: %w", err)
+		// return nil, errInvalidTokenJSON
 	}
 
 	return &token, nil
