@@ -21,7 +21,8 @@ import (
 )
 
 const (
-	provenanceOnlyBuildType = "https://github.com/slsa-framework/slsa-github-generator@v1"
+	// provenanceOnlyBuildType = "https://github.com/slsa-framework/slsa-github-generator@v1"
+	provenanceOnlyBuildType = "https://ianlewis.org/slsa-framework/slsa-github-generator@v1"
 )
 
 // WorkflowRun contains information about the build run including the builder,
