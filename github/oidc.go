@@ -17,6 +17,7 @@ package github
 import (
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"os"
@@ -34,24 +35,32 @@ type OIDCToken struct {
 	JobWorkflowRef string `json:"job_workflow_ref"`
 }
 
+var (
+	errURLEnvKeyEmpty   = fmt.Errorf("%q env var is empty", requestURLEnvKey)
+	errResponseJSON     = errors.New("invalid response JSON")
+	errInvalidToken     = errors.New("invalid JWT token")
+	errInvalidTokenB64  = errors.New("invalid JWT token base64")
+	errInvalidTokenJSON = errors.New("invalid JWT token JSON")
+)
+
 // RequestOIDCToken requests an OIDC token from Github's provider and returns
 // the token.
 func RequestOIDCToken(audience string) (*OIDCToken, error) {
 	urlKey := os.Getenv(requestURLEnvKey)
 	if urlKey == "" {
-		return nil, fmt.Errorf("requestURLEnvKey is empty")
+		return nil, errURLEnvKeyEmpty
 	}
 
 	url := urlKey + "&audience=" + audience
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("creating request: %w", err)
 	}
 
 	req.Header.Add("Authorization", "bearer "+os.Getenv(requestTokenEnvKey))
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("request: %w", err)
 	}
 	defer resp.Body.Close()
 
@@ -62,13 +71,13 @@ func RequestOIDCToken(audience string) (*OIDCToken, error) {
 	// Extract the value from JSON payload.
 	decoder := json.NewDecoder(resp.Body)
 	if err := decoder.Decode(&payload); err != nil {
-		return nil, err
+		return nil, errResponseJSON
 	}
 
 	// This is a JWT token with 3 parts.
 	parts := strings.Split(payload.Value, ".")
 	if len(parts) != 3 {
-		return nil, fmt.Errorf("invalid jwt token: found %d parts", len(parts))
+		return nil, errInvalidToken
 	}
 
 	content := parts[1]
@@ -76,12 +85,12 @@ func RequestOIDCToken(audience string) (*OIDCToken, error) {
 	// Base64-decode the content.
 	token, err := base64.RawURLEncoding.DecodeString(content)
 	if err != nil {
-		return nil, fmt.Errorf("base64.RawURLEncoding.DecodeString: %w", err)
+		return nil, errInvalidTokenB64
 	}
 
 	var oidc OIDCToken
 	if err := json.Unmarshal(token, &oidc); err != nil {
-		return nil, fmt.Errorf("json.Unmarshal: %w", err)
+		return nil, errInvalidTokenJSON
 	}
 
 	return &oidc, nil
