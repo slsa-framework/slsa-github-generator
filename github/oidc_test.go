@@ -1,6 +1,7 @@
 package github
 
 import (
+	"context"
 	"encoding/base64"
 	"errors"
 	"fmt"
@@ -59,7 +60,7 @@ func TestRequestOIDCToken(t *testing.T) {
 				defer stop()
 			}
 
-			token, err := RequestOIDCToken(tc.audience)
+			token, err := RequestOIDCToken(context.Background(), tc.audience)
 			if !errors.Is(err, tc.err) {
 				t.Fatalf("unexpected error: %v", cmp.Diff(err, tc.err, cmpopts.EquateErrors()))
 			}

@@ -15,6 +15,7 @@
 package slsa
 
 import (
+	"context"
 	"fmt"
 
 	intoto "github.com/in-toto/in-toto-golang/in_toto"
@@ -30,10 +31,10 @@ const (
 
 // HostedActionsProvenance generates an in-toto provenance statement in the SLSA
 // v0.2 format for a workflow run on a Github actions hosted runner.
-func HostedActionsProvenance(w WorkflowRun) (*intoto.ProvenanceStatement, error) {
+func HostedActionsProvenance(ctx context.Context, w WorkflowRun) (*intoto.ProvenanceStatement, error) {
 	// NOTE: Use buildType as the audience as that closely matches the intended
 	// recipient of the OIDC token.
-	t, err := github.RequestOIDCToken(w.BuildType)
+	t, err := github.RequestOIDCToken(ctx, w.BuildType)
 	if err != nil {
 		return nil, err
 	}

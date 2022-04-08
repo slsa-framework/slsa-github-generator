@@ -15,13 +15,14 @@
 package github
 
 import (
-	"encoding/base64"
-	"encoding/json"
+	"context"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"os"
-	"strings"
+
+	"github.com/coreos/go-oidc"
 )
 
 const (
@@ -45,13 +46,13 @@ var (
 
 // RequestOIDCToken requests an OIDC token from Github's provider and returns
 // the token.
-func RequestOIDCToken(audience string) (*OIDCToken, error) {
-	urlKey := os.Getenv(requestURLEnvKey)
-	if urlKey == "" {
+func RequestOIDCToken(ctx context.Context, audience string) (*OIDCToken, error) {
+	providerURL := os.Getenv(requestURLEnvKey)
+	if providerURL == "" {
 		return nil, errURLEnvKeyEmpty
 	}
 
-	url := urlKey + "&audience=" + audience
+	url := providerURL + "&audience=" + audience
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return nil, fmt.Errorf("creating request: %w", err)
@@ -64,34 +65,25 @@ func RequestOIDCToken(audience string) (*OIDCToken, error) {
 	}
 	defer resp.Body.Close()
 
-	var payload struct {
-		Value string `json:"value"`
-	}
-
-	// Extract the value from JSON payload.
-	decoder := json.NewDecoder(resp.Body)
-	if err := decoder.Decode(&payload); err != nil {
-		return nil, errResponseJSON
-	}
-
-	// This is a JWT token with 3 parts.
-	parts := strings.Split(payload.Value, ".")
-	if len(parts) != 3 {
-		return nil, errInvalidToken
-	}
-
-	content := parts[1]
-
-	// Base64-decode the content.
-	token, err := base64.RawURLEncoding.DecodeString(content)
+	rawIDToken, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, errInvalidTokenB64
+		return nil, fmt.Errorf("reading response body: %w", err)
 	}
 
-	var oidc OIDCToken
-	if err := json.Unmarshal(token, &oidc); err != nil {
+	provider, err := oidc.NewProvider(ctx, providerURL)
+	if err != nil {
+		return nil, fmt.Errorf("creating provider: %w", err)
+	}
+	verifier := provider.Verifier(&oidc.Config{ClientID: audience})
+	idToken, err := verifier.Verify(ctx, string(rawIDToken))
+	if err != nil {
 		return nil, errInvalidTokenJSON
 	}
 
-	return &oidc, nil
+	var token OIDCToken
+	if err := idToken.Claims(&token); err != nil {
+		return nil, errInvalidTokenJSON
+	}
+
+	return &token, nil
 }
