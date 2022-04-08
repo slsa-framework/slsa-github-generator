@@ -17,6 +17,7 @@ package slsa
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	intoto "github.com/in-toto/in-toto-golang/in_toto"
 	slsa "github.com/in-toto/in-toto-golang/in_toto/slsa_provenance/v0.2"
@@ -34,8 +35,7 @@ const (
 func HostedActionsProvenance(ctx context.Context, w WorkflowRun) (*intoto.ProvenanceStatement, error) {
 	// NOTE: Use buildType as the audience as that closely matches the intended
 	// recipient of the OIDC token.
-	t, err := github.RequestOIDCToken(ctx, w.BuildType)
-	// t, err := github.RequestOIDCToken(ctx, "slsa-framework")
+	t, err := github.RequestOIDCToken(ctx, strings.ReplaceAll(w.BuildType, "@", "_"))
 	if err != nil {
 		return nil, err
 	}
