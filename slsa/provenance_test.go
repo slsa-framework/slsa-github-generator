@@ -1,6 +1,7 @@
 package slsa
 
 import (
+	"context"
 	"reflect"
 	"testing"
 
@@ -39,7 +40,7 @@ func TestHostedActionsProvenance(t *testing.T) {
 		defer stop()
 
 		t.Run(tc.name, func(t *testing.T) {
-			if p, err := HostedActionsProvenance(tc.r); err != nil {
+			if p, err := HostedActionsProvenance(context.Background(), tc.r); err != nil {
 				t.Fatalf("unexpected error: %v", err)
 			} else {
 				if want, got := tc.expected, p; !reflect.DeepEqual(want, got) {

@@ -17,19 +17,23 @@ package github
 import (
 	"bytes"
 	"context"
+	"encoding/base64"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"net/http"
 	"net/url"
 	"os"
+	"strings"
 
 	"github.com/coreos/go-oidc"
+
+	"github.com/slsa-framework/slsa-github-generator/internal/errors"
 )
 
+var defaultActionsProviderURL = "https://token.actions.githubusercontent.com"
+
 const (
-	actionsProviderURL = "https://token.actions.githubusercontent.com"
 	requestTokenEnvKey = "ACTIONS_ID_TOKEN_REQUEST_TOKEN"
 	requestURLEnvKey   = "ACTIONS_ID_TOKEN_REQUEST_URL"
 )
@@ -38,73 +42,119 @@ const (
 type OIDCToken struct {
 	// JobWorkflowRef is a reference to the current job workflow.
 	JobWorkflowRef string `json:"job_workflow_ref"`
+
+	// rawToken holds the full JWT token in compact serialization format for
+	// later verification.
+	rawToken string
 }
 
-var (
-	errURLEnvKeyEmpty   = fmt.Errorf("%q env var is empty", requestURLEnvKey)
-	errResponseJSON     = errors.New("invalid response JSON")
-	errInvalidToken     = errors.New("invalid JWT token")
-	errInvalidTokenB64  = errors.New("invalid JWT token base64")
-	errInvalidTokenJSON = errors.New("invalid JWT token JSON")
-)
+type errRequestError struct {
+	errors.WrappableError
+}
 
-// RequestOIDCToken requests an OIDC token from Github's provider and returns
-// the token.
-func RequestOIDCToken(ctx context.Context, audience string) (*OIDCToken, error) {
-	requestURL := os.Getenv(requestURLEnvKey)
-	if requestURL == "" {
-		return nil, errURLEnvKeyEmpty
-	}
+type errToken struct {
+	errors.WrappableError
+}
 
-	req, err := http.NewRequest("GET", requestURL+"&audience="+url.QueryEscape(audience), nil)
+type errVerify struct {
+	errors.WrappableError
+}
+
+// OIDCClient is a client for the GitHub OIDC provider.
+type OIDCClient struct {
+	actionsProviderURL string
+	requestURL         *url.URL
+	conf               *oidc.Config
+}
+
+// NewOIDCClient returns new GitHub OIDC provider client.
+func NewOIDCClient(audience string) (*OIDCClient, error) {
+	parsedURL, err := url.Parse(os.Getenv(requestURLEnvKey))
 	if err != nil {
-		return nil, fmt.Errorf("creating request: %w", err)
+		return nil, fmt.Errorf("invalid request URL %q: %w", parsedURL, err)
 	}
+	q := parsedURL.Query()
+	q.Add("audience", audience)
+	parsedURL.RawQuery = q.Encode()
 
+	return &OIDCClient{
+		actionsProviderURL: defaultActionsProviderURL,
+		requestURL:         parsedURL,
+		conf: &oidc.Config{
+			ClientID: audience,
+		},
+	}, nil
+}
+
+// Token requests an OIDC token from Github's provider and returns
+// the token.
+// FIXME: Don't return an OIDCToken. Either return a rawToken as a string, or verify on the spot.
+func (c *OIDCClient) Token(ctx context.Context) (*OIDCToken, error) {
+	// Request the token.
+	req, err := http.NewRequest("GET", c.requestURL.String(), nil)
+	if err != nil {
+		return nil, errors.Errorf(&errRequestError{}, "creating request: %w", err)
+	}
 	req.Header.Add("Authorization", "bearer "+os.Getenv(requestTokenEnvKey))
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("request: %w", err)
+		return nil, errors.Errorf(&errRequestError{}, "request: %w", err)
 	}
 	defer resp.Body.Close()
 
+	// Read the response.
 	b, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, fmt.Errorf("reading response: %w", err)
+		return nil, errors.Errorf(&errRequestError{}, "reading response: %w", err)
 	}
-
 	if resp.StatusCode >= 400 {
-		return nil, fmt.Errorf("response: %s: %s", resp.Status, string(b))
-	}
-
-	var payload struct {
-		Value string `json:"value"`
+		return nil, errors.Errorf(&errRequestError{}, "response: %s: %s", resp.Status, string(b))
 	}
 
 	// Extract the raw token from JSON payload.
+	var payload struct {
+		Value string `json:"value"`
+	}
 	decoder := json.NewDecoder(bytes.NewReader(b))
 	if err := decoder.Decode(&payload); err != nil {
-		return nil, errResponseJSON
+		return nil, errors.Errorf(&errToken{}, "parsing JSON: %w", err)
 	}
 
+	parts := strings.Split(payload.Value, ".")
+	if len(parts) != 3 {
+		return nil, errors.Errorf(&errToken{}, "invalid token, expected 3 parts got %d", len(parts))
+	}
+
+	// Base64-decode the content.
+	token, err := base64.RawURLEncoding.DecodeString(parts[1])
+	if err != nil {
+		return nil, errors.Errorf(&errToken{}, "invalid token payload: %w", err)
+	}
+
+	var t OIDCToken
+	if err := json.Unmarshal(token, &t); err != nil {
+		return nil, errors.Errorf(&errToken{}, "invalid token payload: %w", err)
+	}
+	t.rawToken = payload.Value
+
+	return &t, nil
+}
+
+// Verify verifies the token contents and signature.
+func (c *OIDCClient) Verify(ctx context.Context, t *OIDCToken) error {
 	// Verify the token.
-	provider, err := oidc.NewProvider(ctx, actionsProviderURL)
+
+	// FIXME: create a verifier using NewVerifier.
+	// FIXME: allow setting a dummy KeySet to the verifier for testing.
+	provider, err := oidc.NewProvider(ctx, c.actionsProviderURL)
 	if err != nil {
-		return nil, fmt.Errorf("retrieving provider info: %w", err)
+		return errors.Errorf(&errVerify{}, "retrieving provider info: %w", err)
 	}
 
-	verifier := provider.Verifier(&oidc.Config{ClientID: audience})
-	idToken, err := verifier.Verify(ctx, payload.Value)
-	if err != nil {
-		return nil, fmt.Errorf("could not verify token: %w", err)
-		// return nil, errInvalidTokenJSON
+	verifier := provider.Verifier(c.conf)
+	if _, err = verifier.Verify(ctx, t.rawToken); err != nil {
+		return errors.Errorf(&errVerify{}, "could not verify token: %w", err)
 	}
 
-	var token OIDCToken
-	if err := idToken.Claims(&token); err != nil {
-		return nil, fmt.Errorf("invalid claims: %w", err)
-		// return nil, errInvalidTokenJSON
-	}
-
-	return &token, nil
+	return nil
 }
