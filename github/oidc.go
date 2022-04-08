@@ -15,10 +15,12 @@
 package github
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"os"
@@ -67,12 +69,21 @@ func RequestOIDCToken(ctx context.Context, audience string) (*OIDCToken, error) 
 	}
 	defer resp.Body.Close()
 
+	b, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("reading response: %w", err)
+	}
+
+	if resp.StatusCode >= 400 {
+		return nil, fmt.Errorf("response: %s: %s", resp.Status, string(b))
+	}
+
 	var payload struct {
 		Value string `json:"value"`
 	}
 
 	// Extract the raw token from JSON payload.
-	decoder := json.NewDecoder(resp.Body)
+	decoder := json.NewDecoder(bytes.NewReader(b))
 	if err := decoder.Decode(&payload); err != nil {
 		return nil, errResponseJSON
 	}
