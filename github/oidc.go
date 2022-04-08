@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"os"
 
 	"github.com/coreos/go-oidc"
@@ -53,7 +54,7 @@ func RequestOIDCToken(ctx context.Context, audience string) (*OIDCToken, error) 
 		return nil, errURLEnvKeyEmpty
 	}
 
-	req, err := http.NewRequest("GET", requestURL+"&audience="+audience, nil)
+	req, err := http.NewRequest("GET", requestURL+"&audience="+url.QueryEscape(audience), nil)
 	if err != nil {
 		return nil, fmt.Errorf("creating request: %w", err)
 	}

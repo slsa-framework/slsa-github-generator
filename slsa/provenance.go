@@ -34,7 +34,7 @@ const (
 func HostedActionsProvenance(ctx context.Context, w WorkflowRun) (*intoto.ProvenanceStatement, error) {
 	// NOTE: Use buildType as the audience as that closely matches the intended
 	// recipient of the OIDC token.
-	t, err := github.RequestOIDCToken(ctx, "slsa-framework")
+	t, err := github.RequestOIDCToken(ctx, w.BuildType)
 	if err != nil {
 		return nil, err
 	}
