@@ -16,9 +16,9 @@ package github
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"net/http"
 	"net/url"
 	"os"
@@ -66,9 +66,14 @@ func RequestOIDCToken(ctx context.Context, audience string) (*OIDCToken, error) 
 	}
 	defer resp.Body.Close()
 
-	rawIDToken, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, fmt.Errorf("reading response body: %w", err)
+	var payload struct {
+		Value string `json:"value"`
+	}
+
+	// Extract the raw token from JSON payload.
+	decoder := json.NewDecoder(resp.Body)
+	if err := decoder.Decode(&payload); err != nil {
+		return nil, errResponseJSON
 	}
 
 	// Verify the token.
@@ -77,9 +82,8 @@ func RequestOIDCToken(ctx context.Context, audience string) (*OIDCToken, error) 
 		return nil, fmt.Errorf("retrieving provider info: %w", err)
 	}
 
-	fmt.Printf("%v\n", string(rawIDToken))
 	verifier := provider.Verifier(&oidc.Config{ClientID: audience})
-	idToken, err := verifier.Verify(ctx, string(rawIDToken))
+	idToken, err := verifier.Verify(ctx, payload.Value)
 	if err != nil {
 		return nil, fmt.Errorf("could not verify token: %w", err)
 		// return nil, errInvalidTokenJSON
