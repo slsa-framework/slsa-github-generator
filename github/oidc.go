@@ -26,6 +26,7 @@ import (
 )
 
 const (
+	actionsProviderURL = "https://token.actions.githubusercontent.com"
 	requestTokenEnvKey = "ACTIONS_ID_TOKEN_REQUEST_TOKEN"
 	requestURLEnvKey   = "ACTIONS_ID_TOKEN_REQUEST_URL"
 )
@@ -47,13 +48,12 @@ var (
 // RequestOIDCToken requests an OIDC token from Github's provider and returns
 // the token.
 func RequestOIDCToken(ctx context.Context, audience string) (*OIDCToken, error) {
-	providerURL := os.Getenv(requestURLEnvKey)
-	if providerURL == "" {
+	requestURL := os.Getenv(requestURLEnvKey)
+	if requestURL == "" {
 		return nil, errURLEnvKeyEmpty
 	}
 
-	url := providerURL + "&audience=" + audience
-	req, err := http.NewRequest("GET", url, nil)
+	req, err := http.NewRequest("GET", requestURL+"&audience="+audience, nil)
 	if err != nil {
 		return nil, fmt.Errorf("creating request: %w", err)
 	}
@@ -70,10 +70,12 @@ func RequestOIDCToken(ctx context.Context, audience string) (*OIDCToken, error) 
 		return nil, fmt.Errorf("reading response body: %w", err)
 	}
 
-	provider, err := oidc.NewProvider(ctx, providerURL)
+	// Verify the token.
+	provider, err := oidc.NewProvider(ctx, actionsProviderURL)
 	if err != nil {
-		return nil, fmt.Errorf("creating provider: %w", err)
+		return nil, fmt.Errorf("retrieving provider info: %w", err)
 	}
+
 	verifier := provider.Verifier(&oidc.Config{ClientID: audience})
 	idToken, err := verifier.Verify(ctx, string(rawIDToken))
 	if err != nil {
