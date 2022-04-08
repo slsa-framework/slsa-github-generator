@@ -82,6 +82,7 @@ func RequestOIDCToken(ctx context.Context, audience string) (*OIDCToken, error) 
 		return nil, fmt.Errorf("retrieving provider info: %w", err)
 	}
 
+	fmt.Printf("%v\n", payload.Value)
 	verifier := provider.Verifier(&oidc.Config{ClientID: audience})
 	idToken, err := verifier.Verify(ctx, payload.Value)
 	if err != nil {
