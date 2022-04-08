@@ -26,13 +26,14 @@ import (
 const (
 	// GithubHostedActionsBuilderID is the builder ID for Github hosted actions.
 	GithubHostedActionsBuilderID = "https://github.com/Attestations/GitHubHostedActions@v1"
-	audience                     = "slsa-framework"
 )
 
 // HostedActionsProvenance generates an in-toto provenance statement in the SLSA
 // v0.2 format for a workflow run on a Github actions hosted runner.
 func HostedActionsProvenance(w WorkflowRun) (*intoto.ProvenanceStatement, error) {
-	t, err := github.RequestOIDCToken(audience)
+	// NOTE: Use buildType as the audience as that closely matches the intended
+	// recipient of the OIDC token.
+	t, err := github.RequestOIDCToken(w.BuildType)
 	if err != nil {
 		return nil, err
 	}
