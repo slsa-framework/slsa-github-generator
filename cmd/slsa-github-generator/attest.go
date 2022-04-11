@@ -68,6 +68,12 @@ func parseSubjects(subjectsStr string) ([]intoto.Subject, error) {
 		}
 		name := strings.TrimSpace(parts[1])
 
+		for _, p := range parsed {
+			if p.Name == name {
+				return nil, fmt.Errorf("duplicate subject: %q", name)
+			}
+		}
+
 		parsed = append(parsed, intoto.Subject{
 			Name: name,
 			Digest: slsav02.DigestSet{

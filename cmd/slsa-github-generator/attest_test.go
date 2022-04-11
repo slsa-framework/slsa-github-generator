@@ -107,6 +107,12 @@ e712aff3705ac314b9a890e0ec208faa20054eee514d86ab913d768f94e01279 fuga`,
 			str:  "abcdef hoge",
 			err:  true,
 		},
+		{
+			name: "duplicate name",
+			str: `2e0390eb024a52963db7b95e84a9c2b12c004054a7bad9a97ec0c7c89d4681d2 hoge
+2e0390eb024a52963db7b95e84a9c2b12c004054a7bad9a97ec0c7c89d4681d2 hoge`,
+			err: true,
+		},
 	}
 
 	for _, tc := range testCases {
@@ -118,6 +124,10 @@ e712aff3705ac314b9a890e0ec208faa20054eee514d86ab913d768f94e01279 fuga`,
 				}
 				t.Fatalf("unexpected error: %v", err)
 			} else {
+				if tc.err {
+					t.Fatalf("expected error but received %#v", s)
+				}
+
 				if want, got := tc.expected, s; !reflect.DeepEqual(want, got) {
 					t.Errorf("unexpected subjects, want: %#v, got: %#v", want, got)
 				}
