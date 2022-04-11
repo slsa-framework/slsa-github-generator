@@ -1,0 +1,25 @@
+name: Pre submits
+on: [pull_request, workflow_dispatch]
+
+permissions: read-all
+
+jobs:
+  pre-submit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@ec3a7ce113134d7a93b817d10a8272cb61118579 # v2.3.4
+
+      - name: setup-go
+        uses: actions/setup-go@bfdd3570ce990073878bf10f6b2d79082de49492 # v2.2.0
+        with:
+          go-version: "1.18"
+
+      - name: Run tests
+        run: |
+          set -euo pipefail
+
+          # Download dependencies.
+          go mod vendor
+          # Test.
+          go test -mod=vendor -v ./...

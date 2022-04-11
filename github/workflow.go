@@ -60,7 +60,7 @@ func (c WorkflowContext) RepositoryURI() string {
 		ref = "@" + c.Ref
 	}
 	return fmt.Sprintf(
-		"git+%s/%s%s.git",
+		"git+%s/%s%s",
 		c.ServerURL,
 		c.Repository,
 		ref,

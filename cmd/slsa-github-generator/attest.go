@@ -15,6 +15,7 @@
 package main
 
 import (
+	"bufio"
 	"context"
 	"errors"
 	"fmt"
@@ -36,38 +37,37 @@ var (
 	// shaCheck verifies a hash is has only hexidecimal digits and is 64
 	// characters long.
 	shaCheck = regexp.MustCompile(`^[a-fA-F0-9]{64}$`)
+
+	// wsSplit is used to split lines in the subjects input.
+	wsSplit = regexp.MustCompile(`[\t ]`)
 )
 
 // parseSubjects parses the value given to the subjects option.
 func parseSubjects(subjectsStr string) ([]intoto.Subject, error) {
 	var parsed []intoto.Subject
 
-	subjects := strings.Split(subjectsStr, "\n")
-	for _, s := range subjects {
+	scanner := bufio.NewScanner(strings.NewReader(subjectsStr))
+	for scanner.Scan() {
 		// Split by whitespace, and get values.
-		fields := strings.Fields(s)
+		parts := wsSplit.Split(strings.TrimSpace(scanner.Text()), 2)
 
-		// Check for the sha256 digest.
-		if len(fields) == 0 {
-			// NOTE: Ignore blank or whitespace only lines.
+		// Lowercase the sha digest to comply with the SLSA spec.
+		shaDigest := strings.ToLower(strings.TrimSpace(parts[0]))
+		if shaDigest == "" {
+			// Ignore empty lines.
 			continue
 		}
-		// Lowercase the sha digest to comply with the SLSA spec.
-		shaDigest := strings.ToLower(fields[0])
 		// Do a sanity check on the SHA to make sure it's a proper hex digest.
 		if !shaCheck.MatchString(shaDigest) {
 			return nil, fmt.Errorf("unexpected sha256 hash %q", shaDigest)
 		}
 
 		// Check for the subject name.
-		if len(fields) == 1 {
+		if len(parts) == 1 {
 			return nil, fmt.Errorf("expected subject name for hash %q", shaDigest)
 		}
-		name := fields[1]
+		name := strings.TrimSpace(parts[1])
 
-		if len(fields) > 2 {
-			return nil, fmt.Errorf("unexpected extra values: %v", fields[2:])
-		}
 		for _, p := range parsed {
 			if p.Name == name {
 				return nil, fmt.Errorf("duplicate subject: %q", name)
@@ -81,6 +81,10 @@ func parseSubjects(subjectsStr string) ([]intoto.Subject, error) {
 			},
 		})
 	}
+	if err := scanner.Err(); err != nil {
+		return nil, err
+	}
+
 	return parsed, nil
 }
 
