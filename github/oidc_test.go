@@ -94,6 +94,20 @@ func TestRequestOIDCToken(t *testing.T) {
 			status:   http.StatusOK,
 			err:      &errToken{},
 		},
+		{
+			name:     "error response",
+			audience: []string{"hoge"},
+			raw:      "",
+			status:   http.StatusServiceUnavailable,
+			err:      &errRequestError{},
+		},
+		{
+			name:     "redirect response",
+			audience: []string{"hoge"},
+			raw:      "",
+			status:   http.StatusFound,
+			err:      &errRequestError{},
+		},
 	}
 
 	for _, tc := range testCases {

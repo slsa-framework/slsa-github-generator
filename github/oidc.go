@@ -137,7 +137,7 @@ func (c *OIDCClient) requestToken(ctx context.Context, audience []string) ([]byt
 	if err != nil {
 		return nil, errors.Errorf(&errRequestError{}, "reading response: %w", err)
 	}
-	if resp.StatusCode >= 400 {
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		return nil, errors.Errorf(&errRequestError{}, "response: %s: %s", resp.Status, string(b))
 	}
 	return b, nil
