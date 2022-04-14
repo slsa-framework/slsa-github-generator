@@ -47,10 +47,8 @@ func TestHostedActionsProvenance(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			s, c := github.NewTestOIDCServer(t, now, tc.token)
 			defer s.Close()
-			// NOTE: Override the client that does token verification.
-			tc.r.oidcClient = c
 
-			if p, err := HostedActionsProvenance(context.Background(), tc.r); err != nil {
+			if p, err := HostedActionsProvenance(context.Background(), tc.r, c); err != nil {
 				t.Fatalf("unexpected error: %v", err)
 			} else {
 				if want, got := tc.expected, p; !reflect.DeepEqual(want, got) {

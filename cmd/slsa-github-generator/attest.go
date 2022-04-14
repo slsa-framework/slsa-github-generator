@@ -120,7 +120,10 @@ run in the context of a Github Actions workflow.`,
 
 			ctx := context.Background()
 
-			p, err := slsa.HostedActionsProvenance(ctx, slsa.NewWorkflowRun(parsedSubjects, ghContext))
+			c, err := github.NewOIDCClient()
+			check(err)
+
+			p, err := slsa.HostedActionsProvenance(ctx, slsa.NewWorkflowRun(parsedSubjects, ghContext), c)
 			check(err)
 
 			if attPath != "" {
@@ -135,7 +138,6 @@ run in the context of a Github Actions workflow.`,
 
 				_, err = f.Write(att.Bytes())
 				check(err)
-
 			}
 		},
 	}

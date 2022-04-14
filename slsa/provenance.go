@@ -35,20 +35,11 @@ var (
 
 // HostedActionsProvenance generates an in-toto provenance statement in the SLSA
 // v0.2 format for a workflow run on a Github actions hosted runner.
-func HostedActionsProvenance(ctx context.Context, w WorkflowRun) (*intoto.ProvenanceStatement, error) {
+func HostedActionsProvenance(ctx context.Context, w WorkflowRun, c *github.OIDCClient) (*intoto.ProvenanceStatement, error) {
 	// NOTE: Use buildType as the audience as that closely matches the intended
 	// recipient of the OIDC token.
 	// NOTE: GitHub doesn't allow github.com in the audience so remove it.
 	audience := githubComReplace.ReplaceAllString(w.BuildType, "")
-
-	c := w.oidcClient
-	if c == nil {
-		var err error
-		c, err = github.NewOIDCClient()
-		if err != nil {
-			return nil, err
-		}
-	}
 
 	t, err := c.Token(ctx, []string{audience})
 	if err != nil {
