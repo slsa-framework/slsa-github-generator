@@ -70,8 +70,6 @@ type errVerify struct {
 
 // OIDCClient is a client for the GitHub OIDC provider.
 type OIDCClient struct {
-	actionsProviderURL string
-
 	// requestURL is the GitHub URL to request a OIDC token.
 	requestURL *url.URL
 
@@ -92,12 +90,11 @@ func NewOIDCClient() (*OIDCClient, error) {
 	}
 
 	c := OIDCClient{
-		actionsProviderURL: defaultActionsProviderURL,
-		requestURL:         parsedURL,
-		bearerToken:        os.Getenv(requestTokenEnvKey),
+		requestURL:  parsedURL,
+		bearerToken: os.Getenv(requestTokenEnvKey),
 	}
 	c.verifierFunc = func(ctx context.Context) (*oidc.IDTokenVerifier, error) {
-		provider, err := oidc.NewProvider(ctx, c.actionsProviderURL)
+		provider, err := oidc.NewProvider(ctx, defaultActionsProviderURL)
 		if err != nil {
 			return nil, err
 		}
