@@ -21,7 +21,6 @@ import (
 
 	intoto "github.com/in-toto/in-toto-golang/in_toto"
 	slsa "github.com/in-toto/in-toto-golang/in_toto/slsa_provenance/v0.2"
-
 	"github.com/slsa-framework/slsa-github-generator/github"
 )
 
@@ -41,7 +40,17 @@ func HostedActionsProvenance(ctx context.Context, w WorkflowRun) (*intoto.Proven
 	// recipient of the OIDC token.
 	// NOTE: GitHub doesn't allow github.com in the audience so remove it.
 	audience := githubComReplace.ReplaceAllString(w.BuildType, "")
-	t, err := github.RequestOIDCToken(ctx, audience)
+
+	c := w.oidcClient
+	if c == nil {
+		var err error
+		c, err = github.NewOIDCClient()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	t, err := c.Token(ctx, []string{audience})
 	if err != nil {
 		return nil, err
 	}
