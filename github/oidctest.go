@@ -110,7 +110,8 @@ func newTestOIDCServer(t *testing.T, now time.Time, f http.HandlerFunc) (*httpte
 		case "/":
 			f(w, r)
 		case "/.well-known/openid-configuration":
-			fmt.Fprintf(w, `{"issuer": %q}`, issuerURL)
+			// Return very basic provider info in case it's requested.
+			fmt.Fprintf(w, `{"issuer": %q, "token_endpoint": %q}`, issuerURL, issuerURL)
 		default:
 			w.WriteHeader(http.StatusNotFound)
 		}
