@@ -1,9 +1,9 @@
 package slsa
 
 import (
-	"reflect"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
 	intoto "github.com/in-toto/in-toto-golang/in_toto"
 	slsa "github.com/in-toto/in-toto-golang/in_toto/slsa_provenance/v0.2"
 
@@ -32,6 +32,29 @@ func TestHostedActionsProvenance(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: "invocation id",
+			r: WorkflowRun{
+				GithubContext: github.WorkflowContext{
+					RunID:      "12345",
+					RunAttempt: "1",
+				},
+			},
+			expected: &intoto.ProvenanceStatement{
+				StatementHeader: intoto.StatementHeader{
+					Type:          intoto.StatementInTotoV01,
+					PredicateType: slsa.PredicateSLSAProvenance,
+				},
+				Predicate: slsa.ProvenancePredicate{
+					Builder: slsa.ProvenanceBuilder{
+						ID: GithubHostedActionsBuilderID,
+					},
+					Metadata: &slsa.ProvenanceMetadata{
+						BuildInvocationID: "12345-1",
+					},
+				},
+			},
+		},
 	}
 
 	for _, tc := range testCases {
@@ -42,8 +65,8 @@ func TestHostedActionsProvenance(t *testing.T) {
 			if p, err := HostedActionsProvenance(tc.r); err != nil {
 				t.Fatalf("unexpected error: %v", err)
 			} else {
-				if want, got := tc.expected, p; !reflect.DeepEqual(want, got) {
-					t.Errorf("unexpected result, want: %#v, got: %#v", want, got)
+				if want, got := tc.expected, p; !cmp.Equal(want, got) {
+					t.Errorf("unexpected result\nwant: %#v\ngot:  %#v\ndiff: %v", want, got, cmp.Diff(want, got))
 				}
 			}
 		})

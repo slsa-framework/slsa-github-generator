@@ -42,6 +42,12 @@ func HostedActionsProvenance(w WorkflowRun) (*intoto.ProvenanceStatement, error)
 		builderID = fmt.Sprintf("https://github.com/%s", t.JobWorkflowRef)
 	}
 
+	buildInvocationID := w.GithubContext.RunID
+	if w.GithubContext.RunAttempt != "" {
+		// NOTE: RunID does not get updated on re-runs so we need to include RunAttempt.
+		buildInvocationID = fmt.Sprintf("%s-%s", w.GithubContext.RunID, w.GithubContext.RunAttempt)
+	}
+
 	return &intoto.ProvenanceStatement{
 		StatementHeader: intoto.StatementHeader{
 			Type:          intoto.StatementInTotoV01,
@@ -58,7 +64,8 @@ func HostedActionsProvenance(w WorkflowRun) (*intoto.ProvenanceStatement, error)
 			Materials:   w.Materials,
 			// TODO(https://github.com/slsa-framework/slsa-github-generator/issues/8): support more metadata fields.
 			Metadata: &slsa.ProvenanceMetadata{
-				Completeness: w.Completeness,
+				BuildInvocationID: buildInvocationID,
+				Completeness:      w.Completeness,
 			},
 		},
 	}, nil
