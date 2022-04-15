@@ -60,9 +60,15 @@ func NewTestOIDCServer(t *testing.T, now time.Time, token *OIDCToken) (*httptest
 	// FIXME: Fix creating a test server that can return tokens that can be verified.
 	var issuerURL string
 	s, c := newTestOIDCServer(t, now, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Allow the token to override the issuer for verification testing.
+		issuer := issuerURL
+		if token.Issuer != "" {
+			issuer = token.Issuer
+		}
+
 		b, err := json.Marshal(jsonToken{
-			Issuer:         issuerURL,
-			Audience:       r.URL.Query()["audience"],
+			Issuer:         issuer,
+			Audience:       token.Audience,
 			Expiry:         token.Expiry.Unix(),
 			JobWorkflowRef: token.JobWorkflowRef,
 		})

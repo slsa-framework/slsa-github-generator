@@ -46,13 +46,13 @@ func tokenEqual(issuer string, wantToken, gotToken *OIDCToken) bool {
 	return true
 }
 
-func TestRequestOIDCToken(t *testing.T) {
+func TestToken(t *testing.T) {
 	now := time.Date(2022, 4, 14, 12, 24, 0, 0, time.UTC)
 
 	testCases := []struct {
 		name     string
 		audience []string
-		expected *OIDCToken
+		token    *OIDCToken
 		status   int
 		raw      string
 		err      error
@@ -60,11 +60,42 @@ func TestRequestOIDCToken(t *testing.T) {
 		{
 			name:     "basic token",
 			audience: []string{"hoge"},
-			expected: &OIDCToken{
+			token: &OIDCToken{
 				Audience:       []string{"hoge"},
 				Expiry:         now.Add(1 * time.Hour),
-				JobWorkflowRef: "hoge",
+				JobWorkflowRef: "pico",
 			},
+		},
+		{
+			name:     "expired token",
+			audience: []string{"hoge"},
+			token: &OIDCToken{
+				Audience:       []string{"hoge"},
+				Expiry:         now.Add(-1 * time.Hour),
+				JobWorkflowRef: "pico",
+			},
+			err: &errVerify{},
+		},
+		{
+			name:     "bad audience",
+			audience: []string{"hoge"},
+			token: &OIDCToken{
+				Audience:       []string{"fuga"},
+				Expiry:         now.Add(1 * time.Hour),
+				JobWorkflowRef: "pico",
+			},
+			err: &errVerify{},
+		},
+		{
+			name:     "bad issuer",
+			audience: []string{"hoge"},
+			token: &OIDCToken{
+				Issuer:         "https://www.google.com/",
+				Audience:       []string{"hoge"},
+				Expiry:         now.Add(1 * time.Hour),
+				JobWorkflowRef: "pico",
+			},
+			err: &errVerify{},
 		},
 		{
 			name:     "invalid response",
@@ -114,8 +145,8 @@ func TestRequestOIDCToken(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			var s *httptest.Server
 			var c *OIDCClient
-			if tc.expected != nil {
-				s, c = NewTestOIDCServer(t, now, tc.expected)
+			if tc.token != nil {
+				s, c = NewTestOIDCServer(t, now, tc.token)
 			} else {
 				s, c = newRawTestOIDCServer(t, now, tc.status, tc.raw)
 			}
@@ -133,10 +164,96 @@ func TestRequestOIDCToken(t *testing.T) {
 			} else {
 				if tc.err != nil {
 					t.Fatalf("unexpected error: %v", cmp.Diff(err, tc.err, cmpopts.EquateErrors()))
+				} else {
+					// Successful response, as expected. Check token.
+					if want, got := tc.token, token; !tokenEqual(s.URL, want, got) {
+						t.Errorf("unexpected workflow ref\nwant: %#v\ngot:  %#v\ndiff:\n%v", want, got, cmp.Diff(want, got))
+					}
 				}
 			}
-			if want, got := tc.expected, token; !tokenEqual(s.URL, want, got) {
-				t.Errorf("unexpected workflow ref\nwant: %#v\ngot:  %#v\ndiff:\n%v", want, got, cmp.Diff(want, got))
+		})
+	}
+}
+
+func Test_compareStringSlice(t *testing.T) {
+	testCases := []struct {
+		name     string
+		left     []string
+		right    []string
+		expected bool
+	}{
+		{
+			name:     "empty",
+			left:     []string{},
+			right:    []string{},
+			expected: true,
+		},
+		{
+			name:     "nil",
+			left:     nil,
+			right:    nil,
+			expected: true,
+		},
+		{
+			name:     "left nil, right empty",
+			left:     nil,
+			right:    []string{},
+			expected: true,
+		},
+		{
+			name:     "left empty, right nil",
+			left:     []string{},
+			right:    nil,
+			expected: true,
+		},
+		{
+			name:     "equal",
+			left:     []string{"hoge", "fuga"},
+			right:    []string{"hoge", "fuga"},
+			expected: true,
+		},
+		{
+			name:     "unsorted",
+			left:     []string{"hoge", "fuga"},
+			right:    []string{"fuga", "hoge"},
+			expected: true,
+		},
+		{
+			name:     "left bigger",
+			left:     []string{"hoge", "fuga", "pico"},
+			right:    []string{"fuga", "hoge"},
+			expected: false,
+		},
+		{
+			name:     "right bigger",
+			left:     []string{"hoge", "fuga"},
+			right:    []string{"fuga", "hoge", "pico"},
+			expected: false,
+		},
+		{
+			name:     "diff value",
+			left:     []string{"hoge", "fuga"},
+			right:    []string{"fuga", "pico"},
+			expected: false,
+		},
+		{
+			name:     "left nil",
+			left:     nil,
+			right:    []string{"hoge", "fuga"},
+			expected: false,
+		},
+		{
+			name:     "right nil",
+			left:     []string{"hoge", "fuga"},
+			right:    nil,
+			expected: false,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			if want, got := tc.expected, compareStringSlice(tc.left, tc.right); want != got {
+				t.Errorf("unexpected result, want: %v, got: %v", want, got)
 			}
 		})
 	}

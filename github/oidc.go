@@ -221,12 +221,10 @@ func compareStringSlice(s1, s2 []string) bool {
 		return false
 	}
 
-	c1 := make([]string, len(s1))
-	copy(s1, c1)
+	c1 := append([]string{}, s1...)
 	sort.Strings(c1)
 
-	c2 := make([]string, len(s2))
-	copy(s2, c2)
+	c2 := append([]string{}, s2...)
 	sort.Strings(c2)
 
 	for i := range c1 {
