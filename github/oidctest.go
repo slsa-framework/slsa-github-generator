@@ -1,41 +1,137 @@
 package github
 
 import (
+	"context"
+	"crypto/rand"
+	"crypto/rsa"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
-	"os"
+	"net/url"
+	"strings"
+	"testing"
+	"time"
+
+	"github.com/coreos/go-oidc"
+	"gopkg.in/square/go-jose.v2"
 )
 
-// NewTestOIDCServer returns an httptest.Server that can be used as the OIDC
-// server in tests and a cleanup function that can be used to stop and clean up
-// the server. The server returns the given token when queried.
-func NewTestOIDCServer(t *OIDCToken) (*httptest.Server, func()) {
-	b, err := json.Marshal(t)
-	if err != nil {
-		panic(err)
-	}
-
-	rawResponse := fmt.Sprintf(`{"value": "part1.%s.part3"}`, base64.RawURLEncoding.EncodeToString(b))
-	return newRawTestOIDCServer(rawResponse)
+type jsonToken struct {
+	Issuer         string   `json:"iss"`
+	Audience       []string `json:"aud"`
+	Expiry         int64    `json:"exp"`
+	JobWorkflowRef string   `json:"job_workflow_ref"`
 }
 
-func newRawTestOIDCServer(raw string) (*httptest.Server, func()) {
-	s := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+// testKeySet is a oidc.KeySet that can be used in tests.
+type testKeySet struct{}
+
+// VerifySignature implements oidc.KeySet.VerifySignature
+func (ks *testKeySet) VerifySignature(ctx context.Context, jwt string) ([]byte, error) {
+	// NOTE: Doesn't actually verify, just parses out the payload from the token.
+	parts := strings.Split(jwt, ".")
+	if len(parts) < 2 {
+		return nil, fmt.Errorf("jwt parts: %d", len(parts))
+	}
+	payload, err := base64.RawURLEncoding.DecodeString(parts[1])
+	if err != nil {
+		return nil, fmt.Errorf("jwt payload: %v", err)
+	}
+	return payload, nil
+}
+
+// NewTestOIDCServer returns an httptest.Server that can be used as the OIDC
+// server, and an OIDClient that will use the test server. The server returns the
+// given token when queried. Now is the time used for token expiration
+// verification by the client.
+func NewTestOIDCServer(t *testing.T, now time.Time, token *OIDCToken) (*httptest.Server, *OIDCClient) {
+	privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	signer, err := jose.NewSigner(jose.SigningKey{Algorithm: jose.RS256, Key: privateKey}, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// FIXME: Fix creating a test server that can return tokens that can be verified.
+	var issuerURL string
+	s, c := newTestOIDCServer(t, now, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Allow the token to override the issuer for verification testing.
+		issuer := issuerURL
+		if token.Issuer != "" {
+			issuer = token.Issuer
+		}
+
+		b, err := json.Marshal(jsonToken{
+			Issuer:         issuer,
+			Audience:       token.Audience,
+			Expiry:         token.Expiry.Unix(),
+			JobWorkflowRef: token.JobWorkflowRef,
+		})
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		object, err := signer.Sign(b)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		value, err := object.CompactSerialize()
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		fmt.Fprintf(w, `{"value": "%s"}`, value)
+	}))
+	issuerURL = s.URL
+
+	return s, c
+}
+
+func newRawTestOIDCServer(t *testing.T, now time.Time, status int, raw string) (*httptest.Server, *OIDCClient) {
+	return newTestOIDCServer(t, now, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Respond with a very basic 3-part JWT token.
+		w.WriteHeader(status)
 		fmt.Fprintln(w, raw)
 	}))
-	oldEnv, ok := os.LookupEnv(requestURLEnvKey)
-	// NOTE: httptest.Server.URL has no trailing slash.
-	os.Setenv(requestURLEnvKey, s.URL+"/")
-	return s, func() {
-		s.Close()
-		if ok {
-			os.Setenv(requestURLEnvKey, oldEnv)
-		} else {
-			os.Unsetenv(requestURLEnvKey)
+}
+
+func newTestOIDCServer(t *testing.T, now time.Time, f http.HandlerFunc) (*httptest.Server, *OIDCClient) {
+	var issuerURL string
+	s := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/":
+			f(w, r)
+		case "/.well-known/openid-configuration":
+			// Return very basic provider info in case it's requested.
+			fmt.Fprintf(w, `{"issuer": %q, "token_endpoint": %q}`, issuerURL, issuerURL)
+		default:
+			w.WriteHeader(http.StatusNotFound)
 		}
+	}))
+	issuerURL = s.URL
+
+	c, err := NewOIDCClient()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
 	}
+	c.requestURL, err = url.Parse(s.URL)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	c.verifierFunc = func(ctx context.Context) (*oidc.IDTokenVerifier, error) {
+		return oidc.NewVerifier(s.URL, &testKeySet{}, &oidc.Config{
+			Now:               func() time.Time { return now },
+			SkipClientIDCheck: true,
+		}), nil
+	}
+
+	return s, c
 }

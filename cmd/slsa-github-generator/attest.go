@@ -120,12 +120,15 @@ run in the context of a Github Actions workflow.`,
 				check(errors.New("expected at least one subject"))
 			}
 
-			p, err := slsa.HostedActionsProvenance(slsa.NewWorkflowRun(parsedSubjects, ghContext))
+			ctx := context.Background()
+
+			c, err := github.NewOIDCClient()
+			check(err)
+
+			p, err := slsa.HostedActionsProvenance(ctx, slsa.NewWorkflowRun(parsedSubjects, ghContext), c)
 			check(err)
 
 			if attPath != "" {
-				ctx := context.Background()
-
 				s := sigstore.NewDefaultSigner()
 				att, err := s.Sign(ctx, p)
 				check(err)

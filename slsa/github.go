@@ -49,6 +49,9 @@ type WorkflowRun struct {
 
 	// GithubContext is the context for the workflow run.
 	GithubContext github.WorkflowContext
+
+	// oidcClient overrides the GitHub OIDC client.
+	oidcClient *github.OIDCClient
 }
 
 // WorkflowParameters contains parameters given to the workflow invocation.
