@@ -12,6 +12,7 @@ workflow](https://docs.github.com/en/actions/using-workflows/reusing-workflows).
   - [Getting Started](#getting-started)
   - [Workflow Inputs](#workflow-inputs)
   - [Workflow Outputs](#workflow-outputs)
+  - [Provenance Format](#provenance-format)
   - [Provenance Example](#provenance-example)
 
 ---
@@ -80,6 +81,15 @@ produces the following outputs:
 | ------------------ | ------------------------------------------ |
 | `attestation-name` | The artifact name of the signed provenance |
 
+### Provenance Format
+
+The project generates SLSA provenance with the following values.
+
+| Name                         | Value                                                      | Description                                                                                                                         |
+| ---------------------------- | ---------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `buildType`                  | https://github.com/slsa-framework/slsa-github-generator@v1 | Identifies a generic GitHub Actions build.                                                                                          |
+| `metadata.buildInvocationID` | [RUN_ID]-[RUN_ATTEMPT]                                     | The GitHub Actions `run_id` does not update when a workflow is re-run. Run attempt is added to make the build invocation ID unique. |
+
 ### Provenance Example
 
 The following is an example of the generated proveanance. Provenance is
@@ -126,6 +136,7 @@ generated as an [in-toto](https://in-toto.io/) statement with a SLSA predecate.
       }
     },
     "metadata": {
+      "buildInvocationID": "2182400786-1",
       "completeness": {
         "parameters": true,
         "environment": false,
