@@ -117,5 +117,6 @@ func NewWorkflowRun(s []intoto.Subject, c github.WorkflowContext) WorkflowRun {
 		Completeness: slsa.ProvenanceComplete{
 			Parameters: true,
 		},
+		GithubContext: c,
 	}
 }
