@@ -43,10 +43,15 @@ func TestHostedActionsProvenance(t *testing.T) {
 		{
 			name: "invocation id",
 			r: WorkflowRun{
+				BuildType: "hoge",
 				GithubContext: github.WorkflowContext{
 					RunID:      "12345",
 					RunAttempt: "1",
 				},
+			},
+			token: &github.OIDCToken{
+				Audience: []string{"hoge"},
+				Expiry:   now.Add(1 * time.Hour),
 			},
 			expected: &intoto.ProvenanceStatement{
 				StatementHeader: intoto.StatementHeader{
@@ -57,6 +62,7 @@ func TestHostedActionsProvenance(t *testing.T) {
 					Builder: slsa.ProvenanceBuilder{
 						ID: GithubHostedActionsBuilderID,
 					},
+					BuildType: "hoge",
 					Metadata: &slsa.ProvenanceMetadata{
 						BuildInvocationID: "12345-1",
 					},
