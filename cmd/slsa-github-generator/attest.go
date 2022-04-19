@@ -17,6 +17,7 @@ package main
 import (
 	"bufio"
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -97,6 +98,7 @@ func getFile(path string) (io.Writer, error) {
 
 // attestCmd returns the 'attest' command.
 func attestCmd() *cobra.Command {
+	var predicatePath string
 	var attPath string
 	var subjects string
 
@@ -118,12 +120,15 @@ run in the context of a Github Actions workflow.`,
 				check(errors.New("expected at least one subject"))
 			}
 
-			p, err := slsa.HostedActionsProvenance(slsa.NewWorkflowRun(parsedSubjects, ghContext))
+			ctx := context.Background()
+
+			c, err := github.NewOIDCClient()
+			check(err)
+
+			p, err := slsa.HostedActionsProvenance(ctx, slsa.NewWorkflowRun(parsedSubjects, ghContext), c)
 			check(err)
 
 			if attPath != "" {
-				ctx := context.Background()
-
 				s := sigstore.NewDefaultSigner()
 				att, err := s.Sign(ctx, p)
 				check(err)
@@ -135,13 +140,24 @@ run in the context of a Github Actions workflow.`,
 
 				_, err = f.Write(att.Bytes())
 				check(err)
+			}
 
+			if predicatePath != "" {
+				pb, err := json.Marshal(p.Predicate)
+				check(err)
+
+				pf, err := getFile(predicatePath)
+				check(err)
+
+				_, err = pf.Write(pb)
+				check(err)
 			}
 		},
 	}
 
-	c.Flags().StringVarP(&attPath, "signature", "g", "attestation.intoto.jsonl", "Path to write the signed attestation")
-	c.Flags().StringVarP(&subjects, "subjects", "s", "", "Formatted list of subjects in the same format as sha256sum")
+	c.Flags().StringVarP(&predicatePath, "predicate", "p", "", "Path to write the unsigned provenance predicate.")
+	c.Flags().StringVarP(&attPath, "signature", "g", "attestation.intoto.jsonl", "Path to write the signed attestation.")
+	c.Flags().StringVarP(&subjects, "subjects", "s", "", "Formatted list of subjects in the same format as sha256sum.")
 
 	return c
 }

@@ -8,6 +8,7 @@ workflow](https://docs.github.com/en/actions/using-workflows/reusing-workflows).
 
 ---
 
+- [Project Status](#project-status)
 - [Generating Provenance](#generating-provenance)
   - [Getting Started](#getting-started)
   - [Workflow Inputs](#workflow-inputs)
@@ -16,6 +17,11 @@ workflow](https://docs.github.com/en/actions/using-workflows/reusing-workflows).
   - [Provenance Example](#provenance-example)
 
 ---
+
+## Project Status
+
+This project is currently under active development. The API could change while
+approaching an initial release.
 
 ## Generating Provenance
 
