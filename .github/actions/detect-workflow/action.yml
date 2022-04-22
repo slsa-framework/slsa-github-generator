@@ -3,8 +3,10 @@ description: 'Get the current reusable workflow repository name and ref. Require
 outputs:
   repository:
     description: The current workflow repository, format org/repository
+    value: ${{ steps.detect.outputs.repository }}
   ref:
     description: The current workflow reference
+    value: ${{ steps.detect.outputs.ref }}
 runs:
   using: 'composite'
   steps:
@@ -26,3 +28,4 @@ runs:
         echo "::set-output name=ref::$(echo $WORKFLOW_REF | cut -d "@" -f2)"
         echo $WORKFLOW_REF | cut -d "@" -f1 | cut -d '/' -f1-2
       shell: bash
+      id: detect
