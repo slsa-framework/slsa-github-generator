@@ -9,6 +9,8 @@ runs:
   using: 'composite'
   steps:
     - run: | 
+        set -euo pipefail
+        
         status_code=$(curl -sS -H "Authorization: Bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=slsa-framework/slsa-github-generator-go/builder" -o jwt.json -w '%{http_code}')
         if [[ $status_code -ge 400 ]]; then
             error_msg=$(jq -r .message jwt.json 2>/dev/null || echo 'unknown error')
@@ -22,4 +24,5 @@ runs:
         fi
         echo "::set-output name=repository::$(echo $WORKFLOW_REF | cut -d "@" -f1 | cut -d '/' -f1-2)"
         echo "::set-output name=ref::$(echo $WORKFLOW_REF | cut -d "@" -f2)"
+        echo $WORKFLOW_REF | cut -d "@" -f1 | cut -d '/' -f1-2
       shell: bash
