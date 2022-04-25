@@ -1,0 +1,40 @@
+package main
+
+import (
+	"context"
+	"fmt"
+	"log"
+	"strings"
+
+	"github.com/slsa-framework/slsa-github-generator/github"
+)
+
+func main() {
+	ctx := context.Background()
+
+	c, err := github.NewOIDCClient()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	audience := "slsa-framework/slsa-github-generator/detect-workflow"
+
+	t, err := c.Token(ctx, []string{audience})
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	pathParts := strings.SplitN(t.JobWorkflowRef, "/", 3)
+	if len(pathParts) < 3 {
+		log.Fatal("missing org/repository in job workflow ref")
+	}
+	repository := strings.Join(pathParts[:2], "/")
+
+	refParts := strings.Split(t.JobWorkflowRef, "@")
+	if len(refParts) < 2 {
+		log.Fatal("missing reference in job workflow ref")
+	}
+
+	fmt.Println(fmt.Sprintf(`::set-output repository=version::%s`, repository))
+	fmt.Println(fmt.Sprintf(`::set-output ref=version::%s`, refParts[1]))
+}
