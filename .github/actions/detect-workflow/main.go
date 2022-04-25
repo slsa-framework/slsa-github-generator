@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"os"
+	"path"
 	"strings"
 
 	"github.com/slsa-framework/slsa-github-generator/github"
@@ -17,7 +19,11 @@ func main() {
 		log.Fatal(err)
 	}
 
-	audience := "slsa-framework/slsa-github-generator/detect-workflow"
+	audience := os.Getenv("GITHUB_REPOSITORY")
+	if audience == "" {
+		log.Fatal("missing github repository environment context")
+	}
+	audience = path.Join(audience, "detect-workflow")
 
 	t, err := c.Token(ctx, []string{audience})
 	if err != nil {
