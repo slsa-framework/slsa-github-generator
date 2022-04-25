@@ -35,6 +35,6 @@ func main() {
 		log.Fatal("missing reference in job workflow ref")
 	}
 
-	fmt.Println(fmt.Sprintf(`::set-output repository=version::%s`, repository))
-	fmt.Println(fmt.Sprintf(`::set-output ref=version::%s`, refParts[1]))
+	fmt.Println(fmt.Sprintf(`::set-output name=repository::%s`, repository))
+	fmt.Println(fmt.Sprintf(`::set-output name=ref::%s`, refParts[1]))
 }
