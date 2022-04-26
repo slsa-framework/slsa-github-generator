@@ -1,0 +1,12 @@
+name: 'Detect Reusable Workflow Repository and Ref'
+description: 'Get the current reusable workflow repository name and ref. Requires "id-token: write" permission'
+outputs:
+  repository:
+    description: The current workflow repository, format org/repository
+    value: ${{ steps.detect.outputs.repository }}
+  ref:
+    description: The current workflow reference
+    value: ${{ steps.detect.outputs.ref }}
+runs:
+  using: 'docker'
+  image: 'Dockerfile'
