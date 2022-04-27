@@ -17,11 +17,6 @@ name: SLSA provenance generator
 permissions:
   contents: read
 
-env:
-  # This repo.
-  GENERATOR_REPOSITORY: slsa-framework/slsa-github-generator
-  GENERATOR_REF: main
-
 ###################################################################
 #                                                                 #
 #            Input and output argument definitions                #
@@ -53,13 +48,15 @@ jobs:
       id-token: write # Needed for keyless.
       contents: read
     steps:
+      - name: Run local detect action
+        id: detect
+        uses: ./.github/actions/detect-workflow
       - name: Checkout the repository
         uses: actions/checkout@ec3a7ce113134d7a93b817d10a8272cb61118579 # v2.3.4
         with:
           fetch-depth: 0
-          repository: "${{ env.GENERATOR_REPOSITORY }}"
-          ref: "${{ env.GENERATOR_REF }}"
-
+          repository: "${{ steps.detect.outputs.repository }}"
+          ref: "${{ steps.detect.outputs.ref }}"
       - name: Set up golang environment
         uses: actions/setup-go@424fc82d43fa5a37540bae62709ddcc23d9520d4 # v2.1.3
         with:
