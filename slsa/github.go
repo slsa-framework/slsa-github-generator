@@ -69,7 +69,9 @@ func NewWorkflowRun(s []intoto.Subject, c github.WorkflowContext) WorkflowRun {
 	// Create the entrypoint from the repository URI @ workflow path in the
 	// event. `workflow` is not used from the github context because it includes
 	// the workflow name rather than the path.
-	entryPoint := fmt.Sprintf("%s%s",
+	// NOTE: ServerURL does not have a trailing slash and Repository does not
+	// have a leading slash.
+	entryPoint := fmt.Sprintf("%s/%s",
 		c.ServerURL,
 		path.Join(
 			c.Repository,
