@@ -15,6 +15,9 @@
 package slsa
 
 import (
+	"fmt"
+	"path"
+
 	intoto "github.com/in-toto/in-toto-golang/in_toto"
 	slsa "github.com/in-toto/in-toto-golang/in_toto/slsa_provenance/v0.2"
 	"github.com/slsa-framework/slsa-github-generator/github"
@@ -25,7 +28,7 @@ const (
 )
 
 // WorkflowRun contains information about the build run including the builder,
-// build invocation, materials, and environment.
+// buildnvocation, materials, and environment.
 type WorkflowRun struct {
 	// Subjects is information about the generated artifacts.
 	Subjects []intoto.Subject
@@ -63,12 +66,23 @@ type WorkflowParameters struct {
 // NewWorkflowRun returns a generic WorkflowRun based on the
 // github context without special knowledge of the build.
 func NewWorkflowRun(s []intoto.Subject, c github.WorkflowContext) WorkflowRun {
+	// Create the entrypoint from the repository URI @ workflow path in the
+	// event. `workflow` is not used from the github context because it includes
+	// the workflow name rather than the path.
+	entryPoint := fmt.Sprintf("%s%s",
+		c.ServerURL,
+		path.Join(
+			c.Repository,
+			fmt.Sprintf("%s", c.Event["workflow"]),
+		),
+	)
+
 	return WorkflowRun{
 		Subjects:  s,
 		BuildType: provenanceOnlyBuildType,
 		Invocation: slsa.ProvenanceInvocation{
 			ConfigSource: slsa.ConfigSource{
-				EntryPoint: c.Workflow,
+				EntryPoint: entryPoint,
 				URI:        c.RepositoryURI(),
 				Digest: slsa.DigestSet{
 					"sha1": c.SHA,
