@@ -2,7 +2,6 @@ package slsa
 
 import (
 	"context"
-	"reflect"
 	"testing"
 	"time"
 
@@ -41,6 +40,35 @@ func TestHostedActionsProvenance(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: "invocation id",
+			r: WorkflowRun{
+				BuildType: "hoge",
+				GithubContext: github.WorkflowContext{
+					RunID:      "12345",
+					RunAttempt: "1",
+				},
+			},
+			token: &github.OIDCToken{
+				Audience: []string{"hoge"},
+				Expiry:   now.Add(1 * time.Hour),
+			},
+			expected: &intoto.ProvenanceStatement{
+				StatementHeader: intoto.StatementHeader{
+					Type:          intoto.StatementInTotoV01,
+					PredicateType: slsa.PredicateSLSAProvenance,
+				},
+				Predicate: slsa.ProvenancePredicate{
+					Builder: slsa.ProvenanceBuilder{
+						ID: GithubHostedActionsBuilderID,
+					},
+					BuildType: "hoge",
+					Metadata: &slsa.ProvenanceMetadata{
+						BuildInvocationID: "12345-1",
+					},
+				},
+			},
+		},
 	}
 
 	for _, tc := range testCases {
@@ -51,8 +79,8 @@ func TestHostedActionsProvenance(t *testing.T) {
 			if p, err := HostedActionsProvenance(context.Background(), tc.r, c); err != nil {
 				t.Fatalf("unexpected error: %v", err)
 			} else {
-				if want, got := tc.expected, p; !reflect.DeepEqual(want, got) {
-					t.Errorf("unexpected result\nwant: %#v\ngot:  %#v\ndiff:\n%v", want, got, cmp.Diff(want, got))
+				if want, got := tc.expected, p; !cmp.Equal(want, got) {
+					t.Errorf("unexpected result\nwant: %#v\ngot:  %#v\ndiff: %v", want, got, cmp.Diff(want, got))
 				}
 			}
 		})
