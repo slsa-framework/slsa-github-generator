@@ -98,7 +98,7 @@ func (s *Signer) Sign(ctx context.Context, p *intoto.ProvenanceStatement) (*Atte
 	if err != nil {
 		return nil, fmt.Errorf("obtaining cosign provider: %w", err)
 	}
-	k, err := fulcio.NewSigner(ctx, tok, s.oidcIssuer, s.oidcClientID, "", fClient)
+	k, err := fulcio.NewSigner(ctx, tok, s.oidcIssuer, s.oidcClientID, "", "", fClient)
 	if err != nil {
 		return nil, fmt.Errorf("creating fulcio signer: %w", err)
 	}
