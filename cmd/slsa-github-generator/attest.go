@@ -130,7 +130,10 @@ run in the context of a Github Actions workflow.`,
 
 			if attPath != "" {
 				s := sigstore.NewDefaultSigner()
-				att, err := s.Sign(ctx, p)
+				att, err := s.Sign(ctx, &intoto.Statement{
+					StatementHeader: p.StatementHeader,
+					Predicate:       p.Predicate,
+				})
 				check(err)
 
 				_, err = s.Upload(ctx, att)
