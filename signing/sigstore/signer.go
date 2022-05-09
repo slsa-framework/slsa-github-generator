@@ -24,6 +24,7 @@ import (
 	"github.com/sigstore/cosign/cmd/cosign/cli/rekor"
 	"github.com/sigstore/cosign/pkg/cosign"
 	"github.com/sigstore/cosign/pkg/providers"
+	"github.com/sigstore/rekor/pkg/generated/models"
 	"github.com/sigstore/sigstore/pkg/signature/dsse"
 
 	intoto "github.com/in-toto/in-toto-golang/in_toto"
@@ -78,7 +79,7 @@ func NewSigner(fulcioAddr, rekorAddr, oidcIssuer, oidcClientID string) Signer {
 
 // Sign signs the given provenance statement and returns the signed
 // attestation.
-func (s *Signer) Sign(ctx context.Context, p *intoto.ProvenanceStatement) (*Attestation, error) {
+func (s *Signer) Sign(ctx context.Context, p *intoto.Statement) (*Attestation, error) {
 	// Get Fulcio signer
 	if !providers.Enabled(ctx) {
 		return nil, fmt.Errorf("no auth provider is enabled. Are you running outside of Github Actions?")
@@ -97,7 +98,7 @@ func (s *Signer) Sign(ctx context.Context, p *intoto.ProvenanceStatement) (*Atte
 	if err != nil {
 		return nil, fmt.Errorf("obtaining cosign provider: %w", err)
 	}
-	k, err := fulcio.NewSigner(ctx, tok, s.oidcIssuer, s.oidcClientID, "", fClient)
+	k, err := fulcio.NewSigner(ctx, tok, s.oidcIssuer, s.oidcClientID, "", "", fClient)
 	if err != nil {
 		return nil, fmt.Errorf("creating fulcio signer: %w", err)
 	}
@@ -115,15 +116,16 @@ func (s *Signer) Sign(ctx context.Context, p *intoto.ProvenanceStatement) (*Atte
 }
 
 // Upload uploads the signed attestation to the rekor transparency log.
-func (s *Signer) Upload(ctx context.Context, att *Attestation) error {
+func (s *Signer) Upload(ctx context.Context, att *Attestation) (*models.LogEntryAnon, error) {
 	rekorClient, err := rekor.NewClient(s.rekorAddr)
 	if err != nil {
-		return fmt.Errorf("creating rekor client: %w", err)
+		return nil, fmt.Errorf("creating rekor client: %w", err)
 	}
 	// TODO: Is it a bug that we need []byte(string(k.Cert)) or else we hit invalid PEM?
-	if _, err := cosign.TLogUploadInTotoAttestation(ctx, rekorClient, att.att, []byte(string(att.cert))); err != nil {
-		return fmt.Errorf("uploading attestation: %w", err)
+	logEntry, err := cosign.TLogUploadInTotoAttestation(ctx, rekorClient, att.att, []byte(string(att.cert)))
+	if err != nil {
+		return nil, fmt.Errorf("uploading attestation: %w", err)
 	}
 
-	return nil
+	return logEntry, nil
 }
