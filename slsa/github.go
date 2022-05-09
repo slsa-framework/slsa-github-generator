@@ -28,7 +28,7 @@ const (
 )
 
 // WorkflowRun contains information about the build run including the builder,
-// buildnvocation, materials, and environment.
+// build invocation, materials, and environment.
 type WorkflowRun struct {
 	// Subjects is information about the generated artifacts.
 	Subjects []intoto.Subject
