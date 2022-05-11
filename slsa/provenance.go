@@ -29,9 +29,7 @@ const (
 	GithubHostedActionsBuilderID = "https://github.com/Attestations/GitHubHostedActions@v1"
 )
 
-var (
-	githubComReplace = regexp.MustCompile(`^(https?://)?github\.com/?`)
-)
+var githubComReplace = regexp.MustCompile(`^(https?://)?github\.com/?`)
 
 // HostedActionsProvenance generates an in-toto provenance statement in the SLSA
 // v0.2 format for a workflow run on a Github actions hosted runner.
@@ -40,15 +38,18 @@ func HostedActionsProvenance(ctx context.Context, w WorkflowRun, c *github.OIDCC
 	// recipient of the OIDC token.
 	// NOTE: GitHub doesn't allow github.com in the audience so remove it.
 	audience := githubComReplace.ReplaceAllString(w.BuildType, "")
-
-	t, err := c.Token(ctx, []string{audience})
-	if err != nil {
-		return nil, err
-	}
-
 	builderID := GithubHostedActionsBuilderID
-	if t.JobWorkflowRef != "" {
-		builderID = fmt.Sprintf("https://github.com/%s", t.JobWorkflowRef)
+
+	// We allow nil OIDC client to support e2e tests on pull requests.
+	if c != nil {
+		t, err := c.Token(ctx, []string{audience})
+		if err != nil {
+			return nil, err
+		}
+
+		if t.JobWorkflowRef != "" {
+			builderID = fmt.Sprintf("https://github.com/%s", t.JobWorkflowRef)
+		}
 	}
 
 	buildInvocationID := w.GithubContext.RunID
