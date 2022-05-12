@@ -129,14 +129,15 @@ run in the context of a Github Actions workflow.`,
 			check(err)
 
 			if attPath != "" {
-				s := sigstore.NewDefaultSigner()
+				s := sigstore.NewDefaultFulcio()
 				att, err := s.Sign(ctx, &intoto.Statement{
 					StatementHeader: p.StatementHeader,
 					Predicate:       p.Predicate,
 				})
 				check(err)
 
-				_, err = s.Upload(ctx, att)
+				r := sigstore.NewDefaultRekor()
+				_, err = r.Upload(ctx, att)
 				check(err)
 
 				f, err := getFile(attPath)
