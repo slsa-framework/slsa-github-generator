@@ -21,11 +21,9 @@ import (
 	"fmt"
 
 	"github.com/sigstore/cosign/cmd/cosign/cli/fulcio"
-	"github.com/sigstore/cosign/cmd/cosign/cli/rekor"
-	"github.com/sigstore/cosign/pkg/cosign"
 	"github.com/sigstore/cosign/pkg/providers"
-	"github.com/sigstore/rekor/pkg/generated/models"
 	"github.com/sigstore/sigstore/pkg/signature/dsse"
+	"github.com/slsa-framework/slsa-github-generator/signing"
 
 	intoto "github.com/in-toto/in-toto-golang/in_toto"
 )
@@ -34,44 +32,41 @@ const (
 	defaultFulcioAddr   = "https://v1.fulcio.sigstore.dev"
 	defaultOIDCIssuer   = "https://oauth2.sigstore.dev/auth"
 	defaultOIDCClientID = "sigstore"
-	defaultRekorAddr    = "https://rekor.sigstore.dev"
 )
 
-// Signer is used to sign provenance statements and upload them to a
-// transparency log.
-type Signer struct {
+// Fulcio is used to sign provenance statements using Fulcio.
+type Fulcio struct {
 	fulcioAddr   string
-	rekorAddr    string
 	oidcIssuer   string
 	oidcClientID string
 }
 
-// Attestation is a signed attestation.
-type Attestation struct {
+// attestation is a signed attestation.
+type attestation struct {
 	cert []byte
 	att  []byte
 }
 
 // Bytes returns the signed attestation as an encoded DSSE JSON envelope.
-func (a Attestation) Bytes() []byte {
+func (a *attestation) Bytes() []byte {
 	return a.att
 }
 
 // Cert returns the certificate used to sign the attestation.
-func (a Attestation) Cert() []byte {
+func (a *attestation) Cert() []byte {
 	return a.cert
 }
 
-// NewDefaultSigner creates a new signer with the default values.
-func NewDefaultSigner() Signer {
-	return NewSigner(defaultFulcioAddr, defaultRekorAddr, defaultOIDCIssuer, defaultOIDCClientID)
+// NewDefaultFulcio creates a new Fulcio instance using the public Fulcio
+// server and public sigstore OIDC issuer.
+func NewDefaultFulcio() *Fulcio {
+	return NewFulcio(defaultFulcioAddr, defaultOIDCIssuer, defaultOIDCClientID)
 }
 
-// NewSigner creates a new Signer.
-func NewSigner(fulcioAddr, rekorAddr, oidcIssuer, oidcClientID string) Signer {
-	return Signer{
+// NewFulcio creates a new Fulcio instance.
+func NewFulcio(fulcioAddr, oidcIssuer, oidcClientID string) *Fulcio {
+	return &Fulcio{
 		fulcioAddr:   fulcioAddr,
-		rekorAddr:    rekorAddr,
 		oidcIssuer:   oidcIssuer,
 		oidcClientID: oidcClientID,
 	}
@@ -79,7 +74,7 @@ func NewSigner(fulcioAddr, rekorAddr, oidcIssuer, oidcClientID string) Signer {
 
 // Sign signs the given provenance statement and returns the signed
 // attestation.
-func (s *Signer) Sign(ctx context.Context, p *intoto.Statement) (*Attestation, error) {
+func (s *Fulcio) Sign(ctx context.Context, p *intoto.Statement) (signing.Attestation, error) {
 	// Get Fulcio signer
 	if !providers.Enabled(ctx) {
 		return nil, fmt.Errorf("no auth provider is enabled. Are you running outside of Github Actions?")
@@ -109,23 +104,8 @@ func (s *Signer) Sign(ctx context.Context, p *intoto.Statement) (*Attestation, e
 		return nil, fmt.Errorf("signing message: %v", err)
 	}
 
-	return &Attestation{
+	return &attestation{
 		att:  signedAtt,
 		cert: k.Cert,
 	}, nil
-}
-
-// Upload uploads the signed attestation to the rekor transparency log.
-func (s *Signer) Upload(ctx context.Context, att *Attestation) (*models.LogEntryAnon, error) {
-	rekorClient, err := rekor.NewClient(s.rekorAddr)
-	if err != nil {
-		return nil, fmt.Errorf("creating rekor client: %w", err)
-	}
-	// TODO: Is it a bug that we need []byte(string(k.Cert)) or else we hit invalid PEM?
-	logEntry, err := cosign.TLogUploadInTotoAttestation(ctx, rekorClient, att.att, []byte(string(att.cert)))
-	if err != nil {
-		return nil, fmt.Errorf("uploading attestation: %w", err)
-	}
-
-	return logEntry, nil
 }
