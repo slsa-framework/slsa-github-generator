@@ -15,8 +15,6 @@
 package slsa
 
 import (
-	"fmt"
-
 	intoto "github.com/in-toto/in-toto-golang/in_toto"
 	slsa "github.com/in-toto/in-toto-golang/in_toto/slsa_provenance/v0.2"
 	"github.com/slsa-framework/slsa-github-generator/github"
@@ -70,11 +68,8 @@ func NewWorkflowRun(s []intoto.Subject, c github.WorkflowContext) WorkflowRun {
 		BuildType: provenanceOnlyBuildType,
 		Invocation: slsa.ProvenanceInvocation{
 			ConfigSource: slsa.ConfigSource{
-				// Entrypoint is the path to the workflow in the repo
-				// pointed to by URI. `workflow` is not used from the github
-				// context because it includes the workflow name rather than
-				// the path.
-				EntryPoint: fmt.Sprintf("%s", c.Event["workflow"]),
+				// TODO(github.com/slsa-framework/slsa-github-generator/issues/11): Get path to workflow file.
+				EntryPoint: c.Workflow,
 				URI:        c.RepositoryURI(),
 				Digest: slsa.DigestSet{
 					"sha1": c.SHA,
@@ -83,7 +78,7 @@ func NewWorkflowRun(s []intoto.Subject, c github.WorkflowContext) WorkflowRun {
 			// Builder-controlled environment vars needed
 			// to reproduce the build.
 			Environment: map[string]interface{}{
-				// TODO(https://github.com/slsa-framework/slsa-github-generator/issues/5): set "arch"
+				// TODO(github.com/slsa-framework/slsa-github-generator/issues/5): set "arch"
 				"github_run_number":  c.RunNumber,
 				"github_run_id":      c.RunID,
 				"github_run_attempt": c.RunAttempt,
