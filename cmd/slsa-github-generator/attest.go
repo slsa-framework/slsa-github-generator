@@ -122,10 +122,8 @@ run in the context of a Github Actions workflow.`,
 
 			ctx := context.Background()
 
-			c, err := github.NewOIDCClient()
-			check(err)
-
-			p, err := slsa.HostedActionsProvenance(ctx, slsa.NewWorkflowRun(parsedSubjects, ghContext), c)
+			g := slsa.NewHostedActionsGenerator(slsa.NewGithubActionsBuild(parsedSubjects, ghContext))
+			p, err := g.Generate(ctx)
 			check(err)
 
 			if attPath != "" {

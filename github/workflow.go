@@ -45,9 +45,6 @@ type WorkflowContext struct {
 	ServerURL  string                 `json:"server_url"`
 	RunID      string                 `json:"run_id"`
 	RunAttempt string                 `json:"run_attempt"`
-	// TODO: try removing this token:
-	// `omitting Token from the struct causes an unexpected end of line from encoding/json`
-	// Token string `json:"token,omitempty"`
 }
 
 // RepositoryURI returns a full repository URI for the repo that triggered the workflow.
@@ -77,4 +74,19 @@ func GetWorkflowContext() (WorkflowContext, error) {
 
 	err := json.Unmarshal([]byte(ghContext), &w)
 	return w, err
+}
+
+// GetToken gets the Github Actions token.
+// See: https://docs.github.com/en/actions/security-guides/automatic-token-authentication
+func GetToken() (string, error) {
+	var w struct {
+		Token string `json:"token,omitempty"`
+	}
+	ghContext, ok := os.LookupEnv(githubContextEnvKey)
+	if !ok {
+		return "", errors.New("GITHUB_CONTEXT environment variable not set")
+	}
+
+	err := json.Unmarshal([]byte(ghContext), &w)
+	return w.Token, err
 }
