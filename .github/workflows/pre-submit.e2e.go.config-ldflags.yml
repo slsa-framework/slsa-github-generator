@@ -28,7 +28,7 @@ jobs:
     permissions:
       id-token: write # For signing.
       contents: write # For asset uploads.
-    uses: ./.github/workflows/slsa3_builder.yml
+    uses: ./.github/workflows/builder_go_slsa3.yml
     with:
       go-version: 1.18
       config-file: .github/workflows/configs-go/config-ldflags.yml
