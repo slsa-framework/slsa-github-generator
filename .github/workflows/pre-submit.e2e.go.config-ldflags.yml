@@ -1,4 +1,4 @@
-name: PR e2e - go ldflags
+name: PR e2e go ldflags
 on: 
   pull_request:
     branches: [ main ]
@@ -6,7 +6,7 @@ on:
 permissions: read-all
 
 env:
-  THIS_FILE: pr-e2e.go.config-ldflags.yml
+  THIS_FILE: pre-submit.e2e.go.config-ldflags.yml
 
 jobs:
   args:
@@ -31,7 +31,7 @@ jobs:
     uses: ./.github/workflows/slsa3_builder.yml
     with:
       go-version: 1.18
-      config-file: .github/configs-go/config-ldflags.yml
+      config-file: .github/workflows/configs-go/config-ldflags.yml
       evaluated-envs: "VERSION:${{needs.args.outputs.version}},COMMIT:${{needs.args.outputs.commit}},BRANCH:${{needs.args.outputs.branch}}"
 
   verify:
