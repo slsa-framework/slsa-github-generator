@@ -1,0 +1,13 @@
+version: 1
+env:
+  - GO111MODULE:on
+
+flags:
+  - -trimpath
+  - -tags=netgo
+
+goos: linux
+goarch: amd64
+binary: binary-{{ .OS }}-{{ .Arch }}
+ldflags:
+  - '{{ .Env.VERSION_LDFLAGS }}'
