@@ -10,7 +10,7 @@ flags:
 
 goos: linux
 goarch: amd64
-main: ./pr-e2e/go/main.go
+main: ./builders/go/e2e-presubmits/main.go
 binary: binary-{{ .Os }}-{{ .Arch }}
 ldflags:
   - '{{ .Env.VERSION }}'  
