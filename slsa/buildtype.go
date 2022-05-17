@@ -24,10 +24,6 @@ import (
 	"github.com/slsa-framework/slsa-github-generator/github"
 )
 
-var (
-	provenanceOnlyBuildType = "https://github.com/slsa-framework/slsa-github-generator@v1"
-)
-
 // BuildType implements generation of buildType specific elements of SLSA
 // provenance. Each BuildType instance represents a specific build.
 type BuildType interface {
@@ -72,11 +68,6 @@ func NewGithubActionsBuild(s []intoto.Subject, c github.WorkflowContext) *Github
 		Clients: &DefaultClientProvider{},
 	}
 
-}
-
-// URI implements BuildType.URI.
-func (b *GithubActionsBuild) URI() string {
-	return provenanceOnlyBuildType
 }
 
 // Subject implements BuildType.Subject.

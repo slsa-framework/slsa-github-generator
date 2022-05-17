@@ -15,7 +15,7 @@ var testBuildType = "http://example.com/v1"
 var testBuildConfig = "test build config"
 
 type TestBuild struct {
-	GithubActionsBuild
+	*GithubActionsBuild
 }
 
 func (*TestBuild) URI() string {
@@ -37,7 +37,9 @@ func TestHostedActionsProvenance(t *testing.T) {
 	}{
 		{
 			name: "empty",
-			b:    NewGithubActionsBuild(nil, github.WorkflowContext{}).WithClients(&NilClientProvider{}),
+			b: &TestBuild{
+				GithubActionsBuild: NewGithubActionsBuild(nil, github.WorkflowContext{}).WithClients(&NilClientProvider{}),
+			},
 			token: &github.OIDCToken{
 				Audience: []string{""},
 				Expiry:   now.Add(1 * time.Hour),
@@ -48,44 +50,23 @@ func TestHostedActionsProvenance(t *testing.T) {
 					PredicateType: slsa.PredicateSLSAProvenance,
 				},
 				Predicate: slsa.ProvenancePredicate{
-					BuildType: provenanceOnlyBuildType,
 					Builder: slsa.ProvenanceBuilder{
 						ID: GithubHostedActionsBuilderID,
 					},
-					Metadata: &slsa.ProvenanceMetadata{},
-				},
-			},
-		},
-		{
-			name: "empty",
-			b: &TestBuild{
-				GithubActionsBuild: *NewGithubActionsBuild(nil, github.WorkflowContext{}).WithClients(&NilClientProvider{}),
-			},
-			token: &github.OIDCToken{
-				Audience: []string{""},
-				Expiry:   now.Add(1 * time.Hour),
-			},
-			expected: &intoto.ProvenanceStatement{
-				StatementHeader: intoto.StatementHeader{
-					Type:          intoto.StatementInTotoV01,
-					PredicateType: slsa.PredicateSLSAProvenance,
-				},
-				Predicate: slsa.ProvenancePredicate{
 					BuildType:   testBuildType,
 					BuildConfig: testBuildConfig,
-					Builder: slsa.ProvenanceBuilder{
-						ID: GithubHostedActionsBuilderID,
-					},
-					Metadata: &slsa.ProvenanceMetadata{},
+					Metadata:    &slsa.ProvenanceMetadata{},
 				},
 			},
 		},
 		{
 			name: "invocation id",
-			b: NewGithubActionsBuild(nil, github.WorkflowContext{
-				RunID:      "12345",
-				RunAttempt: "1",
-			}).WithClients(&NilClientProvider{}),
+			b: &TestBuild{
+				GithubActionsBuild: NewGithubActionsBuild(nil, github.WorkflowContext{
+					RunID:      "12345",
+					RunAttempt: "1",
+				}).WithClients(&NilClientProvider{}),
+			},
 			token: &github.OIDCToken{
 				Audience: []string{"hoge"},
 				Expiry:   now.Add(1 * time.Hour),
@@ -99,7 +80,8 @@ func TestHostedActionsProvenance(t *testing.T) {
 					Builder: slsa.ProvenanceBuilder{
 						ID: GithubHostedActionsBuilderID,
 					},
-					BuildType: provenanceOnlyBuildType,
+					BuildType:   testBuildType,
+					BuildConfig: testBuildConfig,
 					Invocation: slsa.ProvenanceInvocation{
 						Environment: map[string]interface{}{
 							"github_run_id":      "12345",
