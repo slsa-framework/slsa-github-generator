@@ -16,7 +16,10 @@ package slsa
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"strconv"
+	"strings"
 
 	intoto "github.com/in-toto/in-toto-golang/in_toto"
 	slsa "github.com/in-toto/in-toto-golang/in_toto/slsa_provenance/v0.2"
@@ -87,6 +90,48 @@ func addEnvKeyString(m map[string]interface{}, k string, v string) {
 	}
 }
 
+// getEntryPoint retrieves the path to the user workflow that initiated the
+// workflow run. The `github` context contains the path in `workflow` but it
+// will be the name of the workflow if it's set. The name will not uniquely
+// identify the workflow so we need to retrieve the path via the Github API to
+// get it reliably.
+func (b *GithubActionsBuild) getEntryPoint(ctx context.Context) (string, error) {
+	ghClient, err := b.Clients.GithubClient(ctx)
+	if err != nil {
+		return "", fmt.Errorf("github client: %w", err)
+	}
+	if ghClient == nil {
+		return "", nil
+	}
+
+	runID, err := strconv.ParseInt(b.Context.RunID, 10, 64)
+	if err != nil {
+		return "", fmt.Errorf("parsing run ID %q: %w", b.Context.RunID, err)
+	}
+
+	repo := strings.SplitN(b.Context.Repository, "/", 2)
+	if len(repo) < 2 {
+		return "", fmt.Errorf("unexpected repository: %q", b.Context.Repository)
+	}
+	owner := repo[0]
+	repoName := repo[1]
+
+	wr, _, err := ghClient.Actions.GetWorkflowRunByID(ctx, owner, repoName, runID)
+	if err != nil {
+		return "", fmt.Errorf("getting workflow run: %w", err)
+	}
+
+	wf, _, err := ghClient.Actions.GetWorkflowByID(ctx, owner, repoName, wr.GetWorkflowID())
+	if err != nil {
+		return "", fmt.Errorf("getting workflow: %w", err)
+	}
+	if wf.Path == nil {
+		return "", errors.New("workflow path not found")
+	}
+
+	return *wf.Path, nil
+}
+
 // Invocation implements BuildType.Invocation. An invocation is returned that
 // describes the workflow run.
 // TODO: Document the basic invocation format.
@@ -139,7 +184,12 @@ func (b *GithubActionsBuild) Invocation(ctx context.Context) (slsa.ProvenanceInv
 	}
 
 	// ConfigSource
-	i.ConfigSource.EntryPoint = b.Context.Workflow
+	entryPoint, err := b.getEntryPoint(ctx)
+	if err != nil {
+		return i, fmt.Errorf("getting entrypoint: %w", err)
+	}
+
+	i.ConfigSource.EntryPoint = entryPoint
 	i.ConfigSource.URI = b.Context.RepositoryURI()
 	if b.Context.SHA != "" {
 		i.ConfigSource.Digest = slsa.DigestSet{
