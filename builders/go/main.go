@@ -71,9 +71,9 @@ func runBuild(dry bool, configFile, evalEnvs string) error {
 	return nil
 }
 
-func runProvenanceGeneration(subject, digest, commands, envs string) error {
+func runProvenanceGeneration(subject, digest, commands, envs, workingDir string) error {
 	attBytes, err := pkg.GenerateProvenance(subject, digest,
-		commands, envs)
+		commands, envs, workingDir)
 	if err != nil {
 		return err
 	}
@@ -107,6 +107,7 @@ func main() {
 	provenanceDigest := provenanceCmd.String("digest", "", "sha256 digest of the untrusted binary")
 	provenanceCommand := provenanceCmd.String("command", "", "command used to compile the binary")
 	provenanceEnv := provenanceCmd.String("env", "", "env variables used to compile the binary")
+	provenanceWorkingDir := provenanceCmd.String("workingDir", "", "working directory used to issue compilation commands")
 
 	// Expect a sub-command.
 	if len(os.Args) < 2 {
@@ -129,12 +130,12 @@ func main() {
 		provenanceCmd.Parse(os.Args[2:])
 		// Note: *provenanceEnv may be empty.
 		if *provenanceName == "" || *provenanceDigest == "" ||
-			*provenanceCommand == "" {
+			*provenanceCommand == "" || *provenanceWorkingDir == "" {
 			usage(os.Args[0])
 		}
 
 		err := runProvenanceGeneration(*provenanceName, *provenanceDigest,
-			*provenanceCommand, *provenanceEnv)
+			*provenanceCommand, *provenanceEnv, *provenanceWorkingDir)
 		check(err)
 
 	default:

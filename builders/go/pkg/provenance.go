@@ -38,8 +38,9 @@ const (
 
 type (
 	step struct {
-		Command []string `json:"command"`
-		Env     []string `json:"env"`
+		Command    []string `json:"command"`
+		Env        []string `json:"env"`
+		WorkingDir string   `json:"workingDir"`
 	}
 	buildConfig struct {
 		Version int    `json:"version"`
@@ -50,7 +51,7 @@ type (
 // GenerateProvenance translates github context into a SLSA provenance
 // attestation.
 // Spec: https://slsa.dev/provenance/v0.2
-func GenerateProvenance(name, digest, command, envs string) ([]byte, error) {
+func GenerateProvenance(name, digest, command, envs, workingDir string) ([]byte, error) {
 	gh, err := github.GetWorkflowContext()
 	if err != nil {
 		return nil, err
@@ -87,10 +88,20 @@ func GenerateProvenance(name, digest, command, envs string) ([]byte, error) {
 	wr.BuildConfig = buildConfig{
 		Version: buildConfigVersion,
 		Steps: []step{
-			// Single step.
+			// Vendoring step.
 			{
-				Command: com,
-				Env:     env,
+				// Note: vendoring and compilation are
+				// performed in the same VM, so the compiler is
+				// the same.
+				Command:    []string{com[0], "mod", "vendor"},
+				WorkingDir: workingDir,
+				// Note: No user-defined env set for this step.
+			},
+			// Compilation step.
+			{
+				Command:    com,
+				Env:        env,
+				WorkingDir: workingDir,
 			},
 		},
 	}

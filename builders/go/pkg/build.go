@@ -18,6 +18,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 	"syscall"
 )
@@ -28,7 +29,6 @@ var (
 	errorInvalidEnvArgument        = errors.New("invalid env passed via argument")
 	errorEnvVariableNameNotAllowed = errors.New("env variable not allowed")
 	errorInvalidFilename           = errors.New("invalid filename")
-	errorEmptyFilename             = errors.New("filename is not set")
 )
 
 // See `go build help`.
@@ -68,6 +68,11 @@ func GoBuildNew(goc string, cfg *GoReleaserConfig) *GoBuild {
 }
 
 func (b *GoBuild) Run(dry bool) error {
+	// Get directory.
+	dir, err := b.getDir()
+	if err != nil {
+		return err
+	}
 	// Set flags.
 	flags, err := b.generateFlags()
 	if err != nil {
@@ -128,23 +133,65 @@ func (b *GoBuild) Run(dry bool) error {
 
 		// Share the env variables used.
 		fmt.Printf("::set-output name=go-env::%s\n", menv)
+
+		// Share working directory necessary for issuing the vendoring command.
+		fmt.Printf("::set-output name=go-working-dir::%s\n", dir)
 		return nil
 	}
 
-	// Use the name provider via env variable for the compilation.
-	// This variable is trusted and defined by the re-usable workflow.
-	binary := os.Getenv("OUTPUT_BINARY")
-	if binary == "" {
-		return fmt.Errorf("OUTPUT_BINARY not defined")
+	binary, err := getOutputBinaryPath(os.Getenv("OUTPUT_BINARY"))
+	if err != nil {
+		return err
 	}
 
 	// Generate the command.
 	command := b.generateCommand(flags, binary)
 
+	// Change directory.
+	if err := os.Chdir(dir); err != nil {
+		return err
+	}
+
+	fmt.Println("dir", dir)
 	fmt.Println("binary", binary)
 	fmt.Println("command", command)
 	fmt.Println("env", envs)
+
 	return syscall.Exec(b.goc, command, envs)
+}
+
+func getOutputBinaryPath(binary string) (string, error) {
+	// Use the name provider via env variable for the compilation.
+	// This variable is trusted and defined by the re-usable workflow.
+	// It should be set to an absolute path value.
+	abinary, err := filepath.Abs(binary)
+	if err != nil {
+		return "", fmt.Errorf("filepath.Abs: %w", err)
+	}
+
+	if binary == "" {
+		return "", fmt.Errorf("%w: OUTPUT_BINARY not defined", errorInvalidFilename)
+	}
+
+	if binary != abinary {
+		return "", fmt.Errorf("%w: %v is not an absolute path", errorInvalidFilename, binary)
+	}
+
+	return binary, nil
+}
+
+func (b *GoBuild) getDir() (string, error) {
+	if b.cfg.Dir == nil {
+		return os.Getenv("PWD"), nil
+	}
+
+	// Note: validation of the dir is done in config.go
+	fp, err := filepath.Abs(*b.cfg.Dir)
+	if err != nil {
+		return "", err
+	}
+
+	return fp, nil
 }
 
 func (b *GoBuild) generateCommand(flags []string, binary string) []string {
@@ -248,7 +295,7 @@ func (b *GoBuild) generateOutputFilename() (string, error) {
 	}
 
 	if name == "" {
-		return "", fmt.Errorf("%w", errorEmptyFilename)
+		return "", fmt.Errorf("%w: filename is empty", errorInvalidFilename)
 	}
 	return name, nil
 }

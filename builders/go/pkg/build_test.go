@@ -65,6 +65,50 @@ func Test_isAllowedEnvVariable(t *testing.T) {
 	}
 }
 
+func Test_getOutputBinaryPath(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name     string
+		path     string
+		expected error
+	}{
+		{
+			name:     "empty output",
+			path:     "",
+			expected: errorInvalidFilename,
+		},
+		{
+			name:     "not absolute",
+			path:     "./some/path/to/binary",
+			expected: errorInvalidFilename,
+		},
+		{
+			name: "absolute path",
+			path: "/to/absolute/path/to/binary",
+		},
+	}
+	for _, tt := range tests {
+		tt := tt // Re-initializing variable so it is not changed while executing the closure below
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			r, err := getOutputBinaryPath(tt.path)
+			if !errCmp(err, tt.expected) {
+				t.Errorf(cmp.Diff(err, tt.expected))
+			}
+
+			if err != nil {
+				return
+			}
+
+			if !cmp.Equal(r, tt.path) {
+				t.Errorf(cmp.Diff(r, tt.expected))
+			}
+		})
+	}
+}
+
 func Test_isAllowedArg(t *testing.T) {
 	t.Parallel()
 
@@ -159,7 +203,7 @@ func Test_generateOutputFilename(t *testing.T) {
 				err error
 				fn  string
 			}{
-				err: errorEmptyFilename,
+				err: errorInvalidFilename,
 			},
 		},
 		{
@@ -494,7 +538,8 @@ func Test_generateEnvVariables(t *testing.T) {
 			}{
 				flags: []string{
 					"GOOS=windows", "GOARCH=amd64",
-					"GOVAR1=value1", "GOVAR2=value2", "CGO_VAR1=val1", "CGO_VAR2=val2",
+					"GOVAR1=value1", "GOVAR2=value2",
+					"CGO_VAR1=val1", "CGO_VAR2=val2",
 				},
 				err: nil,
 			},

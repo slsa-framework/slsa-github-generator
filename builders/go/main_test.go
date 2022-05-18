@@ -7,6 +7,7 @@ import (
 	"io"
 	"os"
 	"os/exec"
+	"path"
 	"regexp"
 	"testing"
 
@@ -23,13 +24,14 @@ func errCmp(e1, e2 error) bool {
 func Test_runVerify(t *testing.T) {
 	t.Parallel()
 	tests := []struct {
-		subject  string
-		name     string
-		config   string
-		evalEnvs string
-		err      error
-		commands []string
-		envs     []string
+		subject    string
+		name       string
+		config     string
+		evalEnvs   string
+		err        error
+		commands   []string
+		envs       []string
+		workingDir string
 	}{
 		{
 			name:     "two ldflags",
@@ -193,6 +195,27 @@ func Test_runVerify(t *testing.T) {
 				"CGO_ENABLED=0",
 			},
 		},
+		{
+			name:     "valid working dir",
+			subject:  "binary-linux-amd64",
+			config:   "./testdata/valid-working-dir.yml",
+			evalEnvs: "VERSION_LDFLAGS:bla, ELSE:else",
+			commands: []string{
+				"-trimpath",
+				"-tags=netgo",
+				"-ldflags=bla something-else",
+				"-o",
+				"binary-linux-amd64",
+				"main.go",
+			},
+			envs: []string{
+				"GOOS=linux",
+				"GOARCH=amd64",
+				"GO111MODULE=on",
+				"CGO_ENABLED=0",
+			},
+			workingDir: "./valid/path/",
+		},
 		// Below are the same tests we do in pkg/config_test.go
 		{
 			name:   "invalid main",
@@ -224,6 +247,11 @@ func Test_runVerify(t *testing.T) {
 			config: "../pkg/testdata/releaser-invalid-main.yml",
 			err:    pkg.ErrorInvalidDirectory,
 		},
+		{
+			name:   "invalid dir path",
+			config: "../pkg/testdata/releaser-invalid-dir.yml",
+			err:    pkg.ErrorInvalidDirectory,
+		},
 	}
 
 	for _, tt := range tests {
@@ -249,7 +277,7 @@ func Test_runVerify(t *testing.T) {
 				return
 			}
 
-			cmd, env, subject, err := extract(s)
+			cmd, env, subject, wd, err := extract(s)
 			if err != nil {
 				t.Errorf("extract: %v", err)
 			}
@@ -266,6 +294,17 @@ func Test_runVerify(t *testing.T) {
 			commands := append([]string{goc, "build", "-mod=vendor"}, tt.commands...)
 			if !cmp.Equal(cmd, commands) {
 				t.Errorf(cmp.Diff(cmd, commands))
+			}
+
+			var expectedWd string
+			if tt.workingDir == "" {
+				expectedWd = os.Getenv("PWD")
+			} else {
+				expectedWd = path.Join(os.Getenv("PWD"), tt.workingDir)
+			}
+
+			if expectedWd != wd {
+				t.Errorf(cmp.Diff(wd, expectedWd))
 			}
 
 			sorted := cmpopts.SortSlices(func(a, b string) bool { return a < b })
@@ -310,13 +349,15 @@ func (r *run) end() string {
 	return s
 }
 
-func extract(lines string) ([]string, []string, string, error) {
+func extract(lines string) ([]string, []string, string, string, error) {
 	rsubject := regexp.MustCompile("^::set-output name=go-binary-name::(.*)$")
 	rcmd := regexp.MustCompile("^::set-output name=go-command::(.*)$")
 	renv := regexp.MustCompile("^::set-output name=go-env::(.*)$")
+	rwd := regexp.MustCompile("^::set-output name=go-working-dir::(.*)$")
 	var subject string
 	var scmd string
 	var senv string
+	var wd string
 
 	scanner := bufio.NewScanner(bytes.NewReader([]byte(lines)))
 	for scanner.Scan() {
@@ -335,23 +376,28 @@ func extract(lines string) ([]string, []string, string, error) {
 			senv = e[1]
 		}
 
-		if subject != "" && scmd != "" && senv != "" {
+		w := rwd.FindStringSubmatch(scanner.Text())
+		if len(w) > 1 {
+			wd = w[1]
+		}
+
+		if subject != "" && scmd != "" && senv != "" && wd != "" {
 			break
 		}
 	}
 	if err := scanner.Err(); err != nil {
-		return []string{}, []string{}, "", err
+		return []string{}, []string{}, "", "", err
 	}
 
 	cmd, err := pkg.UnmarshallList(scmd)
 	if err != nil {
-		return []string{}, []string{}, "", err
+		return []string{}, []string{}, "", "", err
 	}
 
 	env, err := pkg.UnmarshallList(senv)
 	if err != nil {
-		return []string{}, []string{}, "", err
+		return []string{}, []string{}, "", "", err
 	}
 
-	return cmd, env, subject, nil
+	return cmd, env, subject, wd, nil
 }

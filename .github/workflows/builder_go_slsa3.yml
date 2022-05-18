@@ -177,6 +177,7 @@ jobs:
       go-binary-name: ${{ steps.build-dry.outputs.go-binary-name }}
       go-command: ${{ steps.build-dry.outputs.go-command }}
       go-env: ${{ steps.build-dry.outputs.go-env }}
+      go-working-dir: ${{ steps.build-dry.outputs.go-working-dir }}
     runs-on: ubuntu-latest
     needs: builder
     steps:
@@ -216,18 +217,6 @@ jobs:
           # Make the builder executable.
           chmod a+x "$BUILDER_BINARY"
 
-      - name: Download dependencies
-        shell: bash
-        run: |
-          set -euo pipefail
-          go mod vendor
-
-      # TODO(hermeticity) OS-level.
-      # - name: Disable hermeticity
-      # uses: slsa/hermeticity@xxx
-      #   with:
-      #     to-state: enabled
-
       - name: Build dry project
         id: build-dry
         shell: bash
@@ -235,12 +224,9 @@ jobs:
           BUILDER_BINARY: "${{ env.BUILDER_BINARY }}"
           CONFIG_FILE: "${{ inputs.config-file }}"
           UNTRUSTED_ENVS: "${{ inputs.evaluated-envs }}"
-          UNTRUSTED_WORKING_DIR: "${{ inputs.working-dir }}"
         run: |
           set -euo pipefail
 
-          # TODO: pass UNTRUSTED_WORKING_DIR to builder, which will use realpath()
-          # to compute the actual directory.
           # Note: this outputs information about resolved arguments, etc.
           # the values are trusted because the compiler is not invoked.
           echo ./"$BUILDER_BINARY" build --dry "$CONFIG_FILE" "$UNTRUSTED_ENVS"
@@ -255,7 +241,7 @@ jobs:
     outputs:
       go-binary-sha256: ${{ steps.build-sha256.outputs.go-binary-sha256 }}
     runs-on: ubuntu-latest
-    needs: [builder]
+    needs: [builder,build-dry]
     steps:
       - name: Checkout the repository
         uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # v2.3.4
@@ -294,9 +280,14 @@ jobs:
           chmod a+x "$BUILDER_BINARY"
 
       - name: Download dependencies
+        env:
+          UNTRUSTED_WORKING_DIR: "${{ needs.build-dry.outputs.go-working-dir }}"
         shell: bash
         run: |
           set -euo pipefail
+
+          # Note: maybe simpler to make this step part of the builder in the future.
+          cd "$UNTRUSTED_WORKING_DIR"
           go mod vendor
 
       # TODO(hermeticity) OS-level.
@@ -312,17 +303,15 @@ jobs:
           BUILDER_BINARY: "${{ env.BUILDER_BINARY }}"
           CONFIG_FILE: "${{ inputs.config-file }}"
           UNTRUSTED_ENVS: "${{ inputs.evaluated-envs }}"
-          UNTRUSTED_WORKING_DIR: "${{ inputs.working-dir }}"
         run: |
           set -euo pipefail
 
           # Disable set-output command.
           echo "::stop-commands::`echo -n ${{ github.token }} | sha256sum | head -c 64`"
 
-          # TODO: pass UNTRUSTED_WORKING_DIR to builder, which will use realpath()
-          # to compute the actual directory.
-          echo "./$BUILDER_BINARY" build "$CONFIG_FILE" "$UNTRUSTED_ENVS"
-          export OUTPUT_BINARY="${{ env.GENERATED_BINARY_NAME }}"
+          echo "./$BUILDER_BINARY" build "$PWD/$CONFIG_FILE" "$UNTRUSTED_ENVS"
+          # Note: We need to provide the asbolute path to the output binary.
+          export OUTPUT_BINARY="$PWD/${{ env.GENERATED_BINARY_NAME }}"
           ./"$BUILDER_BINARY" build "$CONFIG_FILE" "$UNTRUSTED_ENVS"
 
       - name: Compute binary hash
@@ -432,6 +421,7 @@ jobs:
           UNTRUSTED_BINARY_HASH: "${{ needs.build.outputs.go-binary-sha256 }}"
           UNTRUSTED_COMMAND: "${{ needs.build-dry.outputs.go-command }}"
           UNTRUSTED_ENV: "${{ needs.build-dry.outputs.go-env }}"
+          UNTRUSTED_WORKING_DIR: "${{ needs.build-dry.outputs.go-working-dir }}"
           BUILDER_BINARY: "${{ env.BUILDER_BINARY }}"
           GITHUB_CONTEXT: "${{ toJSON(github) }}"
         run: |
@@ -441,7 +431,12 @@ jobs:
 
           # Create and sign provenance
           # This sets signed-provenance-name to the name of the signed DSSE envelope.
-          ./"$BUILDER_BINARY" provenance --binary-name "$UNTRUSTED_BINARY_NAME" --digest "$UNTRUSTED_BINARY_HASH" --command "$UNTRUSTED_COMMAND" --env "$UNTRUSTED_ENV"
+          ./"$BUILDER_BINARY" provenance \
+            --binary-name "$UNTRUSTED_BINARY_NAME" \
+            --digest "$UNTRUSTED_BINARY_HASH" \
+            --command "$UNTRUSTED_COMMAND" \
+            --env "$UNTRUSTED_ENV" \
+            --workingDir "$UNTRUSTED_WORKING_DIR"
 
       - name: Upload the signed provenance
         uses: actions/upload-artifact@6673cd052c4cd6fcf4b4e6e60ea986c889389535 # v2.3.1

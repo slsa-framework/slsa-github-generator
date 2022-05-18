@@ -41,12 +41,14 @@ type goReleaserConfigFile struct {
 	Binary  string   `yaml:"binary`
 	Version int      `yaml:"version"`
 	Main    *string  `yaml:"main"`
+	Dir     *string  `yaml:"dir"`
 }
 
 type GoReleaserConfig struct {
 	Goos    string
 	Goarch  string
 	Main    *string
+	Dir     *string
 	Env     map[string]string
 	Flags   []string
 	Ldflags []string
@@ -84,6 +86,10 @@ func fromConfig(cf *goReleaserConfigFile) (*GoReleaserConfig, error) {
 		return nil, err
 	}
 
+	if err := validateDir(cf); err != nil {
+		return nil, err
+	}
+
 	cfg := GoReleaserConfig{
 		Goos:    cf.Goos,
 		Goarch:  cf.Goarch,
@@ -91,6 +97,7 @@ func fromConfig(cf *goReleaserConfigFile) (*GoReleaserConfig, error) {
 		Ldflags: cf.Ldflags,
 		Binary:  cf.Binary,
 		Main:    cf.Main,
+		Dir:     cf.Dir,
 	}
 
 	if err := cfg.setEnvs(cf); err != nil {
@@ -101,7 +108,14 @@ func fromConfig(cf *goReleaserConfigFile) (*GoReleaserConfig, error) {
 }
 
 func validatePath(path string) error {
-	return fileIsUnderDirectory(path)
+	return pathIsUnderCurrentDirectory(path)
+}
+
+func validateDir(cf *goReleaserConfigFile) error {
+	if cf.Dir == nil {
+		return nil
+	}
+	return validatePath(*cf.Dir)
 }
 
 func validateMain(cf *goReleaserConfigFile) error {
@@ -110,7 +124,7 @@ func validateMain(cf *goReleaserConfigFile) error {
 	}
 
 	// Validate the main path is under the current directory.
-	return fileIsUnderDirectory(*cf.Main)
+	return pathIsUnderCurrentDirectory(*cf.Main)
 }
 
 func validateVersion(cf *goReleaserConfigFile) error {

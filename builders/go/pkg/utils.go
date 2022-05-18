@@ -26,7 +26,7 @@ import (
 
 var ErrorInvalidDirectory = errors.New("invalid directory")
 
-func fileIsUnderDirectory(path string) error {
+func pathIsUnderCurrentDirectory(path string) error {
 	wd, err := os.Getwd()
 	if err != nil {
 		return err
@@ -36,11 +36,21 @@ func fileIsUnderDirectory(path string) error {
 		return err
 	}
 
-	if !strings.HasPrefix(p, wd+"/") {
+	if !strings.HasPrefix(p, wd+"/") &&
+		wd != p {
 		return ErrorInvalidDirectory
 	}
 
 	return nil
+}
+
+func isDirectory(path string) (bool, error) {
+	fileInfo, err := os.Stat(path)
+	if err != nil {
+		return false, err
+	}
+
+	return fileInfo.IsDir(), err
 }
 
 func UnmarshallList(arg string) ([]string, error) {

@@ -20,7 +20,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
-func Test_fileIsUnderDirectory(t *testing.T) {
+func Test_pathIsUnderCurrentDirectory(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
@@ -29,8 +29,23 @@ func Test_fileIsUnderDirectory(t *testing.T) {
 		expected error
 	}{
 		{
-			name:     "some valid path",
+			name:     "valid same path",
+			path:     "./",
+			expected: nil,
+		},
+		{
+			name:     "valid path no slash",
 			path:     "./some/valid/path",
+			expected: nil,
+		},
+		{
+			name:     "valid path with slash",
+			path:     "./some/valid/path/",
+			expected: nil,
+		},
+		{
+			name:     "valid path with no dot",
+			path:     "some/valid/path/",
 			expected: nil,
 		},
 		{
@@ -54,7 +69,7 @@ func Test_fileIsUnderDirectory(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			err := fileIsUnderDirectory(tt.path)
+			err := pathIsUnderCurrentDirectory(tt.path)
 			if !errCmp(err, tt.expected) {
 				t.Errorf(cmp.Diff(err, tt.expected))
 			}

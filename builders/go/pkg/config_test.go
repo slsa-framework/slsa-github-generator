@@ -29,54 +29,115 @@ func Test_ConfigFromFile(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
-		name     string
-		path     string
-		expected error
+		name   string
+		path   string
+		err    error
+		config GoReleaserConfig
 	}{
 		{
-			name:     "valid releaser empty main",
-			path:     "./testdata/releaser-valid-empty-main.yml",
-			expected: nil,
+			name: "valid releaser empty main",
+			path: "./testdata/releaser-valid-empty-main.yml",
+			config: GoReleaserConfig{
+				Goos: "linux", Goarch: "amd64",
+				Flags:   []string{"-trimpath", "-tags=netgo"},
+				Ldflags: []string{"{{ .Env.VERSION_LDFLAGS }}"},
+				Binary:  "binary-{{ .OS }}-{{ .Arch }}",
+				Env: map[string]string{
+					"GO111MODULE": "on", "CGO_ENABLED": "0",
+				},
+			},
 		},
 		{
-			name:     "valid releaser no main",
-			path:     "./testdata/releaser-valid-no-main.yml",
-			expected: nil,
+			name: "valid releaser no main",
+			path: "./testdata/releaser-valid-no-main.yml",
+			config: GoReleaserConfig{
+				Goos: "linux", Goarch: "amd64",
+				Flags:   []string{"-trimpath", "-tags=netgo"},
+				Ldflags: []string{"{{ .Env.VERSION_LDFLAGS }}"},
+				Binary:  "binary-{{ .OS }}-{{ .Arch }}",
+				Env: map[string]string{
+					"GO111MODULE": "on", "CGO_ENABLED": "0",
+				},
+			},
 		},
 		{
-			name:     "valid releaser main",
-			path:     "./testdata/releaser-valid-main.yml",
-			expected: nil,
+			name: "valid releaser main",
+			path: "./testdata/releaser-valid-main.yml",
+			config: GoReleaserConfig{
+				Goos: "linux", Goarch: "amd64",
+				Flags:   []string{"-trimpath", "-tags=netgo"},
+				Ldflags: []string{"{{ .Env.VERSION_LDFLAGS }}"},
+				Binary:  "binary-{{ .OS }}-{{ .Arch }}",
+				Env: map[string]string{
+					"GO111MODULE": "on", "CGO_ENABLED": "0",
+				},
+				Main: asPointer("./relative/main.go"),
+			},
 		},
 		{
-			name:     "valid releaser main with parent path",
-			path:     "../pkg/testdata/releaser-valid-main.yml",
-			expected: nil,
+			name: "missing version",
+			path: "./testdata/releaser-noversion.yml",
+			err:  ErrorUnsupportedVersion,
 		},
 		{
-			name:     "missing version",
-			path:     "./testdata/releaser-noversion.yml",
-			expected: ErrorUnsupportedVersion,
+			name: "invalid version",
+			path: "./testdata/releaser-invalid-version.yml",
+			err:  ErrorUnsupportedVersion,
 		},
 		{
-			name:     "invalid version",
-			path:     "./testdata/releaser-invalid-version.yml",
-			expected: ErrorUnsupportedVersion,
+			name: "invalid envs",
+			path: "./testdata/releaser-invalid-envs.yml",
+			err:  ErrorInvalidEnvironmentVariable,
 		},
 		{
-			name:     "invalid envs",
-			path:     "./testdata/releaser-invalid-envs.yml",
-			expected: ErrorInvalidEnvironmentVariable,
+			name: "invalid main",
+			path: "./testdata/releaser-invalid-main.yml",
+			err:  ErrorInvalidDirectory,
 		},
 		{
-			name:     "invalid main",
-			path:     "./testdata/releaser-invalid-main.yml",
-			expected: ErrorInvalidDirectory,
+			name: "invalid main path",
+			path: "../testdata/releaser-invalid-main.yml",
+			err:  ErrorInvalidDirectory,
 		},
 		{
-			name:     "invalid path",
-			path:     "../testdata/releaser-invalid-main.yml",
-			expected: ErrorInvalidDirectory,
+			name: "invalid dir path",
+			path: "../testdata/releaser-invalid-dir.yml",
+			err:  ErrorInvalidDirectory,
+		},
+		{
+			name: "valid dir path",
+			path: "./testdata/releaser-valid-dir.yml",
+			config: GoReleaserConfig{
+				Goos: "linux", Goarch: "amd64",
+				Flags:   []string{"-trimpath", "-tags=netgo"},
+				Ldflags: []string{"{{ .Env.VERSION_LDFLAGS }}"},
+				Binary:  "binary-{{ .OS }}-{{ .Arch }}",
+				Env: map[string]string{
+					"GO111MODULE": "on", "CGO_ENABLED": "0",
+				},
+				Dir: asPointer("./path/to/dir"),
+			},
+		},
+		{
+			name: "valid config path with dots",
+			// Resolves to "./testdata/releaser-valid-dir.yml".
+			path: "./testdata/../testdata/./releaser-valid-dir.yml",
+			config: GoReleaserConfig{
+				Goos: "linux", Goarch: "amd64",
+				Flags:   []string{"-trimpath", "-tags=netgo"},
+				Ldflags: []string{"{{ .Env.VERSION_LDFLAGS }}"},
+				Binary:  "binary-{{ .OS }}-{{ .Arch }}",
+				Env: map[string]string{
+					"GO111MODULE": "on", "CGO_ENABLED": "0",
+				},
+				Dir: asPointer("./path/to/dir"),
+			},
+		},
+		{
+			name: "invalid config path with dots",
+			// Resolves to "../releaser-valid-dir.yml".
+			path: "./testdata/../testdata/./foo/../../../releaser-valid-dir.yml",
+			err:  ErrorInvalidDirectory,
 		},
 	}
 	for _, tt := range tests {
@@ -84,9 +145,16 @@ func Test_ConfigFromFile(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			_, err := ConfigFromFile(tt.path)
-			if !errCmp(err, tt.expected) {
-				t.Errorf(cmp.Diff(err, tt.expected))
+			cfg, err := ConfigFromFile(tt.path)
+			if !errCmp(err, tt.err) {
+				t.Errorf(cmp.Diff(err, tt.err))
+			}
+			if err != nil {
+				return
+			}
+
+			if !cmp.Equal(*cfg, tt.config) {
+				t.Errorf(cmp.Diff(*cfg, tt.config))
 			}
 		})
 	}
