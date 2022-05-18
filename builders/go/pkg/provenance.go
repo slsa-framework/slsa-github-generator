@@ -166,5 +166,5 @@ func GenerateProvenance(name, digest, command, envs, workingDir string) ([]byte,
 
 func isPreSubmitTests() bool {
 	return (os.Getenv("GITHUB_EVENT_NAME") == "pull_request" &&
-		os.Getenv("GITHUB_REPOSITORY") == "slsa-framework/slsa-github-generator-go")
+		os.Getenv("GITHUB_REPOSITORY") == "slsa-framework/slsa-github-generator")
 }
