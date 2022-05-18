@@ -1,4 +1,4 @@
-name: PR e2e - go ldflags
+name: PR e2e go ldflags main dir
 on: 
   pull_request:
     branches: [ main ]
