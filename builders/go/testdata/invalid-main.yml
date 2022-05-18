@@ -1,0 +1,16 @@
+version: 1
+env:
+  - GO111MODULE=on
+  # https://stackoverflow.com/a/62821358/19407
+  - CGO_ENABLED=0
+
+flags:
+  - -trimpath
+  - -tags=netgo
+
+main: ../path/to/main.go
+goos: linux
+goarch: amd64
+binary: binary-{{ .Os }}-{{ .Arch }}
+ldflags:
+  - 'something-{{ .Env.ELSE }}'

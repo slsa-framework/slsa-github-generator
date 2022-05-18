@@ -15,11 +15,28 @@ jobs:
         with:
           go-version: "1.18"
 
-      - name: Run tests
+      - name: Generic API tests
         run: |
           set -euo pipefail
 
           # Download dependencies.
           go mod vendor
+
           # Test.
+          go test -mod=vendor -v ./...
+
+      - name: Go builder tests
+        run: |
+          set -euo pipefail
+
+          # Go tests.
+          cd builders/go/
+          
+          # Download dependencies.
+          go mod vendor
+
+          # Build.
+          go build -mod=vendor
+          
+          # Tests.
           go test -mod=vendor -v ./...
