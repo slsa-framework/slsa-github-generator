@@ -1782,6 +1782,8 @@ github.com/slsa-framework/slsa-github-generator v0.0.0-20220512235017-c5c4e50308
 github.com/slsa-framework/slsa-github-generator v0.0.0-20220512235017-c5c4e5030859/go.mod h1:4ba8RzrBQZKJIStrzs2BRDYYEggLKHV6Sn+neGY4RAs=
 github.com/slsa-framework/slsa-github-generator v0.0.0-20220513145523-8d0cdc6af66f h1:+WusJky+OdCJeYBLTD9BsQbs4sP6vox1/YBfmGSRsmA=
 github.com/slsa-framework/slsa-github-generator v0.0.0-20220513145523-8d0cdc6af66f/go.mod h1:4ba8RzrBQZKJIStrzs2BRDYYEggLKHV6Sn+neGY4RAs=
+github.com/slsa-framework/slsa-github-generator v0.0.0-20220518233342-f83249d19f44 h1:y8+5x0mlVOX7FVOyqd3T+F1o5R0nrEmx8OImSA8kGfE=
+github.com/slsa-framework/slsa-github-generator v0.0.0-20220518233342-f83249d19f44/go.mod h1:4ba8RzrBQZKJIStrzs2BRDYYEggLKHV6Sn+neGY4RAs=
 github.com/smallstep/assert v0.0.0-20200723003110-82e2b9b3b262/go.mod h1:MyOHs9Po2fbM1LHej6sBUT8ozbxmMOFG+E+rx/GSGuc=
 github.com/smartystreets/assertions v0.0.0-20180927180507-b2de0cb4f26d/go.mod h1:OnSkiWE9lh6wB0YB77sQom3nweQdgAjqCqsofrRNTgc=
 github.com/smartystreets/assertions v1.0.0/go.mod h1:kHHU4qYBaI3q23Pp3VPrmWhuIUrLW/7eUrw0BU5VaoM=
