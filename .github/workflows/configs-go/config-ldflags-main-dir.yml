@@ -1,0 +1,20 @@
+# Used for pre-submit tests.
+version: 1
+env:
+  - GO111MODULE=on
+  - CGO_ENABLED=0
+
+flags:
+  - -trimpath
+  - -tags=netgo
+
+goos: linux
+goarch: amd64
+# Note: main is not necessary.
+main: main.go
+dir: builders/go/e2e-presubmits/
+binary: binary-{{ .Os }}-{{ .Arch }}
+ldflags:
+  - '{{ .Env.VERSION }}'  
+  - '{{ .Env.COMMIT }}'
+  - '{{ .Env.BRANCH }}'
