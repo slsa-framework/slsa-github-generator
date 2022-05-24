@@ -158,16 +158,19 @@ jobs:
 
             # https://go.dev/ref/mod#build-commands.
             go build -mod=vendor -o "$BUILDER_BINARY"
-            
+
             mv "$BUILDER_BINARY" ../../"$BUILDER_BINARY"
+
+            cd -
           else
             echo "Fetching the builder with ref: $BUILDER_REF"
             
             .github/workflows/scripts/builder-fetch.sh
 
             mv "$BUILDER_RELEASE_BINARY" "$BUILDER_BINARY"
+            
           fi
-
+          
           BUILDER_DIGEST=$(sha256sum "$BUILDER_BINARY" | awk '{print $1}')
           echo "::set-output name=go-builder-sha256::$BUILDER_DIGEST"
           echo "hash of $BUILDER_BINARY is $BUILDER_DIGEST"
