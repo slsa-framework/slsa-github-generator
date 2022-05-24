@@ -142,6 +142,8 @@ jobs:
         env:
           COMPILE_BUILDER: "${{ inputs.compile-builder }}"
           BUILDER_REF: "${{ needs.detect-env.outputs.builder_ref }}"
+          # Needed for the gh CLI used in builder-fetch.sh.
+          GH_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
         run: |
           set -euo pipefail
 
