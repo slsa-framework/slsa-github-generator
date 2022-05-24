@@ -22,6 +22,12 @@ env:
   GENERATED_BINARY_NAME: compiled-binary
   # Builder
   BUILDER_BINARY: builder
+  BUILDER_RELEASE_BINARY: builder-linux-amd64
+  # Verifier
+  VERIFIER_REPOSITORY: laurentsimon/slsa-verifier
+  VERIFIER_RELEASE_BINARY: slsa-verify-linux-amd64
+  VERIFIER_RELEASE_BINARY_SHA256: 89fbcba9aed67d5146ea99946c7e4e5a80e3767871f0e3ffcd0b582134efd010
+  VERIFIER_RELEASE: v13.0.10
   # Builder location
   BUILDER_DIR: builders
 
@@ -34,11 +40,11 @@ on:
   workflow_call:
     inputs:
       go-version:
-        description: "The go version to use"
+        description: "The go version to use."
         required: true
         type: string
       upload-assets:
-        description: "Whether to upload assets to a GitHub release or not"
+        description: "Whether to upload assets to a GitHub release or not."
         required: false
         type: boolean
         default: true
@@ -48,12 +54,17 @@ on:
         type: string
         default: ".slsa-goreleaser.yml"
       evaluated-envs:
-        description: "Evaluated env variables to pass to the builder"
+        description: "Evaluated env variables to pass to the builder."
         required: false
         type: string
+      compile-builder:
+        description: "Build the builder from source. This increases build time by ~2mn."
+        required: false
+        type: boolean
+        default: false
     outputs:
       go-binary-name:
-        description: "The name of the generated binary uploaded to the artifact registry"
+        description: "The name of the generated binary uploaded to the artifact registry."
         value: ${{ jobs.build-dry.outputs.go-binary-name }}
 
 jobs:
@@ -130,10 +141,7 @@ jobs:
         run: |
           set -euo pipefail
 
-          cd "$BUILDER_DIR"/go/
-
-          #TODO(reproducible)
-          go mod vendor
+          
 
       # TODO(hermeticity) OS-level.
       # - name: Disable hermeticity
@@ -145,19 +153,34 @@ jobs:
         shell: bash
         id: builder-gen
         env:
-          BUILDER_BINARY: "${{ env.BUILDER_BINARY }}"
+          COMPILE_BUILDER: "${{ inputs.compiler-builder }}"
+          BUILDER_REF: "${{ needs.detect-env.outputs.builder_ref }}"
         run: |
           set -euo pipefail
 
-          cd "$BUILDER_DIR"/go/
+          if [[ "$COMPILE_BUILDER" = true ]]; then
+            echo "Building the builder"
 
-          # https://go.dev/ref/mod#build-commands.
-          go build -mod=vendor -o "$BUILDER_BINARY"
-          BUILDER_DIGEST=$(sha256sum "$BUILDER_BINARY" | awk '{print $1}')
-          echo "::set-output name=go-builder-sha256::$BUILDER_DIGEST"
-          echo "hash of $BUILDER_BINARY is $BUILDER_DIGEST"
+            cd "$BUILDER_DIR"/go/
 
-          mv "$BUILDER_BINARY" ../../"$BUILDER_BINARY"
+            #TODO(reproducible)
+            go mod vendor
+
+            # https://go.dev/ref/mod#build-commands.
+            go build -mod=vendor -o "$BUILDER_BINARY"
+            BUILDER_DIGEST=$(sha256sum "$BUILDER_BINARY" | awk '{print $1}')
+            echo "::set-output name=go-builder-sha256::$BUILDER_DIGEST"
+            echo "hash of $BUILDER_BINARY is $BUILDER_DIGEST"
+
+            mv "$BUILDER_BINARY" ../../"$BUILDER_BINARY"
+          else
+            echo "Fetching the builder with ref: $BUILDER_REF"
+            
+            .github/workflows/scripts/builder-fetch.sh
+
+            mv "$BUILDER_RELEASE_BINARY" ../../"$BUILDER_BINARY"
+          fi
+          
 
       - name: Upload the builder
         uses: actions/upload-artifact@6673cd052c4cd6fcf4b4e6e60ea986c889389535 # v2.3.1
@@ -202,7 +225,6 @@ jobs:
       - name: Verify builder
         env:
           BUILDER_HASH: "${{ needs.builder.outputs.go-builder-sha256 }}"
-          BUILDER_BINARY: "${{ env.BUILDER_BINARY }}"
         run: |
           set -euo pipefail
 
@@ -221,7 +243,6 @@ jobs:
         id: build-dry
         shell: bash
         env:
-          BUILDER_BINARY: "${{ env.BUILDER_BINARY }}"
           CONFIG_FILE: "${{ inputs.config-file }}"
           UNTRUSTED_ENVS: "${{ inputs.evaluated-envs }}"
         run: |
@@ -264,7 +285,6 @@ jobs:
       - name: Verify builder
         env:
           BUILDER_HASH: "${{ needs.builder.outputs.go-builder-sha256 }}"
-          BUILDER_BINARY: "${{ env.BUILDER_BINARY }}"
         run: |
           set -euo pipefail
 
@@ -300,7 +320,6 @@ jobs:
         id: build-gen
         shell: bash
         env:
-          BUILDER_BINARY: "${{ env.BUILDER_BINARY }}"
           CONFIG_FILE: "${{ inputs.config-file }}"
           UNTRUSTED_ENVS: "${{ inputs.evaluated-envs }}"
         run: |
@@ -398,7 +417,6 @@ jobs:
       - name: Verify builder
         env:
           BUILDER_HASH: "${{ needs.builder.outputs.go-builder-sha256 }}"
-          BUILDER_BINARY: "${{ env.BUILDER_BINARY }}"
         run: |
           set -euo pipefail
 
@@ -422,7 +440,6 @@ jobs:
           UNTRUSTED_COMMAND: "${{ needs.build-dry.outputs.go-command }}"
           UNTRUSTED_ENV: "${{ needs.build-dry.outputs.go-env }}"
           UNTRUSTED_WORKING_DIR: "${{ needs.build-dry.outputs.go-working-dir }}"
-          BUILDER_BINARY: "${{ env.BUILDER_BINARY }}"
           GITHUB_CONTEXT: "${{ toJSON(github) }}"
         run: |
           set -euo pipefail
