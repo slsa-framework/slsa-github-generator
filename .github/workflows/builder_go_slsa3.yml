@@ -27,8 +27,8 @@ env:
   # Verifier
   VERIFIER_REPOSITORY: laurentsimon/slsa-verifier
   VERIFIER_RELEASE_BINARY: slsa-verifier-linux-amd64
-  VERIFIER_RELEASE_BINARY_SHA256: deb79c8722e3cee0b9ae305215f5c4ecc40b51af2500de7c912d540c27768b28
-  VERIFIER_RELEASE: v0.0.1
+  VERIFIER_RELEASE_BINARY_SHA256: fb743bc6bb56908d590da66bfe5c266d003aa226b30fcada5f7b9e4aea43b52b
+  VERIFIER_RELEASE: v0.0.4
   # Builder location
   BUILDER_DIR: builders
 
