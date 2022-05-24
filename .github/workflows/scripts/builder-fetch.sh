@@ -32,6 +32,7 @@ if [[ "$BUILDER_TAG" = "$(echo -n "$BUILDER_TAG" | grep -P '^[a-f\d]{40}$')" ]];
     while read line; do
         TAG=$(echo "$line" | cut -f1)
         BRANCH=$(gh release -R "$BUILDER_REPOSITORY" view "$TAG" --json targetCommitish --jq '.targetCommitish')
+        #TODO(revert) main
         if [[ "$BRANCH" != "feat/fastbuilds" ]]; then
             continue
         fi
@@ -72,7 +73,8 @@ echo "verifier hash verification has passed"
 
 # Verify the provenance of the builder.
 chmod a+x "$VERIFIER_RELEASE_BINARY"
-./"$VERIFIER_RELEASE_BINARY" --branch "main" \
+#TODO(revert) main
+./"$VERIFIER_RELEASE_BINARY" --branch "feat/fastbuilds" \
                             --tag "$BUILDER_TAG" \
                             --artifact-path "$BUILDER_RELEASE_BINARY" \
                             --provenance "$BUILDER_RELEASE_BINARY.intoto.jsonl" \
