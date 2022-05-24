@@ -61,10 +61,10 @@ echo "Builder version: $BUILDER_TAG"
 echo "BUILDER_REPOSITORY: $BUILDER_REPOSITORY"
 
 # Fetch the release binary and provenance.
-gh release -R "$BUILDER_REPOSITORY" download "$BUILDER_TAG" -p "$BUILDER_RELEASE_BINARY*" | exit 10
+gh release -R "$BUILDER_REPOSITORY" download "$BUILDER_TAG" -p "$BUILDER_RELEASE_BINARY*" || exit 10
 
 # Fetch the verifier at the right hash.
-gh release -R "$VERIFIER_REPOSITORY" download "$VERIFIER_RELEASE" -p "$VERIFIER_RELEASE_BINARY" | exit 11
+gh release -R "$VERIFIER_REPOSITORY" download "$VERIFIER_RELEASE" -p "$VERIFIER_RELEASE_BINARY" || exit 11
 COMPUTED_HASH=$(sha256sum "$VERIFIER_RELEASE_BINARY" | awk '{print $1}')
 echo "verifier hash computed is $COMPUTED_HASH"
 echo "$VERIFIER_RELEASE_BINARY_SHA256 $VERIFIER_RELEASE_BINARY" | sha256sum --strict --check --status || exit 4
@@ -76,7 +76,7 @@ chmod a+x "$VERIFIER_RELEASE_BINARY"
                             --tag "$BUILDER_TAG" \
                             --artifact-path "$BUILDER_RELEASE_BINARY" \
                             --provenance "$BUILDER_RELEASE_BINARY.intoto.jsonl" \
-                            --source "github.com/$BUILDER_REPOSITORY" | exit 6
+                            --source "github.com/$BUILDER_REPOSITORY" || exit 6
 
 BUILDER_COMMIT=$(gh api /repos/"$BUILDER_REPOSITORY"/git/ref/tags/"$BUILDER_TAG" | jq -r '.object.sha')
 PROVENANCE_COMMIT=$(cat "$BUILDER_RELEASE_BINARY.intoto.jsonl" | jq -r '.payload' | base64 -d | jq -r '.predicate.materials[0].digest.sha1')
