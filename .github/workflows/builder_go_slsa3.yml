@@ -153,7 +153,7 @@ jobs:
         shell: bash
         id: builder-gen
         env:
-          COMPILE_BUILDER: "${{ inputs.compiler-builder }}"
+          COMPILE_BUILDER: "${{ inputs.compile-builder }}"
           BUILDER_REF: "${{ needs.detect-env.outputs.builder_ref }}"
         run: |
           set -euo pipefail
