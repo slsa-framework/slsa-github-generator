@@ -136,19 +136,6 @@ jobs:
         with:
           go-version: 1.18
 
-      - name: Download dependencies
-        shell: bash
-        run: |
-          set -euo pipefail
-
-          
-
-      # TODO(hermeticity) OS-level.
-      # - name: Disable hermeticity
-      # uses: slsa/hermeticity@xxx
-      #   with:
-      #     to-state: enabled
-
       - name: Build builder
         shell: bash
         id: builder-gen
