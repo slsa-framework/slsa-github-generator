@@ -56,6 +56,7 @@ fi
 echo "Builder version: $BUILDER_TAG"
 
 echo "BUILDER_REPOSITORY: $BUILDER_REPOSITORY"
+
 # Fetch the release binary and provenance.
 gh release -R "$BUILDER_REPOSITORY" download "$BUILDER_TAG" -p "$BUILDER_RELEASE_BINARY*" | exit 10
 

@@ -26,8 +26,8 @@ env:
   BUILDER_REPOSITORY: laurentsimon/slsa-github-generator
   # Verifier
   VERIFIER_REPOSITORY: laurentsimon/slsa-verifier
-  VERIFIER_RELEASE_BINARY: slsa-verify-linux-amd64
-  VERIFIER_RELEASE_BINARY_SHA256: 89fbcba9aed67d5146ea99946c7e4e5a80e3767871f0e3ffcd0b582134efd010
+  VERIFIER_RELEASE_BINARY: slsa-verifier-linux-amd64
+  VERIFIER_RELEASE_BINARY_SHA256: deb79c8722e3cee0b9ae305215f5c4ecc40b51af2500de7c912d540c27768b28
   VERIFIER_RELEASE: v0.0.1
   # Builder location
   BUILDER_DIR: builders
