@@ -32,7 +32,7 @@ if [[ "$BUILDER_TAG" = "$(echo -n "$BUILDER_TAG" | grep -P '^[a-f\d]{40}$')" ]];
     while read line; do
         TAG=$(echo "$line" | cut -f1)
         BRANCH=$(gh release -R "$BUILDER_REPOSITORY" view "$TAG" --json targetCommitish --jq '.targetCommitish')
-        if [[ "$BRANCH" != "main" ]]; then
+        if [[ "$BRANCH" != "feat/fastbuilds" ]]; then
             continue
         fi
         COMMIT=$(gh api /repos/"$BUILDER_REPOSITORY"/git/ref/tags/"$TAG" | jq -r '.object.sha')
