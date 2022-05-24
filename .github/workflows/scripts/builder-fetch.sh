@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+
+set -euo pipefail
+
 # Caller sets the following:
 #BUILDER_REPOSITORY="slsa-framework/slsa-github-generator"
 #BUILDER_TAG="v13.0.10" or "6a1e642a8689671a2cec9287149eb50bd9fe5ef6"
