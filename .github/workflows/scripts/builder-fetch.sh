@@ -8,6 +8,9 @@
 #VERIFIER_RELEASE_BINARY="slsa-verifier-linux-amd64"
 #VERIFIER_RELEASE_BINARY_SHA256="89fbcba9aed67d5146ea99946c7e4e5a80e3767871f0e3ffcd0b582134efd010"
 
+# This is necessary for the gh CLI.
+export GH_TOKEN="$GITHUB_TOKEN"
+
 PREFIX="refs/tags/"
 
 # Extract version.
