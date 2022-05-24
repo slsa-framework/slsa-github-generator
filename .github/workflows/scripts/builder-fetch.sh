@@ -50,19 +50,19 @@ fi
 
 if [[ "$BUILDER_TAG" != "$(echo -n "$BUILDER_TAG" | grep -P '^v\d*(\.([\d]{1,})){0,2}$')" ]]; then
     echo "Invalid ref: $BUILDER_TAG"
-    exit 0
+    exit 7
 fi
 
 echo "Builder version: $BUILDER_TAG"
 
 # Fetch the release binary and provenance.
-gh release -R "$BUILDER_REPOSITORY" download "$BUILDER_TAG" -p "$BUILDER_RELEASE_BINARY*"
+gh release -R "$BUILDER_REPOSITORY" download "$BUILDER_TAG" -p "$BUILDER_RELEASE_BINARY*" | exit 10
 # Test
 #mv $BUILDER_RELEASE_BINARY builder-binary
 #mv $BUILDER_RELEASE_BINARY.intoto.jsonl builder-binary.intoto.jsonl
 
 # Fetch the verifier at the right hash.
-gh release -R "$VERIFIER_REPOSITORY" download "$VERIFIER_RELEASE" -p "$VERIFIER_RELEASE_BINARY"
+gh release -R "$VERIFIER_REPOSITORY" download "$VERIFIER_RELEASE" -p "$VERIFIER_RELEASE_BINARY" | exit 11
 COMPUTED_HASH=$(sha256sum "$VERIFIER_RELEASE_BINARY" | awk '{print $1}')
 echo "verifier hash computed is $COMPUTED_HASH"
 echo "$VERIFIER_RELEASE_BINARY_SHA256 $VERIFIER_RELEASE_BINARY" | sha256sum --strict --check --status || exit 4
@@ -72,11 +72,11 @@ echo "verifier hash verification has passed"
 
 
 # Verify the provenance of the builder.
-./"$VERIFIER_RELEASE_BINARY" --branch "man" \
+./"$VERIFIER_RELEASE_BINARY" --branch "main" \
                             --tag "$BUILDER_TAG" \
                             --artifact-path "$BUILDER_RELEASE_BINARY" \
                             --provenance "$BUILDER_RELEASE_BINARY.intoto.jsonl" \
-                            --source "github.com/$BUILDER_REPOSITORY"
+                            --source "github.com/$BUILDER_REPOSITORY" | exit 6
 
 #./verifier-binary --branch main --tag "$BUILDER_TAG" --artifact-path builder-binary --provenance builder-binary.intoto.jsonl --source "github.com/$BUILDER_REPOSITORY" || exit 5
 BUILDER_COMMIT=$(gh api /repos/"$BUILDER_REPOSITORY"/git/ref/tags/"$BUILDER_TAG" | jq -r '.object.sha')
