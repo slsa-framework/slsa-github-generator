@@ -32,8 +32,7 @@ if [[ "$BUILDER_TAG" = "$(echo -n "$BUILDER_TAG" | grep -P '^[a-f\d]{40}$')" ]];
     while read line; do
         TAG=$(echo "$line" | cut -f1)
         BRANCH=$(gh release -R "$BUILDER_REPOSITORY" view "$TAG" --json targetCommitish --jq '.targetCommitish')
-        #TODO(revert) main
-        if [[ "$BRANCH" != "feat/fastbuilds" ]]; then
+        if [[ "$BRANCH" != "main" ]]; then
             continue
         fi
         COMMIT=$(gh api /repos/"$BUILDER_REPOSITORY"/git/ref/tags/"$TAG" | jq -r '.object.sha')
@@ -73,8 +72,7 @@ echo "verifier hash verification has passed"
 
 # Verify the provenance of the builder.
 chmod a+x "$VERIFIER_RELEASE_BINARY"
-#TODO(revert) main
-./"$VERIFIER_RELEASE_BINARY" --branch "feat/fastbuilds" \
+./"$VERIFIER_RELEASE_BINARY" --branch "main" \
                             --tag "$BUILDER_TAG" \
                             --artifact-path "$BUILDER_RELEASE_BINARY" \
                             --provenance "$BUILDER_RELEASE_BINARY.intoto.jsonl" \
