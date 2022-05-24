@@ -85,4 +85,5 @@ if [[ "$BUILDER_COMMIT" != "$PROVENANCE_COMMIT" ]]; then
     exit 5
 fi
 
+#TODO: verify the command
 echo "Builder provenance verified at tag $BUILDER_REF and commit $BUILDER_COMMIT"
