@@ -68,6 +68,7 @@ echo "$VERIFIER_RELEASE_BINARY_SHA256 $VERIFIER_RELEASE_BINARY" | sha256sum --st
 echo "verifier hash verification has passed"
 
 # Verify the provenance of the builder.
+chmod a+x "$VERIFIER_RELEASE_BINARY"
 ./"$VERIFIER_RELEASE_BINARY" --branch "main" \
                             --tag "$BUILDER_TAG" \
                             --artifact-path "$BUILDER_RELEASE_BINARY" \
