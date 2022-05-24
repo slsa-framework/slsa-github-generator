@@ -22,7 +22,7 @@ env:
   GENERATED_BINARY_NAME: compiled-binary
   # Builder
   BUILDER_BINARY: builder
-  BUILDER_RELEASE_BINARY: builder-linux-amd64
+  BUILDER_RELEASE_BINARY: slsa-builder-go-linux-amd64
   # Verifier
   VERIFIER_REPOSITORY: laurentsimon/slsa-verifier
   VERIFIER_RELEASE_BINARY: slsa-verify-linux-amd64

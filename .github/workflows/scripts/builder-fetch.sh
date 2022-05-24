@@ -1,24 +1,25 @@
 #!/usr/bin/env bash
 # Caller sets the following:
-#BUILDER_REPOSITORY="slsa-framework/example-package"
-#BUILDER_REF="v13.0.10" or "6a1e642a8689671a2cec9287149eb50bd9fe5ef6"
-#BUILDER_REF="6a1e642a8689671a2cec9287149eb50bd9fe5ef6" # v11.0.14
+#BUILDER_REPOSITORY="slsa-framework/slsa-github-generator"
+#BUILDER_TAG="v13.0.10" or "6a1e642a8689671a2cec9287149eb50bd9fe5ef6"
 #BUILDER_RELEASE_BINARY="builder-linux-amd64"
-
-# Verifier info.
 #VERIFIER_REPOSITORY="slsa-framework/slsa-verifier"
-#VERIFIER_REPOSITORY="slsa-framework/example-package"
 #VERIFIER_RELEASE="v13.0.10"
-#VERIFIER_RELEASE_BINARY="binary-linux-amd64"
+#VERIFIER_RELEASE_BINARY="slsa-verifier-linux-amd64"
 #VERIFIER_RELEASE_BINARY_SHA256="89fbcba9aed67d5146ea99946c7e4e5a80e3767871f0e3ffcd0b582134efd010"
 
-if [[ -z "$BUILDER_REF" ]]; then
-    echo "empty hash"
+PREFIX="refs/tags/"
+
+# Extract version.
+if [[ "$BUILDER_REF" =~ "^$PREFIX*" ]]; then
+    echo "Invalid ref: $BUILDER_REF"
     exit 2
 fi
 
-if [[ "$BUILDER_REF" = "$(echo -n "$BUILDER_REF" | grep -P '^[a-f\d]{40}$')" ]]; then
-    echo "Builder referenced by hash: $BUILDER_REF"
+BUILDER_TAG="${BUILDER_REF#"$PREFIX"}"
+
+if [[ "$BUILDER_TAG" = "$(echo -n "$BUILDER_TAG" | grep -P '^[a-f\d]{40}$')" ]]; then
+    echo "Builder referenced by hash: $BUILDER_TAG"
     echo "Resolving..."
     
     RELEASE_TAG=""
@@ -32,30 +33,30 @@ if [[ "$BUILDER_REF" = "$(echo -n "$BUILDER_REF" | grep -P '^[a-f\d]{40}$')" ]];
             continue
         fi
         COMMIT=$(gh api /repos/"$BUILDER_REPOSITORY"/git/ref/tags/"$TAG" | jq -r '.object.sha')
-        if [[ "$COMMIT" == "$BUILDER_REF" ]]; then
+        if [[ "$COMMIT" == "$BUILDER_TAG" ]]; then
             RELEASE_TAG="$TAG"
-            echo "Found tag $BUILDER_REF match at tag $TAG and commit $COMMIT"
+            echo "Found tag $BUILDER_TAG match at tag $TAG and commit $COMMIT"
             break
         fi
     done <<< "$RELEASE_LIST"
 
     if [[ -z "$RELEASE_TAG" ]]; then 
-        echo "Tag not found for $BUILDER_REF"
+        echo "Tag not found for $BUILDER_TAG"
         exit 3
     fi
 
-    BUILDER_REF="$RELEASE_TAG"
+    BUILDER_TAG="$RELEASE_TAG"
 fi
 
-if [[ "$BUILDER_REF" != "$(echo -n "$BUILDER_REF" | grep -P '^v\d*(\.([\d]{1,})){0,2}$')" ]]; then
-    echo "Invalid ref: $BUILDER_REF"
+if [[ "$BUILDER_TAG" != "$(echo -n "$BUILDER_TAG" | grep -P '^v\d*(\.([\d]{1,})){0,2}$')" ]]; then
+    echo "Invalid ref: $BUILDER_TAG"
     exit 0
 fi
 
-echo "Builder version: $BUILDER_REF"
+echo "Builder version: $BUILDER_TAG"
 
 # Fetch the release binary and provenance.
-gh release -R "$BUILDER_REPOSITORY" download "$BUILDER_REF" -p "$BUILDER_RELEASE_BINARY*"
+gh release -R "$BUILDER_REPOSITORY" download "$BUILDER_TAG" -p "$BUILDER_RELEASE_BINARY*"
 # Test
 #mv $BUILDER_RELEASE_BINARY builder-binary
 #mv $BUILDER_RELEASE_BINARY.intoto.jsonl builder-binary.intoto.jsonl
@@ -72,13 +73,13 @@ echo "verifier hash verification has passed"
 
 # Verify the provenance of the builder.
 ./"$VERIFIER_RELEASE_BINARY" --branch "main" \
-                            --tag "$BUILDER_REF" \
+                            --tag "$BUILDER_TAG" \
                             --artifact-path "$BUILDER_RELEASE_BINARY" \
                             --provenance "$BUILDER_RELEASE_BINARY.intoto.jsonl" \
                             --source "github.com/$BUILDER_REPOSITORY"
 
-#./verifier-binary --branch main --tag "$BUILDER_REF" --artifact-path builder-binary --provenance builder-binary.intoto.jsonl --source "github.com/$BUILDER_REPOSITORY" || exit 5
-BUILDER_COMMIT=$(gh api /repos/"$BUILDER_REPOSITORY"/git/ref/tags/"$BUILDER_REF" | jq -r '.object.sha')
+#./verifier-binary --branch main --tag "$BUILDER_TAG" --artifact-path builder-binary --provenance builder-binary.intoto.jsonl --source "github.com/$BUILDER_REPOSITORY" || exit 5
+BUILDER_COMMIT=$(gh api /repos/"$BUILDER_REPOSITORY"/git/ref/tags/"$BUILDER_TAG" | jq -r '.object.sha')
 PROVENANCE_COMMIT=$(cat "$BUILDER_RELEASE_BINARY.intoto.jsonl" | jq -r '.payload' | base64 -d | jq -r '.predicate.materials[0].digest.sha1')
 if [[ "$BUILDER_COMMIT" != "$PROVENANCE_COMMIT" ]]; then
     echo "Builder commit sha $BUILDER_COMMIT != provenance material $PROVENANCE_COMMIT"
@@ -86,4 +87,4 @@ if [[ "$BUILDER_COMMIT" != "$PROVENANCE_COMMIT" ]]; then
 fi
 
 #TODO: verify the command
-echo "Builder provenance verified at tag $BUILDER_REF and commit $BUILDER_COMMIT"
+echo "Builder provenance verified at tag $BUILDER_TAG and commit $BUILDER_COMMIT"
