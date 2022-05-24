@@ -168,7 +168,7 @@ jobs:
             
             .github/workflows/scripts/builder-fetch.sh
 
-            mv "$BUILDER_RELEASE_BINARY" ../../"$BUILDER_BINARY"
+            mv "$BUILDER_RELEASE_BINARY" "$BUILDER_BINARY"
           fi
           
 
