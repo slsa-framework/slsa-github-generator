@@ -1,6 +1,8 @@
 name: Builders realeaser
 
-on: 
+on:
+  # For manual tests.
+  workflow_dispatch:
   push:
     tags:
       - "*" # triggers only if push new tag version, like `0.8.4` or else
