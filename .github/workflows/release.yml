@@ -1,0 +1,23 @@
+name: Builders realeaser
+
+on: 
+  push:
+    tags:
+      - "*" # triggers only if push new tag version, like `0.8.4` or else
+
+permissions: read-all
+
+env:
+  GH_TOKEN: ${{ secrets.E2E_GO_TOKEN }}
+
+jobs:
+  # Go builder.
+  go-builder:
+    permissions:
+      id-token: write # For signing.
+      contents: write # For asset uploads.
+    uses: slsa-framework/slsa-github-generator/.github/workflows/builder_go_slsa3.yml@main
+    with:
+      go-version: 1.18
+      config-file: .github/workflows/configs-go/config-release.yml
+      compile-builder: true
