@@ -7,9 +7,6 @@ on:
 
 permissions: read-all
 
-env:
-  GH_TOKEN: ${{ secrets.E2E_GO_TOKEN }}
-
 jobs:
   # Go builder.
   go-builder:
