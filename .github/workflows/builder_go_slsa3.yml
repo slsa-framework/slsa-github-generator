@@ -59,7 +59,7 @@ on:
         required: false
         type: string
       compile-builder:
-        description: "Build the builder from source. This speeds up build time by ~2mn."
+        description: "Build the builder from source. This increases build time by ~2mn."
         required: false
         type: boolean
         default: false
