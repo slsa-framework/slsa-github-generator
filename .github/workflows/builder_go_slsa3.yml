@@ -27,7 +27,7 @@ env:
   # Verifier
   VERIFIER_REPOSITORY: slsa-framework/slsa-verifier
   VERIFIER_RELEASE_BINARY: slsa-verifier-linux-amd64
-  VERIFIER_RELEASE_BINARY_SHA256: fb743bc6bb56908d590da66bfe5c266d003aa226b30fcada5f7b9e4aea43b52b
+  VERIFIER_RELEASE_BINARY_SHA256: 60c91c9d5b9a059e37ac46da316f20c81da335b5d00e1f74d03dd50f819694bd
   VERIFIER_RELEASE: v0.0.1
   # Builder location
   BUILDER_DIR: builders
