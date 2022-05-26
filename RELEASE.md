@@ -66,9 +66,9 @@ Error: Process completed with exit code 4.
 ## Tagging
 
 Create a new tag for the official generator via [slsa-framework/slsa-github-generator/releases/new](https://github.com/slsa-framework/slsa-github-generator/releases/new). 
-The tag *MUST* be a "canonical" semantic version without metadata (`vX.Y.Z`). Shorter versions are not accepted by the builder's and verifier's code. 
+The tag *MUST* be a "canonical" semantic version without metadata (`$BUILDER_TAG`). Shorter versions are not accepted by the builder's and verifier's code. 
 
-Set the title to `vX.Y.Z`.
+Set the title to `$BUILDER_TAG`.
 
 Tick the `This is a pre-release` option.
 
@@ -102,6 +102,7 @@ verifier hash verification has passed
 verification failed: could not find a matching signature entry
 Error: Process completed with exit code 6.
 ```. 
+
 If it does not, delete the release, fix the bug and re-start the release process at the top of this page.
 4. If the test above failed with the expected message, re-upload the original binary back to the assets, e.g. via:
 ```
