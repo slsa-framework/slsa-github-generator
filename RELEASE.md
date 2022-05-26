@@ -117,11 +117,11 @@ The next step is to update the verifier's e2e tests. For this, you need to:
 
 1. Generate binaries and provenance for a project, using the `$BUILDER_REF` builder. TODO: need a common repository to do this.
 
-2. Place the files in a new directory `slsa-framework/slsa-verifier/tree/main/testdata/$BUILDER_REF`.
+2. Place the files in a new directory `slsa-framework/slsa-verifier/tree/main/testdata/$BUILDER_TAG`.
 
 3. Add the new release to the list defined in [slsa-framework/slsa-verifier/blob/main/main_test.go](https://github.com/slsa-framework/slsa-verifier/blob/main/main_test.go).
 
-Send a pull request to merge the changes into the verifier's repository. The pre-submits will validate that the verifier is able to verify provenance from the `$BUILDER_REF` builder.
+Send a pull request to merge the changes into the verifier's repository. The pre-submits will validate that the verifier is able to verify provenance from the `$BUILDER_TAG` builder.
 
 ## Finalize release
 
