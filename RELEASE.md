@@ -19,9 +19,12 @@ Set up env variables:
 ```
 $ export GH_TOKEN=<PAT-token>
 $ export GITHUB_USERNAME="laurentsimon"
-$ export VERIFIER_TAG="v0.0.1" # This is the existing slsa-verifier version used by the builder. (https://github.com/slsa-framework/slsa-github-generator/blob/release/bad-verifier/.github/workflows/builder_go_slsa3.yml#L31)
+# This is the existing slsa-verifier version used by the builder. (https://github.com/slsa-framework/slsa-github-generator/blob/release/bad-verifier/.github/workflows/builder_go_slsa3.yml#L31)
+$ export VERIFIER_TAG="v0.0.1" 
 $ export VERIFIER_REPOSITORY="$GITHUB_USERNAME/slsa-verifier"
-$ export BUILDER_TAG="v0.0.2" # release tag of the builder
+# Release tag of the builder we want to release
+$ export BUILDER_TAG="v0.0.2" 
+# Branch name for our test
 $ export BUILDER_REF="release/bad-verifier"
 $ export BUILDER_REPOSITORY="$GITHUB_USERNAME/slsa-github-generator"
 $ export GH=/path/to/gh
@@ -48,12 +51,13 @@ $ "$GH" release -R "$VERIFIER_REPOSITORY" upload "$VERIFIER_TAG" slsa-verifier-l
 $ "$GH" release -R "$BUILDER_REPOSITORY" create "$BUILDER_TAG" --title "$BUILDER_TAG" --notes "pre-release tests for $BUILDER_TAG $(date)" --target "$BUILDER_REF"
 ```
 This will trigger a workflow release, let it complete and generate the release assets.
-3. Edit the file [slsa-framework/example-package/.github/workflows/e2e.go.workflow_dispatch.main.adversarial-verifier-binary.slsa3.yml#L14](https://github.com/slsa-framework/example-package/blob/main/.github/workflows/e2e.go.workflow_dispatch.main.adversarial-verifier-binary.slsa3.yml#L14) by using `$BUILDER_REPOSITORY` and `$BUILDER_TAG`:
+
+4. Edit the file [slsa-framework/example-package/.github/workflows/e2e.go.workflow_dispatch.main.adversarial-verifier-binary.slsa3.yml#L14](https://github.com/slsa-framework/example-package/blob/main/.github/workflows/e2e.go.workflow_dispatch.main.adversarial-verifier-binary.slsa3.yml#L14) by using `$BUILDER_REPOSITORY` and `$BUILDER_TAG`:
 ```
     uses: $BUILDER_REPOSITORY/.github/workflows/builder_go_slsa3.yml@$BUILDER_REF
 ```
-3. Run the test manually via the GitHub UX in [https://github.com/slsa-framework/example-package/actions/workflows/e2e.go.workflow_dispatch.main.adversarial-verifier-binary.slsa3.yml](https://github.com/slsa-framework/example-package/actions/workflows/e2e.go.workflow_dispatch.main.adversarial-verifier-binary.slsa3.yml) by cliking `Run Workflow`.
-4. Verify the run fails with log message:
+5. Run the test manually via the GitHub UX in [https://github.com/slsa-framework/example-package/actions/workflows/e2e.go.workflow_dispatch.main.adversarial-verifier-binary.slsa3.yml](https://github.com/slsa-framework/example-package/actions/workflows/e2e.go.workflow_dispatch.main.adversarial-verifier-binary.slsa3.yml) by cliking `Run Workflow`.
+6. Verify the run fails with log message:
 ```
 verifier hash computed is 5891b5b522d5df086d0ff0b110fbd9d21bb4fc7163af34d08286a2e846f6be03
 Error: Process completed with exit code 4.
