@@ -159,7 +159,7 @@ ldflags:
 The builder workflow [slsa-framework/slsa-github-generator/.github/workflows/builder_go_slsa3.yml](.github/workflows/builder_go_slsa3.yml) accepts the following inputs:
 
 | Name         | Required | Description    | Default                                                                                                                                                                                                                                           |
-| ------------ | -------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ------------------ | -------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `config-file` | no      | `.github/workflows/slsa-goreleaser.yml` | The configuration file for the builder. A path within the calling repository. |
 | `evaluated-envs`        | no       | empty value | A list of environment variables, seperated by `,`: `VAR1: value, VAR2: value`. This is typically used to pass dynamically-generated values, such as `ldflags`. Note that only environment variables with names starting with `CGO_` or `GO` are accepted. |
 | `go-version` | yes      | The go version for your project. This value is passed, unchanged, to the [actions/setup-go](https://github.com/actions/setup-go) action when setting up the environment |
@@ -168,9 +168,12 @@ The builder workflow [slsa-framework/slsa-github-generator/.github/workflows/bui
 ### Workflow Example
 
 Create a new workflow, say `.github/workflows/slsa-goreleaser.yml`.
+
 Make sure that you reference the trusted builder with a semnatic version of the form `vX.Y.Z`. The build will fail
-if you reference it via a shorter tag like `vX.Y` or `vX`. Refencing via hash is currently not supported due to limitations
-of the reusable workflow APIs. (We are working with GitHub to addrss this limitation).
+if you reference it via a shorter tag like `vX.Y` or `vX`. 
+
+Refencing via hash is currently not supported due to limitations
+of the reusable workflow APIs. (We are working with GitHub to address this limitation).
 
 ```yaml
 name: SLSA go releaser
