@@ -42,10 +42,10 @@ Download the generated binary `slsa-builder-go-linux-amd64` locally on your mach
 
 ## Post-release tests
 
-End-to-end tests run daily in [github.com/slsa-framework/example-package/.github/workflows/](github.com/slsa-framework/example-package/.github/workflows/), and contain adversarial tests (developer tampers with the artifacts used by the builders). All these adversarial tests compile the builder from source (`compile-builder: true`). But we need to verify that the builder detects malicious builder binarie when `compile-builder: false` (default).
+End-to-end tests run daily in [github.com/slsa-framework/example-package/.github/workflows/](github.com/slsa-framework/example-package/.github/workflows/), and contain adversarial tests (developer tampers with the artifacts used by the builders). All these adversarial tests compile the builder from source (`compile-builder: true`). But we need to verify that the builder detects malicious builder's binary when `compile-builder: false` (default).
 
 For this:
-1. Make sure you have downloaded the builder's binary locally `slsa-builder-go-linux-amd64`, either via the web UI or via `TODO:command`.
+1. Make sure you have downloaded the `vX.Y.Z` builder's binary locally `slsa-builder-go-linux-amd64`, either via the web UI or via `TODO:command`.
 2. Upload a different binary to the assets. You can use the [GitHub CLI](TODO) command as follows:
 3. Trigger the test in [TODO](TODO) and verifies that it fails, with a message `TODO`. If it does not, delete the release, fix the bug and re-start the release process at the top of this page.
 4. If the test above failed with the expected message, re-upload the original binary back to the assets, e.g. via `TODO:command`.
@@ -54,11 +54,13 @@ For this:
 
 The next step is to update the verifier's e2e tests. For this, you need to:
 
-1. Create binaries and provenance for the new release `vX.Y.Z`, and place the files in a new directory [slsa-framework/slsa-verifier/tree/main/testdata/vX.Y.Z](https://github.com/slsa-framework/slsa-verifier/tree/main/testdata/vX.Y.Z).
+1. Generate binaries and provenance for a project, using the `vX.Y.Z` builder. 
 
-2. Add the new release to the list defined in [slsa-framework/slsa-verifier/blob/main/main_test.go](https://github.com/slsa-framework/slsa-verifier/blob/main/main_test.go).
+2. Place the files in a new directory [slsa-framework/slsa-verifier/tree/main/testdata/vX.Y.Z](https://github.com/slsa-framework/slsa-verifier/tree/main/testdata/vX.Y.Z).
 
-Send a pull request to merge the into the verifier's repository.
+3. Add the new release to the list defined in [slsa-framework/slsa-verifier/blob/main/main_test.go](https://github.com/slsa-framework/slsa-verifier/blob/main/main_test.go).
+
+Send a pull request to merge the changes into the verifier's repository. The pre-submit will validate that the verifier is able to verify provenance from the `vX.Y.Z` builder.
 
 ## Finalize release
 
