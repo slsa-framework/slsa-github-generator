@@ -43,7 +43,7 @@ $ "$GH" release -R "$VERIFIER_REPOSITORY" upload "$VERIFIER_TAG" slsa-verifier-l
 ```
 2. Ensure your fork of the builder is at the same commit hash as the offical builder's `$BUILDER_TAG` release.
 3. Create a new branch `git checkout -b "$BUILDER_REF"`
-3. Update the file `$VERIFIER_REPOSITORY/main/.github/workflows/builder_go_slsa3.yml#L28)
+4. Update the file `$VERIFIER_REPOSITORY/main/.github/workflows/builder_go_slsa3.yml#L28` and push the changes.
 3. Create a release for your builder:
 ```
 
