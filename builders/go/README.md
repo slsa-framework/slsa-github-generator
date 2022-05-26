@@ -212,27 +212,6 @@ jobs:
       go-version: 1.17
       # Optional: only needed if using ldflags.
       evaluated-envs: "VERSION_LDFLAGS:${{needs.args.outputs.ldflags}}"
-
-  # Upload to GitHub release.
-  upload:
-    permissions:
-      contents: write
-    runs-on: ubuntu-latest
-    needs: build
-    steps:
-      - uses: actions/download-artifact@fb598a63ae348fa914e94cd0ff38f362e927b741
-        with:
-          name: ${{ needs.build.outputs.go-binary-name }}
-      - uses: actions/download-artifact@fb598a63ae348fa914e94cd0ff38f362e927b741
-        with:
-          name: ${{ needs.build.outputs.go-binary-name }}.intoto.jsonl
-      - name: Release
-        uses: softprops/action-gh-release@1e07f4398721186383de40550babbdf2b84acfc5
-        if: startsWith(github.ref, 'refs/tags/')
-        with:
-          files: |
-            ${{ needs.build.outputs.go-binary-name }}
-            ${{ needs.build.outputs.go-binary-name }}.intoto.jsonl
 ```
 
 ## Verification of provenance
@@ -243,6 +222,7 @@ To verify the provenance, use the [github.com/slsa-framework/slsa-verifier](http
 
 ```shell
 $ git clone git@github.com:slsa-framework/slsa-verifier.git
+$ git checkout tags/v1.0.0
 $ go run . --help
     -binary string
     	path to a binary to verify
