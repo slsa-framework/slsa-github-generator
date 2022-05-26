@@ -104,6 +104,7 @@ Error: Process completed with exit code 6.
 ```
 
 If it does not, delete the release, fix the bug and re-start the release process at the top of this page.
+
 4. If the test above failed with the expected message, re-upload the original binary back to the assets, e.g. via:
 ```
 $ mv slsa-builder-go-linux-amd64-"$BUILDER_TAG".original slsa-builder-go-linux-amd64
