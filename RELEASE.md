@@ -19,9 +19,9 @@ Set up env variables:
 ```
 $ export GH_TOKEN=<PAT-token>
 $ export GITHUB_USERNAME="laurentsimon"
-$ export VERIFIER_TAG="v2.3.4" # change accordingly.
+$ export VERIFIER_TAG="v0.0.1" # This is the existing slsa-verifier version used by the builder. (https://github.com/slsa-framework/slsa-github-generator/blob/release/bad-verifier/.github/workflows/builder_go_slsa3.yml#L31)
 $ export VERIFIER_REPOSITORY="$GITHUB_USERNAME/slsa-verifier"
-$ export BUILDER_TAG="v0.0.2"
+$ export BUILDER_TAG="v0.0.2" # release tag of the builder
 $ export BUILDER_REF="release/bad-verifier"
 $ export BUILDER_REPOSITORY="$GITHUB_USERNAME/slsa-github-generator"
 $ export GH=/path/to/gh
@@ -33,18 +33,17 @@ Needless to say, only think about a release when all the e2e tests in [github.co
 
 There is one integration test we cannot easily test "live", so we need to simulate it by changing the code: malicious verifier binary in assets. We want to be sure the builder fails if the verifier's binary is tampered with. For this:
 
-1. Create a new release for your fork of the slsa-verifier repository with a malicious binary (We need a release because the builder only accepts reference tags). 
+1. Create a new release for your fork of the slsa-verifier repository with a malicious binary. 
 ```
 $ echo hello > slsa-verifier-linux-amd64
 $ "$GH" release -R "$VERIFIER_REPOSITORY" create "$VERIFIER_TAG" --title "$VERIFIER_TAG" --notes "pre-release tests for builder $BUILDER_TAG $(date)"
 $ # Note: this will create a release workflow: cancel it in the GitHub UI.
 $ "$GH" release -R "$VERIFIER_REPOSITORY" upload "$VERIFIER_TAG" slsa-verifier-linux-amd64
 ```
-
 2. Ensure your fork of the builder is at the same commit hash as the offical builder's `$BUILDER_TAG` release.
 3. Create a new branch `git checkout -b "$BUILDER_REF"`
-4. Update the file `$BUILDER_REPOSITORY/main/.github/workflows/builder_go_slsa3.yml#L28` by replacing the string `slsa-framework/slsa-github-generator` with the value of `$BUILDER_REPOSITORY`. Then push the changes.
-3. Create a release for your builder:
+4. Update the file `$BUILDER_REPOSITORY/main/.github/workflows/builder_go_slsa3.yml` by replacing the strings `BUILDER_REPOSITORY` and `VERIFIER_REPOSITORY` with your own username (value of `$GITHUB_USERNAME`). Then push the changes.
+3. Create a release for your builder for this branch:
 ```
 $ "$GH" release -R "$BUILDER_REPOSITORY" create "$BUILDER_TAG" --title "$BUILDER_TAG" --notes "pre-release tests for $BUILDER_TAG $(date)" --target "$BUILDER_REF"
 ```
@@ -54,7 +53,11 @@ This will trigger a workflow release, let it complete and generate the release a
     uses: $BUILDER_REPOSITORY/.github/workflows/builder_go_slsa3.yml@$BUILDER_REF
 ```
 3. Run the test manually via the GitHub UX in [https://github.com/slsa-framework/example-package/actions/workflows/e2e.go.workflow_dispatch.main.adversarial-verifier-binary.slsa3.yml](https://github.com/slsa-framework/example-package/actions/workflows/e2e.go.workflow_dispatch.main.adversarial-verifier-binary.slsa3.yml) by cliking `Run Workflow`.
-4. Verify the run fails with log message `TODO`.
+4. Verify the run fails with log message:
+```
+verifier hash computed is 5891b5b522d5df086d0ff0b110fbd9d21bb4fc7163af34d08286a2e846f6be03
+Error: Process completed with exit code 4.
+```
 
 ## Tagging
 
@@ -67,29 +70,52 @@ Tick the `This is a pre-release` option.
 
 Click `Publish release`.
 
-Download the generated binary `slsa-builder-go-linux-amd64` locally on your machine.
+Download the generated binary `slsa-builder-go-linux-amd64` locally on your machine:
+```
+$ "$GH" release -R slsa-framework/slsa-github-generator download "$BUILDER_TAG" -p "slsa-builder-go-linux-amd64"
+```
 
 ## Post-release tests
 
 End-to-end tests run daily in [github.com/slsa-framework/example-package/.github/workflows/](github.com/slsa-framework/example-package/.github/workflows/), and contain adversarial tests (developer tampers with the artifacts used by the builders). All these adversarial tests compile the builder from source (`compile-builder: true`). But we need to verify that the builder detects malicious builder's binary when `compile-builder: false` (default).
 
 For this:
-1. Make sure you have downloaded the `vX.Y.Z` builder's binary locally `slsa-builder-go-linux-amd64`, either via the web UI or via `TODO:command`.
-2. Upload a different binary to the assets. You can use the [GitHub CLI](TODO) command as follows:
-3. Trigger the test in [TODO](TODO) and verifies that it fails, with a message `TODO`. If it does not, delete the release, fix the bug and re-start the release process at the top of this page.
-4. If the test above failed with the expected message, re-upload the original binary back to the assets, e.g. via `TODO:command`.
+1. Make sure you have downloaded the `$BUILDER_TAG` builder's binary locally `slsa-builder-go-linux-amd64`, either via the web UI or via:
+```
+$ "$GH" release -R slsa-framework/slsa-github-generator download "$BUILDER_TAG" -p "slsa-builder-go-linux-amd64"
+$ mv slsa-builder-go-linux-amd64 slsa-builder-go-linux-amd64-"$BUILDER_TAG".original
+```
+2. Upload a different binary to the assets:
+```
+$ echo hello > slsa-builder-go-linux-amd64
+$ "$GH" release -R slsa-framework/slsa-github-generator upload "$BUILDER_TAG" slsa-builder-go-linux-amd64  --clobber
+```
+3. Update the version of the workflow [slsa-framework/example-package/.github/workflows/e2e.go.workflow_dispatch.main.adversarial-builder-binary.slsa3.yml#L14](https://github.com/slsa-framework/example-package/blob/main/.github/workflows/e2e.go.workflow_dispatch.main.adversarial-builder-binary.slsa3.yml#L14) with the `$BUILDER_TAG` to test.
+4. Trigger the test in [slsa-framework/example-package/actions/workflows/e2e.go.workflow_dispatch.main.adversarial-builder-binary.slsa3.yml](https://github.com/slsa-framework/example-package/actions/workflows/e2e.go.workflow_dispatch.main.adversarial-builder-binary.slsa3.yml) by cliking `Run workflow`. Verify that it fails, with a message:
+```
+verifier hash computed is 60c91c9d5b9a059e37ac46da316f20c81da335b5d00e1f74d03dd50f819694bd
+verifier hash verification has passed
+verification failed: could not find a matching signature entry
+Error: Process completed with exit code 6.
+```. 
+If it does not, delete the release, fix the bug and re-start the release process at the top of this page.
+4. If the test above failed with the expected message, re-upload the original binary back to the assets, e.g. via:
+```
+$ mv slsa-builder-go-linux-amd64-"$BUILDER_TAG".original slsa-builder-go-linux-amd64
+$ "$GH" release -R slsa-framework/slsa-github-generator upload "$BUILDER_TAG" slsa-builder-go-linux-amd64  --clobber
+```
 
 ## Update verifier
 
 The next step is to update the verifier's e2e tests. For this, you need to:
 
-1. Generate binaries and provenance for a project, using the `vX.Y.Z` builder. 
+1. Generate binaries and provenance for a project, using the `$BUILDER_REF` builder. TODO: need a common repository to do this.
 
-2. Place the files in a new directory [slsa-framework/slsa-verifier/tree/main/testdata/vX.Y.Z](https://github.com/slsa-framework/slsa-verifier/tree/main/testdata/vX.Y.Z).
+2. Place the files in a new directory `slsa-framework/slsa-verifier/tree/main/testdata/$BUILDER_REF`.
 
 3. Add the new release to the list defined in [slsa-framework/slsa-verifier/blob/main/main_test.go](https://github.com/slsa-framework/slsa-verifier/blob/main/main_test.go).
 
-Send a pull request to merge the changes into the verifier's repository. The pre-submit will validate that the verifier is able to verify provenance from the `vX.Y.Z` builder.
+Send a pull request to merge the changes into the verifier's repository. The pre-submits will validate that the verifier is able to verify provenance from the `$BUILDER_REF` builder.
 
 ## Finalize release
 
