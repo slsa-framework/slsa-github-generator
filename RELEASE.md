@@ -22,8 +22,8 @@ Needless to say, only think about a release when all the e2e tests in [github.co
 There is one integration test we cannot easily test "live", so we need to simulate it by changing the code: malicious verifier binary in assets. We want to be sure the builder fails if the verifier's binary is tampered with. For this:
 
 1. Create a branch and alter the verifier's expected hash in [slsa-framework/slsa-github-generator/blob/main/.github/workflows/builder_go_slsa3.yml#L30](https://github.com/slsa-framework/slsa-github-generator/blob/main/.github/workflows/builder_go_slsa3.yml#L30)
-2. Edit the file [slsa-framework/example-package](TODO) by updating the version to `vX.Y.Z`.
-3. Run the test manually via the GitHub UX in [TODO](TODO)
+2. Edit the file [slsa-framework/example-package/.github/workflows/e2e.go.workflow_dispatch.main.adversarial-verifier-binary.slsa3.yml#L14](https://github.com/slsa-framework/example-package/blob/main/.github/workflows/e2e.go.workflow_dispatch.main.adversarial-verifier-binary.slsa3.yml#L14) by using your own repo/branch.
+3. Run the test manually via the GitHub UX in [https://github.com/slsa-framework/example-package/actions/workflows/e2e.go.workflow_dispatch.main.adversarial-verifier-binary.slsa3.yml](https://github.com/slsa-framework/example-package/actions/workflows/e2e.go.workflow_dispatch.main.adversarial-verifier-binary.slsa3.yml) and click `Run Workflow`.
 4. Verify the run fails with log message `TODO`.
 
 ## Tagging
