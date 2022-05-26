@@ -6,11 +6,11 @@ This repository contains the code, examples and technical design for the blog po
 
 ---
 
-[Golang projects](#golang-projects)
-[Other projects](other-projects)
-[Technical design](technical-design)
-    - [Blog post](#blog-post)
-    - [Specifications](#specifications)
+- [Golang projects](#golang-projects)
+- [Other projects](other-projects)
+- [Technical design](technical-design)
+  - [Blog post](#blog-post)
+  - [Specifications](#specifications)
 ---
 
 ## Golang projects
