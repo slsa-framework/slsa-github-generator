@@ -101,7 +101,7 @@ verifier hash computed is 60c91c9d5b9a059e37ac46da316f20c81da335b5d00e1f74d03dd5
 verifier hash verification has passed
 verification failed: could not find a matching signature entry
 Error: Process completed with exit code 6.
-```. 
+```
 
 If it does not, delete the release, fix the bug and re-start the release process at the top of this page.
 4. If the test above failed with the expected message, re-upload the original binary back to the assets, e.g. via:
