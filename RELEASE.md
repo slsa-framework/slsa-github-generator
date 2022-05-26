@@ -13,24 +13,24 @@ This is a  document to describe the release process for the Go builder. Since al
 
 ---
 
+In the rest of the document, we will assume we want to release `vX.Y.Z` of the builder.
+
 ## Pre-release tests
 
 Needless to say, only think about a release when all the e2e tests in [github.com/slsa-framework/example-package/.github/workflows/](github.com/slsa-framework/example-package/.github/workflows/) are passing. (They run daily).
 
 There is one integration test we cannot easily test "live", so we need to simulate it by changing the code: malicious verifier binary in assets. We want to be sure the builder fails if the verifier's binary is tampered with. For this:
 
-1. Create a branch and change the verifier repository [TODO:file]
-2. Edit the file [slsa-framework/example-package](TODO) by changing the name/branch of the builder to point to your builder.
+1. Create a branch and alter the verifier's expected hash in [slsa-framework/slsa-github-generator/blob/main/.github/workflows/builder_go_slsa3.yml#L30](https://github.com/slsa-framework/slsa-github-generator/blob/main/.github/workflows/builder_go_slsa3.yml#L30)
+2. Edit the file [slsa-framework/example-package](TODO) by updating the version to `vX.Y.Z`.
 3. Run the test manually via the GitHub UX in [TODO](TODO)
 4. Verify the run fails with log message `TODO`.
 
 ## Tagging
 
-In the rest of the document, we will assume we want to release `vX.Y.Z` of the builder.
-
 A new tag should be created via [slsa-framework/slsa-github-generator/releases/new](https://github.com/slsa-framework/slsa-github-generator/releases/new). 
 
-The tag *MUST* be a "canonical" semnatic version without metadata (`vX.Y.Z`). Shorter versions are not accepted by the builder's and verifier's code. 
+The tag *MUST* be a "canonical" semantic version without metadata (`vX.Y.Z`). Shorter versions are not accepted by the builder's and verifier's code. 
 
 Set the title to `vX.Y.Z`.
 
