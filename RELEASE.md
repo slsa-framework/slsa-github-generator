@@ -17,13 +17,13 @@ This is a  document to describe the release process for the Go builder. Since al
 
 Set up env variables:
 ```
-```
 $ export GH_TOKEN=<PAT-token>
 $ export GITHUB_USERNAME="laurentsimon"
 $ export VERIFIER_TAG="v2.3.4" # change accordingly.
 $ export VERIFIER_REPOSITORY="$GITHUB_USERNAME/slsa-verifier"
 $ export BUILDER_TAG="v0.0.2"
-$ export BUILDER_REF="feat/bad-verifier"
+$ export BUILDER_REF="release/bad-verifier"
+$ export BUILDER_REPOSITORY="$GITHUB_USERNAME/slsa-github-generator"
 $ export GH=/path/to/gh
 ```
 
@@ -33,29 +33,32 @@ Needless to say, only think about a release when all the e2e tests in [github.co
 
 There is one integration test we cannot easily test "live", so we need to simulate it by changing the code: malicious verifier binary in assets. We want to be sure the builder fails if the verifier's binary is tampered with. For this:
 
-1. Create a new release for your fork of the slsa-verifier repository, e.g. `v2.3.4` with a malicious binary (We need a release because the builder only accepts reference tags). 
-
+1. Create a new release for your fork of the slsa-verifier repository with a malicious binary (We need a release because the builder only accepts reference tags). 
 ```
 $ echo hello > slsa-verifier-linux-amd64
 $ "$GH" release -R "$VERIFIER_REPOSITORY" create "$VERIFIER_TAG" --title "$VERIFIER_TAG" --notes "pre-release tests for builder $BUILDER_TAG $(date)"
 $ # Note: this will create a release workflow: cancel it in the GitHub UI.
 $ "$GH" release -R "$VERIFIER_REPOSITORY" upload "$VERIFIER_TAG" slsa-verifier-linux-amd64
 ```
+
 2. Ensure your fork of the builder is at the same commit hash as the offical builder's `$BUILDER_TAG` release.
 3. Create a new branch `git checkout -b "$BUILDER_REF"`
-4. Update the file `$VERIFIER_REPOSITORY/main/.github/workflows/builder_go_slsa3.yml#L28` and push the changes.
+4. Update the file `$BUILDER_REPOSITORY/main/.github/workflows/builder_go_slsa3.yml#L28` by replacing the string `slsa-framework/slsa-github-generator` with the value of `$BUILDER_REPOSITORY`. Then push the changes.
 3. Create a release for your builder:
 ```
-
+$ "$GH" release -R "$BUILDER_REPOSITORY" create "$BUILDER_TAG" --title "$BUILDER_TAG" --notes "pre-release tests for $BUILDER_TAG $(date)" --target "$BUILDER_REF"
 ```
-3. Edit the file [slsa-framework/example-package/.github/workflows/e2e.go.workflow_dispatch.main.adversarial-verifier-binary.slsa3.yml#L14](https://github.com/slsa-framework/example-package/blob/main/.github/workflows/e2e.go.workflow_dispatch.main.adversarial-verifier-binary.slsa3.yml#L14) by using your own repo/tag.
-3. Run the test manually via the GitHub UX in [https://github.com/slsa-framework/example-package/actions/workflows/e2e.go.workflow_dispatch.main.adversarial-verifier-binary.slsa3.yml](https://github.com/slsa-framework/example-package/actions/workflows/e2e.go.workflow_dispatch.main.adversarial-verifier-binary.slsa3.yml) and click `Run Workflow`.
+This will trigger a workflow release, let it complete and generate the release assets.
+3. Edit the file [slsa-framework/example-package/.github/workflows/e2e.go.workflow_dispatch.main.adversarial-verifier-binary.slsa3.yml#L14](https://github.com/slsa-framework/example-package/blob/main/.github/workflows/e2e.go.workflow_dispatch.main.adversarial-verifier-binary.slsa3.yml#L14) by using `$BUILDER_REPOSITORY` and `$BUILDER_TAG`:
+```
+    uses: $BUILDER_REPOSITORY/.github/workflows/builder_go_slsa3.yml@$BUILDER_REF
+```
+3. Run the test manually via the GitHub UX in [https://github.com/slsa-framework/example-package/actions/workflows/e2e.go.workflow_dispatch.main.adversarial-verifier-binary.slsa3.yml](https://github.com/slsa-framework/example-package/actions/workflows/e2e.go.workflow_dispatch.main.adversarial-verifier-binary.slsa3.yml) by cliking `Run Workflow`.
 4. Verify the run fails with log message `TODO`.
 
 ## Tagging
 
-A new tag should be created via [slsa-framework/slsa-github-generator/releases/new](https://github.com/slsa-framework/slsa-github-generator/releases/new). 
-
+Create a new tag for the official generator via [slsa-framework/slsa-github-generator/releases/new](https://github.com/slsa-framework/slsa-github-generator/releases/new). 
 The tag *MUST* be a "canonical" semantic version without metadata (`vX.Y.Z`). Shorter versions are not accepted by the builder's and verifier's code. 
 
 Set the title to `vX.Y.Z`.
