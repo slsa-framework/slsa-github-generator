@@ -111,6 +111,8 @@ $ mv slsa-builder-go-linux-amd64-"$BUILDER_TAG".original slsa-builder-go-linux-a
 $ "$GH" release -R slsa-framework/slsa-github-generator upload "$BUILDER_TAG" slsa-builder-go-linux-amd64  --clobber
 ```
 
+5. Re-run the workflow above and verify that it succeeds. (TODO: we need a set of workflows identical to the e2e tests but using pre-built binaries; and do this as first pre-release tests)
+
 ## Update verifier
 
 The next step is to update the verifier's e2e tests. For this, you need to:
