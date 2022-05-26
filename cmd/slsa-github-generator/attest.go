@@ -41,6 +41,9 @@ var (
 
 	// wsSplit is used to split lines in the subjects input.
 	wsSplit = regexp.MustCompile(`[\t ]`)
+
+	// provenanceOnlyBuildType is the URI for provenance only SLSA generation.
+	provenanceOnlyBuildType = "https://github.com/slsa-framework/slsa-github-generator@v1"
 )
 
 // parseSubjects parses the value given to the subjects option.
@@ -96,6 +99,15 @@ func getFile(path string) (io.Writer, error) {
 	return os.OpenFile(path, os.O_WRONLY|os.O_CREATE, 0600)
 }
 
+type provenanceOnlyBuild struct {
+	*slsa.GithubActionsBuild
+}
+
+// URI implements BuildType.URI.
+func (b *provenanceOnlyBuild) URI() string {
+	return provenanceOnlyBuildType
+}
+
 // attestCmd returns the 'attest' command.
 func attestCmd() *cobra.Command {
 	var predicatePath string
@@ -122,10 +134,12 @@ run in the context of a Github Actions workflow.`,
 
 			ctx := context.Background()
 
-			c, err := github.NewOIDCClient()
-			check(err)
+			b := provenanceOnlyBuild{
+				GithubActionsBuild: slsa.NewGithubActionsBuild(parsedSubjects, ghContext),
+			}
 
-			p, err := slsa.HostedActionsProvenance(ctx, slsa.NewWorkflowRun(parsedSubjects, ghContext), c)
+			g := slsa.NewHostedActionsGenerator(&b)
+			p, err := g.Generate(ctx)
 			check(err)
 
 			if attPath != "" {

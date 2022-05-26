@@ -11,18 +11,35 @@ import (
 	"github.com/slsa-framework/slsa-github-generator/github"
 )
 
+var testBuildType = "http://example.com/v1"
+var testBuildConfig = "test build config"
+
+type TestBuild struct {
+	*GithubActionsBuild
+}
+
+func (*TestBuild) URI() string {
+	return testBuildType
+}
+
+func (*TestBuild) BuildConfig(context.Context) (interface{}, error) {
+	return testBuildConfig, nil
+}
+
 func TestHostedActionsProvenance(t *testing.T) {
 	now := time.Date(2022, 4, 14, 12, 24, 0, 0, time.UTC)
 
 	testCases := []struct {
 		name     string
-		r        WorkflowRun
+		b        BuildType
 		token    *github.OIDCToken
 		expected *intoto.ProvenanceStatement
 	}{
 		{
 			name: "empty",
-			r:    WorkflowRun{},
+			b: &TestBuild{
+				GithubActionsBuild: NewGithubActionsBuild(nil, github.WorkflowContext{}).WithClients(&NilClientProvider{}),
+			},
 			token: &github.OIDCToken{
 				Audience: []string{""},
 				Expiry:   now.Add(1 * time.Hour),
@@ -36,18 +53,19 @@ func TestHostedActionsProvenance(t *testing.T) {
 					Builder: slsa.ProvenanceBuilder{
 						ID: GithubHostedActionsBuilderID,
 					},
-					Metadata: &slsa.ProvenanceMetadata{},
+					BuildType:   testBuildType,
+					BuildConfig: testBuildConfig,
+					Metadata:    &slsa.ProvenanceMetadata{},
 				},
 			},
 		},
 		{
 			name: "invocation id",
-			r: WorkflowRun{
-				BuildType: "hoge",
-				GithubContext: github.WorkflowContext{
+			b: &TestBuild{
+				GithubActionsBuild: NewGithubActionsBuild(nil, github.WorkflowContext{
 					RunID:      "12345",
 					RunAttempt: "1",
-				},
+				}).WithClients(&NilClientProvider{}),
 			},
 			token: &github.OIDCToken{
 				Audience: []string{"hoge"},
@@ -62,7 +80,14 @@ func TestHostedActionsProvenance(t *testing.T) {
 					Builder: slsa.ProvenanceBuilder{
 						ID: GithubHostedActionsBuilderID,
 					},
-					BuildType: "hoge",
+					BuildType:   testBuildType,
+					BuildConfig: testBuildConfig,
+					Invocation: slsa.ProvenanceInvocation{
+						Environment: map[string]interface{}{
+							"github_run_id":      "12345",
+							"github_run_attempt": "1",
+						},
+					},
 					Metadata: &slsa.ProvenanceMetadata{
 						BuildInvocationID: "12345-1",
 					},
@@ -73,10 +98,9 @@ func TestHostedActionsProvenance(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			s, c := github.NewTestOIDCServer(t, now, tc.token)
-			defer s.Close()
+			g := NewHostedActionsGenerator(tc.b).WithClients(&NilClientProvider{})
 
-			if p, err := HostedActionsProvenance(context.Background(), tc.r, c); err != nil {
+			if p, err := g.Generate(context.Background()); err != nil {
 				t.Fatalf("unexpected error: %v", err)
 			} else {
 				if want, got := tc.expected, p; !cmp.Equal(want, got) {
