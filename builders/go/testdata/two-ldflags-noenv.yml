@@ -1,0 +1,12 @@
+version: 1
+
+flags:
+  - -trimpath
+  - -tags=netgo
+
+goos: linux
+goarch: amd64
+binary: binary-{{ .Os }}-{{ .Arch }}
+ldflags:
+  - '{{ .Env.VERSION_LDFLAGS }}'
+  - 'something-{{ .Env.ELSE }}'

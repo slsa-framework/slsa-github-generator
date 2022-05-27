@@ -1,0 +1,514 @@
+# Copyright The GOSST team.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+name: SLSA go builder
+
+permissions:
+  contents: read
+
+env:
+  # Project.
+  GENERATED_BINARY_NAME: compiled-binary
+  # Builder
+  BUILDER_BINARY: builder
+  BUILDER_RELEASE_BINARY: slsa-builder-go-linux-amd64
+  BUILDER_REPOSITORY: slsa-framework/slsa-github-generator
+  # Verifier
+  VERIFIER_REPOSITORY: slsa-framework/slsa-verifier
+  VERIFIER_RELEASE_BINARY: slsa-verifier-linux-amd64
+  VERIFIER_RELEASE_BINARY_SHA256: 60c91c9d5b9a059e37ac46da316f20c81da335b5d00e1f74d03dd50f819694bd
+  VERIFIER_RELEASE: v0.0.1
+  # Builder location
+  BUILDER_DIR: builders
+
+###################################################################
+#                                                                 #
+#            Input and output argument definitions                #
+#                                                                 #
+###################################################################
+on:
+  workflow_call:
+    inputs:
+      go-version:
+        description: "The go version to use."
+        required: true
+        type: string
+      upload-assets:
+        description: "Whether to upload assets to a GitHub release or not."
+        required: false
+        type: boolean
+        default: true
+      config-file:
+        description: "The configuration file for the builder. A path within the calling repository."
+        required: false
+        type: string
+        default: ".slsa-goreleaser.yml"
+      evaluated-envs:
+        description: "Evaluated env variables to pass to the builder."
+        required: false
+        type: string
+      compile-builder:
+        description: "Build the builder from source. This increases build time by ~2mn."
+        required: false
+        type: boolean
+        default: false
+    outputs:
+      go-binary-name:
+        description: "The name of the generated binary uploaded to the artifact registry."
+        value: ${{ jobs.build-dry.outputs.go-binary-name }}
+
+jobs:
+  ###################################################################
+  #                                                                 #
+  #                       Build the builder                         #
+  #                                                                 #
+  ###################################################################
+  detect-env:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write # Needed to detect the current reusable repository and ref.
+      contents: read
+    outputs:
+      builder_repo: ${{ steps.detect.outputs.builder_repo }}
+      builder_ref: ${{ steps.detect.outputs.builder_ref }}
+    steps:
+      - name: Detect the builder ref
+        id: detect
+        env:
+          PULL_REQUEST_REPOSITORY: "${{ github.event.pull_request.head.repo.full_name }}"
+        shell: bash
+        run: |
+          # On pull requests, permissions are not available.
+          if [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
+              echo "::set-output name=builder_repo::$PULL_REQUEST_REPOSITORY"
+              echo "::set-output name=builder_ref::$GITHUB_HEAD_REF"
+              exit 0
+          fi
+
+          if [[ -z "$ACTIONS_ID_TOKEN_REQUEST_TOKEN" ]] || [[ -z "$ACTIONS_ID_TOKEN_REQUEST_URL" ]]; then
+              echo "OIDC not available" not available.
+              exit 1
+          fi
+
+          status_code=$(curl -sS -H "Authorization: Bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=$GITHUB_REPOSITORY/builder" -o jwt.json -w '%{http_code}')
+          if [[ $status_code -ge 400 ]]; then
+              error_msg=$(jq -r .message jwt.json 2>/dev/null || echo 'unknown error')
+              echo "Failed to get OIDC token from GitHub, response $status_code: $error_msg"
+              exit 2;
+          fi
+
+          export WORKFLOW_REF=$(cat jwt.json | jq -r '.value' | cut -d "." -f2 | base64 -d | jq -r '.job_workflow_ref')
+          if [ -z $WORKFLOW_REF ]; then
+              echo "OIDC token parsing failure: job_workflow_ref could not be retrieved"
+              exit 3;
+          fi
+
+          echo "::set-output name=builder_repo::$(echo $WORKFLOW_REF | cut -d "@" -f1 | cut -d '/' -f1-2)"
+          echo "::set-output name=builder_ref::$(echo $WORKFLOW_REF | cut -d "@" -f2)"
+
+  builder:
+    outputs:
+      go-builder-sha256: ${{ steps.builder-gen.outputs.go-builder-sha256 }}
+      go-prov-sha256: ${{ steps.builder-gen.outputs.go-prov-sha256 }}
+    runs-on: ubuntu-latest
+    needs: [detect-env]
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # v2.3.4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+          repository: "${{ needs.detect-env.outputs.builder_repo }}"
+          ref: "${{ needs.detect-env.outputs.builder_ref }}"
+
+      - name: Set up golang environment
+        uses: actions/setup-go@f6164bd8c8acb4a71fb2791a8b6c4024ff038dab # v2.1.3
+        with:
+          go-version: 1.18
+
+      - name: Build builder
+        shell: bash
+        id: builder-gen
+        env:
+          COMPILE_BUILDER: "${{ inputs.compile-builder }}"
+          BUILDER_REF: "${{ needs.detect-env.outputs.builder_ref }}"
+          # Needed for the gh CLI used in builder-fetch.sh.
+          GH_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+        run: |
+          set -euo pipefail
+
+          if [[ "$COMPILE_BUILDER" = true ]]; then
+            echo "Building the builder"
+
+            cd "$BUILDER_DIR"/go/
+
+            #TODO(reproducible)
+            go mod vendor
+
+            # https://go.dev/ref/mod#build-commands.
+            go build -mod=vendor -o "$BUILDER_BINARY"
+
+            mv "$BUILDER_BINARY" ../../"$BUILDER_BINARY"
+
+            cd -
+          else
+            echo "Fetching the builder with ref: $BUILDER_REF"
+            
+            .github/workflows/scripts/builder-fetch.sh
+
+            mv "$BUILDER_RELEASE_BINARY" "$BUILDER_BINARY"
+            
+          fi
+          
+          BUILDER_DIGEST=$(sha256sum "$BUILDER_BINARY" | awk '{print $1}')
+          echo "::set-output name=go-builder-sha256::$BUILDER_DIGEST"
+          echo "hash of $BUILDER_BINARY is $BUILDER_DIGEST"
+
+      - name: Upload the builder
+        uses: actions/upload-artifact@6673cd052c4cd6fcf4b4e6e60ea986c889389535 # v2.3.1
+        with:
+          name: "${{ env.BUILDER_BINARY }}"
+          path: "${{ env.BUILDER_BINARY }}"
+          if-no-files-found: error
+          retention-days: 5
+
+  ###################################################################
+  #                                                                 #
+  #                 Build dry to resolve variables                  #
+  #                                                                 #
+  ###################################################################
+  build-dry:
+    outputs:
+      go-binary-name: ${{ steps.build-dry.outputs.go-binary-name }}
+      go-command: ${{ steps.build-dry.outputs.go-command }}
+      go-env: ${{ steps.build-dry.outputs.go-env }}
+      go-working-dir: ${{ steps.build-dry.outputs.go-working-dir }}
+    runs-on: ubuntu-latest
+    needs: builder
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # v2.3.4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      # Code needed (not tested) if go-vesion is made optional.
+      # See https://stackoverflow.com/questions/67368005/check-whether-environment-variable-is-empty.
+      - name: Set up golang environment
+        uses: actions/setup-go@f6164bd8c8acb4a71fb2791a8b6c4024ff038dab # v2.1.3
+        with:
+          go-version: ${{ inputs.go-version }}
+
+      - name: Download builder
+        uses: actions/download-artifact@fb598a63ae348fa914e94cd0ff38f362e927b741 # v2.1.0
+        with:
+          name: "${{ env.BUILDER_BINARY }}"
+
+      - name: Verify builder
+        env:
+          BUILDER_HASH: "${{ needs.builder.outputs.go-builder-sha256 }}"
+        run: |
+          set -euo pipefail
+
+          echo "hash of builder should be $BUILDER_HASH"
+          COMPUTED_HASH=$(sha256sum "$BUILDER_BINARY" | awk '{print $1}')
+          echo "builder hash computed is $COMPUTED_HASH"
+
+          # Compare hashes. Explicit exit to be safe.
+          # TODO: remove the builder as well.
+          echo "$BUILDER_HASH $BUILDER_BINARY" | sha256sum --strict --check --status || exit -2
+
+          # Make the builder executable.
+          chmod a+x "$BUILDER_BINARY"
+
+      - name: Build dry project
+        id: build-dry
+        shell: bash
+        env:
+          CONFIG_FILE: "${{ inputs.config-file }}"
+          UNTRUSTED_ENVS: "${{ inputs.evaluated-envs }}"
+        run: |
+          set -euo pipefail
+
+          # Note: this outputs information about resolved arguments, etc.
+          # the values are trusted because the compiler is not invoked.
+          echo ./"$BUILDER_BINARY" build --dry "$CONFIG_FILE" "$UNTRUSTED_ENVS"
+          ./"$BUILDER_BINARY" build --dry "$CONFIG_FILE" "$UNTRUSTED_ENVS"
+
+  ###################################################################
+  #                                                                 #
+  #                       Build the project                         #
+  #                                                                 #
+  ###################################################################
+  build:
+    outputs:
+      go-binary-sha256: ${{ steps.build-sha256.outputs.go-binary-sha256 }}
+    runs-on: ubuntu-latest
+    needs: [builder,build-dry]
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # v2.3.4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      # Code needed (not tested) if go-vesion is made optional.
+      # See https://stackoverflow.com/questions/67368005/check-whether-environment-variable-is-empty.
+      - name: Set up golang environment
+        uses: actions/setup-go@f6164bd8c8acb4a71fb2791a8b6c4024ff038dab # v2.1.3
+        with:
+          go-version: ${{ inputs.go-version }}
+
+      - name: Download builder
+        uses: actions/download-artifact@fb598a63ae348fa914e94cd0ff38f362e927b741 # v2.1.0
+        with:
+          name: "${{ env.BUILDER_BINARY }}"
+
+      - name: Verify builder
+        env:
+          BUILDER_HASH: "${{ needs.builder.outputs.go-builder-sha256 }}"
+        run: |
+          set -euo pipefail
+
+          echo "hash of builder should be $BUILDER_HASH"
+          COMPUTED_HASH=$(sha256sum "$BUILDER_BINARY" | awk '{print $1}')
+          echo "builder hash computed is $COMPUTED_HASH"
+
+          # Compare hashes. Explicit exit to be safe.
+          # TODO: remove the builder as well.
+          echo "$BUILDER_HASH $BUILDER_BINARY" | sha256sum --strict --check --status || exit -2
+
+          # Make the builder executable.
+          chmod a+x "$BUILDER_BINARY"
+
+      - name: Download dependencies
+        env:
+          UNTRUSTED_WORKING_DIR: "${{ needs.build-dry.outputs.go-working-dir }}"
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          # Note: maybe simpler to make this step part of the builder in the future.
+          cd "$UNTRUSTED_WORKING_DIR"
+          go mod vendor
+
+      # TODO(hermeticity) OS-level.
+      # - name: Disable hermeticity
+      # uses: slsa/hermeticity@xxx
+      #   with:
+      #     to-state: enabled
+
+      - name: Build project
+        id: build-gen
+        shell: bash
+        env:
+          CONFIG_FILE: "${{ inputs.config-file }}"
+          UNTRUSTED_ENVS: "${{ inputs.evaluated-envs }}"
+        run: |
+          set -euo pipefail
+
+          # Disable set-output command.
+          echo "::stop-commands::`echo -n ${{ github.token }} | sha256sum | head -c 64`"
+
+          echo "./$BUILDER_BINARY" build "$PWD/$CONFIG_FILE" "$UNTRUSTED_ENVS"
+          # Note: We need to provide the asbolute path to the output binary.
+          export OUTPUT_BINARY="$PWD/${{ env.GENERATED_BINARY_NAME }}"
+          ./"$BUILDER_BINARY" build "$CONFIG_FILE" "$UNTRUSTED_ENVS"
+
+      - name: Compute binary hash
+        id: build-sha256
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          # Re-enable set-output command.
+          echo "::`echo -n ${{ github.token }} | sha256sum | head -c 64`::"
+
+          DIGEST=$(sha256sum "${{ env.GENERATED_BINARY_NAME }}" | awk '{print $1}')
+          echo "digest of ${{ env.GENERATED_BINARY_NAME }} is $DIGEST"
+
+          echo "::set-output name=go-binary-sha256::$DIGEST"
+
+      - name: Upload the artifact
+        uses: actions/upload-artifact@6673cd052c4cd6fcf4b4e6e60ea986c889389535 # v2.3.1
+        with:
+          name: "${{ env.GENERATED_BINARY_NAME }}"
+          path: "${{ env.GENERATED_BINARY_NAME }}"
+          if-no-files-found: error
+          retention-days: 5
+
+  ###################################################################
+  #                                                                 #
+  #                 Upload the resulting binary                     #
+  #                                                                 #
+  ###################################################################
+  binary-upload:
+    runs-on: ubuntu-latest
+    needs: [build, build-dry]
+    steps:
+      - name: Download generated binary
+        uses: actions/download-artifact@fb598a63ae348fa914e94cd0ff38f362e927b741 # v2.1.0
+        with:
+          name: "${{ env.GENERATED_BINARY_NAME }}"
+
+      - name: Verify binary hash
+        env:
+          UNTRUSTED_BINARY_HASH: "${{ needs.build.outputs.go-binary-sha256 }}"
+          UNTRUSTED_BINARY_NAME: "${{ needs.build-dry.outputs.go-binary-name }}"
+        run: |
+          set -euo pipefail
+
+          echo "hash of binary ${{ env.GENERATED_BINARY_NAME }} should be $UNTRUSTED_BINARY_HASH"
+
+          COMPUTED_HASH=$(sha256sum "${{ env.GENERATED_BINARY_NAME }}" | awk '{print $1}')
+          echo "binary hash computed is $COMPUTED_HASH"
+
+          # Compare hashes. Explicit exit to be safe.
+          echo "$UNTRUSTED_BINARY_HASH ${{ env.GENERATED_BINARY_NAME }}" | sha256sum --strict --check --status || exit -2
+
+          mv "${{ env.GENERATED_BINARY_NAME }}" "$UNTRUSTED_BINARY_NAME"
+
+      - name: Upload the generated binary
+        uses: actions/upload-artifact@6673cd052c4cd6fcf4b4e6e60ea986c889389535 # v2.3.1
+        with:
+          name: "${{ needs.build-dry.outputs.go-binary-name }}"
+          path: "${{ needs.build-dry.outputs.go-binary-name }}"
+          if-no-files-found: error
+          retention-days: 5
+
+  ###################################################################
+  #                                                                 #
+  #                 Generate the SLSA provenance                    #
+  #                                                                 #
+  ###################################################################
+  provenance:
+    runs-on: ubuntu-latest
+    needs: [builder, build, build-dry]
+    permissions:
+      id-token: write # Needed for keyless.
+      contents: read
+    outputs:
+      go-provenance-name: ${{ steps.sign-prov.outputs.signed-provenance-name }}
+      go-provenance-sha256: ${{ steps.sign-prov.outputs.signed-provenance-sha256 }}
+    steps:
+      - name: Download builder
+        uses: actions/download-artifact@fb598a63ae348fa914e94cd0ff38f362e927b741 # v2.1.0
+        with:
+          name: "${{ env.BUILDER_BINARY }}"
+
+      - name: Verify builder
+        env:
+          BUILDER_HASH: "${{ needs.builder.outputs.go-builder-sha256 }}"
+        run: |
+          set -euo pipefail
+
+          echo "hash of builder should be $BUILDER_HASH"
+          COMPUTED_HASH=$(sha256sum "$BUILDER_BINARY" | awk '{print $1}')
+          echo "builder hash computed is $COMPUTED_HASH"
+
+          # Compare hashes. Explicit exit to be safe.
+          # TODO: remove the builder as well.
+          echo "$BUILDER_HASH $BUILDER_BINARY" | sha256sum --strict --check --status || exit -2
+
+          # Make the builder executable.
+          chmod a+x "$BUILDER_BINARY"
+
+      - name: Create and sign provenance
+        id: sign-prov
+        shell: bash
+        env:
+          UNTRUSTED_BINARY_NAME: "${{ needs.build-dry.outputs.go-binary-name }}"
+          UNTRUSTED_BINARY_HASH: "${{ needs.build.outputs.go-binary-sha256 }}"
+          UNTRUSTED_COMMAND: "${{ needs.build-dry.outputs.go-command }}"
+          UNTRUSTED_ENV: "${{ needs.build-dry.outputs.go-env }}"
+          UNTRUSTED_WORKING_DIR: "${{ needs.build-dry.outputs.go-working-dir }}"
+          GITHUB_CONTEXT: "${{ toJSON(github) }}"
+        run: |
+          set -euo pipefail
+
+          echo "provenance generator is $BUILDER_BINARY"
+
+          # Create and sign provenance
+          # This sets signed-provenance-name to the name of the signed DSSE envelope.
+          ./"$BUILDER_BINARY" provenance \
+            --binary-name "$UNTRUSTED_BINARY_NAME" \
+            --digest "$UNTRUSTED_BINARY_HASH" \
+            --command "$UNTRUSTED_COMMAND" \
+            --env "$UNTRUSTED_ENV" \
+            --workingDir "$UNTRUSTED_WORKING_DIR"
+
+      - name: Upload the signed provenance
+        uses: actions/upload-artifact@6673cd052c4cd6fcf4b4e6e60ea986c889389535 # v2.3.1
+        with:
+          name: "${{ steps.sign-prov.outputs.signed-provenance-name }}"
+          path: "${{ steps.sign-prov.outputs.signed-provenance-name }}"
+          if-no-files-found: error
+          retention-days: 5
+
+###################################################################
+#                                                                 #
+#           Upload binaries and provenances as assets             #
+#                                                                 #
+###################################################################
+  upload-assets:
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    needs: [build,build-dry,provenance]
+    if: startsWith(github.ref, 'refs/tags/') && inputs.upload-assets == true
+    steps:
+      # Verify binary hash.
+      - uses: actions/download-artifact@fb598a63ae348fa914e94cd0ff38f362e927b741
+        with:
+          name: ${{ needs.build-dry.outputs.go-binary-name }}
+      - name: Verify binary hash
+        env:
+          UNTRUSTED_BINARY_HASH: "${{ needs.build.outputs.go-binary-sha256 }}"
+          UNTRUSTED_BINARY_NAME: "${{ needs.build-dry.outputs.go-binary-name }}"
+        run: |
+          set -euo pipefail
+
+          echo "hash of binary $UNTRUSTED_BINARY_NAME should be $UNTRUSTED_BINARY_HASH"
+
+          COMPUTED_HASH=$(sha256sum "$UNTRUSTED_BINARY_NAME" | awk '{print $1}')
+          echo "binary hash computed is $COMPUTED_HASH"
+
+          # Compare hashes. Explicit exit to be safe.
+          echo "$UNTRUSTED_BINARY_HASH $UNTRUSTED_BINARY_NAME" | sha256sum --strict --check --status || exit -2
+
+      # Verify provenance hash.
+      - uses: actions/download-artifact@fb598a63ae348fa914e94cd0ff38f362e927b741
+        with:
+          name: ${{ needs.provenance.outputs.go-provenance-name }}
+      - name: Verify provenance hash
+        env:
+          UNTRUSTED_PROVENANCE_HASH: "${{ needs.provenance.outputs.go-provenance-sha256 }}"
+          UNTRUSTED_PROVENANCE_NAME: "${{ needs.provenance.outputs.go-provenance-name }}"
+        run: |
+          set -euo pipefail
+
+          echo "hash of provenance $UNTRUSTED_PROVENANCE_NAME should be $UNTRUSTED_PROVENANCE_HASH"
+
+          COMPUTED_HASH=$(sha256sum "$UNTRUSTED_PROVENANCE_NAME" | awk '{print $1}')
+          echo "provenance hash computed is $COMPUTED_HASH"
+
+          # Compare hashes. Explicit exit to be safe.
+          echo "$UNTRUSTED_PROVENANCE_HASH $UNTRUSTED_PROVENANCE_NAME" | sha256sum --strict --check --status || exit -2
+
+      - name: Release
+        uses: softprops/action-gh-release@1e07f4398721186383de40550babbdf2b84acfc5
+        with:
+          files: |
+            ${{ needs.build-dry.outputs.go-binary-name }}
+            ${{ needs.provenance.outputs.go-provenance-name }}

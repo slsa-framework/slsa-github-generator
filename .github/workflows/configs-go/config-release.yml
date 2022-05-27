@@ -1,0 +1,14 @@
+# Used for pre-submit tests.
+version: 1
+env:
+  - GO111MODULE=on
+  - CGO_ENABLED=0
+
+flags:
+  - -trimpath
+  - -tags=netgo
+
+goos: linux
+goarch: amd64
+dir: builders/go/
+binary: slsa-builder-go-{{ .Os }}-{{ .Arch }}
