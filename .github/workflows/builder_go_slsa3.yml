@@ -159,16 +159,15 @@ jobs:
             # https://go.dev/ref/mod#build-commands.
             go build -mod=vendor -o "$BUILDER_BINARY"
 
-            mv "$BUILDER_BINARY" ../../"$BUILDER_BINARY"
-
             cd -
+
+            mv "${BUILDER_DIR}/go/${BUILDER_BINARY}" .
           else
             echo "Fetching the builder with ref: $BUILDER_REF"
-            
+
             .github/workflows/scripts/builder-fetch.sh
 
             mv "$BUILDER_RELEASE_BINARY" "$BUILDER_BINARY"
-            
           fi
 
           BUILDER_DIGEST=$(sha256sum "$BUILDER_BINARY" | awk '{print $1}')
