@@ -21,28 +21,49 @@ import (
 
 	intoto "github.com/in-toto/in-toto-golang/in_toto"
 	slsa "github.com/in-toto/in-toto-golang/in_toto/slsa_provenance/v0.2"
-	"github.com/slsa-framework/slsa-github-generator/github"
 )
 
 const (
-	// GithubHostedActionsBuilderID is the builder ID for Github hosted actions.
+	// GithubHostedActionsBuilderID is a default builder ID for Github hosted actions.
 	GithubHostedActionsBuilderID = "https://github.com/Attestations/GitHubHostedActions@v1"
 )
 
 var githubComReplace = regexp.MustCompile(`^(https?://)?github\.com/?`)
 
-// HostedActionsProvenance generates an in-toto provenance statement in the SLSA
-// v0.2 format for a workflow run on a Github actions hosted runner.
-func HostedActionsProvenance(ctx context.Context, w WorkflowRun, c *github.OIDCClient) (*intoto.ProvenanceStatement, error) {
+// HostedActionsGenerator is a SLSA provenance generator for Github Hosted
+// Actions. Provenance is generated based on a "build type" which defines the
+// format for many of the fields in the provenance metadata. Builders for
+// different ecosystems (languages etc.) can implement a build type from
+// scratch or by extending GithubActionsBuild.
+type HostedActionsGenerator struct {
+	buildType BuildType
+	clients   ClientProvider
+}
+
+// NewHostedActionsGenerator returns a SLSA provenance generator for the given build type.
+func NewHostedActionsGenerator(bt BuildType) *HostedActionsGenerator {
+	return &HostedActionsGenerator{
+		buildType: bt,
+		clients:   &DefaultClientProvider{},
+	}
+}
+
+// Generate generates an in-toto provenance statement in SLSA v0.2 format.
+func (g *HostedActionsGenerator) Generate(ctx context.Context) (*intoto.ProvenanceStatement, error) {
 	// NOTE: Use buildType as the audience as that closely matches the intended
 	// recipient of the OIDC token.
 	// NOTE: GitHub doesn't allow github.com in the audience so remove it.
-	audience := githubComReplace.ReplaceAllString(w.BuildType, "")
-	builderID := GithubHostedActionsBuilderID
+	audience := githubComReplace.ReplaceAllString(g.buildType.URI(), "")
+
+	oidcClient, err := g.clients.OIDCClient()
+	if err != nil {
+		return nil, err
+	}
 
 	// We allow nil OIDC client to support e2e tests on pull requests.
-	if c != nil {
-		t, err := c.Token(ctx, []string{audience})
+	builderID := GithubHostedActionsBuilderID
+	if oidcClient != nil {
+		t, err := oidcClient.Token(ctx, []string{audience})
 		if err != nil {
 			return nil, err
 		}
@@ -52,31 +73,53 @@ func HostedActionsProvenance(ctx context.Context, w WorkflowRun, c *github.OIDCC
 		}
 	}
 
-	buildInvocationID := w.GithubContext.RunID
-	if w.GithubContext.RunAttempt != "" {
-		// NOTE: RunID does not get updated on re-runs so we need to include RunAttempt.
-		buildInvocationID = fmt.Sprintf("%s-%s", w.GithubContext.RunID, w.GithubContext.RunAttempt)
+	subject, err := g.buildType.Subject(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	invocation, err := g.buildType.Invocation(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	buildConfig, err := g.buildType.BuildConfig(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	materials, err := g.buildType.Materials(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	metadata, err := g.buildType.Metadata(ctx)
+	if err != nil {
+		return nil, err
 	}
 
 	return &intoto.ProvenanceStatement{
 		StatementHeader: intoto.StatementHeader{
 			Type:          intoto.StatementInTotoV01,
 			PredicateType: slsa.PredicateSLSAProvenance,
-			Subject:       w.Subjects,
+			Subject:       subject,
 		},
 		Predicate: slsa.ProvenancePredicate{
-			BuildType: w.BuildType,
+			BuildType: g.buildType.URI(),
 			Builder: slsa.ProvenanceBuilder{
 				ID: builderID,
 			},
-			Invocation:  w.Invocation,
-			BuildConfig: w.BuildConfig,
-			Materials:   w.Materials,
-			// TODO(https://github.com/slsa-framework/slsa-github-generator/issues/8): support more metadata fields.
-			Metadata: &slsa.ProvenanceMetadata{
-				BuildInvocationID: buildInvocationID,
-				Completeness:      w.Completeness,
-			},
+			Invocation:  invocation,
+			BuildConfig: buildConfig,
+			Materials:   materials,
+			Metadata:    metadata,
 		},
 	}, nil
+}
+
+// WithClients overrides the default ClientProvider. Useful for tests where
+// clients are not available.
+func (g *HostedActionsGenerator) WithClients(c ClientProvider) *HostedActionsGenerator {
+	g.clients = c
+	return g
 }
