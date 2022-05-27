@@ -54,7 +54,7 @@ This will trigger a workflow release, let it complete and generate the release a
 
 4. Edit the file [slsa-framework/example-package/.github/workflows/e2e.go.workflow_dispatch.main.adversarial-verifier-binary.slsa3.yml#L14](https://github.com/slsa-framework/example-package/blob/main/.github/workflows/e2e.go.workflow_dispatch.main.adversarial-verifier-binary.slsa3.yml#L14) by using `$BUILDER_REPOSITORY` and `$BUILDER_TAG`:
 ```
-    uses: $BUILDER_REPOSITORY/.github/workflows/builder_go_slsa3.yml@$BUILDER_REF
+    uses: $BUILDER_REPOSITORY/.github/workflows/builder_go_slsa3.yml@$BUILDER_TAG
 ```
 5. Run the test manually via the GitHub UX in [https://github.com/slsa-framework/example-package/actions/workflows/e2e.go.workflow_dispatch.main.adversarial-verifier-binary.slsa3.yml](https://github.com/slsa-framework/example-package/actions/workflows/e2e.go.workflow_dispatch.main.adversarial-verifier-binary.slsa3.yml) by cliking `Run Workflow`.
 6. Verify the run fails with log message:
@@ -111,13 +111,13 @@ $ mv slsa-builder-go-linux-amd64-"$BUILDER_TAG".original slsa-builder-go-linux-a
 $ "$GH" release -R slsa-framework/slsa-github-generator upload "$BUILDER_TAG" slsa-builder-go-linux-amd64  --clobber
 ```
 
-5. Re-run the workflow above and verify that it succeeds. (TODO: we need a set of workflows identical to the e2e tests but using pre-built binaries; and do this as first pre-release tests)
+5. Re-run the workflow above and verify that it succeeds. (TODO: https://github.com/slsa-framework/slsa-github-generator/issues/116).
 
 ## Update verifier
 
 The next step is to update the verifier's e2e tests. For this, you need to:
 
-1. Generate binaries and provenance for a project, using the `$BUILDER_REF` builder. TODO: need a common repository to do this.
+1. Generate binaries and provenance for a project, using the `$BUILDER_TAG` builder. (TODO: https://github.com/slsa-framework/slsa-github-generator/issues/119).
 
 2. Place the files in a new directory `slsa-framework/slsa-verifier/tree/main/testdata/$BUILDER_TAG`.
 
@@ -131,7 +131,7 @@ Untick the `This is a pre-release` option. That's it!
 
 ## Update the starter workflow
 
-TODO
+TODO: https://github.com/slsa-framework/slsa-github-generator/issues/97
 
 ## Announce
 
