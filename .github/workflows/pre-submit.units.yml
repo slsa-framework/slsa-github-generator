@@ -30,13 +30,13 @@ jobs:
           set -euo pipefail
 
           # Go tests.
-          cd builders/go/
-          
+          cd internal/builders/go/
+
           # Download dependencies.
           go mod vendor
 
           # Build.
           go build -mod=vendor
-          
+
           # Tests.
           go test -mod=vendor -v ./...

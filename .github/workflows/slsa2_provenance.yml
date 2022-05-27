@@ -92,8 +92,8 @@ jobs:
           set -euo pipefail
 
           # https://go.dev/ref/mod#build-commands.
-          go build -mod=vendor -o slsa-github-generator github.com/slsa-framework/slsa-github-generator/cmd/slsa-github-generator
-          chmod a+x slsa-github-generator
+          go build -mod=vendor -o builder github.com/slsa-framework/slsa-github-generator/internal/builders/generic
+          chmod a+x builder
 
       - name: Create and sign provenance
         id: sign-prov
@@ -108,7 +108,7 @@ jobs:
           set -euo pipefail
           # Create and sign provenance
           # This sets signed-provenance-name to the name of the signed DSSE envelope.
-          ./slsa-github-generator attest --subjects "${SUBJECTS}" -g attestation.intoto.jsonl
+          ./builder attest --subjects "${SUBJECTS}" -g attestation.intoto.jsonl
           echo "::set-output name=signed-provenance-name::attestation.intoto.jsonl"
 
       - name: Upload the signed provenance

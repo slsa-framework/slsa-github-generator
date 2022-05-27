@@ -12,9 +12,9 @@ goos: linux
 goarch: amd64
 # Note: main is not necessary.
 main: main.go
-dir: builders/go/e2e-presubmits/
+dir: internal/builders/go/e2e-presubmits/
 binary: binary-{{ .Os }}-{{ .Arch }}
 ldflags:
-  - '{{ .Env.VERSION }}'  
-  - '{{ .Env.COMMIT }}'
-  - '{{ .Env.BRANCH }}'
+  - "{{ .Env.VERSION }}"
+  - "{{ .Env.COMMIT }}"
+  - "{{ .Env.BRANCH }}"
