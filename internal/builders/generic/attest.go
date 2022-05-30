@@ -148,21 +148,29 @@ run in the context of a Github Actions workflow.`,
 			check(err)
 
 			if attPath != "" {
-				s := sigstore.NewDefaultFulcio()
-				att, err := s.Sign(ctx, &intoto.Statement{
-					StatementHeader: p.StatementHeader,
-					Predicate:       p.Predicate,
-				})
-				check(err)
+				var attBytes []byte
+				if isPreSubmitTests() {
+					attBytes, err = json.Marshal(p)
+					check(err)
+				} else {
+					s := sigstore.NewDefaultFulcio()
+					att, err := s.Sign(ctx, &intoto.Statement{
+						StatementHeader: p.StatementHeader,
+						Predicate:       p.Predicate,
+					})
+					check(err)
 
-				r := sigstore.NewDefaultRekor()
-				_, err = r.Upload(ctx, att)
-				check(err)
+					r := sigstore.NewDefaultRekor()
+					_, err = r.Upload(ctx, att)
+					check(err)
+
+					attBytes = att.Bytes()
+				}
 
 				f, err := getFile(attPath)
 				check(err)
 
-				_, err = f.Write(att.Bytes())
+				_, err = f.Write(attBytes)
 				check(err)
 			}
 
