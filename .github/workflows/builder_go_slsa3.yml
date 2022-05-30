@@ -90,6 +90,7 @@ jobs:
         shell: bash
         run: |
           # On pull requests, permissions are not available.
+          # TODO(github.com/slsa-framework/slsa-github-generator/issues/124): Remove special logic for pull_requests.
           if [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
               echo "::set-output name=builder_repo::$PULL_REQUEST_REPOSITORY"
               echo "::set-output name=builder_ref::$GITHUB_HEAD_REF"
