@@ -84,7 +84,13 @@ jobs:
               exit 2;
           fi
 
-          cat jwt.json
+          cat jwt.json | jq -r '.value' | cut -d "." -f1
+          echo ""
+          cat jwt.json | jq -r '.value' | cut -d "." -f2
+          echo ""
+          cat jwt.json | jq -r '.value' | cut -d "." -f3
+          echo ""
+
           export WORKFLOW_REF=$(cat jwt.json | jq -r '.value' | cut -d "." -f2 | base64 -d | jq -r '.job_workflow_ref')
           if [ -z $WORKFLOW_REF ]; then
               echo "OIDC token parsing failure: job_workflow_ref could not be retrieved"
