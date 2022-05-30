@@ -63,7 +63,7 @@ jobs:
           PULL_REQUEST_REPOSITORY: "${{ github.event.pull_request.head.repo.full_name }}"
         shell: bash
         run: |
-          set -euo pipefail
+          # set -euo pipefail
 
           # On pull requests, permissions are not available.
           if [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
