@@ -18,7 +18,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
 	"net/url"
@@ -53,6 +52,11 @@ type OIDCToken struct {
 	JobWorkflowRef string `json:"job_workflow_ref"`
 }
 
+// errURLError indicates the OIDC server URL is invalid.
+type errURLError struct {
+	errors.WrappableError
+}
+
 // errRequestError indicates an error requesting the token from the issuer.
 type errRequestError struct {
 	errors.WrappableError
@@ -84,9 +88,9 @@ type OIDCClient struct {
 // NewOIDCClient returns new GitHub OIDC provider client.
 func NewOIDCClient() (*OIDCClient, error) {
 	requestURL := os.Getenv(requestURLEnvKey)
-	parsedURL, err := url.Parse(requestURL)
+	parsedURL, err := url.ParseRequestURI(requestURL)
 	if err != nil {
-		return nil, fmt.Errorf("invalid request URL %q: %w", requestURL, err)
+		return nil, errors.Errorf(&errURLError{}, "invalid request URL %q: %w", requestURL, err)
 	}
 
 	c := OIDCClient{
