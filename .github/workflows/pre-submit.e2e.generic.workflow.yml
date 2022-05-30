@@ -34,12 +34,17 @@ jobs:
           echo $PROVENANCE
           pwd
           ls -lh .
+          echo "--"
+          cat "$PROVENANCE"
+          echo "--"
 
           # disable pipefail and use cat in order to swallow base64 errors.
           set +o pipefail
+          cat "$PROVENANCE" | base64 -d | cat
           ATTESTATION=$(cat "$PROVENANCE" | base64 -d | cat)
           set -o pipefail
 
+          echo "--"
           echo $ATTESTATION | jq
 
           e2e_verify_predicate_subject_name "$ATTESTATION" "binary-name"
