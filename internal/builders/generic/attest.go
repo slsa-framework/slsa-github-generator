@@ -139,6 +139,11 @@ run in the context of a Github Actions workflow.`,
 			}
 
 			g := slsa.NewHostedActionsGenerator(&b)
+			// TODO(github.com/slsa-framework/slsa-github-generator/issues/124): Remove
+			if isPreSubmitTests() {
+				g = g.WithClients(&slsa.NilClientProvider{})
+			}
+
 			p, err := g.Generate(ctx)
 			check(err)
 
@@ -179,4 +184,10 @@ run in the context of a Github Actions workflow.`,
 	c.Flags().StringVarP(&subjects, "subjects", "s", "", "Formatted list of subjects in the same format as sha256sum.")
 
 	return c
+}
+
+// isPresubmitTests returns true if running in pre-submit tests.
+func isPreSubmitTests() bool {
+	return (os.Getenv("GITHUB_EVENT_NAME") == "pull_request" &&
+		os.Getenv("GITHUB_REPOSITORY") == "slsa-framework/slsa-github-generator")
 }
