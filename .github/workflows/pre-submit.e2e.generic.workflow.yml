@@ -36,7 +36,7 @@ jobs:
           ATTESTATION=$(cat "$PROVENANCE" | base64 -d | cat)
           set -o pipefail
 
-          echo $ATTESTATION
+          echo $ATTESTATION | jq
 
           e2e_verify_predicate_subject_name "$ATTESTATION" "binary-name"
           e2e_verify_predicate_builder_id "$ATTESTATION" "https://github.com/Attestations/GitHubHostedActions@v1"
