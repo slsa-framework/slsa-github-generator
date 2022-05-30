@@ -32,6 +32,8 @@ jobs:
           source "./.github/workflows/scripts/e2e-utils.sh"
 
           echo $PROVENANCE
+          pwd
+          ls -lh .
 
           # disable pipefail and use cat in order to swallow base64 errors.
           set +o pipefail
