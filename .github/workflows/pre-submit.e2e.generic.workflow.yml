@@ -31,7 +31,10 @@ jobs:
 
           source "./.github/workflows/scripts/e2e-utils.sh"
 
-          ATTESTATION=$(cat "$PROVENANCE" | base64 -d)
+          # disable pipefail and use cat in order to swallow base64 errors.
+          set +o pipefail
+          ATTESTATION=$(cat "$PROVENANCE" | base64 -d | cat)
+          set -o pipefail
 
           e2e_verify_predicate_subject_name "$ATTESTATION" "binary-name"
           e2e_verify_predicate_builder_id "$ATTESTATION" "https://github.com/Attestations/GitHubHostedActions@v1"
