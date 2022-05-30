@@ -84,11 +84,11 @@ jobs:
               exit 2;
           fi
 
-          cat jwt.json | jq -r '.value' | cut -d "." -f1
+          cat jwt.json | jq -r '.value' | cut -d "." -f1 | base64 -d
           echo ""
-          cat jwt.json | jq -r '.value' | cut -d "." -f2
+          cat jwt.json | jq -r '.value' | cut -d "." -f2 | base64 -d
           echo ""
-          cat jwt.json | jq -r '.value' | cut -d "." -f3
+          cat jwt.json | jq -r '.value' | cut -d "." -f3 | base64 -d
           echo ""
 
           export WORKFLOW_REF=$(cat jwt.json | jq -r '.value' | cut -d "." -f2 | base64 -d | jq -r '.job_workflow_ref')
