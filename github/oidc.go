@@ -84,9 +84,6 @@ type OIDCClient struct {
 // NewOIDCClient returns new GitHub OIDC provider client.
 func NewOIDCClient() (*OIDCClient, error) {
 	requestURL := os.Getenv(requestURLEnvKey)
-	if requestURL == "" {
-		return nil, fmt.Errorf("unable to request token: %v is empty", requestURLEnvKey)
-	}
 	parsedURL, err := url.Parse(requestURL)
 	if err != nil {
 		return nil, fmt.Errorf("invalid request URL %q: %w", requestURL, err)
