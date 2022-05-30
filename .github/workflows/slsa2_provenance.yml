@@ -48,7 +48,7 @@ jobs:
   #     - name: Detect the repository and ref
   #       id: detect
   #       uses: slsa-framework/slsa-github-generator/.github/actions/detect-workflow@aec5cd1e20507a6f1b5d8e82a8f62c3e2ca9b9f9
-	detect-env:
+  detect-env:
     runs-on: ubuntu-latest
     permissions:
       id-token: write # Needed to detect the current reusable repository and ref.
