@@ -23,9 +23,9 @@ jobs:
       - uses: actions/checkout@ec3a7ce113134d7a93b817d10a8272cb61118579 #v2.4.0
       - uses: actions/download-artifact@fb598a63ae348fa914e94cd0ff38f362e927b741
         with:
-          name: ${{ needs.build.outputs.signed-provenance-name }}
+          name: ${{ needs.build.outputs.attestation-name }}
       - env:
-          PROVENANCE: ${{ needs.build.outputs.signed-provenance-name }}
+          PROVENANCE: ${{ needs.build.outputs.attestation-name }}
         run: |
           set -euo pipefail
 
