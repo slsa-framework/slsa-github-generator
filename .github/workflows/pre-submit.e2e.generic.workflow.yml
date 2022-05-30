@@ -31,21 +31,13 @@ jobs:
 
           source "./.github/workflows/scripts/e2e-utils.sh"
 
-          echo $PROVENANCE
-          pwd
-          ls -lh .
-          echo "--"
-          cat "$PROVENANCE"
-          echo "--"
-
+          # TODO(github.com/slsa-framework/slsa-github-generator/issues/129): Address base64 output format.
           # disable pipefail and use cat in order to swallow base64 errors.
-          set +o pipefail
-          cat "$PROVENANCE" | base64 -d | cat
-          ATTESTATION=$(cat "$PROVENANCE" | base64 -d | cat)
-          set -o pipefail
-
-          echo "--"
-          echo $ATTESTATION | jq
+          # set +o pipefail
+          # ATTESTATION=$(cat "$PROVENANCE" | base64 -d | cat)
+          # set -o pipefail
+          # NOTE: Provenance is not-signed and is in simple in-toto format, not DSSE.
+          ATTESTATION=$(cat "$PROVENANCE")
 
           e2e_verify_predicate_subject_name "$ATTESTATION" "binary-name"
           e2e_verify_predicate_builder_id "$ATTESTATION" "https://github.com/Attestations/GitHubHostedActions@v1"
