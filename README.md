@@ -11,15 +11,16 @@ This repository contains the code, examples and technical design for the blog po
 - [Technical design](#technical-design)
   - [Blog post](#blog-post)
   - [Specifications](#specifications)
+
 ---
 
 ## Golang projects
 
-To generate SLSA provenance for your Golang project, follow [builders/go/README.md](builders/go/README.md)
+To generate SLSA provenance for your Golang project, follow [internal/builders/go/README.md](internal/builders/go/README.md)
 
 ## Other projects
 
-To generate SLSA provenance for other programming languages, follow [builders/generic/README.md](builders/generic/README.md)
+To generate SLSA provenance for other programming languages, follow [internal/builders/generic/README.md](internal/builders/generic/README.md)
 
 ## Technical design
 

@@ -10,5 +10,5 @@ flags:
 
 goos: linux
 goarch: amd64
-dir: builders/go/
+dir: internal/builders/go/
 binary: slsa-builder-go-{{ .Os }}-{{ .Arch }}

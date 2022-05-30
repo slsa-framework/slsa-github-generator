@@ -30,7 +30,7 @@ env:
   VERIFIER_RELEASE_BINARY_SHA256: 60c91c9d5b9a059e37ac46da316f20c81da335b5d00e1f74d03dd50f819694bd
   VERIFIER_RELEASE: v0.0.1
   # Builder location
-  BUILDER_DIR: builders
+  BUILDER_DIR: internal/builders
 
 ###################################################################
 #                                                                 #
@@ -159,18 +159,17 @@ jobs:
             # https://go.dev/ref/mod#build-commands.
             go build -mod=vendor -o "$BUILDER_BINARY"
 
-            mv "$BUILDER_BINARY" ../../"$BUILDER_BINARY"
-
             cd -
+
+            mv "${BUILDER_DIR}/go/${BUILDER_BINARY}" .
           else
             echo "Fetching the builder with ref: $BUILDER_REF"
-            
+
             .github/workflows/scripts/builder-fetch.sh
 
             mv "$BUILDER_RELEASE_BINARY" "$BUILDER_BINARY"
-            
           fi
-          
+
           BUILDER_DIGEST=$(sha256sum "$BUILDER_BINARY" | awk '{print $1}')
           echo "::set-output name=go-builder-sha256::$BUILDER_DIGEST"
           echo "hash of $BUILDER_BINARY is $BUILDER_DIGEST"
@@ -255,7 +254,7 @@ jobs:
     outputs:
       go-binary-sha256: ${{ steps.build-sha256.outputs.go-binary-sha256 }}
     runs-on: ubuntu-latest
-    needs: [builder,build-dry]
+    needs: [builder, build-dry]
     steps:
       - name: Checkout the repository
         uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # v2.3.4
@@ -456,16 +455,16 @@ jobs:
           if-no-files-found: error
           retention-days: 5
 
-###################################################################
-#                                                                 #
-#           Upload binaries and provenances as assets             #
-#                                                                 #
-###################################################################
+  ###################################################################
+  #                                                                 #
+  #           Upload binaries and provenances as assets             #
+  #                                                                 #
+  ###################################################################
   upload-assets:
     permissions:
       contents: write
     runs-on: ubuntu-latest
-    needs: [build,build-dry,provenance]
+    needs: [build, build-dry, provenance]
     if: startsWith(github.ref, 'refs/tags/') && inputs.upload-assets == true
     steps:
       # Verify binary hash.

@@ -1,7 +1,7 @@
 name: PR e2e go ldflags main dir
-on: 
+on:
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 permissions: read-all
 
@@ -19,7 +19,7 @@ jobs:
       - id: ldflags
         run: |
           set -euo pipefail
-          
+
           echo "::set-output name=version::-X main.gitVersion=v1.2.3"
           echo "::set-output name=commit::-X main.gitCommit=abcdef"
           echo "::set-output name=branch::-X main.gitBranch=main"
@@ -51,5 +51,5 @@ jobs:
           PROVENANCE: ${{ needs.build.outputs.go-binary-name }}.intoto.jsonl
         run: |
           set -euo pipefail
-        
+
           ./.github/workflows/scripts/e2e-verify.sh
