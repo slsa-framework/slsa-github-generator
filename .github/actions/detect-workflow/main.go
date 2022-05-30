@@ -25,8 +25,9 @@ import (
 	"github.com/slsa-framework/slsa-github-generator/github"
 )
 
-// getStr returns a value from the given Event map. Values are specified as "."
-// separated indexes into the map. e.g. pull_request.head.repo.full_name.
+// getStr returns a string value from the given Event map. Values are specified
+// as dot-separated indexes into the map. e.g.
+// "pull_request.head.repo.full_name".
 func getStr(m map[string]interface{}, key string) string {
 	if key == "" {
 		return ""
@@ -34,6 +35,7 @@ func getStr(m map[string]interface{}, key string) string {
 
 	parts := strings.Split(key, ".")
 
+	// Traverse the first parts of the path.
 	current := m[parts[0]]
 	for _, part := range parts[1:] {
 		switch v := current.(type) {
@@ -46,6 +48,7 @@ func getStr(m map[string]interface{}, key string) string {
 		}
 	}
 
+	// Return the final part if it's a string.
 	switch v := current.(type) {
 	case string:
 		return v
