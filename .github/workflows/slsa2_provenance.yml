@@ -54,8 +54,8 @@ jobs:
       id-token: write # Needed to detect the current reusable repository and ref.
       contents: read
     outputs:
-      builder_repo: ${{ steps.detect.outputs.repository }}
-      builder_ref: ${{ steps.detect.outputs.ref }}
+      repository: ${{ steps.detect.outputs.repository }}
+      ref: ${{ steps.detect.outputs.ref }}
     steps:
       - name: Detect the builder ref
         id: detect
