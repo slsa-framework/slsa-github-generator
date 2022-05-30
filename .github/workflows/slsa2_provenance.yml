@@ -63,8 +63,6 @@ jobs:
           PULL_REQUEST_REPOSITORY: "${{ github.event.pull_request.head.repo.full_name }}"
         shell: bash
         run: |
-          # set -euo pipefail
-
           # On pull requests, permissions are not available.
           if [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
               echo "::set-output name=builder_repo::$PULL_REQUEST_REPOSITORY"
@@ -83,13 +81,6 @@ jobs:
               echo "Failed to get OIDC token from GitHub, response $status_code: $error_msg"
               exit 2;
           fi
-
-          cat jwt.json | jq -r '.value' | cut -d "." -f1 | base64 -d
-          echo ""
-          cat jwt.json | jq -r '.value' | cut -d "." -f2 | base64 -d
-          echo ""
-          cat jwt.json | jq -r '.value' | cut -d "." -f3 | base64 -d
-          echo ""
 
           export WORKFLOW_REF=$(cat jwt.json | jq -r '.value' | cut -d "." -f2 | base64 -d | jq -r '.job_workflow_ref')
           if [ -z $WORKFLOW_REF ]; then
