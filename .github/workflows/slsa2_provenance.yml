@@ -35,18 +35,61 @@ on:
         value: ${{ jobs.generator.outputs.signed-provenance-name }}
 
 jobs:
-  detect-env:
+  # TODO: Use detect-workflow when #125 is merged.
+  # detect-env:
+  #   runs-on: ubuntu-latest
+  #   permissions:
+  #     id-token: write # Needed to detect the current reusable repository and ref.
+  #     contents: read
+  #   outputs:
+  #     repository: ${{ steps.detect.outputs.repository }}
+  #     ref: ${{ steps.detect.outputs.ref }}
+  #   steps:
+  #     - name: Detect the repository and ref
+  #       id: detect
+  #       uses: slsa-framework/slsa-github-generator/.github/actions/detect-workflow@aec5cd1e20507a6f1b5d8e82a8f62c3e2ca9b9f9
+	detect-env:
     runs-on: ubuntu-latest
     permissions:
       id-token: write # Needed to detect the current reusable repository and ref.
       contents: read
     outputs:
-      repository: ${{ steps.detect.outputs.repository }}
-      ref: ${{ steps.detect.outputs.ref }}
+      builder_repo: ${{ steps.detect.outputs.repository }}
+      builder_ref: ${{ steps.detect.outputs.ref }}
     steps:
-      - name: Detect the repository and ref
+      - name: Detect the builder ref
         id: detect
-        uses: slsa-framework/slsa-github-generator/.github/actions/detect-workflow@aec5cd1e20507a6f1b5d8e82a8f62c3e2ca9b9f9
+        env:
+          PULL_REQUEST_REPOSITORY: "${{ github.event.pull_request.head.repo.full_name }}"
+        shell: bash
+        run: |
+          # On pull requests, permissions are not available.
+          if [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
+              echo "::set-output name=builder_repo::$PULL_REQUEST_REPOSITORY"
+              echo "::set-output name=builder_ref::$GITHUB_HEAD_REF"
+              exit 0
+          fi
+
+          if [[ -z "$ACTIONS_ID_TOKEN_REQUEST_TOKEN" ]] || [[ -z "$ACTIONS_ID_TOKEN_REQUEST_URL" ]]; then
+              echo "OIDC not available" not available.
+              exit 1
+          fi
+
+          status_code=$(curl -sS -H "Authorization: Bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=$GITHUB_REPOSITORY/builder" -o jwt.json -w '%{http_code}')
+          if [[ $status_code -ge 400 ]]; then
+              error_msg=$(jq -r .message jwt.json 2>/dev/null || echo 'unknown error')
+              echo "Failed to get OIDC token from GitHub, response $status_code: $error_msg"
+              exit 2;
+          fi
+
+          export WORKFLOW_REF=$(cat jwt.json | jq -r '.value' | cut -d "." -f2 | base64 -d | jq -r '.job_workflow_ref')
+          if [ -z $WORKFLOW_REF ]; then
+              echo "OIDC token parsing failure: job_workflow_ref could not be retrieved"
+              exit 3;
+          fi
+
+          echo "::set-output name=repository::$(echo $WORKFLOW_REF | cut -d "@" -f1 | cut -d '/' -f1-2)"
+          echo "::set-output name=ref::$(echo $WORKFLOW_REF | cut -d "@" -f2)"
 
   ###################################################################
   #                                                                 #
