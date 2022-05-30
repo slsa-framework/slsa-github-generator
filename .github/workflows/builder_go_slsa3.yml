@@ -83,6 +83,7 @@ jobs:
       builder_repo: ${{ steps.detect.outputs.builder_repo }}
       builder_ref: ${{ steps.detect.outputs.builder_ref }}
     steps:
+      # TODO: Use detect-workflow when #125 is merged.
       - name: Detect the builder ref
         id: detect
         env:
