@@ -98,6 +98,10 @@ func GenerateProvenance(name, digest, command, envs, workingDir string) ([]byte,
 
 	ctx := context.Background()
 	g := slsa.NewHostedActionsGenerator(&b)
+	// Pre-submit tests don't have access to write OIDC token.
+	if isPreSubmitTests() {
+		g.WithClients(&slsa.NilClientProvider{})
+	}
 	p, err := g.Generate(ctx)
 	if err != nil {
 		return nil, err
