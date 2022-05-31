@@ -54,10 +54,10 @@ type OIDCToken struct {
 	// RepositoryID is the unique repository ID.
 	RepositoryID string `json:"repository_id"`
 
-	// RepositoryOwnerID is the uqnique ID of the owner of the repository.
+	// RepositoryOwnerID is the unique ID of the owner of the repository.
 	RepositoryOwnerID string `json:"repository_owner_id"`
 
-	// ActorID is the uqnique ID of the actor who triggered the build.
+	// ActorID is the unique ID of the actor who triggered the build.
 	ActorID string `json:"actor_id"`
 }
 

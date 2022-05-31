@@ -233,7 +233,6 @@ An example of the provenance generated from this repo is below:
 }
 ```
 
-
 ## Verification of provenance
 
 To verify the provenance, use the [github.com/slsa-framework/slsa-verifier](https://github.com/slsa-framework/slsa-verifier) project.
