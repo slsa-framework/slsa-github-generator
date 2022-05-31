@@ -36,6 +36,9 @@ e2e_verify_predicate_invocation_environment "$ATTESTATION" "arch" "X64"
 e2e_verify_predicate_invocation_environment "$ATTESTATION" "github_event_name" "$GITHUB_EVENT_NAME"
 e2e_verify_predicate_invocation_environment "$ATTESTATION" "github_ref" "$GITHUB_REF"
 e2e_verify_predicate_invocation_environment "$ATTESTATION" "github_ref_type" "$GITHUB_REF_TYPE"
+e2e_verify_predicate_invocation_environment "$ATTESTATION" "github_actor_id" "TODO"
+e2e_verify_predicate_invocation_environment "$ATTESTATION" "github_repository_id" "$GITHUB_REF_TYPE"
+e2e_verify_predicate_invocation_environment "$ATTESTATION" "github_repository_owner_id" "$GITHUB_REF_TYPE"
 
 # First step is vendoring
 e2e_verify_predicate_buildConfig_step_command "0" "$ATTESTATION" "[\"mod\",\"vendor\"]"
