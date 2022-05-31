@@ -189,7 +189,7 @@ func (b *GithubActionsBuild) Invocation(ctx context.Context) (slsa.ProvenanceInv
 	}
 
 	if oidcClient != nil {
-		t, err := oidcClient.Token(ctx, b.Context.Repository)
+		t, err := oidcClient.Token(ctx, []string{b.Context.Repository})
 		if err != nil {
 			return i, err
 		}
