@@ -91,6 +91,11 @@ func GenerateProvenance(name, digest, command, envs, workingDir string) ([]byte,
 		}, gh),
 	}
 
+	// Pre-submit tests don't have access to write OIDC token.
+	if isPreSubmitTests() {
+		b.GithubActionsBuild.WithClients(&slsa.NilClientProvider{})
+	}
+
 	ctx := context.Background()
 	g := slsa.NewHostedActionsGenerator(&b)
 	p, err := g.Generate(ctx)
