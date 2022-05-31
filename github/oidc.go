@@ -50,6 +50,15 @@ type OIDCToken struct {
 
 	// JobWorkflowRef is a reference to the current job workflow.
 	JobWorkflowRef string `json:"job_workflow_ref"`
+
+	// RepositoryID is the unique repository ID.
+	RepositoryID string `json:"repository_id"`
+
+	// RepositoryOwnerID is the uqnique ID of the owner of the repository.
+	RepositoryOwnerID string `json:"repository_owner_id"`
+
+	// ActorID is the uqnique ID of the actor who triggered the build.
+	ActorID string `json:"actor_id"`
 }
 
 // errURLError indicates the OIDC server URL is invalid.

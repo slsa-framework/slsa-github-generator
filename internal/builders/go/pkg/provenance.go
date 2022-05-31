@@ -48,6 +48,15 @@ type (
 	}
 )
 
+type goProvenanceBuild struct {
+	*slsa.GithubActionsBuild
+}
+
+// URI implements BuildType.URI.
+func (b *goProvenanceBuild) URI() string {
+	return buildType
+}
+
 // GenerateProvenance translates github context into a SLSA provenance
 // attestation.
 // Spec: https://slsa.dev/provenance/v0.2
@@ -71,21 +80,26 @@ func GenerateProvenance(name, digest, command, envs, workingDir string) ([]byte,
 		return nil, err
 	}
 
-	// Generate a basic WorkflowRun for our subject based on the github
-	// context.
-	wr := slsa.NewWorkflowRun([]intoto.Subject{
-		{
-			Name: name,
-			Digest: slsa02.DigestSet{
-				"sha256": digest,
+	b := goProvenanceBuild{
+		GithubActionsBuild: slsa.NewGithubActionsBuild([]intoto.Subject{
+			{
+				Name: name,
+				Digest: slsa02.DigestSet{
+					"sha256": digest,
+				},
 			},
-		},
-	}, gh)
+		}, gh),
+	}
 
-	// Identifies that this is a slsa-framework's slsa-github-generator-go' build.
-	wr.BuildType = buildType
+	ctx := context.Background()
+	g := slsa.NewHostedActionsGenerator(&b)
+	p, err := g.Generate(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	// Sets the builder specific build config.
-	wr.BuildConfig = buildConfig{
+	p.Predicate.BuildConfig = buildConfig{
 		Version: buildConfigVersion,
 		Steps: []step{
 			// Vendoring step.
@@ -104,23 +118,6 @@ func GenerateProvenance(name, digest, command, envs, workingDir string) ([]byte,
 				WorkingDir: workingDir,
 			},
 		},
-	}
-
-	// Generate the provenance.
-	ctx := context.Background()
-
-	// Note: we leave the client as `nil` for pre-submit tests.
-	var c *github.OIDCClient
-	if !isPreSubmitTests() {
-		c, err = github.NewOIDCClient()
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	p, err := slsa.HostedActionsProvenance(ctx, wr, c)
-	if err != nil {
-		return nil, err
 	}
 
 	// Set the architecture based on the runner. Architecture should be the
