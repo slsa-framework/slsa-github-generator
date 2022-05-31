@@ -70,7 +70,6 @@ func NewGithubActionsBuild(s []intoto.Subject, c github.WorkflowContext) *Github
 		Context: c,
 		Clients: &DefaultClientProvider{},
 	}
-
 }
 
 // Subject implements BuildType.Subject.
@@ -178,6 +177,27 @@ func (b *GithubActionsBuild) Invocation(ctx context.Context) (slsa.ProvenanceInv
 	// github_sha1 is the commit SHA that triggered the
 	// workflow run.
 	addEnvKeyString(env, "github_sha1", b.Context.SHA)
+
+	oidcClient, err := b.Clients.OIDCClient()
+	if err != nil {
+		return "", fmt.Errorf("oidc client: %w", err)
+	}
+
+	if oidcClient != nil {
+		t, err := oidcClient.Token(ctx, nil)
+		if err != nil {
+			return nil, err
+		}
+
+		if t.JobWorkflowRef != "" {
+			builderID = fmt.Sprintf("https://github.com/%s", t.JobWorkflowRef)
+		}
+	}
+	// github_repository_id is the unique ID of the repository
+	// at the time of the build.
+
+	// github_actor_id is the unique ID of the repository
+	// at the time of the build.
 
 	if len(env) > 0 {
 		i.Environment = env

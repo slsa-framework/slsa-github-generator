@@ -123,8 +123,9 @@ jobs:
     permissions:
       id-token: write
       contents: write
+      actions: read
     needs: args
-    uses: slsa-framework/slsa-github-generator-go/.github/workflows/slsa3_builder.yml@v1.0.0
+    uses: slsa-framework/slsa-github-generator/.github/workflows/builder_go_slsa3.yml@v1.0.0
     with:
       go-version: 1.17
       # Optional: only needed if using ldflags.
@@ -163,12 +164,16 @@ An example of the provenance generated from this repo is below:
       "parameters": {},
       "environment": {
         "github_actor": "ianlewis",
+        "github_actor_id": "123456",
         "github_base_ref": "",
         "github_event_name": "workflow_dispatch",
         "github_event_payload": ...,
         "github_head_ref": "",
         "github_ref": "refs/heads/main",
         "github_ref_type": "branch",
+        "github_repository_id": "8923542",
+        "github_repository_owner": "ianlewis",
+        "github_repository_owner_id": "123456",
         "github_run_attempt": "1",
         "github_run_id": "2193104371",
         "github_run_number": "16",
