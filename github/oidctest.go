@@ -118,20 +118,19 @@ func newTestOIDCServer(t *testing.T, now time.Time, f http.HandlerFunc) (*httpte
 	}))
 	issuerURL = s.URL
 
-	c, err := NewOIDCClient()
+	requestURL, err := url.ParseRequestURI(s.URL)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	c.requestURL, err = url.Parse(s.URL)
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	c.verifierFunc = func(ctx context.Context) (*oidc.IDTokenVerifier, error) {
-		return oidc.NewVerifier(s.URL, &testKeySet{}, &oidc.Config{
-			Now:               func() time.Time { return now },
-			SkipClientIDCheck: true,
-		}), nil
+	c := OIDCClient{
+		requestURL: requestURL,
+		verifierFunc: func(ctx context.Context) (*oidc.IDTokenVerifier, error) {
+			return oidc.NewVerifier(s.URL, &testKeySet{}, &oidc.Config{
+				Now:               func() time.Time { return now },
+				SkipClientIDCheck: true,
+			}), nil
+		},
 	}
 
-	return s, c
+	return s, &c
 }

@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
 	"time"
 
@@ -44,6 +45,24 @@ func tokenEqual(issuer string, wantToken, gotToken *OIDCToken) bool {
 	}
 
 	return true
+}
+
+func TestNewOIDCClient(t *testing.T) {
+	// Tests that NewOIDCClient returns an error when the
+	// ACTIONS_ID_TOKEN_REQUEST_URL env var is empty.
+	t.Run("empty url", func(t *testing.T) {
+		if os.Getenv(requestURLEnvKey) != "" {
+			panic(fmt.Sprintf("expected %v to be empty", requestURLEnvKey))
+		}
+
+		_, err := NewOIDCClient()
+		if err == nil {
+			t.Fatalf("expected error")
+		}
+		if want, got := (&errURLError{}), err; !errors.As(got, &want) {
+			t.Fatalf("unexpected error, want: %#v, got: %#v", want, got)
+		}
+	})
 }
 
 func TestToken(t *testing.T) {
