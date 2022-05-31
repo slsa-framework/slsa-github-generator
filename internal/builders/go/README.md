@@ -150,7 +150,7 @@ An example of the provenance generated from this repo is below:
   ],
   "predicate": {
     "builder": {
-      "id": "https://github.com/slsa-framework/slsa-github-generator/.github/workflows/builder_go_slsa3.yml@v1.1.0"
+      "id": "https://github.com/slsa-framework/slsa-github-generator/.github/workflows/builder_go_slsa3.yml@v1.0.0"
     },
     "buildType": "https://github.com/slsa-framework/slsa-github-generator-go@v1",
     "invocation": {
