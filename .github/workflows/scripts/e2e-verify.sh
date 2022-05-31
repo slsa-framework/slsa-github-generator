@@ -19,6 +19,7 @@ source "./.github/workflows/scripts/e2e-utils.sh"
 
 BRANCH="main"
 
+# Note: this requires GH_TOKEN to be set in the workflows.
 THIS_FILE=$(gh api -H "Accept: application/vnd.github.v3+json" /repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID | jq -r '.path' | cut -d '/' -f3)
 
 # Provenance content verification.
