@@ -188,6 +188,7 @@ func (b *GithubActionsBuild) Invocation(ctx context.Context) (slsa.ProvenanceInv
 		return i, fmt.Errorf("oidc client: %w", err)
 	}
 
+	fmt.Println("oidcClient", oidcClient)
 	if oidcClient != nil {
 		t, err := oidcClient.Token(ctx, []string{b.Context.Repository})
 		if err != nil {
@@ -281,6 +282,7 @@ func (b *GithubActionsBuild) Metadata(context.Context) (*slsa.ProvenanceMetadata
 // WithClients overrides the build type's default client provider. This is
 // useful for tests where APIs are not available.
 func (b *GithubActionsBuild) WithClients(p ClientProvider) *GithubActionsBuild {
+	fmt.Println("setting clients")
 	b.Clients = p
 	return b
 }
