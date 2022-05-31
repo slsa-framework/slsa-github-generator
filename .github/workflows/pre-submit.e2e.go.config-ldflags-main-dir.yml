@@ -1,4 +1,4 @@
-name: PR e2e go ldflags main dir
+name: Pre-submit e2e go ldflags main dir
 on:
   pull_request:
     branches: [main]
@@ -6,7 +6,7 @@ on:
 permissions: read-all
 
 env:
-  THIS_FILE: pr-e2e.go.config-ldflags-main-dir.yml
+  THIS_FILE: pre-submit.e2e.go.config-ldflags-main-dir.yml
 
 jobs:
   args:

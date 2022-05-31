@@ -21,7 +21,7 @@ BRANCH="main"
 
 # Provenance content verification.
 ATTESTATION=$(cat "$PROVENANCE" | base64 -d)
-LDFLAGS=$(echo "$THIS_FILE" | cut -d '.' -f3 | grep -v noldflags)
+LDFLAGS=$(echo "$THIS_FILE" | cut -d '.' -f4 | grep -v noldflags)
 
 e2e_verify_predicate_subject_name "$ATTESTATION" "$BINARY"
 e2e_verify_predicate_builder_id "$ATTESTATION" "https://github.com/Attestations/GitHubHostedActions@v1"
