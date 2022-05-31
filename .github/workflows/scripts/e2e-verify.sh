@@ -36,9 +36,13 @@ e2e_verify_predicate_invocation_environment "$ATTESTATION" "arch" "X64"
 e2e_verify_predicate_invocation_environment "$ATTESTATION" "github_event_name" "$GITHUB_EVENT_NAME"
 e2e_verify_predicate_invocation_environment "$ATTESTATION" "github_ref" "$GITHUB_REF"
 e2e_verify_predicate_invocation_environment "$ATTESTATION" "github_ref_type" "$GITHUB_REF_TYPE"
-e2e_verify_predicate_invocation_environment "$ATTESTATION" "github_actor_id" "TODO"
-e2e_verify_predicate_invocation_environment "$ATTESTATION" "github_repository_id" "$GITHUB_REF_TYPE"
-e2e_verify_predicate_invocation_environment "$ATTESTATION" "github_repository_owner_id" "$GITHUB_REF_TYPE"
+# gh api   -H "Accept: application/vnd.github.v3+json"   /users/github
+e2e_verify_predicate_invocation_environment "$ATTESTATION" "github_actor_id" "9919"
+# gh api   -H "Accept: application/vnd.github.v3+json"   /users/slsa-framework
+e2e_verify_predicate_invocation_environment "$ATTESTATION" "github_repository_owner_id" "80431187"
+# gh api   -H "Accept: application/vnd.github.v3+json"   /repos/slsa-framework/slsa-github-generator
+e2e_verify_predicate_invocation_environment "$ATTESTATION" "github_repository_id" "475074978"
+
 
 # First step is vendoring
 e2e_verify_predicate_buildConfig_step_command "0" "$ATTESTATION" "[\"mod\",\"vendor\"]"
