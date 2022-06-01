@@ -186,6 +186,17 @@ func (c *OIDCClient) verifyToken(ctx context.Context, audience []string, payload
 		return nil, errors.Errorf(&errVerify{}, "audience not equal %q != %q", audience, t.Audience)
 	}
 
+	// Verify some of the fields we expect to populate the provenance.
+	if t.RepositoryID == "" {
+		return nil, errors.Errorf(&errVerify{}, "repository ID is empty")
+	}
+	if t.RepositoryOwnerID == "" {
+		return nil, errors.Errorf(&errVerify{}, "repository owner ID is empty")
+	}
+	if t.ActorID == "" {
+		return nil, errors.Errorf(&errVerify{}, "actor ID is empty")
+	}
+
 	return t, nil
 }
 

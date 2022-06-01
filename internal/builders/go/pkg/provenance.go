@@ -50,11 +50,17 @@ type (
 
 type goProvenanceBuild struct {
 	*slsa.GithubActionsBuild
+	buildConfig buildConfig
 }
 
 // URI implements BuildType.URI.
 func (b *goProvenanceBuild) URI() string {
 	return buildType
+}
+
+// BuildConfig implements BuildType.BuildConfig.
+func (b *goProvenanceBuild) BuildConfig(context.Context) (interface{}, error) {
+	return b.buildConfig, nil
 }
 
 // GenerateProvenance translates github context into a SLSA provenance
@@ -89,6 +95,26 @@ func GenerateProvenance(name, digest, command, envs, workingDir string) ([]byte,
 				},
 			},
 		}, gh),
+		buildConfig: buildConfig{
+			Version: buildConfigVersion,
+			Steps: []step{
+				// Vendoring step.
+				{
+					// Note: vendoring and compilation are
+					// performed in the same VM, so the compiler is
+					// the same.
+					Command:    []string{com[0], "mod", "vendor"},
+					WorkingDir: workingDir,
+					// Note: No user-defined env set for this step.
+				},
+				// Compilation step.
+				{
+					Command:    com,
+					Env:        env,
+					WorkingDir: workingDir,
+				},
+			},
+		},
 	}
 
 	// Pre-submit tests don't have access to write OIDC token.
@@ -105,28 +131,6 @@ func GenerateProvenance(name, digest, command, envs, workingDir string) ([]byte,
 	p, err := g.Generate(ctx)
 	if err != nil {
 		return nil, err
-	}
-
-	// Sets the builder specific build config.
-	p.Predicate.BuildConfig = buildConfig{
-		Version: buildConfigVersion,
-		Steps: []step{
-			// Vendoring step.
-			{
-				// Note: vendoring and compilation are
-				// performed in the same VM, so the compiler is
-				// the same.
-				Command:    []string{com[0], "mod", "vendor"},
-				WorkingDir: workingDir,
-				// Note: No user-defined env set for this step.
-			},
-			// Compilation step.
-			{
-				Command:    com,
-				Env:        env,
-				WorkingDir: workingDir,
-			},
-		},
 	}
 
 	// Set the architecture based on the runner. Architecture should be the

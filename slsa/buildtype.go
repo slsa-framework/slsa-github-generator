@@ -27,8 +27,6 @@ import (
 	"github.com/slsa-framework/slsa-github-generator/github"
 )
 
-var errorInvalidOIDCToken = errors.New("invalid OIDC token")
-
 // BuildType implements generation of buildType specific elements of SLSA
 // provenance. Each BuildType instance represents a specific build.
 type BuildType interface {
@@ -193,16 +191,6 @@ func (b *GithubActionsBuild) Invocation(ctx context.Context) (slsa.ProvenanceInv
 		t, err := oidcClient.Token(ctx, []string{b.Context.Repository})
 		if err != nil {
 			return i, err
-		}
-
-		if t.RepositoryID == "" {
-			return i, fmt.Errorf("%w: repository ID is empty", errorInvalidOIDCToken)
-		}
-		if t.RepositoryOwnerID == "" {
-			return i, fmt.Errorf("%w: repository owner ID is empty", errorInvalidOIDCToken)
-		}
-		if t.ActorID == "" {
-			return i, fmt.Errorf("%w: actor ID is empty", errorInvalidOIDCToken)
 		}
 
 		// github_repository_id is the unique ID of the repository.
