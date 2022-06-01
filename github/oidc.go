@@ -218,6 +218,9 @@ func (c *OIDCClient) verifyClaims(token *OIDCToken) error {
 	if token.ActorID == "" {
 		return errors.Errorf(&errClaims{}, "actor ID is empty")
 	}
+	if token.JobWorkflowRef == "" {
+		return errors.Errorf(&errClaims{}, "job workflow ref is empty")
+	}
 	return nil
 }
 

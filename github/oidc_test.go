@@ -101,6 +101,18 @@ func TestToken(t *testing.T) {
 			err: &errClaims{},
 		},
 		{
+			name:     "no workflow ref claim",
+			audience: []string{"hoge"},
+			token: &OIDCToken{
+				Audience:          []string{"hoge"},
+				Expiry:            now.Add(1 * time.Hour),
+				RepositoryID:      "1234",
+				RepositoryOwnerID: "4321",
+				ActorID:           "4567",
+			},
+			err: &errClaims{},
+		},
+		{
 			name:     "no owner id claim",
 			audience: []string{"hoge"},
 			token: &OIDCToken{
