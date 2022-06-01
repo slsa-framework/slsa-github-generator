@@ -152,7 +152,7 @@ An example of the provenance generated from this repo is below:
     "builder": {
       "id": "https://github.com/slsa-framework/slsa-github-generator/.github/workflows/builder_go_slsa3.yml@v1.0.0"
     },
-    "buildType": "https://github.com/slsa-framework/slsa-github-generator-go@v1",
+    "buildType": "https://github.com/slsa-framework/slsa-github-generator/go@v1",
     "invocation": {
       "configSource": {
         "uri": "git+https://github.com/ianlewis/actions-test@refs/heads/main",
@@ -267,7 +267,7 @@ verified SLSA provenance produced at
  {
         "caller": "origin/repo",
         "commit": "0dfcd24824432c4ce587f79c918eef8fc2c44d7b",
-        "job_workflow_ref": "/slsa-framework/slsa-github-generator-go/.github/workflows/slsa3_builder.yml@refs/heads/main",
+        "job_workflow_ref": "/slsa-framework/slsa-github-generator/.github/workflows/builder_go_slsa3.yml@refs/tags/v1.0.0",
         "trigger": "workflow_dispatch",
         "issuer": "https://token.actions.githubusercontent.com"
 }
