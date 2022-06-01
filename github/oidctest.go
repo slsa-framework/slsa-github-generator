@@ -19,10 +19,13 @@ import (
 )
 
 type jsonToken struct {
-	Issuer         string   `json:"iss"`
-	Audience       []string `json:"aud"`
-	Expiry         int64    `json:"exp"`
-	JobWorkflowRef string   `json:"job_workflow_ref"`
+	Issuer            string   `json:"iss"`
+	Audience          []string `json:"aud"`
+	Expiry            int64    `json:"exp"`
+	JobWorkflowRef    string   `json:"job_workflow_ref"`
+	RepositoryID      string   `json:"repository_id"`
+	RepositoryOwnerID string   `json:"repository_owner_id"`
+	ActorID           string   `json:"actor_id"`
 }
 
 // testKeySet is a oidc.KeySet that can be used in tests.
@@ -67,10 +70,13 @@ func NewTestOIDCServer(t *testing.T, now time.Time, token *OIDCToken) (*httptest
 		}
 
 		b, err := json.Marshal(jsonToken{
-			Issuer:         issuer,
-			Audience:       token.Audience,
-			Expiry:         token.Expiry.Unix(),
-			JobWorkflowRef: token.JobWorkflowRef,
+			Issuer:            issuer,
+			Audience:          token.Audience,
+			Expiry:            token.Expiry.Unix(),
+			JobWorkflowRef:    token.JobWorkflowRef,
+			RepositoryID:      token.RepositoryID,
+			RepositoryOwnerID: token.RepositoryOwnerID,
+			ActorID:           token.ActorID,
 		})
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)

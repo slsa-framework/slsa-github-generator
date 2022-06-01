@@ -76,6 +76,11 @@ type errToken struct {
 	errors.WrappableError
 }
 
+// errClaims indicates an error in the claims of the token.
+type errClaims struct {
+	errors.WrappableError
+}
+
 // errVerify indicates an error in the token verification process.
 type errVerify struct {
 	errors.WrappableError
@@ -205,13 +210,13 @@ func (c *OIDCClient) decodeToken(token *oidc.IDToken) (*OIDCToken, error) {
 func (c *OIDCClient) verifyClaims(token *OIDCToken) error {
 	// Verify some of the fields we expect to populate the provenance.
 	if token.RepositoryID == "" {
-		return errors.Errorf(&errVerify{}, "repository ID is empty")
+		return errors.Errorf(&errClaims{}, "repository ID is empty")
 	}
 	if token.RepositoryOwnerID == "" {
-		return errors.Errorf(&errVerify{}, "repository owner ID is empty")
+		return errors.Errorf(&errClaims{}, "repository owner ID is empty")
 	}
 	if token.ActorID == "" {
-		return errors.Errorf(&errVerify{}, "actor ID is empty")
+		return errors.Errorf(&errClaims{}, "actor ID is empty")
 	}
 	return nil
 }
