@@ -124,7 +124,7 @@ jobs:
       id-token: write
       contents: write
     needs: args
-    uses: slsa-framework/slsa-github-generator-go/.github/workflows/slsa3_builder.yml@v1.0.0
+    uses: slsa-framework/slsa-github-generator/.github/workflows/slsa3_builder.yml@v1.0.0
     with:
       go-version: 1.17
       # Optional: only needed if using ldflags.
@@ -151,14 +151,14 @@ An example of the provenance generated from this repo is below:
     "builder": {
       "id": "https://github.com/slsa-framework/slsa-github-generator/.github/workflows/builder_go_slsa3.yml@v1.1.0"
     },
-    "buildType": "https://github.com/slsa-framework/slsa-github-generator-go@v1",
+    "buildType": "https://github.com/slsa-framework/slsa-github-generator/go@v1",
     "invocation": {
       "configSource": {
         "uri": "git+https://github.com/ianlewis/actions-test@refs/heads/main",
         "digest": {
           "sha1": "d29d1701b47bbbe489e94b053611e5a7bf6d9414"
         },
-        "entryPoint": "build w/ SLSA provenance"
+        "entryPoint": ".github/workflows/release.yml"
       },
       "parameters": {},
       "environment": {
