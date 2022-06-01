@@ -159,7 +159,7 @@ An example of the provenance generated from this repo is below:
         "digest": {
           "sha1": "d29d1701b47bbbe489e94b053611e5a7bf6d9414"
         },
-        "entryPoint": "build w/ SLSA provenance"
+        "entryPoint": ".github/workflows/release.yml"
       },
       "parameters": {},
       "environment": {
