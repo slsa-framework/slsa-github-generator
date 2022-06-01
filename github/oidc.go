@@ -186,17 +186,6 @@ func (c *OIDCClient) verifyToken(ctx context.Context, audience []string, payload
 		return nil, errors.Errorf(&errVerify{}, "audience not equal %q != %q", audience, t.Audience)
 	}
 
-	// Verify some of the fields we expect to populate the provenance.
-	if t.RepositoryID == "" {
-		return nil, errors.Errorf(&errVerify{}, "repository ID is empty")
-	}
-	if t.RepositoryOwnerID == "" {
-		return nil, errors.Errorf(&errVerify{}, "repository owner ID is empty")
-	}
-	if t.ActorID == "" {
-		return nil, errors.Errorf(&errVerify{}, "actor ID is empty")
-	}
-
 	return t, nil
 }
 
@@ -211,6 +200,20 @@ func (c *OIDCClient) decodeToken(token *oidc.IDToken) (*OIDCToken, error) {
 	}
 
 	return &t, nil
+}
+
+func (c *OIDCClient) verifyClaims(token *OIDCToken) error {
+	// Verify some of the fields we expect to populate the provenance.
+	if token.RepositoryID == "" {
+		return errors.Errorf(&errVerify{}, "repository ID is empty")
+	}
+	if token.RepositoryOwnerID == "" {
+		return errors.Errorf(&errVerify{}, "repository owner ID is empty")
+	}
+	if token.ActorID == "" {
+		return errors.Errorf(&errVerify{}, "actor ID is empty")
+	}
+	return nil
 }
 
 // Token requests an OIDC token from Github's provider, verifies it, and
@@ -233,6 +236,10 @@ func (c *OIDCClient) Token(ctx context.Context, audience []string) (*OIDCToken, 
 
 	token, err := c.decodeToken(t)
 	if err != nil {
+		return nil, err
+	}
+
+	if err := c.verifyClaims(token); err != nil {
 		return nil, err
 	}
 
