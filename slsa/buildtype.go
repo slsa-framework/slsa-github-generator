@@ -100,7 +100,7 @@ func (b *GithubActionsBuild) getEntryPoint(ctx context.Context) (string, error) 
 		return "", fmt.Errorf("github client: %w", err)
 	}
 	if ghClient == nil {
-		// If not client is provided, return the name of the workflow.
+		// If no client is provided, return the name of the workflow.
 		return b.Context.Workflow, nil
 	}
 
