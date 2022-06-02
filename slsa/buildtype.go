@@ -204,9 +204,8 @@ func (b *GithubActionsBuild) Invocation(ctx context.Context) (slsa.ProvenanceInv
 		addEnvKeyString(env, "github_repository_owner_id", t.RepositoryOwnerID)
 	}
 
-	if len(env) > 0 {
-		i.Environment = env
-	}
+	// Set the env.
+	i.Environment = env
 
 	// ConfigSource
 	entryPoint, err := b.getEntryPoint(ctx)
