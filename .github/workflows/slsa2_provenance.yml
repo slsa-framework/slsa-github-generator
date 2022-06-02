@@ -35,31 +35,19 @@ on:
         value: ${{ jobs.generator.outputs.attestation-name }}
 
 jobs:
-  # TODO: Use detect-workflow when #125 is merged.
-  # detect-env:
-  #   runs-on: ubuntu-latest
-  #   permissions:
-  #     id-token: write # Needed to detect the current reusable repository and ref.
-  #     contents: read
-  #   outputs:
-  #     repository: ${{ steps.detect.outputs.repository }}
-  #     ref: ${{ steps.detect.outputs.ref }}
-  #   steps:
-  #     - name: Detect the repository and ref
-  #       id: detect
-  #       uses: slsa-framework/slsa-github-generator/.github/actions/detect-workflow@aec5cd1e20507a6f1b5d8e82a8f62c3e2ca9b9f9
   detect-env:
     runs-on: ubuntu-latest
     permissions:
       id-token: write # Needed to detect the current reusable repository and ref.
       contents: read
+      actions: read
     outputs:
       repository: ${{ steps.detect.outputs.repository }}
       ref: ${{ steps.detect.outputs.ref }}
     steps:
       - name: Detect the builder ref
         id: detect
-        uses: slsa-framework/slsa-github-generator/.github/actions/detect-workflow@b18a9ec9f79bb22067a9e91d3ddf170e7d9884f8
+        uses: slsa-framework/slsa-github-generator/.github/actions/detect-workflow@e04e68924fc50269a505daf147ca912d8c3fab3a
 
   ###################################################################
   #                                                                 #
