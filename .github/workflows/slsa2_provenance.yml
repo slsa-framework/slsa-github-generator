@@ -59,37 +59,7 @@ jobs:
     steps:
       - name: Detect the builder ref
         id: detect
-        env:
-          PULL_REQUEST_REPOSITORY: "${{ github.event.pull_request.head.repo.full_name }}"
-        shell: bash
-        run: |
-          # On pull requests, permissions are not available.
-          if [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
-              echo "::set-output name=builder_repo::$PULL_REQUEST_REPOSITORY"
-              echo "::set-output name=builder_ref::$GITHUB_HEAD_REF"
-              exit 0
-          fi
-
-          if [[ -z "$ACTIONS_ID_TOKEN_REQUEST_TOKEN" ]] || [[ -z "$ACTIONS_ID_TOKEN_REQUEST_URL" ]]; then
-              echo "OIDC not available" not available.
-              exit 1
-          fi
-
-          status_code=$(curl -sS -H "Authorization: Bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=$GITHUB_REPOSITORY/builder" -o jwt.json -w '%{http_code}')
-          if [[ $status_code -ge 400 ]]; then
-              error_msg=$(jq -r .message jwt.json 2>/dev/null || echo 'unknown error')
-              echo "Failed to get OIDC token from GitHub, response $status_code: $error_msg"
-              exit 2;
-          fi
-
-          export WORKFLOW_REF=$(cat jwt.json | jq -r '.value' | cut -d "." -f2 | base64 -d | jq -r '.job_workflow_ref')
-          if [ -z $WORKFLOW_REF ]; then
-              echo "OIDC token parsing failure: job_workflow_ref could not be retrieved"
-              exit 3;
-          fi
-
-          echo "::set-output name=repository::$(echo $WORKFLOW_REF | cut -d "@" -f1 | cut -d '/' -f1-2)"
-          echo "::set-output name=ref::$(echo $WORKFLOW_REF | cut -d "@" -f2)"
+        uses: slsa-framework/slsa-github-generator/.github/actions/detect-workflow@b18a9ec9f79bb22067a9e91d3ddf170e7d9884f8
 
   ###################################################################
   #                                                                 #
@@ -116,7 +86,7 @@ jobs:
           ref: "${{ needs.detect-env.outputs.ref }}"
 
       - name: Set up golang environment
-        uses: actions/setup-go@424fc82d43fa5a37540bae62709ddcc23d9520d4 # v2.1.3
+        uses: actions/setup-go@b22fbbc2921299758641fab08929b4ac52b32923 # v3.2.0
         with:
           go-version: 1.18
 
@@ -156,7 +126,7 @@ jobs:
           echo "::set-output name=attestation-name::attestation.intoto.jsonl"
 
       - name: Upload the signed provenance
-        uses: actions/upload-artifact@82c141cc518b40d92cc801eee768e7aafc9c2fa2 # v2.3.1
+        uses: actions/upload-artifact@3cea5372237819ed00197afe530f5a7ea3e805c8 # v3.1.0
         with:
           name: "${{ steps.sign-prov.outputs.attestation-name }}"
           path: "${{ steps.sign-prov.outputs.attestation-name }}"

@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
 	"time"
 
@@ -46,6 +47,24 @@ func tokenEqual(issuer string, wantToken, gotToken *OIDCToken) bool {
 	return true
 }
 
+func TestNewOIDCClient(t *testing.T) {
+	// Tests that NewOIDCClient returns an error when the
+	// ACTIONS_ID_TOKEN_REQUEST_URL env var is empty.
+	t.Run("empty url", func(t *testing.T) {
+		if os.Getenv(requestURLEnvKey) != "" {
+			panic(fmt.Sprintf("expected %v to be empty", requestURLEnvKey))
+		}
+
+		_, err := NewOIDCClient()
+		if err == nil {
+			t.Fatalf("expected error")
+		}
+		if want, got := (&errURLError{}), err; !errors.As(got, &want) {
+			t.Fatalf("unexpected error, want: %#v, got: %#v", want, got)
+		}
+	})
+}
+
 func TestToken(t *testing.T) {
 	now := time.Date(2022, 4, 14, 12, 24, 0, 0, time.UTC)
 
@@ -61,18 +80,72 @@ func TestToken(t *testing.T) {
 			name:     "basic token",
 			audience: []string{"hoge"},
 			token: &OIDCToken{
+				Audience:          []string{"hoge"},
+				Expiry:            now.Add(1 * time.Hour),
+				JobWorkflowRef:    "pico",
+				RepositoryID:      "1234",
+				RepositoryOwnerID: "4321",
+				ActorID:           "4567",
+			},
+		},
+		{
+			name:     "no repository id claim",
+			audience: []string{"hoge"},
+			token: &OIDCToken{
+				Audience:          []string{"hoge"},
+				Expiry:            now.Add(1 * time.Hour),
+				JobWorkflowRef:    "pico",
+				RepositoryOwnerID: "4321",
+				ActorID:           "4567",
+			},
+			err: &errClaims{},
+		},
+		{
+			name:     "no workflow ref claim",
+			audience: []string{"hoge"},
+			token: &OIDCToken{
+				Audience:          []string{"hoge"},
+				Expiry:            now.Add(1 * time.Hour),
+				RepositoryID:      "1234",
+				RepositoryOwnerID: "4321",
+				ActorID:           "4567",
+			},
+			err: &errClaims{},
+		},
+		{
+			name:     "no owner id claim",
+			audience: []string{"hoge"},
+			token: &OIDCToken{
 				Audience:       []string{"hoge"},
 				Expiry:         now.Add(1 * time.Hour),
 				JobWorkflowRef: "pico",
+				RepositoryID:   "1234",
+				ActorID:        "4567",
 			},
+			err: &errClaims{},
+		},
+		{
+			name:     "no actor id claim",
+			audience: []string{"hoge"},
+			token: &OIDCToken{
+				Audience:          []string{"hoge"},
+				Expiry:            now.Add(1 * time.Hour),
+				JobWorkflowRef:    "pico",
+				RepositoryID:      "1234",
+				RepositoryOwnerID: "4321",
+			},
+			err: &errClaims{},
 		},
 		{
 			name:     "expired token",
 			audience: []string{"hoge"},
 			token: &OIDCToken{
-				Audience:       []string{"hoge"},
-				Expiry:         now.Add(-1 * time.Hour),
-				JobWorkflowRef: "pico",
+				Audience:          []string{"hoge"},
+				Expiry:            now.Add(-1 * time.Hour),
+				JobWorkflowRef:    "pico",
+				RepositoryID:      "1234",
+				RepositoryOwnerID: "4321",
+				ActorID:           "4567",
 			},
 			err: &errVerify{},
 		},
@@ -80,9 +153,12 @@ func TestToken(t *testing.T) {
 			name:     "bad audience",
 			audience: []string{"hoge"},
 			token: &OIDCToken{
-				Audience:       []string{"fuga"},
-				Expiry:         now.Add(1 * time.Hour),
-				JobWorkflowRef: "pico",
+				Audience:          []string{"fuga"},
+				Expiry:            now.Add(1 * time.Hour),
+				JobWorkflowRef:    "pico",
+				RepositoryID:      "1234",
+				RepositoryOwnerID: "4321",
+				ActorID:           "4567",
 			},
 			err: &errVerify{},
 		},
@@ -90,10 +166,13 @@ func TestToken(t *testing.T) {
 			name:     "bad issuer",
 			audience: []string{"hoge"},
 			token: &OIDCToken{
-				Issuer:         "https://www.google.com/",
-				Audience:       []string{"hoge"},
-				Expiry:         now.Add(1 * time.Hour),
-				JobWorkflowRef: "pico",
+				Issuer:            "https://www.google.com/",
+				Audience:          []string{"hoge"},
+				Expiry:            now.Add(1 * time.Hour),
+				JobWorkflowRef:    "pico",
+				RepositoryID:      "1234",
+				RepositoryOwnerID: "4321",
+				ActorID:           "4567",
 			},
 			err: &errVerify{},
 		},

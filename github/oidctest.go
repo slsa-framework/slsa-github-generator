@@ -19,10 +19,13 @@ import (
 )
 
 type jsonToken struct {
-	Issuer         string   `json:"iss"`
-	Audience       []string `json:"aud"`
-	Expiry         int64    `json:"exp"`
-	JobWorkflowRef string   `json:"job_workflow_ref"`
+	Issuer            string   `json:"iss"`
+	Audience          []string `json:"aud"`
+	Expiry            int64    `json:"exp"`
+	JobWorkflowRef    string   `json:"job_workflow_ref"`
+	RepositoryID      string   `json:"repository_id"`
+	RepositoryOwnerID string   `json:"repository_owner_id"`
+	ActorID           string   `json:"actor_id"`
 }
 
 // testKeySet is a oidc.KeySet that can be used in tests.
@@ -67,10 +70,13 @@ func NewTestOIDCServer(t *testing.T, now time.Time, token *OIDCToken) (*httptest
 		}
 
 		b, err := json.Marshal(jsonToken{
-			Issuer:         issuer,
-			Audience:       token.Audience,
-			Expiry:         token.Expiry.Unix(),
-			JobWorkflowRef: token.JobWorkflowRef,
+			Issuer:            issuer,
+			Audience:          token.Audience,
+			Expiry:            token.Expiry.Unix(),
+			JobWorkflowRef:    token.JobWorkflowRef,
+			RepositoryID:      token.RepositoryID,
+			RepositoryOwnerID: token.RepositoryOwnerID,
+			ActorID:           token.ActorID,
 		})
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -118,20 +124,19 @@ func newTestOIDCServer(t *testing.T, now time.Time, f http.HandlerFunc) (*httpte
 	}))
 	issuerURL = s.URL
 
-	c, err := NewOIDCClient()
+	requestURL, err := url.ParseRequestURI(s.URL)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	c.requestURL, err = url.Parse(s.URL)
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	c.verifierFunc = func(ctx context.Context) (*oidc.IDTokenVerifier, error) {
-		return oidc.NewVerifier(s.URL, &testKeySet{}, &oidc.Config{
-			Now:               func() time.Time { return now },
-			SkipClientIDCheck: true,
-		}), nil
+	c := OIDCClient{
+		requestURL: requestURL,
+		verifierFunc: func(ctx context.Context) (*oidc.IDTokenVerifier, error) {
+			return oidc.NewVerifier(s.URL, &testKeySet{}, &oidc.Config{
+				Now:               func() time.Time { return now },
+				SkipClientIDCheck: true,
+			}), nil
+		},
 	}
 
-	return s, c
+	return s, &c
 }
