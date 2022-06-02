@@ -6,10 +6,11 @@ This document explains how to use the builder for Golang projects.
 
 [Generation of provenance](#generation)
 
-- [Example provenance](#example-provenance)
 - [Configuration file](#configuration-file)
+- [Migration from goreleaser](#migration-from-goreleaser)
 - [Workflow inputs](#workflow-inputs)
 - [Workflow Example](#workflow-example)
+- [Example provenance](#example-provenance)
 
 [Verification of provenance](#verification-of-provenance)
 
@@ -21,6 +22,115 @@ This document explains how to use the builder for Golang projects.
 ## Generation
 
 To generate provenance for a golang binary, follow the steps below:
+
+### Configuration file
+
+Define a configuration file called `.slsa-goreleaser.yml` in the root of your project.
+
+```yml
+# Version for this file.
+version: 1
+
+# (Optional) List of env variables used during compilation.
+env:
+  - GO111MODULE=on
+  - CGO_ENABLED=0
+
+# (Optional) Flags for the compiler.
+flags:
+  - -trimpath
+  - -tags=netgo
+
+# The OS to compile for. `GOOS` env variable will be set to this value.
+goos: linux 
+
+# The architecture to compile for. `GOARCH` env variable will be set to this value.
+goarch: amd64
+
+# (Optional) Entrypoint to compile. (Optional)
+# main: ./path/to/main.go
+
+# (Optional) Working directory. (default: root of the project)
+# dir: /path/to/dir
+
+# Binary output name.
+# {{ .Os }} will be replaced by goos field in the config file.
+# {{ .Arch }} will be replaced by goarch field in the config file.
+binary: binary-{{ .Os }}-{{ .Arch }}
+
+# (Optional) ldflags generated dynamically in the workflow, and set as the `env` input variables in the workflow.
+ldflags:
+  - "{{ .Env.VERSION_LDFLAGS }}"
+```
+
+### Migration from goreleaser
+
+If you are already using Goreleaser, you may be able to migrate to our builder using multiple config files for each build. However, this is cumbersome and we are working on supporting multiple builds in a single config file for future releases. 
+
+In the meantime, you can use both Goreleaser and this builder in the same repository. For example, you can pick one build you would like to start generating provenance for. Goreleaser and this builder can co-exist without interfering with one another, so long as they build fr different OS/Arch. We think gradual adoption is good for project to get used to SLSA.
+
+The configuration file accepts many of the common fields Goreleaser uses, as you can see in the [example](#configuration-file). The configuration file also supports two variables: `{{ .Os }}` and `{{ .Arch }}`. If you need suppport for other variables, please [open an issue](https://github.com/slsa-framework/slsa-github-generator/issues/new).
+
+### Workflow inputs
+
+The builder workflow [slsa-framework/slsa-github-generator/.github/workflows/builder_go_slsa3.yml](.github/workflows/builder_go_slsa3.yml) accepts the following inputs:
+
+| Name         | Required | Description    | Default                                                                                                                                                                                                                                           |
+| ------------------ | -------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `config-file` | no      | `.github/workflows/slsa-goreleaser.yml` | The configuration file for the builder. A path within the calling repository. |
+| `evaluated-envs`        | no       | empty value | A list of environment variables, seperated by `,`: `VAR1: value, VAR2: value`. This is typically used to pass dynamically-generated values, such as `ldflags`. Note that only environment variables with names starting with `CGO_` or `GO` are accepted. |
+| `go-version` | yes      | The go version for your project. This value is passed, unchanged, to the [actions/setup-go](https://github.com/actions/setup-go) action when setting up the environment |
+| `upload-assets` | no    | true on new tags | Whether to upload assets to a GitHub release or not. |
+
+### Workflow Example
+
+Create a new workflow, say `.github/workflows/slsa-goreleaser.yml`.
+
+Make sure that you reference the trusted builder with a semnatic version of the form `vX.Y.Z`. The build will fail
+if you reference it via a shorter tag like `vX.Y` or `vX`. 
+
+Refencing via hash is currently not supported due to limitations
+of the reusable workflow APIs. (We are working with GitHub to address this limitation).
+
+```yaml
+name: SLSA go releaser
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "*"
+
+permissions: read-all
+
+jobs:
+  # Generate ldflags dynamically.
+  # Optional: only needed for ldflags.
+  args:
+    runs-on: ubuntu-latest
+    outputs:
+      ldflags: ${{ steps.ldflags.outputs.value }}
+    steps:
+      - id: checkout
+        uses: actions/checkout@ec3a7ce113134d7a93b817d10a8272cb61118579 # v2.3.4
+        with:
+          fetch-depth: 0
+      - id: ldflags
+        run: |
+          echo "::set-output name=value::$(./scripts/version-ldflags)"
+
+  # Trusted builder.
+  build:
+    permissions:
+      id-token: write
+      contents: write
+      actions: read
+    needs: args
+    uses: slsa-framework/slsa-github-generator/.github/workflows/builder_go_slsa3.yml@v1.0.0
+    with:
+      go-version: 1.17
+      # Optional: only needed if using ldflags.
+      evaluated-envs: "VERSION_LDFLAGS:${{needs.args.outputs.ldflags}}"
+```
 
 ### Example provenance
 
@@ -40,26 +150,30 @@ An example of the provenance generated from this repo is below:
   ],
   "predicate": {
     "builder": {
-      "id": "https://github.com/slsa-framework/slsa-github-generator/.github/workflows/builder_go_slsa3.yml@v1.1.0"
+      "id": "https://github.com/slsa-framework/slsa-github-generator/.github/workflows/builder_go_slsa3.yml@v1.0.0"
     },
-    "buildType": "https://github.com/slsa-framework/slsa-github-generator-go@v1",
+    "buildType": "https://github.com/slsa-framework/slsa-github-generator/go@v1",
     "invocation": {
       "configSource": {
         "uri": "git+https://github.com/ianlewis/actions-test@refs/heads/main",
         "digest": {
           "sha1": "d29d1701b47bbbe489e94b053611e5a7bf6d9414"
         },
-        "entryPoint": "build w/ SLSA provenance"
+        "entryPoint": ".github/workflows/release.yml"
       },
       "parameters": {},
       "environment": {
         "github_actor": "ianlewis",
+        "github_actor_id": "123456",
         "github_base_ref": "",
         "github_event_name": "workflow_dispatch",
         "github_event_payload": ...,
         "github_head_ref": "",
         "github_ref": "refs/heads/main",
         "github_ref_type": "branch",
+        "github_repository_id": "8923542",
+        "github_repository_owner": "ianlewis",
+        "github_repository_owner_id": "123456",
         "github_run_attempt": "1",
         "github_run_id": "2193104371",
         "github_run_number": "16",
@@ -119,101 +233,6 @@ An example of the provenance generated from this repo is below:
 }
 ```
 
-### Configuration file
-
-Define a configuration file called `.slsa-goreleaser.yml` in the root of your project:
-
-```yml
-version: 1
-# List of env variables used during compilation.
-env:
-  - GO111MODULE=on
-  - CGO_ENABLED=0
-
-# Flags for the compiler.
-flags:
-  - -trimpath
-  - -tags=netgo
-
-goos: linux # same values as GOOS env variable.
-goarch: amd64 # same values as GOARCH env variable.
-
-# Entrypoint to compile. Default is the root directory.
-# main: ./path/to/main.go
-
-# Working directory. (default: root of project)
-# dir: /path/to/dir
-
-# Binary name.
-# {{ .Os }} will be replaced by goos field in the config file.
-# {{ .Arch }} will be replaced by goarch field in the config file.
-binary: binary-{{ .Os }}-{{ .Arch }}
-
-# (Optional) ldflags generated dynamically in the workflow, and set as the `env` input variables in the workflow.
-ldflags:
-  - "{{ .Env.VERSION_LDFLAGS }}"
-```
-
-### Workflow inputs
-
-The builder workflow [slsa-framework/slsa-github-generator/.github/workflows/builder_go_slsa3.yml](.github/workflows/builder_go_slsa3.yml) accepts the following inputs:
-
-| Name         | Required | Description    | Default                                                                                                                                                                                                                                           |
-| ------------------ | -------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `config-file` | no      | `.github/workflows/slsa-goreleaser.yml` | The configuration file for the builder. A path within the calling repository. |
-| `evaluated-envs`        | no       | empty value | A list of environment variables, seperated by `,`: `VAR1: value, VAR2: value`. This is typically used to pass dynamically-generated values, such as `ldflags`. Note that only environment variables with names starting with `CGO_` or `GO` are accepted. |
-| `go-version` | yes      | The go version for your project. This value is passed, unchanged, to the [actions/setup-go](https://github.com/actions/setup-go) action when setting up the environment |
-| `upload-assets` | no    | true on new tags | Whether to upload assets to a GitHub release or not. |
-
-### Workflow Example
-
-Create a new workflow, say `.github/workflows/slsa-goreleaser.yml`.
-
-Make sure that you reference the trusted builder with a semnatic version of the form `vX.Y.Z`. The build will fail
-if you reference it via a shorter tag like `vX.Y` or `vX`. 
-
-Refencing via hash is currently not supported due to limitations
-of the reusable workflow APIs. (We are working with GitHub to address this limitation).
-
-```yaml
-name: SLSA go releaser
-on:
-  workflow_dispatch:
-  push:
-    tags:
-      - "*"
-
-permissions: read-all
-
-jobs:
-  # Generate ldflags dynamically.
-  # Optional: only needed for ldflags.
-  args:
-    runs-on: ubuntu-latest
-    outputs:
-      ldflags: ${{ steps.ldflags.outputs.value }}
-    steps:
-      - id: checkout
-        uses: actions/checkout@ec3a7ce113134d7a93b817d10a8272cb61118579 # v2.3.4
-        with:
-          fetch-depth: 0
-      - id: ldflags
-        run: |
-          echo "::set-output name=value::$(./scripts/version-ldflags)"
-
-  # Trusted builder.
-  build:
-    permissions:
-      id-token: write
-      contents: write
-    needs: args
-    uses: slsa-framework/slsa-github-generator-go/.github/workflows/slsa3_builder.yml@v1.0.0 # TODO: use hash upon release.
-    with:
-      go-version: 1.17
-      # Optional: only needed if using ldflags.
-      evaluated-envs: "VERSION_LDFLAGS:${{needs.args.outputs.ldflags}}"
-```
-
 ## Verification of provenance
 
 To verify the provenance, use the [github.com/slsa-framework/slsa-verifier](https://github.com/slsa-framework/slsa-verifier) project.
@@ -248,7 +267,7 @@ verified SLSA provenance produced at
  {
         "caller": "origin/repo",
         "commit": "0dfcd24824432c4ce587f79c918eef8fc2c44d7b",
-        "job_workflow_ref": "/slsa-framework/slsa-github-generator-go/.github/workflows/slsa3_builder.yml@refs/heads/main",
+        "job_workflow_ref": "/slsa-framework/slsa-github-generator/.github/workflows/builder_go_slsa3.yml@refs/tags/v1.0.0",
         "trigger": "workflow_dispatch",
         "issuer": "https://token.actions.githubusercontent.com"
 }

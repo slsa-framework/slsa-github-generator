@@ -70,7 +70,6 @@ func NewGithubActionsBuild(s []intoto.Subject, c github.WorkflowContext) *Github
 		Context: c,
 		Clients: &DefaultClientProvider{},
 	}
-
 }
 
 // Subject implements BuildType.Subject.
@@ -101,7 +100,8 @@ func (b *GithubActionsBuild) getEntryPoint(ctx context.Context) (string, error) 
 		return "", fmt.Errorf("github client: %w", err)
 	}
 	if ghClient == nil {
-		return "", nil
+		// If no client is provided, return the name of the workflow.
+		return b.Context.Workflow, nil
 	}
 
 	runID, err := strconv.ParseInt(b.Context.RunID, 10, 64)
@@ -178,6 +178,31 @@ func (b *GithubActionsBuild) Invocation(ctx context.Context) (slsa.ProvenanceInv
 	// github_sha1 is the commit SHA that triggered the
 	// workflow run.
 	addEnvKeyString(env, "github_sha1", b.Context.SHA)
+
+	// github_repository_owner is the owner of the repository.
+	addEnvKeyString(env, "github_repository_owner", b.Context.RepositoryOwner)
+
+	oidcClient, err := b.Clients.OIDCClient()
+	if err != nil {
+		return i, fmt.Errorf("oidc client: %w", err)
+	}
+
+	if oidcClient != nil {
+		t, err := oidcClient.Token(ctx, []string{b.Context.Repository})
+		if err != nil {
+			return i, err
+		}
+
+		// github_repository_id is the unique ID of the repository.
+		addEnvKeyString(env, "github_repository_id", t.RepositoryID)
+
+		// github_actor_id is the unique ID of the repository.
+		addEnvKeyString(env, "github_actor_id", t.ActorID)
+
+		// github_repository_owner_id is the unique ID of the owner
+		// of the repository.
+		addEnvKeyString(env, "github_repository_owner_id", t.RepositoryOwnerID)
+	}
 
 	if len(env) > 0 {
 		i.Environment = env

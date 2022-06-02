@@ -6,7 +6,7 @@ on:
 permissions: read-all
 
 env:
-  THIS_FILE: pre-submit.e2e.go.config-ldflags-main-dir.yml
+  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 jobs:
   args:
@@ -28,6 +28,7 @@ jobs:
     permissions:
       id-token: write # For signing.
       contents: write # For asset uploads.
+      actions: read # For the entry point.
     uses: ./.github/workflows/builder_go_slsa3.yml
     with:
       go-version: 1.18
