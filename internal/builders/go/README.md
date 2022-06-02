@@ -123,8 +123,9 @@ jobs:
     permissions:
       id-token: write
       contents: write
+      actions: read
     needs: args
-    uses: slsa-framework/slsa-github-generator-go/.github/workflows/slsa3_builder.yml@v1.0.0
+    uses: slsa-framework/slsa-github-generator/.github/workflows/builder_go_slsa3.yml@v1.0.0
     with:
       go-version: 1.17
       # Optional: only needed if using ldflags.
@@ -149,26 +150,30 @@ An example of the provenance generated from this repo is below:
   ],
   "predicate": {
     "builder": {
-      "id": "https://github.com/slsa-framework/slsa-github-generator/.github/workflows/builder_go_slsa3.yml@v1.1.0"
+      "id": "https://github.com/slsa-framework/slsa-github-generator/.github/workflows/builder_go_slsa3.yml@v1.0.0"
     },
-    "buildType": "https://github.com/slsa-framework/slsa-github-generator-go@v1",
+    "buildType": "https://github.com/slsa-framework/slsa-github-generator/go@v1",
     "invocation": {
       "configSource": {
         "uri": "git+https://github.com/ianlewis/actions-test@refs/heads/main",
         "digest": {
           "sha1": "d29d1701b47bbbe489e94b053611e5a7bf6d9414"
         },
-        "entryPoint": "build w/ SLSA provenance"
+        "entryPoint": ".github/workflows/release.yml"
       },
       "parameters": {},
       "environment": {
         "github_actor": "ianlewis",
+        "github_actor_id": "123456",
         "github_base_ref": "",
         "github_event_name": "workflow_dispatch",
         "github_event_payload": ...,
         "github_head_ref": "",
         "github_ref": "refs/heads/main",
         "github_ref_type": "branch",
+        "github_repository_id": "8923542",
+        "github_repository_owner": "ianlewis",
+        "github_repository_owner_id": "123456",
         "github_run_attempt": "1",
         "github_run_id": "2193104371",
         "github_run_number": "16",
@@ -228,7 +233,6 @@ An example of the provenance generated from this repo is below:
 }
 ```
 
-
 ## Verification of provenance
 
 To verify the provenance, use the [github.com/slsa-framework/slsa-verifier](https://github.com/slsa-framework/slsa-verifier) project.
@@ -263,7 +267,7 @@ verified SLSA provenance produced at
  {
         "caller": "origin/repo",
         "commit": "0dfcd24824432c4ce587f79c918eef8fc2c44d7b",
-        "job_workflow_ref": "/slsa-framework/slsa-github-generator-go/.github/workflows/slsa3_builder.yml@refs/heads/main",
+        "job_workflow_ref": "/slsa-framework/slsa-github-generator/.github/workflows/builder_go_slsa3.yml@refs/tags/v1.0.0",
         "trigger": "workflow_dispatch",
         "issuer": "https://token.actions.githubusercontent.com"
 }
