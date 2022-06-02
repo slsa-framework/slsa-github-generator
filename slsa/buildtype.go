@@ -85,7 +85,7 @@ func (b *GithubActionsBuild) BuildConfig(context.Context) (interface{}, error) {
 
 func addEnvKeyString(m map[string]interface{}, k string, v string) {
 	// Always record the value, even if it's empty. Let
-	// the consumer/verifier decide how to interpret the meaning.
+	// the consumer/verifier decide how to interpret their meaning.
 	m[k] = v
 }
 
