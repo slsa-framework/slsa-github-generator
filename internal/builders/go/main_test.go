@@ -11,7 +11,7 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/slsa-framework/slsa-github-generator-go/pkg"
+	"github.com/slsa-framework/slsa-github-generator/internal/builders/go/pkg"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
