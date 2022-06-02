@@ -16,45 +16,98 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
-	"os"
 	"path"
 	"strings"
 
 	"github.com/slsa-framework/slsa-github-generator/github"
 )
 
-func main() {
-	ctx := context.Background()
+// getStr returns a string value from the given Event map. Values are specified
+// as dot-separated indexes into the map. e.g.
+// "pull_request.head.repo.full_name".
+func getStr(m map[string]interface{}, key string) string {
+	if key == "" {
+		return ""
+	}
 
+	parts := strings.Split(key, ".")
+
+	// Traverse the first parts of the path.
+	current := m[parts[0]]
+	for _, part := range parts[1:] {
+		switch v := current.(type) {
+		case map[string]interface{}:
+			current = v[part]
+		case map[string]string:
+			current = v[part]
+		default:
+			return ""
+		}
+	}
+
+	// Return the final part if it's a string.
+	switch v := current.(type) {
+	case string:
+		return v
+	default:
+		return ""
+	}
+}
+
+func getRepoRef(ctx context.Context, c *github.OIDCClient) (string, string, error) {
+	var repository, ref string
+
+	ghContext, err := github.GetWorkflowContext()
+	if err != nil {
+		return "", "", fmt.Errorf("getting github context: %w", err)
+	}
+
+	// TODO(github.com/slsa-framework/slsa-github-generator/issues/124): Remove special logic for pull_requests.
+	if ghContext.EventName == "pull_request" {
+		// If a pull request get the repo from the pull request.
+		repository = getStr(ghContext.Event, "pull_request.head.repo.full_name")
+		ref = ghContext.HeadRef
+	} else {
+		audience := ghContext.Repository
+		if audience == "" {
+			return "", "", errors.New("missing github repository context")
+		}
+		audience = path.Join(audience, "detect-workflow")
+
+		t, err := c.Token(ctx, []string{audience})
+		if err != nil {
+			return "", "", fmt.Errorf("getting OIDC token: %w", err)
+		}
+
+		pathParts := strings.SplitN(t.JobWorkflowRef, "/", 3)
+		if len(pathParts) < 3 {
+			return "", "", errors.New("missing org/repository in job workflow ref")
+		}
+		repository = strings.Join(pathParts[:2], "/")
+
+		refParts := strings.Split(t.JobWorkflowRef, "@")
+		if len(refParts) < 2 {
+			return "", "", errors.New("missing reference in job workflow ref")
+		}
+		ref = refParts[1]
+	}
+
+	return repository, ref, nil
+}
+
+func main() {
 	c, err := github.NewOIDCClient()
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	audience := os.Getenv("GITHUB_REPOSITORY")
-	if audience == "" {
-		log.Fatal("missing github repository environment context")
-	}
-	audience = path.Join(audience, "detect-workflow")
-
-	t, err := c.Token(ctx, []string{audience})
+	repository, ref, err := getRepoRef(context.Background(), c)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	pathParts := strings.SplitN(t.JobWorkflowRef, "/", 3)
-	if len(pathParts) < 3 {
-		log.Fatal("missing org/repository in job workflow ref")
-	}
-	repository := strings.Join(pathParts[:2], "/")
-
-	refParts := strings.Split(t.JobWorkflowRef, "@")
-	if len(refParts) < 2 {
-		log.Fatal("missing reference in job workflow ref")
-	}
-
 	fmt.Println(fmt.Sprintf(`::set-output name=repository::%s`, repository))
-	fmt.Println(fmt.Sprintf(`::set-output name=ref::%s`, refParts[1]))
+	fmt.Println(fmt.Sprintf(`::set-output name=ref::%s`, ref))
 }
