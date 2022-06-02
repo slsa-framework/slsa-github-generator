@@ -24,5 +24,3 @@ outputs:
 runs:
   using: "docker"
   image: "Dockerfile"
-  env:
-    GITHUB_CONTEXT: "${{ toJSON(github) }}"
