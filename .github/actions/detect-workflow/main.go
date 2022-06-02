@@ -33,6 +33,8 @@ type action struct {
 	client *github.OIDCClient
 }
 
+// TODO(github.com/slsa-framework/slsa-github-generator/issues/153): use go-githubactions
+
 func newAction(getenv func(string) string, c *github.OIDCClient) (*action, error) {
 	eventPath := getenv("GITHUB_EVENT_PATH")
 	if eventPath == "" {
