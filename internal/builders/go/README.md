@@ -6,6 +6,7 @@ This document explains how to use the builder for Golang projects.
 
 [Generation of provenance](#generation)
 
+- [Supported triggers](#supported-triggers)
 - [Configuration file](#configuration-file)
 - [Migration from goreleaser](#migration-from-goreleaser)
 - [Workflow inputs](#workflow-inputs)
@@ -22,6 +23,13 @@ This document explains how to use the builder for Golang projects.
 ## Generation
 
 To generate provenance for a golang binary, follow the steps below:
+
+### Supported triggers
+
+Most GitHub trigger events are supported, at the exception of `pull_request`. We have extensively tested the 
+following triggers: `schedule`, `push` (including new tags) and manual `workflow_dispatch`.
+
+If you would like support for `pull_request`, please tell us about your use case and [file an issue](https://github.com/slsa-framework/slsa-github-generator/issues/new).
 
 ### Configuration file
 
