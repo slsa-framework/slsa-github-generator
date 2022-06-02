@@ -84,9 +84,9 @@ func (b *GithubActionsBuild) BuildConfig(context.Context) (interface{}, error) {
 }
 
 func addEnvKeyString(m map[string]interface{}, k string, v string) {
-	if v != "" {
-		m[k] = v
-	}
+	// Always record the value, even if it's empty. Let
+	// the consumer/verifier decide how to interpret their meaning.
+	m[k] = v
 }
 
 // getEntryPoint retrieves the path to the user workflow that initiated the
@@ -204,9 +204,8 @@ func (b *GithubActionsBuild) Invocation(ctx context.Context) (slsa.ProvenanceInv
 		addEnvKeyString(env, "github_repository_owner_id", t.RepositoryOwnerID)
 	}
 
-	if len(env) > 0 {
-		i.Environment = env
-	}
+	// Set the env.
+	i.Environment = env
 
 	// ConfigSource
 	entryPoint, err := b.getEntryPoint(ctx)
