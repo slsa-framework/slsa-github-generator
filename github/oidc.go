@@ -50,6 +50,15 @@ type OIDCToken struct {
 
 	// JobWorkflowRef is a reference to the current job workflow.
 	JobWorkflowRef string `json:"job_workflow_ref"`
+
+	// RepositoryID is the unique repository ID.
+	RepositoryID string `json:"repository_id"`
+
+	// RepositoryOwnerID is the unique ID of the owner of the repository.
+	RepositoryOwnerID string `json:"repository_owner_id"`
+
+	// ActorID is the unique ID of the actor who triggered the build.
+	ActorID string `json:"actor_id"`
 }
 
 // errURLError indicates the OIDC server URL is invalid.
@@ -64,6 +73,11 @@ type errRequestError struct {
 
 // errToken indicates an error in the format of the token.
 type errToken struct {
+	errors.WrappableError
+}
+
+// errClaims indicates an error in the claims of the token.
+type errClaims struct {
 	errors.WrappableError
 }
 
@@ -193,6 +207,23 @@ func (c *OIDCClient) decodeToken(token *oidc.IDToken) (*OIDCToken, error) {
 	return &t, nil
 }
 
+func (c *OIDCClient) verifyClaims(token *OIDCToken) error {
+	// Verify some of the fields we expect to populate the provenance.
+	if token.RepositoryID == "" {
+		return errors.Errorf(&errClaims{}, "repository ID is empty")
+	}
+	if token.RepositoryOwnerID == "" {
+		return errors.Errorf(&errClaims{}, "repository owner ID is empty")
+	}
+	if token.ActorID == "" {
+		return errors.Errorf(&errClaims{}, "actor ID is empty")
+	}
+	if token.JobWorkflowRef == "" {
+		return errors.Errorf(&errClaims{}, "job workflow ref is empty")
+	}
+	return nil
+}
+
 // Token requests an OIDC token from Github's provider, verifies it, and
 // returns the token.
 func (c *OIDCClient) Token(ctx context.Context, audience []string) (*OIDCToken, error) {
@@ -213,6 +244,10 @@ func (c *OIDCClient) Token(ctx context.Context, audience []string) (*OIDCToken, 
 
 	token, err := c.decodeToken(t)
 	if err != nil {
+		return nil, err
+	}
+
+	if err := c.verifyClaims(token); err != nil {
 		return nil, err
 	}
 

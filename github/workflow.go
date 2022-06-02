@@ -30,21 +30,22 @@ const (
 //
 // See: https://docs.github.com/en/actions/learn-github-actions/contexts#github-context.
 type WorkflowContext struct {
-	Repository string                 `json:"repository"`
-	ActionPath string                 `json:"action_path"`
-	Workflow   string                 `json:"workflow"`
-	EventName  string                 `json:"event_name"`
-	Event      map[string]interface{} `json:"event"`
-	SHA        string                 `json:"sha"`
-	RefType    string                 `json:"ref_type"`
-	Ref        string                 `json:"ref"`
-	BaseRef    string                 `json:"base_ref"`
-	HeadRef    string                 `json:"head_ref"`
-	Actor      string                 `json:"actor"`
-	RunNumber  string                 `json:"run_number"`
-	ServerURL  string                 `json:"server_url"`
-	RunID      string                 `json:"run_id"`
-	RunAttempt string                 `json:"run_attempt"`
+	Repository      string                 `json:"repository"`
+	RepositoryOwner string                 `json:"repository_owner"`
+	ActionPath      string                 `json:"action_path"`
+	Workflow        string                 `json:"workflow"`
+	EventName       string                 `json:"event_name"`
+	Event           map[string]interface{} `json:"event"`
+	SHA             string                 `json:"sha"`
+	RefType         string                 `json:"ref_type"`
+	Ref             string                 `json:"ref"`
+	BaseRef         string                 `json:"base_ref"`
+	HeadRef         string                 `json:"head_ref"`
+	Actor           string                 `json:"actor"`
+	RunNumber       string                 `json:"run_number"`
+	ServerURL       string                 `json:"server_url"`
+	RunID           string                 `json:"run_id"`
+	RunAttempt      string                 `json:"run_attempt"`
 }
 
 // RepositoryURI returns a full repository URI for the repo that triggered the workflow.
