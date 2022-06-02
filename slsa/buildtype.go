@@ -84,9 +84,9 @@ func (b *GithubActionsBuild) BuildConfig(context.Context) (interface{}, error) {
 }
 
 func addEnvKeyString(m map[string]interface{}, k string, v string) {
-	if v != "" {
-		m[k] = v
-	}
+	// Always record the value, even if it's empty. Let
+	// the consumer/verifier decide how to interpret the meaning.
+	m[k] = v
 }
 
 // getEntryPoint retrieves the path to the user workflow that initiated the
