@@ -18,6 +18,9 @@ set -euo pipefail
 
 source "./.github/workflows/scripts/e2e-utils.sh"
 
+# TODO(github.com/slsa-framework/slsa-github-generator/issues/152): Create
+# separate script file for common checks.
+
 # TODO(github.com/slsa-framework/slsa-github-generator/issues/129): Address base64 output format.
 # disable pipefail and use cat in order to swallow base64 errors.
 # set +o pipefail
