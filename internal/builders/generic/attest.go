@@ -138,11 +138,15 @@ run in the context of a Github Actions workflow.`,
 			b := provenanceOnlyBuild{
 				GithubActionsBuild: slsa.NewGithubActionsBuild(parsedSubjects, ghContext),
 			}
+			// TODO(github.com/slsa-framework/slsa-github-generator/issues/124): Remove
+			if utils.IsPresubmitTests() {
+				b.WithClients(&slsa.NilClientProvider{})
+			}
 
 			g := slsa.NewHostedActionsGenerator(&b)
 			// TODO(github.com/slsa-framework/slsa-github-generator/issues/124): Remove
 			if utils.IsPresubmitTests() {
-				g = g.WithClients(&slsa.NilClientProvider{})
+				g.WithClients(&slsa.NilClientProvider{})
 			}
 
 			p, err := g.Generate(ctx)
