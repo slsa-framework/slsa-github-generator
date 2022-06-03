@@ -39,18 +39,18 @@ Each of the projects utilize the same base GitHub workflow SLSA provenance. The 
 
 
 `BuildType`: This is the URI for the particular provenance builder, for example, the go or generic builder. 
-```
-"buildType": "https://github.com/slsa-framework/slsa-github-generator-go@v1"
+```json
+  "buildType": "https://github.com/slsa-framework/slsa-github-generator-go@v1"
 ```
 `Builder.Id`: The builder ID refers to the fully qualified URI of the trusted builder's workflow and its reference. 
-```
+```json
  "builder": {
       "id": "https://github.com/slsa-framework/slsa-github-generator/.github/workflows/builder_go_slsa3.yml@refs/tags/v0.0.1"
   }
 ```
 `Invocation`: Identifies the event that kicked off the build. This describes the workflow run and includes GitHub workflow event information, entrypoint, and parameters from trigger events. 
 `Invocation.configSource`: This describes the calling workflow's source and the entrypoint of the build.
-```
+```json
       "configSource": {
         "uri": "git+https://github.com/laurentsimon/slsa-verifier-test-gen@refs/heads/main",
         "digest": {
@@ -62,7 +62,7 @@ Each of the projects utilize the same base GitHub workflow SLSA provenance. The 
 `Invocation.parameters`: This describes any parameters from trigger events.
 
 `Invocation.environment`: This describes the GitHub workflow environment, including the event information.
-```
+```json
 "environment": {
         "arch": "X64",
         "github_actor": "laurentsimon",
@@ -79,7 +79,7 @@ Each of the projects utilize the same base GitHub workflow SLSA provenance. The 
 `BuildConfig`: This contains information on the steps of the build. The default is nil, specific builders implement their own.
 
 `Materials`: List of materials that influenced the build, including the repository that triggered the GitHub Actions workflow.
-```
+```json
     "materials": [
       {
         "uri": "git+https://github.com/laurentsimon/slsa-verifier-test-gen@refs/heads/main",
@@ -93,7 +93,7 @@ Each of the projects utilize the same base GitHub workflow SLSA provenance. The 
     ]
 ```
 `Metadata`: Other properties of the build, including `BuildInvocationID` as the unique `RunID` and `RunAttempt`. 
-```
+```json
 "metadata": {
       "buildInvocationID": "2387611653-1",
       "completeness": {
