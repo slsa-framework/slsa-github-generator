@@ -62,10 +62,29 @@ _Added v1.0.0_
 ```
 `Invocation.parameters`: This describes any parameters from trigger events.
 
-`Invocation.environment`: This describes the GitHub workflow environment, including the event information.
+`Invocation.environment`: This describes the GitHub workflow builder-controlled environment variables, including the event information, required to reproduce the build. See `github` content [documentation](https://docs.github.com/en/actions/learn-github-actions/contexts#github-context) for more information.
+
+
+  | Name       | Value    | Description    |
+| ---------------------------- | -------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `github_event_name`   | `workflow_dispatch` | Name of the [event](https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#available-events) that initiated the workflow run. |
+| `github_event_payload` | `"{"inputs": null,"ref": "refs/heads/main", "repository": { ... }}"`    | The full event payload, including workflow inputs and repository information. |
+| `github_ref_type` | `"branch"`    | The type of ref that triggered the workflow run. |
+| `github_ref` | `"refs/pull/169/merge"`    | The ref that triggered the workflow run. |
+| `github_base_ref` | `"feat/feat-branch"`    | The ref or source branch of the pull request in a workflow run. Only populated on pull requests. |
+| `github_head_ref` | `"feat/feat-branch"`    | The is ref or source branch of the pull request in a workflow run. |
+| `github_actor` | `"laurentsimon"`    | The username of the user that initiated the workflow run. |
+| `github_sha1` | `"b54fb2ec8807a93b58d5f298b7e6b785ea7078bb"`    | The is the commit SHA that triggered the workflow run. |
+| `github_repository_owner` | `"slsa-framework"`    | The owner of the repository. |
+| `github_repository_id` | `"8923542"`    | The is the unique ID of the repository. |
+| `github_actor_id` | `"branch"`    | The is the unique ID of the actor that triggered the workflow run. |
+| `github_repository_owner_id` | `"123456"`    | The is the unique ID of the owner of the repository. |
+| `github_run_attempt` | `"1"`    | The is run attempt of the workflow run. |
+| `github_run_id` | `"2436960022"`    | The is the run ID for the workflow run. |
+| `github_run_number` | `"32"`    | The is the run number of the workflow run. |
+
 ```json
 "environment": {
-    "arch": "X64",
     "github_actor": "laurentsimon",
     "github_base_ref": "",
     "github_event_name": "workflow_dispatch",
@@ -74,10 +93,21 @@ _Added v1.0.0_
       "ref": "refs/heads/main",
       "repository": { ... }
     },
+    "github_head_ref": "add-field-docs",
+    "github_ref": "refs/pull/169/merge",
+    "github_ref_type": "branch",
+    "github_repository_owner": "slsa-framework",
+    "github_run_attempt": "1",
+    "github_run_id": "2436960022",
+    "github_run_number": "32",
+    "github_sha1": "b54fb2ec8807a93b58d5f298b7e6b785ea7078bb",
+    "github_repository_id": "8923542",
+    "github_repository_owner": "ianlewis",
+    "github_repository_owner_id": "123456",
 }
 ```
 
-`BuildConfig`: This contains information on the steps of the build. The default is nil, specific builders implement their own.
+`BuildConfig`: This contains information on the steps of the build. The default is nil, specific builders implement their own. See [BuildConfig Format](https://github.com/slsa-framework/slsa-github-generator/blob/main/internal/builders/go/README.md#buildconfig-format) in the Golang builder for an example.
 
 `Materials`: List of materials that influenced the build, including the repository that triggered the GitHub Actions workflow.
 ```json
