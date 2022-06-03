@@ -23,6 +23,7 @@ import (
 	intoto "github.com/in-toto/in-toto-golang/in_toto"
 	slsa02 "github.com/in-toto/in-toto-golang/in_toto/slsa_provenance/v0.2"
 	"github.com/slsa-framework/slsa-github-generator/github"
+	"github.com/slsa-framework/slsa-github-generator/internal/utils"
 	"github.com/slsa-framework/slsa-github-generator/signing/sigstore"
 	"github.com/slsa-framework/slsa-github-generator/slsa"
 )
@@ -118,14 +119,14 @@ func GenerateProvenance(name, digest, command, envs, workingDir string) ([]byte,
 	}
 
 	// Pre-submit tests don't have access to write OIDC token.
-	if isPreSubmitTests() {
+	if utils.IsPresubmitTests() {
 		b.GithubActionsBuild.WithClients(&slsa.NilClientProvider{})
 	}
 
 	ctx := context.Background()
 	g := slsa.NewHostedActionsGenerator(&b)
 	// Pre-submit tests don't have access to write OIDC token.
-	if isPreSubmitTests() {
+	if utils.IsPresubmitTests() {
 		g.WithClients(&slsa.NilClientProvider{})
 	}
 	p, err := g.Generate(ctx)
@@ -150,7 +151,7 @@ func GenerateProvenance(name, digest, command, envs, workingDir string) ([]byte,
 	}
 	p.Predicate.Materials = append(p.Predicate.Materials, runnerMaterials)
 
-	if isPreSubmitTests() {
+	if utils.IsPresubmitTests() {
 		fmt.Println("Pre-submit tests detected. Skipping signing.")
 		return marshallToBytes(*p)
 	}
@@ -172,9 +173,4 @@ func GenerateProvenance(name, digest, command, envs, workingDir string) ([]byte,
 	}
 
 	return att.Bytes(), nil
-}
-
-func isPreSubmitTests() bool {
-	return (os.Getenv("GITHUB_EVENT_NAME") == "pull_request" &&
-		os.Getenv("GITHUB_REPOSITORY") == "slsa-framework/slsa-github-generator")
 }

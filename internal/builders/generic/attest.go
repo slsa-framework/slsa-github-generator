@@ -30,6 +30,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/slsa-framework/slsa-github-generator/github"
+	"github.com/slsa-framework/slsa-github-generator/internal/utils"
 	"github.com/slsa-framework/slsa-github-generator/signing/sigstore"
 	"github.com/slsa-framework/slsa-github-generator/slsa"
 )
@@ -137,27 +138,44 @@ run in the context of a Github Actions workflow.`,
 			b := provenanceOnlyBuild{
 				GithubActionsBuild: slsa.NewGithubActionsBuild(parsedSubjects, ghContext),
 			}
+			// TODO(github.com/slsa-framework/slsa-github-generator/issues/124): Remove
+			if utils.IsPresubmitTests() {
+				b.WithClients(&slsa.NilClientProvider{})
+			}
 
 			g := slsa.NewHostedActionsGenerator(&b)
+			// TODO(github.com/slsa-framework/slsa-github-generator/issues/124): Remove
+			if utils.IsPresubmitTests() {
+				g.WithClients(&slsa.NilClientProvider{})
+			}
+
 			p, err := g.Generate(ctx)
 			check(err)
 
 			if attPath != "" {
-				s := sigstore.NewDefaultFulcio()
-				att, err := s.Sign(ctx, &intoto.Statement{
-					StatementHeader: p.StatementHeader,
-					Predicate:       p.Predicate,
-				})
-				check(err)
+				var attBytes []byte
+				if utils.IsPresubmitTests() {
+					attBytes, err = json.Marshal(p)
+					check(err)
+				} else {
+					s := sigstore.NewDefaultFulcio()
+					att, err := s.Sign(ctx, &intoto.Statement{
+						StatementHeader: p.StatementHeader,
+						Predicate:       p.Predicate,
+					})
+					check(err)
 
-				r := sigstore.NewDefaultRekor()
-				_, err = r.Upload(ctx, att)
-				check(err)
+					r := sigstore.NewDefaultRekor()
+					_, err = r.Upload(ctx, att)
+					check(err)
+
+					attBytes = att.Bytes()
+				}
 
 				f, err := getFile(attPath)
 				check(err)
 
-				_, err = f.Write(att.Bytes())
+				_, err = f.Write(attBytes)
 				check(err)
 			}
 

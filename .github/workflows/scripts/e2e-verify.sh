@@ -30,6 +30,8 @@ e2e_verify_predicate_subject_name "$ATTESTATION" "$BINARY"
 e2e_verify_predicate_builder_id "$ATTESTATION" "https://github.com/Attestations/GitHubHostedActions@v1"
 e2e_verify_predicate_builderType "$ATTESTATION" "https://github.com/slsa-framework/slsa-github-generator/go@v1"
 
+# NOTE: We set GITHUB_WORKFLOW to the entryPoint for pull_requests.
+# TODO(github.com/slsa-framework/slsa-github-generator/issues/131): support retrieving entryPoint in pull requests.
 e2e_verify_predicate_invocation_configSource "$ATTESTATION" "{\"uri\":\"git+https://github.com/$GITHUB_REPOSITORY@$GITHUB_REF\",\"digest\":{\"sha1\":\"$GITHUB_SHA\"},\"entryPoint\":\"$GITHUB_WORKFLOW\"}"
 
 e2e_verify_predicate_invocation_environment "$ATTESTATION" "github_actor" "$GITHUB_ACTOR"
@@ -49,7 +51,6 @@ e2e_verify_predicate_invocation_environment "$ATTESTATION" "github_run_attempt" 
 #e2e_verify_predicate_invocation_environment "$ATTESTATION" "github_actor_id" "$ACTOR_ID"
 #e2e_verify_predicate_invocation_environment "$ATTESTATION" "github_repository_owner_id" "$OWNER_ID"
 #e2e_verify_predicate_invocation_environment "$ATTESTATION" "github_repository_id" "$REPO_ID"
-
 
 # First step is vendoring
 e2e_verify_predicate_buildConfig_step_command "0" "$ATTESTATION" "[\"mod\",\"vendor\"]"

@@ -1,0 +1,29 @@
+name: pre-submit e2e generic workflow
+on:
+  pull_request:
+    branches: [main]
+
+env:
+  THIS_FILE: pre-submit.e2e.generic.workflow.yml
+
+jobs:
+  build:
+    permissions:
+      id-token: write # For signing.
+      contents: write # For asset uploads.
+      actions: read # For reading workflow info.
+    uses: ./.github/workflows/slsa2_provenance.yml
+    with:
+      subjects: "2e0390eb024a52963db7b95e84a9c2b12c004054a7bad9a97ec0c7c89d4681d2    binary-name"
+
+  verify:
+    runs-on: ubuntu-latest
+    needs: [build]
+    steps:
+      - uses: actions/checkout@ec3a7ce113134d7a93b817d10a8272cb61118579 #v2.4.0
+      - uses: actions/download-artifact@fb598a63ae348fa914e94cd0ff38f362e927b741
+        with:
+          name: ${{ needs.build.outputs.attestation-name }}
+      - env:
+          PROVENANCE: ${{ needs.build.outputs.attestation-name }}
+        run: "./.github/workflows/scripts/pre-submit.e2e.generic.workflow.sh"

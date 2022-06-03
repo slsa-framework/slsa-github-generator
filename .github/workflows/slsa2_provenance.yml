@@ -32,7 +32,7 @@ on:
     outputs:
       attestation-name:
         description: "The artifact name of the signed provenance"
-        value: ${{ jobs.generator.outputs.signed-provenance-name }}
+        value: ${{ jobs.generator.outputs.attestation-name }}
 
 jobs:
   detect-env:
@@ -40,13 +40,14 @@ jobs:
     permissions:
       id-token: write # Needed to detect the current reusable repository and ref.
       contents: read
+      actions: read
     outputs:
       repository: ${{ steps.detect.outputs.repository }}
       ref: ${{ steps.detect.outputs.ref }}
     steps:
-      - name: Detect the repository and ref
+      - name: Detect the builder ref
         id: detect
-        uses: slsa-framework/slsa-github-generator/.github/actions/detect-workflow@b18a9ec9f79bb22067a9e91d3ddf170e7d9884f8
+        uses: slsa-framework/slsa-github-generator/.github/actions/detect-workflow@9d7ea9186521283831060d09910ff3d7e8bfa1ee
 
   ###################################################################
   #                                                                 #
@@ -55,7 +56,7 @@ jobs:
   ###################################################################
   generator:
     outputs:
-      signed-provenance-name: ${{ steps.sign-prov.outputs.signed-provenance-name }}
+      attestation-name: ${{ steps.sign-prov.outputs.attestation-name }}
     runs-on: ubuntu-latest
     needs: [detect-env]
     permissions:
@@ -71,6 +72,7 @@ jobs:
           fetch-depth: 0
           repository: "${{ needs.detect-env.outputs.repository }}"
           ref: "${{ needs.detect-env.outputs.ref }}"
+
       - name: Set up golang environment
         uses: actions/setup-go@b22fbbc2921299758641fab08929b4ac52b32923 # v3.2.0
         with:
@@ -107,14 +109,14 @@ jobs:
         run: |
           set -euo pipefail
           # Create and sign provenance
-          # This sets signed-provenance-name to the name of the signed DSSE envelope.
+          # This sets attestation-name to the name of the signed DSSE envelope.
           ./builder attest --subjects "${SUBJECTS}" -g attestation.intoto.jsonl
-          echo "::set-output name=signed-provenance-name::attestation.intoto.jsonl"
+          echo "::set-output name=attestation-name::attestation.intoto.jsonl"
 
       - name: Upload the signed provenance
         uses: actions/upload-artifact@3cea5372237819ed00197afe530f5a7ea3e805c8 # v3.1.0
         with:
-          name: "${{ steps.sign-prov.outputs.signed-provenance-name }}"
-          path: "${{ steps.sign-prov.outputs.signed-provenance-name }}"
+          name: "${{ steps.sign-prov.outputs.attestation-name }}"
+          path: "${{ steps.sign-prov.outputs.attestation-name }}"
           if-no-files-found: error
           retention-days: 5
