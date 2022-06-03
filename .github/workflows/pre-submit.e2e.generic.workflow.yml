@@ -12,7 +12,7 @@ jobs:
       id-token: write # For signing.
       contents: write # For asset uploads.
       actions: read # For reading workflow info.
-    uses: ./.github/workflows/slsa2_provenance.yml
+    uses: ./.github/workflows/generator_generic_slsa2.yml
     with:
       subjects: "2e0390eb024a52963db7b95e84a9c2b12c004054a7bad9a97ec0c7c89d4681d2    binary-name"
 
