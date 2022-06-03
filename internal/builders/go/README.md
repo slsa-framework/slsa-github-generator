@@ -241,6 +241,42 @@ An example of the provenance generated from this repo is below:
 }
 ```
 
+### BuildConfig format
+
+The `BuildConfig` contains the following fields:
+
+`version`: The version of the `BuildConfig` format.
+
+`steps`: The steps that were performed in the buid.
+
+`steps[*].command`: The list of commands that were executed in a step.
+
+```json
+  "command": [
+    "/opt/hostedtoolcache/go/1.17.10/x64/bin/go",
+    "mod",
+    "vendor"
+  ],
+```
+
+`steps[*].env`: Any environment variables used in the command, including any OS environment variables and those set in the configuration file.
+
+```json
+  "env": [
+    "GOOS=linux",
+    "GOARCH=amd64",
+    "GO111MODULE=on",
+    "CGO_ENABLED=0"
+  ],
+```
+
+`steps[*].workingDir`: The working directory where the steps were performed in the runner.
+
+```json
+  "workingDir": "/home/runner/work/ianlewis/actions-test"
+```
+
+
 ## Verification of provenance
 
 To verify the provenance, use the [github.com/slsa-framework/slsa-verifier](https://github.com/slsa-framework/slsa-verifier) project.
