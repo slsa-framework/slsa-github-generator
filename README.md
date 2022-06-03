@@ -38,6 +38,7 @@ Each of the projects utilize the same base GitHub workflow SLSA provenance. The 
 
 
 _Added v1.0.0_
+
 `BuildType`: This is the URI for the particular provenance builder, for example, the go or generic builder. 
 ```json
   "buildType": "https://github.com/slsa-framework/slsa-github-generator-go@v1"
