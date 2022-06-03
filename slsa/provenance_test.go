@@ -11,8 +11,10 @@ import (
 	"github.com/slsa-framework/slsa-github-generator/github"
 )
 
-var testBuildType = "http://example.com/v1"
-var testBuildConfig = "test build config"
+var (
+	testBuildType   = "http://example.com/v1"
+	testBuildConfig = "test build config"
+)
 
 type TestBuild struct {
 	*GithubActionsBuild
@@ -55,16 +57,39 @@ func TestHostedActionsProvenance(t *testing.T) {
 					},
 					BuildType:   testBuildType,
 					BuildConfig: testBuildConfig,
-					Metadata:    &slsa.ProvenanceMetadata{},
+					Invocation: slsa.ProvenanceInvocation{
+						Environment: map[string]interface{}{
+							"github_run_id":           "",
+							"github_run_attempt":      "",
+							"github_actor":            "",
+							"github_base_ref":         "",
+							"github_event_name":       "",
+							"github_head_ref":         "",
+							"github_ref":              "",
+							"github_ref_type":         "",
+							"github_repository_owner": "",
+							"github_run_number":       "",
+							"github_sha1":             "",
+						},
+					},
+					Metadata: &slsa.ProvenanceMetadata{},
 				},
 			},
 		},
 		{
-			name: "invocation id",
+			name: "invocation env",
 			b: &TestBuild{
 				GithubActionsBuild: NewGithubActionsBuild(nil, github.WorkflowContext{
 					RunID:      "12345",
 					RunAttempt: "1",
+					EventName:  "pull_request",
+					SHA:        "abcde",
+					RefType:    "branch",
+					Ref:        "some/ref",
+					BaseRef:    "some/base_ref",
+					HeadRef:    "some/head_ref",
+					RunNumber:  "102937",
+					Actor:      "user",
 				}).WithClients(&NilClientProvider{}),
 			},
 			token: &github.OIDCToken{
@@ -84,8 +109,22 @@ func TestHostedActionsProvenance(t *testing.T) {
 					BuildConfig: testBuildConfig,
 					Invocation: slsa.ProvenanceInvocation{
 						Environment: map[string]interface{}{
-							"github_run_id":      "12345",
-							"github_run_attempt": "1",
+							"github_run_id":           "12345",
+							"github_run_attempt":      "1",
+							"github_actor":            "user",
+							"github_base_ref":         "some/base_ref",
+							"github_event_name":       "pull_request",
+							"github_head_ref":         "some/head_ref",
+							"github_ref":              "some/ref",
+							"github_ref_type":         "branch",
+							"github_repository_owner": "",
+							"github_run_number":       "102937",
+							"github_sha1":             "abcde",
+						},
+						ConfigSource: slsa.ConfigSource{
+							Digest: slsa.DigestSet{
+								"sha1": "abcde",
+							},
 						},
 					},
 					Metadata: &slsa.ProvenanceMetadata{

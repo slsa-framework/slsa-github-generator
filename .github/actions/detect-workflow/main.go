@@ -16,23 +16,57 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
+	"os"
 	"path"
 	"strings"
 
 	"github.com/slsa-framework/slsa-github-generator/github"
 )
 
-// getStr returns a string value from the given Event map. Values are specified
+type action struct {
+	getenv func(string) string
+	event  map[string]any
+	client *github.OIDCClient
+}
+
+// TODO(github.com/slsa-framework/slsa-github-generator/issues/164): use the github context via the shared library
+
+func newAction(getenv func(string) string, c *github.OIDCClient) (*action, error) {
+	eventPath := getenv("GITHUB_EVENT_PATH")
+	if eventPath == "" {
+		return nil, errors.New("GITHUB_EVENT_PATH not set")
+	}
+
+	payload, err := os.ReadFile(eventPath)
+	if err != nil {
+		return nil, err
+	}
+
+	var event map[string]any
+	if err := json.Unmarshal(payload, &event); err != nil {
+		return nil, err
+	}
+
+	return &action{
+		getenv: getenv,
+		event:  event,
+		client: c,
+	}, nil
+}
+
+// getEventValue returns a string value from the given Event map. Values are specified
 // as dot-separated indexes into the map. e.g.
 // "pull_request.head.repo.full_name".
-func getStr(m map[string]interface{}, key string) string {
+func (a *action) getEventValue(key string) string {
 	if key == "" {
 		return ""
 	}
 
+	m := a.event
 	parts := strings.Split(key, ".")
 
 	// Traverse the first parts of the path.
@@ -57,27 +91,23 @@ func getStr(m map[string]interface{}, key string) string {
 	}
 }
 
-func getRepoRef(ctx context.Context, c *github.OIDCClient) (string, string, error) {
+func (a *action) getRepoRef(ctx context.Context) (string, string, error) {
 	var repository, ref string
 
-	ghContext, err := github.GetWorkflowContext()
-	if err != nil {
-		return "", "", fmt.Errorf("getting github context: %w", err)
-	}
-
 	// TODO(github.com/slsa-framework/slsa-github-generator/issues/124): Remove special logic for pull_requests.
-	if ghContext.EventName == "pull_request" {
+	eventName := a.getenv("GITHUB_EVENT_NAME")
+	if eventName == "pull_request" {
 		// If a pull request get the repo from the pull request.
-		repository = getStr(ghContext.Event, "pull_request.head.repo.full_name")
-		ref = ghContext.HeadRef
+		repository = a.getEventValue("pull_request.head.repo.full_name")
+		ref = a.getenv("GITHUB_HEAD_REF")
 	} else {
-		audience := ghContext.Repository
+		audience := a.getenv("GITHUB_REPOSITORY")
 		if audience == "" {
 			return "", "", errors.New("missing github repository context")
 		}
 		audience = path.Join(audience, "detect-workflow")
 
-		t, err := c.Token(ctx, []string{audience})
+		t, err := a.client.Token(ctx, []string{audience})
 		if err != nil {
 			return "", "", fmt.Errorf("getting OIDC token: %w", err)
 		}
@@ -103,7 +133,12 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	repository, ref, err := getRepoRef(context.Background(), c)
+	a, err := newAction(os.Getenv, c)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	repository, ref, err := a.getRepoRef(context.Background())
 	if err != nil {
 		log.Fatal(err)
 	}

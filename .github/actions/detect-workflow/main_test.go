@@ -23,7 +23,7 @@ import (
 	"github.com/slsa-framework/slsa-github-generator/github"
 )
 
-func Test_getStr(t *testing.T) {
+func Test_action_getEventValue(t *testing.T) {
 	cases := []struct {
 		name     string
 		m        map[string]interface{}
@@ -92,14 +92,17 @@ func Test_getStr(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			if want, got := tc.expected, getStr(tc.m, tc.key); want != got {
+			a := action{
+				event: tc.m,
+			}
+			if want, got := tc.expected, a.getEventValue(tc.key); want != got {
 				t.Errorf("unexpected response, want: %q, got: %q", want, got)
 			}
 		})
 	}
 }
 
-func Test_getRepoRef(t *testing.T) {
+func Test_action_getRepoRef(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 		now := time.Date(2022, 5, 3, 14, 49, 0, 0, time.UTC)
 		os.Setenv("GITHUB_CONTEXT", `{"repository": "githubuser/reponame"}`)
@@ -110,7 +113,17 @@ func Test_getRepoRef(t *testing.T) {
 		})
 		defer s.Close()
 
-		repo, ref, err := getRepoRef(context.Background(), c)
+		a := action{
+			getenv: func(k string) string {
+				if k == "GITHUB_REPOSITORY" {
+					return "githubuser/reponame"
+				}
+				return ""
+			},
+			client: c,
+		}
+
+		repo, ref, err := a.getRepoRef(context.Background())
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
@@ -124,11 +137,31 @@ func Test_getRepoRef(t *testing.T) {
 
 	t.Run("pull_request", func(t *testing.T) {
 		now := time.Date(2022, 5, 3, 14, 49, 0, 0, time.UTC)
-		os.Setenv("GITHUB_CONTEXT", `{"repository": "githubuser/reponame", "head_ref": "refs/heads/mybranch", "event_name": "pull_request", "event": {"pull_request": {"head": {"repo": {"full_name": "otheruser/reponame"}}}}}`)
 		s, c := github.NewTestOIDCServer(t, now, nil)
 		defer s.Close()
 
-		repo, ref, err := getRepoRef(context.Background(), c)
+		a := action{
+			getenv: func(k string) string {
+				env := map[string]string{
+					"GITHUB_REPOSITORY": "githubuser/reponame",
+					"GITHUB_EVENT_NAME": "pull_request",
+					"GITHUB_HEAD_REF":   "refs/heads/mybranch",
+				}
+				return env[k]
+			},
+			client: c,
+			event: map[string]any{
+				"pull_request": map[string]any{
+					"head": map[string]any{
+						"repo": map[string]any{
+							"full_name": "otheruser/reponame",
+						},
+					},
+				},
+			},
+		}
+
+		repo, ref, err := a.getRepoRef(context.Background())
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
