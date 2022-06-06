@@ -30,10 +30,20 @@ To get started, you will need to add some steps to your current workflow. We
 will assume you have an existing Github Actions workflow to build your project.
 
 Add a step to your workflow after you have built your project to generate a
-sha256 hash of your artifacts. The following assumes you have a binary called
-`binary-linux-amd64`.
+sha256 hash of your artifacts and base64 encode it.
 
-After that, add a new job to call the `slsa-github-generator` reusable workflow.
+Assuming you have a binary called `binary-linux-amd64` you can use the
+`sha256sum` and `base64` commands to create the digest. Here we use the `-w0` to
+output the encoded data on one line and make it easier to use as a Github Actions
+output:
+
+```shell
+$ sha256sum binary-linux-amd64 | base64 -w0
+```
+
+After you have encoded your digest, add a new job to call the
+`slsa-github-generator` reusable workflow. Here's an example of what it might
+look like all together.
 
 ```yaml
 jobs:
@@ -42,17 +52,15 @@ jobs:
       digest: ${{ steps.hash.outputs.digest }}
     runs-on: ubuntu-latest
     steps:
-      # Your build steps are here.
+      - name: "build binary-linux-amd64"
+        run: |
+          # Build build binary-linux-amd64 here.
       - name: "generate hash"
         shell: bash
         id: hash
         run: |
           set -euo pipefail
-          DIGEST=$(sha256sum binary-linux-amd64)
-          DIGEST="${DIGEST//'%'/'%25'}"
-          DIGEST="${DIGEST//$'\n'/'%0A'}"
-          DIGEST="${DIGEST//$'\r'/'%0D'}"
-          echo "::set-output name=digest::$DIGEST"
+          echo "::set-output name=digest::$(sha256sum binary-linux-amd64 | base64 -w0)"
   provenance:
     needs: [build]
     permissions:
