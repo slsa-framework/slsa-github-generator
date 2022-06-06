@@ -60,6 +60,9 @@ jobs:
         id: hash
         run: |
           set -euo pipefail
+          # sha256sum generates sha256 hash for all artifacts.
+          # base64 -w0 encodes to base64 and outputs on a single line.
+          # sha256sum artifact1 artifact2 ... | base64 -w0
           echo "::set-output name=digest::$(sha256sum artifact1 artifact2 | base64 -w0)"
   provenance:
     needs: [build]
