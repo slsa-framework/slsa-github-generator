@@ -16,6 +16,7 @@ This document explains how to use the builder for Golang projects.
 
 [Verification of provenance](#verification-of-provenance)
 
+- [Installation](#installation)
 - [Inputs](#inputs)
 - [Command line examples](#command-line-examples)
 
@@ -282,39 +283,14 @@ The `BuildConfig` contains the following fields:
 
 To verify the provenance, use the [github.com/slsa-framework/slsa-verifier](https://github.com/slsa-framework/slsa-verifier) project.
 
+### Installation
+
+To install the verifier, see [slsa-framework/slsa-verifier#installation](https://github.com/slsa-framework/slsa-verifier#installation).
+
 ### Inputs
 
-```shell
-$ git clone git@github.com:slsa-framework/slsa-verifier.git
-$ git checkout tags/v1.0.0
-$ go run . --help
-    -binary string
-    	path to a binary to verify
-    -branch string
-    	expected branch the binary was compiled from (default "main")
-    -provenance string
-    	path to a provenance file
-    -source string
-    	expected source repository that should have produced the binary, e.g. github.com/some/repo
-    -tag string
-    	[optional] expected tag the binary was compiled from
-    -versioned-tag string
-    	[optional] expected version the binary was compiled from. Uses semantic version to match the tag
-```
+The inputs of the verifier are described in [slsa-framework/slsa-verifier#available-options](https://github.com/slsa-framework/slsa-verifier#available-options).
 
 ### Command line examples
 
-```shell
-$ go run . --binary ~/Downloads/binary-linux-amd64 --provenance ~/Downloads/binary-linux-amd64.intoto.jsonl --source github.com/origin/repo
-
-Verified against tlog entry 1544571
-verified SLSA provenance produced at
- {
-        "caller": "origin/repo",
-        "commit": "0dfcd24824432c4ce587f79c918eef8fc2c44d7b",
-        "job_workflow_ref": "/slsa-framework/slsa-github-generator/.github/workflows/builder_go_slsa3.yml@refs/tags/v1.0.0",
-        "trigger": "workflow_dispatch",
-        "issuer": "https://token.actions.githubusercontent.com"
-}
-successfully verified SLSA provenance
-```
+A command line example is provided in [slsa-framework/slsa-verifier#example](https://github.com/slsa-framework/slsa-verifier#example).
