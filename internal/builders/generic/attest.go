@@ -16,7 +16,9 @@ package main
 
 import (
 	"bufio"
+	"bytes"
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -48,10 +50,15 @@ var (
 )
 
 // parseSubjects parses the value given to the subjects option.
-func parseSubjects(subjectsStr string) ([]intoto.Subject, error) {
+func parseSubjects(b64str string) ([]intoto.Subject, error) {
 	var parsed []intoto.Subject
 
-	scanner := bufio.NewScanner(strings.NewReader(subjectsStr))
+	subjects, err := base64.StdEncoding.DecodeString(b64str)
+	if err != nil {
+		return nil, fmt.Errorf("error decoding subjects (is it base64 encoded?): %w", err)
+	}
+
+	scanner := bufio.NewScanner(bytes.NewReader(subjects))
 	for scanner.Scan() {
 		// Split by whitespace, and get values.
 		parts := wsSplit.Split(strings.TrimSpace(scanner.Text()), 2)
@@ -194,7 +201,7 @@ run in the context of a Github Actions workflow.`,
 
 	c.Flags().StringVarP(&predicatePath, "predicate", "p", "", "Path to write the unsigned provenance predicate.")
 	c.Flags().StringVarP(&attPath, "signature", "g", "attestation.intoto.jsonl", "Path to write the signed attestation.")
-	c.Flags().StringVarP(&subjects, "subjects", "s", "", "Formatted list of subjects in the same format as sha256sum.")
+	c.Flags().StringVarP(&subjects, "subjects", "s", "", "Formatted list of subjects in the same format as sha256sum (base64 encoded).")
 
 	return c
 }
