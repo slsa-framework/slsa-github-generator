@@ -20,8 +20,6 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/json"
-	"errors"
-	"fmt"
 	"io"
 	"os"
 	"regexp"
@@ -32,6 +30,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/slsa-framework/slsa-github-generator/github"
+	"github.com/slsa-framework/slsa-github-generator/internal/errors"
 	"github.com/slsa-framework/slsa-github-generator/internal/utils"
 	"github.com/slsa-framework/slsa-github-generator/signing/sigstore"
 	"github.com/slsa-framework/slsa-github-generator/slsa"
@@ -49,13 +48,38 @@ var (
 	provenanceOnlyBuildType = "https://github.com/slsa-framework/slsa-github-generator@v1"
 )
 
+// errBase64 indicates a base64 error in the subject.
+type errBase64 struct {
+	errors.WrappableError
+}
+
+// errSha indicates a error in the hash format.
+type errSha struct {
+	errors.WrappableError
+}
+
+// errNoName indicates a missing subject name.
+type errNoName struct {
+	errors.WrappableError
+}
+
+// errDuplicateSubject indicates a duplicate subject name.
+type errDuplicateSubject struct {
+	errors.WrappableError
+}
+
+// errScan is an error scanning the SHA digest data.
+type errScan struct {
+	errors.WrappableError
+}
+
 // parseSubjects parses the value given to the subjects option.
 func parseSubjects(b64str string) ([]intoto.Subject, error) {
 	var parsed []intoto.Subject
 
 	subjects, err := base64.StdEncoding.DecodeString(b64str)
 	if err != nil {
-		return nil, fmt.Errorf("error decoding subjects (is it base64 encoded?): %w", err)
+		return nil, errors.Errorf(&errBase64{}, "error decoding subjects (is it base64 encoded?): %w", err)
 	}
 
 	scanner := bufio.NewScanner(bytes.NewReader(subjects))
@@ -71,18 +95,18 @@ func parseSubjects(b64str string) ([]intoto.Subject, error) {
 		}
 		// Do a sanity check on the SHA to make sure it's a proper hex digest.
 		if !shaCheck.MatchString(shaDigest) {
-			return nil, fmt.Errorf("unexpected sha256 hash %q", shaDigest)
+			return nil, errors.Errorf(&errSha{}, "unexpected sha256 hash format for %q", shaDigest)
 		}
 
 		// Check for the subject name.
 		if len(parts) == 1 {
-			return nil, fmt.Errorf("expected subject name for hash %q", shaDigest)
+			return nil, errors.Errorf(&errNoName{}, "expected subject name for hash %q", shaDigest)
 		}
 		name := strings.TrimSpace(parts[1])
 
 		for _, p := range parsed {
 			if p.Name == name {
-				return nil, fmt.Errorf("duplicate subject: %q", name)
+				return nil, errors.Errorf(&errDuplicateSubject{}, "duplicate subject %q", name)
 			}
 		}
 
@@ -94,7 +118,7 @@ func parseSubjects(b64str string) ([]intoto.Subject, error) {
 		})
 	}
 	if err := scanner.Err(); err != nil {
-		return nil, err
+		return nil, errors.Errorf(&errScan{}, "reading digest: %w", err)
 	}
 
 	return parsed, nil
