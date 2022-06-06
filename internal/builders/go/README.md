@@ -278,7 +278,6 @@ The `BuildConfig` contains the following fields:
   "workingDir": "/home/runner/work/ianlewis/actions-test"
 ```
 
-
 ## Verification of provenance
 
 To verify the provenance, use the [github.com/slsa-framework/slsa-verifier](https://github.com/slsa-framework/slsa-verifier) project.
