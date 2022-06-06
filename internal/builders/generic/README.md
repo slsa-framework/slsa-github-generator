@@ -38,7 +38,7 @@ output the encoded data on one line and make it easier to use as a Github Action
 output:
 
 ```shell
-$ sha256sum binary-linux-amd64 | base64 -w0
+$ sha256sum artifact1 artifact2 ... | base64 -w0
 ```
 
 After you have encoded your digest, add a new job to call the
@@ -52,15 +52,15 @@ jobs:
       digest: ${{ steps.hash.outputs.digest }}
     runs-on: ubuntu-latest
     steps:
-      - name: "build binary-linux-amd64"
+      - name: "build artifacts"
         run: |
-          # Build build binary-linux-amd64 here.
+          # Build build artifacts here.
       - name: "generate hash"
         shell: bash
         id: hash
         run: |
           set -euo pipefail
-          echo "::set-output name=digest::$(sha256sum binary-linux-amd64 | base64 -w0)"
+          echo "::set-output name=digest::$(sha256sum artifact1 artifact2 | base64 -w0)"
   provenance:
     needs: [build]
     permissions:
@@ -77,9 +77,11 @@ The builder workflow
 [.github/workflows/slsa2_provenance.yml](.github/workflows/slsa2_provenance.yml) accepts
 the following inputs:
 
-| Name       | Required | Description                                                                                                    |
-| ---------- | -------- | -------------------------------------------------------------------------------------------------------------- |
-| `subjects` | yes      | Artifacts for which to generate provenance, formatted the same as the output of sha256sum (SHA256 NAME\n[...]) |
+| Name       | Required | Description                                           |
+| ---------- | -------- | ----------------------------------------------------- |
+| `subjects` | yes      | Artifacts for which to generate provenance, formatted |
+|            |          | the same as the output of sha256sum                   |
+|            |          | (SHA256 NAME\n[...]) and base64 encoded.              |
 
 ### Workflow Outputs
 
