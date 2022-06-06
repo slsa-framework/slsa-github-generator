@@ -31,7 +31,7 @@ Each of the projects utilize the same base GitHub workflow SLSA provenance. The 
   | Name       | Value    | Description    |
 | ---------------------------- | ------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `github_event_name`   | `workflow_dispatch`, `schedule`, `push`, etc | Name of the [event](https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#available-events) that initiated the workflow run. |
-| `github_event_payload` | `"{"inputs": null, "repository": { ... }}"`    | The full event payload, including workflow inputs and repository information. |
+| `github_event_payload` | `"{"inputs": null, "repository": { ... }}"`    | The full [event payload](https://docs.github.com/en/developers/webhooks-and-events/webhooks/webhook-events-and-payloads), including workflow inputs and repository information. |
 | `github_ref_type` | `"branch"`    | The type of ref that triggered the workflow run. |
 | `github_ref` | `"refs/heads/main"`    | The ref that triggered the workflow run. |
 | `github_base_ref` | `"feat/feat-branch"`    | The ref or source branch of the pull request in a workflow run. Only populated on pull requests. |
