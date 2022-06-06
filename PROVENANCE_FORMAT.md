@@ -1,6 +1,5 @@
 Each of the projects utilize the same base GitHub workflow SLSA provenance. The common fields of the SLSA provenance predicate attested to are below.
 
-
 ## Since v1.0.0
 
 `BuildType`: This is the URI for the particular provenance builder, for example, the go or generic builder. 
@@ -32,7 +31,7 @@ Each of the projects utilize the same base GitHub workflow SLSA provenance. The 
   | Name       | Value    | Description    |
 | ---------------------------- | ------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `github_event_name`   | `workflow_dispatch`, `schedule`, `push`, etc | Name of the [event](https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#available-events) that initiated the workflow run. |
-| `github_event_payload` | `"{"inputs": null,"ref": "refs/heads/main", "repository": { ... }}"`    | The full event payload, including workflow inputs and repository information. |
+| `github_event_payload` | `"{"inputs": null, "repository": { ... }}"`    | The full event payload, including workflow inputs and repository information. |
 | `github_ref_type` | `"branch"`    | The type of ref that triggered the workflow run. |
 | `github_ref` | `"refs/heads/main"`    | The ref that triggered the workflow run. |
 | `github_base_ref` | `"feat/feat-branch"`    | The ref or source branch of the pull request in a workflow run. Only populated on pull requests. |
@@ -71,7 +70,8 @@ Each of the projects utilize the same base GitHub workflow SLSA provenance. The 
 }
 ```
 
-`BuildConfig`: This contains information on the steps of the build. The default is nil, specific builders implement their own. See [BuildConfig Format](https://github.com/slsa-framework/slsa-github-generator/blob/main/internal/builders/go/README.md#buildconfig-format) in the Golang builder for an example.
+`BuildConfig`: This contains information on the steps of the build. The default is nil, specific builders implement their own. See:
+- [Golang BuildConfig Format](https://github.com/slsa-framework/slsa-github-generator/blob/main/internal/builders/go/README.md#buildconfig-format).
 
 `Materials`: List of materials that influenced the build, including the repository that triggered the GitHub Actions workflow.
 ```json

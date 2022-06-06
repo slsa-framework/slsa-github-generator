@@ -12,6 +12,7 @@ This document explains how to use the builder for Golang projects.
 - [Workflow inputs](#workflow-inputs)
 - [Workflow Example](#workflow-example)
 - [Example provenance](#example-provenance)
+- [BuildConfig format](#buildconfig-format)
 
 [Verification of provenance](#verification-of-provenance)
 
