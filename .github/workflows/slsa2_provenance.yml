@@ -25,8 +25,8 @@ permissions:
 on:
   workflow_call:
     inputs:
-      subjects:
-        description: "Artifacts for which to generate provenance, formatted the same as the output of sha256sum (SHA256 NAME\\n[...])"
+      base64-subjects:
+        description: "Artifacts for which to generate provenance, formatted the same as the output of sha256sum (SHA256 NAME\\n[...]) and base64 encoded."
         required: true
         type: string
     outputs:
@@ -104,7 +104,7 @@ jobs:
         # order to avoid script injection.
         # See: https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions#understanding-the-risk-of-script-injections
         env:
-          SUBJECTS: "${{ inputs.subjects }}"
+          SUBJECTS: "${{ inputs.base64-subjects }}"
           GITHUB_CONTEXT: "${{ toJSON(github) }}"
         run: |
           set -euo pipefail

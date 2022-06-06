@@ -68,7 +68,7 @@ jobs:
       contents: read
     uses: slsa-framework/slsa-github-generator/.github/workflows/slsa2_provenance.yml@main
     with:
-      subjects: "${{ needs.build.outputs.digest }}"
+      base64-subjects: "${{ needs.build.outputs.digest }}"
 ```
 
 ### Workflow Inputs
@@ -77,11 +77,11 @@ The builder workflow
 [.github/workflows/slsa2_provenance.yml](.github/workflows/slsa2_provenance.yml) accepts
 the following inputs:
 
-| Name       | Required | Description                                           |
-| ---------- | -------- | ----------------------------------------------------- |
-| `subjects` | yes      | Artifacts for which to generate provenance, formatted |
-|            |          | the same as the output of sha256sum                   |
-|            |          | (SHA256 NAME\n[...]) and base64 encoded.              |
+| Name              | Required | Description                                           |
+| ----------------- | -------- | ----------------------------------------------------- |
+| `base64-subjects` | yes      | Artifacts for which to generate provenance, formatted |
+|                   |          | the same as the output of sha256sum                   |
+|                   |          | (SHA256 NAME\n[...]) and base64 encoded.              |
 
 ### Workflow Outputs
 
