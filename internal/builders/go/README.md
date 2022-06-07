@@ -14,12 +14,6 @@ This document explains how to use the builder for Golang projects.
 - [Example provenance](#example-provenance)
 - [BuildConfig format](#buildconfig-format)
 
-[Verification of provenance](#verification-of-provenance)
-
-- [Installation](#installation)
-- [Inputs](#inputs)
-- [Command line examples](#command-line-examples)
-
 ---
 
 ## Generation
@@ -277,19 +271,3 @@ The `BuildConfig` contains the following fields:
 ```json
   "workingDir": "/home/runner/work/ianlewis/actions-test"
 ```
-
-## Verification of provenance
-
-To verify the provenance, use the [github.com/slsa-framework/slsa-verifier](https://github.com/slsa-framework/slsa-verifier) project.
-
-### Installation
-
-To install the verifier, see [slsa-framework/slsa-verifier#installation](https://github.com/slsa-framework/slsa-verifier#installation).
-
-### Inputs
-
-The inputs of the verifier are described in [slsa-framework/slsa-verifier#available-options](https://github.com/slsa-framework/slsa-verifier#available-options).
-
-### Command line examples
-
-A command line example is provided in [slsa-framework/slsa-verifier#example](https://github.com/slsa-framework/slsa-verifier#example).
