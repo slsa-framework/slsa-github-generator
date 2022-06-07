@@ -38,9 +38,11 @@ There is one integration test we cannot easily test "live", so we need to simula
 
 1. Create a new release for your fork of the slsa-verifier repository with a malicious binary. 
 ```
-$ echo hello > slsa-verifier-linux-amd64
+# Create a release
 $ "$GH" release -R "$VERIFIER_REPOSITORY" create "$VERIFIER_TAG" --title "$VERIFIER_TAG" --notes "pre-release tests for builder $BUILDER_TAG $(date)"
 $ # Note: this will create a release workflow: cancel it in the GitHub UI.
+# Upload a malicious binary.
+$ echo hello > slsa-verifier-linux-amd64
 $ "$GH" release -R "$VERIFIER_REPOSITORY" upload "$VERIFIER_TAG" slsa-verifier-linux-amd64
 ```
 2. Ensure your fork of the builder is at the same commit hash as the offical builder's `$BUILDER_TAG` release.
