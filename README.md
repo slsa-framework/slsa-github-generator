@@ -22,6 +22,7 @@ To generate SLSA provenance for your Golang project, follow [internal/builders/g
 ## Other projects
 
 To generate SLSA provenance for other programming languages, follow [internal/builders/generic/README.md](internal/builders/generic/README.md).
+This is a pre-release only and we will have the official release in the next few weeks.
 
 ## Provenance format
 
