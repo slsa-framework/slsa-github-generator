@@ -117,7 +117,7 @@ $ "$GH" release -R slsa-framework/slsa-github-generator upload "$BUILDER_TAG" sl
 
 The next step is to update the verifier's e2e tests. For this, you need to:
 
-1. Generate binaries and provenance for a project, using the `$BUILDER_TAG` builder. (TODO: https://github.com/slsa-framework/slsa-github-generator/issues/119).
+1. Generate binaries and provenance for a project, using the [example-package](https://github.com/slsa-framework/example-package) builder. You will need to create provenance via a `workflow_dispatch` from this [workflow](https://github.com/slsa-framework/example-package/blob/main/.github/workflows/e2e.go.workflow_dispatch.main.config-noldflags.slsa3.yml) of the e2e test repository, and push a tag of the form vX and vX.Y to trigger this [workflow](https://github.com/slsa-framework/example-package/blob/main/.github/workflows/e2e.go.tag.main.config-ldflags-assets.major.slsa3.yml).
 
 2. Place the files in a new directory `slsa-framework/slsa-verifier/tree/main/testdata/$BUILDER_TAG`.
 
