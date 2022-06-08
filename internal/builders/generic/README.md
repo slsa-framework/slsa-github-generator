@@ -80,11 +80,9 @@ The builder workflow
 [.github/workflows/slsa2_provenance.yml](.github/workflows/slsa2_provenance.yml) accepts
 the following inputs:
 
-| Name              | Required | Description                                           |
-| ----------------- | -------- | ----------------------------------------------------- |
-| `base64-subjects` | yes      | Artifacts for which to generate provenance, formatted |
-|                   |          | the same as the output of sha256sum                   |
-|                   |          | (SHA256 NAME\n[...]) and base64 encoded.              |
+| Name              | Required | Description                                                                                                                        |
+| ----------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `base64-subjects` | yes      | Artifacts for which to generate provenance, formatted the same as the output of sha256sum (SHA256 NAME\n[...]) and base64 encoded. |
 
 ### Workflow Outputs
 
