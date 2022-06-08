@@ -1,10 +1,10 @@
-name: pre-submit e2e generic workflow
+name: pre-submit e2e generic default
 on:
   pull_request:
     branches: [main]
 
 env:
-  THIS_FILE: pre-submit.e2e.generic.workflow.yml
+  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 jobs:
   build:
@@ -15,7 +15,7 @@ jobs:
     uses: ./.github/workflows/slsa2_provenance.yml
     with:
       # echo "2e0390eb024a52963db7b95e84a9c2b12c004054a7bad9a97ec0c7c89d4681d2    binary-name" | base64 -w0
-      subjects: "MmUwMzkwZWIwMjRhNTI5NjNkYjdiOTVlODRhOWMyYjEyYzAwNDA1NGE3YmFkOWE5N2VjMGM3Yzg5ZDQ2ODFkMiAgICBiaW5hcnktbmFtZQo="
+      base64-subjects: "MmUwMzkwZWIwMjRhNTI5NjNkYjdiOTVlODRhOWMyYjEyYzAwNDA1NGE3YmFkOWE5N2VjMGM3Yzg5ZDQ2ODFkMiAgICBiaW5hcnktbmFtZQo="
 
   verify:
     runs-on: ubuntu-latest
@@ -26,5 +26,6 @@ jobs:
         with:
           name: ${{ needs.build.outputs.attestation-name }}
       - env:
+          BINARY: "binary-name"
           PROVENANCE: ${{ needs.build.outputs.attestation-name }}
-        run: "./.github/workflows/scripts/pre-submit.e2e.generic.workflow.sh"
+        run: ./.github/workflows/scripts/pre-submit.e2e.generic.default.sh
