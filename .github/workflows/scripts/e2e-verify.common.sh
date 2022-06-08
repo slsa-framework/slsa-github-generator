@@ -4,12 +4,6 @@
 
 source "./.github/workflows/scripts/e2e-utils.sh"
 
-# Gets the name of the currently running workflow file.
-# Note: this requires GH_TOKEN to be set in the workflows.
-e2e_this_file() {
-    gh api -H "Accept: application/vnd.github.v3+json" "/repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" | jq -r '.path' | cut -d '/' -f3
-}
-
 # Runs all generic SLSA checks that shouldn't change on a per-builder basis.
 # $1: the attestation content
 e2e_verify_common_all() {
