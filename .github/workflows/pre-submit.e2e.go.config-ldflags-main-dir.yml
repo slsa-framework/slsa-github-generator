@@ -50,7 +50,4 @@ jobs:
       - env:
           BINARY: ${{ needs.build.outputs.go-binary-name }}
           PROVENANCE: ${{ needs.build.outputs.go-binary-name }}.intoto.jsonl
-        run: |
-          set -euo pipefail
-
-          ./.github/workflows/scripts/e2e-verify.sh
+        run: ./.github/workflows/scripts/pre-submit.e2e.go.default.sh
