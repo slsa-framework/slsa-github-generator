@@ -1,11 +1,6 @@
 name: reviewdog
 
-"on": [pull_request]
-
-permissions:
-  contents: read
-  # Required to write PR comments.
-  pull-requests: write
+"on": [pull_request_target]
 
 jobs:
   golangci-lint:
