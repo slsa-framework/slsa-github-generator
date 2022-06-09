@@ -275,6 +275,8 @@ func (b *GoBuild) SetArgEnvVariables(envs string) error {
 }
 
 func (b *GoBuild) generateOutputFilename() (string, error) {
+	// Note: the `.` is needed to accomodate the semantic version
+	// as part of the name.
 	const alpha = ".abcdefghijklmnopqrstuvwxyz1234567890-_"
 
 	var name string
