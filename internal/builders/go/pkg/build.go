@@ -31,6 +31,8 @@ var (
 	errorInvalidFilename           = errors.New("invalid filename")
 )
 
+var unknownVersion = "unknown"
+
 // See `go build help`.
 // `-asmflags`, `-n`, `-mod`, `-installsuffix`, `-modfile`,
 // `-workfile`, `-overlay`, `-pkgdir`, `-toolexec`, `-o`,
@@ -272,21 +274,27 @@ func (b *GoBuild) SetArgEnvVariables(envs string) error {
 }
 
 func (b *GoBuild) generateOutputFilename() (string, error) {
-	const alpha = "abcdefghijklmnopqrstuvwxyz1234567890-_"
+	const alpha = ".abcdefghijklmnopqrstuvwxyz1234567890-_"
 
 	var name string
 
 	// Replace .Os variable.
 	if strings.Contains(b.cfg.Binary, "{{ .Os }}") && b.cfg.Goos == "" {
-		return "", fmt.Errorf("%w", errorEnvVariableNameEmpty)
+		return "", fmt.Errorf("%w: .Os", errorEnvVariableNameEmpty)
 	}
 	name = strings.ReplaceAll(b.cfg.Binary, "{{ .Os }}", b.cfg.Goos)
 
 	// Replace .Arch variable.
 	if strings.Contains(name, "{{ .Arch }}") && b.cfg.Goarch == "" {
-		return "", fmt.Errorf("%w", errorEnvVariableNameEmpty)
+		return "", fmt.Errorf("%w: .Arch", errorEnvVariableNameEmpty)
 	}
 	name = strings.ReplaceAll(name, "{{ .Arch }}", b.cfg.Goarch)
+
+	// Resolve other variables.
+	if strings.Contains(name, "{{ .Version }}") {
+		version := getVersion()
+		name = strings.ReplaceAll(name, "{{ .Version }}", version)
+	}
 
 	for _, char := range name {
 		if !strings.Contains(alpha, strings.ToLower(string(char))) {
@@ -297,6 +305,12 @@ func (b *GoBuild) generateOutputFilename() (string, error) {
 	if name == "" {
 		return "", fmt.Errorf("%w: filename is empty", errorInvalidFilename)
 	}
+
+	// Validate the path, since we allow '.' in the name.
+	if err := validatePath(name); err != nil {
+		return "", err
+	}
+
 	return name, nil
 }
 
@@ -343,10 +357,10 @@ func (b *GoBuild) generateLdflags() (string, error) {
 		var res string
 		ss := "{{ .Env."
 		es := "}}"
-		found := false
 		for {
 			start := strings.Index(v, ss)
 			if start == -1 {
+				res = fmt.Sprintf("%s%s", res, strings.Trim(v, " "))
 				break
 			}
 			end := strings.Index(string(v[start+len(ss):]), es)
@@ -364,17 +378,54 @@ func (b *GoBuild) generateLdflags() (string, error) {
 				return "", fmt.Errorf("%w: %s", errorEnvVariableNameEmpty, name)
 			}
 			res = fmt.Sprintf("%s%s%s", res, v[:start], val)
-			found = true
 			v = v[start+len(ss)+end+len(es):]
 		}
-		if !found {
-			res = v
-		}
+
 		a = append(a, res)
 	}
+
+	// Special variables.
+	for i, v := range a {
+		var res string
+		ss := "{{ ."
+		es := "}}"
+		for {
+			start := strings.Index(v, ss)
+			if start == -1 {
+				res = fmt.Sprintf("%s%s", res, strings.Trim(v, " "))
+				break
+			}
+			end := strings.Index(string(v[start+len(ss):]), es)
+			if end == -1 {
+				return "", fmt.Errorf("%w: %s", errorInvalidEnvArgument, v)
+			}
+
+			name := strings.Trim(string(v[start+len(ss):start+len(ss)+end]), " ")
+			if name == "" {
+				return "", fmt.Errorf("%w: %s", errorEnvVariableNameEmpty, v)
+			}
+
+			if name == "Version" {
+				version := getVersion()
+				res = fmt.Sprintf("%s%s%s", res, v[:start], version)
+			}
+			v = v[start+len(ss)+end+len(es):]
+		}
+
+		a[i] = res
+	}
+
 	if len(a) > 0 {
 		return strings.Join(a, " "), nil
 	}
 
 	return "", nil
+}
+
+func getVersion() string {
+	version := os.Getenv("GITHUB_REF_NAME")
+	if version == "" {
+		return unknownVersion
+	}
+	return version
 }
