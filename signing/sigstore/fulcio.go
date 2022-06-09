@@ -21,6 +21,7 @@ import (
 	"fmt"
 
 	"github.com/sigstore/cosign/cmd/cosign/cli/fulcio"
+	"github.com/sigstore/cosign/cmd/cosign/cli/options"
 	"github.com/sigstore/cosign/pkg/providers"
 	"github.com/sigstore/sigstore/pkg/signature/dsse"
 	"github.com/slsa-framework/slsa-github-generator/signing"
@@ -85,15 +86,11 @@ func (s *Fulcio) Sign(ctx context.Context, p *intoto.Statement) (signing.Attesta
 		return nil, fmt.Errorf("marshalling json: %w", err)
 	}
 
-	fClient, err := fulcio.NewClient(s.fulcioAddr)
-	if err != nil {
-		return nil, fmt.Errorf("creating fulcio client: %w", err)
-	}
-	tok, err := providers.Provide(ctx, s.oidcClientID)
-	if err != nil {
-		return nil, fmt.Errorf("obtaining cosign provider: %w", err)
-	}
-	k, err := fulcio.NewSigner(ctx, tok, s.oidcIssuer, s.oidcClientID, "", "", fClient)
+	k, err := fulcio.NewSigner(ctx, options.KeyOpts{
+		OIDCIssuer:   s.oidcIssuer,
+		OIDCClientID: s.oidcClientID,
+		FulcioURL:    s.fulcioAddr,
+	})
 	if err != nil {
 		return nil, fmt.Errorf("creating fulcio signer: %w", err)
 	}
