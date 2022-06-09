@@ -3,6 +3,7 @@ extends: default
 
 rules:
   comments:
+    # prettier formats comments one space from content
     min-spaces-from-content: 1
   document-start: disable
   line-length: disable
