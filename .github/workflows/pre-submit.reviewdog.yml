@@ -2,8 +2,8 @@ name: reviewdog
 
 "on": [pull_request]
 
-# TODO(github.com/slsa-framework/slsa-github-generator/issues/228): use more restrictive default
-permissions: read-all
+permissions:
+  contents: read
 
 jobs:
   golangci-lint:
