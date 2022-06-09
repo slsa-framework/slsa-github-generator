@@ -753,7 +753,7 @@ func Test_generateLdflags(t *testing.T) {
 			outldflags: "value1-name-value2 value1-name-value3 value3-name-value1 value3-name-value2",
 		},
 		{
-			name:   "several ldflags",
+			name:   "several ldflags with start/end",
 			argEnv: "VAR1:value1, VAR2:value2, VAR3:value3",
 			inldflags: []string{
 				"start-{{ .Env.VAR1 }}-name-{{ .Env.VAR2 }}-end",
@@ -806,7 +806,7 @@ func Test_generateLdflags(t *testing.T) {
 				t.Errorf("SetArgEnvVariables: %v", err)
 			}
 			ldflags, err := b.generateLdflags()
-			fmt.Println(ldflags)
+
 			// Unset env variables, so that they don't
 			// affect other tests.
 			for k := range tt.githubEnv {
