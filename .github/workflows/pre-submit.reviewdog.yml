@@ -15,7 +15,7 @@ jobs:
       - name: golangci-lint
         uses: reviewdog/action-golangci-lint@v2
         with:
-          github_token: "${{ secrets.REVIEWDOG_GH_TOKEN }}"
+          github_token: ${{ secrets.REVIEWDOG_GH_TOKEN }}
           go_version: "1.18"
           golangci_lint_flags: "--timeout=5m"
           level: warning
@@ -27,7 +27,7 @@ jobs:
       - name: shellcheck
         uses: reviewdog/action-shellcheck@v1
         with:
-          github_token: "${{ secrets.REVIEWDOG_GH_TOKEN }}"
+          github_token: ${{ secrets.REVIEWDOG_GH_TOKEN }}
           level: warning
           fail_on_error: true
   shfmt:
@@ -37,7 +37,7 @@ jobs:
       - name: shfmt
         uses: reviewdog/action-shfmt@v1
         with:
-          github_token: "${{ secrets.REVIEWDOG_GH_TOKEN }}"
+          github_token: ${{ secrets.REVIEWDOG_GH_TOKEN }}
           level: warning
           fail_on_error: true
   yamllint:
@@ -47,7 +47,7 @@ jobs:
       - name: yamllint
         uses: reviewdog/action-yamllint@v1
         with:
-          github_token: "${{ secrets.REVIEWDOG_GH_TOKEN }}"
+          github_token: ${{ secrets.REVIEWDOG_GH_TOKEN }}
           yamllint_flags: "-c .yamllint.yaml ."
           level: warning
           fail_on_error: true
