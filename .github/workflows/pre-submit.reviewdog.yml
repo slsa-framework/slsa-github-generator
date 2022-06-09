@@ -1,5 +1,12 @@
 name: reviewdog
+
 "on": [pull_request]
+
+permissions:
+  contents: read
+  # Required to write PR comments.
+  pull-requests: write
+
 jobs:
   golangci-lint:
     runs-on: ubuntu-latest
