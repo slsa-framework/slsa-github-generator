@@ -1,5 +1,5 @@
 name: reviewdog
-on: [pull_request]
+"on": [pull_request]
 jobs:
   golangci-lint:
     runs-on: ubuntu-latest
@@ -37,6 +37,6 @@ jobs:
       - name: yamllint
         uses: reviewdog/action-yamllint@v1
         with:
-          yamllint_flags: "-c .yamllint.config.yaml ."
+          yamllint_flags: "-c .yamllint.yaml ."
           level: warning
           fail_on_error: true
