@@ -7,6 +7,9 @@ permissions:
   # Required to write PR comments.
   pull-requests: write
 
+env:
+  REVIEWDOG_GITHUB_API_TOKEN: "${{ secrets.REVIEWDOG_GH_TOKEN }}"
+
 jobs:
   golangci-lint:
     runs-on: ubuntu-latest
@@ -17,6 +20,7 @@ jobs:
         with:
           go_version: "1.18"
           golangci_lint_flags: "--timeout=5m"
+          reporter: github-pr-review
           level: warning
           fail_on_error: true
   shellcheck:
@@ -26,6 +30,7 @@ jobs:
       - name: shellcheck
         uses: reviewdog/action-shellcheck@v1
         with:
+          reporter: github-pr-review
           level: warning
           fail_on_error: true
   shfmt:
@@ -35,6 +40,7 @@ jobs:
       - name: shfmt
         uses: reviewdog/action-shfmt@v1
         with:
+          reporter: github-pr-review
           level: warning
           fail_on_error: true
   yamllint:
@@ -45,5 +51,6 @@ jobs:
         uses: reviewdog/action-yamllint@v1
         with:
           yamllint_flags: "-c .yamllint.yaml ."
+          reporter: github-pr-review
           level: warning
           fail_on_error: true
