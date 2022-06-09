@@ -1,0 +1,6 @@
+---
+rules:
+  line-length: disable
+  comments:
+    # prettier formats comments one space from content
+    min-spaces-from-content: 1
