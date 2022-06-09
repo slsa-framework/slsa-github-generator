@@ -806,7 +806,7 @@ func Test_generateLdflags(t *testing.T) {
 				t.Errorf("SetArgEnvVariables: %v", err)
 			}
 			ldflags, err := b.generateLdflags()
-
+			fmt.Println(ldflags)
 			// Unset env variables, so that they don't
 			// affect other tests.
 			for k := range tt.githubEnv {

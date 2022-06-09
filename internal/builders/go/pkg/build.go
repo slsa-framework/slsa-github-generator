@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"syscall"
 )
@@ -352,67 +353,43 @@ func isAllowedEnvVariable(name string) bool {
 // TODO: maybe not needed if handled directly by go compiler.
 func (b *GoBuild) generateLdflags() (string, error) {
 	var a []string
+	reVar := regexp.MustCompile(`{{ \.([A-Z][a-z]*) }}`)
+	reDyn := regexp.MustCompile(`{{ \.Env\.(\w+) }}`)
 
+	// Resolve variables.
 	for _, v := range b.cfg.Ldflags {
-		var res string
-		ss := "{{ .Env."
-		es := "}}"
-		for {
-			start := strings.Index(v, ss)
-			if start == -1 {
-				res = fmt.Sprintf("%s%s", res, strings.Trim(v, " "))
-				break
-			}
-			end := strings.Index(string(v[start+len(ss):]), es)
-			if end == -1 {
-				return "", fmt.Errorf("%w: %s", errorInvalidEnvArgument, v)
+
+		// Special variables.
+		names := reVar.FindAllString(v, -1)
+		for _, n := range names {
+
+			name := strings.ReplaceAll(n, "{{ .", "")
+			name = strings.ReplaceAll(name, " }}", "")
+
+			// {{ .Version }} variable.
+			if name != "Version" {
+				return "", fmt.Errorf("%w: %s", errorInvalidEnvArgument, n)
 			}
 
-			name := strings.Trim(string(v[start+len(ss):start+len(ss)+end]), " ")
-			if name == "" {
-				return "", fmt.Errorf("%w: %s", errorEnvVariableNameEmpty, v)
-			}
+			version := getVersion()
+			v = strings.ReplaceAll(v, n, version)
+		}
+
+		// Dynamic env variables provided by caller.
+		names = reDyn.FindAllString(v, -1)
+		for _, n := range names {
+
+			name := strings.ReplaceAll(n, "{{ .Env.", "")
+			name = strings.ReplaceAll(name, " }}", "")
 
 			val, exists := b.argEnv[name]
 			if !exists {
-				return "", fmt.Errorf("%w: %s", errorEnvVariableNameEmpty, name)
+				return "", fmt.Errorf("%w: %s", errorEnvVariableNameEmpty, n)
 			}
-			res = fmt.Sprintf("%s%s%s", res, v[:start], val)
-			v = v[start+len(ss)+end+len(es):]
+			v = strings.ReplaceAll(v, n, val)
 		}
 
-		a = append(a, res)
-	}
-
-	// Special variables.
-	for i, v := range a {
-		var res string
-		ss := "{{ ."
-		es := "}}"
-		for {
-			start := strings.Index(v, ss)
-			if start == -1 {
-				res = fmt.Sprintf("%s%s", res, strings.Trim(v, " "))
-				break
-			}
-			end := strings.Index(string(v[start+len(ss):]), es)
-			if end == -1 {
-				return "", fmt.Errorf("%w: %s", errorInvalidEnvArgument, v)
-			}
-
-			name := strings.Trim(string(v[start+len(ss):start+len(ss)+end]), " ")
-			if name == "" {
-				return "", fmt.Errorf("%w: %s", errorEnvVariableNameEmpty, v)
-			}
-
-			if name == "Version" {
-				version := getVersion()
-				res = fmt.Sprintf("%s%s%s", res, v[:start], version)
-			}
-			v = v[start+len(ss)+end+len(es):]
-		}
-
-		a[i] = res
+		a = append(a, v)
 	}
 
 	if len(a) > 0 {
