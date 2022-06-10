@@ -172,6 +172,8 @@ jobs:
       - name: Get image ID
         id: inspect
         shell: bash
+        env:
+          TAGS: "${{ inputs.tags }}"
         run: |
           set -euo pipefail
           # Get the first tag. Id for each tag should be the same.
@@ -184,6 +186,8 @@ jobs:
       - name: Push image
         id: push
         shell: bash
+        env:
+          TAGS: "${{ inputs.tags }}"
         run: |
           set -euo pipefail
           # stop commmands just in case.
