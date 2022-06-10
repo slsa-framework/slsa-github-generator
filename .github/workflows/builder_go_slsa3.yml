@@ -76,7 +76,6 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       id-token: write # Needed to detect the current reusable repository and ref.
-      actions: read # Needed to detect info about the Github Actions environment.
     steps:
       - name: Detect the builder ref
         id: detect
