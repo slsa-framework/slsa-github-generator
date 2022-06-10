@@ -43,7 +43,6 @@ env:
     secrets:
       personal_access_token:
         description: "A github auth token used when pushing to github container registry. Defaults to GITHUB_TOKEN"
-        type: string
     outputs:
       image:
         description: "The image id."
