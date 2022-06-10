@@ -98,7 +98,7 @@ jobs:
 
           # https://go.dev/ref/mod#build-commands.
           go build -mod=vendor -o "$BUILDER_BINARY" github.com/slsa-framework/slsa-github-generator/internal/builders/dockerfile
-          chmod a+x $BUILDER_BINARY
+          chmod a+x "$BUILDER_BINARY"
 
           BUILDER_DIGEST=$(sha256sum "$BUILDER_BINARY" | awk '{print $1}')
           echo "::set-output name=builder-sha256::$BUILDER_DIGEST"
@@ -139,9 +139,6 @@ jobs:
       - name: Verify builder
         env:
           BUILDER_HASH: "${{ needs.builder.outputs.builder-sha256 }}"
-          DOCKERFILE: "${{ inputs.file }}"
-          CONTEXT: "${{ inputs.context }}"
-          TAGS: "${{ inputs.tags }}"
         run: |
           set -euo pipefail
 
@@ -154,11 +151,15 @@ jobs:
           echo "$BUILDER_HASH $BUILDER_BINARY" | sha256sum --strict --check --status || exit -2
 
           # Make the builder executable.
-          chmod a+x "$BUILDER_BINARY" -c -t "$TAGS"
+          chmod a+x "$BUILDER_BINARY"
 
       - name: Build image
         id: build
         shell: bash
+        env:
+          DOCKERFILE: "${{ inputs.file }}"
+          CONTEXT: "${{ inputs.context }}"
+          TAGS: "${{ inputs.tags }}"
         run: |
           set -euo pipefail
 
