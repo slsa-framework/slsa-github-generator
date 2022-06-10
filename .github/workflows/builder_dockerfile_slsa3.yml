@@ -30,12 +30,10 @@ env:
     inputs:
       context:
         description: "The context directory for the Dockerfile"
-        required: true
         default: "."
         type: string
       file:
         description: "The path to the Dockerfile"
-        required: true
         default: "./Dockerfile"
         type: string
       tags:
