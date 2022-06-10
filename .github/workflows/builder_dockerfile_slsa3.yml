@@ -40,6 +40,7 @@ env:
         description: "CSV list of name:tag to attach to the image and push"
         required: true
         type: string
+    secrets:
       github_token:
         description: "A github auth token used when pushing to github container registry. Defaults to GITHUB_TOKEN"
         type: string
