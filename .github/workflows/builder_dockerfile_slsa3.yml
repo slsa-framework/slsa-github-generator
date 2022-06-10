@@ -122,6 +122,7 @@ jobs:
     needs: [builder]
     permissions:
       contents: read
+      packages: write # Needed to push the image.
     outputs:
       image: ${{ steps.inspect.outputs.image }}
     steps:
