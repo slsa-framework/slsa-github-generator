@@ -40,6 +40,9 @@ env:
         description: "CSV list of name:tag to attach to the image and push"
         required: true
         type: string
+      # github_token:
+      #   description: "A github auth token used when pushing to github container registry. Defaults to GITHUB_TOKEN"
+      #   type: string
     outputs:
       image:
         description: "The image id."
@@ -70,6 +73,8 @@ jobs:
     needs: [detect-env]
     permissions:
       contents: read
+      # TODO: Maybe remove and make inputs.github_token required?
+      packages: write
     steps:
       - name: Checkout the repository
         uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # v3.0.2
@@ -122,7 +127,6 @@ jobs:
     needs: [builder]
     permissions:
       contents: read
-      packages: write # Needed to push the image.
     outputs:
       image: ${{ steps.inspect.outputs.image }}
     steps:
@@ -153,6 +157,23 @@ jobs:
 
           # Make the builder executable.
           chmod a+x "$BUILDER_BINARY"
+
+      - name: Authenticate Docker
+        shell: bash
+        env:
+          INPUT_TOKEN: "${{ inputs.github_token }}"
+          GITHUB_TOKEN: "${{ github.token }}"
+        run: |
+          set -euo pipefail
+
+          if [[ -n "$INPUT_TOKEN" ]]; then
+            TOKEN="$INPUT_TOKEN"
+          else
+            TOKEN="$GITHUB_TOKEN"
+          fi
+
+          # TODO: Authenticate to other repositories.
+          echo "$TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
 
       - name: Build image
         id: build
