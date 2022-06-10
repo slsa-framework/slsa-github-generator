@@ -26,6 +26,7 @@ Docker registry. This command assumes that it is being run in the context of a
 Github Actions workflow.`,
 		Run: func(cmd *cobra.Command, args []string) {
 			// TODO(github.com/slsa-framework/slsa-github-generator/issues/57): implement attest command
+			panic("not implemented")
 		},
 	}
 
