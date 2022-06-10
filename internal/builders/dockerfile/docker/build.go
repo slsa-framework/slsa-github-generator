@@ -28,8 +28,7 @@ func Build(opts BuildOpts) error {
 		contextDir = "."
 	}
 
-	// TODO(github.com/slsa-framework/slsa-github-generator/issues/57): implement build.
-	cmd, err := NewCommand("build", contextDir)
+	cmd, err := New("build", contextDir)
 	if err != nil {
 		return err
 	}

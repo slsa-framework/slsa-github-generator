@@ -32,10 +32,9 @@ func buildCmd() *cobra.Command {
 
 	c := &cobra.Command{
 		Use:   "build",
-		Short: "Build and push a Docker image.",
-		Long: `Build a Docker image from a Dockerfile and push it to an image repository.
-This command assumes that it is being run in the context of a Github Actions
-workflow.`,
+		Short: "Build a Docker image.",
+		Long: `Build a Docker image from a Dockerfile.  This command assumes that it is being
+run in the context of a Github Actions workflow.`,
 
 		Run: func(cmd *cobra.Command, args []string) {
 			tagList := strings.Split(tags, ",")
@@ -49,14 +48,6 @@ workflow.`,
 				Tags:       tagList,
 			}); err != nil {
 				check(fmt.Errorf("failed to build Docker image: %w", err))
-			}
-
-			for _, tag := range tagList {
-				if err := docker.Push(docker.PushOpts{
-					Tag: tag,
-				}); err != nil {
-					check(fmt.Errorf("failed to push to image repository: %w", err))
-				}
 			}
 		},
 	}

@@ -15,35 +15,53 @@
 package docker
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
 	"strings"
 )
 
-// Command is a docker command.
-type Command struct {
-	cmd *exec.Cmd
+// CommandSteps is a series of steps executed when running a build. These steps
+// can be included in the buildConfig in provenance statements.
+type CommandSteps []*CommandStep
+
+// Run executes each step. If any step returns an error the error is returned
+// and subsequent steps are not executed.
+func (s CommandSteps) Run() error {
+	for _, step := range s {
+		if err := step.Run(); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
-// NewCommand returns a docker command.
-func NewCommand(args ...string) (*Command, error) {
+// CommandStep is a command executed by the builder.
+type CommandStep struct {
+	Command    []string `json:"command"`
+	Env        []string `json:"env"`
+	WorkingDir string   `json:"workingDir"`
+}
+
+// New returns a docker command.
+func New(args ...string) (*CommandStep, error) {
 	// TODO(github.com/slsa-framework/slsa-github-generator/issues/57): implement build.
 	path, err := exec.LookPath("docker")
 	if err != nil {
 		return nil, fmt.Errorf("unable to find the docker command: %w", err)
 	}
 
-	cmd := exec.Command(path, args...)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	return &Command{
-		cmd: cmd,
+	command := []string{path}
+	command = append(command, args...)
+
+	return &CommandStep{
+		Command: command,
 	}, nil
 }
 
 // WithFlag adds a flag to the command.
-func (c *Command) WithFlag(name, value string) {
+func (c *CommandStep) WithFlag(name, value string) {
 	flg := name
 	if !strings.HasPrefix("-", flg) {
 		flg = "--" + flg
@@ -51,10 +69,35 @@ func (c *Command) WithFlag(name, value string) {
 	if value != "" {
 		flg += "=" + value
 	}
-	c.cmd.Args = append(c.cmd.Args, flg)
+	c.Command = append(c.Command, flg)
 }
 
-// Run runs the command.
-func (c *Command) Run() error {
-	return c.cmd.Run()
+func (c *CommandStep) newCmd() (*exec.Cmd, error) {
+	if len(c.Command) == 0 {
+		return nil, errors.New("command is empty")
+	}
+	cmd := exec.Command(c.Command[0], c.Command[:1]...)
+	cmd.Env = c.Env
+	cmd.Dir = c.WorkingDir
+	return cmd, nil
+}
+
+// Run runs the command routing output to stdout and stderr.
+func (c *CommandStep) Run() error {
+	cmd, err := c.newCmd()
+	if err != nil {
+		return err
+	}
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	return cmd.Run()
+}
+
+// Output runs the command and returns the stdout.
+func (c *CommandStep) Output() ([]byte, error) {
+	cmd, err := c.newCmd()
+	if err != nil {
+		return nil, err
+	}
+	return cmd.Output()
 }

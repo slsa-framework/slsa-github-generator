@@ -1,0 +1,197 @@
+# Copyright 2022 SLSA Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+name: SLSA provenance generator
+
+permissions:
+  contents: read
+
+env:
+  BUILDER_BINARY: builder
+
+###################################################################
+#                                                                 #
+#            Input and output argument definitions                #
+#                                                                 #
+###################################################################
+"on":
+  workflow_call:
+    inputs:
+      context:
+        description: "The context directory for the Dockerfile"
+        required: true
+        default: "."
+        type: string
+      file:
+        description: "The path to the Dockerfile"
+        required: true
+        default: "./Dockerfile"
+        type: string
+      tags:
+        description: "CSV list of name:tag to attach to the image and push"
+        required: true
+        type: string
+    outputs:
+      image:
+        description: "The image id."
+        value: ${{ jobs.build.outputs.image }}
+
+jobs:
+  detect-env:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write # Needed to detect the current reusable repository and ref.
+    outputs:
+      repository: ${{ steps.detect.outputs.repository }}
+      ref: ${{ steps.detect.outputs.ref }}
+    steps:
+      - name: Detect the builder ref
+        id: detect
+        uses: slsa-framework/slsa-github-generator/.github/actions/detect-workflow@bbeae84f20f78877b7ba56f324b993c3ee576cf1
+
+  ###################################################################
+  #                                                                 #
+  #                       Build the builder                         #
+  #                                                                 #
+  ###################################################################
+  builder:
+    outputs:
+      builder-sha256: ${{ steps.build.outputs.builder-sha256 }}
+    runs-on: ubuntu-latest
+    needs: [detect-env]
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # v3.0.2
+        with:
+          fetch-depth: 0
+          repository: "${{ needs.detect-env.outputs.repository }}"
+          ref: "${{ needs.detect-env.outputs.ref }}"
+
+      - name: Set up golang environment
+        uses: actions/setup-go@b22fbbc2921299758641fab08929b4ac52b32923 # v3.2.0
+        with:
+          go-version: 1.18
+
+      - name: Download dependencies
+        shell: bash
+        # TODO(reproducible)
+        run: go mod vendor
+
+      # TODO(hermeticity) OS-level.
+
+      - name: Build builder
+        id: build
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          # https://go.dev/ref/mod#build-commands.
+          go build -mod=vendor -o "$BUILDER_BINARY" github.com/slsa-framework/slsa-github-generator/internal/builders/dockerfile
+          chmod a+x $BUILDER_BINARY
+
+          BUILDER_DIGEST=$(sha256sum "$BUILDER_BINARY" | awk '{print $1}')
+          echo "::set-output name=builder-sha256::$BUILDER_DIGEST"
+          echo "hash of $BUILDER_BINARY is $BUILDER_DIGEST"
+
+      - name: Upload the builder
+        uses: actions/upload-artifact@3cea5372237819ed00197afe530f5a7ea3e805c8 # v3.1.0
+        with:
+          name: "${{ env.BUILDER_BINARY }}"
+          path: "${{ env.BUILDER_BINARY }}"
+          if-no-files-found: error
+          retention-days: 5
+
+  ###################################################################
+  #                                                                 #
+  #                       Build the image                           #
+  #                                                                 #
+  ###################################################################
+  build:
+    runs-on: ubuntu-latest
+    needs: [builder]
+    permissions:
+      contents: read
+    outputs:
+      image: ${{ steps.inspect.outputs.image }}
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # v3.0.2
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Download builder
+        uses: actions/download-artifact@fb598a63ae348fa914e94cd0ff38f362e927b741 # v2.1.0
+        with:
+          name: "${{ env.BUILDER_BINARY }}"
+
+      - name: Verify builder
+        env:
+          BUILDER_HASH: "${{ needs.builder.outputs.builder-sha256 }}"
+          DOCKERFILE: "${{ inputs.file }}"
+          CONTEXT: "${{ inputs.context }}"
+          TAGS: "${{ inputs.tags }}"
+        run: |
+          set -euo pipefail
+
+          echo "hash of builder should be $BUILDER_HASH"
+          COMPUTED_HASH=$(sha256sum "$BUILDER_BINARY" | awk '{print $1}')
+          echo "builder hash computed is $COMPUTED_HASH"
+
+          # Compare hashes. Explicit exit to be safe.
+          # TODO: remove the builder as well.
+          echo "$BUILDER_HASH $BUILDER_BINARY" | sha256sum --strict --check --status || exit -2
+
+          # Make the builder executable.
+          chmod a+x "$BUILDER_BINARY" -c -t "$TAGS"
+
+      - name: Build image
+        id: build
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          # Disable commands to prevent overwriting outputs.
+          echo "::stop-commands::`echo -n ${{ github.token }} | sha256sum | head -c 64`"
+
+          echo "./$BUILDER_BINARY" build -f "$DOCKERFILE" -c "$CONTEXT" -t "$TAGS"
+          "./$BUILDER_BINARY" build -f "$DOCKERFILE" -c "$CONTEXT" -t "$TAGS"
+
+      - name: Get image ID
+        id: inspect
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Get the first tag. Id for each tag should be the same.
+          TAG=$(echo "$TAGS" | tr ',' '\n' | sed -n 1'p')
+          IMAGEID=$(docker image inspect "$TAG" --format "{{ .Id }}")
+          # re-enable commands.
+          echo "::`echo -n ${{ github.token }} | sha256sum | head -c 64`::"
+          echo "::set-output name=image::$IMAGEID"
+
+      - name: Push image
+        id: push
+        shell: bash
+        run: |
+          set -euo pipefail
+          # stop commmands just in case.
+          echo "::stop-commands::`echo -n ${{ github.token }} | sha256sum | head -c 64`"
+          # Push each tag.
+          echo "$TAGS" | tr ',' '\n' | sed -n 1'p' | while read -r tag; do
+            docker push $tag
+          done
+
+        # TODO(github.com/slsa-framework/slsa-github-generator/issues/57): Generate and upload provenance.
