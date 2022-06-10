@@ -76,7 +76,7 @@ func (c *CommandStep) newCmd() (*exec.Cmd, error) {
 	if len(c.Command) == 0 {
 		return nil, errors.New("command is empty")
 	}
-	cmd := exec.Command(c.Command[0], c.Command[:1]...)
+	cmd := exec.Command(c.Command[0], c.Command[1:]...)
 	cmd.Env = c.Env
 	cmd.Dir = c.WorkingDir
 	return cmd, nil
