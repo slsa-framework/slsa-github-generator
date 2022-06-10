@@ -22,7 +22,7 @@ permissions:
 #            Input and output argument definitions                #
 #                                                                 #
 ###################################################################
-on:
+"on":
   workflow_call:
     inputs:
       base64-subjects:
@@ -36,13 +36,13 @@ on:
 
 jobs:
   detect-env:
+    outputs:
+      repository: ${{ steps.detect.outputs.repository }}
+      ref: ${{ steps.detect.outputs.ref }}
     runs-on: ubuntu-latest
     permissions:
       id-token: write # Needed to detect the current reusable repository and ref.
       actions: read # Needed to detect info about the Github Actions environment.
-    outputs:
-      repository: ${{ steps.detect.outputs.repository }}
-      ref: ${{ steps.detect.outputs.ref }}
     steps:
       - name: Detect the builder ref
         id: detect
