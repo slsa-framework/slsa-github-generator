@@ -80,7 +80,7 @@ The configuration file accepts many of the common fields Goreleaser uses, as you
 
 | Name         | Value      | Example     |
 | --------------------------- |  ----------------------------------------------- | ------------------ |
-| `{{ .CommitDate }}` | `$(git log --date=iso8601-strict -1 --pretty=%ct)`     |  `1654892178` |
+| `{{ .CommitDate }}` | `date -d @$(git log --date=iso8601-strict -1 --pretty=%ct)`     |  `Mon Jun 13 01:23:36 AM UTC 2022` |
 | `{{ .FullCommit }}` | `$GITHUB_SHA` or `$(git rev-parse HEAD)`   | `b2a980888f359b8cef22cb61f153746e1a06deb0` |
 | `{{ .ShortCommit }}` | `$(echo $GITHUB_SHA \| cut -c1-8)` or `$(git rev-parse HEAD \| cut -c1-8)`   | `b2a98088` |
 | `{{ .Version }}` | `$(git describe --tags --always --dirty \| cut -c2-)`  | `1.2.3-alpha+b2a98088` |
