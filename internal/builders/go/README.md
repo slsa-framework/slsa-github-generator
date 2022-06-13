@@ -12,11 +12,7 @@ This document explains how to use the builder for Golang projects.
 - [Workflow inputs](#workflow-inputs)
 - [Workflow Example](#workflow-example)
 - [Example provenance](#example-provenance)
-
-[Verification of provenance](#verification-of-provenance)
-
-- [Inputs](#inputs)
-- [Command line examples](#command-line-examples)
+- [BuildConfig format](#buildconfig-format)
 
 ---
 
@@ -27,7 +23,7 @@ To generate provenance for a golang binary, follow the steps below:
 ### Supported triggers
 
 Most GitHub trigger events are supported, at the exception of `pull_request`. We have extensively tested the 
-following triggers: `schedule`, `push` (including new tags) and manual `workflow_dispatch`.
+following triggers: `schedule`, `push` (including new tags), `release` and manual `workflow_dispatch`.
 
 If you would like support for `pull_request`, please tell us about your use case and [file an issue](https://github.com/slsa-framework/slsa-github-generator/issues/new).
 
@@ -77,7 +73,7 @@ If you are already using Goreleaser, you may be able to migrate to our builder u
 
 In the meantime, you can use both Goreleaser and this builder in the same repository. For example, you can pick one build you would like to start generating provenance for. Goreleaser and this builder can co-exist without interfering with one another, so long as they build fr different OS/Arch. We think gradual adoption is good for project to get used to SLSA.
 
-The configuration file accepts many of the common fields Goreleaser uses, as you can see in the [example](#configuration-file). The configuration file also supports two variables: `{{ .Os }}` and `{{ .Arch }}`. If you need suppport for other variables, please [open an issue](https://github.com/slsa-framework/slsa-github-generator/issues/new).
+The configuration file accepts many of the common fields Goreleaser uses, as you can see in the [example](#configuration-file). The configuration file also supports two variables: `{{ .Os }}`, `{{ .Arch }}` and `{{ .Version }}`. If you need suppport for other variables, please [open an issue](https://github.com/slsa-framework/slsa-github-generator/issues/new).
 
 ### Workflow inputs
 
@@ -274,46 +270,4 @@ The `BuildConfig` contains the following fields:
 
 ```json
   "workingDir": "/home/runner/work/ianlewis/actions-test"
-```
-
-
-## Verification of provenance
-
-To verify the provenance, use the [github.com/slsa-framework/slsa-verifier](https://github.com/slsa-framework/slsa-verifier) project.
-
-### Inputs
-
-```shell
-$ git clone git@github.com:slsa-framework/slsa-verifier.git
-$ git checkout tags/v1.0.0
-$ go run . --help
-    -binary string
-    	path to a binary to verify
-    -branch string
-    	expected branch the binary was compiled from (default "main")
-    -provenance string
-    	path to a provenance file
-    -source string
-    	expected source repository that should have produced the binary, e.g. github.com/some/repo
-    -tag string
-    	[optional] expected tag the binary was compiled from
-    -versioned-tag string
-    	[optional] expected version the binary was compiled from. Uses semantic version to match the tag
-```
-
-### Command line examples
-
-```shell
-$ go run . --binary ~/Downloads/binary-linux-amd64 --provenance ~/Downloads/binary-linux-amd64.intoto.jsonl --source github.com/origin/repo
-
-Verified against tlog entry 1544571
-verified SLSA provenance produced at
- {
-        "caller": "origin/repo",
-        "commit": "0dfcd24824432c4ce587f79c918eef8fc2c44d7b",
-        "job_workflow_ref": "/slsa-framework/slsa-github-generator/.github/workflows/builder_go_slsa3.yml@refs/tags/v1.0.0",
-        "trigger": "workflow_dispatch",
-        "issuer": "https://token.actions.githubusercontent.com"
-}
-successfully verified SLSA provenance
 ```

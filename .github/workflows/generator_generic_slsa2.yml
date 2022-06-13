@@ -22,11 +22,11 @@ permissions:
 #            Input and output argument definitions                #
 #                                                                 #
 ###################################################################
-on:
+"on":
   workflow_call:
     inputs:
-      subjects:
-        description: "Artifacts for which to generate provenance, formatted the same as the output of sha256sum (SHA256 NAME\\n[...])"
+      base64-subjects:
+        description: "Artifacts for which to generate provenance, formatted the same as the output of sha256sum (SHA256 NAME\\n[...]) and base64 encoded."
         required: true
         type: string
     outputs:
@@ -36,18 +36,16 @@ on:
 
 jobs:
   detect-env:
-    runs-on: ubuntu-latest
-    permissions:
-      id-token: write # Needed to detect the current reusable repository and ref.
-      contents: read
-      actions: read
     outputs:
       repository: ${{ steps.detect.outputs.repository }}
       ref: ${{ steps.detect.outputs.ref }}
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write # Needed to detect the current reusable repository and ref.
     steps:
       - name: Detect the builder ref
         id: detect
-        uses: slsa-framework/slsa-github-generator/.github/actions/detect-workflow@9d7ea9186521283831060d09910ff3d7e8bfa1ee
+        uses: slsa-framework/slsa-github-generator/.github/actions/detect-workflow@bbeae84f20f78877b7ba56f324b993c3ee576cf1
 
   ###################################################################
   #                                                                 #
@@ -104,7 +102,7 @@ jobs:
         # order to avoid script injection.
         # See: https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions#understanding-the-risk-of-script-injections
         env:
-          SUBJECTS: "${{ inputs.subjects }}"
+          SUBJECTS: "${{ inputs.base64-subjects }}"
           GITHUB_CONTEXT: "${{ toJSON(github) }}"
         run: |
           set -euo pipefail
