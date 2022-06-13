@@ -82,9 +82,9 @@ The configuration file accepts many of the common fields Goreleaser uses, as you
 | --------------------------- |  ----------------------------------------------- | ------------------ |
 |  `{{ .CommitDate }}`  | `$(git log --date=iso8601-strict -1 --pretty=%ct)`     |  `1654892178` |
 | `{{ .FullCommit }}` | `$GITHUB_SHA` or `$(git rev-parse HEAD)`   | `b2a980888f359b8cef22cb61f153746e1a06deb0` |
-| `{{ .ShortCommit }}` | `$(echo $GITHUB_SHA \| cut -c1-8)` or `$(git rev-parse HEAD | cut -c1-8)`   | `b2a98088` |
+| `{{ .ShortCommit }}` | `$(echo $GITHUB_SHA \| cut -c1-8)` or `$(git rev-parse HEAD \| cut -c1-8)`   | `b2a98088` |
 | `{{ .Version }}` | `$(git describe --tags --always --dirty \| cut -c2-)`  | `1.2.3-alpha+b2a98088` |
-| `{{ .Tag }}` | `$GITHUB_REF_NAME` (on `release` and `push` new tag triggers) or `$(git describe --tags --always --dirty | cut -c2-)`    | `v1.2.3-alpha+b2a98088` |
+| `{{ .Tag }}` | `$GITHUB_REF_NAME` (on `release` and `push` new tag triggers) or `$(git describe --tags --always --dirty \| cut -c2-)`    | `v1.2.3-alpha+b2a98088` |
 | `{{ .Major }}` | `$(git describe --tags --always --dirty \| cut -d '.' -f1 \| cut -c2-)`    | `1` |
 | `{{ .Minor }}` | `$(git describe --tags --always --dirty \| cut -d '.' -f2`    | `2` |
 | `{{ .Patch }}` | `$(git describe --tags --always --dirty \| cut -d '.' -f3 \| cut -d '-' -f1 \| cut -d '+' -f1`    | `3` |
