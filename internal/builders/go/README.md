@@ -64,7 +64,10 @@ binary: binary-{{ .Os }}-{{ .Arch }}
 
 # (Optional) ldflags generated dynamically in the workflow, and set as the `env` input variables in the workflow.
 ldflags:
-  - "{{ .Env.VERSION_LDFLAGS }}"
+  - '-X main.Version={{ .Env.VERSION }}'
+  - '-X main.Commit={{ .Env.COMMIT }}'
+  - '-X main.CommitDate={{ .Env.COMMIT_DATE }}'
+  - '-X main.TreeState={{ .Env.TREE_STATE }}'
 ```
 
 ### Migration from goreleaser
@@ -73,7 +76,20 @@ If you are already using Goreleaser, you may be able to migrate to our builder u
 
 In the meantime, you can use both Goreleaser and this builder in the same repository. For example, you can pick one build you would like to start generating provenance for. Goreleaser and this builder can co-exist without interfering with one another, so long as they build fr different OS/Arch. We think gradual adoption is good for project to get used to SLSA.
 
-The configuration file accepts many of the common fields Goreleaser uses, as you can see in the [example](#configuration-file). The configuration file also supports two variables: `{{ .Os }}`, `{{ .Arch }}` and `{{ .Version }}`. If you need suppport for other variables, please [open an issue](https://github.com/slsa-framework/slsa-github-generator/issues/new).
+The configuration file accepts many of the common fields Goreleaser uses, as you can see in the [example](#configuration-file). The configuration file also supports two variables: `{{ .Os }}` and `{{ .Arch }}`. Other variables can be set manually as follow in combination with the builder's `evaluated-envs`:
+
+| Name         | Value      | Example                                                                                                                                                                                                                                |
+| ------------------ |  -------------------------------------------------------------------------------------------------------- |
+| `{{ .CommitDate }}` | `$(git log --date=iso8601-strict -1 --pretty=%ct)`     |  `1654892178`
+| `{{ .FullCommit }}` | `$GITHUB_SHA` or `$(git rev-parse HEAD)`   | `b2a980888f359b8cef22cb61f153746e1a06deb0`
+| `{{ .ShortCommit }}` | `$(echo $GITHUB_SHA | cut -c1-8)` or `$(git rev-parse HEAD | cut -c1-8)`   | `b2a98088`
+| `{{ .Version }}` | `$(git describe --tags --always --dirty | cut -c2-)`  | `1.2.3-alpha+b2a98088`
+| `{{ .Tag }}` | `$GITHUB_REF_NAME` (on `release` and `push` new tag triggers) or `$(git describe --tags --always --dirty | cut -c2-)`    | `v1.2.3-alpha+b2a98088`
+| `{{ .Major }}` | `$(git describe --tags --always --dirty | cut -d '.' -f1 | cut -c2-)`    | `1`
+| `{{ .Minor }}` | `$(git describe --tags --always --dirty | cut -d '.' -f2`    | `2`
+| `{{ .Patch }}` | `$(git describe --tags --always --dirty | cut -d '.' -f3 | cut -d '-' -f1 | cut -d '+' -f1`    | `3`
+
+If you think you need suppport for other variables, please [open an issue](https://github.com/slsa-framework/slsa-github-generator/issues/new).
 
 ### Workflow inputs
 
@@ -112,7 +128,10 @@ jobs:
   args:
     runs-on: ubuntu-latest
     outputs:
-      ldflags: ${{ steps.ldflags.outputs.value }}
+      commit-date: ${{ steps.ldflags.outputs.commit-date }}
+      commit: ${{ steps.ldflags.outputs.commit }}
+      version: ${{ steps.ldflags.outputs.version }}
+      tree-state: ${{ steps.ldflags.outputs.tree-state }}
     steps:
       - id: checkout
         uses: actions/checkout@ec3a7ce113134d7a93b817d10a8272cb61118579 # v2.3.4
@@ -120,7 +139,10 @@ jobs:
           fetch-depth: 0
       - id: ldflags
         run: |
-          echo "::set-output name=value::$(./scripts/version-ldflags)"
+          echo "::set-output name=commit-date::$(git log --date=iso8601-strict -1 --pretty=%ct)"
+          echo "::set-output name=commit::$GITHUB_SHA"
+          echo "::set-output name=version::$(git describe --tags --always --dirty | cut -c2-)"
+          echo "::set-output name=tree-state::$(if git diff --quiet; then echo "clean"; else echo "dirty"; fi)"
 
   # Trusted builder.
   build:
@@ -133,7 +155,7 @@ jobs:
     with:
       go-version: 1.17
       # Optional: only needed if using ldflags.
-      evaluated-envs: "VERSION_LDFLAGS:${{needs.args.outputs.ldflags}}"
+      evaluated-envs: "COMMIT_DATE:${{needs.args.outputs.commit-date}}, COMMIT:${{needs.args.outputs.commit}}, VERSION:${{needs.args.outputs.version}}, TREE_STATE:${{needs.args.outputs.tree-state}}"
 ```
 
 ### Example provenance

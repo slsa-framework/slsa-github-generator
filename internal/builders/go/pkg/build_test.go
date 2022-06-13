@@ -181,13 +181,14 @@ func Test_generateOutputFilename(t *testing.T) {
 		goos     string
 		goarch   string
 		envs     map[string]string
+		argEnv   string
 		expected struct {
 			err error
 			fn  string
 		}
 	}{
 		{
-			name:     "valid filename",
+			name:     "invalid filename",
 			filename: "../filename",
 			expected: struct {
 				err error
@@ -227,8 +228,18 @@ func Test_generateOutputFilename(t *testing.T) {
 			},
 		},
 		{
-			name:     "filename os",
-			filename: "$bla",
+			name:     "filename invalid letter ^",
+			filename: "Name-AB^",
+			goarch:   "amd64",
+			expected: struct {
+				err error
+				fn  string
+			}{
+				err: errorInvalidFilename,
+			},
+		},
+		{
+			filename: "filename invalid letter $",
 			expected: struct {
 				err error
 				fn  string
@@ -271,6 +282,18 @@ func Test_generateOutputFilename(t *testing.T) {
 			},
 		},
 		{
+			name:     "filename capital letter",
+			filename: "Name-{{ .Arch }}",
+			goarch:   "amd64",
+			expected: struct {
+				err error
+				fn  string
+			}{
+				err: nil,
+				fn:  "Name-amd64",
+			},
+		},
+		{
 			name:     "filename amd64/linux arch",
 			filename: "name-{{ .Os }}-{{ .Arch }}",
 			goarch:   "amd64",
@@ -302,12 +325,12 @@ func Test_generateOutputFilename(t *testing.T) {
 				err error
 				fn  string
 			}{
-				err: errorInvalidFilename,
+				err: errorInvalidEnvArgument,
 			},
 		},
 		{
 			name:     "filename amd64/linux v1.2.3",
-			filename: "name-{{ .Os }}-{{ .Arch }}-{{ .Version }}",
+			filename: "name-{{ .Os }}-{{ .Arch }}-{{ .Tag }}",
 			goarch:   "amd64",
 			goos:     "linux",
 			envs: map[string]string{
@@ -323,7 +346,7 @@ func Test_generateOutputFilename(t *testing.T) {
 		},
 		{
 			name:     "filename twice v1.2.3",
-			filename: "name-{{ .Version }}-{{ .Version }}",
+			filename: "name-{{ .Tag }}-{{ .Tag }}",
 			goarch:   "amd64",
 			goos:     "linux",
 			envs: map[string]string{
@@ -339,7 +362,7 @@ func Test_generateOutputFilename(t *testing.T) {
 		},
 		{
 			name:     "filename twice empty versions",
-			filename: "name-{{ .Version }}-{{ .Version }}",
+			filename: "name-{{ .Tag }}-{{ .Tag }}",
 			goarch:   "amd64",
 			goos:     "linux",
 			envs: map[string]string{
@@ -350,12 +373,12 @@ func Test_generateOutputFilename(t *testing.T) {
 				fn  string
 			}{
 				err: nil,
-				fn:  fmt.Sprintf("name-%s-%s", unknownVersion, unknownVersion),
+				fn:  fmt.Sprintf("name-%s-%s", unknownTag, unknownTag),
 			},
 		},
 		{
 			name:     "invalid name with version",
-			filename: "name-{{ .Version }}/../bla",
+			filename: "name-{{ .Tag }}/../bla",
 			goarch:   "amd64",
 			goos:     "linux",
 			envs: map[string]string{
@@ -370,7 +393,7 @@ func Test_generateOutputFilename(t *testing.T) {
 		},
 		{
 			name:     "filename twice unset versions",
-			filename: "name-{{ .Version }}-{{ .Version }}",
+			filename: "name-{{ .Tag }}-{{ .Tag }}",
 			goarch:   "amd64",
 			goos:     "linux",
 			expected: struct {
@@ -378,7 +401,24 @@ func Test_generateOutputFilename(t *testing.T) {
 				fn  string
 			}{
 				err: nil,
-				fn:  fmt.Sprintf("name-%s-%s", unknownVersion, unknownVersion),
+				fn:  fmt.Sprintf("name-%s-%s", unknownTag, unknownTag),
+			},
+		},
+		{
+			name:     "filename envs",
+			filename: "name-{{ .Env.VAR1 }}-{{ .Os }}-{{ .Arch }}-{{ .Env.VAR2 }}-{{ .Tag }}-end",
+			goarch:   "amd64",
+			goos:     "linux",
+			envs: map[string]string{
+				"GITHUB_REF_NAME": "v1.2.3",
+			},
+			argEnv: "VAR1:var1, VAR2:var2",
+			expected: struct {
+				err error
+				fn  string
+			}{
+				err: nil,
+				fn:  "name-var1-linux-amd64-var2-v1.2.3-end",
 			},
 		},
 	}
@@ -406,6 +446,11 @@ func Test_generateOutputFilename(t *testing.T) {
 			}
 
 			b := GoBuildNew("go compiler", c)
+
+			err = b.SetArgEnvVariables(tt.argEnv)
+			if err != nil {
+				t.Errorf("SetArgEnvVariables: %v", err)
+			}
 
 			fn, err := b.generateOutputFilename()
 			if !errCmp(err, tt.expected.err) {
@@ -764,18 +809,30 @@ func Test_generateLdflags(t *testing.T) {
 			outldflags: "start-value1-name-value2-end start-value1-name-value3-end start-value3-name-value1-end start-value3-name-value2-end",
 		},
 		{
-			name:   "several ldflags and version",
+			name:   "several ldflags and tag",
 			argEnv: "VAR1:value1, VAR2:value2, VAR3:value3",
 			githubEnv: map[string]string{
 				"GITHUB_REF_NAME": "v1.2.3",
 			},
 			inldflags: []string{
-				"start-{{ .Env.VAR1 }}-name-{{ .Env.VAR2 }}-{{ .Version }}-end",
+				"start-{{ .Env.VAR1 }}-name-{{ .Env.VAR2 }}-{{ .Tag }}-end",
 				"{{ .Env.VAR1 }}-name-{{ .Env.VAR3 }}",
-				"{{ .Env.VAR3 }}-name-{{ .Env.VAR1 }}-{{ .Version }}-{{ .Version }}",
-				"{{ .Env.VAR3 }}-name-{{ .Env.VAR2 }}-{{ .Version }}-end",
+				"{{ .Env.VAR3 }}-name-{{ .Env.VAR1 }}-{{ .Tag }}-{{ .Tag }}",
+				"{{ .Env.VAR3 }}-name-{{ .Env.VAR2 }}-{{ .Tag }}-end",
 			},
 			outldflags: "start-value1-name-value2-v1.2.3-end value1-name-value3 value3-name-value1-v1.2.3-v1.2.3 value3-name-value2-v1.2.3-end",
+		},
+		{
+			name:   "several ldflags and Arch and Os",
+			argEnv: "VAR1:value1, VAR2:value2, VAR3:value3",
+			githubEnv: map[string]string{
+				"GITHUB_REF_NAME": "v1.2.3",
+			},
+			inldflags: []string{
+				"start-{{ .Env.VAR1 }}-name-{{ .Env.VAR2 }}-{{ .Tag }}-{{ .Arch }}-end",
+				"{{ .Env.VAR1 }}-name-{{ .Env.VAR3 }}-{{ .Os }}-end",
+			},
+			outldflags: "start-value1-name-value2-v1.2.3-amd64-end value1-name-value3-linux-end",
 		},
 	}
 
@@ -788,6 +845,8 @@ func Test_generateLdflags(t *testing.T) {
 			cfg := goReleaserConfigFile{
 				Version: 1,
 				Ldflags: tt.inldflags,
+				Goarch:  "amd64",
+				Goos:    "linux",
 			}
 			c, err := fromConfig(&cfg)
 			if err != nil {
