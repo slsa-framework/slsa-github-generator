@@ -67,6 +67,7 @@ jobs:
   provenance:
     needs: [build]
     permissions:
+      actions: read
       id-token: write
       contents: read
     uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@main
