@@ -7,3 +7,7 @@ rules:
     min-spaces-from-content: 1
   document-start: disable
   line-length: disable
+  truthy:
+    allowed-values: ["true", "false"]
+    # Allow Github Actions keys like 'on'
+    check-keys: false
