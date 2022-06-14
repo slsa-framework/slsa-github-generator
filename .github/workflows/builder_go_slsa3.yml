@@ -97,7 +97,7 @@ jobs:
         uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # v2.3.4
         with:
           fetch-depth: 1
-          persist-credentials: true
+          persist-credentials: false
           repository: "${{ needs.detect-env.outputs.repository }}"
           ref: "${{ needs.detect-env.outputs.ref }}"
 
@@ -169,7 +169,7 @@ jobs:
         uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # v2.3.4
         with:
           fetch-depth: 1
-          persist-credentials: true
+          persist-credentials: false
 
       # Code needed (not tested) if go-vesion is made optional.
       # See https://stackoverflow.com/questions/67368005/check-whether-environment-variable-is-empty.
@@ -229,7 +229,7 @@ jobs:
         uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # v2.3.4
         with:
           fetch-depth: 1
-          persist-credentials: true
+          persist-credentials: false
 
       # Code needed (not tested) if go-vesion is made optional.
       # See https://stackoverflow.com/questions/67368005/check-whether-environment-variable-is-empty.
