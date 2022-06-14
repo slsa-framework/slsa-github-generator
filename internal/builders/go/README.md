@@ -74,7 +74,26 @@ ldflags:
 
 If you are already using Goreleaser, you may be able to migrate to our builder using multiple config files for each build. However, this is cumbersome and we are working on supporting multiple builds in a single config file for future releases. 
 
-In the meantime, you can use both Goreleaser and this builder in the same repository. For example, you can pick one build you would like to start generating provenance for. Goreleaser and this builder can co-exist without interfering with one another, so long as the resulting binaries have different names (e.g., when building for different OS/Arch). We think gradual adoption is good for projects to get used to SLSA.
+In the meantime, you can use both Goreleaser and this builder in the same repository. For example, you can pick one build you would like to start generating provenance for. Goreleaser and this builder can co-exist without interfering with one another, so long as the resulting binaries have different names (e.g., when building for different OS/Arch). If you want to keep the same name, you can also make use of the following Goreleaser `ignore` option in the `.goreleaser.yml`:
+
+```
+builds:
+...
+  goos:
+    - windows
+    - linux
+    - darwin
+  goarch:
+    - amd64
+    - arm64
+    - s390x
+  # This instructs to Goreleaser to not build for linux amd64.
+  ignore:
+    - goos: linux
+      goarch: amd64
+```
+
+We think gradual adoption is good for projects to get used to SLSA.
 
 The configuration file accepts many of the common fields Goreleaser uses, as you can see in the [example](#configuration-file). The configuration file also supports two variables: `{{ .Os }}` and `{{ .Arch }}`. Other variables can be set manually as shows in the table below, in combination with the builder's `evaluated-envs`:
 
