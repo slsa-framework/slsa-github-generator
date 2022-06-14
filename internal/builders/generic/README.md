@@ -69,7 +69,7 @@ jobs:
     permissions:
       id-token: write
       contents: read
-    uses: slsa-framework/slsa-github-generator/.github/workflows/slsa2_provenance.yml@main
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@main
     with:
       base64-subjects: "${{ needs.build.outputs.digest }}"
 ```
@@ -77,7 +77,7 @@ jobs:
 ### Workflow Inputs
 
 The builder workflow
-[.github/workflows/slsa2_provenance.yml](.github/workflows/slsa2_provenance.yml) accepts
+[.github/workflows/generator_generic_slsa3.yml](.github/workflows/generator_generic_slsa3.yml) accepts
 the following inputs:
 
 | Name              | Required | Description                                                                                                                        |
@@ -87,7 +87,7 @@ the following inputs:
 ### Workflow Outputs
 
 The builder workflow
-[.github/workflows/slsa2_provenance.yml](.github/workflows/slsa2_provenance.yml)
+[.github/workflows/generator_generic_slsa3.yml](.github/workflows/generator_generic_slsa3.yml)
 produces the following outputs:
 
 | Name               | Description                                |
@@ -122,7 +122,7 @@ generated as an [in-toto](https://in-toto.io/) statement with a SLSA predecate.
   ],
   "predicate": {
     "builder": {
-      "id": "https://github.com/slsa-framework/slsa-github-generator/.github/workflows/slsa2_provenance.yml@refs/heads/main"
+      "id": "https://github.com/slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@refs/heads/main"
     },
     "buildType": "https://github.com/slsa-framework/slsa-github-generator@v1",
     "invocation": {

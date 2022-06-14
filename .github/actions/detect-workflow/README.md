@@ -24,7 +24,7 @@ myjob:
     contents: read
     actions: read
   # {owner}/{repository}{/path}@{ref}
-  uses: slsa-framework/slsa-github-generator/.github/workflows/slsa2_provenance.yml@main
+  uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@main
   with:
     subjects: "${{ needs.build.outputs.digest }}"
 ```

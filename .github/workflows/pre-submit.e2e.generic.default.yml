@@ -12,7 +12,7 @@ jobs:
       id-token: write # For signing.
       contents: write # For asset uploads.
       actions: read # For reading workflow info.
-    uses: ./.github/workflows/slsa2_provenance.yml
+    uses: ./.github/workflows/generator_generic_slsa3.yml
     with:
       # echo "2e0390eb024a52963db7b95e84a9c2b12c004054a7bad9a97ec0c7c89d4681d2    binary-name" | base64 -w0
       base64-subjects: "MmUwMzkwZWIwMjRhNTI5NjNkYjdiOTVlODRhOWMyYjEyYzAwNDA1NGE3YmFkOWE5N2VjMGM3Yzg5ZDQ2ODFkMiAgICBiaW5hcnktbmFtZQo="
