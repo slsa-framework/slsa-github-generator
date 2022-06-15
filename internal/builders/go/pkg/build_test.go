@@ -476,7 +476,7 @@ func Test_generateOutputFilename(t *testing.T) {
 }
 
 func Test_SetArgEnvVariables(t *testing.T) {
-	// t.Parallel()
+	t.Parallel()
 
 	tests := []struct {
 		name     string
