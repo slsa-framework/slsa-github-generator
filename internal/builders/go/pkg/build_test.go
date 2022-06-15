@@ -442,7 +442,7 @@ func Test_generateOutputFilename(t *testing.T) {
 
 			// Set env variables.
 			for k, v := range tt.envs {
-				os.Setenv(k, v)
+				t.Setenv(k, v)
 			}
 
 			b := GoBuildNew("go compiler", c)
@@ -855,7 +855,7 @@ func Test_generateLdflags(t *testing.T) {
 
 			// Set GitHub env variables.
 			for k, v := range tt.githubEnv {
-				os.Setenv(k, v)
+				t.Setenv(k, v)
 			}
 
 			b := GoBuildNew("go compiler", c)
