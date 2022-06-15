@@ -441,6 +441,11 @@ func Test_generateOutputFilename(t *testing.T) {
 				t.Errorf("fromConfig: %v", err)
 			}
 
+			// Unset env variables, in case the workflow environment sets them.
+			for _, k := range []string{"GITHUB_REF_NAME"} {
+				os.Unsetenv(k)
+			}
+
 			// Set env variables.
 			for k, v := range tt.envs {
 				t.Setenv(k, v)
