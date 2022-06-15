@@ -173,7 +173,8 @@ func Test_isAllowedArg(t *testing.T) {
 }
 
 func Test_generateOutputFilename(t *testing.T) {
-	t.Parallel()
+	// Disable to avoid env clobbering between tests.
+	// t.Parallel()
 
 	tests := []struct {
 		name     string
@@ -440,9 +441,14 @@ func Test_generateOutputFilename(t *testing.T) {
 				t.Errorf("fromConfig: %v", err)
 			}
 
+			// Unset env variables, in case the workflow environment sets them.
+			for _, k := range []string{"GITHUB_REF_NAME"} {
+				os.Unsetenv(k)
+			}
+
 			// Set env variables.
 			for k, v := range tt.envs {
-				os.Setenv(k, v)
+				t.Setenv(k, v)
 			}
 
 			b := GoBuildNew("go compiler", c)
@@ -716,7 +722,8 @@ func Test_generateEnvVariables(t *testing.T) {
 }
 
 func Test_generateLdflags(t *testing.T) {
-	t.Parallel()
+	// Disable to avoid env clobbering between tests.
+	// t.Parallel()
 
 	tests := []struct {
 		name       string
@@ -855,7 +862,7 @@ func Test_generateLdflags(t *testing.T) {
 
 			// Set GitHub env variables.
 			for k, v := range tt.githubEnv {
-				os.Setenv(k, v)
+				t.Setenv(k, v)
 			}
 
 			b := GoBuildNew("go compiler", c)

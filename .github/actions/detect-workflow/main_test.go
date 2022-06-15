@@ -16,7 +16,6 @@ package main
 
 import (
 	"context"
-	"os"
 	"testing"
 	"time"
 
@@ -105,7 +104,7 @@ func Test_action_getEventValue(t *testing.T) {
 func Test_action_getRepoRef(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 		now := time.Date(2022, 5, 3, 14, 49, 0, 0, time.UTC)
-		os.Setenv("GITHUB_CONTEXT", `{"repository": "githubuser/reponame"}`)
+		t.Setenv("GITHUB_CONTEXT", `{"repository": "githubuser/reponame"}`)
 		s, c := github.NewTestOIDCServer(t, now, &github.OIDCToken{
 			Audience:       []string{"githubuser/reponame/detect-workflow"},
 			Expiry:         time.Date(2022, 5, 4, 0, 0, 0, 0, time.UTC),
