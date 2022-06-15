@@ -173,7 +173,8 @@ func Test_isAllowedArg(t *testing.T) {
 }
 
 func Test_generateOutputFilename(t *testing.T) {
-	t.Parallel()
+	// Disable to avoid env clobbering between tests.
+	// t.Parallel()
 
 	tests := []struct {
 		name     string
@@ -475,7 +476,7 @@ func Test_generateOutputFilename(t *testing.T) {
 }
 
 func Test_SetArgEnvVariables(t *testing.T) {
-	t.Parallel()
+	// t.Parallel()
 
 	tests := []struct {
 		name     string
@@ -716,7 +717,8 @@ func Test_generateEnvVariables(t *testing.T) {
 }
 
 func Test_generateLdflags(t *testing.T) {
-	t.Parallel()
+	// Disable to avoid env clobbering between tests.
+	// t.Parallel()
 
 	tests := []struct {
 		name       string
