@@ -31,7 +31,7 @@ type LogEntry interface {
 	LogIndex() int64
 
 	// UUID return the uuid of the transparency log entry.
-	UUID() int64
+	UUID() string
 }
 
 // TransparencyLog allows interaction with a transparency log.
