@@ -111,7 +111,7 @@ jobs:
         id: builder-gen
         env:
           COMPILE_BUILDER: "${{ inputs.compile-builder }}"
-          BUILDER_REF: "${{ needs.detect-env.outputs.builder_ref }}"
+          BUILDER_REF: "${{ needs.detect-env.outputs.ref }}"
           # Needed for the gh CLI used in builder-fetch.sh.
           GH_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
         run: |
