@@ -6,6 +6,7 @@ import (
 
 	"github.com/sigstore/cosign/cmd/cosign/cli/rekor"
 	"github.com/sigstore/cosign/pkg/cosign"
+	"github.com/sigstore/rekor/pkg/generated/client/entries"
 	"github.com/sigstore/rekor/pkg/generated/models"
 	"github.com/slsa-framework/slsa-github-generator/signing"
 )
@@ -21,6 +22,7 @@ type Rekor struct {
 
 type rekorEntryAnon struct {
 	entry *models.LogEntryAnon
+	uuid  string
 }
 
 // ID implements LogEntry.ID.
@@ -29,6 +31,19 @@ func (e *rekorEntryAnon) ID() string {
 		return ""
 	}
 	return *e.entry.LogID
+}
+
+// LogIndex implements LogEntry.LogIndex.
+func (e *rekorEntryAnon) LogIndex() int64 {
+	if e.entry.LogIndex == nil {
+		return -1
+	}
+	return *e.entry.LogIndex
+}
+
+// UUID implements LogEntry.UUID.
+func (e *rekorEntryAnon) UUID() string {
+	return e.uuid
 }
 
 // NewDefaultRekor returns a new Rekor instance for the Rekor public instance.
@@ -55,7 +70,24 @@ func (r *Rekor) Upload(ctx context.Context, att signing.Attestation) (signing.Lo
 		return nil, fmt.Errorf("uploading attestation: %w", err)
 	}
 
+	params := entries.NewGetLogEntryByIndexParamsWithContext(ctx)
+	params.SetLogIndex(*logEntry.LogIndex)
+	resp, err := rekorClient.Entries.GetLogEntryByIndex(params)
+	if err != nil {
+		return nil, fmt.Errorf("retrieving log uuid by index: %w", err)
+	}
+	var uuid string
+	for ix, entry := range resp.Payload {
+		if err := cosign.VerifyTLogEntry(ctx, rekorClient, &entry); err != nil {
+			return nil, fmt.Errorf("validating log entry: %w", err)
+		}
+		uuid = ix
+		logEntry = &entry
+	}
+
+	fmt.Printf("Uploaded signed attestation to rekor with UUID %s.\n", uuid)
 	return &rekorEntryAnon{
 		entry: logEntry,
+		uuid:  uuid,
 	}, nil
 }
