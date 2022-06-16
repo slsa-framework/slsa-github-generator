@@ -168,7 +168,8 @@ func GenerateProvenance(name, digest, command, envs, workingDir string) ([]byte,
 
 	// Upload the signed attestation to rekor.
 	r := sigstore.NewDefaultRekor()
-	if _, err := r.Upload(ctx, att); err != nil {
+	if logEntry, err := r.Upload(ctx, att); err != nil {
+		fmt.Printf("Uploaded signed attestation to rekor with UUID %s.\n", logEntry.UUID())
 		return nil, err
 	}
 
