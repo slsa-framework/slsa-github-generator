@@ -20,7 +20,7 @@ jobs:
           set -euo pipefail
 
           #Install golangci-lint
-          wget -qO- "https://github.com/golangci/golangci-lint/releases/download/v${GOLANGCI_LINT_VERSION}/golangci-lint-${GOLANGCI_LINT_VERSION}-linux-amd64.tar.gz" | tar -xJf -
+          wget -qO- "https://github.com/golangci/golangci-lint/releases/download/v${GOLANGCI_LINT_VERSION}/golangci-lint-${GOLANGCI_LINT_VERSION}-linux-amd64.tar.gz" | tar -xf -
           mv golangci-lint-${GOLANGCI_LINT_VERSION}-linux-amd64/golangci-lint /usr/local/bin
 
           # Run golangci-lint
@@ -36,7 +36,7 @@ jobs:
           set -euo pipefail
 
           # Install shellcheck
-          wget -qO- "https://github.com/koalaman/shellcheck/releases/download/v${SHELLCHECK_VERSION}/shellcheck-v${SHELLCHECK_VERSION}.linux.x86_64.tar.xz" | tar -xJf -
+          wget -qO- "https://github.com/koalaman/shellcheck/releases/download/v${SHELLCHECK_VERSION}/shellcheck-v${SHELLCHECK_VERSION}.linux.x86_64.tar.xz" | tar -xf -
           mv "shellcheck-v$SHELLCHECK_VERSION/shellcheck" /usr/local/bin
 
           # Find all shell script files.
