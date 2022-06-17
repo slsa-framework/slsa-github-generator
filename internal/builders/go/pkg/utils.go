@@ -44,15 +44,6 @@ func pathIsUnderCurrentDirectory(path string) error {
 	return nil
 }
 
-func isDirectory(path string) (bool, error) {
-	fileInfo, err := os.Stat(path)
-	if err != nil {
-		return false, err
-	}
-
-	return fileInfo.IsDir(), err
-}
-
 func UnmarshallList(arg string) ([]string, error) {
 	var res []string
 	// If argument is empty, return an empty list early,
