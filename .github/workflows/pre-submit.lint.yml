@@ -14,7 +14,7 @@ jobs:
       - uses: actions/setup-go@v3
         with:
           go-version: "1.18"
-        env:
+      - env:
           GOLANGCI_LINT_VERSION: "1.46.2"
         run: |
           set -euo pipefail
