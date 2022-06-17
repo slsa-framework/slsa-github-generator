@@ -25,6 +25,7 @@ import (
 	"github.com/sigstore/cosign/pkg/providers"
 	"github.com/sigstore/sigstore/pkg/signature/dsse"
 	"github.com/slsa-framework/slsa-github-generator/signing"
+	"github.com/slsa-framework/slsa-github-generator/signing/envelope"
 
 	intoto "github.com/in-toto/in-toto-golang/in_toto"
 )
@@ -101,8 +102,15 @@ func (s *Fulcio) Sign(ctx context.Context, p *intoto.Statement) (signing.Attesta
 		return nil, fmt.Errorf("signing message: %v", err)
 	}
 
+	// Add certificate to envelope.
+	// TODO: Remove when DSSE spec includes a cert field inside the signatures.
+	signedAttWithCert, err := envelope.AddCertToEnvelope(signedAtt, k.Cert)
+	if err != nil {
+		return nil, fmt.Errorf("adding certificate to DSSE: %v", err)
+	}
+
 	return &attestation{
-		att:  signedAtt,
+		att:  signedAttWithCert,
 		cert: k.Cert,
 	}, nil
 }
