@@ -1,3 +1,0 @@
-test:
-  dupkey: foo #bad comment
-  dupkey: bar
