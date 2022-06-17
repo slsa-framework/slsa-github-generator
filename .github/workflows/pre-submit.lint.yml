@@ -5,10 +5,6 @@ on: [pull_request]
 permissions:
   # Needed to check out the repo.
   contents: read
-  # Needed for creating pull request comments.
-  pull-requests: write
-  # Needed for creating checks output.
-  checks: write
 
 jobs:
   golangci-lint:
