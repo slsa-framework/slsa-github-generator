@@ -116,18 +116,17 @@ func main() {
 
 	switch os.Args[1] {
 	case buildCmd.Name():
-		buildCmd.Parse(os.Args[2:])
+		check(buildCmd.Parse(os.Args[2:]))
 		if len(buildCmd.Args()) < 1 {
 			usage(os.Args[0])
 		}
 		configFile := buildCmd.Args()[0]
 		evaluatedEnvs := buildCmd.Args()[1]
 
-		err := runBuild(*buildDry, configFile, evaluatedEnvs)
-		check(err)
+		check(runBuild(*buildDry, configFile, evaluatedEnvs))
 
 	case provenanceCmd.Name():
-		provenanceCmd.Parse(os.Args[2:])
+		check(provenanceCmd.Parse(os.Args[2:]))
 		// Note: *provenanceEnv may be empty.
 		if *provenanceName == "" || *provenanceDigest == "" ||
 			*provenanceCommand == "" || *provenanceWorkingDir == "" {

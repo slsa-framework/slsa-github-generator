@@ -29,12 +29,8 @@ import (
 )
 
 const (
-	parametersVersion  int = 1
 	buildConfigVersion int = 1
 	buildType              = "https://github.com/slsa-framework/slsa-github-generator/go@v1"
-	requestTokenEnvKey     = "ACTIONS_ID_TOKEN_REQUEST_TOKEN"
-	requestURLEnvKey       = "ACTIONS_ID_TOKEN_REQUEST_URL"
-	audience               = "slsa-framework/slsa-github-generator"
 )
 
 type (
