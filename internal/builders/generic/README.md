@@ -4,9 +4,10 @@ This document explains how to generate SLSA provenance for projects for which
 there is no language or ecosystem specific builder available.
 
 This can be done by adding an additional step to your existing Github Actions
-workflow to call a [Github Actions reusable
-workflow](https://docs.github.com/en/actions/using-workflows/reusing-workflows).
-We'll call this the "generic workflow" from now on.
+workflow to call a [reusable
+workflow](https://docs.github.com/en/actions/using-workflows/reusing-workflows)
+to generate generic SLSA provenance. We'll call this workflow the "generic
+workflow" from now on.
 
 The generic workflow differs from ecosystem specific builders (like the [Go
 builder](../go)) which build the artifacts as well as generate provenance. This
@@ -15,6 +16,7 @@ project simply generates provenance as a separate step in an existing workflow.
 ---
 
 - [Project Status](#project-status)
+- [Benefits of Provenance](#benefits-of-provenance)
 - [Generating Provenance](#generating-provenance)
   - [Getting Started](#getting-started)
   - [Workflow Inputs](#workflow-inputs)
@@ -28,6 +30,17 @@ project simply generates provenance as a separate step in an existing workflow.
 
 This project is currently under active development. The API could change while
 approaching an initial release.
+
+## Benefits of Provenance
+
+Using the generic workflow will generate a non-forgeable attestation to the
+artifacts' digests using the identity of the GitHub workflow. This can be used
+to create a positive attestation to a software artifact coming from your
+repository.
+
+That means that once your users verify the artifacts they have downloaded they
+can be sure that the artifacts were created by your repository's workflow and
+haven't been tampered with.
 
 ## Generating Provenance
 
@@ -59,7 +72,7 @@ provenance:
     actions: read # Needed for detection of GitHub Actions environment.
     id-token: write # Needed for provenance signing and ID
     contents: read # Needed for API access
-  uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@main
+  uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.0.0
   with:
     base64-subjects: "${{ needs.build.outputs.digest }}"
 ```
@@ -106,7 +119,7 @@ jobs:
       actions: read
       id-token: write
       contents: read
-    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@main
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.0.0
     with:
       base64-subjects: "${{ needs.build.outputs.digest }}"
 
