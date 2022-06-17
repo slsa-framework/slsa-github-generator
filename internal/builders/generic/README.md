@@ -72,7 +72,7 @@ provenance:
     actions: read # Needed for detection of GitHub Actions environment.
     id-token: write # Needed for provenance signing and ID
     contents: read # Needed for API access
-  uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.0.0
+  uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.1.0
   with:
     base64-subjects: "${{ needs.build.outputs.digest }}"
 ```
@@ -93,16 +93,6 @@ jobs:
           # These are some amazing artifacts.
           echo "foo" > artifact1
           echo "bar" > artifact2
-
-      - name: Upload artifacts.
-        uses: actions/upload-artifact@3cea5372237819ed00197afe530f5a7ea3e805c8 # v3.1.0
-        with:
-          path: |
-            artifact1
-            artifact2
-          if-no-files-found: error
-          retention-days: 5
-
       - name: "generate hash"
         shell: bash
         id: hash
@@ -111,6 +101,20 @@ jobs:
           # base64 -w0 encodes to base64 and outputs on a single line.
           # sha256sum artifact1 artifact2 ... | base64 -w0
           echo "::set-output name=digest::$(sha256sum artifact1 artifact2 | base64 -w0)"
+      - name: Upload artifact1
+        uses: actions/upload-artifact@3cea5372237819ed00197afe530f5a7ea3e805c8 # v3.1.0
+        with:
+          name: artifact1
+          path: artifact1
+          if-no-files-found: error
+          retention-days: 5
+      - name: Upload artifact2
+        uses: actions/upload-artifact@3cea5372237819ed00197afe530f5a7ea3e805c8 # v3.1.0
+        with:
+          name: artifact2
+          path: artifact2
+          if-no-files-found: error
+          retention-days: 5
 
   # This step calls the generic workflow to generate provenance.
   provenance:
@@ -119,7 +123,8 @@ jobs:
       actions: read
       id-token: write
       contents: read
-    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.0.0
+    if: startsWith(github.ref, 'refs/tags/')
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.1.0
     with:
       base64-subjects: "${{ needs.build.outputs.digest }}"
 
@@ -127,6 +132,7 @@ jobs:
   release:
     needs: [build, provenance]
     runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
     steps:
       - name: Download artifact1
         uses: actions/download-artifact@fb598a63ae348fa914e94cd0ff38f362e927b741 # v2.1.0
