@@ -15,38 +15,52 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # v3.0.2
-      - name: golangci-lint
-        uses: reviewdog/action-golangci-lint@1530051a4d9af7e1c94afb2ea38fe7ba13e180ee # v2.1.4
+      - uses: actions/setup-go@v3
         with:
-          go_version: "1.18"
-          golangci_lint_flags: "--timeout=5m"
-          level: warning
-          fail_on_error: true
-  shellcheck:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # v3.0.2
-      - name: shellcheck
-        uses: reviewdog/action-shellcheck@66c9a47bf02255b250284a82251cb4cadf5043f5 # v1.15.0
-        with:
-          level: warning
-          fail_on_error: true
-  shfmt:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # v3.0.2
-      - name: shfmt
-        uses: reviewdog/action-shfmt@f59386f08bd9a24ac1a746e69f026ddc2ed06710 # v1.0.2
-        with:
-          level: warning
-          fail_on_error: true
-  yamllint:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # v3.0.2
-      - name: yamllint
-        uses: reviewdog/action-yamllint@8c429dfe4fc47b1ce1fa99a64e94693880d5dc30 # v1.6.1
-        with:
-          yamllint_flags: "-c .yamllint.yaml ."
-          level: warning
-          fail_on_error: true
+          go-version: "1.18"
+      - env:
+          GOLANGCI_LINT_VERSION: "1.46.2"
+      - run: |
+          set -euo pipefail
+
+          # install golangci-lint
+          curl -sSLo golangci-lint.tar.gz https://github.com/golangci/golangci-lint/releases/download/v${GOLANGCI_LINT_VERSION}/golangci-lint-${GOLANGCI_LINT_VERSION}-linux-amd64.tar.gz
+          tar xf golangci-lint.tar.gz
+          mv golangci-lint-${GOLANGCI_LINT_VERSION}-linux-amd64/golangci-lint /usr/local/bin
+          rm -f golangci-lint.tar.gz
+
+          golangci-lint run ./... --timeout=5m
+
+  # TODO: Run shellcheck manually.
+  # shellcheck:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # v3.0.2
+  #     - name: shellcheck
+  #       uses: reviewdog/action-shellcheck@66c9a47bf02255b250284a82251cb4cadf5043f5 # v1.15.0
+  #       with:
+  #         level: warning
+  #         fail_on_error: true
+
+  # TODO: Run shfmt manually.
+  # shfmt:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # v3.0.2
+  #     - name: shfmt
+  #       uses: reviewdog/action-shfmt@f59386f08bd9a24ac1a746e69f026ddc2ed06710 # v1.0.2
+  #       with:
+  #         level: warning
+  #         fail_on_error: true
+
+  # TODO: Run yamllint manually.
+  # yamllint:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # v3.0.2
+  #     - name: yamllint
+  #       uses: reviewdog/action-yamllint@8c429dfe4fc47b1ce1fa99a64e94693880d5dc30 # v1.6.1
+  #       with:
+  #         yamllint_flags: "-c .yamllint.yaml ."
+  #         level: warning
+  #         fail_on_error: true
