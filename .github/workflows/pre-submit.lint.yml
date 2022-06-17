@@ -29,9 +29,6 @@ jobs:
   shellcheck:
     steps:
       - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # v3.0.2
-      - uses: actions/setup-go@b22fbbc2921299758641fab08929b4ac52b32923 # v3.2.0
-        with:
-          go-version: "1.18"
       - env:
           SHELLCHECK_VERSION: "0.8.0"
         run: |
@@ -47,25 +44,16 @@ jobs:
           # Run shellcheck
           shellcheck --external-sources ${FILES}
 
-  # TODO: Run shfmt manually.
-  # shfmt:
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # v3.0.2
-  #     - name: shfmt
-  #       uses: reviewdog/action-shfmt@f59386f08bd9a24ac1a746e69f026ddc2ed06710 # v1.0.2
-  #       with:
-  #         level: warning
-  #         fail_on_error: true
+  yamllint:
+    steps:
+      - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # v3.0.2
+      - env:
+          YAMLLINT_VERSION: "1.26.3"
+        run: |
+          set -euo pipefail
 
-  # TODO: Run yamllint manually.
-  # yamllint:
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # v3.0.2
-  #     - name: yamllint
-  #       uses: reviewdog/action-yamllint@8c429dfe4fc47b1ce1fa99a64e94693880d5dc30 # v1.6.1
-  #       with:
-  #         yamllint_flags: "-c .yamllint.yaml ."
-  #         level: warning
-  #         fail_on_error: true
+          # Install yamllint
+          pip install "yamllint==${YAMLLINT_VERSION}"
+
+          # Run yamllint
+          yamllint -c .yamllint.yaml .
