@@ -13,4 +13,4 @@ goarch: amd64
 main: /not/relative
 binary: binary-{{ .OS }}-{{ .Arch }}
 ldflags:
-  - '{{ .Env.VERSION_LDFLAGS }}'
+  - "{{ .Env.VERSION_LDFLAGS }}"
