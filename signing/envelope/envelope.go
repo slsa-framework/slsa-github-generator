@@ -2,8 +2,10 @@ package envelope
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"github.com/secure-systems-lab/go-securesystemslib/dsse"
+	"github.com/sigstore/sigstore/pkg/cryptoutils"
 )
 
 /*
@@ -32,6 +34,9 @@ type Signature struct {
 	Cert  string `json:"cert"`
 }
 
+// AddCertToEnvelope takes a signed DSSE Envelope and a PEM-encoded certificate, and
+// returns an Envelope with the certificate inside the Signature of the Envelope.
+// This assumes there is only one signature present in the envelope.
 func AddCertToEnvelope(signedAtt []byte, cert []byte) ([]byte, error) {
 	// Unmarshal into a DSSE envelope.
 	env := &dsse.Envelope{}
@@ -46,6 +51,14 @@ func AddCertToEnvelope(signedAtt []byte, cert []byte) ([]byte, error) {
 		Signatures:  []Signature{},
 	}
 
+	if len(env.Signatures) != 1 {
+		return nil, fmt.Errorf("expected exactly one signature in the envelope")
+	}
+
+	if certs, err := cryptoutils.UnmarshalCertificatesFromPEM(cert); err != nil || len(certs) != 1 {
+		return nil, fmt.Errorf("invalid certificate, expected PEM encoded certificate")
+	}
+
 	for _, sig := range env.Signatures {
 		envWithCert.Signatures = append(envWithCert.Signatures,
 			Signature{Sig: sig.Sig, KeyID: sig.KeyID, Cert: string(cert)})
@@ -53,4 +66,21 @@ func AddCertToEnvelope(signedAtt []byte, cert []byte) ([]byte, error) {
 
 	// Return marshalled result
 	return json.Marshal(envWithCert)
+}
+
+// GetCertFromEnvelope takes a signed Envelope and extracts the PEM-encoded
+// certificate from the signature.
+// This assumes there is only one signature present in the envelope.
+func GetCertFromEnvelope(signedAtt []byte) ([]byte, error) {
+	// Unmarshal into an envelope.
+	env := &Envelope{}
+	if err := json.Unmarshal(signedAtt, env); err != nil {
+		return nil, err
+	}
+
+	if len(env.Signatures) != 1 {
+		return nil, fmt.Errorf("expected exactly one signature in the envelope")
+	}
+
+	return []byte(env.Signatures[0].Cert), nil
 }
