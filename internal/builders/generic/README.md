@@ -1,10 +1,22 @@
 # Generation of SLSA3+ provenance for arbitrary projects
 
-This document explains how to use the builder for projects for which there is no language-specific builder available.
+This document explains how to generate SLSA provenance for projects for which
+there is no language or ecosystem specific builder available.
+
+This can be done by adding an additional step to your existing Github Actions
+workflow to call a [reusable
+workflow](https://docs.github.com/en/actions/using-workflows/reusing-workflows)
+to generate generic SLSA provenance. We'll call this workflow the "generic
+workflow" from now on.
+
+The generic workflow differs from ecosystem specific builders (like the [Go
+builder](../go)) which build the artifacts as well as generate provenance. This
+project simply generates provenance as a separate step in an existing workflow.
 
 ---
 
 - [Project Status](#project-status)
+- [Benefits of Provenance](#benefits-of-provenance)
 - [Generating Provenance](#generating-provenance)
   - [Getting Started](#getting-started)
   - [Workflow Inputs](#workflow-inputs)
@@ -19,9 +31,20 @@ This document explains how to use the builder for projects for which there is no
 This project is currently under active development. The API could change while
 approaching an initial release.
 
+## Benefits of Provenance
+
+Using the generic workflow will generate a non-forgeable attestation to the
+artifacts' digests using the identity of the GitHub workflow. This can be used
+to create a positive attestation to a software artifact coming from your
+repository.
+
+That means that once your users verify the artifacts they have downloaded they
+can be sure that the artifacts were created by your repository's workflow and
+haven't been tampered with.
+
 ## Generating Provenance
 
-`slsa-github-generator` uses a Github Actions reusable workflow to generate the
+The generic workflow uses a Github Actions reusable workflow to generate the
 provenance.
 
 ### Getting Started
@@ -41,12 +64,25 @@ output:
 $ sha256sum artifact1 artifact2 ... | base64 -w0
 ```
 
-After you have encoded your digest, add a new job to call the
-`slsa-github-generator` reusable workflow. Here's an example of what it might
-look like all together.
+After you have encoded your digest, add a new job to call the reusable workflow.
+
+```yaml
+provenance:
+  permissions:
+    actions: read # Needed for detection of GitHub Actions environment.
+    id-token: write # Needed for provenance signing and ID
+    contents: read # Needed for API access
+  uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.1.0
+  with:
+    base64-subjects: "${{ needs.build.outputs.digest }}"
+```
+
+Here's an example of what it might look like all together.
 
 ```yaml
 jobs:
+  # This step builds our artifacts, uploads them to the workflow run, and
+  # outputs their digest.
   build:
     outputs:
       digest: ${{ steps.hash.outputs.digest }}
@@ -54,25 +90,71 @@ jobs:
     steps:
       - name: "build artifacts"
         run: |
-          # Build build artifacts here.
+          # These are some amazing artifacts.
+          echo "foo" > artifact1
+          echo "bar" > artifact2
       - name: "generate hash"
         shell: bash
         id: hash
         run: |
-          set -euo pipefail
           # sha256sum generates sha256 hash for all artifacts.
           # base64 -w0 encodes to base64 and outputs on a single line.
           # sha256sum artifact1 artifact2 ... | base64 -w0
           echo "::set-output name=digest::$(sha256sum artifact1 artifact2 | base64 -w0)"
+      - name: Upload artifact1
+        uses: actions/upload-artifact@3cea5372237819ed00197afe530f5a7ea3e805c8 # v3.1.0
+        with:
+          name: artifact1
+          path: artifact1
+          if-no-files-found: error
+          retention-days: 5
+      - name: Upload artifact2
+        uses: actions/upload-artifact@3cea5372237819ed00197afe530f5a7ea3e805c8 # v3.1.0
+        with:
+          name: artifact2
+          path: artifact2
+          if-no-files-found: error
+          retention-days: 5
+
+  # This step calls the generic workflow to generate provenance.
   provenance:
     needs: [build]
     permissions:
       actions: read
       id-token: write
       contents: read
-    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@main
+    if: startsWith(github.ref, 'refs/tags/')
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.1.0
     with:
       base64-subjects: "${{ needs.build.outputs.digest }}"
+
+  # This step creates a GitHub release with our artifacts and provenance.
+  release:
+    needs: [build, provenance]
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+    steps:
+      - name: Download artifact1
+        uses: actions/download-artifact@fb598a63ae348fa914e94cd0ff38f362e927b741 # v2.1.0
+        with:
+          name: artifact1
+      - name: Download artifact2
+        uses: actions/download-artifact@fb598a63ae348fa914e94cd0ff38f362e927b741 # v2.1.0
+        with:
+          name: artifact2
+      - name: Download provenance
+        uses: actions/download-artifact@fb598a63ae348fa914e94cd0ff38f362e927b741 # v2.1.0
+        with:
+          # The provenance step returns an output with the artifact name of
+          # our provenance.
+          name: ${{needs.provenance.outputs.attestation-name}}
+      - name: Create release
+        uses: softprops/action-gh-release@1e07f4398721186383de40550babbdf2b84acfc5 # v0.1.14
+        with:
+          files: |
+            artifact1
+            artifact2
+            ${{needs.provenance.outputs.attestation-name}}
 ```
 
 ### Workflow Inputs
