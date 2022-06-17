@@ -1,4 +1,4 @@
-name: reviewdog
+name: Lint
 
 on: [pull_request]
 
@@ -14,9 +14,9 @@ jobs:
       - uses: actions/setup-go@v3
         with:
           go-version: "1.18"
-      - env:
+        env:
           GOLANGCI_LINT_VERSION: "1.46.2"
-      - run: |
+        run: |
           set -euo pipefail
 
           # install golangci-lint
