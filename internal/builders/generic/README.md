@@ -1,6 +1,16 @@
 # Generation of SLSA3+ provenance for arbitrary projects
 
-This document explains how to use the builder for projects for which there is no language-specific builder available.
+This document explains how to generate SLSA provenance for projects for which
+there is no language or ecosystem specific builder available.
+
+This can be done by adding an additional step to your existing Github Actions
+workflow to call a [Github Actions reusable
+workflow](https://docs.github.com/en/actions/using-workflows/reusing-workflows).
+We'll call this the "generic workflow" from now on.
+
+The generic workflow differs from ecosystem specific builders (like the [Go
+builder](../go)) which build the artifacts as well as generate provenance. This
+project simply generates provenance as a separate step in an existing workflow.
 
 ---
 
@@ -21,7 +31,7 @@ approaching an initial release.
 
 ## Generating Provenance
 
-`slsa-github-generator` uses a Github Actions reusable workflow to generate the
+The generic workflow uses a Github Actions reusable workflow to generate the
 provenance.
 
 ### Getting Started
@@ -41,12 +51,25 @@ output:
 $ sha256sum artifact1 artifact2 ... | base64 -w0
 ```
 
-After you have encoded your digest, add a new job to call the
-`slsa-github-generator` reusable workflow. Here's an example of what it might
-look like all together.
+After you have encoded your digest, add a new job to call the reusable workflow.
+
+```yaml
+provenance:
+  permissions:
+    actions: read # Needed for detection of GitHub Actions environment.
+    id-token: write # Needed for provenance signing and ID
+    contents: read # Needed for API access
+  uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@main
+  with:
+    base64-subjects: "${{ needs.build.outputs.digest }}"
+```
+
+Here's an example of what it might look like all together.
 
 ```yaml
 jobs:
+  # This step builds our artifacts, uploads them to the workflow run, and
+  # outputs their digest.
   build:
     outputs:
       digest: ${{ steps.hash.outputs.digest }}
@@ -54,16 +77,29 @@ jobs:
     steps:
       - name: "build artifacts"
         run: |
-          # Build build artifacts here.
+          # These are some amazing artifacts.
+          echo "foo" > artifact1
+          echo "bar" > artifact2
+
+      - name: Upload artifacts.
+        uses: actions/upload-artifact@3cea5372237819ed00197afe530f5a7ea3e805c8 # v3.1.0
+        with:
+          path: |
+            artifact1
+            artifact2
+          if-no-files-found: error
+          retention-days: 5
+
       - name: "generate hash"
         shell: bash
         id: hash
         run: |
-          set -euo pipefail
           # sha256sum generates sha256 hash for all artifacts.
           # base64 -w0 encodes to base64 and outputs on a single line.
           # sha256sum artifact1 artifact2 ... | base64 -w0
           echo "::set-output name=digest::$(sha256sum artifact1 artifact2 | base64 -w0)"
+
+  # This step calls the generic workflow to generate provenance.
   provenance:
     needs: [build]
     permissions:
@@ -73,6 +109,33 @@ jobs:
     uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@main
     with:
       base64-subjects: "${{ needs.build.outputs.digest }}"
+
+  # This step creates a GitHub release with our artifacts and provenance.
+  release:
+    needs: [build, provenance]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download artifact1
+        uses: actions/download-artifact@fb598a63ae348fa914e94cd0ff38f362e927b741 # v2.1.0
+        with:
+          name: artifact1
+      - name: Download artifact2
+        uses: actions/download-artifact@fb598a63ae348fa914e94cd0ff38f362e927b741 # v2.1.0
+        with:
+          name: artifact2
+      - name: Download provenance
+        uses: actions/download-artifact@fb598a63ae348fa914e94cd0ff38f362e927b741 # v2.1.0
+        with:
+          # The provenance step returns an output with the artifact name of
+          # our provenance.
+          name: ${{needs.provenance.outputs.attestation-name}}
+      - name: Create release
+        uses: softprops/action-gh-release@1e07f4398721186383de40550babbdf2b84acfc5 # v0.1.14
+        with:
+          files: |
+            artifact1
+            artifact2
+            ${{needs.provenance.outputs.attestation-name}}
 ```
 
 ### Workflow Inputs
