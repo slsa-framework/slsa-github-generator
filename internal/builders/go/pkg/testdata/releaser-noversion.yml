@@ -7,10 +7,10 @@ flags:
   - -trimpath
   - -tags=netgo
 
-#TODO:
-#mod_timestamp: '{{ .CommitTimestamp }}'
+# TODO:
+# mod_timestamp: '{{ .CommitTimestamp }}'
 goos: linux
 goarch: amd64
 binary: binary-{{ .OS }}-{{ .Arch }}
 ldflags:
-  - '{{ .Env.VERSION_LDFLAGS }}'
+  - "{{ .Env.VERSION_LDFLAGS }}"
