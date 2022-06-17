@@ -38,7 +38,7 @@ type goReleaserConfigFile struct {
 	Env     []string `yaml:"env"`
 	Flags   []string `yaml:"flags"`
 	Ldflags []string `yaml:"ldflags"`
-	Binary  string   `yaml:"binary`
+	Binary  string   `yaml:"binary"`
 	Version int      `yaml:"version"`
 	Main    *string  `yaml:"main"`
 	Dir     *string  `yaml:"dir"`
