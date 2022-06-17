@@ -42,9 +42,29 @@ jobs:
           # Find all shell script files.
           FILES=$(find . -type f -not -iwholename '*/.git/*' -exec bash -c 'file "$1" | cut -d':' -f2 | grep --quiet shell' _ {} \; -print)
 
-          # Run shellcheck
-          # TODO: Get shellcheck to output github actions checks.
-          shellcheck --external-sources ${FILES}
+          # Run shellcheck and output GitHub Actions commands.
+          # See: https://docs.github.com/en/actions/using-workflows/workflow-commands-for-github-actions
+          find . -type f -not -iwholename '*/.git/*' -exec bash -c 'file "$1" | cut -d':' -f2 | grep --quiet shell' _ {} \; -print0 | xargs -0 shellcheck -f json --external-sources | jq -c '.[]' | while IFS="" read -r p || [ -n "$p" ]; do
+              LEVEL=$(echo "$p" | jq -c '.level // empty' | tr -d '"')
+              FILE=$(echo "$p" | jq -c '.file // empty' | tr -d '"')
+              LINE=$(echo "$p" | jq -c '.line // empty' | tr -d '"')
+              ENDLINE=$(echo "$p" | jq -c '.endLine // empty' | tr -d '"')
+              COL=$(echo "$p" | jq -c '.column // empty' | tr -d '"')
+              ENDCOL=$(echo "$p" | jq -c '.endColumn // empty' | tr -d '"')
+              MESSAGE=$(echo "$p" | jq -c '.message // empty' | tr -d '"')
+
+              case $LEVEL in
+              "info")
+                  echo "::notice file=${FILE},line=${LINE},endLine=${ENDLINE},col=${COL},endColumn=${ENDCOL}::${MESSAGE}"
+                  ;;
+              "warning")
+                  echo "::warning file=${FILE},line=${LINE},endLine=${ENDLINE},col=${COL},endColumn=${ENDCOL}::${MESSAGE}"
+                  ;;
+              "error")
+                  echo "::error file=${FILE},line=${LINE},endLine=${ENDLINE},col=${COL},endColumn=${ENDCOL}::${MESSAGE}"
+                  ;;
+              esac
+          done
 
   yamllint:
     runs-on: ubuntu-latest
