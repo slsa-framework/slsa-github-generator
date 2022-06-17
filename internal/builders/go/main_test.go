@@ -340,7 +340,9 @@ func (r *run) end() string {
 	os.Stdout = r.oldStdout
 
 	var buf bytes.Buffer
-	io.Copy(&buf, r.rPipe)
+	if _, err := io.Copy(&buf, r.rPipe); err != nil {
+		panic(err)
+	}
 	s := buf.String()
 
 	r.oldStdout = nil
