@@ -6,13 +6,13 @@ This document explains how to use the builder for [Go](https://go.dev/) projects
 
 [Generation of provenance](#generation)
 
-- [Supported triggers](#supported-triggers)
-- [Configuration file](#configuration-file)
+- [Supported Triggers](#supported-triggers)
+- [Configuration File](#configuration-file)
 - [Migration from goreleaser](#migration-from-goreleaser)
-- [Workflow inputs](#workflow-inputs)
+- [Workflow Inputs](#workflow-inputs)
 - [Workflow Example](#workflow-example)
-- [Example provenance](#example-provenance)
-- [BuildConfig format](#buildconfig-format)
+- [Provenance Example](#provenance-example)
+- [BuildConfig Format](#buildconfig-format)
 
 ---
 
@@ -20,14 +20,19 @@ This document explains how to use the builder for [Go](https://go.dev/) projects
 
 To generate provenance for a Go binary, follow the steps below:
 
-### Supported triggers
+### Supported Triggers
 
-Most GitHub trigger events are supported, at the exception of `pull_request`. We have extensively tested the
-following triggers: `schedule`, `push` (including new tags), `release` and manual `workflow_dispatch`.
+Most [GitHub trigger events](https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows) are supported, with the exception of `pull_request`.
+The following triggers are well tested:
 
-If you would like support for `pull_request`, please tell us about your use case and [file an issue](https://github.com/slsa-framework/slsa-github-generator/issues/new).
+- `schedule`
+- `push` (including new tags)
+- `release`
+- Manual run via `workflow_dispatch`
 
-### Configuration file
+If you would like support for `pull_request`, please tell us about your use case on [issue #358](https://github.com/slsa-framework/slsa-github-generator/issues/358).
+
+### Configuration File
 
 Define a configuration file called `.slsa-goreleaser.yml` in the root of your project.
 
@@ -110,7 +115,7 @@ The configuration file accepts many of the common fields Goreleaser uses, as you
 
 If you think you need suppport for other variables, please [open an issue](https://github.com/slsa-framework/slsa-github-generator/issues/new).
 
-### Workflow inputs
+### Workflow Inputs
 
 The builder workflow [slsa-framework/slsa-github-generator/.github/workflows/builder_go_slsa3.yml](.github/workflows/builder_go_slsa3.yml) accepts the following inputs:
 
@@ -177,7 +182,7 @@ jobs:
       evaluated-envs: "COMMIT_DATE:${{needs.args.outputs.commit-date}}, COMMIT:${{needs.args.outputs.commit}}, VERSION:${{needs.args.outputs.version}}, TREE_STATE:${{needs.args.outputs.tree-state}}"
 ```
 
-### Example provenance
+### Provenance Example
 
 An example of the provenance generated from this repo is below:
 
@@ -278,7 +283,7 @@ An example of the provenance generated from this repo is below:
 }
 ```
 
-### BuildConfig format
+### BuildConfig Format
 
 The `BuildConfig` contains the following fields:
 
