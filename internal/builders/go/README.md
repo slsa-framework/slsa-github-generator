@@ -132,7 +132,7 @@ Create a new workflow, say `.github/workflows/slsa-goreleaser.yml`.
 Make sure that you reference the trusted builder with a semantic version of the form `vX.Y.Z`. The build will fail
 if you reference it via a shorter tag like `vX.Y` or `vX`.
 
-Refencing via hash is currently not supported due to limitations
+Referencing via hash is currently not supported due to limitations
 of the reusable workflow APIs. (We are working with GitHub to address this limitation).
 
 ```yaml
