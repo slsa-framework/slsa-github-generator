@@ -160,15 +160,19 @@ jobs:
 
 ### Supported Triggers
 
-Most [GitHub trigger events](https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows) are supported, with the exception of `pull_request`.
-The following triggers are well tested:
+The following [GitHub trigger events](https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows) are fully supported and tested:
 
 - `schedule`
 - `push` (including new tags)
 - `release`
 - Manual run via `workflow_dispatch`
 
-If you would like support for `pull_request`, please tell us about your use case on [issue #358](https://github.com/slsa-framework/slsa-github-generator/issues/358).
+However, in practice, most triggers should work with the exception of
+`pull_request`. If you would like support for `pull_request`, please tell us
+about your use case on [issue
+#358](https://github.com/slsa-framework/slsa-github-generator/issues/358). If
+you have an issue in all other triggers please submit a [new
+issue](https://github.com/slsa-framework/slsa-github-generator/issues/new/choose).
 
 ### Workflow Inputs
 
