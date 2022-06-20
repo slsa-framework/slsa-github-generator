@@ -14,7 +14,7 @@ set -euo pipefail
 PREFIX="refs/tags/"
 
 # Extract version.
-if [[ "$BUILDER_REF" =~ ^$PREFIX* ]]; then
+if ! [[ "$BUILDER_REF" == $PREFIX* ]]; then
     echo "Invalid ref: $BUILDER_REF"
     exit 2
 fi
