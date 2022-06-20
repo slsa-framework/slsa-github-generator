@@ -112,7 +112,7 @@ jobs:
           set -euo pipefail
           # Create and sign provenance
           # This sets attestation-name to the name of the signed DSSE envelope.
-          ./builder attest --subjects "${SUBJECTS}" -g attestation.intoto.jsonl
+          ./"$BUILDER_BINARY" attest --subjects "${SUBJECTS}" -g attestation.intoto.jsonl
           echo "::set-output name=attestation-name::attestation.intoto.jsonl"
 
       - name: Upload the signed provenance
