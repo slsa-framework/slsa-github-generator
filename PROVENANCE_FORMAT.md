@@ -131,4 +131,4 @@ many other fields are formatted including all of those below.
 
 ```
 
-Specific implementations of builders may define and customize their own `BuildConfig`, `Invocation`, `Materials`, and `Metadata`.
+Specific implementations of builders may define and customize their own `buildConfig`, `invocation`, `materials`, and `metadata`.
