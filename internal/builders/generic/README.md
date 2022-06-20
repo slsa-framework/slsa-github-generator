@@ -161,7 +161,7 @@ jobs:
 
 ### Workflow Inputs
 
-The [builder workflow](https://github.com/slsa-framework/slsa-github-generator/blob/main/.github/workflows/generator_generic_slsa3.yml) accepts the following inputs:
+The [generic workflow](https://github.com/slsa-framework/slsa-github-generator/blob/main/.github/workflows/generator_generic_slsa3.yml) accepts the following inputs:
 
 | Name              | Required | Description                                                                                                                        |
 | ----------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------- |
