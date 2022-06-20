@@ -16,25 +16,21 @@ jobs:
           go-version: "1.18"
       - env:
           GOLANGCI_LINT_VERSION: "1.46.2"
-          # FIXME: restore correct checksum.
-          GOLANGCI_LINT_CHECKSUM: "2d79dbcf3e7fb9f9dfc415e706e21dc03f129cacaa464e8be12546a8ba27be55"
-          # GOLANGCI_LINT_CHECKSUM: "242cd4f2d6ac0556e315192e8555784d13da5d1874e51304711570769c4f2b9b"
+          GOLANGCI_LINT_CHECKSUM: "242cd4f2d6ac0556e315192e8555784d13da5d1874e51304711570769c4f2b9b"
         run: |
           set -euo pipefail
 
           #Install golangci-lint
-          echo "downloading..."
           curl -sSLo golangci-lint.tar.gz "https://github.com/golangci/golangci-lint/releases/download/v${GOLANGCI_LINT_VERSION}/golangci-lint-${GOLANGCI_LINT_VERSION}-linux-amd64.tar.gz"
-          echo "untarrig..."
           tar xf golangci-lint.tar.gz
           cd golangci-lint-${GOLANGCI_LINT_VERSION}-linux-amd64
-          echo "checksumming..."
+          echo "golangci-lint checksum is $(sha256sum golangci-lint | awk '{ print $1 }')"
+          echo "expected checksum is $GOLANGCI_LINT_CHECKSUM"
           echo "$GOLANGCI_LINT_CHECKSUM golangci-lint" | sha256sum --strict --check --status || exit -2
           mv golangci-lint /usr/local/bin
           cd ..
 
           # Run golangci-lint
-          echo "running..."
           golangci-lint run ./... --out-format=github-actions --timeout=5m
 
   shellcheck:
