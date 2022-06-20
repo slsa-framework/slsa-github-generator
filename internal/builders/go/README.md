@@ -1,6 +1,6 @@
-# Generation of SLSA3+ provenance for Golang projects
+# Generation of SLSA3+ provenance for Go projects
 
-This document explains how to use the builder for Golang projects.
+This document explains how to use the builder for [Go](https://go.dev/) projects.
 
 ---
 
@@ -18,11 +18,11 @@ This document explains how to use the builder for Golang projects.
 
 ## Generation
 
-To generate provenance for a golang binary, follow the steps below:
+To generate provenance for a Go binary, follow the steps below:
 
 ### Supported triggers
 
-Most GitHub trigger events are supported, at the exception of `pull_request`. We have extensively tested the 
+Most GitHub trigger events are supported, at the exception of `pull_request`. We have extensively tested the
 following triggers: `schedule`, `push` (including new tags), `release` and manual `workflow_dispatch`.
 
 If you would like support for `pull_request`, please tell us about your use case and [file an issue](https://github.com/slsa-framework/slsa-github-generator/issues/new).
@@ -46,7 +46,7 @@ flags:
   - -tags=netgo
 
 # The OS to compile for. `GOOS` env variable will be set to this value.
-goos: linux 
+goos: linux
 
 # The architecture to compile for. `GOARCH` env variable will be set to this value.
 goarch: amd64
@@ -64,15 +64,15 @@ binary: binary-{{ .Os }}-{{ .Arch }}
 
 # (Optional) ldflags generated dynamically in the workflow, and set as the `evaluated-envs` input variables in the workflow.
 ldflags:
-  - '-X main.Version={{ .Env.VERSION }}'
-  - '-X main.Commit={{ .Env.COMMIT }}'
-  - '-X main.CommitDate={{ .Env.COMMIT_DATE }}'
-  - '-X main.TreeState={{ .Env.TREE_STATE }}'
+  - "-X main.Version={{ .Env.VERSION }}"
+  - "-X main.Commit={{ .Env.COMMIT }}"
+  - "-X main.CommitDate={{ .Env.COMMIT_DATE }}"
+  - "-X main.TreeState={{ .Env.TREE_STATE }}"
 ```
 
 ### Migration from goreleaser
 
-If you are already using Goreleaser, you may be able to migrate to our builder using multiple config files for each build. However, this is cumbersome and we are working on supporting multiple builds in a single config file for future releases. 
+If you are already using Goreleaser, you may be able to migrate to our builder using multiple config files for each build. However, this is cumbersome and we are working on supporting multiple builds in a single config file for future releases.
 
 In the meantime, you can use both Goreleaser and this builder in the same repository. For example, you can pick one build you would like to start generating provenance for. Goreleaser and this builder can co-exist without interfering with one another, so long as the resulting binaries have different names (e.g., when building for different OS/Arch). If you want to keep the same name, you can use the Goreleaser `ignore` option in the `.goreleaser.yml`:
 
@@ -97,16 +97,16 @@ We think gradual adoption is good for projects to get used to SLSA.
 
 The configuration file accepts many of the common fields Goreleaser uses, as you can see in the [example](#configuration-file). The configuration file also supports two variables: `{{ .Os }}` and `{{ .Arch }}`. Other variables can be set manually as shows in the table below, in combination with the builder's `evaluated-envs`:
 
-| Name         | Value      | Example     |
-| --------------------------- |  ----------------------------------------------- | ------------------ |
-| `{{ .CommitDate }}` | `date -d @$(git log --date=iso8601-strict -1 --pretty=%ct)`     |  `Mon Jun 13 01:23:36 AM UTC 2022` |
-| `{{ .FullCommit }}` | `$GITHUB_SHA` or `$(git rev-parse HEAD)`   | `b2a980888f359b8cef22cb61f153746e1a06deb0` |
-| `{{ .ShortCommit }}` | `$(echo $GITHUB_SHA \| cut -c1-8)` or `$(git rev-parse HEAD \| cut -c1-8)`   | `b2a98088` |
-| `{{ .Version }}` | `$(git describe --tags --always --dirty \| cut -c2-)` or `$(echo $GITHUB_REF_NAME \| cut -c2-)` on new tags and release triggers | `1.2.3-alpha+b2a98088` |
-| `{{ .Tag }}` | `$GITHUB_REF_NAME` (on `release` and `push` new tag triggers) or `$(git describe --tags --always --dirty \| cut -c2-)`    | `v1.2.3-alpha+b2a98088` |
-| `{{ .Major }}` | `$(git describe --tags --always --dirty \| cut -d '.' -f1 \| cut -c2-)`    | `1` |
-| `{{ .Minor }}` | `$(git describe --tags --always --dirty \| cut -d '.' -f2`    | `2` |
-| `{{ .Patch }}` | `$(git describe --tags --always --dirty \| cut -d '.' -f3 \| cut -d '-' -f1 \| cut -d '+' -f1`    | `3` |
+| Name                 | Value                                                                                                                            | Example                                    |
+| -------------------- | -------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------ |
+| `{{ .CommitDate }}`  | `date -d @$(git log --date=iso8601-strict -1 --pretty=%ct)`                                                                      | `Mon Jun 13 01:23:36 AM UTC 2022`          |
+| `{{ .FullCommit }}`  | `$GITHUB_SHA` or `$(git rev-parse HEAD)`                                                                                         | `b2a980888f359b8cef22cb61f153746e1a06deb0` |
+| `{{ .ShortCommit }}` | `$(echo $GITHUB_SHA \| cut -c1-8)` or `$(git rev-parse HEAD \| cut -c1-8)`                                                       | `b2a98088`                                 |
+| `{{ .Version }}`     | `$(git describe --tags --always --dirty \| cut -c2-)` or `$(echo $GITHUB_REF_NAME \| cut -c2-)` on new tags and release triggers | `1.2.3-alpha+b2a98088`                     |
+| `{{ .Tag }}`         | `$GITHUB_REF_NAME` (on `release` and `push` new tag triggers) or `$(git describe --tags --always --dirty \| cut -c2-)`           | `v1.2.3-alpha+b2a98088`                    |
+| `{{ .Major }}`       | `$(git describe --tags --always --dirty \| cut -d '.' -f1 \| cut -c2-)`                                                          | `1`                                        |
+| `{{ .Minor }}`       | `$(git describe --tags --always --dirty \| cut -d '.' -f2`                                                                       | `2`                                        |
+| `{{ .Patch }}`       | `$(git describe --tags --always --dirty \| cut -d '.' -f3 \| cut -d '-' -f1 \| cut -d '+' -f1`                                   | `3`                                        |
 
 If you think you need suppport for other variables, please [open an issue](https://github.com/slsa-framework/slsa-github-generator/issues/new).
 
@@ -114,19 +114,19 @@ If you think you need suppport for other variables, please [open an issue](https
 
 The builder workflow [slsa-framework/slsa-github-generator/.github/workflows/builder_go_slsa3.yml](.github/workflows/builder_go_slsa3.yml) accepts the following inputs:
 
-| Name         | Required | Description    | Default                                                                                                                                                                                                                                           |
-| ------------------ | -------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `config-file` | no      | `.github/workflows/slsa-goreleaser.yml` | The configuration file for the builder. A path within the calling repository. |
-| `evaluated-envs`        | no       | empty value | A list of environment variables, seperated by `,`: `VAR1: value, VAR2: value`. This is typically used to pass dynamically-generated values, such as `ldflags`. Note that only environment variables with names starting with `CGO_` or `GO` are accepted. |
-| `go-version` | yes      | The go version for your project. This value is passed, unchanged, to the [actions/setup-go](https://github.com/actions/setup-go) action when setting up the environment |
-| `upload-assets` | no    | true on new tags | Whether to upload assets to a GitHub release or not. |
+| Name             | Required | Description                                                                                                                                                             | Default                                                                                                                                                                                                                                                   |
+| ---------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `config-file`    | no       | `.github/workflows/slsa-goreleaser.yml`                                                                                                                                 | The configuration file for the builder. A path within the calling repository.                                                                                                                                                                             |
+| `evaluated-envs` | no       | empty value                                                                                                                                                             | A list of environment variables, seperated by `,`: `VAR1: value, VAR2: value`. This is typically used to pass dynamically-generated values, such as `ldflags`. Note that only environment variables with names starting with `CGO_` or `GO` are accepted. |
+| `go-version`     | yes      | The go version for your project. This value is passed, unchanged, to the [actions/setup-go](https://github.com/actions/setup-go) action when setting up the environment |
+| `upload-assets`  | no       | true on new tags                                                                                                                                                        | Whether to upload assets to a GitHub release or not.                                                                                                                                                                                                      |
 
 ### Workflow Example
 
 Create a new workflow, say `.github/workflows/slsa-goreleaser.yml`.
 
 Make sure that you reference the trusted builder with a semnatic version of the form `vX.Y.Z`. The build will fail
-if you reference it via a shorter tag like `vX.Y` or `vX`. 
+if you reference it via a shorter tag like `vX.Y` or `vX`.
 
 Refencing via hash is currently not supported due to limitations
 of the reusable workflow APIs. (We are working with GitHub to address this limitation).
@@ -166,9 +166,9 @@ jobs:
   # Trusted builder.
   build:
     permissions:
-      id-token: write   # To sign the provenance.
-      contents: write   # To upload assets to release.
-      actions: read     # To read the workflow path.
+      id-token: write # To sign the provenance.
+      contents: write # To upload assets to release.
+      actions: read # To read the workflow path.
     needs: args
     uses: slsa-framework/slsa-github-generator/.github/workflows/builder_go_slsa3.yml@v1.0.0
     with:
