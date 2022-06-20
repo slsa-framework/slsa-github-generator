@@ -1,4 +1,4 @@
-# Provenance format
+# Provenance Format
 
 The provenance format for each workflow conforms to the [SLSA v0.2 provenance
 format](https://slsa.dev/provenance/v0.2). Each of the projects populate the
