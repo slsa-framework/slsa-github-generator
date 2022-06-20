@@ -3,15 +3,13 @@
 source "./.github/workflows/scripts/assert.sh"
 
 e2e_assert_eq() {
-    assert_eq "$@"
-    if [ "$?" != "0" ]; then
+    if ! assert_eq "$@"; then
         exit 1
     fi
 }
 
 e2e_assert_not_eq() {
-    assert_not_eq "$@"
-    if [ "$?" != "0" ]; then
+    if ! assert_not_eq "$@"; then
         exit 1
     fi
 }
