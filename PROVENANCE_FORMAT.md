@@ -116,7 +116,7 @@ many other fields are formatted including all of those below.
 
 ### Metadata
 
-`metadata`: Other properties of the build, including `BuildInvocationID` as the unique `RunID` and `RunAttempt`.
+`metadata`: Other properties of the build, including `BuildInvocationID`, which is the unique `RunID` and `RunAttempt` separated by a '-'.
 
 ```json
 "metadata": {
