@@ -23,14 +23,18 @@ jobs:
           set -euo pipefail
 
           #Install golangci-lint
+          echo "downloading..."
           curl -sSLo golangci-lint.tar.gz "https://github.com/golangci/golangci-lint/releases/download/v${GOLANGCI_LINT_VERSION}/golangci-lint-${GOLANGCI_LINT_VERSION}-linux-amd64.tar.gz"
+          echo "untarrig..."
           tar xf golangci-lint.tar.gz
           cd golangci-lint-${GOLANGCI_LINT_VERSION}-linux-amd64
+          echo "checksumming..."
           echo "$GOLANGCI_LINT_CHECKSUM golangci-lint" | sha256sum --strict --check --status || exit -2
           mv golangci-lint /usr/local/bin
           cd ..
 
           # Run golangci-lint
+          echo "running..."
           golangci-lint run ./... --out-format=github-actions --timeout=5m
 
   shellcheck:
