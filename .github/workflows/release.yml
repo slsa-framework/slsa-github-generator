@@ -24,6 +24,9 @@ jobs:
 
   # Go builder.
   go-builder:
+    # Force the builds to rin sequentially, to avoid
+    # the builder binaries being overwritten by each run.
+    needs: [generic-generator]
     permissions:
       id-token: write # For signing.
       contents: write # For asset uploads.
