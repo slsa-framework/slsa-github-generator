@@ -32,7 +32,7 @@ many other fields are formatted including all of those below.
 
 `invocation`: Identifies the event that kicked off the build. This describes the workflow run and includes GitHub workflow event information, entrypoint, and parameters from trigger events.
 
-`invocation.configSource`: This describes the calling workflow's source and the entrypoint of the build.
+`invocation.configSource`: This describes the calling workflow's source (`uri` and `digest`) and the `entryPoint` of the build.
 
 ```json
 "configSource": {
