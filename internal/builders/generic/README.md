@@ -64,7 +64,7 @@ output:
 $ sha256sum artifact1 artifact2 ... | base64 -w0
 ```
 
-This workflow expects the base64 encoded value for the subjects to decode to a string conforming to the expected output of the above command. Specifically, the decoded output is expected to be comprised of a hash value followed by a space followed by the artifact name.
+This workflow expects the `base64-subjects` input to decode to a string conforming to the expected output of the `sha256sum` command. Specifically, the decoded output is expected to be comprised of a hash value followed by a space followed by the artifact name.
 
 After you have encoded your digest, add a new job to call the reusable workflow.
 
