@@ -19,6 +19,7 @@ project simply generates provenance as a separate step in an existing workflow.
 - [Benefits of Provenance](#benefits-of-provenance)
 - [Generating Provenance](#generating-provenance)
   - [Getting Started](#getting-started)
+  - [Supported Triggers](#supported-triggers)
   - [Workflow Inputs](#workflow-inputs)
   - [Workflow Outputs](#workflow-outputs)
   - [Provenance Format](#provenance-format)
@@ -156,6 +157,22 @@ jobs:
             artifact2
             ${{needs.provenance.outputs.attestation-name}}
 ```
+
+### Supported Triggers
+
+The following [GitHub trigger events](https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows) are fully supported and tested:
+
+- `schedule`
+- `push` (including new tags)
+- `release`
+- Manual run via `workflow_dispatch`
+
+However, in practice, most triggers should work with the exception of
+`pull_request`. If you would like support for `pull_request`, please tell us
+about your use case on [issue
+#358](https://github.com/slsa-framework/slsa-github-generator/issues/358). If
+you have an issue in all other triggers please submit a [new
+issue](https://github.com/slsa-framework/slsa-github-generator/issues/new/choose).
 
 ### Workflow Inputs
 
