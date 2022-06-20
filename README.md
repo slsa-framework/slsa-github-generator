@@ -9,7 +9,7 @@ This repository contains the code, examples and technical design for system desc
 ---
 
 - [Generation of provenance](#generation-of-provenance)
-  - [Golang projects](#golang-projects)
+  - [Go projects](#go-projects)
   - [Other projects](#other-projects)
 - [Verification of provenance](#verification-of-provenance)
   - [Installation](#installation)
@@ -24,13 +24,15 @@ This repository contains the code, examples and technical design for system desc
 
 ## Generation of provenance
 
-### Golang projects
+### Go projects
 
-To generate SLSA provenance for your Golang project, follow [internal/builders/go/README.md](internal/builders/go/README.md).
+To generate SLSA provenance for your [Go](https://go.dev/) project, follow
+[internal/builders/go/README.md](internal/builders/go/README.md).
 
 ### Other projects
 
-To generate SLSA provenance for other programming languages, follow [internal/builders/generic/README.md](internal/builders/generic/README.md).
+To generate SLSA provenance for other programming languages, follow
+[internal/builders/generic/README.md](internal/builders/generic/README.md).
 This is a pre-release only and we will have the official release in July 2022.
 
 ## Verification of provenance
@@ -62,4 +64,3 @@ For a more in-depth technical dive, read the [SPECIFICATIONS.md](./SPECIFICATION
 ### Provenance format
 
 The format of the provenance is available in [PROVENANCE_FORMAT.md](./PROVENANCE_FORMAT.md).
-
