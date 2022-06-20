@@ -14,6 +14,10 @@
 
 name: SLSA provenance generator
 
+env:
+  # Builder
+  BUILDER_BINARY: generic-builder
+
 permissions:
   contents: read
 
@@ -92,8 +96,8 @@ jobs:
           set -euo pipefail
 
           # https://go.dev/ref/mod#build-commands.
-          go build -mod=vendor -o builder github.com/slsa-framework/slsa-github-generator/internal/builders/generic
-          chmod a+x builder
+          go build -mod=vendor -o "$BUILDER_BINARY" github.com/slsa-framework/slsa-github-generator/internal/builders/generic
+          chmod a+x "$BUILDER_BINARY"
 
       - name: Create and sign provenance
         id: sign-prov
