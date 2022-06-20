@@ -12,7 +12,7 @@ fields of the SLSA provenance predicate attested to are below.
 `Builder.Id`: The builder ID refers to the fully qualified URI of the trusted builder's workflow and its reference.
 
 ```json
-builder": {
+"builder": {
   "id": "https://github.com/slsa-framework/slsa-github-generator/.github/workflows/builder_go_slsa3.yml@refs/tags/v0.0.1"
 }
 ```
@@ -30,9 +30,9 @@ many other fields are formatted including all of those below.
 
 ### Invocation
 
-`Invocation`: Identifies the event that kicked off the build. This describes the workflow run and includes GitHub workflow event information, entrypoint, and parameters from trigger events.
+`invocation`: Identifies the event that kicked off the build. This describes the workflow run and includes GitHub workflow event information, entrypoint, and parameters from trigger events.
 
-`Invocation.configSource`: This describes the calling workflow's source and the entrypoint of the build.
+`invocation.configSource`: This describes the calling workflow's source and the entrypoint of the build.
 
 ```json
 "configSource": {
@@ -44,9 +44,9 @@ many other fields are formatted including all of those below.
 },
 ```
 
-`Invocation.parameters`: This describes any parameters from trigger events.
+`invocation.parameters`: This describes any parameters from trigger events.
 
-`Invocation.environment`: This describes the GitHub workflow builder-controlled environment variables, including the event information, required to reproduce the build. See `github` content [documentation](https://docs.github.com/en/actions/learn-github-actions/contexts#github-context) for more information.
+`invocation.environment`: This describes the GitHub workflow builder-controlled environment variables, including the event information, required to reproduce the build. See `github` content [documentation](https://docs.github.com/en/actions/learn-github-actions/contexts#github-context) for more information.
 
 | Name                         | Value                                        | Description                                                                                                                                                                     |
 | ---------------------------- | -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
