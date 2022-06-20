@@ -64,6 +64,8 @@ output:
 $ sha256sum artifact1 artifact2 ... | base64 -w0
 ```
 
+This workflow expects the base64 encoded value for the subjects to decode to a string conforming to the expected output of the above command. Specifically, the decoded output is expected to be comprised of a hash value followed by a space followed by the artifact name.
+
 After you have encoded your digest, add a new job to call the reusable workflow.
 
 ```yaml
@@ -159,19 +161,15 @@ jobs:
 
 ### Workflow Inputs
 
-The builder workflow
-[.github/workflows/generator_generic_slsa3.yml](.github/workflows/generator_generic_slsa3.yml) accepts
-the following inputs:
+The [builder workflow](https://github.com/slsa-framework/slsa-github-generator/blob/main/.github/workflows/generator_generic_slsa3.yml) accepts the following inputs:
 
 | Name              | Required | Description                                                                                                                        |
 | ----------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| `base64-subjects` | yes      | Artifacts for which to generate provenance, formatted the same as the output of sha256sum (SHA256 NAME\n[...]) and base64 encoded. |
+| `base64-subjects` | yes      | Artifact(s) for which to generate provenance, formatted the same as the output of sha256sum (SHA256 NAME\n[...]) and base64 encoded. The encoded value should decode to, for example: `90f3f7d6c862883ab9d856563a81ea6466eb1123b55bff11198b4ed0030cac86  foo.zip` |
 
 ### Workflow Outputs
 
-The builder workflow
-[.github/workflows/generator_generic_slsa3.yml](.github/workflows/generator_generic_slsa3.yml)
-produces the following outputs:
+The [builder workflow](https://github.com/slsa-framework/slsa-github-generator/blob/main/.github/workflows/generator_generic_slsa3.yml) produces the following outputs:
 
 | Name               | Description                                |
 | ------------------ | ------------------------------------------ |
@@ -189,7 +187,7 @@ The project generates SLSA provenance with the following values.
 ### Provenance Example
 
 The following is an example of the generated proveanance. Provenance is
-generated as an [in-toto](https://in-toto.io/) statement with a SLSA predecate.
+generated as an [in-toto](https://in-toto.io/) statement with a SLSA predicate.
 
 ```json
 {
