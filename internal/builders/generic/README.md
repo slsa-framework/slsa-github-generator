@@ -169,7 +169,7 @@ The [generic workflow](https://github.com/slsa-framework/slsa-github-generator/b
 
 ### Workflow Outputs
 
-The [builder workflow](https://github.com/slsa-framework/slsa-github-generator/blob/main/.github/workflows/generator_generic_slsa3.yml) produces the following outputs:
+The [generic workflow](https://github.com/slsa-framework/slsa-github-generator/blob/main/.github/workflows/generator_generic_slsa3.yml) produces the following outputs:
 
 | Name               | Description                                |
 | ------------------ | ------------------------------------------ |
