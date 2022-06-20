@@ -19,9 +19,9 @@ permissions:
 
 env:
   # Project.
-  GENERATED_BINARY_NAME: compiled-binary
+  GENERATED_BINARY_NAME: go-compiled-binary
   # Builder
-  BUILDER_BINARY: builder
+  BUILDER_BINARY: go-builder
   BUILDER_RELEASE_BINARY: slsa-builder-go-linux-amd64
   BUILDER_REPOSITORY: slsa-framework/slsa-github-generator
   # Verifier
