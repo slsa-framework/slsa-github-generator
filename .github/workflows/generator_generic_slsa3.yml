@@ -19,6 +19,7 @@ permissions:
 
 env:
   # Generator
+  BUILDER_BINARY: generic-generator
   BUILDER_RELEASE_BINARY: slsa-generator-generic-linux-amd64
   BUILDER_REPOSITORY: slsa-framework/slsa-github-generator
   # Verifier
@@ -107,15 +108,15 @@ jobs:
             go mod vendor
 
             # https://go.dev/ref/mod#build-commands.
-            go build -mod=vendor -o builder github.com/slsa-framework/slsa-github-generator/internal/builders/generic
+            go build -mod=vendor -o "$BUILDER_BINARY" github.com/slsa-framework/slsa-github-generator/internal/builders/generic
           else
             echo "Fetching the generator with ref: $BUILDER_REF"
 
             .github/workflows/scripts/builder-fetch.sh
 
-            mv "$BUILDER_RELEASE_BINARY" "./builder"
+            mv "$BUILDER_RELEASE_BINARY" "$BUILDER_BINARY"
           fi
-          chmod a+x ./builder
+          chmod a+x "$BUILDER_BINARY"
 
       - name: Create and sign provenance
         id: sign-prov
@@ -130,7 +131,7 @@ jobs:
           set -euo pipefail
           # Create and sign provenance
           # This sets attestation-name to the name of the signed DSSE envelope.
-          ./builder attest --subjects "${SUBJECTS}" -g attestation.intoto.jsonl
+          ./"$BUILDER_BINARY" attest --subjects "${SUBJECTS}" -g attestation.intoto.jsonl
           echo "::set-output name=attestation-name::attestation.intoto.jsonl"
 
       - name: Upload the signed provenance
