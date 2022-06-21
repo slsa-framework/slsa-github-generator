@@ -75,7 +75,7 @@ provenance:
     actions: read # Needed for detection of GitHub Actions environment.
     id-token: write # Needed for provenance signing and ID
     contents: read # Needed for API access
-  uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.1.0
+  uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.1.1
   with:
     base64-subjects: "${{ needs.build.outputs.digest }}"
 ```
@@ -127,7 +127,7 @@ jobs:
       id-token: write
       contents: read
     if: startsWith(github.ref, 'refs/tags/')
-    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.1.0
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.1.1
     with:
       base64-subjects: "${{ needs.build.outputs.digest }}"
 
