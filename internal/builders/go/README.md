@@ -174,7 +174,7 @@ jobs:
       contents: write # To upload assets to release.
       actions: read # To read the workflow path.
     needs: args
-    uses: slsa-framework/slsa-github-generator/.github/workflows/builder_go_slsa3.yml@v1.0.0
+    uses: slsa-framework/slsa-github-generator/.github/workflows/builder_go_slsa3.yml@v1.1.1
     with:
       go-version: 1.17
       # Optional: only needed if using ldflags.
@@ -199,7 +199,7 @@ An example of the provenance generated from this repo is below:
   ],
   "predicate": {
     "builder": {
-      "id": "https://github.com/slsa-framework/slsa-github-generator/.github/workflows/builder_go_slsa3.yml@v1.0.0"
+      "id": "https://github.com/slsa-framework/slsa-github-generator/.github/workflows/builder_go_slsa3.yml@v1.1.1"
     },
     "buildType": "https://github.com/slsa-framework/slsa-github-generator/go@v1",
     "invocation": {
