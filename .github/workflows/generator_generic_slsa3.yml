@@ -14,25 +14,37 @@
 
 name: SLSA provenance generator
 
-env:
-  # Builder
-  BUILDER_BINARY: generic-builder
-
 permissions:
   contents: read
+
+env:
+  # Generator
+  BUILDER_BINARY: generic-generator
+  BUILDER_RELEASE_BINARY: slsa-generator-generic-linux-amd64
+  BUILDER_REPOSITORY: slsa-framework/slsa-github-generator
+  # Verifier
+  VERIFIER_REPOSITORY: slsa-framework/slsa-verifier
+  VERIFIER_RELEASE_BINARY: slsa-verifier-linux-amd64
+  VERIFIER_RELEASE_BINARY_SHA256: 60c91c9d5b9a059e37ac46da316f20c81da335b5d00e1f74d03dd50f819694bd
+  VERIFIER_RELEASE: v0.0.1
 
 ###################################################################
 #                                                                 #
 #            Input and output argument definitions                #
 #                                                                 #
 ###################################################################
-"on":
+on:
   workflow_call:
     inputs:
       base64-subjects:
         description: "Artifacts for which to generate provenance, formatted the same as the output of sha256sum (SHA256 NAME\\n[...]) and base64 encoded."
         required: true
         type: string
+      compile-generator:
+        description: "Build the generator from source. This increases build time by ~2mn."
+        required: false
+        type: boolean
+        default: false
     outputs:
       attestation-name:
         description: "The artifact name of the signed provenance"
@@ -47,7 +59,7 @@ jobs:
     permissions:
       id-token: write # Needed to detect the current reusable repository and ref.
     steps:
-      - name: Detect the builder ref
+      - name: Detect the generator ref
         id: detect
         uses: slsa-framework/slsa-github-generator/.github/actions/detect-workflow@bbeae84f20f78877b7ba56f324b993c3ee576cf1
 
@@ -80,23 +92,30 @@ jobs:
         with:
           go-version: 1.18
 
-      - name: Download dependencies
-        shell: bash
-        run: |
-          set -euo pipefail
-          #TODO(reproducible)
-          go mod vendor
-
-      # TODO(hermeticity) OS-level.
-
       - name: Build slsa-github-generator
         shell: bash
         id: generator-gen
+        env:
+          COMPILE_GENERATOR: "${{ inputs.compile-generator }}"
+          BUILDER_REF: "${{ needs.detect-env.outputs.ref }}"
         run: |
           set -euo pipefail
 
-          # https://go.dev/ref/mod#build-commands.
-          go build -mod=vendor -o "$BUILDER_BINARY" github.com/slsa-framework/slsa-github-generator/internal/builders/generic
+          if [[ "$COMPILE_GENERATOR" == true ]]; then
+            echo "Building the generator"
+
+            #TODO(reproducible)
+            go mod vendor
+
+            # https://go.dev/ref/mod#build-commands.
+            go build -mod=vendor -o "$BUILDER_BINARY" github.com/slsa-framework/slsa-github-generator/internal/builders/generic
+          else
+            echo "Fetching the generator with ref: $BUILDER_REF"
+
+            .github/workflows/scripts/builder-fetch.sh
+
+            mv "$BUILDER_RELEASE_BINARY" "$BUILDER_BINARY"
+          fi
           chmod a+x "$BUILDER_BINARY"
 
       - name: Create and sign provenance
