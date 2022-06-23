@@ -46,6 +46,8 @@ func newAction(getenv func(string) string, c *github.OIDCClient) (*action, error
 		return nil, err
 	}
 
+	log.Printf("event: %s", payload)
+
 	var event map[string]any
 	if err := json.Unmarshal(payload, &event); err != nil {
 		return nil, err
@@ -123,6 +125,13 @@ func (a *action) getRepoRef(ctx context.Context) (string, string, error) {
 			return "", "", errors.New("missing reference in job workflow ref")
 		}
 		ref = refParts[1]
+	}
+
+	if repository == "" {
+		return "", "", errors.New("no repository detected")
+	}
+	if ref == "" {
+		return "", "", errors.New("no ref detected")
 	}
 
 	return repository, ref, nil
