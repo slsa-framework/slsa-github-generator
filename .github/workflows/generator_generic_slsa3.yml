@@ -61,8 +61,7 @@ jobs:
     steps:
       - name: Detect the generator ref
         id: detect
-        # uses: slsa-framework/slsa-github-generator/.github/actions/detect-workflow@bbeae84f20f78877b7ba56f324b993c3ee576cf1
-        uses: ianlewis/slsa-github-generator/.github/actions/detect-workflow@detect-env-empty-outputs
+        uses: slsa-framework/slsa-github-generator/.github/actions/detect-workflow@bbeae84f20f78877b7ba56f324b993c3ee576cf1
 
   ###################################################################
   #                                                                 #

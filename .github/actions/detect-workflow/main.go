@@ -46,8 +46,6 @@ func newAction(getenv func(string) string, c *github.OIDCClient) (*action, error
 		return nil, err
 	}
 
-	log.Printf("event: %s", payload)
-
 	var event map[string]any
 	if err := json.Unmarshal(payload, &event); err != nil {
 		return nil, err
