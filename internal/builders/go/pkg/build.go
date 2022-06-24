@@ -52,6 +52,8 @@ var allowedEnvVariablePrefix = map[string]bool{
 	"GO": true, "CGO_": true,
 }
 
+var Output = os.Stdout
+
 type GoBuild struct {
 	cfg *GoReleaserConfig
 	goc string
@@ -155,10 +157,10 @@ func (b *GoBuild) Run(dry bool) error {
 		return err
 	}
 
-	fmt.Println("dir", dir)
-	fmt.Println("binary", binary)
-	fmt.Println("command", command)
-	fmt.Println("env", envs)
+	fmt.Fprintf(Output, "dir %s \n", dir)
+	fmt.Fprintf(Output, "binary %s \n", binary)
+	fmt.Fprintf(Output, "command %s \n", command)
+	fmt.Fprintf(Output, "env %s \n", envs)
 
 	return syscall.Exec(b.goc, command, envs)
 }
