@@ -8,6 +8,22 @@ updates:
       prefix: ":seedling:"
     open-pull-requests-limit: 10
 
+  - package-ecosystem: gomod
+    directory: ".github/actions/detect-workflow"
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: ":seedling:"
+    open-pull-requests-limit: 10
+
+  - package-ecosystem: docker
+    directory: ".github/actions/detect-workflow"
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: ":seedling:"
+    open-pull-requests-limit: 10
+
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:

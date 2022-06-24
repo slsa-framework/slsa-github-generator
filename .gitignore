@@ -17,3 +17,6 @@ vendor/
 # Go workspace file
 go.work
 go.work.sum
+
+# goland
+.idea
