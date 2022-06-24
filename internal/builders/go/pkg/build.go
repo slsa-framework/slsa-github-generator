@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"syscall"
 )
@@ -30,6 +31,8 @@ var (
 	errorEnvVariableNameNotAllowed = errors.New("env variable not allowed")
 	errorInvalidFilename           = errors.New("invalid filename")
 )
+
+var unknownTag = "unknown"
 
 // See `go build help`.
 // `-asmflags`, `-n`, `-mod`, `-installsuffix`, `-modfile`,
@@ -272,21 +275,23 @@ func (b *GoBuild) SetArgEnvVariables(envs string) error {
 }
 
 func (b *GoBuild) generateOutputFilename() (string, error) {
-	const alpha = "abcdefghijklmnopqrstuvwxyz1234567890-_"
+	// Note: the `.` is needed to accomodate the semantic version
+	// as part of the name.
+	const alpha = ".abcdefghijklmnopqrstuvwxyz1234567890-_"
 
 	var name string
 
-	// Replace .Os variable.
-	if strings.Contains(b.cfg.Binary, "{{ .Os }}") && b.cfg.Goos == "" {
-		return "", fmt.Errorf("%w", errorEnvVariableNameEmpty)
+	// Special variables.
+	name, err := b.resolveSepcialVariables(b.cfg.Binary)
+	if err != nil {
+		return "", err
 	}
-	name = strings.ReplaceAll(b.cfg.Binary, "{{ .Os }}", b.cfg.Goos)
 
-	// Replace .Arch variable.
-	if strings.Contains(name, "{{ .Arch }}") && b.cfg.Goarch == "" {
-		return "", fmt.Errorf("%w", errorEnvVariableNameEmpty)
+	// Dynamic env variables provided by caller.
+	name, err = b.resolveEnvVariables(name)
+	if err != nil {
+		return "", err
 	}
-	name = strings.ReplaceAll(name, "{{ .Arch }}", b.cfg.Goarch)
 
 	for _, char := range name {
 		if !strings.Contains(alpha, strings.ToLower(string(char))) {
@@ -297,6 +302,12 @@ func (b *GoBuild) generateOutputFilename() (string, error) {
 	if name == "" {
 		return "", fmt.Errorf("%w: filename is empty", errorInvalidFilename)
 	}
+
+	// Validate the path.
+	if err := validatePath(name); err != nil {
+		return "", err
+	}
+
 	return name, nil
 }
 
@@ -339,42 +350,83 @@ func isAllowedEnvVariable(name string) bool {
 func (b *GoBuild) generateLdflags() (string, error) {
 	var a []string
 
+	// Resolve variables.
 	for _, v := range b.cfg.Ldflags {
-		var res string
-		ss := "{{ .Env."
-		es := "}}"
-		found := false
-		for {
-			start := strings.Index(v, ss)
-			if start == -1 {
-				break
-			}
-			end := strings.Index(string(v[start+len(ss):]), es)
-			if end == -1 {
-				return "", fmt.Errorf("%w: %s", errorInvalidEnvArgument, v)
-			}
 
-			name := strings.Trim(string(v[start+len(ss):start+len(ss)+end]), " ")
-			if name == "" {
-				return "", fmt.Errorf("%w: %s", errorEnvVariableNameEmpty, v)
-			}
+		// Special variables.
+		v, err := b.resolveSepcialVariables(v)
+		if err != nil {
+			return "", err
+		}
 
-			val, exists := b.argEnv[name]
-			if !exists {
-				return "", fmt.Errorf("%w: %s", errorEnvVariableNameEmpty, name)
-			}
-			res = fmt.Sprintf("%s%s%s", res, v[:start], val)
-			found = true
-			v = v[start+len(ss)+end+len(es):]
+		// Dynamic env variables provided by caller.
+		v, err = b.resolveEnvVariables(v)
+		if err != nil {
+			return "", err
 		}
-		if !found {
-			res = v
-		}
-		a = append(a, res)
+		a = append(a, v)
 	}
+
 	if len(a) > 0 {
 		return strings.Join(a, " "), nil
 	}
 
 	return "", nil
+}
+
+func (b *GoBuild) resolveSepcialVariables(s string) (string, error) {
+	reVar := regexp.MustCompile(`{{ \.([A-Z][a-z]*) }}`)
+	names := reVar.FindAllString(s, -1)
+	for _, n := range names {
+
+		name := strings.ReplaceAll(n, "{{ .", "")
+		name = strings.ReplaceAll(name, " }}", "")
+
+		switch name {
+		case "Os":
+			if b.cfg.Goos == "" {
+				return "", fmt.Errorf("%w: {{ .Os }}", errorEnvVariableNameEmpty)
+			}
+			s = strings.ReplaceAll(s, n, b.cfg.Goos)
+
+		case "Arch":
+			if b.cfg.Goarch == "" {
+				return "", fmt.Errorf("%w: {{ .Arch }}", errorEnvVariableNameEmpty)
+			}
+			s = strings.ReplaceAll(s, n, b.cfg.Goarch)
+
+		case "Tag":
+			tag := getTag()
+			s = strings.ReplaceAll(s, n, tag)
+		default:
+			return "", fmt.Errorf("%w: %s", errorInvalidEnvArgument, n)
+		}
+
+	}
+	return s, nil
+}
+
+func (b *GoBuild) resolveEnvVariables(s string) (string, error) {
+	reDyn := regexp.MustCompile(`{{ \.Env\.(\w+) }}`)
+	names := reDyn.FindAllString(s, -1)
+	for _, n := range names {
+
+		name := strings.ReplaceAll(n, "{{ .Env.", "")
+		name = strings.ReplaceAll(name, " }}", "")
+
+		val, exists := b.argEnv[name]
+		if !exists {
+			return "", fmt.Errorf("%w: %s", errorEnvVariableNameEmpty, n)
+		}
+		s = strings.ReplaceAll(s, n, val)
+	}
+	return s, nil
+}
+
+func getTag() string {
+	tag := os.Getenv("GITHUB_REF_NAME")
+	if tag == "" {
+		return unknownTag
+	}
+	return tag
 }

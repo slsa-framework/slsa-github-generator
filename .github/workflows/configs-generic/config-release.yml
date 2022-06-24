@@ -1,7 +1,7 @@
+# Used for pre-submit tests.
 version: 1
 env:
   - GO111MODULE=on
-  # https://stackoverflow.com/a/62821358/19407
   - CGO_ENABLED=0
 
 flags:
@@ -10,4 +10,5 @@ flags:
 
 goos: linux
 goarch: amd64
-binary: binary-{{ .Os }}-{{ .Arch }}
+dir: internal/builders/generic/
+binary: slsa-generator-generic-{{ .Os }}-{{ .Arch }}

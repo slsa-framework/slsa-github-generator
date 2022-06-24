@@ -20,21 +20,18 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/slsa-framework/slsa-github-generator/signing"
+
 	intoto "github.com/in-toto/in-toto-golang/in_toto"
 	slsa02 "github.com/in-toto/in-toto-golang/in_toto/slsa_provenance/v0.2"
 	"github.com/slsa-framework/slsa-github-generator/github"
 	"github.com/slsa-framework/slsa-github-generator/internal/utils"
-	"github.com/slsa-framework/slsa-github-generator/signing/sigstore"
 	"github.com/slsa-framework/slsa-github-generator/slsa"
 )
 
 const (
-	parametersVersion  int = 1
 	buildConfigVersion int = 1
 	buildType              = "https://github.com/slsa-framework/slsa-github-generator/go@v1"
-	requestTokenEnvKey     = "ACTIONS_ID_TOKEN_REQUEST_TOKEN"
-	requestURLEnvKey       = "ACTIONS_ID_TOKEN_REQUEST_URL"
-	audience               = "slsa-framework/slsa-github-generator"
 )
 
 type (
@@ -67,7 +64,7 @@ func (b *goProvenanceBuild) BuildConfig(context.Context) (interface{}, error) {
 // GenerateProvenance translates github context into a SLSA provenance
 // attestation.
 // Spec: https://slsa.dev/provenance/v0.2
-func GenerateProvenance(name, digest, command, envs, workingDir string) ([]byte, error) {
+func GenerateProvenance(name, digest, command, envs, workingDir string, s signing.Signer, r signing.TransparencyLog) ([]byte, error) {
 	gh, err := github.GetWorkflowContext()
 	if err != nil {
 		return nil, err
@@ -157,7 +154,6 @@ func GenerateProvenance(name, digest, command, envs, workingDir string) ([]byte,
 	}
 
 	// Sign the provenance.
-	s := sigstore.NewDefaultFulcio()
 	att, err := s.Sign(ctx, &intoto.Statement{
 		StatementHeader: p.StatementHeader,
 		Predicate:       p.Predicate,
@@ -167,8 +163,8 @@ func GenerateProvenance(name, digest, command, envs, workingDir string) ([]byte,
 	}
 
 	// Upload the signed attestation to rekor.
-	r := sigstore.NewDefaultRekor()
-	if _, err := r.Upload(ctx, att); err != nil {
+	if logEntry, err := r.Upload(ctx, att); err != nil {
+		fmt.Printf("Uploaded signed attestation to rekor with UUID %s.\n", logEntry.UUID())
 		return nil, err
 	}
 

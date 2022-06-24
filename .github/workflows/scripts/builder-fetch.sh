@@ -14,22 +14,22 @@ set -euo pipefail
 PREFIX="refs/tags/"
 
 # Extract version.
-if [[ "$BUILDER_REF" =~ "^$PREFIX*" ]]; then
+if [[ "$BUILDER_REF" != "$PREFIX"* ]]; then
     echo "Invalid ref: $BUILDER_REF"
     exit 2
 fi
 
 BUILDER_TAG="${BUILDER_REF#"$PREFIX"}"
 
-if [[ "$BUILDER_TAG" = "$(echo -n "$BUILDER_TAG" | grep -P '^[a-f\d]{40}$')" ]]; then
+if [[ "$BUILDER_TAG" == "$(echo -n "$BUILDER_TAG" | grep -P '^[a-f\d]{40}$')" ]]; then
     echo "Builder referenced by hash: $BUILDER_TAG"
     echo "Resolving..."
-    
+
     RELEASE_TAG=""
 
     # List the releases and find the corepsonding hash.
     RELEASE_LIST=$(gh release -R "$BUILDER_REPOSITORY" -L 50 list)
-    while read line; do
+    while read -r line; do
         TAG=$(echo "$line" | cut -f1)
         BRANCH=$(gh release -R "$BUILDER_REPOSITORY" view "$TAG" --json targetCommitish --jq '.targetCommitish')
         if [[ "$BRANCH" != "main" ]]; then
@@ -41,9 +41,9 @@ if [[ "$BUILDER_TAG" = "$(echo -n "$BUILDER_TAG" | grep -P '^[a-f\d]{40}$')" ]];
             echo "Found tag $BUILDER_TAG match at tag $TAG and commit $COMMIT"
             break
         fi
-    done <<< "$RELEASE_LIST"
+    done <<<"$RELEASE_LIST"
 
-    if [[ -z "$RELEASE_TAG" ]]; then 
+    if [[ -z "$RELEASE_TAG" ]]; then
         echo "Tag not found for $BUILDER_TAG"
         exit 3
     fi
@@ -73,13 +73,13 @@ echo "verifier hash verification has passed"
 # Verify the provenance of the builder.
 chmod a+x "$VERIFIER_RELEASE_BINARY"
 ./"$VERIFIER_RELEASE_BINARY" --branch "main" \
-                            --tag "$BUILDER_TAG" \
-                            --artifact-path "$BUILDER_RELEASE_BINARY" \
-                            --provenance "$BUILDER_RELEASE_BINARY.intoto.jsonl" \
-                            --source "github.com/$BUILDER_REPOSITORY" || exit 6
+    --tag "$BUILDER_TAG" \
+    --artifact-path "$BUILDER_RELEASE_BINARY" \
+    --provenance "$BUILDER_RELEASE_BINARY.intoto.jsonl" \
+    --source "github.com/$BUILDER_REPOSITORY" || exit 6
 
 BUILDER_COMMIT=$(gh api /repos/"$BUILDER_REPOSITORY"/git/ref/tags/"$BUILDER_TAG" | jq -r '.object.sha')
-PROVENANCE_COMMIT=$(cat "$BUILDER_RELEASE_BINARY.intoto.jsonl" | jq -r '.payload' | base64 -d | jq -r '.predicate.materials[0].digest.sha1')
+PROVENANCE_COMMIT=$(jq -r '.payload' <"$BUILDER_RELEASE_BINARY.intoto.jsonl" | base64 -d | jq -r '.predicate.materials[0].digest.sha1')
 if [[ "$BUILDER_COMMIT" != "$PROVENANCE_COMMIT" ]]; then
     echo "Builder commit sha $BUILDER_COMMIT != provenance material $PROVENANCE_COMMIT"
     exit 5

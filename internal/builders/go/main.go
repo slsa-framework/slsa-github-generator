@@ -24,6 +24,8 @@ import (
 	"os"
 	"os/exec"
 
+	"github.com/slsa-framework/slsa-github-generator/signing/sigstore"
+
 	// Enable the github OIDC auth provider.
 	_ "github.com/sigstore/cosign/pkg/providers/github"
 
@@ -72,8 +74,10 @@ func runBuild(dry bool, configFile, evalEnvs string) error {
 }
 
 func runProvenanceGeneration(subject, digest, commands, envs, workingDir string) error {
+	r := sigstore.NewDefaultRekor()
+	s := sigstore.NewDefaultFulcio()
 	attBytes, err := pkg.GenerateProvenance(subject, digest,
-		commands, envs, workingDir)
+		commands, envs, workingDir, s, r)
 	if err != nil {
 		return err
 	}
@@ -116,18 +120,17 @@ func main() {
 
 	switch os.Args[1] {
 	case buildCmd.Name():
-		buildCmd.Parse(os.Args[2:])
+		check(buildCmd.Parse(os.Args[2:]))
 		if len(buildCmd.Args()) < 1 {
 			usage(os.Args[0])
 		}
 		configFile := buildCmd.Args()[0]
 		evaluatedEnvs := buildCmd.Args()[1]
 
-		err := runBuild(*buildDry, configFile, evaluatedEnvs)
-		check(err)
+		check(runBuild(*buildDry, configFile, evaluatedEnvs))
 
 	case provenanceCmd.Name():
-		provenanceCmd.Parse(os.Args[2:])
+		check(provenanceCmd.Parse(os.Args[2:]))
 		// Note: *provenanceEnv may be empty.
 		if *provenanceName == "" || *provenanceDigest == "" ||
 			*provenanceCommand == "" || *provenanceWorkingDir == "" {

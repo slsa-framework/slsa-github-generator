@@ -17,6 +17,7 @@ package pkg
 import (
 	"fmt"
 	"os"
+	"os/exec"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -173,21 +174,23 @@ func Test_isAllowedArg(t *testing.T) {
 }
 
 func Test_generateOutputFilename(t *testing.T) {
-	t.Parallel()
+	// Disable to avoid env clobbering between tests.
+	// t.Parallel()
 
 	tests := []struct {
 		name     string
 		filename string
 		goos     string
 		goarch   string
-		envs     string
+		envs     map[string]string
+		argEnv   string
 		expected struct {
 			err error
 			fn  string
 		}
 	}{
 		{
-			name:     "valid filename",
+			name:     "invalid filename",
 			filename: "../filename",
 			expected: struct {
 				err error
@@ -227,8 +230,18 @@ func Test_generateOutputFilename(t *testing.T) {
 			},
 		},
 		{
-			name:     "filename os",
-			filename: "$bla",
+			name:     "filename invalid letter ^",
+			filename: "Name-AB^",
+			goarch:   "amd64",
+			expected: struct {
+				err error
+				fn  string
+			}{
+				err: errorInvalidFilename,
+			},
+		},
+		{
+			filename: "filename invalid letter $",
 			expected: struct {
 				err error
 				fn  string
@@ -271,6 +284,18 @@ func Test_generateOutputFilename(t *testing.T) {
 			},
 		},
 		{
+			name:     "filename capital letter",
+			filename: "Name-{{ .Arch }}",
+			goarch:   "amd64",
+			expected: struct {
+				err error
+				fn  string
+			}{
+				err: nil,
+				fn:  "Name-amd64",
+			},
+		},
+		{
 			name:     "filename amd64/linux arch",
 			filename: "name-{{ .Os }}-{{ .Arch }}",
 			goarch:   "amd64",
@@ -302,7 +327,100 @@ func Test_generateOutputFilename(t *testing.T) {
 				err error
 				fn  string
 			}{
+				err: errorInvalidEnvArgument,
+			},
+		},
+		{
+			name:     "filename amd64/linux v1.2.3",
+			filename: "name-{{ .Os }}-{{ .Arch }}-{{ .Tag }}",
+			goarch:   "amd64",
+			goos:     "linux",
+			envs: map[string]string{
+				"GITHUB_REF_NAME": "v1.2.3",
+			},
+			expected: struct {
+				err error
+				fn  string
+			}{
+				err: nil,
+				fn:  "name-linux-amd64-v1.2.3",
+			},
+		},
+		{
+			name:     "filename twice v1.2.3",
+			filename: "name-{{ .Tag }}-{{ .Tag }}",
+			goarch:   "amd64",
+			goos:     "linux",
+			envs: map[string]string{
+				"GITHUB_REF_NAME": "v1.2.3",
+			},
+			expected: struct {
+				err error
+				fn  string
+			}{
+				err: nil,
+				fn:  "name-v1.2.3-v1.2.3",
+			},
+		},
+		{
+			name:     "filename twice empty versions",
+			filename: "name-{{ .Tag }}-{{ .Tag }}",
+			goarch:   "amd64",
+			goos:     "linux",
+			envs: map[string]string{
+				"GITHUB_REF_NAME": "",
+			},
+			expected: struct {
+				err error
+				fn  string
+			}{
+				err: nil,
+				fn:  fmt.Sprintf("name-%s-%s", unknownTag, unknownTag),
+			},
+		},
+		{
+			name:     "invalid name with version",
+			filename: "name-{{ .Tag }}/../bla",
+			goarch:   "amd64",
+			goos:     "linux",
+			envs: map[string]string{
+				"GITHUB_REF_NAME": "v1.2.3",
+			},
+			expected: struct {
+				err error
+				fn  string
+			}{
 				err: errorInvalidFilename,
+			},
+		},
+		{
+			name:     "filename twice unset versions",
+			filename: "name-{{ .Tag }}-{{ .Tag }}",
+			goarch:   "amd64",
+			goos:     "linux",
+			expected: struct {
+				err error
+				fn  string
+			}{
+				err: nil,
+				fn:  fmt.Sprintf("name-%s-%s", unknownTag, unknownTag),
+			},
+		},
+		{
+			name:     "filename envs",
+			filename: "name-{{ .Env.VAR1 }}-{{ .Os }}-{{ .Arch }}-{{ .Env.VAR2 }}-{{ .Tag }}-end",
+			goarch:   "amd64",
+			goos:     "linux",
+			envs: map[string]string{
+				"GITHUB_REF_NAME": "v1.2.3",
+			},
+			argEnv: "VAR1:var1, VAR2:var2",
+			expected: struct {
+				err error
+				fn  string
+			}{
+				err: nil,
+				fn:  "name-var1-linux-amd64-var2-v1.2.3-end",
 			},
 		},
 	}
@@ -310,7 +428,8 @@ func Test_generateOutputFilename(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt // Re-initializing variable so it is not changed while executing the closure below
 		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
+			// Note: disable parallelism to avoid env variable clobbering between tests.
+			// t.Parallel()
 
 			cfg := goReleaserConfigFile{
 				Binary:  tt.filename,
@@ -322,11 +441,33 @@ func Test_generateOutputFilename(t *testing.T) {
 			if err != nil {
 				t.Errorf("fromConfig: %v", err)
 			}
+
+			// Unset env variables, in case the workflow environment sets them.
+			for _, k := range []string{"GITHUB_REF_NAME"} {
+				os.Unsetenv(k)
+			}
+
+			// Set env variables.
+			for k, v := range tt.envs {
+				t.Setenv(k, v)
+			}
+
 			b := GoBuildNew("go compiler", c)
+
+			err = b.SetArgEnvVariables(tt.argEnv)
+			if err != nil {
+				t.Errorf("SetArgEnvVariables: %v", err)
+			}
 
 			fn, err := b.generateOutputFilename()
 			if !errCmp(err, tt.expected.err) {
 				t.Errorf(cmp.Diff(err, tt.expected.err))
+			}
+
+			// Unset env variables, so that they don't
+			// affect other tests.
+			for k := range tt.envs {
+				os.Unsetenv(k)
 			}
 
 			if err != nil {
@@ -582,12 +723,14 @@ func Test_generateEnvVariables(t *testing.T) {
 }
 
 func Test_generateLdflags(t *testing.T) {
-	t.Parallel()
+	// Disable to avoid env clobbering between tests.
+	// t.Parallel()
 
 	tests := []struct {
 		name       string
 		argEnv     string
 		inldflags  []string
+		githubEnv  map[string]string
 		err        error
 		outldflags string
 	}{
@@ -662,21 +805,67 @@ func Test_generateLdflags(t *testing.T) {
 			},
 			outldflags: "value1-name-value2 value1-name-value3 value3-name-value1 value3-name-value2",
 		},
+		{
+			name:   "several ldflags with start/end",
+			argEnv: "VAR1:value1, VAR2:value2, VAR3:value3",
+			inldflags: []string{
+				"start-{{ .Env.VAR1 }}-name-{{ .Env.VAR2 }}-end",
+				"start-{{ .Env.VAR1 }}-name-{{ .Env.VAR3 }}-end",
+				"start-{{ .Env.VAR3 }}-name-{{ .Env.VAR1 }}-end",
+				"start-{{ .Env.VAR3 }}-name-{{ .Env.VAR2 }}-end",
+			},
+			outldflags: "start-value1-name-value2-end start-value1-name-value3-end start-value3-name-value1-end start-value3-name-value2-end",
+		},
+		{
+			name:   "several ldflags and tag",
+			argEnv: "VAR1:value1, VAR2:value2, VAR3:value3",
+			githubEnv: map[string]string{
+				"GITHUB_REF_NAME": "v1.2.3",
+			},
+			inldflags: []string{
+				"start-{{ .Env.VAR1 }}-name-{{ .Env.VAR2 }}-{{ .Tag }}-end",
+				"{{ .Env.VAR1 }}-name-{{ .Env.VAR3 }}",
+				"{{ .Env.VAR3 }}-name-{{ .Env.VAR1 }}-{{ .Tag }}-{{ .Tag }}",
+				"{{ .Env.VAR3 }}-name-{{ .Env.VAR2 }}-{{ .Tag }}-end",
+			},
+			outldflags: "start-value1-name-value2-v1.2.3-end value1-name-value3 value3-name-value1-v1.2.3-v1.2.3 value3-name-value2-v1.2.3-end",
+		},
+		{
+			name:   "several ldflags and Arch and Os",
+			argEnv: "VAR1:value1, VAR2:value2, VAR3:value3",
+			githubEnv: map[string]string{
+				"GITHUB_REF_NAME": "v1.2.3",
+			},
+			inldflags: []string{
+				"start-{{ .Env.VAR1 }}-name-{{ .Env.VAR2 }}-{{ .Tag }}-{{ .Arch }}-end",
+				"{{ .Env.VAR1 }}-name-{{ .Env.VAR3 }}-{{ .Os }}-end",
+			},
+			outldflags: "start-value1-name-value2-v1.2.3-amd64-end value1-name-value3-linux-end",
+		},
 	}
 
 	for _, tt := range tests {
 		tt := tt // Re-initializing variable so it is not changed while executing the closure below
 		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
+			// Disable to avoid env clobbering between tests.
+			// t.Parallel()
 
 			cfg := goReleaserConfigFile{
 				Version: 1,
 				Ldflags: tt.inldflags,
+				Goarch:  "amd64",
+				Goos:    "linux",
 			}
 			c, err := fromConfig(&cfg)
 			if err != nil {
 				t.Errorf("fromConfig: %v", err)
 			}
+
+			// Set GitHub env variables.
+			for k, v := range tt.githubEnv {
+				t.Setenv(k, v)
+			}
+
 			b := GoBuildNew("go compiler", c)
 
 			err = b.SetArgEnvVariables(tt.argEnv)
@@ -684,6 +873,12 @@ func Test_generateLdflags(t *testing.T) {
 				t.Errorf("SetArgEnvVariables: %v", err)
 			}
 			ldflags, err := b.generateLdflags()
+
+			// Unset env variables, so that they don't
+			// affect other tests.
+			for k := range tt.githubEnv {
+				os.Unsetenv(k)
+			}
 
 			if !errCmp(err, tt.err) {
 				t.Errorf(cmp.Diff(err, tt.err))
@@ -852,4 +1047,124 @@ func Test_generateCommand(t *testing.T) {
 
 func asPointer(s string) *string {
 	return &s
+}
+
+func TestGoBuild_Run(t *testing.T) {
+	type fields struct {
+		cfg     *GoReleaserConfig
+		goc     string
+		argEnv  map[string]string
+		ldflags string
+	}
+	type args struct {
+		dry bool
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		wantErr bool
+		err     error
+	}{
+		{
+			name: "dry run valid flags",
+			fields: fields{
+				cfg: &GoReleaserConfig{
+					Goos:   "linux",
+					Goarch: "amd64",
+					Binary: "binary",
+					Main:   asPointer("../builders/go/main.go"),
+					Dir:    asPointer("../builders/go"),
+					Ldflags: []string{
+						"-X main.version=1.0.0",
+					},
+				},
+			},
+			args: args{
+				dry: true,
+			},
+		},
+		{
+			name: "non-dry valid flags",
+			fields: fields{
+				cfg: &GoReleaserConfig{
+					Goos:   "linux",
+					Goarch: "amd64",
+					Binary: "/tmp/binary",
+					Main:   asPointer("main.go"),
+					Dir:    asPointer("./testdata/go"),
+					Ldflags: []string{
+						"-X main.version=1.0.0",
+					},
+				},
+			},
+			args: args{
+				dry: false,
+			},
+		},
+		{
+			name: "slash in the binary name",
+			fields: fields{
+				cfg: &GoReleaserConfig{
+					Goos:   "linux",
+					Goarch: "amd64",
+					Binary: "tmp/binary",
+					Main:   asPointer("../builders/go/main.go"),
+					Dir:    asPointer("../builders/go"),
+				},
+			},
+			args: args{
+				dry: true,
+			},
+			wantErr: true,
+			err:     errorInvalidFilename,
+		},
+		{
+			name: "dry run - invalid flags",
+			fields: fields{
+				cfg: &GoReleaserConfig{
+					Goos:    "linux",
+					Goarch:  "amd64",
+					Binary:  "binary",
+					Main:    asPointer("../builders/go/main.go"),
+					Dir:     asPointer("../builders/go"),
+					Ldflags: []string{},
+				},
+			},
+			args: args{
+				dry: true,
+			},
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			b := &GoBuild{
+				cfg:     tt.fields.cfg,
+				goc:     tt.fields.goc,
+				argEnv:  tt.fields.argEnv,
+				ldflags: tt.fields.ldflags,
+			}
+			t.Setenv("OUTPUT_BINARY", tt.fields.cfg.Binary)
+			// if the test is not dry run , then code has to look for golang binary
+			if !tt.args.dry {
+				path, err := exec.LookPath("go")
+				if err != nil {
+					t.Errorf("exec.LookPath: %v", err)
+				}
+				b.goc = path
+			}
+			err := b.Run(tt.args.dry)
+			if err != nil != tt.wantErr {
+				t.Errorf("Run() error = %v, wantErr %v", err, tt.wantErr)
+			}
+			if tt.err != nil {
+				if err == nil {
+					t.Errorf("Run() error = nil, wantErr %v", tt.err)
+				} else if errCmp(err, tt.err) {
+					t.Errorf("Run() error = %v, wantErr %v %v", err, tt.err, cmp.Diff(err, tt.err))
+				}
+			}
+		})
+	}
 }

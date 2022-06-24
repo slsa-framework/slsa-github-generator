@@ -24,8 +24,14 @@ type Signer interface {
 
 // LogEntry represents a transparency log entry.
 type LogEntry interface {
-	// ID returns the ID of the transparency log entry.
+	// ID returns the ID of the transparency log.
 	ID() string
+
+	// LogIndex return the index of the transparency log entry.
+	LogIndex() int64
+
+	// UUID return the uuid of the transparency log entry.
+	UUID() string
 }
 
 // TransparencyLog allows interaction with a transparency log.

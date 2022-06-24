@@ -46,14 +46,14 @@ e2e_verify_predicate_buildConfig_step_env "1" "$ATTESTATION" "[\"GOOS=linux\",\"
 e2e_verify_predicate_buildConfig_step_workingDir "1" "$ATTESTATION" "$PWD/internal/builders/go/e2e-presubmits"
 
 if [[ -n "$LDFLAGS" ]]; then
-	e2e_verify_predicate_buildConfig_step_command "1" "$ATTESTATION" "[\"build\",\"-mod=vendor\",\"-trimpath\",\"-tags=netgo\",\"-ldflags=-X main.gitVersion=v1.2.3 -X main.gitCommit=abcdef -X main.gitBranch=$BRANCH\",\"-o\",\"$BINARY\",\"main.go\"]"
-	chmod a+x ./"$BINARY"
-	V=$(./"$BINARY" | grep 'GitVersion: v1.2.3')
-	C=$(./"$BINARY" | grep 'GitCommit: abcdef')
-	B=$(./"$BINARY" | grep "GitBranch: main")
-	e2e_assert_not_eq "$V" "" "GitVersion should not be empty"
-	e2e_assert_not_eq "$C" "" "GitCommit should not be empty"
-	e2e_assert_not_eq "$B" "" "GitBranch should not be empty"
+    e2e_verify_predicate_buildConfig_step_command "1" "$ATTESTATION" "[\"build\",\"-mod=vendor\",\"-trimpath\",\"-tags=netgo\",\"-ldflags=-X main.gitVersion=v1.2.3 -X main.gitCommit=abcdef -X main.gitBranch=$BRANCH\",\"-o\",\"$BINARY\",\"main.go\"]"
+    chmod a+x ./"$BINARY"
+    V=$(./"$BINARY" | grep 'GitVersion: v1.2.3')
+    C=$(./"$BINARY" | grep 'GitCommit: abcdef')
+    B=$(./"$BINARY" | grep "GitBranch: main")
+    e2e_assert_not_eq "$V" "" "GitVersion should not be empty"
+    e2e_assert_not_eq "$C" "" "GitCommit should not be empty"
+    e2e_assert_not_eq "$B" "" "GitBranch should not be empty"
 else
-	e2e_verify_predicate_buildConfig_step_command "1" "$ATTESTATION" "[\"build\",\"-mod=vendor\",\"-trimpath\",\"-tags=netgo\",\"-o\",\"$BINARY\",\"main.go\"]"
+    e2e_verify_predicate_buildConfig_step_command "1" "$ATTESTATION" "[\"build\",\"-mod=vendor\",\"-trimpath\",\"-tags=netgo\",\"-o\",\"$BINARY\",\"main.go\"]"
 fi
