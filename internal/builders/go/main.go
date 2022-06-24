@@ -23,6 +23,7 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"path/filepath"
 
 	"github.com/slsa-framework/slsa-github-generator/signing/sigstore"
 
@@ -83,7 +84,7 @@ func runProvenanceGeneration(subject, digest, commands, envs, workingDir string)
 	}
 
 	filename := fmt.Sprintf("%s.intoto.jsonl", subject)
-	err = ioutil.WriteFile(filename, attBytes, 0600)
+	err = ioutil.WriteFile(filename, attBytes, 0o600)
 	if err != nil {
 		return err
 	}
@@ -148,10 +149,11 @@ func main() {
 }
 
 func computeSHA256(filePath string) (string, error) {
-	file, err := os.Open(filePath)
+	file, err := os.Open(filepath.Clean(filePath))
 	if err != nil {
 		return "", err
 	}
+
 	defer file.Close()
 
 	hash := sha256.New()
