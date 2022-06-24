@@ -125,6 +125,13 @@ func (a *action) getRepoRef(ctx context.Context) (string, string, error) {
 		ref = refParts[1]
 	}
 
+	if repository == "" {
+		return "", "", errors.New("no repository detected")
+	}
+	if ref == "" {
+		return "", "", errors.New("no ref detected")
+	}
+
 	return repository, ref, nil
 }
 
