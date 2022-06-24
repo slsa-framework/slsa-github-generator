@@ -180,9 +180,9 @@ issue](https://github.com/slsa-framework/slsa-github-generator/issues/new/choose
 
 The [generic workflow](https://github.com/slsa-framework/slsa-github-generator/blob/main/.github/workflows/generator_generic_slsa3.yml) accepts the following inputs:
 
-| Name              | Required | Description                                                                                                                        |
-| ----------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| `base64-subjects` | yes      | Artifact(s) for which to generate provenance, formatted the same as the output of sha256sum (SHA256 NAME\n[...]) and base64 encoded. The encoded value should decode to, for example: `90f3f7d6c862883ab9d856563a81ea6466eb1123b55bff11198b4ed0030cac86  foo.zip` |
+| Name              | Required | Description                                                                                                                                                                                                                                                      |
+| ----------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `base64-subjects` | yes      | Artifact(s) for which to generate provenance, formatted the same as the output of sha256sum (SHA256 NAME\n[...]) and base64 encoded. The encoded value should decode to, for example: `90f3f7d6c862883ab9d856563a81ea6466eb1123b55bff11198b4ed0030cac86 foo.zip` |
 
 ### Workflow Outputs
 
@@ -212,42 +212,46 @@ generated as an [in-toto](https://in-toto.io/) statement with a SLSA predicate.
   "predicateType": "https://slsa.dev/provenance/v0.2",
   "subject": [
     {
-      "name": "binary-linux-amd64",
+      "name": "ghcr.io/ianlewis/actions-test",
       "digest": {
-        "sha256": "2e0390eb024a52963db7b95e84a9c2b12c004054a7bad9a97ec0c7c89d4681d2"
+        "sha256": "8ae83e5b11e4cc8257f5f4d1023081ba1c72e8e60e8ed6cacd0d53a4ca2d142b"
       }
     },
   ],
   "predicate": {
     "builder": {
-      "id": "https://github.com/slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@refs/heads/main"
+      "id": "https://github.com/slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@refs/tags/v1.1.1"
     },
     "buildType": "https://github.com/slsa-framework/slsa-github-generator@v1",
     "invocation": {
       "configSource": {
         "uri": "git+https://github.com/ianlewis/actions-test@refs/heads/main.git",
         "digest": {
-          "sha1": "3b5dc7cf5c0fd71c5a74c6b16cae78d49e03857c"
+          "sha1": "e491e4b2ce5bc76fb103729b61b04d3c46d8a192"
         },
-        "entryPoint": "SLSA provenance"
+        "entryPoint": ".github/workflows/generic-container.yml"
       },
       "parameters": {},
       "environment": {
         "github_actor": "ianlewis",
+        "github_actor_id": "49289",
         "github_base_ref": "",
-        "github_event_name": "workflow_dispatch",
-        "github_event_payload": ...,
+        "github_event_name": "push",
+        "github_event_payload": {...},
         "github_head_ref": "",
-        "github_ref": "refs/heads/main",
-        "github_ref_type": "branch",
+        "github_ref": "refs/tags/v0.0.9",
+        "github_ref_type": "tag",
+        "github_repository_id": "474793590",
+        "github_repository_owner": "ianlewis",
+        "github_repository_owner_id": "49289",
         "github_run_attempt": "1",
-        "github_run_id": "2093917134",
-        "github_run_number": "19",
-        "github_sha1": "3b5dc7cf5c0fd71c5a74c6b16cae78d49e03857c"
+        "github_run_id": "2556669934",
+        "github_run_number": "12",
+        "github_sha1": "e491e4b2ce5bc76fb103729b61b04d3c46d8a192"
       }
     },
     "metadata": {
-      "buildInvocationID": "2182400786-1",
+      "buildInvocationID": "2556669934-1",
       "completeness": {
         "parameters": true,
         "environment": false,
@@ -257,9 +261,9 @@ generated as an [in-toto](https://in-toto.io/) statement with a SLSA predicate.
     },
     "materials": [
       {
-        "uri": "git+https://github.com/ianlewis/actions-test@refs/heads/main.git",
+        "uri": "git+https://github.com/ianlewis/actions-test@refs/tags/v0.0.9",
         "digest": {
-          "sha1": "3b5dc7cf5c0fd71c5a74c6b16cae78d49e03857c"
+          "sha1": "e491e4b2ce5bc76fb103729b61b04d3c46d8a192"
         }
       }
     ]
