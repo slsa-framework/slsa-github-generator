@@ -73,8 +73,13 @@ func runBuild(dry bool, configFile, evalEnvs string) error {
 	return nil
 }
 
-func runProvenanceGeneration(subject, digest, commands, envs, workingDir string) error {
-	r := sigstore.NewDefaultRekor()
+func runProvenanceGeneration(subject, digest, commands, envs, workingDir, rekor string) error {
+	var r *sigstore.Rekor
+	if rekor == "" {
+		r = sigstore.NewDefaultRekor()
+	} else {
+		r = sigstore.NewRekor(rekor)
+	}
 	s := sigstore.NewDefaultFulcio()
 	attBytes, err := pkg.GenerateProvenance(subject, digest,
 		commands, envs, workingDir, s, r)
@@ -83,7 +88,7 @@ func runProvenanceGeneration(subject, digest, commands, envs, workingDir string)
 	}
 
 	filename := fmt.Sprintf("%s.intoto.jsonl", subject)
-	err = ioutil.WriteFile(filename, attBytes, 0600)
+	err = ioutil.WriteFile(filename, attBytes, 0o600)
 	if err != nil {
 		return err
 	}
@@ -112,6 +117,7 @@ func main() {
 	provenanceCommand := provenanceCmd.String("command", "", "command used to compile the binary")
 	provenanceEnv := provenanceCmd.String("env", "", "env variables used to compile the binary")
 	provenanceWorkingDir := provenanceCmd.String("workingDir", "", "working directory used to issue compilation commands")
+	provenanceRekor := provenanceCmd.String("rekor", "", "rekor server to use for provenance")
 
 	// Expect a sub-command.
 	if len(os.Args) < 2 {
@@ -138,7 +144,7 @@ func main() {
 		}
 
 		err := runProvenanceGeneration(*provenanceName, *provenanceDigest,
-			*provenanceCommand, *provenanceEnv, *provenanceWorkingDir)
+			*provenanceCommand, *provenanceEnv, *provenanceWorkingDir, *provenanceRekor)
 		check(err)
 
 	default:
