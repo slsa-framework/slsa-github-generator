@@ -4,6 +4,8 @@ go 1.18
 
 require github.com/slsa-framework/slsa-github-generator v1.1.1
 
+require github.com/google/go-cmp v0.5.8
+
 require (
 	github.com/coreos/go-oidc v2.2.1+incompatible // indirect
 	github.com/golang/protobuf v1.5.2 // indirect

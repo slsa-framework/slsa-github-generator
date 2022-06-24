@@ -16,8 +16,11 @@ package main
 
 import (
 	"context"
+	"os"
 	"testing"
 	"time"
+
+	"github.com/google/go-cmp/cmp"
 
 	"github.com/slsa-framework/slsa-github-generator/github"
 )
@@ -174,4 +177,69 @@ func Test_action_getRepoRef(t *testing.T) {
 			t.Errorf("unexpected ref, want: %q, got: %q", want, got)
 		}
 	})
+}
+
+func Test_newAction(t *testing.T) {
+	type args struct {
+		getenv func(string) string
+		c      *github.OIDCClient
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    *action
+		wantErr bool
+	}{
+		{
+			name: "failure with empty string",
+			args: args{
+				getenv: func(k string) string {
+					return ""
+				},
+			},
+			wantErr: true,
+			want:    nil,
+		},
+		{
+			name: "success",
+			args: args{
+				getenv: func(k string) string {
+					// create a temp file with key:value
+
+					f, err := os.CreateTemp("", "")
+					if err != nil {
+						t.Fatalf("unexpected error: %v", err)
+					}
+					defer f.Close()
+					if _, err := f.Write([]byte(`{"test":"hoge"}`)); err != nil {
+						t.Fatalf("unexpected error: %v", err)
+					}
+					return f.Name()
+				},
+			},
+			want: &action{
+				getenv: func(k string) string {
+					return "test:hoge"
+				},
+				event: map[string]any{
+					"test": "hoge",
+				},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := newAction(tt.args.getenv, tt.args.c)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("newAction() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			var diff string
+			if tt.want != nil && tt.want.event != nil {
+				if diff = cmp.Diff(got.event, tt.want.event); diff != "" {
+					t.Errorf("newAction() event mismatch (-want +got):\n%s", diff)
+				}
+			}
+		})
+	}
 }
