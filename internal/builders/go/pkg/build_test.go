@@ -17,6 +17,7 @@ package pkg
 import (
 	"fmt"
 	"os"
+	"os/exec"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -1046,4 +1047,124 @@ func Test_generateCommand(t *testing.T) {
 
 func asPointer(s string) *string {
 	return &s
+}
+
+func TestGoBuild_Run(t *testing.T) {
+	type fields struct {
+		cfg     *GoReleaserConfig
+		goc     string
+		argEnv  map[string]string
+		ldflags string
+	}
+	type args struct {
+		dry bool
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		wantErr bool
+		err     error
+	}{
+		{
+			name: "dry run valid flags",
+			fields: fields{
+				cfg: &GoReleaserConfig{
+					Goos:   "linux",
+					Goarch: "amd64",
+					Binary: "binary",
+					Main:   asPointer("../builders/go/main.go"),
+					Dir:    asPointer("../builders/go"),
+					Ldflags: []string{
+						"-X main.version=1.0.0",
+					},
+				},
+			},
+			args: args{
+				dry: true,
+			},
+		},
+		{
+			name: "non-dry valid flags",
+			fields: fields{
+				cfg: &GoReleaserConfig{
+					Goos:   "linux",
+					Goarch: "amd64",
+					Binary: "/tmp/binary",
+					Main:   asPointer("main.go"),
+					Dir:    asPointer("./testdata/go"),
+					Ldflags: []string{
+						"-X main.version=1.0.0",
+					},
+				},
+			},
+			args: args{
+				dry: false,
+			},
+		},
+		{
+			name: "slash in the binary name",
+			fields: fields{
+				cfg: &GoReleaserConfig{
+					Goos:   "linux",
+					Goarch: "amd64",
+					Binary: "tmp/binary",
+					Main:   asPointer("../builders/go/main.go"),
+					Dir:    asPointer("../builders/go"),
+				},
+			},
+			args: args{
+				dry: true,
+			},
+			wantErr: true,
+			err:     errorInvalidFilename,
+		},
+		{
+			name: "dry run - invalid flags",
+			fields: fields{
+				cfg: &GoReleaserConfig{
+					Goos:    "linux",
+					Goarch:  "amd64",
+					Binary:  "binary",
+					Main:    asPointer("../builders/go/main.go"),
+					Dir:     asPointer("../builders/go"),
+					Ldflags: []string{},
+				},
+			},
+			args: args{
+				dry: true,
+			},
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			b := &GoBuild{
+				cfg:     tt.fields.cfg,
+				goc:     tt.fields.goc,
+				argEnv:  tt.fields.argEnv,
+				ldflags: tt.fields.ldflags,
+			}
+			t.Setenv("OUTPUT_BINARY", tt.fields.cfg.Binary)
+			// if the test is not dry run , then code has to look for golang binary
+			if !tt.args.dry {
+				path, err := exec.LookPath("go")
+				if err != nil {
+					t.Errorf("exec.LookPath: %v", err)
+				}
+				b.goc = path
+			}
+			err := b.Run(tt.args.dry)
+			if err != nil != tt.wantErr {
+				t.Errorf("Run() error = %v, wantErr %v", err, tt.wantErr)
+			}
+			if tt.err != nil {
+				if err == nil {
+					t.Errorf("Run() error = nil, wantErr %v", tt.err)
+				} else if errCmp(err, tt.err) {
+					t.Errorf("Run() error = %v, wantErr %v %v", err, tt.err, cmp.Diff(err, tt.err))
+				}
+			}
+		})
+	}
 }

@@ -10,8 +10,23 @@ on:
 permissions: read-all
 
 jobs:
+  # Generic generator.
+  generic-generator:
+    permissions:
+      id-token: write # For signing.
+      contents: write # For asset uploads.
+      actions: read # For the entrypoint.
+    uses: slsa-framework/slsa-github-generator/.github/workflows/builder_go_slsa3.yml@main
+    with:
+      go-version: 1.18
+      config-file: .github/workflows/configs-generic/config-release.yml
+      compile-builder: true
+
   # Go builder.
   go-builder:
+    # Force the builds to rin sequentially, to avoid
+    # the builder binaries being overwritten by each run.
+    needs: [generic-generator]
     permissions:
       id-token: write # For signing.
       contents: write # For asset uploads.
