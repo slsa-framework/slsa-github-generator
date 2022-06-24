@@ -101,7 +101,8 @@ $ "$GH" release -R slsa-framework/slsa-github-generator upload "$BUILDER_TAG" sl
 ```
 verifier hash computed is 60c91c9d5b9a059e37ac46da316f20c81da335b5d00e1f74d03dd50f819694bd
 verifier hash verification has passed
-verification failed: could not find a matching signature entry
+...
+FAILED: SLSA verification failed: expected hash '5891b5b522d5df086d0ff0b110fbd9d21bb4fc7163af34d08286a2e846f6be03', got 'e8af48495ca3c5a7737b4a34322afc7e95a85cf1457a37473fb81cff9b4f0d05': binary artifact hash does not match provenance subject
 Error: Process completed with exit code 6.
 ```
 
@@ -129,7 +130,15 @@ Send a pull request to merge the changes into the verifier's repository. The pre
 
 ## Finalize release
 
-Untick the `This is a pre-release` option. That's it!
+Untick the `This is a pre-release` option. 
+
+Update the documentation to recommend using the new version:
+
+```shell
+$ find . -name "*.md" -exec sed -i "s/v1.0.0/v1.1.1/g" {} +
+```
+
+That's it!
 
 ## Update the starter workflow
 

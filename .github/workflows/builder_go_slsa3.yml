@@ -19,16 +19,16 @@ permissions:
 
 env:
   # Project.
-  GENERATED_BINARY_NAME: compiled-binary
+  GENERATED_BINARY_NAME: go-compiled-binary
   # Builder
-  BUILDER_BINARY: builder
+  BUILDER_BINARY: go-builder
   BUILDER_RELEASE_BINARY: slsa-builder-go-linux-amd64
   BUILDER_REPOSITORY: slsa-framework/slsa-github-generator
   # Verifier
   VERIFIER_REPOSITORY: slsa-framework/slsa-verifier
   VERIFIER_RELEASE_BINARY: slsa-verifier-linux-amd64
-  VERIFIER_RELEASE_BINARY_SHA256: 60c91c9d5b9a059e37ac46da316f20c81da335b5d00e1f74d03dd50f819694bd
-  VERIFIER_RELEASE: v0.0.1
+  VERIFIER_RELEASE_BINARY_SHA256: 14360688de2d294e9cda7b9074ab7dcf02d5c38f2874f6c95d4ad46e300c3e53
+  VERIFIER_RELEASE: v1.1.0
   # Builder location
   BUILDER_DIR: internal/builders
 
@@ -79,7 +79,7 @@ jobs:
     steps:
       - name: Detect the builder ref
         id: detect
-        uses: slsa-framework/slsa-github-generator/.github/actions/detect-workflow@bbeae84f20f78877b7ba56f324b993c3ee576cf1
+        uses: slsa-framework/slsa-github-generator/.github/actions/detect-workflow@d995948e8d53cc639c0d3ef69db31dbc243519c4
 
   ###################################################################
   #                                                                 #
