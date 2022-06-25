@@ -15,7 +15,7 @@ const (
 	defaultRekorAddr = "https://rekor.sigstore.dev"
 )
 
-// Rekor implements TransparencyLog
+// Rekor implements TransparencyLog.
 type Rekor struct {
 	rekorAddr string
 }

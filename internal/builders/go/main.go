@@ -83,7 +83,7 @@ func runProvenanceGeneration(subject, digest, commands, envs, workingDir string)
 	}
 
 	filename := fmt.Sprintf("%s.intoto.jsonl", subject)
-	err = ioutil.WriteFile(filename, attBytes, 0600)
+	err = ioutil.WriteFile(filename, attBytes, 0o600)
 	if err != nil {
 		return err
 	}

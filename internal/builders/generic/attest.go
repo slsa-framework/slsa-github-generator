@@ -37,7 +37,7 @@ import (
 )
 
 var (
-	// shaCheck verifies a hash is has only hexidecimal digits and is 64
+	// shaCheck verifies a hash is has only hexadecimal digits and is 64
 	// characters long.
 	shaCheck = regexp.MustCompile(`^[a-fA-F0-9]{64}$`)
 
@@ -128,7 +128,7 @@ func getFile(path string) (io.Writer, error) {
 	if path == "-" {
 		return os.Stdout, nil
 	}
-	return os.OpenFile(path, os.O_WRONLY|os.O_CREATE, 0600)
+	return os.OpenFile(path, os.O_WRONLY|os.O_CREATE, 0o600)
 }
 
 type provenanceOnlyBuild struct {
