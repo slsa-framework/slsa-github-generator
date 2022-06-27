@@ -25,7 +25,7 @@ project simply generates provenance as a separate step in an existing workflow.
   - [Provenance Format](#provenance-format)
   - [Provenance Example](#provenance-example)
 - [Integration With Other Build Systems](#integration-with-other-build-systems)
-  - [Provenance with Goreleaser](#provenance-with-goreleaser)
+  - [Provenance with GoReleaser](#provenance-with-goreleaser)
 
 ---
 
@@ -282,9 +282,9 @@ generated as an [in-toto](https://in-toto.io/) statement with a SLSA predicate.
 
 This section explains how to generate non-forgeable SLSA provenance with existing build systems.
 
-### Provenance for Goreleaser
+### Provenance for GoReleaser
 
-If you use [Goreleaser](https://github.com/goreleaser/goreleaser-action) to generate your build, you can easily
+If you use [GoReleaser](https://github.com/goreleaser/goreleaser-action) to generate your build, you can easily
 generate SLSA3 provenance by updating your existing workflow with the 4 steps indicated in the workflow below:
 
 ```yaml
@@ -292,7 +292,7 @@ jobs:
   goreleaser:
     # =================================================
     #
-    # Step 1: Declare an `outputs` for the Goreleaser job.
+    # Step 1: Declare an `outputs` for the GoReleaser job.
     #
     # =================================================
     outputs:
