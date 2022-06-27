@@ -25,7 +25,11 @@ project simply generates provenance as a separate step in an existing workflow.
   - [Provenance Format](#provenance-format)
   - [Provenance Example](#provenance-example)
 - [Integration With Other Build Systems](#integration-with-other-build-systems)
+<<<<<<< HEAD
   - [Provenance with GoReleaser](#provenance-with-goreleaser)
+=======
+  - [Provenance with Goreleaser](#provenance-with-goreleaser)
+>>>>>>> 2be4bf6 (Update doc)
 
 ---
 
