@@ -288,7 +288,7 @@ This section explains how to generate non-forgeable SLSA provenance with existin
 If you use [Goreleaser](https://github.com/goreleaser/goreleaser-action) to generate your build, you can easily
 generate SLSA3 provenance as follows:
 
-```
+```yaml
 jobs:
   goreleaser:
     # Step 1: declare an output for the Goreleaser job.
