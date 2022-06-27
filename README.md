@@ -27,7 +27,7 @@ This repository contains the code, examples and technical design for system desc
 ### Builders 
 
 Builders build and generate provenance. They let you meet the [build](https://slsa.dev/spec/v0.1/requirements#build-requirements)
-and [provenance](https://slsa.dev/spec/v0.1/requirements#provenance-requirements) requirements.
+and [provenance](https://slsa.dev/spec/v0.1/requirements#provenance-requirements) requirements for [SLSA Level 3](https://slsa.dev/spec/v0.1/levels).
 
 Builders are able to report the exact commands used to generate your artifact in the provenance.
 
