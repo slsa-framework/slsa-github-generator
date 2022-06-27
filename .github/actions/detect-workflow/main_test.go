@@ -106,9 +106,12 @@ func Test_action_getRepoRef(t *testing.T) {
 		now := time.Date(2022, 5, 3, 14, 49, 0, 0, time.UTC)
 		t.Setenv("GITHUB_CONTEXT", `{"repository": "githubuser/reponame"}`)
 		s, c := github.NewTestOIDCServer(t, now, &github.OIDCToken{
-			Audience:       []string{"githubuser/reponame/detect-workflow"},
-			Expiry:         time.Date(2022, 5, 4, 0, 0, 0, 0, time.UTC),
-			JobWorkflowRef: "githubuser/reponame/path/to/workflow@refs/heads/main",
+			Audience:          []string{"githubuser/reponame/detect-workflow"},
+			Expiry:            time.Date(2022, 5, 4, 0, 0, 0, 0, time.UTC),
+			JobWorkflowRef:    "githubuser/reponame/path/to/workflow@refs/heads/main",
+			RepositoryOwnerID: "1",
+			ActorID:           "1",
+			RepositoryID:      "1",
 		})
 		defer s.Close()
 
