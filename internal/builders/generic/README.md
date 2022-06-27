@@ -286,12 +286,16 @@ This section explains how to generate non-forgeable SLSA provenance with existin
 ### Provenance for Goreleaser
 
 If you use [Goreleaser](https://github.com/goreleaser/goreleaser-action) to generate your build, you can easily
-generate SLSA3 provenance as follows:
+generate SLSA3 provenance by updating your existing workflow with the 4 steps indicated in the workflow below:
 
 ```yaml
 jobs:
   goreleaser:
+    # =================================================
+    #
     # Step 1: declare an output for the Goreleaser job.
+    #
+    # =================================================
     outputs:
       hashes: ${{ steps.hash.outputs.hashes }}
     
@@ -300,11 +304,19 @@ jobs:
     steps:
       [...]
       - name: Run GoReleaser
+        # =================================================
+        #
         # Step 2: add an id field to your goreleaser step.
+        #
+        # =================================================
         id: run-goreleaser 
         uses: goreleaser/goreleaser-action@b953231f81b8dfd023c58e0854a721e35037f28b
 
+      # =================================================
+      #
       # Step 3: add the step below to your job.
+      #
+      # =================================================
       - name: Generate subject
         id: hash
         env:
@@ -315,7 +327,11 @@ jobs:
           checksum_file=$(echo "$ARTIFACTS" | jq -r '.[] | select (.type=="Checksum") | .path')
           echo "::set-output name=hashes::$(cat $checksum_file | base64 -w0)"
 
-  # This step calls the generic workflow to generate provenance.
+  # =========================================================
+  #
+  # Step 4: Call the generic workflow to generate provenance.
+  #
+  # =========================================================
   provenance:
     needs: [goreleaser]
     permissions:
