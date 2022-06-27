@@ -24,6 +24,8 @@ project simply generates provenance as a separate step in an existing workflow.
   - [Workflow Outputs](#workflow-outputs)
   - [Provenance Format](#provenance-format)
   - [Provenance Example](#provenance-example)
+- [Integration With Other Build Systems](#integration-with-other-build-systems)
+  - [Provenance with GoReleaser](#provenance-with-goreleaser)
 
 ---
 
@@ -77,7 +79,7 @@ provenance:
     contents: read # Needed for API access
   uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.1.1
   with:
-    base64-subjects: "${{ needs.build.outputs.digest }}"
+    base64-subjects: "${{ needs.build.outputs.hashes }}"
 ```
 
 Here's an example of what it might look like all together.
@@ -88,22 +90,24 @@ jobs:
   # outputs their digest.
   build:
     outputs:
-      digest: ${{ steps.hash.outputs.digest }}
+      hashes: ${{ steps.hash.outputs.hashes }}
     runs-on: ubuntu-latest
     steps:
-      - name: "build artifacts"
+      - name: Build artifacts
         run: |
           # These are some amazing artifacts.
           echo "foo" > artifact1
           echo "bar" > artifact2
-      - name: "generate hash"
+
+      - name: Generate hashes
         shell: bash
         id: hash
         run: |
           # sha256sum generates sha256 hash for all artifacts.
           # base64 -w0 encodes to base64 and outputs on a single line.
           # sha256sum artifact1 artifact2 ... | base64 -w0
-          echo "::set-output name=digest::$(sha256sum artifact1 artifact2 | base64 -w0)"
+          echo "::set-output name=hashes::$(sha256sum artifact1 artifact2 | base64 -w0)"
+
       - name: Upload artifact1
         uses: actions/upload-artifact@3cea5372237819ed00197afe530f5a7ea3e805c8 # v3.1.0
         with:
@@ -111,6 +115,7 @@ jobs:
           path: artifact1
           if-no-files-found: error
           retention-days: 5
+
       - name: Upload artifact2
         uses: actions/upload-artifact@3cea5372237819ed00197afe530f5a7ea3e805c8 # v3.1.0
         with:
@@ -126,10 +131,9 @@ jobs:
       actions: read
       id-token: write
       contents: read
-    if: startsWith(github.ref, 'refs/tags/')
     uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.1.1
     with:
-      base64-subjects: "${{ needs.build.outputs.digest }}"
+      base64-subjects: "${{ needs.build.outputs.hashes }}"
 
   # This step creates a GitHub release with our artifacts and provenance.
   release:
@@ -141,16 +145,19 @@ jobs:
         uses: actions/download-artifact@fb598a63ae348fa914e94cd0ff38f362e927b741 # v2.1.0
         with:
           name: artifact1
+
       - name: Download artifact2
         uses: actions/download-artifact@fb598a63ae348fa914e94cd0ff38f362e927b741 # v2.1.0
         with:
           name: artifact2
+
       - name: Download provenance
         uses: actions/download-artifact@fb598a63ae348fa914e94cd0ff38f362e927b741 # v2.1.0
         with:
           # The provenance step returns an output with the artifact name of
           # our provenance.
           name: ${{needs.provenance.outputs.attestation-name}}
+
       - name: Create release
         uses: softprops/action-gh-release@1e07f4398721186383de40550babbdf2b84acfc5 # v0.1.14
         with:
@@ -269,4 +276,71 @@ generated as an [in-toto](https://in-toto.io/) statement with a SLSA predicate.
     ]
   }
 }
+```
+
+## Integration With Other Build Systems
+
+This section explains how to generate non-forgeable SLSA provenance with existing build systems.
+
+### Provenance for GoReleaser
+
+If you use [GoReleaser](https://github.com/goreleaser/goreleaser-action) to generate your build, you can easily
+generate SLSA3 provenance by updating your existing workflow with the 4 steps indicated in the workflow below:
+
+```yaml
+jobs:
+  goreleaser:
+    # =================================================
+    #
+    # Step 1: Declare an `outputs` for the GoReleaser job.
+    #
+    # =================================================
+    outputs:
+      hashes: ${{ steps.hash.outputs.hashes }}
+    
+    [...]
+    
+    steps:
+      [...]
+      - name: Run GoReleaser
+        # =================================================
+        #
+        # Step 2: Add an `id: run-goreleaser` field 
+        #         to your goreleaser step.
+        #
+        # =================================================
+        id: run-goreleaser 
+        uses: goreleaser/goreleaser-action@b953231f81b8dfd023c58e0854a721e35037f28b
+
+      # =================================================
+      #
+      # Step 3: Add a step to generate the provenance subjects
+      #         as shown below.
+      #
+      # =================================================
+      - name: Generate subject
+        id: hash
+        env:
+          ARTIFACTS: "${{ steps.run-goreleaser.outputs.artifacts }}"
+        run: |
+          set -euo pipefail
+
+          checksum_file=$(echo "$ARTIFACTS" | jq -r '.[] | select (.type=="Checksum") | .path')
+          echo "::set-output name=hashes::$(cat $checksum_file | base64 -w0)"
+
+  # =========================================================
+  #
+  # Step 4: Call the generic workflow to generate provenance
+  #         by declaring the job below.
+  #
+  # =========================================================
+  provenance:
+    needs: [goreleaser]
+    permissions:
+      actions: read
+      id-token: write
+      contents: read
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.1.1
+    with:
+      base64-subjects: "${{ needs.goreleaser.outputs.hashes }}"
 ```
