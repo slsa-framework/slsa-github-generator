@@ -40,7 +40,8 @@ The following builders are available:
 ### Provenance-only Generators
 
 Provenance-only generators let you build your artifact, and only generate provenance for you. 
-They let you meet the [provenance](https://slsa.dev/spec/v0.1/requirements#provenance-requirements) requirements.
+They let you meet the [provenance](https://slsa.dev/spec/v0.1/requirements#provenance-requirements) requirements 
+for [SLSA Level 3](https://slsa.dev/spec/v0.1/levels).
 
 Generators create an attestation to a software artifact coming from your repository.
 
