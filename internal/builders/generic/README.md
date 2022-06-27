@@ -131,7 +131,6 @@ jobs:
       actions: read
       id-token: write
       contents: read
-    if: startsWith(github.ref, 'refs/tags/')
     uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.1.1
     with:
       base64-subjects: "${{ needs.build.outputs.hashes }}"
@@ -306,7 +305,8 @@ jobs:
       - name: Run GoReleaser
         # =================================================
         #
-        # Step 2: add an id field to your goreleaser step.
+        # Step 2: add an id: run-goreleaser field 
+        #         to your goreleaser step.
         #
         # =================================================
         id: run-goreleaser 
@@ -314,7 +314,8 @@ jobs:
 
       # =================================================
       #
-      # Step 3: add the step below to your job.
+      # Step 3: add the `Generate subject` step below to 
+      #         your job.
       #
       # =================================================
       - name: Generate subject
@@ -329,7 +330,8 @@ jobs:
 
   # =========================================================
   #
-  # Step 4: Call the generic workflow to generate provenance.
+  # Step 4: Call the generic workflow to generate provenance
+  #         by declaring the job below.
   #
   # =========================================================
   provenance:
@@ -338,7 +340,6 @@ jobs:
       actions: read
       id-token: write
       contents: read
-    if: startsWith(github.ref, 'refs/tags/')
     uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.1.1
     with:
       base64-subjects: "${{ needs.goreleaser.outputs.hashes }}"
