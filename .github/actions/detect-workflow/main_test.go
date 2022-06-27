@@ -109,9 +109,9 @@ func Test_action_getRepoRef(t *testing.T) {
 			Audience:          []string{"githubuser/reponame/detect-workflow"},
 			Expiry:            time.Date(2022, 5, 4, 0, 0, 0, 0, time.UTC),
 			JobWorkflowRef:    "githubuser/reponame/path/to/workflow@refs/heads/main",
-			RepositoryOwnerID: "githubuser",
-			ActorID:           "githubuser",
-			RepositoryID:      "reponame",
+			RepositoryOwnerID: "1",
+			ActorID:           "1",
+			RepositoryID:      "1",
 		})
 		defer s.Close()
 
