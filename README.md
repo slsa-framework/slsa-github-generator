@@ -27,11 +27,7 @@ This repository contains the code, examples and technical design for system desc
 ### Builders 
 
 Builders build and generate provenance. They let you meet the [build](https://slsa.dev/spec/v0.1/requirements#build-requirements)
-<<<<<<< HEAD
 and [provenance](https://slsa.dev/spec/v0.1/requirements#provenance-requirements) requirements for [SLSA Level 3 and above](https://slsa.dev/spec/v0.1/levels).
-=======
-and [provenance](https://slsa.dev/spec/v0.1/requirements#provenance-requirements) requirements.
->>>>>>> 2be4bf6 (Update doc)
 
 Builders are able to report the exact commands used to generate your artifact in the provenance.
 
@@ -44,12 +40,8 @@ The following builders are available:
 ### Provenance-only Generators
 
 Provenance-only generators let you build your artifact, and only generate provenance for you. 
-<<<<<<< HEAD
 They let you meet the [provenance](https://slsa.dev/spec/v0.1/requirements#provenance-requirements) requirements 
 for [SLSA Level 3](https://slsa.dev/spec/v0.1/levels).
-=======
-They let you meet the [provenance](https://slsa.dev/spec/v0.1/requirements#provenance-requirements) requirements.
->>>>>>> 2be4bf6 (Update doc)
 
 Generators create an attestation to a software artifact coming from your repository.
 
