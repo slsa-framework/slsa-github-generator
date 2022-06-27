@@ -292,7 +292,7 @@ jobs:
   goreleaser:
     # =================================================
     #
-    # Step 1: declare an output for the Goreleaser job.
+    # Step 1: Declare an `outputs` for the Goreleaser job.
     #
     # =================================================
     outputs:
@@ -305,7 +305,7 @@ jobs:
       - name: Run GoReleaser
         # =================================================
         #
-        # Step 2: add an id: run-goreleaser field 
+        # Step 2: Add an `id: run-goreleaser` field 
         #         to your goreleaser step.
         #
         # =================================================
@@ -314,8 +314,8 @@ jobs:
 
       # =================================================
       #
-      # Step 3: add the `Generate subject` step below to 
-      #         your job.
+      # Step 3: Add a step to generate the provenance subjects
+      #         as shown below.
       #
       # =================================================
       - name: Generate subject
