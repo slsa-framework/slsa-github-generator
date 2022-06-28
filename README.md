@@ -9,8 +9,8 @@ This repository contains the code, examples and technical design for system desc
 ---
 
 - [Generation of provenance](#generation-of-provenance)
-  - [Go projects](#go-projects)
-  - [Other projects](#other-projects)
+  - [Builders](#builders)
+  - [Provenance-only Generators](#provenance-only-generators)
 - [Verification of provenance](#verification-of-provenance)
   - [Installation](#installation)
   - [Inputs](#inputs)
@@ -24,14 +24,30 @@ This repository contains the code, examples and technical design for system desc
 
 ## Generation of provenance
 
-### Go projects
+### Builders 
 
-To generate SLSA provenance for your [Go](https://go.dev/) project, follow
-[internal/builders/go/README.md](internal/builders/go/README.md).
+Builders build and generate provenance. They let you meet the [build](https://slsa.dev/spec/v0.1/requirements#build-requirements)
+and [provenance](https://slsa.dev/spec/v0.1/requirements#provenance-requirements) requirements for [SLSA Level 3 and above](https://slsa.dev/spec/v0.1/levels).
 
-### Other projects
+Builders are able to report the exact commands used to generate your artifact in the provenance.
 
-To generate SLSA provenance for other programming languages, follow
+The following builders are available:
+
+1. [Go Builder SLSA Level 3](internal/builders/go/README.md): To generate SLSA provenance for your [Go](https://go.dev/) project, follow
+[internal/builders/go/README.md](internal/builders/go/README.md)
+
+
+### Provenance-only Generators
+
+Provenance-only generators let you build your artifact, and only generate provenance for you. 
+They let you meet the [provenance](https://slsa.dev/spec/v0.1/requirements#provenance-requirements) requirements 
+for [SLSA Level 3](https://slsa.dev/spec/v0.1/levels).
+
+Generators create an attestation to a software artifact coming from your repository.
+
+Generators are *not* able to report the exact commands used to generate your artifact in the provenance.
+
+To generate SLSA provenance using the provenance-only generator, follow
 [internal/builders/generic/README.md](internal/builders/generic/README.md).
 This is a pre-release only and we will have the official release in July 2022.
 

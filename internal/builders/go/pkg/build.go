@@ -282,7 +282,7 @@ func (b *GoBuild) generateOutputFilename() (string, error) {
 	var name string
 
 	// Special variables.
-	name, err := b.resolveSepcialVariables(b.cfg.Binary)
+	name, err := b.resolveSpecialVariables(b.cfg.Binary)
 	if err != nil {
 		return "", err
 	}
@@ -354,7 +354,7 @@ func (b *GoBuild) generateLdflags() (string, error) {
 	for _, v := range b.cfg.Ldflags {
 
 		// Special variables.
-		v, err := b.resolveSepcialVariables(v)
+		v, err := b.resolveSpecialVariables(v)
 		if err != nil {
 			return "", err
 		}
@@ -374,7 +374,7 @@ func (b *GoBuild) generateLdflags() (string, error) {
 	return "", nil
 }
 
-func (b *GoBuild) resolveSepcialVariables(s string) (string, error) {
+func (b *GoBuild) resolveSpecialVariables(s string) (string, error) {
 	reVar := regexp.MustCompile(`{{ \.([A-Z][a-z]*) }}`)
 	names := reVar.FindAllString(s, -1)
 	for _, n := range names {
