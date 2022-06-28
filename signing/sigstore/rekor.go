@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	defaultRekorAddr = "https://rekor.sigstore.dev"
+	DefaultRekorAddr = "https://rekor.sigstore.dev"
 )
 
 // Rekor implements TransparencyLog
@@ -48,7 +48,7 @@ func (e *rekorEntryAnon) UUID() string {
 
 // NewDefaultRekor returns a new Rekor instance for the Rekor public instance.
 func NewDefaultRekor() *Rekor {
-	return NewRekor(defaultRekorAddr)
+	return NewRekor(DefaultRekorAddr)
 }
 
 // NewRekor returns a new Rekor instance.
