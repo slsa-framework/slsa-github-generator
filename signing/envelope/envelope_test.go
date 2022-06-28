@@ -38,7 +38,7 @@ func intotoEntry(certPem []byte, provenance []byte) (*intotod.V001Entry, error) 
 	}, nil
 }
 
-// marshals a dsse envelope for testing
+// marshals a dsse envelope for testing.
 func marshalEnvelope(t *testing.T, env *dsse.Envelope) string {
 	b, err := json.Marshal(env)
 	if err != nil {
@@ -47,7 +47,7 @@ func marshalEnvelope(t *testing.T, env *dsse.Envelope) string {
 	return string(b)
 }
 
-// test utility to sign a payload with a given signer
+// test utility to sign a payload with a given signer.
 func envelope(t *testing.T, k *ecdsa.PrivateKey, payload []byte) string {
 	s, err := signature.LoadECDSASigner(k, crypto.SHA256)
 	if err != nil {

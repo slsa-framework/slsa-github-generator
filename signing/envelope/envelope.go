@@ -26,7 +26,7 @@ The used signature scheme has to be agreed upon by the signer and verifer
 out of band.
 The signature is a base64 encoding of the raw bytes from the signature
 algorithm.
-The cert is a PEM encoded string of the signing certificate
+The cert is a PEM encoded string of the signing certificate.
 */
 type Signature struct {
 	KeyID string `json:"keyid"`
