@@ -22,6 +22,7 @@ import (
 	"encoding/json"
 	"io"
 	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
 
@@ -128,7 +129,7 @@ func getFile(path string) (io.Writer, error) {
 	if path == "-" {
 		return os.Stdout, nil
 	}
-	return os.OpenFile(path, os.O_WRONLY|os.O_CREATE, 0o600)
+	return os.OpenFile(filepath.Clean(path), os.O_WRONLY|os.O_CREATE, 0o600)
 }
 
 type provenanceOnlyBuild struct {
