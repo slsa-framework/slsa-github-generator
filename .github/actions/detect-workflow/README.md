@@ -12,7 +12,7 @@ in order to determine the reusable workflow's repository.
 ## Why?
 
 When a GitHub Actions reusable workflow is executed, the workflow only has
-access to the executing yaml itself. If any other code is required to execute
+access to the executing YAML itself. If any other code is required to execute
 the workflow it needs to be checked out from the reusable workflow's repository
 at the ref that was specified by the user. A call to a reusable workflow might
 look like this:
