@@ -101,7 +101,7 @@ jobs:
           echo "ref: ${{ needs.detect-env.outputs.ref }}"
 
       - name: Checkout the Go builder repository
-        uses: ./.github/actions/checkout-go
+        uses: laurentsimon/slsa-github-generator/.github/actions/checkout-go@feat/action-go-checkout
         with:
           repository: "${{ needs.detect-env.outputs.repository }}"
           ref: "${{ needs.detect-env.outputs.ref }}"
