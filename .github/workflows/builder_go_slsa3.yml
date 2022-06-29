@@ -209,7 +209,7 @@ jobs:
   ###################################################################
   build:
     outputs:
-      go-binary-sha256: ${{ steps.build-sha256.outputs.sha256 }}
+      go-binary-sha256: ${{ steps.compute-digest.outputs.sha256 }}
     runs-on: ubuntu-latest
     needs: [builder, build-dry]
     steps:
@@ -275,6 +275,7 @@ jobs:
           ./"$BUILDER_BINARY" build "$CONFIG_FILE" "$UNTRUSTED_ENVS"
 
       - name: Compute binary hash
+        id: compute-digest
         uses: ./.github/actions/compute-sha256
           with:
             path: "${{ env.GENERATED_BINARY_NAME }}"
