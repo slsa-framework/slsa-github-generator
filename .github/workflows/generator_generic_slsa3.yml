@@ -23,10 +23,12 @@ env:
   BUILDER_RELEASE_BINARY: slsa-generator-generic-linux-amd64
   BUILDER_REPOSITORY: slsa-framework/slsa-github-generator
   # Verifier
+  # NOTE: These VERIFIER_* variables are used for verification of generator
+  # release binaries when the compile-generator input is false.
   VERIFIER_REPOSITORY: slsa-framework/slsa-verifier
   VERIFIER_RELEASE_BINARY: slsa-verifier-linux-amd64
   VERIFIER_RELEASE_BINARY_SHA256: 60c91c9d5b9a059e37ac46da316f20c81da335b5d00e1f74d03dd50f819694bd
-  VERIFIER_RELEASE: v0.0.1
+  VERIFIER_RELEASE: v1.1.1
 
 on:
   workflow_call:
