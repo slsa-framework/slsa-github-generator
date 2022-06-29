@@ -422,7 +422,7 @@ jobs:
             --digest "$UNTRUSTED_BINARY_HASH" \
             --command "$UNTRUSTED_COMMAND" \
             --env "$UNTRUSTED_ENV" \
-            --workingDir "$UNTRUSTED_WORKING_DIR"
+            --workingDir "$UNTRUSTED_WORKING_DIR" \
             --rekor "$REKOR_URL"
 
       - name: Upload the signed provenance
