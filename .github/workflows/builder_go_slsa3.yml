@@ -81,7 +81,7 @@ jobs:
     steps:
       - name: Detect the builder ref
         id: detect
-        uses: laurentsimon/slsa-github-generator/.github/actions/detect-workflow@feat/action-go-checkout
+        uses: slsa-framework/slsa-github-generator/.github/actions/detect-workflow@d995948e8d53cc639c0d3ef69db31dbc243519c4
 
   ###################################################################
   #                                                                 #
@@ -95,13 +95,8 @@ jobs:
     runs-on: ubuntu-latest
     needs: [detect-env]
     steps:
-      - name: Test
-        run: |
-          echo "repository: ${{ needs.detect-env.outputs.repository }}"
-          echo "ref: ${{ needs.detect-env.outputs.ref }}"
-
       - name: Checkout the Go builder repository
-        uses: laurentsimon/slsa-github-generator/.github/actions/checkout-go@feat/action-go-checkout
+        uses: ./.github/actions/checkout-go
         with:
           repository: "${{ needs.detect-env.outputs.repository }}"
           ref: "${{ needs.detect-env.outputs.ref }}"
