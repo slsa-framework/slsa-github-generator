@@ -146,6 +146,7 @@ func attestCmd() *cobra.Command {
 	var predicatePath string
 	var attPath string
 	var subjects string
+	var rekorUrl string
 
 	c := &cobra.Command{
 		Use:   "attest",
@@ -197,7 +198,7 @@ run in the context of a Github Actions workflow.`,
 					})
 					check(err)
 
-					r := sigstore.NewDefaultRekor()
+					r := sigstore.NewRekor(rekorUrl)
 					_, err = r.Upload(ctx, att)
 					check(err)
 
@@ -227,6 +228,7 @@ run in the context of a Github Actions workflow.`,
 	c.Flags().StringVarP(&predicatePath, "predicate", "p", "", "Path to write the unsigned provenance predicate.")
 	c.Flags().StringVarP(&attPath, "signature", "g", "attestation.intoto.jsonl", "Path to write the signed attestation.")
 	c.Flags().StringVarP(&subjects, "subjects", "s", "", "Formatted list of subjects in the same format as sha256sum (base64 encoded).")
+	c.Flags().StringVarP(&rekorUrl, "rekor-url", "r", sigstore.DefaultRekorAddr, "Location of the Rekor server to upload signing events.")
 
 	return c
 }

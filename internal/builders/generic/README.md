@@ -190,6 +190,7 @@ The [generic workflow](https://github.com/slsa-framework/slsa-github-generator/b
 | Name              | Required | Description                                                                                                                                                                                                                                                      |
 | ----------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `base64-subjects` | yes      | Artifact(s) for which to generate provenance, formatted the same as the output of sha256sum (SHA256 NAME\n[...]) and base64 encoded. The encoded value should decode to, for example: `90f3f7d6c862883ab9d856563a81ea6466eb1123b55bff11198b4ed0030cac86 foo.zip` |
+| `rekor-url` | no      | The location of the Rekor server to upload signing events. By default, the value is `https://rekor.sigstore.dev` |
 
 ### Workflow Outputs
 

@@ -65,6 +65,11 @@ on:
         required: false
         type: boolean
         default: false
+      rekor-url:
+        description: "The location of the rekor server"
+        required: false
+        type: string
+        default: "https://rekor.sigstore.dev"
     outputs:
       go-binary-name:
         description: "The name of the generated binary uploaded to the artifact registry."
@@ -404,6 +409,7 @@ jobs:
           UNTRUSTED_ENV: "${{ needs.build-dry.outputs.go-env }}"
           UNTRUSTED_WORKING_DIR: "${{ needs.build-dry.outputs.go-working-dir }}"
           GITHUB_CONTEXT: "${{ toJSON(github) }}"
+          REKOR_URL: "${{ inputs.rekor-url }}"
         run: |
           set -euo pipefail
 
@@ -417,6 +423,7 @@ jobs:
             --command "$UNTRUSTED_COMMAND" \
             --env "$UNTRUSTED_ENV" \
             --workingDir "$UNTRUSTED_WORKING_DIR"
+            --rekor "$REKOR_URL"
 
       - name: Upload the signed provenance
         uses: actions/upload-artifact@3cea5372237819ed00197afe530f5a7ea3e805c8 # v3.1.0
