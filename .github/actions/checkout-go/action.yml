@@ -24,17 +24,36 @@ inputs:
 runs:
   using: "composite"
   steps:
-  REVERT for safety in case they set default value in the futuer
-    - name: Checkout the repository
+    # Note: we could use a single block:
+    #  `uses: actions/checkout
+    #     with:
+    #       ref: "${{ inputs.ref }}"`
+    # and it would work, because the ref field does not have a default
+    # value set https://github.com/actions/checkout/blob/main/action.yml#L7-L11.
+    # However, if this were to change in the future, we'd be setting an empty value
+    # when the developer has not defined it; and it would overwrite the default value
+    # set by the `actions/checkout`. Even if it is highlely unlikely the `actions/checkout` team
+    # will set a default value in the future, we want to be sure it does not affect us if they do.
+    # This is why we use 2 blocks to call the `actions/checkout`:
+    #   1. if inputs.ref != ''
+    #   2. if inputs.ref == ''
+    - name: Checkout the repository with user ref
+      if: inputs.ref != ''
       uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # v2.3.4
       with:
         fetch-depth: 1
         persist-credentials: false
         repository: "${{ inputs.repository }}"
-        # Note: ref may be ""; in this case the Action will resolve it for us.
-        # It is important that the ref has no default set (https://github.com/actions/checkout/blob/main/action.yml#L7-L11),
-        # because setting an empty value would overwrite the default value and fail.
         ref: "${{ inputs.ref }}"
+        token: "${{ inputs.token }}"
+
+    - name: Checkout the repository with default ref
+      if: inputs.ref == ''
+      uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # v2.3.4
+      with:
+        fetch-depth: 1
+        persist-credentials: false
+        repository: "${{ inputs.repository }}"
         token: "${{ inputs.token }}"
 
     - name: Set up Go environment
