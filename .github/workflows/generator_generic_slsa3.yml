@@ -92,16 +92,11 @@ jobs:
       # workflow run.
       actions: read
     steps:
-      - name: Checkout the repository
-        uses: actions/checkout@ec3a7ce113134d7a93b817d10a8272cb61118579 # v2.3.4
+      - name: Checkout the Go repository
+        uses: ./.github/actions/checkout-go
         with:
-          fetch-depth: 1
           repository: "${{ needs.detect-env.outputs.repository }}"
           ref: "${{ needs.detect-env.outputs.ref }}"
-
-      - name: Set up golang environment
-        uses: actions/setup-go@b22fbbc2921299758641fab08929b4ac52b32923 # v3.2.0
-        with:
           go-version: 1.18
 
       - name: Build slsa-github-generator
