@@ -8,4 +8,4 @@ fi
 
 DIGEST=$(sha256sum "$UNTRUSTED_PATH" | awk '{print $1}')
 
-echo "::set-output name=$OUTPUT_NAME::$DIGEST"
+echo "::set-output name=sha256::$DIGEST"

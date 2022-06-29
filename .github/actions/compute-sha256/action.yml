@@ -4,10 +4,6 @@ inputs:
   path:
     description: 'Path to a file.'
     required: true
-  name:
-    description: 'Path to a file.'
-    required: false
-    default: 'sha256'
 outputs:
   sha256:
     description: 'The SHA256 of the file.'
@@ -20,7 +16,6 @@ runs:
       id: compute
       env:
         UNTRUSTED_PATH: "${{ inputs.path }}"
-        OUTPUT_NAME: "${{ inputs.name }}"
       run: |
 
         set -euo pipefail
