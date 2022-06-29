@@ -268,13 +268,12 @@ func (b *GoBuild) SetArgEnvVariables(envs string) error {
 
 		fmt.Printf("arg env: %s:%s\n", name, value)
 		b.argEnv[name] = value
-
 	}
 	return nil
 }
 
 func (b *GoBuild) generateOutputFilename() (string, error) {
-	// Note: the `.` is needed to accomodate the semantic version
+	// Note: the `.` is needed to accommodate the semantic version
 	// as part of the name.
 	const alpha = ".abcdefghijklmnopqrstuvwxyz1234567890-_"
 
@@ -319,7 +318,6 @@ func (b *GoBuild) generateFlags() ([]string, error) {
 			return nil, fmt.Errorf("%w: %s", errorUnsupportedArguments, v)
 		}
 		flags = append(flags, v)
-
 	}
 	return flags, nil
 }
@@ -351,7 +349,6 @@ func (b *GoBuild) generateLdflags() (string, error) {
 
 	// Resolve variables.
 	for _, v := range b.cfg.Ldflags {
-
 		// Special variables.
 		v, err := b.resolveSpecialVariables(v)
 		if err != nil {
@@ -377,7 +374,6 @@ func (b *GoBuild) resolveSpecialVariables(s string) (string, error) {
 	reVar := regexp.MustCompile(`{{ \.([A-Z][a-z]*) }}`)
 	names := reVar.FindAllString(s, -1)
 	for _, n := range names {
-
 		name := strings.ReplaceAll(n, "{{ .", "")
 		name = strings.ReplaceAll(name, " }}", "")
 
@@ -400,7 +396,6 @@ func (b *GoBuild) resolveSpecialVariables(s string) (string, error) {
 		default:
 			return "", fmt.Errorf("%w: %s", errorInvalidEnvArgument, n)
 		}
-
 	}
 	return s, nil
 }
@@ -409,7 +404,6 @@ func (b *GoBuild) resolveEnvVariables(s string) (string, error) {
 	reDyn := regexp.MustCompile(`{{ \.Env\.(\w+) }}`)
 	names := reDyn.FindAllString(s, -1)
 	for _, n := range names {
-
 		name := strings.ReplaceAll(n, "{{ .Env.", "")
 		name = strings.ReplaceAll(name, " }}", "")
 

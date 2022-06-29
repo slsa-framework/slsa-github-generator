@@ -18,6 +18,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"gopkg.in/yaml.v3"
@@ -69,7 +70,7 @@ func ConfigFromFile(pathfn string) (*GoReleaserConfig, error) {
 		return nil, err
 	}
 
-	cfg, err := os.ReadFile(pathfn)
+	cfg, err := os.ReadFile(filepath.Clean(pathfn))
 	if err != nil {
 		return nil, fmt.Errorf("os.ReadFile: %w", err)
 	}
