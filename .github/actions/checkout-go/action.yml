@@ -8,7 +8,7 @@ inputs:
     default: ${{ github.repository }}
   ref:
     # Note: the logic is fairly involved https://github.com/actions/checkout/blob/main/src/ref-helper.ts, 
-    # so we do not attemt to resolve it ourselves or provide a default value. We let the official actions/checkout
+    # so we do not attempt to resolve it ourselves or provide a default value. We let the official `actions/checkout`
     # do it for us.
     description: 'The branch, tag or SHA to checkout.'
     required: false
