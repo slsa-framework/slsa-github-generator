@@ -16,9 +16,5 @@ runs:
       id: compute
       env:
         UNTRUSTED_PATH: "${{ inputs.path }}"
-      run: |
-
-        set -euo pipefail
-
-        ./.github/actions/compute-sha256.sh
+      run: ./.github/actions/compute-sha256.sh
 
