@@ -15,7 +15,7 @@ PREFIX="refs/tags/"
 
 # Extract version.
 if [[ "$BUILDER_REF" != "$PREFIX"* ]]; then
-    echo "Invalid ref: $BUILDER_REF"
+    echo "Invalid ref: $BUILDER_REF. Expected ref of the form refs/tags/vX.Y.Z"
     exit 2
 fi
 
@@ -52,7 +52,7 @@ if [[ "$BUILDER_TAG" == "$(echo -n "$BUILDER_TAG" | grep -P '^[a-f\d]{40}$')" ]]
 fi
 
 if [[ "$BUILDER_TAG" != "$(echo -n "$BUILDER_TAG" | grep -P '^v\d*(\.([\d]{1,})){0,2}$')" ]]; then
-    echo "Invalid ref: $BUILDER_TAG"
+    echo "Invalid version: $BUILDER_TAG. Expected versin of the form vX.Y.Z"
     exit 7
 fi
 
