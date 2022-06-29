@@ -167,26 +167,11 @@ jobs:
           go-version: ${{ inputs.go-version }}
 
       - name: Download builder
-        uses: actions/download-artifact@fb598a63ae348fa914e94cd0ff38f362e927b741 # v3.0.0
+        uses: ./.github/actions/secure-download-artifact
         with:
           name: "${{ env.BUILDER_BINARY }}"
-
-      - name: Verify builder
-        env:
-          BUILDER_HASH: "${{ needs.builder.outputs.go-builder-sha256 }}"
-        run: |
-          set -euo pipefail
-
-          echo "hash of builder should be $BUILDER_HASH"
-          COMPUTED_HASH=$(sha256sum "$BUILDER_BINARY" | awk '{print $1}')
-          echo "builder hash computed is $COMPUTED_HASH"
-
-          # Compare hashes. Explicit exit to be safe.
-          # TODO: remove the builder as well.
-          echo "$BUILDER_HASH $BUILDER_BINARY" | sha256sum --strict --check --status || exit -2
-
-          # Make the builder executable.
-          chmod a+x "$BUILDER_BINARY"
+          sha256: "${{ needs.builder.outputs.go-builder-sha256 }}"
+          set-executable: true
 
       - name: Build dry project
         id: build-dry
@@ -219,26 +204,11 @@ jobs:
           go-version: ${{ inputs.go-version }}
 
       - name: Download builder
-        uses: actions/download-artifact@fb598a63ae348fa914e94cd0ff38f362e927b741 # v3.0.0
+        uses: ./.github/actions/secure-download-artifact
         with:
           name: "${{ env.BUILDER_BINARY }}"
-
-      - name: Verify builder
-        env:
-          BUILDER_HASH: "${{ needs.builder.outputs.go-builder-sha256 }}"
-        run: |
-          set -euo pipefail
-
-          echo "hash of builder should be $BUILDER_HASH"
-          COMPUTED_HASH=$(sha256sum "$BUILDER_BINARY" | awk '{print $1}')
-          echo "builder hash computed is $COMPUTED_HASH"
-
-          # Compare hashes. Explicit exit to be safe.
-          # TODO: remove the builder as well.
-          echo "$BUILDER_HASH $BUILDER_BINARY" | sha256sum --strict --check --status || exit -2
-
-          # Make the builder executable.
-          chmod a+x "$BUILDER_BINARY"
+          sha256: "${{ needs.builder.outputs.go-builder-sha256 }}"
+          set-executable: true
 
       - name: Download dependencies
         env:
@@ -288,46 +258,7 @@ jobs:
           if-no-files-found: error
           retention-days: 5
 
-  ###################################################################
-  #                                                                 #
-  #                 Upload the resulting binary                     #
-  #                                                                 #
-  ###################################################################
-  binary-upload:
-    runs-on: ubuntu-latest
-    needs: [build, build-dry]
-    steps:
-      - name: Download generated binary
-        uses: actions/download-artifact@fb598a63ae348fa914e94cd0ff38f362e927b741 # v3.0.0
-        with:
-          name: "${{ env.GENERATED_BINARY_NAME }}"
-
-      - name: Verify binary hash
-        env:
-          UNTRUSTED_BINARY_HASH: "${{ needs.build.outputs.go-binary-sha256 }}"
-          UNTRUSTED_BINARY_NAME: "${{ needs.build-dry.outputs.go-binary-name }}"
-        run: |
-          set -euo pipefail
-
-          echo "hash of binary ${{ env.GENERATED_BINARY_NAME }} should be $UNTRUSTED_BINARY_HASH"
-
-          COMPUTED_HASH=$(sha256sum "${{ env.GENERATED_BINARY_NAME }}" | awk '{print $1}')
-          echo "binary hash computed is $COMPUTED_HASH"
-
-          # Compare hashes. Explicit exit to be safe.
-          echo "$UNTRUSTED_BINARY_HASH ${{ env.GENERATED_BINARY_NAME }}" | sha256sum --strict --check --status || exit -2
-
-          mv "${{ env.GENERATED_BINARY_NAME }}" "$UNTRUSTED_BINARY_NAME"
-
-      - name: Upload the generated binary
-        uses: actions/upload-artifact@3cea5372237819ed00197afe530f5a7ea3e805c8 # v3.1.0
-        with:
-          name: "${{ needs.build-dry.outputs.go-binary-name }}"
-          path: "${{ needs.build-dry.outputs.go-binary-name }}"
-          if-no-files-found: error
-          retention-days: 5
-
-  ###################################################################
+    ###################################################################
   #                                                                 #
   #                 Generate the SLSA provenance                    #
   #                                                                 #
@@ -343,26 +274,11 @@ jobs:
       go-provenance-sha256: ${{ steps.sign-prov.outputs.signed-provenance-sha256 }}
     steps:
       - name: Download builder
-        uses: actions/download-artifact@fb598a63ae348fa914e94cd0ff38f362e927b741 # v3.0.0
+        uses: ./.github/actions/secure-download-artifact
         with:
           name: "${{ env.BUILDER_BINARY }}"
-
-      - name: Verify builder
-        env:
-          BUILDER_HASH: "${{ needs.builder.outputs.go-builder-sha256 }}"
-        run: |
-          set -euo pipefail
-
-          echo "hash of builder should be $BUILDER_HASH"
-          COMPUTED_HASH=$(sha256sum "$BUILDER_BINARY" | awk '{print $1}')
-          echo "builder hash computed is $COMPUTED_HASH"
-
-          # Compare hashes. Explicit exit to be safe.
-          # TODO: remove the builder as well.
-          echo "$BUILDER_HASH $BUILDER_BINARY" | sha256sum --strict --check --status || exit -2
-
-          # Make the builder executable.
-          chmod a+x "$BUILDER_BINARY"
+          sha256: "${{ needs.builder.outputs.go-builder-sha256 }}"
+          set-executable: true
 
       - name: Create and sign provenance
         id: sign-prov
@@ -408,43 +324,18 @@ jobs:
     needs: [build, build-dry, binary-upload, provenance]
     if: startsWith(github.ref, 'refs/tags/') && inputs.upload-assets == true
     steps:
-      # Verify binary hash.
-      - uses: actions/download-artifact@fb598a63ae348fa914e94cd0ff38f362e927b741 # v3.0.0
+      - name: Download binary
+        uses: ./.github/actions/secure-download-artifact
         with:
-          name: ${{ needs.build-dry.outputs.go-binary-name }}
-      - name: Verify binary hash
-        env:
-          UNTRUSTED_BINARY_HASH: "${{ needs.build.outputs.go-binary-sha256 }}"
-          UNTRUSTED_BINARY_NAME: "${{ needs.build-dry.outputs.go-binary-name }}"
-        run: |
-          set -euo pipefail
+          name: "${{ env.GENERATED_BINARY_NAME }}"
+          path: "${{ needs.build-dry.outputs.go-binary-name }}"
+          sha256: "${{ needs.builder.outputs.go-builder-sha256 }}"
 
-          echo "hash of binary $UNTRUSTED_BINARY_NAME should be $UNTRUSTED_BINARY_HASH"
-
-          COMPUTED_HASH=$(sha256sum "$UNTRUSTED_BINARY_NAME" | awk '{print $1}')
-          echo "binary hash computed is $COMPUTED_HASH"
-
-          # Compare hashes. Explicit exit to be safe.
-          echo "$UNTRUSTED_BINARY_HASH $UNTRUSTED_BINARY_NAME" | sha256sum --strict --check --status || exit -2
-
-      # Verify provenance hash.
-      - uses: actions/download-artifact@fb598a63ae348fa914e94cd0ff38f362e927b741 # v3.0.0.
+      - name: Download provenance
+        uses: ./.github/actions/secure-download-artifact
         with:
-          name: ${{ needs.provenance.outputs.go-provenance-name }}
-      - name: Verify provenance hash
-        env:
-          UNTRUSTED_PROVENANCE_HASH: "${{ needs.provenance.outputs.go-provenance-sha256 }}"
-          UNTRUSTED_PROVENANCE_NAME: "${{ needs.provenance.outputs.go-provenance-name }}"
-        run: |
-          set -euo pipefail
-
-          echo "hash of provenance $UNTRUSTED_PROVENANCE_NAME should be $UNTRUSTED_PROVENANCE_HASH"
-
-          COMPUTED_HASH=$(sha256sum "$UNTRUSTED_PROVENANCE_NAME" | awk '{print $1}')
-          echo "provenance hash computed is $COMPUTED_HASH"
-
-          # Compare hashes. Explicit exit to be safe.
-          echo "$UNTRUSTED_PROVENANCE_HASH $UNTRUSTED_PROVENANCE_NAME" | sha256sum --strict --check --status || exit -2
+          name: "${{ needs.provenance.outputs.go-provenance-name }}"
+          sha256: "${{ needs.provenance.outputs.go-provenance-sha256 }}"
 
       - name: Release
         uses: softprops/action-gh-release@1e07f4398721186383de40550babbdf2b84acfc5 # v0.1.14

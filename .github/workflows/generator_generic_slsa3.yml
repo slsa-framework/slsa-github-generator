@@ -163,24 +163,11 @@ jobs:
       contents: write
     if: startsWith(github.ref, 'refs/tags/') && inputs.upload-to-release == true
     steps:
-      # Verify provenance hash.
-      - uses: actions/download-artifact@fb598a63ae348fa914e94cd0ff38f362e927b741 # v3.0.0
+      - name: Download the provenance
+        uses: ./.github/actions/secure-download-artifact
         with:
-          name: ${{ needs.generator.outputs.attestation-name }}
-      - name: Verify provenance hash
-        env:
-          UNTRUSTED_PROVENANCE_NAME: "${{ needs.generator.outputs.attestation-name }}"
-          UNTRUSTED_PROVENANCE_HASH: "${{ needs.generator.outputs.attestation-sha256 }}"
-        run: |
-          set -euo pipefail
-
-          echo "hash of provenance $UNTRUSTED_PROVENANCE_NAME should be $UNTRUSTED_PROVENANCE_HASH"
-
-          COMPUTED_HASH=$(sha256sum "$UNTRUSTED_PROVENANCE_NAME" | awk '{print $1}')
-          echo "provenance hash computed is $COMPUTED_HASH"
-
-          # Compare hashes. Explicit exit to be safe.
-          echo "$UNTRUSTED_PROVENANCE_HASH $UNTRUSTED_PROVENANCE_NAME" | sha256sum --strict --check --status || exit -2
+          name: "${{ needs.generator.outputs.attestation-name }}"
+          sha256: "${{ needs.generator.outputs.attestation-sha256 }}"
 
       - name: Release
         uses: softprops/action-gh-release@1e07f4398721186383de40550babbdf2b84acfc5 # v0.1.14
