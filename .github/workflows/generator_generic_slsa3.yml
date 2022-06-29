@@ -92,38 +92,15 @@ jobs:
       # workflow run.
       actions: read
     steps:
-      - name: Checkout the Go repository
-        uses: ./.github/actions/checkout-go
+      - name: Generate builder
+        uses: ./.github/actions/generate-builder
         with:
           repository: "${{ needs.detect-env.outputs.repository }}"
           ref: "${{ needs.detect-env.outputs.ref }}"
           go-version: 1.18
-
-      - name: Build slsa-github-generator
-        shell: bash
-        id: generator-gen
-        env:
-          COMPILE_GENERATOR: "${{ inputs.compile-generator }}"
-          BUILDER_REF: "${{ needs.detect-env.outputs.ref }}"
-        run: |
-          set -euo pipefail
-
-          if [[ "$COMPILE_GENERATOR" == true ]]; then
-            echo "Building the generator"
-
-            #TODO(reproducible)
-            go mod vendor
-
-            # https://go.dev/ref/mod#build-commands.
-            go build -mod=vendor -o "$BUILDER_BINARY" github.com/slsa-framework/slsa-github-generator/internal/builders/generic
-          else
-            echo "Fetching the generator with ref: $BUILDER_REF"
-
-            .github/workflows/scripts/builder-fetch.sh
-
-            mv "$BUILDER_RELEASE_BINARY" "$BUILDER_BINARY"
-          fi
-          chmod a+x "$BUILDER_BINARY"
+          binary: "$BUILDER_BINARY"
+          compile-builder: "${{ inputs.compile-generator }}"
+          directory: "$BUILDER_DIR/generic"
 
       - name: Create and sign provenance
         id: sign-prov
