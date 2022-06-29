@@ -42,7 +42,6 @@ runs:
     
     - name: Generate builder
       shell: bash
-      id: builder-gen
       env:
         COMPILE_BUILDER: "${{ inputs.compile-builder }}"
         BUILDER_REF: "${{ inputs.ref }}"
