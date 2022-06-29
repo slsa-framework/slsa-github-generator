@@ -275,18 +275,10 @@ jobs:
           ./"$BUILDER_BINARY" build "$CONFIG_FILE" "$UNTRUSTED_ENVS"
 
       - name: Compute binary hash
-        id: build-sha256
-        shell: bash
-        run: |
-          set -euo pipefail
-
-          # Re-enable set-output command.
-          echo "::`echo -n ${{ github.token }} | sha256sum | head -c 64`::"
-
-          DIGEST=$(sha256sum "${{ env.GENERATED_BINARY_NAME }}" | awk '{print $1}')
-          echo "digest of ${{ env.GENERATED_BINARY_NAME }} is $DIGEST"
-
-          echo "::set-output name=go-binary-sha256::$DIGEST"
+        uses: ./.github/actions/compute-sha256
+          with:
+            path: "${{ env.GENERATED_BINARY_NAME }}"
+            name: "go-binary-sha256"
 
       - name: Upload the artifact
         uses: actions/upload-artifact@3cea5372237819ed00197afe530f5a7ea3e805c8 # v3.1.0
