@@ -1,5 +1,5 @@
 name: 'Checkout a repository for a Go project'
-description: 'Checkout a Go project's repository and setup the Go environment'
+description: 'Checkout and setup the environment for a Go project'
 inputs:
   repository:
     description: 'Repository name with owner.'
