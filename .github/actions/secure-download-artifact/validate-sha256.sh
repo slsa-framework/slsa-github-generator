@@ -5,9 +5,7 @@ if [[ ! -f "$UNTRUSTED_PATH" ]]; then
     echo "File $UNTRUSTED_PATH not present"
     exit 5
 fi
-
-UNTRUSTED_COMPUTED_HASH=$(sha256sum "$UNTRUSTED_PATH" | awk '{print $1}')
-        
+    
 echo "expected hash is $UNTRUSTED_EXPECTED_HASH"
 echo "computed hash is $UNTRUSTED_COMPUTED_HASH"
 
@@ -20,8 +18,10 @@ echo "hashes match"
 
 if [[ "$SET_EXECUTABLE" == "true" ]]; then
     echo "Setting $UNTRUSTED_PATH as executable"
+    chmod u+x "$UNTRUSTED_PATH"
 fi
 
 if [[ -n "$UNTRUSTED_DST_PATH" ]]; then
+    echo "Moving $UNTRUSTED_PATH to $UNTRUSTED_DST_PATH"
     mv "$UNTRUSTED_PATH" "$UNTRUSTED_DST_PATH"
 fi
