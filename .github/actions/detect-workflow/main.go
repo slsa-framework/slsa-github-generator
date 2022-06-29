@@ -151,10 +151,10 @@ func main() {
 	}
 
 	// Log to help troubleshooting.
-	fmt.Printf(`repository:%s\n`, repository)
-	fmt.Printf(`ref:%s\n`, ref)
+	fmt.Printf("repository:%s\n", repository)
+	fmt.Printf("ref:%s\n", ref)
 
 	// Output of the Action.
-	fmt.Printf(`::set-output name=repository::%s\n`, repository)
-	fmt.Printf(`::set-output name=ref::%s\n`, ref)
+	fmt.Println(fmt.Sprintf(`::set-output name=repository::%s`, repository))
+	fmt.Println(fmt.Sprintf(`::set-output name=ref::%s`, ref))
 }
