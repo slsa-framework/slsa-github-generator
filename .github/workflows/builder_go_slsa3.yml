@@ -276,7 +276,7 @@ jobs:
 
       - name: Compute binary hash
         id: compute-digest
-        run: ./.github/actions/compute-sha256
+        uses: ./.github/actions/compute-sha256
           with:
             path: "${{ env.GENERATED_BINARY_NAME }}"
 
