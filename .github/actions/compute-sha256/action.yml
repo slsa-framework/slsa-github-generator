@@ -14,6 +14,7 @@ runs:
   steps:
     - name: Compute the sha256
       id: compute
+      shell: bash
       env:
         UNTRUSTED_PATH: "${{ inputs.path }}"
       run: ./.github/actions/compute-sha256.sh
