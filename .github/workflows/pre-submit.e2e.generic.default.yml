@@ -1,7 +1,12 @@
 name: pre-submit e2e generic default
+
 on:
+  push:
+    branches: [main, "*"]
   pull_request:
+    # The branches below must be a subset of the branches above
     branches: [main]
+  workflow_dispatch:
 
 env:
   GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -1,7 +1,12 @@
-name: Pre-submit e2e go ldflags main dir
+name: pre-submit e2e go ldflags main dir
+
 on:
+  push:
+    branches: [main, "*"]
   pull_request:
+    # The branches below must be a subset of the branches above
     branches: [main]
+  workflow_dispatch:
 
 permissions: read-all
 
@@ -23,6 +28,7 @@ jobs:
           echo "::set-output name=version::-X main.gitVersion=v1.2.3"
           echo "::set-output name=commit::-X main.gitCommit=abcdef"
           echo "::set-output name=branch::-X main.gitBranch=main"
+
   build:
     needs: [args]
     permissions:
