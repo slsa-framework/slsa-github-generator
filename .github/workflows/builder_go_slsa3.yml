@@ -80,6 +80,7 @@ jobs:
       id-token: write # Needed to detect the current reusable repository and ref.
     steps:
       - name: Fake it
+        id: detect
         run: |
 
           echo "::set-output name=repository::laurentsimon/slsa-on-github-test"
