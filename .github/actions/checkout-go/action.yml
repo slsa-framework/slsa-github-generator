@@ -1,24 +1,24 @@
-name: 'Checkout a repository for a Go project'
-description: 'Checkout and setup the environment for a Go project'
+name: "Checkout a repository for a Go project"
+description: "Checkout and setup the environment for a Go project"
 inputs:
   repository:
-    description: 'Repository name with owner.'
+    description: "Repository name with owner."
     required: false
     # Same default as https://github.com/actions/checkout/blob/main/action.yml#L6.
     default: ${{ github.repository }}
   ref:
-    # Note: the logic is fairly involved https://github.com/actions/checkout/blob/main/src/ref-helper.ts, 
+    # Note: the logic is fairly involved https://github.com/actions/checkout/blob/main/src/ref-helper.ts,
     # so we do not attempt to resolve it ourselves or provide a default value. We let the official `actions/checkout`
     # do it for us.
-    description: 'The branch, tag or SHA to checkout.'
+    description: "The branch, tag or SHA to checkout."
     required: false
   token:
-    description: 'The token to use.'
+    description: "The token to use."
     required: false
     # Same default as https://github.com/actions/checkout/blob/main/action.yml#L24.
     default: ${{ github.token }}
   go-version:
-    description: 'The Go version to use, as expected by https://github.com/actions/setup-go.'
+    description: "The Go version to use, as expected by https://github.com/actions/setup-go."
     required: true
 
 runs:

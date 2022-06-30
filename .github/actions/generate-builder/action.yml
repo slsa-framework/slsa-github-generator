@@ -1,33 +1,33 @@
-name: 'Generate the builder'
-description: 'Build or fetch the builder binary'
+name: "Generate the builder"
+description: "Build or fetch the builder binary"
 inputs:
   ref:
-    description: 'Ref of the builder.'
+    description: "Ref of the builder."
     required: true
   repository:
-    description: 'Repository of the builder.'
+    description: "Repository of the builder."
     required: true
   binary:
-    description: 'Name of the compiled binary. (Note: just the filename, not the path)'
+    description: "Name of the compiled binary. (Note: just the filename, not the path)"
     required: true
   compile-builder:
-    description: 'Whether to compile the builder or not.'
+    description: "Whether to compile the builder or not."
     required: true
   directory:
-    description: 'Directory of the source code of the builder. (Note: expect no trailing `/`)'
+    description: "Directory of the source code of the builder. (Note: expect no trailing `/`)"
     required: true
   go-version:
-    description: 'The Go version to use, as expected by https://github.com/actions/setup-go.'
+    description: "The Go version to use, as expected by https://github.com/actions/setup-go."
     required: true
 
   token:
-    description: 'GitHub token'
+    description: "GitHub token"
     required: false
     default: ${{ github.token }}
 
 outputs:
   sha256:
-    description: 'SHA256 of the builder binary.'
+    description: "SHA256 of the builder binary."
     value: ${{ steps.compute.outputs.sha256 }}
 
 runs:
@@ -39,7 +39,7 @@ runs:
         repository: "${{ inputs.repository }}"
         ref: "${{ inputs.ref }}"
         go-version: "${{ inputs.go-version }}"
-    
+
     - name: Generate builder
       shell: bash
       env:
@@ -50,7 +50,7 @@ runs:
         # Needed for the gh CLI used in builder-fetch.sh.
         GH_TOKEN: "${{ inputs.token }}"
       run: ./.github/actions/generate-builder/generate-builder.sh
-    
+
     - name: Compute sha256 of builder
       uses: ./.github/actions/compute-sha256
       id: compute
