@@ -23,6 +23,7 @@ runs:
         name: "${{ inputs.name }}"
 
     - name: TEST
+      shell: bash
       run: |
 
         pwd
