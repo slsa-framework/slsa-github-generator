@@ -96,7 +96,7 @@ jobs:
     steps:
       - name: Generate builder
         id: generate
-        uses: slsa-framework/slsa-github-generator/.github/actions/generate-builder@fe4b511143bc6fb575303b60d4361decbe5a2df3
+        uses: slsa-framework/slsa-github-generator/.github/actions/generate-builder@b35443006ca16949bd3f9abd3e76430516cde3ce
         with:
           repository: "${{ needs.detect-env.outputs.repository }}"
           ref: "${{ needs.detect-env.outputs.ref }}"
@@ -128,12 +128,12 @@ jobs:
     needs: builder
     steps:
       - name: Checkout the Go repository
-        uses: slsa-framework/slsa-github-generator/.github/actions/checkout-go@fe4b511143bc6fb575303b60d4361decbe5a2df3
+        uses: slsa-framework/slsa-github-generator/.github/actions/checkout-go@b35443006ca16949bd3f9abd3e76430516cde3ce
         with:
           go-version: ${{ inputs.go-version }}
 
       - name: Download builder
-        uses: slsa-framework/slsa-github-generator/.github/actions/secure-download-artifact@fe4b511143bc6fb575303b60d4361decbe5a2df3
+        uses: slsa-framework/slsa-github-generator/.github/actions/secure-download-artifact@b35443006ca16949bd3f9abd3e76430516cde3ce
         with:
           name: "${{ env.BUILDER_BINARY }}"
           sha256: "${{ needs.builder.outputs.go-builder-sha256 }}"
@@ -165,12 +165,12 @@ jobs:
     needs: [builder, build-dry]
     steps:
       - name: Checkout the Go repository
-        uses: slsa-framework/slsa-github-generator/.github/actions/checkout-go@fe4b511143bc6fb575303b60d4361decbe5a2df3
+        uses: slsa-framework/slsa-github-generator/.github/actions/checkout-go@b35443006ca16949bd3f9abd3e76430516cde3ce
         with:
           go-version: ${{ inputs.go-version }}
 
       - name: Download builder
-        uses: slsa-framework/slsa-github-generator/.github/actions/secure-download-artifact@fe4b511143bc6fb575303b60d4361decbe5a2df3
+        uses: slsa-framework/slsa-github-generator/.github/actions/secure-download-artifact@b35443006ca16949bd3f9abd3e76430516cde3ce
         with:
           name: "${{ env.BUILDER_BINARY }}"
           sha256: "${{ needs.builder.outputs.go-builder-sha256 }}"
@@ -215,7 +215,7 @@ jobs:
 
       - name: Upload generated binary
         id: upload
-        uses: slsa-framework/slsa-github-generator/.github/actions/secure-upload-artifact@fe4b511143bc6fb575303b60d4361decbe5a2df3
+        uses: slsa-framework/slsa-github-generator/.github/actions/secure-upload-artifact@b35443006ca16949bd3f9abd3e76430516cde3ce
         with:
           path: "${{ needs.build-dry.outputs.go-binary-name }}"
 
@@ -235,7 +235,7 @@ jobs:
       go-provenance-sha256: ${{ steps.sign-prov.outputs.signed-provenance-sha256 }}
     steps:
       - name: Download builder
-        uses: slsa-framework/slsa-github-generator/.github/actions/secure-download-artifact@fe4b511143bc6fb575303b60d4361decbe5a2df3
+        uses: slsa-framework/slsa-github-generator/.github/actions/secure-download-artifact@b35443006ca16949bd3f9abd3e76430516cde3ce
         with:
           name: "${{ env.BUILDER_BINARY }}"
           sha256: "${{ needs.builder.outputs.go-builder-sha256 }}"
@@ -286,13 +286,13 @@ jobs:
     if: startsWith(github.ref, 'refs/tags/') && inputs.upload-assets == true
     steps:
       - name: Download binary
-        uses: slsa-framework/slsa-github-generator/.github/actions/secure-download-artifact@fe4b511143bc6fb575303b60d4361decbe5a2df3
+        uses: slsa-framework/slsa-github-generator/.github/actions/secure-download-artifact@b35443006ca16949bd3f9abd3e76430516cde3ce
         with:
           name: "${{ needs.build-dry.outputs.go-binary-name }}"
           sha256: "${{ needs.builder.outputs.go-builder-sha256 }}"
 
       - name: Download provenance
-        uses: slsa-framework/slsa-github-generator/.github/actions/secure-download-artifact@fe4b511143bc6fb575303b60d4361decbe5a2df3
+        uses: slsa-framework/slsa-github-generator/.github/actions/secure-download-artifact@b35443006ca16949bd3f9abd3e76430516cde3ce
         with:
           name: "${{ needs.provenance.outputs.go-provenance-name }}"
           sha256: "${{ needs.provenance.outputs.go-provenance-sha256 }}"
