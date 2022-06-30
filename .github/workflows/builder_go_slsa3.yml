@@ -110,14 +110,15 @@ jobs:
 
       - name: Generate builder
         id: generate
-        uses: slsa-framework/slsa-github-generator/.github/actions/generate-builder@fe4b511143bc6fb575303b60d4361decbe5a2df3
+        #uses: slsa-framework/slsa-github-generator/.github/actions/generate-builder@fe4b511143bc6fb575303b60d4361decbe5a2df3
+        uses: laurentsimon/slsa-github-generator/.github/actions/generate-builder@test/actions
         with:
           repository: "${{ needs.detect-env.outputs.repository }}"
           ref: "${{ needs.detect-env.outputs.ref }}"
           go-version: 1.18
           binary: "$BUILDER_BINARY"
           compile-builder: "${{ inputs.compile-builder }}"
-          directory: "$BUILDER_DIR/go"
+          directory: "${{ env.BUILDER_DIR }}/go"
 
       - name: Upload the builder
         uses: actions/upload-artifact@3cea5372237819ed00197afe530f5a7ea3e805c8 # v3.1.0
