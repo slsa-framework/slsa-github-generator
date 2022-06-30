@@ -180,7 +180,7 @@ jobs:
   ###################################################################
   build:
     outputs:
-      go-binary-sha256: ${{ steps.compute-digest.outputs.sha256 }}
+      go-binary-sha256: ${{ steps.upload.outputs.sha256 }}
     runs-on: ubuntu-latest
     needs: [builder, build-dry]
     steps:
@@ -234,20 +234,11 @@ jobs:
 
           mv "${{ env.GENERATED_BINARY_NAME }}" "$UNTRUSTED_BINARY_NAME"
 
-      - name: Compute binary hash
-        id: compute-digest
-        #uses: slsa-framework/slsa-github-generator/.github/actions/compute-sha256@fe4b511143bc6fb575303b60d4361decbe5a2df3
-        uses: laurentsimon/slsa-github-generator/.github/actions/compute-sha256@test/actions
+      - name: Upload generated binary
+        id: upload
+        uses: laurentsimon/slsa-github-generator/.github/actions/scure-upload-artifact@test/actions
         with:
           path: "${{ needs.build-dry.outputs.go-binary-name }}"
-
-      - name: Upload the artifact
-        uses: actions/upload-artifact@3cea5372237819ed00197afe530f5a7ea3e805c8 # v3.1.0
-        with:
-          name: "${{ needs.build-dry.outputs.go-binary-name }}"
-          path: "${{ needs.build-dry.outputs.go-binary-name }}"
-          if-no-files-found: error
-          retention-days: 5
 
   ###################################################################
   #                                                                 #
