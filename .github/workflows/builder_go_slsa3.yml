@@ -318,7 +318,6 @@ jobs:
         uses: laurentsimon/slsa-github-generator/.github/actions/secure-download-artifact@test/actions
         with:
           name: "${{ needs.build-dry.outputs.go-binary-name }}"
-          path: "${{ needs.build-dry.outputs.go-binary-name }}"
           sha256: "${{ needs.builder.outputs.go-builder-sha256 }}"
 
       - name: Download provenance
