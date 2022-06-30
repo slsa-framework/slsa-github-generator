@@ -36,6 +36,7 @@ runs:
         UNTRUSTED_PATH: "${{ inputs.name }}"
         UNTRUSTED_DST_PATH: "${{ inputs.path }}"
         SET_EXECUTABLE: "${{ set-executable }}"
+      shell: bash
       run: |
       
         set -euo pipefail
