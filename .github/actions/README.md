@@ -5,7 +5,7 @@ Although the Actions are hosted on the same repository, we consider them "extern
 
 ```././github/actions/name```
 
-but instead as via their "fully-qualified name:
+but instead via their "fully-qualified" name:
 
 ```slsa-framework/slsa-github-generator/.github/actions/name@hash```. 
 
