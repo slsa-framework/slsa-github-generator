@@ -195,8 +195,10 @@ run in the context of a Github Actions workflow.`,
 					var s *sigstore.Fulcio
 					var r *sigstore.Rekor
 					if staging {
+						err := os.RemoveAll(tuf.TufRootEnv)
+						check(err)
 						// Initialize TUF with staging mirror.
-						err := tuf.Initialize(ctx, sigstore.StagingTufAddr, sigstore.StagingRoot)
+						err = tuf.Initialize(ctx, sigstore.StagingTufAddr, sigstore.StagingRoot)
 						check(err)
 						s = sigstore.NewStagingFulcio()
 						r = sigstore.NewStagingRekor()
