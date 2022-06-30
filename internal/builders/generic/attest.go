@@ -20,6 +20,7 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/json"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -194,10 +195,12 @@ run in the context of a Github Actions workflow.`,
 				} else {
 					var s *sigstore.Fulcio
 					var r *sigstore.Rekor
+					fmt.Printf("Before staging, creating fulcio and rekor")
 					if staging {
 						err := os.RemoveAll(tuf.TufRootEnv)
 						check(err)
 						// Initialize TUF with staging mirror.
+						fmt.Printf("Initializing TUF with staging, creating fulcio and rekor")
 						err = tuf.Initialize(ctx, sigstore.StagingTufAddr, sigstore.StagingRoot)
 						check(err)
 						s = sigstore.NewStagingFulcio()
@@ -207,6 +210,7 @@ run in the context of a Github Actions workflow.`,
 						r = sigstore.NewDefaultRekor()
 					}
 
+					fmt.Printf("Done explicit initialization")
 					att, err := s.Sign(ctx, &intoto.Statement{
 						StatementHeader: p.StatementHeader,
 						Predicate:       p.Predicate,
