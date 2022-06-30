@@ -35,11 +35,4 @@ runs:
         UNTRUSTED_PATH: "${{ inputs.name }}"
         UNTRUSTED_DST_PATH: "${{ inputs.path }}"
         SET_EXECUTABLE: "${{ set-executable }}"
-      run: |
-        set -euo pipefail
-
-        ./.github/actions/secure-artifact-download/validate-sha256.sh
-
-
-     
-
+      run: ./.github/actions/secure-artifact-download/validate-sha256.sh
