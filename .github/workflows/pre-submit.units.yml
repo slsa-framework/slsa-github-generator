@@ -89,6 +89,7 @@ jobs:
 
           # Check for expected verifier releases in the builders
           cd generator
+          error=0
           grep -r -e 'VERIFIER_RELEASE_BINARY_SHA256: [0-9a-f]\{64\}' --include=*.yml |
           while read -r  line ; do
             sha=$(echo $line | grep -o -e '[0-9a-f]\{64\}')
@@ -109,6 +110,6 @@ jobs:
             fi
           done
 
-          if [ -n "$error" ]; then
+          if [ $error -ne 0 ]; then
             exit 1
           fi
