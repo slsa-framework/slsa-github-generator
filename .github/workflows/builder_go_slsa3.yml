@@ -241,7 +241,7 @@ jobs:
       - name: Upload the artifact
         uses: actions/upload-artifact@3cea5372237819ed00197afe530f5a7ea3e805c8 # v3.1.0
         with:
-          name: "${{ env.GENERATED_BINARY_NAME }}"
+          name: "${{ needs.build-dry.outputs.go-binary-name }}"
           path: "${{ env.GENERATED_BINARY_NAME }}"
           if-no-files-found: error
           retention-days: 5
@@ -317,7 +317,7 @@ jobs:
         #uses: slsa-framework/slsa-github-generator/.github/actions/secure-download-artifact@fe4b511143bc6fb575303b60d4361decbe5a2df3
         uses: laurentsimon/slsa-github-generator/.github/actions/secure-download-artifact@test/actions
         with:
-          name: "${{ env.GENERATED_BINARY_NAME }}"
+          name: "${{ needs.build-dry.outputs.go-binary-name }}"
           path: "${{ needs.build-dry.outputs.go-binary-name }}"
           sha256: "${{ needs.builder.outputs.go-builder-sha256 }}"
 
