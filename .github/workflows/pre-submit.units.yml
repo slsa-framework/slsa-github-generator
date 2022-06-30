@@ -27,8 +27,9 @@ jobs:
           # Test.
           go test -mod=vendor -v ./...
 
-      - name: Generic API tests
+      - name: API tests
         run: |
+          # Tests unit tests, including in generic and go builders
           set -euo pipefail
 
           # Download dependencies.
@@ -37,7 +38,7 @@ jobs:
           # Test.
           go test -mod=vendor -v ./...
 
-      - name: Go builder tests
+      - name: Builder builds
         run: |
           set -euo pipefail
 
@@ -47,8 +48,62 @@ jobs:
           # Download dependencies.
           go mod vendor
 
-          # Build.
+          # Build Go builder.
           go build -mod=vendor
 
-          # Tests.
-          go test -mod=vendor -v ./...
+          # Generic tests.
+          cd ../generic
+
+          # Download dependencies.
+          go mod vendor
+
+          # Build Generic builder.
+          go build -mod=vendor
+
+  check-verifier:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@ec3a7ce113134d7a93b817d10a8272cb61118579 # v2.3.4
+        with:
+          path: generator
+
+      - name: Checkout
+        uses: actions/checkout@ec3a7ce113134d7a93b817d10a8272cb61118579 # v2.3.4
+        with:
+          path: verifier
+          repository: slsa-framework/slsa-verifier
+
+      - name: Check verifier references
+        run: |
+          # The first sha in SHA256SUM.md is the latest verifier release sha
+          expected_sha=$(cat verifier/slsa-verifier/SHA256SUM.md | grep -e -m 1  -w -o '[0-9a-f]\{64\}')
+
+          # The first vX.Y.Z in SHA256SUM.md is the latest verifier release version
+          expected_version=$(cat verifier/slsa-verifier/SHA256SUM.md | grep -e 'v[0-9].[0-9].[0-9]' -o -m 1 -w | head -1)
+
+          # Check for expected verifier releases in the builders
+          cd generator
+          grep -r -e 'VERIFIER_RELEASE_BINARY_SHA256: [0-9a-f]\{64\}' --include=*.yml |
+          while read -r  line ; do
+            sha=$(echo $line | grep -o '[0-9a-f]\{64\}')
+            file=$(echo $line | awk '{print $1;}')
+            if [ "$sha" != "$expected_sha" ]; then
+              echo "SHA out of date in file $file expected $expected_sha"
+              error=1
+            fi
+          done
+
+          grep -r -e 'VERIFIER_RELEASE: v[0-9].[0-9].[0-9]' --include=*.yml |
+          while read -r  line ; do
+            version=$(echo $line | grep -o 'v[0-9].[0-9].[0-9]')
+            file=$(echo $line | awk '{print $1;}')
+            if [ "$version" != "$expected_version" ]; then
+              echo "Verifier version out of date in file $file expected $expected_version"
+              error=1
+            fi
+          done
+
+          if [ -n "$error" ]; then
+            exit 1
+          fi
