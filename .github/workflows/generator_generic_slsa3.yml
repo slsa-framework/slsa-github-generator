@@ -93,7 +93,6 @@ jobs:
       actions: read
     steps:
       - name: Generate builder
-        # uses: ./.github/actions/generate-builder
         uses: slsa-framework/slsa-github-generator/.github/actions/generate-builder@fe4b511143bc6fb575303b60d4361decbe5a2df3
         with:
           repository: "${{ needs.detect-env.outputs.repository }}"
