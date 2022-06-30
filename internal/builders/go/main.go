@@ -15,6 +15,7 @@
 package main
 
 import (
+	"context"
 	"crypto/sha256"
 	"encoding/hex"
 	"flag"
@@ -29,6 +30,7 @@ import (
 
 	// Enable the github OIDC auth provider.
 	_ "github.com/sigstore/cosign/pkg/providers/github"
+	"github.com/sigstore/sigstore/pkg/tuf"
 
 	"github.com/slsa-framework/slsa-github-generator/internal/builders/go/pkg"
 )
@@ -74,9 +76,20 @@ func runBuild(dry bool, configFile, evalEnvs string) error {
 	return nil
 }
 
-func runProvenanceGeneration(subject, digest, commands, envs, workingDir, rekor string) error {
-	r := sigstore.NewRekor(rekor)
-	s := sigstore.NewDefaultFulcio()
+func runProvenanceGeneration(ctx context.Context, subject, digest, commands, envs, workingDir string, staging bool) error {
+	var s *sigstore.Fulcio
+	var r *sigstore.Rekor
+	if staging {
+		// Initialize TUF with staging mirror.
+		err := tuf.Initialize(ctx, sigstore.StagingTufAddr, sigstore.StagingRoot)
+		check(err)
+		s = sigstore.NewStagingFulcio()
+		r = sigstore.NewStagingRekor()
+	} else {
+		s = sigstore.NewDefaultFulcio()
+		r = sigstore.NewDefaultRekor()
+	}
+
 	attBytes, err := pkg.GenerateProvenance(subject, digest,
 		commands, envs, workingDir, s, r)
 	if err != nil {
@@ -113,13 +126,14 @@ func main() {
 	provenanceCommand := provenanceCmd.String("command", "", "command used to compile the binary")
 	provenanceEnv := provenanceCmd.String("env", "", "env variables used to compile the binary")
 	provenanceWorkingDir := provenanceCmd.String("workingDir", "", "working directory used to issue compilation commands")
-	provenanceRekor := provenanceCmd.String("rekor", sigstore.DefaultRekorAddr, "rekor server to use for provenance")
+	stagingRekor := provenanceCmd.Bool("staging", false, "use staging rekor server for signed provenance upload")
 
 	// Expect a sub-command.
 	if len(os.Args) < 2 {
 		usage(os.Args[0])
 	}
 
+	ctx := context.Background()
 	switch os.Args[1] {
 	case buildCmd.Name():
 		check(buildCmd.Parse(os.Args[2:]))
@@ -139,8 +153,8 @@ func main() {
 			usage(os.Args[0])
 		}
 
-		err := runProvenanceGeneration(*provenanceName, *provenanceDigest,
-			*provenanceCommand, *provenanceEnv, *provenanceWorkingDir, *provenanceRekor)
+		err := runProvenanceGeneration(ctx, *provenanceName, *provenanceDigest,
+			*provenanceCommand, *provenanceEnv, *provenanceWorkingDir, *stagingRekor)
 		check(err)
 
 	default:

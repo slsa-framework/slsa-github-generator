@@ -28,6 +28,7 @@ import (
 
 	intoto "github.com/in-toto/in-toto-golang/in_toto"
 	slsav02 "github.com/in-toto/in-toto-golang/in_toto/slsa_provenance/v0.2"
+	"github.com/sigstore/sigstore/pkg/tuf"
 	"github.com/spf13/cobra"
 
 	"github.com/slsa-framework/slsa-github-generator/github"
@@ -146,7 +147,7 @@ func attestCmd() *cobra.Command {
 	var predicatePath string
 	var attPath string
 	var subjects string
-	var rekorUrl string
+	var staging bool
 
 	c := &cobra.Command{
 		Use:   "attest",
@@ -191,14 +192,25 @@ run in the context of a Github Actions workflow.`,
 					attBytes, err = json.Marshal(p)
 					check(err)
 				} else {
-					s := sigstore.NewDefaultFulcio()
+					var s *sigstore.Fulcio
+					var r *sigstore.Rekor
+					if staging {
+						// Initialize TUF with staging mirror.
+						err := tuf.Initialize(ctx, sigstore.StagingTufAddr, sigstore.StagingRoot)
+						check(err)
+						s = sigstore.NewStagingFulcio()
+						r = sigstore.NewStagingRekor()
+					} else {
+						s = sigstore.NewDefaultFulcio()
+						r = sigstore.NewDefaultRekor()
+					}
+
 					att, err := s.Sign(ctx, &intoto.Statement{
 						StatementHeader: p.StatementHeader,
 						Predicate:       p.Predicate,
 					})
 					check(err)
 
-					r := sigstore.NewRekor(rekorUrl)
 					_, err = r.Upload(ctx, att)
 					check(err)
 
@@ -228,7 +240,7 @@ run in the context of a Github Actions workflow.`,
 	c.Flags().StringVarP(&predicatePath, "predicate", "p", "", "Path to write the unsigned provenance predicate.")
 	c.Flags().StringVarP(&attPath, "signature", "g", "attestation.intoto.jsonl", "Path to write the signed attestation.")
 	c.Flags().StringVarP(&subjects, "subjects", "s", "", "Formatted list of subjects in the same format as sha256sum (base64 encoded).")
-	c.Flags().StringVarP(&rekorUrl, "rekor-url", "r", sigstore.DefaultRekorAddr, "Location of the Rekor server to upload signing events.")
+	c.Flags().BoolVar(&staging, "staging", false, "Use Sigstore staging instance.")
 
 	return c
 }

@@ -32,7 +32,9 @@ import (
 
 const (
 	defaultFulcioAddr   = "https://v1.fulcio.sigstore.dev"
+	stagingFulcioAddr   = "https://fulcio.sigstage.dev"
 	defaultOIDCIssuer   = "https://oauth2.sigstore.dev/auth"
+	stagingOIDCIssuer   = "https://oauth2.sigstage.dev/auth"
 	defaultOIDCClientID = "sigstore"
 )
 
@@ -63,6 +65,12 @@ func (a *attestation) Cert() []byte {
 // server and public sigstore OIDC issuer.
 func NewDefaultFulcio() *Fulcio {
 	return NewFulcio(defaultFulcioAddr, defaultOIDCIssuer, defaultOIDCClientID)
+}
+
+// NewStagingFulcio creates a new Fulcio instance using the staging Fulcio
+// server and public sigstore OIDC issuer.
+func NewStagingFulcio() *Fulcio {
+	return NewFulcio(stagingFulcioAddr, stagingFulcioAddr, defaultOIDCClientID)
 }
 
 // NewFulcio creates a new Fulcio instance.
