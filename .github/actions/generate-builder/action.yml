@@ -49,10 +49,7 @@ runs:
         BUILDER_BINARY: "${{ inputs.binary }}"
         # Needed for the gh CLI used in builder-fetch.sh.
         GH_TOKEN: "${{ inputs.token }}"
-      run: |
-        set -euo pipefail
-
-        ./.github/actions/generate-builder/generate-builder.sh
+      run: ./.github/actions/generate-builder/generate-builder.sh
     
     - name: Compute sha256 of builder
       uses: ./.github/actions/compute-sha256
