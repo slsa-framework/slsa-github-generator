@@ -21,7 +21,7 @@ runs:
 
         set -euo pipefail
 
-        echo "Computing SHA245 for $UNTRUSTED_PATH"
+        echo "Computing SHA256 for $UNTRUSTED_PATH"
 
         if [[ ! -f "$UNTRUSTED_PATH" ]]; then
             echo "File $UNTRUSTED_PATH not present"
