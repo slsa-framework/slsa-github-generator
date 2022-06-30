@@ -141,7 +141,6 @@ jobs:
     if: startsWith(github.ref, 'refs/tags/') && inputs.upload-to-release == true
     steps:
       - name: Download the provenance
-        # uses: ./.github/actions/secure-download-artifact
         uses: slsa-framework/slsa-github-generator/.github/actions/download-artifact@fe4b511143bc6fb575303b60d4361decbe5a2df3
         with:
           name: "${{ needs.generator.outputs.attestation-name }}"
