@@ -12,6 +12,7 @@ outputs:
 runs:
   using: "composite"
   steps:
+    - uses: actions/checkout@bafc
     - name: Compute the sha256
       id: compute
       shell: bash

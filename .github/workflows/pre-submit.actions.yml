@@ -15,7 +15,7 @@ jobs:
           set -euo pipefail
 
           # Verify that no internal Actions are using `actions/checkout`
-          # See reasoning in ./github/actins/README.md
+          # See reasoning in ./github/actions/README.md
 
           results=$(grep -R 'actions/checkout' .github/actions/* | grep -v 'checkout-go\|generate-builder')
           if [[ "$results" != "" ]]; then
