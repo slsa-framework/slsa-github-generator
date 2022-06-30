@@ -105,6 +105,7 @@ jobs:
 
           pwd
           ls -al
+          tree
 
           exit -1
       - name: Generate builder
