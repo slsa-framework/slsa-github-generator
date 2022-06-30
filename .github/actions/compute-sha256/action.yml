@@ -1,12 +1,12 @@
-name: 'SHA256 of a file'
-description: 'Compute the SHA256 of a file'
+name: "SHA256 of a file"
+description: "Compute the SHA256 of a file"
 inputs:
   path:
-    description: 'Path to a file.'
+    description: "Path to a file."
     required: true
 outputs:
   sha256:
-    description: 'The SHA256 of the file.'
+    description: "The SHA256 of the file."
     value: "${{ steps.compute.outputs.sha256 }}"
 
 runs:
@@ -17,4 +17,3 @@ runs:
       env:
         UNTRUSTED_PATH: "${{ inputs.path }}"
       run: ./.github/actions/compute-sha256.sh
-

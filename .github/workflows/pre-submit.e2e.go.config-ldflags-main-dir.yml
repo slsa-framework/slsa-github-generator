@@ -1,7 +1,9 @@
 name: Pre-submit e2e go ldflags main dir
 on:
-  pull_request:
-    branches: [main]
+  # TODO(github.com/slsa-framework/slsa-github-generator/issues/452): restore pre-submit
+  # pull_request:
+  #   branches: [main]
+  workflow_dispatch:
 
 permissions: read-all
 
