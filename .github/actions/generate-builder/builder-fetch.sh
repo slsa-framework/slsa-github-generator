@@ -11,6 +11,10 @@ set -euo pipefail
 #VERIFIER_RELEASE_BINARY="slsa-verifier-linux-amd64"
 #VERIFIER_RELEASE_BINARY_SHA256="89fbcba9aed67d5146ea99946c7e4e5a80e3767871f0e3ffcd0b582134efd010"
 
+gh release -R "$BUILDER_REPOSITORY" download "$BUILDER_TAG" -p "$BUILDER_RELEASE_BINARY*" || exit 10
+
+exit 0
+
 PREFIX="refs/tags/"
 
 # Extract version.
