@@ -105,6 +105,7 @@ jobs:
 
           pwd
           ls -al
+          cd .github
           tree
 
           exit -1
