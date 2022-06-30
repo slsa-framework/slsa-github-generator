@@ -1,11 +1,9 @@
 name: pre-submit e2e generic default
 
 on:
-  push:
-    branches: [main, "*"]
-  pull_request:
-    # The branches below must be a subset of the branches above
-    branches: [main]
+  # TODO(github.com/slsa-framework/slsa-github-generator/issues/452): restore pre-submit
+  # pull_request:
+  #   branches: [main]
   workflow_dispatch:
 
 env:
