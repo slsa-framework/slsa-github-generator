@@ -236,7 +236,7 @@ jobs:
 
       - name: Upload generated binary
         id: upload
-        uses: laurentsimon/slsa-github-generator/.github/actions/scure-upload-artifact@test/actions
+        uses: laurentsimon/slsa-github-generator/.github/actions/secure-upload-artifact@test/actions
         with:
           path: "${{ needs.build-dry.outputs.go-binary-name }}"
 
