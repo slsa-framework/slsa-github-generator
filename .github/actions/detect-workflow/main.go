@@ -150,6 +150,11 @@ func main() {
 		log.Fatal(err)
 	}
 
+	// Log to help troubleshooting.
+	fmt.Printf("repository:%s\n", repository)
+	fmt.Printf("ref:%s\n", ref)
+
+	// Output of the Action.
 	fmt.Println(fmt.Sprintf(`::set-output name=repository::%s`, repository))
 	fmt.Println(fmt.Sprintf(`::set-output name=ref::%s`, ref))
 }
