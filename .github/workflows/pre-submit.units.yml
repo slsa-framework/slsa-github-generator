@@ -80,18 +80,18 @@ jobs:
           set -euo pipefail
 
           # The first sha in SHA256SUM.md is the latest verifier release sha
-          expected_sha=$(cat verifier/SHA256SUM.md | grep -e -m 1  -w -o '[0-9a-f]\{64\}')
-          echo $expected_sha
+          expected_sha=$(cat verifier/SHA256SUM.md | grep -m 1  -w -o -e '[0-9a-f]\{64\}')
+          echo "$expected_sha"
 
           # The first vX.Y.Z in SHA256SUM.md is the latest verifier release version
           expected_version=$(cat verifier/SHA256SUM.md | grep -e 'v[0-9].[0-9].[0-9]' -o -m 1 -w | head -1)
-          echo $expected_version
+          echo "$expected_version"
 
           # Check for expected verifier releases in the builders
           cd generator
           grep -r -e 'VERIFIER_RELEASE_BINARY_SHA256: [0-9a-f]\{64\}' --include=*.yml |
           while read -r  line ; do
-            sha=$(echo $line | grep -o '[0-9a-f]\{64\}')
+            sha=$(echo $line | grep -o -e '[0-9a-f]\{64\}')
             file=$(echo $line | awk '{print $1;}')
             if [ "$sha" != "$expected_sha" ]; then
               echo "SHA out of date in file $file expected $expected_sha"
@@ -101,7 +101,7 @@ jobs:
 
           grep -r -e 'VERIFIER_RELEASE: v[0-9].[0-9].[0-9]' --include=*.yml |
           while read -r  line ; do
-            version=$(echo $line | grep -o 'v[0-9].[0-9].[0-9]')
+            version=$(echo $line | grep -o -e 'v[0-9].[0-9].[0-9]')
             file=$(echo $line | awk '{print $1;}')
             if [ "$version" != "$expected_version" ]; then
               echo "Verifier version out of date in file $file expected $expected_version"
