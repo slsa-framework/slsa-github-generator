@@ -220,6 +220,7 @@ jobs:
         env:
           CONFIG_FILE: "${{ inputs.config-file }}"
           UNTRUSTED_ENVS: "${{ inputs.evaluated-envs }}"
+          UNTRUSTED_BINARY_NAME: "${{ needs.build-dry.outputs.go-binary-name }}"
         run: |
           set -euo pipefail
 
@@ -230,6 +231,8 @@ jobs:
           # Note: We need to provide the asbolute path to the output binary.
           export OUTPUT_BINARY="$PWD/${{ env.GENERATED_BINARY_NAME }}"
           ./"$BUILDER_BINARY" build "$CONFIG_FILE" "$UNTRUSTED_ENVS"
+
+          mv "${{ env.GENERATED_BINARY_NAME }}" "$UNTRUSTED_BINARY_NAME"
 
       - name: Compute binary hash
         id: compute-digest
