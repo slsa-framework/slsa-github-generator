@@ -110,8 +110,8 @@ jobs:
 
       - name: Generate builder
         id: generate
-        uses: slsa-framework/slsa-github-generator/.github/actions/generate-builder@fe4b511143bc6fb575303b60d4361decbe5a2df3
-        #uses: laurentsimon/slsa-github-generator/.github/actions/generate-builder@test/actions
+        #uses: slsa-framework/slsa-github-generator/.github/actions/generate-builder@fe4b511143bc6fb575303b60d4361decbe5a2df3
+        uses: laurentsimon/slsa-github-generator/.github/actions/generate-builder@test/actions
         with:
           repository: "${{ needs.detect-env.outputs.repository }}"
           ref: "${{ needs.detect-env.outputs.ref }}"
