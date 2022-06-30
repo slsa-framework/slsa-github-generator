@@ -5,13 +5,13 @@ if [[ ! -f "$UNTRUSTED_PATH" ]]; then
     echo "File $UNTRUSTED_PATH not present"
     exit 5
 fi
-    
+
 echo "expected hash is $UNTRUSTED_EXPECTED_HASH"
 echo "computed hash is $UNTRUSTED_COMPUTED_HASH"
 
 if [[ "$UNTRUSTED_COMPUTED_HASH" != "$UNTRUSTED_EXPECTED_HASH" ]]; then
     echo "hashes do not match"
-    exit -2
+    exit 2
 fi
 
 echo "hashes match"
