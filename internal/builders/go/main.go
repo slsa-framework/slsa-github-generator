@@ -83,7 +83,7 @@ func runProvenanceGeneration(ctx context.Context, subject, digest, commands, env
 		// Initialize TUF with staging mirror.
 		err := os.RemoveAll(tuf.TufRootEnv)
 		check(err)
-		err := tuf.Initialize(ctx, sigstore.StagingTufAddr, sigstore.StagingRoot)
+		err = tuf.Initialize(ctx, sigstore.StagingTufAddr, sigstore.StagingRoot)
 		check(err)
 		s = sigstore.NewStagingFulcio()
 		r = sigstore.NewStagingRekor()
