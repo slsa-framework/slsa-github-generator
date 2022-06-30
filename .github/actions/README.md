@@ -12,7 +12,7 @@ but instead via their "fully-qualified" name:
 We do this because the Actions are part of the builder, whereas the workflow runs in the "context" of the calling repository.
 
 ## Checkout Rules
-Actions that are called with a copy of the calling repository (`actions/checkout` for the calling repository)
+Actions that are called with a copy of the calling repository on disk (`actions/checkout` for the calling repository)
 should *NEVER* "checkout" the builder's repository, because it creates interference with the calling repository
 and is difficult to get right.
     
@@ -27,12 +27,13 @@ a Dockerfile or nodejs-type projects in the futue).
 
 ## Development
 
-To crate or update an internal Action, follow the 2 following steps:
+To create or update an internal Action, follow the 2 following steps:
 
-1. First create / modify the Action under `./github/actions/<your-action>` and get the changes merged. Let's call the resulting
-commit hash after merge `CH`.
+1. Create / modify the Action under `./github/actions/<your-action>` and get the changes merged. Let's call the resulting
+commit hash after merge `CH`. (his won't affect the existing code even if the behavior of the Action has changed, since
+the existing code will still be calling the Action at an older commit hash).
 
-1. Second, update the re-usable workflow / Actions to use them in a follow-up PR:
+1. Update the re-usable workflow / Actions to use them in a follow-up PR:
 ```yaml
     uses: slsa-framework/slsa-github-generator/.github/actions/<your-action>@CH
 ```
