@@ -24,6 +24,9 @@ jobs:
       compile-generator: true
 
   verify:
+    # NOTE: this name is used as the status check name and by protected
+    # branches for required status checks.
+    name: verify generic provenance
     runs-on: ubuntu-latest
     needs: [build]
     steps:

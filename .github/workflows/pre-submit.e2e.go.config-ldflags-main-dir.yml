@@ -43,8 +43,11 @@ jobs:
       compile-builder: true
 
   verify:
+    # NOTE: this name is used as the status check name and by protected
+    # branches for required status checks.
+    name: verify go provenance
     runs-on: ubuntu-latest
-    needs: build
+    needs: [build]
     steps:
       - uses: actions/checkout@ec3a7ce113134d7a93b817d10a8272cb61118579 # v2.4.0
       - uses: actions/download-artifact@fb598a63ae348fa914e94cd0ff38f362e927b741
