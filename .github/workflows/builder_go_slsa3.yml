@@ -82,7 +82,7 @@ jobs:
       - name: Detect the builder ref
         id: detect
         uses: slsa-framework/slsa-github-generator/.github/actions/detect-workflow@d995948e8d53cc639c0d3ef69db31dbc243519c4
-  
+
   ###################################################################
   #                                                                 #
   #                       Build the builder                         #
@@ -94,20 +94,6 @@ jobs:
     runs-on: ubuntu-latest
     needs: [detect-env]
     steps:
-      # - name: DEBUG TEST
-      #   uses: slsa-framework/slsa-github-generator/.github/actions/checkout-go@fe4b511143bc6fb575303b60d4361decbe5a2df3
-      #   with:
-      #     repository: "${{ needs.detect-env.outputs.repository }}"
-      #     ref: "${{ needs.detect-env.outputs.ref }}"
-      #     go-version: 1.18
-      # - name: PRINT
-      #   run: |
-
-      #     pwd
-      #     ls -al
-      #     cd .github
-      #     tree
-
       - name: Generate builder
         id: generate
         uses: slsa-framework/slsa-github-generator/.github/actions/generate-builder@fe4b511143bc6fb575303b60d4361decbe5a2df3
