@@ -13,11 +13,11 @@ runs:
   using: "composite"
   steps:
     - name: Compute binary hash
-        id: compute-digest
-        #uses: slsa-framework/slsa-github-generator/.github/actions/compute-sha256@fe4b511143bc6fb575303b60d4361decbe5a2df3
-        uses: laurentsimon/slsa-github-generator/.github/actions/compute-sha256@test/actions
-        with:
-          path: "${{ inputs.path }}"
+      id: compute-digest
+      #uses: slsa-framework/slsa-github-generator/.github/actions/compute-sha256@fe4b511143bc6fb575303b60d4361decbe5a2df3
+      uses: laurentsimon/slsa-github-generator/.github/actions/compute-sha256@test/actions
+      with:
+        path: "${{ inputs.path }}"
 
     - name: Upload the artifact
       uses: actions/upload-artifact@3cea5372237819ed00197afe530f5a7ea3e805c8 # v3.1.0
