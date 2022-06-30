@@ -79,9 +79,14 @@ jobs:
     permissions:
       id-token: write # Needed to detect the current reusable repository and ref.
     steps:
-      - name: Detect the builder ref
-        id: detect
-        uses: slsa-framework/slsa-github-generator/.github/actions/detect-workflow@d995948e8d53cc639c0d3ef69db31dbc243519c4
+      - name: Fake it
+        run: |
+
+          echo "::set-output name=repository::laurentsimon/slsa-on-github-test"
+          echo "::set-output name=ref::test/actions"
+      # - name: Detect the builder ref
+      #   id: detect
+      #   uses: slsa-framework/slsa-github-generator/.github/actions/detect-workflow@d995948e8d53cc639c0d3ef69db31dbc243519c4
 
   ###################################################################
   #                                                                 #
