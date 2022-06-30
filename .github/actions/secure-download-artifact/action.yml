@@ -8,7 +8,7 @@ inputs:
     description: 'Destination path.'
     required: false
   sha256:
-    description: 'SHA256 of the file.'
+    description: 'SHA256 of the file for verification.'
     required: true
   set-executable:
     description: 'Set the artifact as executable.'
