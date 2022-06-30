@@ -6,6 +6,6 @@ if [[ ! -f "$UNTRUSTED_PATH" ]]; then
     exit 5
 fi
 
-DIGEST=$(sha256sum "$UNTRUSTED_PATH" | awk '{print $1}')
+digest=$(sha256sum "$UNTRUSTED_PATH" | awk '{print $1}')
 
-echo "::set-output name=sha256::$DIGEST"
+echo "::set-output name=sha256::$digest"
