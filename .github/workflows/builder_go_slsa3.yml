@@ -95,17 +95,11 @@ jobs:
     runs-on: ubuntu-latest
     needs: [detect-env]
     steps:
-      - name: Checkout the repository
-        uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # v2.3.4
+      - name: Checkout the Go builder repository
+        uses: ./.github/actions/checkout-go
         with:
-          fetch-depth: 1
-          persist-credentials: false
           repository: "${{ needs.detect-env.outputs.repository }}"
           ref: "${{ needs.detect-env.outputs.ref }}"
-
-      - name: Set up golang environment
-        uses: actions/setup-go@b22fbbc2921299758641fab08929b4ac52b32923 # v3.2.0
-        with:
           go-version: 1.18
 
       - name: Build builder
@@ -167,16 +161,8 @@ jobs:
     runs-on: ubuntu-latest
     needs: builder
     steps:
-      - name: Checkout the repository
-        uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # v2.3.4
-        with:
-          fetch-depth: 1
-          persist-credentials: false
-
-      # Code needed (not tested) if go-vesion is made optional.
-      # See https://stackoverflow.com/questions/67368005/check-whether-environment-variable-is-empty.
-      - name: Set up golang environment
-        uses: actions/setup-go@b22fbbc2921299758641fab08929b4ac52b32923 # v3.2.0
+      - name: Checkout the Go repository
+        uses: ./.github/actions/checkout-go
         with:
           go-version: ${{ inputs.go-version }}
 
@@ -227,16 +213,8 @@ jobs:
     runs-on: ubuntu-latest
     needs: [builder, build-dry]
     steps:
-      - name: Checkout the repository
-        uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # v2.3.4
-        with:
-          fetch-depth: 1
-          persist-credentials: false
-
-      # Code needed (not tested) if go-vesion is made optional.
-      # See https://stackoverflow.com/questions/67368005/check-whether-environment-variable-is-empty.
-      - name: Set up golang environment
-        uses: actions/setup-go@b22fbbc2921299758641fab08929b4ac52b32923 # v3.2.0
+      - name: Checkout the Go repository
+        uses: ./.github/actions/checkout-go
         with:
           go-version: ${{ inputs.go-version }}
 
