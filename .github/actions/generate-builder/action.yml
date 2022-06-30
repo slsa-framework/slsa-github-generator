@@ -50,11 +50,12 @@ runs:
         go-version: "${{ inputs.go-version }}"
 
     - name: DEBUG
+      shell: bash
       run: |
 
         pwd
         ls
-        
+
     - name: Generate builder
       shell: bash
       env:
