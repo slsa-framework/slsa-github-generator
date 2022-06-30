@@ -1,7 +1,9 @@
 name: pre-submit e2e generic default
 on:
-  pull_request:
-    branches: [main]
+  # TODO(github.com/slsa-framework/slsa-github-generator/issues/452): restore pre-submit
+  # pull_request:
+  #   branches: [main]
+  workflow_dispatch:
 
 env:
   GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
