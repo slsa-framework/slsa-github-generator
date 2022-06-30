@@ -343,5 +343,4 @@ jobs:
     uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.1.1
     with:
       base64-subjects: "${{ needs.goreleaser.outputs.hashes }}"
-      upload-to-release: true
 ```
