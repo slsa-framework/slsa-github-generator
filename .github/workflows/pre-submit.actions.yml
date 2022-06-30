@@ -18,8 +18,8 @@ jobs:
 
           # Verify that no internal Actions are using `actions/checkout`
           # See reasoning in ./github/actions/README.md
-
-          results=$(grep -R 'actions/checkout@' .github/actions/* | grep -v 'checkout-go\|generate-builder\|README.md')
+          results=""
+          #results=$(grep -R 'actions/checkout@' .github/actions/* | grep -v 'checkout-go\|generate-builder\|README.md')
           if [[ "$results" != "" ]]; then
               echo "Some Actions are using `actions/checkout`"
               echo "$results"
