@@ -59,8 +59,7 @@ runs:
     - name: Generate builder
       shell: bash
       env:
-        #COMPILE_BUILDER: "${{ inputs.compile-builder }}"
-        COMPILE_BUILDER: "false"
+        COMPILE_BUILDER: "${{ inputs.compile-builder }}"
         BUILDER_REF: "${{ inputs.ref }}"
         BUILDER_DIR: "${{ inputs.directory }}"
         BUILDER_BINARY: "${{ inputs.binary }}"
