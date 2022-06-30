@@ -49,6 +49,12 @@ runs:
         ref: "${{ inputs.ref }}"
         go-version: "${{ inputs.go-version }}"
 
+    - name: DEBUG
+      run: |
+
+        pwd
+        ls
+        
     - name: Generate builder
       shell: bash
       env:
