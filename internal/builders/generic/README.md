@@ -134,8 +134,10 @@ jobs:
     uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.1.1
     with:
       base64-subjects: "${{ needs.build.outputs.hashes }}"
+      # Upload provenance to a new release
+      upload-assets: true
 
-  # This step creates a GitHub release with our artifacts and provenance.
+  # This step uploads our artifacts to the tagged GitHub release.
   release:
     needs: [build, provenance]
     runs-on: ubuntu-latest
@@ -151,20 +153,12 @@ jobs:
         with:
           name: artifact2
 
-      - name: Download provenance
-        uses: actions/download-artifact@fb598a63ae348fa914e94cd0ff38f362e927b741 # v2.1.0
-        with:
-          # The provenance step returns an output with the artifact name of
-          # our provenance.
-          name: ${{needs.provenance.outputs.attestation-name}}
-
-      - name: Create release
+      - name: Upload assets
         uses: softprops/action-gh-release@1e07f4398721186383de40550babbdf2b84acfc5 # v0.1.14
         with:
           files: |
             artifact1
             artifact2
-            ${{needs.provenance.outputs.attestation-name}}
 ```
 
 ### Supported Triggers
@@ -297,19 +291,19 @@ jobs:
     # =================================================
     outputs:
       hashes: ${{ steps.hash.outputs.hashes }}
-    
+
     [...]
-    
+
     steps:
       [...]
       - name: Run GoReleaser
         # =================================================
         #
-        # Step 2: Add an `id: run-goreleaser` field 
+        # Step 2: Add an `id: run-goreleaser` field
         #         to your goreleaser step.
         #
         # =================================================
-        id: run-goreleaser 
+        id: run-goreleaser
         uses: goreleaser/goreleaser-action@b953231f81b8dfd023c58e0854a721e35037f28b
 
       # =================================================
@@ -343,4 +337,5 @@ jobs:
     uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.1.1
     with:
       base64-subjects: "${{ needs.goreleaser.outputs.hashes }}"
+      upload-assets: true # upload to a new release
 ```
