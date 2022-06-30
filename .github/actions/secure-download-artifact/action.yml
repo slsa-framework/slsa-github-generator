@@ -1,0 +1,38 @@
+name: 'Secure artifact download'
+description: 'Download an artifact and verify its SHA256'
+inputs:
+  name:
+    description: 'Artifact name.'
+    required: true
+  path:
+    description: 'Destination path.'
+    required: false
+  sha256:
+    description: 'SHA256 of the file for verification.'
+    required: true
+  set-executable:
+    description: 'Set the artifact as executable.'
+    required: false
+
+runs:
+  using: "composite"
+  steps:
+    - name: Download the artifact
+      uses: actions/download-artifact@fb598a63ae348fa914e94cd0ff38f362e927b741 # v3.0.0
+      with:
+        name: "${{ inputs.name }}"
+    
+    - name: Compute the hash
+      id: compute
+      uses: ./.github/actions/compute-sha256
+      with:
+        path: "${{ inputs.name }}"
+
+    - name: Verify the SHA256
+      env:
+        UNTRUSTED_EXPECTED_HASH: "${{ inputs.sha256 }}"
+        UNTRUSTED_COMPUTED_HASH: "${{ steps.compute.outputs.sha256 }}"
+        UNTRUSTED_PATH: "${{ inputs.name }}"
+        UNTRUSTED_DST_PATH: "${{ inputs.path }}"
+        SET_EXECUTABLE: "${{ set-executable }}"
+      run: ./.github/actions/secure-artifact-download/validate-sha256.sh
