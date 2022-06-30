@@ -193,7 +193,7 @@ jobs:
         #uses: slsa-framework/slsa-github-generator/.github/actions/secure-download-artifact@fe4b511143bc6fb575303b60d4361decbe5a2df3
         uses: laurentsimon/slsa-github-generator/.github/actions/secure-download-artifact@test/actions
         with:
-          path: "${{ env.BUILDER_BINARY }}"
+          name: "${{ env.BUILDER_BINARY }}"
           sha256: "${{ needs.builder.outputs.go-builder-sha256 }}"
           set-executable: true
 
