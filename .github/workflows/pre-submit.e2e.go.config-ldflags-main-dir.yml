@@ -1,4 +1,5 @@
-name: Pre-submit e2e go ldflags main dir
+name: pre-submit e2e go ldflags main dir
+
 on:
   # TODO(github.com/slsa-framework/slsa-github-generator/issues/452): restore pre-submit
   # pull_request:
@@ -25,6 +26,7 @@ jobs:
           echo "::set-output name=version::-X main.gitVersion=v1.2.3"
           echo "::set-output name=commit::-X main.gitCommit=abcdef"
           echo "::set-output name=branch::-X main.gitBranch=main"
+
   build:
     needs: [args]
     permissions:
@@ -39,8 +41,12 @@ jobs:
       compile-builder: true
 
   verify:
+    # NOTE: this name is used as the status check name and by protected
+    # branches for required status checks. It should have a unique name among
+    # other pre-submits.
+    name: verify go provenance
     runs-on: ubuntu-latest
-    needs: build
+    needs: [build]
     steps:
       - uses: actions/checkout@ec3a7ce113134d7a93b817d10a8272cb61118579 # v2.4.0
       - uses: actions/download-artifact@fb598a63ae348fa914e94cd0ff38f362e927b741
