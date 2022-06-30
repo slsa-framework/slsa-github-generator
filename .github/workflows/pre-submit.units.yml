@@ -75,6 +75,7 @@ jobs:
           repository: slsa-framework/slsa-verifier
 
       - name: Check verifier references
+        shell: bash
         run: |
           set -euo pipefail
 
