@@ -108,7 +108,6 @@ jobs:
           cd .github
           tree
 
-          exit -1
       - name: Generate builder
         id: generate
         uses: slsa-framework/slsa-github-generator/.github/actions/generate-builder@fe4b511143bc6fb575303b60d4361decbe5a2df3
