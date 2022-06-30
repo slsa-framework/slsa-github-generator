@@ -72,7 +72,8 @@ linters:
     - predeclared
     - revive
     - staticcheck
-    - stylecheck
+    # TODO(github.com/slsa-framework/slsa-github-generator/issues/450): enable stylecheck
+    # - stylecheck
     # TODO(github.com/slsa-framework/slsa-github-generator/issues/450): enable thelper
     # - thelper
     - typecheck
