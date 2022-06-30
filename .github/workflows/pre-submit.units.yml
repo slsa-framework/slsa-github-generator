@@ -77,10 +77,10 @@ jobs:
       - name: Check verifier references
         run: |
           # The first sha in SHA256SUM.md is the latest verifier release sha
-          expected_sha=$(cat verifier/slsa-verifier/SHA256SUM.md | grep -e -m 1  -w -o '[0-9a-f]\{64\}')
+          expected_sha=$(cat verifier/SHA256SUM.md | grep -e -m 1  -w -o '[0-9a-f]\{64\}')
 
           # The first vX.Y.Z in SHA256SUM.md is the latest verifier release version
-          expected_version=$(cat verifier/slsa-verifier/SHA256SUM.md | grep -e 'v[0-9].[0-9].[0-9]' -o -m 1 -w | head -1)
+          expected_version=$(cat verifier/SHA256SUM.md | grep -e 'v[0-9].[0-9].[0-9]' -o -m 1 -w | head -1)
 
           # Check for expected verifier releases in the builders
           cd generator
