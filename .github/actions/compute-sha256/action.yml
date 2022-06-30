@@ -16,4 +16,18 @@ runs:
       id: compute
       env:
         UNTRUSTED_PATH: "${{ inputs.path }}"
-      run: ./.github/actions/compute-sha256.sh
+      run: |
+        set -euo pipefail
+
+        echo "Computing SHA256 for $UNTRUSTED_PATH"
+
+        if [[ ! -f "$UNTRUSTED_PATH" ]]; then
+            echo "File $UNTRUSTED_PATH not present"
+            exit 5
+        fi
+        
+        digest=$(sha256sum "$UNTRUSTED_PATH" | awk '{print $1}')
+        echo "computed sha: $digest"
+        
+        echo "::set-output name=sha256::$digest"
+
