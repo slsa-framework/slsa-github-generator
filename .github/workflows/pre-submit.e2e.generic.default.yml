@@ -24,8 +24,9 @@ jobs:
       compile-generator: true
 
   verify:
-    # NOTE: this name is used as the status check name and by protected
-    # branches for required status checks.
+    # NOTE: this name is used as the status check name and by protected #
+    # branches for required status checks. It should have a unique name among
+    # other pre-submits.
     name: verify generic provenance
     runs-on: ubuntu-latest
     needs: [build]
