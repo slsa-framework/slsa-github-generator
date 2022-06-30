@@ -152,7 +152,8 @@ jobs:
           go-version: ${{ inputs.go-version }}
 
       - name: Download builder
-        uses: slsa-framework/slsa-github-generator/.github/actions/secure-download-artifact@fe4b511143bc6fb575303b60d4361decbe5a2df3
+        #uses: slsa-framework/slsa-github-generator/.github/actions/secure-download-artifact@fe4b511143bc6fb575303b60d4361decbe5a2df3
+        uses: laurentsimon/slsa-github-generator/.github/actions/secure-download-artifact@test/actions
         with:
           name: "${{ env.BUILDER_BINARY }}"
           sha256: "${{ needs.builder.outputs.go-builder-sha256 }}"
