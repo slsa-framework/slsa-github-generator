@@ -52,7 +52,7 @@ if [[ "$BUILDER_TAG" == "$(echo -n "$BUILDER_TAG" | grep -P '^[a-f\d]{40}$')" ]]
 fi
 
 if [[ "$BUILDER_TAG" != "$(echo -n "$BUILDER_TAG" | grep -P '^v\d*(\.([\d]{1,})){0,2}$')" ]]; then
-    echo "Invalid version: $BUILDER_TAG. Expected versin of the form vX.Y.Z"
+    echo "Invalid version: $BUILDER_TAG. Expected version of the form vX.Y.Z"
     exit 7
 fi
 
