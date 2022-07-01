@@ -56,7 +56,7 @@ func runBuild(dry bool, configFile, evalEnvs string) error {
 	if err != nil {
 		return err
 	}
-	fmt.Println(cfg)
+	fmt.Fprintln(pkg.Output, cfg)
 
 	gobuild := pkg.GoBuildNew(goc, cfg)
 
@@ -144,7 +144,7 @@ func main() {
 		check(err)
 
 	default:
-		fmt.Println("expected 'build' or 'provenance' subcommands")
+		fmt.Fprintln(pkg.Output, "expected 'build' or 'provenance' subcommands")
 		os.Exit(1)
 	}
 }
