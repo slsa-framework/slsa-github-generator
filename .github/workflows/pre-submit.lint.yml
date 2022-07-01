@@ -29,7 +29,7 @@ jobs:
           mv golangci-lint-${GOLANGCI_LINT_VERSION}-linux-amd64/golangci-lint /usr/local/bin
 
           # Run golangci-lint
-          golangci-lint run -c .golangci.yml ./... --out-format=github-actions
+          make golangci-lint
 
   shellcheck:
     runs-on: ubuntu-latest
@@ -46,27 +46,7 @@ jobs:
 
           # Run shellcheck and output github actions commands.
           # See: https://docs.github.com/en/actions/using-workflows/workflow-commands-for-github-actions
-          find . -type f -not -iwholename '*/.git/*' -exec bash -c 'file "$1" | cut -d':' -f2 | grep --quiet shell' _ {} \; -print0 | xargs -0 shellcheck -f json --external-sources | jq -c '.[]' | while IFS="" read -r p || [ -n "$p" ]; do
-              LEVEL=$(echo "$p" | jq -c '.level // empty' | tr -d '"')
-              FILE=$(echo "$p" | jq -c '.file // empty' | tr -d '"')
-              LINE=$(echo "$p" | jq -c '.line // empty' | tr -d '"')
-              ENDLINE=$(echo "$p" | jq -c '.endLine // empty' | tr -d '"')
-              COL=$(echo "$p" | jq -c '.column // empty' | tr -d '"')
-              ENDCOL=$(echo "$p" | jq -c '.endColumn // empty' | tr -d '"')
-              MESSAGE=$(echo "$p" | jq -c '.message // empty' | tr -d '"')
-
-              case $LEVEL in
-              "info")
-                  echo "::notice file=${FILE},line=${LINE},endLine=${ENDLINE},col=${COL},endColumn=${ENDCOL}::${MESSAGE}"
-                  ;;
-              "warning")
-                  echo "::warning file=${FILE},line=${LINE},endLine=${ENDLINE},col=${COL},endColumn=${ENDCOL}::${MESSAGE}"
-                  ;;
-              "error")
-                  echo "::error file=${FILE},line=${LINE},endLine=${ENDLINE},col=${COL},endColumn=${ENDCOL}::${MESSAGE}"
-                  ;;
-              esac
-          done
+          make shellcheck
 
   yamllint:
     runs-on: ubuntu-latest
@@ -81,4 +61,4 @@ jobs:
           pip install "yamllint==${YAMLLINT_VERSION}"
 
           # Run yamllint
-          yamllint -f github -c .yamllint.yaml .
+          make yamllint
