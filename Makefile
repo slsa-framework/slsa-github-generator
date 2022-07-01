@@ -69,6 +69,6 @@ yamllint: ## Runs the yamllint linter.
 	@set -e;\
 		extraargs=""; \
 		if [ "$(OUTPUT_FORMAT)" == "github" ]; then \
-			extraargs="--out-format github-actions"; \
+			extraargs="-f github"; \
 		fi; \
 		yamllint -c .yamllint.yaml . $$extraargs
