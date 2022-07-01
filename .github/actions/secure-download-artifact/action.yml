@@ -24,7 +24,7 @@ runs:
 
     - name: Compute the hash
       id: compute
-      uses: slsa-framework/slsa-github-generator/.github/actions/compute-sha256@fe4b511143bc6fb575303b60d4361decbe5a2df3
+      uses: slsa-framework/slsa-github-generator/.github/actions/compute-sha256@49e648aa7f5f4f88513b6cd54f6b189516184e6b
       with:
         path: "${{ inputs.name }}"
 
@@ -34,5 +34,28 @@ runs:
         UNTRUSTED_COMPUTED_HASH: "${{ steps.compute.outputs.sha256 }}"
         UNTRUSTED_PATH: "${{ inputs.name }}"
         UNTRUSTED_DST_PATH: "${{ inputs.path }}"
-        SET_EXECUTABLE: "${{ set-executable }}"
-      run: ./.github/actions/secure-artifact-download/validate-sha256.sh
+        SET_EXECUTABLE: "${{ inputs.set-executable }}"
+      shell: bash
+      run: |
+      
+        set -euo pipefail
+        if [[ ! -f "$UNTRUSTED_PATH" ]]; then
+            echo "File $UNTRUSTED_PATH not present"
+            exit 5
+        fi
+            
+        echo "expected hash is $UNTRUSTED_EXPECTED_HASH"
+        echo "computed hash is $UNTRUSTED_COMPUTED_HASH"
+        if [[ "$UNTRUSTED_COMPUTED_HASH" != "$UNTRUSTED_EXPECTED_HASH" ]]; then
+            echo "hashes do not match"
+            exit -2
+        fi
+        echo "hashes match"
+        if [[ "$SET_EXECUTABLE" == "true" ]]; then
+            echo "Setting $UNTRUSTED_PATH as executable"
+            chmod u+x "$UNTRUSTED_PATH"
+        fi
+        if [[ -n "$UNTRUSTED_DST_PATH" ]]; then
+            echo "Moving $UNTRUSTED_PATH to $UNTRUSTED_DST_PATH"
+            mv "$UNTRUSTED_PATH" "$UNTRUSTED_DST_PATH"
+        fi
