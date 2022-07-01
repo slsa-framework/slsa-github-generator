@@ -1,10 +1,21 @@
-name: PR units
-on: [pull_request, workflow_dispatch]
+name: unit tests
+
+on:
+  push:
+    branches: [main, "*"]
+  pull_request:
+    # The branches below must be a subset of the branches above
+    branches: [main]
+  workflow_dispatch:
 
 permissions: read-all
 
 jobs:
   pre-submit:
+    # NOTE: this name is used as the status check name and by protected
+    # branches for required status checks. It should have a unique name among
+    # other pre-submits.
+    name: unit tests
     runs-on: ubuntu-latest
     steps:
       - name: Checkout

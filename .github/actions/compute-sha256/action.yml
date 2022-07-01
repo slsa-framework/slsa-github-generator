@@ -1,12 +1,12 @@
-name: 'SHA256 of a file'
-description: 'Compute the SHA256 of a file'
+name: "SHA256 of a file"
+description: "Compute the SHA256 of a file"
 inputs:
   path:
-    description: 'Path to a file.'
+    description: "Path to a file."
     required: true
 outputs:
   sha256:
-    description: 'The SHA256 of the file.'
+    description: "The SHA256 of the file."
     value: "${{ steps.compute.outputs.sha256 }}"
 
 runs:
@@ -14,7 +14,17 @@ runs:
   steps:
     - name: Compute the sha256
       id: compute
+      shell: bash
       env:
         UNTRUSTED_PATH: "${{ inputs.path }}"
-      run: ./.github/actions/compute-sha256.sh
-
+      run: |
+        set -euo pipefail
+        echo "Computing SHA256 for $UNTRUSTED_PATH"
+        if [[ ! -f "$UNTRUSTED_PATH" ]]; then
+            echo "File $UNTRUSTED_PATH not present"
+            exit 5
+        fi
+        digest=$(sha256sum "$UNTRUSTED_PATH" | awk '{print $1}')
+        echo "computed sha: $digest"
+        
+        echo "::set-output name=sha256::$digest"

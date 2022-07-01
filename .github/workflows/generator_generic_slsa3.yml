@@ -68,7 +68,7 @@ jobs:
     steps:
       - name: Detect the generator ref
         id: detect
-        uses: slsa-framework/slsa-github-generator/.github/actions/detect-workflow@d995948e8d53cc639c0d3ef69db31dbc243519c4
+        uses: slsa-framework/slsa-github-generator/.github/actions/detect-workflow@d995948e8d53cc639c0d3ef69db31dbc243519c4 # v1.1.1
 
   # generator builds the generator binary and runs it to generate SLSA
   # provenance.
@@ -93,14 +93,14 @@ jobs:
       actions: read
     steps:
       - name: Generate builder
-        uses: ./.github/actions/generate-builder
+        uses: slsa-framework/slsa-github-generator/.github/actions/generate-builder@1b4ebe8029b40670c71aae9b9c88be486beb6b49
         with:
           repository: "${{ needs.detect-env.outputs.repository }}"
           ref: "${{ needs.detect-env.outputs.ref }}"
           go-version: 1.18
-          binary: "$BUILDER_BINARY"
+          binary: "${{ env.BUILDER_BINARY }}"
           compile-builder: "${{ inputs.compile-generator }}"
-          directory: "$BUILDER_DIR/generic"
+          directory: "${{ env.BUILDER_DIR }}/generic"
 
       - name: Create and sign provenance
         id: sign-prov
@@ -141,7 +141,7 @@ jobs:
     if: startsWith(github.ref, 'refs/tags/') && inputs.upload-to-release == true
     steps:
       - name: Download the provenance
-        uses: ./.github/actions/secure-download-artifact
+        uses: slsa-framework/slsa-github-generator/.github/actions/download-artifact@1b4ebe8029b40670c71aae9b9c88be486beb6b49
         with:
           name: "${{ needs.generator.outputs.attestation-name }}"
           sha256: "${{ needs.generator.outputs.attestation-sha256 }}"
