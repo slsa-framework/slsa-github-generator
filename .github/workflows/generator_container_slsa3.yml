@@ -41,7 +41,7 @@ on:
         description: "The OCI image name."
         required: true
         type: string
-      registry-user:
+      registry-username:
         description: "Username to log into the container registry."
         required: false # NOTE: This is actually required right now.
         type: string
