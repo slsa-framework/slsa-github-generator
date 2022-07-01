@@ -1,0 +1,163 @@
+# Copyright 2022 SLSA Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+name: SLSA container image provenance
+
+permissions:
+  contents: read
+
+env:
+  # Generator
+  BUILDER_BINARY: generic-generator
+  BUILDER_RELEASE_BINARY: slsa-generator-generic-linux-amd64
+  BUILDER_REPOSITORY: slsa-framework/slsa-github-generator
+  # Verifier
+  # NOTE: These VERIFIER_* variables are used for verification of generator
+  # release binaries when the compile-generator input is false.
+  VERIFIER_REPOSITORY: slsa-framework/slsa-verifier
+  VERIFIER_RELEASE_BINARY: slsa-verifier-linux-amd64
+  VERIFIER_RELEASE_BINARY_SHA256: f92fc4e571949c796d7709bb3f0814a733124b0155e484fad095b5ca68b4cb21
+  VERIFIER_RELEASE: v1.1.1
+
+on:
+  workflow_call:
+    secrets:
+      registry-password:
+        description: "Password to log in the container registry."
+        required: false # NOTE: This is actually required right now.
+    inputs:
+      image:
+        description: "The OCI image name."
+        required: true
+        type: string
+      registry-user:
+        description: "Username to log into the container registry."
+        required: false # NOTE: This is actually required right now.
+        type: string
+      # FIXME: support not uploading to registry.
+      # upload-to-registry:
+      #   description: "If true the provenance is pushed to the container registry."
+      #   required: false
+      #   type: boolean
+      #   default: true
+      compile-generator:
+        description: "Build the generator from source. This increases build time by ~2m."
+        required: false
+        type: boolean
+        default: false
+    outputs:
+      attestation-name:
+        description: "The artifact name of the signed provenance"
+        value: ${{ jobs.generator.outputs.attestation-name }}
+
+jobs:
+  # detect-env detects the reusable workflow's repository and ref for use later
+  # in the workflow.
+  detect-env:
+    outputs:
+      repository: ${{ steps.detect.outputs.repository }}
+      ref: ${{ steps.detect.outputs.ref }}
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write # Needed to detect the current reusable repository and ref.
+    steps:
+      - name: Detect the generator ref
+        id: detect
+        uses: slsa-framework/slsa-github-generator/.github/actions/detect-workflow@d995948e8d53cc639c0d3ef69db31dbc243519c4 # v1.1.1
+
+  # generator builds the generator binary and runs it to generate SLSA
+  # provenance.
+  #
+  # If `compile-generator` is true then the generator is compiled
+  # from source at the ref detected by `detect-env`.
+  #
+  # If `compile-generator` is false, then the generator binary is downloaded
+  # with the release at the ref detected by `detect-env`. This must be a tag
+  # reference.
+  generator:
+    outputs:
+      attestation-name: ${{ steps.sign-prov.outputs.attestation-name }}
+      attestation-sha256: ${{ steps.sign-prov.outputs.attestation-sha256 }}
+    runs-on: ubuntu-latest
+    needs: [detect-env]
+    permissions:
+      id-token: write # Needed for keyless.
+      contents: read
+      # actions permissions are needed to read info on the workflow and
+      # workflow run.
+      actions: read
+      packages: write
+    steps:
+      - name: Generate builder
+        uses: slsa-framework/slsa-github-generator/.github/actions/generate-builder@1b4ebe8029b40670c71aae9b9c88be486beb6b49
+        with:
+          repository: "${{ needs.detect-env.outputs.repository }}"
+          ref: "${{ needs.detect-env.outputs.ref }}"
+          go-version: 1.18
+          binary: "${{ env.BUILDER_BINARY }}"
+          compile-builder: "${{ inputs.compile-generator }}"
+          directory: "${{ env.BUILDER_DIR }}/generic"
+
+      # Note: here we need packages permissions
+      - uses: sigstore/cosign-installer@7e0881f8fe90b25e305bbf0309761e9314607e25 # v2.4.0
+      - name: Login
+        env:
+          UNTRUSTED_IMAGE: "${{ inputs.image }}"
+          UNTRUSTED_USERNAME: "${{ inputs.registry-username }}"
+          UNTRUSTED_PASSWORD: "${{ secrets.registry-password }}"
+        run: |
+          set -euo pipefail
+
+          untrusted_registry="docker.io"
+
+          # HACK: Need to figure out a better way to do this.
+          maybe_domain=$(echo "$UNTRUSTED_IMAGE" | cut -f1 -d "/" | grep "\.")
+          if [ "$maybe_domain" != "" ]; then
+            untrusted_registry="$maybe_domain"
+          fi
+
+          echo "login to $untrusted_registry"
+          cosign login "$untrusted_registry" -u "$UNTRUSTED_USERNAME" -p "$UNTRUSTED_PASSWORD"
+
+      - name: Create and sign provenance
+        id: sign-prov
+        shell: bash
+        # NOTE: Inputs and github context are set to environment variables in
+        # order to avoid script injection.
+        # See: https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions#understanding-the-risk-of-script-injections
+        env:
+          UNTRUSTED_IMAGE: "${{ inputs.image }}"
+          GITHUB_CONTEXT: "${{ toJSON(github) }}"
+        run: |
+          set -euo pipefail
+
+          # Generate a predicate only.
+          attestation_name="attestation.intoto.jsonl"
+          predicate_name="predicate.json"
+          ./"$BUILDER_BINARY" attest -g="" --predicate="$predicate_name"
+
+          # TODO: Set --no-upload if inputs.upload-to-registry is false.
+          COSIGN_EXPERIMENTAL=1 cosign attest --predicate="$predicate_name" \
+            --type slsaprovenance \
+            --force \
+            "$UNTRUSTED_IMAGE" >"$attestation_name"
+          echo "::set-output name=attestation-name::$attestation_name"
+
+      - name: Upload the signed provenance
+        uses: actions/upload-artifact@3cea5372237819ed00197afe530f5a7ea3e805c8 # v3.1.0
+        with:
+          name: "${{ steps.sign-prov.outputs.attestation-name }}"
+          path: "${{ steps.sign-prov.outputs.attestation-name }}"
+          if-no-files-found: error
+          retention-days: 5
