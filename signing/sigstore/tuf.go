@@ -2,7 +2,7 @@ package sigstore
 
 import _ "embed"
 
-// go:embed staging-root.json
+//go:embed staging-root.json
 var StagingRoot []byte
 
 const (
