@@ -13,15 +13,5 @@ jobs:
       - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b
 
       - shell: bash
-        run: |
-          set -euo pipefail
-
-          # Verify that no internal Actions are using `actions/checkout`
-          # See reasoning in ./github/actions/README.md
-
-          results=$(grep -R 'actions/checkout@' .github/actions/* | grep -v 'checkout-go\|generate-builder\|README.md')
-          if [[ "$results" != "" ]]; then
-              echo "Some Actions are using 'actions/checkout'"
-              echo "$results"
-              exit -1
-          fi
+        run: ./.github/workflows/scripts/pre-submit.actions.checkout.sh
+          
