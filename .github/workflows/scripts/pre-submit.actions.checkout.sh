@@ -1,11 +1,24 @@
 #!/usr/bin/env bash
 #
-# Note: not settinng set -e because grep return 1 when there is not match.
+# Copyright 2022 SLSA Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+set -euo pipefail
 
 # Verify that no internal Actions are using `actions/checkout`
 # See reasoning in ./github/actions/README.md
-
-results=$(grep -r --include='*.yml' --include='*.yaml' -e 'actions/checkout@\|actions/checkout-go@' .github/actions/* | grep -v 'checkout-go\|generate-builder')
+results=$(grep -r --include='*.yml' --include='*.yaml' -e 'actions/checkout@\|actions/checkout-go@' .github/actions/* || true | grep -v 'checkout-go\|generate-builder' || true)
 if [[ "$results" != "" ]]; then
     echo "Some Actions are using 'actions/checkout'"
     echo "$results"
