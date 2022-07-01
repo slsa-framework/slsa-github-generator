@@ -11,6 +11,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@ec3a7ce113134d7a93b817d10a8272cb61118579
-      - run: .github/workflows/scripts/pre-submit.actions.checkout.sh
-      
-          
+      - run: |
+
+          set -euo pipefail
+
+          # Verify that no internal Actions are using `actions/checkout`
+          # See reasoning in ./github/actions/README.md
+
+          # Split the command to ignore the `1` error `grep` returns when there is no match.
+          results=$(grep -r --include='*.yml' --include='*.yaml' -e 'actions/checkout@\|actions/checkout-go@' .github/actions/* || true)
+          results=$(grep -v 'checkout-go\|generate-builder' <<<"$results" || true)
+          if [[ "$results" != "" ]]; then
+              echo "Some Actions are using 'actions/checkout'"
+              echo "$results"
+              exit -1
+          fi
+
