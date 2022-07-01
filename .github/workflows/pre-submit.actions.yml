@@ -13,10 +13,10 @@ jobs:
       - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b
       - run: |
 
-        pwd
-        ls
-        cd .github
-        tree
+          pwd
+          ls
+          cd .github
+          tree
         
       - run: ./.github/workflows/scripts/pre-submit.actions.checkout.sh
           
