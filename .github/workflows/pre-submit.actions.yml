@@ -10,17 +10,20 @@ jobs:
     name: verify no checkout in Actions
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b
       - run: |
+      
+          set -euo pipefail
 
-          pwd
-          ls
-          cd .github
-          tree
+          # Verify that no internal Actions are using `actions/checkout`
+          # See reasoning in ./github/actions/README.md
 
-          which grep
+          # Note: splitting command in two to avoid using pipe because
+          # we set -o pipefail option and grep returns 1 when there is no match
 
-          echo hello | grep bla
-        
-      - run: ./.github/workflows/scripts/pre-submit.actions.checkout.sh
-          
+          results=$(grep -r --include='*.yml' --include='*.yaml' -e 'actions/checkout@\|actions/checkout-go@' .github/actions/*)
+          results=$(grep -v 'checkout-go\|generate-builder' <<<$results)
+          if [[ "$results" != "" ]]; then
+              echo "Some Actions are using 'actions/checkout'"
+              echo "$results"
+              exit -1
+          fi
