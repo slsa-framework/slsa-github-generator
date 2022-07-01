@@ -18,7 +18,9 @@ set -euo pipefail
 
 # Verify that no internal Actions are using `actions/checkout`
 # See reasoning in ./github/actions/README.md
-results=$(grep -r --include='*.yml' --include='*.yaml' -e 'actions/checkout@\|actions/checkout-go@' .github/actions/* || true | grep -v 'checkout-go\|generate-builder' || true)
+
+results=$(grep -r --include='*.yml' --include='*.yaml' -e 'actions/checkout@\|actions/checkout-go@' .github/actions/* || true)
+results=$(grep -v 'checkout-go\|generate-builder' <<<"$results" || true)
 if [[ "$results" != "" ]]; then
     echo "Some Actions are using 'actions/checkout'"
     echo "$results"
