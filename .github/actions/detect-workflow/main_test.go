@@ -122,7 +122,9 @@ func Test_action_getRepoRef(t *testing.T) {
 				}
 				return ""
 			},
-			client: c,
+			getClient: func() (*github.OIDCClient, error) {
+				return c, nil
+			},
 		}
 
 		repo, ref, err := a.getRepoRef(context.Background())
@@ -151,7 +153,9 @@ func Test_action_getRepoRef(t *testing.T) {
 				}
 				return env[k]
 			},
-			client: c,
+			getClient: func() (*github.OIDCClient, error) {
+				return c, nil
+			},
 			event: map[string]any{
 				"pull_request": map[string]any{
 					"head": map[string]any{
