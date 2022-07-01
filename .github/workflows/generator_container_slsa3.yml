@@ -29,6 +29,8 @@ env:
   VERIFIER_RELEASE_BINARY: slsa-verifier-linux-amd64
   VERIFIER_RELEASE_BINARY_SHA256: f92fc4e571949c796d7709bb3f0814a733124b0155e484fad095b5ca68b4cb21
   VERIFIER_RELEASE: v1.1.1
+  # Builder location
+  BUILDER_DIR: internal/builders
 
 on:
   workflow_call:
@@ -107,6 +109,7 @@ jobs:
           go-version: 1.18
           binary: "${{ env.BUILDER_BINARY }}"
           compile-builder: "${{ inputs.compile-generator }}"
+          # NOTE: We are using the generic generator.
           directory: "${{ env.BUILDER_DIR }}/generic"
 
       # Note: here we need packages permissions
