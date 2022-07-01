@@ -13,7 +13,7 @@ jobs:
       - uses: actions/checkout@ec3a7ce113134d7a93b817d10a8272cb61118579
       - run: |
       
-          set -e
+          # Note: not settinng set -e because grep return 1 when there is not match.
 
           # Verify that no internal Actions are using `actions/checkout`
           # See reasoning in ./github/actions/README.md
