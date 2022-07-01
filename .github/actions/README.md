@@ -37,3 +37,9 @@ the existing code will still be calling the Action at an older commit hash).
 ```yaml
     uses: slsa-framework/slsa-github-generator/.github/actions/<your-action>@CH
 ```
+
+  You can update using the following command:
+
+  ```shell
+  find .github/ -name '*.yaml' -o -name '*.yml' | xargs sed -i 's/uses: slsa-framework\/slsa-github-generator\/\.github\/actions\/\(.*\)@[a-f0-9]*/uses: slsa-framework\/slsa-github-generator\/.github\/actions\/\1@YOUR_HASH/'
+  ```
