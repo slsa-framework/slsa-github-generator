@@ -70,7 +70,7 @@ func NewDefaultFulcio() *Fulcio {
 // NewStagingFulcio creates a new Fulcio instance using the staging Fulcio
 // server and public sigstore OIDC issuer.
 func NewStagingFulcio() *Fulcio {
-	return NewFulcio(stagingFulcioAddr, stagingFulcioAddr, defaultOIDCClientID)
+	return NewFulcio(stagingFulcioAddr, stagingOIDCIssuer, defaultOIDCClientID)
 }
 
 // NewFulcio creates a new Fulcio instance.
