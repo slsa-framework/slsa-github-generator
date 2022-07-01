@@ -74,7 +74,7 @@ jobs:
     steps:
       - name: Detect the generator ref
         id: detect
-        uses: slsa-framework/slsa-github-generator/.github/actions/detect-workflow@d995948e8d53cc639c0d3ef69db31dbc243519c4 # v1.1.1
+        uses: slsa-framework/slsa-github-generator/.github/actions/detect-workflow@49e648aa7f5f4f88513b6cd54f6b189516184e6b
 
   # generator builds the generator binary and runs it to generate SLSA
   # provenance.
@@ -100,7 +100,7 @@ jobs:
       packages: write
     steps:
       - name: Generate builder
-        uses: slsa-framework/slsa-github-generator/.github/actions/generate-builder@1b4ebe8029b40670c71aae9b9c88be486beb6b49
+        uses: slsa-framework/slsa-github-generator/.github/actions/generate-builder@49e648aa7f5f4f88513b6cd54f6b189516184e6b
         with:
           repository: "${{ needs.detect-env.outputs.repository }}"
           ref: "${{ needs.detect-env.outputs.ref }}"
