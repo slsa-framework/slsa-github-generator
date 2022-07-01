@@ -17,6 +17,10 @@ jobs:
           ls
           cd .github
           tree
+
+          which grep
+
+          echo hello | grep bla
         
       - run: ./.github/workflows/scripts/pre-submit.actions.checkout.sh
           
