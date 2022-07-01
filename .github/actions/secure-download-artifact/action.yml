@@ -37,13 +37,13 @@ runs:
         SET_EXECUTABLE: "${{ inputs.set-executable }}"
       shell: bash
       run: |
-      
+
         set -euo pipefail
         if [[ ! -f "$UNTRUSTED_PATH" ]]; then
             echo "File $UNTRUSTED_PATH not present"
             exit 5
         fi
-            
+
         echo "expected hash is $UNTRUSTED_EXPECTED_HASH"
         echo "computed hash is $UNTRUSTED_COMPUTED_HASH"
         if [[ "$UNTRUSTED_COMPUTED_HASH" != "$UNTRUSTED_EXPECTED_HASH" ]]; then
