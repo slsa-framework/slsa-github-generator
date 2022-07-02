@@ -298,7 +298,7 @@ jobs:
           sha256: "${{ needs.provenance.outputs.go-provenance-sha256 }}"
 
       - name: Release
-        uses: softprops/action-gh-release@1e07f4398721186383de40550babbdf2b84acfc5 # v0.1.14
+        uses: softprops/action-gh-release@50195ba7f6f93d1ac97ba8332a178e008ad176aa # v0.1.14
         with:
           files: |
             ${{ needs.build-dry.outputs.go-binary-name }}
