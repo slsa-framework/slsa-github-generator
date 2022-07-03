@@ -11,7 +11,7 @@ require (
 	github.com/in-toto/in-toto-golang v0.3.4-0.20211211042327-af1f9fb822bf
 	github.com/secure-systems-lab/go-securesystemslib v0.4.0
 	github.com/sigstore/cosign v1.9.0
-	github.com/sigstore/rekor v0.8.2
+	github.com/sigstore/rekor v0.9.0
 	github.com/sigstore/sigstore v1.2.1-0.20220526001230-8dc4fa90a468
 	github.com/spf13/cobra v1.5.0
 	golang.org/x/oauth2 v0.0.0-20220630143837-2104d58473e0
