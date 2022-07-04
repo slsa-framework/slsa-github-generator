@@ -1,0 +1,27 @@
+name: "Secure artifact upload"
+description: "Upload an artifact and outputs its SHA256"
+inputs:
+  path:
+    description: "Artifact path. (Note: This is expected to be a file name in the working directory)."
+    required: true
+outputs:
+  sha256:
+    description: "SHA256 of the file."
+    value: "${{ steps.compute-digest.outputs.sha256 }}"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Compute binary hash
+      id: compute-digest
+      uses: slsa-framework/slsa-github-generator/.github/actions/compute-sha256@ab345b0851aceba69a2ce8f3d2084f6e7d887850
+      with:
+        path: "${{ inputs.path }}"
+
+    - name: Upload the artifact
+      uses: actions/upload-artifact@3cea5372237819ed00197afe530f5a7ea3e805c8 # v3.1.0
+      with:
+        name: "${{ inputs.path }}"
+        path: "${{ inputs.path }}"
+        if-no-files-found: error
+        retention-days: 5
