@@ -81,7 +81,7 @@ jobs:
     steps:
       - name: Detect the builder ref
         id: detect
-        uses: slsa-framework/slsa-github-generator/.github/actions/detect-workflow@49e648aa7f5f4f88513b6cd54f6b189516184e6b # v1.1.1
+        uses: slsa-framework/slsa-github-generator/.github/actions/detect-workflow@ab345b0851aceba69a2ce8f3d2084f6e7d887850 # tag=v1.1.1
 
   ###################################################################
   #                                                                 #
@@ -96,7 +96,7 @@ jobs:
     steps:
       - name: Generate builder
         id: generate
-        uses: slsa-framework/slsa-github-generator/.github/actions/generate-builder@49e648aa7f5f4f88513b6cd54f6b189516184e6b
+        uses: slsa-framework/slsa-github-generator/.github/actions/generate-builder@ab345b0851aceba69a2ce8f3d2084f6e7d887850
         with:
           repository: "${{ needs.detect-env.outputs.repository }}"
           ref: "${{ needs.detect-env.outputs.ref }}"
@@ -106,7 +106,7 @@ jobs:
           directory: "${{ env.BUILDER_DIR }}/go"
 
       - name: Upload the builder
-        uses: actions/upload-artifact@3cea5372237819ed00197afe530f5a7ea3e805c8 # v3.1.0
+        uses: actions/upload-artifact@3cea5372237819ed00197afe530f5a7ea3e805c8 # tag=v3.1.0
         with:
           name: "${{ env.BUILDER_BINARY }}"
           path: "${{ env.BUILDER_BINARY }}"
@@ -128,12 +128,12 @@ jobs:
     needs: builder
     steps:
       - name: Checkout the Go repository
-        uses: slsa-framework/slsa-github-generator/.github/actions/checkout-go@49e648aa7f5f4f88513b6cd54f6b189516184e6b
+        uses: slsa-framework/slsa-github-generator/.github/actions/checkout-go@ab345b0851aceba69a2ce8f3d2084f6e7d887850
         with:
           go-version: ${{ inputs.go-version }}
 
       - name: Download builder
-        uses: slsa-framework/slsa-github-generator/.github/actions/secure-download-artifact@49e648aa7f5f4f88513b6cd54f6b189516184e6b
+        uses: slsa-framework/slsa-github-generator/.github/actions/secure-download-artifact@ab345b0851aceba69a2ce8f3d2084f6e7d887850
         with:
           name: "${{ env.BUILDER_BINARY }}"
           sha256: "${{ needs.builder.outputs.go-builder-sha256 }}"
@@ -165,12 +165,12 @@ jobs:
     needs: [builder, build-dry]
     steps:
       - name: Checkout the Go repository
-        uses: slsa-framework/slsa-github-generator/.github/actions/checkout-go@49e648aa7f5f4f88513b6cd54f6b189516184e6b
+        uses: slsa-framework/slsa-github-generator/.github/actions/checkout-go@ab345b0851aceba69a2ce8f3d2084f6e7d887850
         with:
           go-version: ${{ inputs.go-version }}
 
       - name: Download builder
-        uses: slsa-framework/slsa-github-generator/.github/actions/secure-download-artifact@49e648aa7f5f4f88513b6cd54f6b189516184e6b
+        uses: slsa-framework/slsa-github-generator/.github/actions/secure-download-artifact@ab345b0851aceba69a2ce8f3d2084f6e7d887850
         with:
           name: "${{ env.BUILDER_BINARY }}"
           sha256: "${{ needs.builder.outputs.go-builder-sha256 }}"
@@ -215,7 +215,7 @@ jobs:
 
       - name: Upload generated binary
         id: upload
-        uses: slsa-framework/slsa-github-generator/.github/actions/secure-upload-artifact@49e648aa7f5f4f88513b6cd54f6b189516184e6b
+        uses: slsa-framework/slsa-github-generator/.github/actions/secure-upload-artifact@ab345b0851aceba69a2ce8f3d2084f6e7d887850
         with:
           path: "${{ needs.build-dry.outputs.go-binary-name }}"
 
@@ -235,7 +235,7 @@ jobs:
       go-provenance-sha256: ${{ steps.sign-prov.outputs.signed-provenance-sha256 }}
     steps:
       - name: Download builder
-        uses: slsa-framework/slsa-github-generator/.github/actions/secure-download-artifact@49e648aa7f5f4f88513b6cd54f6b189516184e6b
+        uses: slsa-framework/slsa-github-generator/.github/actions/secure-download-artifact@ab345b0851aceba69a2ce8f3d2084f6e7d887850
         with:
           name: "${{ env.BUILDER_BINARY }}"
           sha256: "${{ needs.builder.outputs.go-builder-sha256 }}"
@@ -266,7 +266,7 @@ jobs:
             --workingDir "$UNTRUSTED_WORKING_DIR"
 
       - name: Upload the signed provenance
-        uses: actions/upload-artifact@3cea5372237819ed00197afe530f5a7ea3e805c8 # v3.1.0
+        uses: actions/upload-artifact@3cea5372237819ed00197afe530f5a7ea3e805c8 # tag=v3.1.0
         with:
           name: "${{ steps.sign-prov.outputs.signed-provenance-name }}"
           path: "${{ steps.sign-prov.outputs.signed-provenance-name }}"
@@ -286,19 +286,19 @@ jobs:
     if: startsWith(github.ref, 'refs/tags/') && inputs.upload-assets == true
     steps:
       - name: Download binary
-        uses: slsa-framework/slsa-github-generator/.github/actions/secure-download-artifact@49e648aa7f5f4f88513b6cd54f6b189516184e6b
+        uses: slsa-framework/slsa-github-generator/.github/actions/secure-download-artifact@ab345b0851aceba69a2ce8f3d2084f6e7d887850
         with:
           name: "${{ needs.build-dry.outputs.go-binary-name }}"
           sha256: "${{ needs.builder.outputs.go-builder-sha256 }}"
 
       - name: Download provenance
-        uses: slsa-framework/slsa-github-generator/.github/actions/secure-download-artifact@49e648aa7f5f4f88513b6cd54f6b189516184e6b
+        uses: slsa-framework/slsa-github-generator/.github/actions/secure-download-artifact@ab345b0851aceba69a2ce8f3d2084f6e7d887850
         with:
           name: "${{ needs.provenance.outputs.go-provenance-name }}"
           sha256: "${{ needs.provenance.outputs.go-provenance-sha256 }}"
 
       - name: Release
-        uses: softprops/action-gh-release@1e07f4398721186383de40550babbdf2b84acfc5 # v0.1.14
+        uses: softprops/action-gh-release@1e07f4398721186383de40550babbdf2b84acfc5 # tag=v0.1.14
         with:
           files: |
             ${{ needs.build-dry.outputs.go-binary-name }}

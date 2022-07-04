@@ -19,10 +19,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@ec3a7ce113134d7a93b817d10a8272cb61118579 # v2.3.4
+        uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b
 
       - name: setup-go
-        uses: actions/setup-go@b22fbbc2921299758641fab08929b4ac52b32923 # v3.2.0
+        uses: actions/setup-go@b22fbbc2921299758641fab08929b4ac52b32923 # tag=v3.2.0
         with:
           go-version: "1.18"
 
