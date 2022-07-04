@@ -124,7 +124,7 @@ jobs:
           echo "::set-output name=attestation-sha256::$attestation_sha256"
 
       - name: Upload the signed provenance
-        uses: actions/upload-artifact@3cea5372237819ed00197afe530f5a7ea3e805c8 # v3.1.0
+        uses: actions/upload-artifact@3cea5372237819ed00197afe530f5a7ea3e805c8 # tag=v3.1.0
         with:
           name: "${{ steps.sign-prov.outputs.attestation-name }}"
           path: "${{ steps.sign-prov.outputs.attestation-name }}"
@@ -149,7 +149,7 @@ jobs:
           sha256: "${{ needs.generator.outputs.attestation-sha256 }}"
 
       - name: Release
-        uses: softprops/action-gh-release@1e07f4398721186383de40550babbdf2b84acfc5 # v0.1.14
+        uses: softprops/action-gh-release@1e07f4398721186383de40550babbdf2b84acfc5 # tag=v0.1.14
         id: release
         with:
           files: |
