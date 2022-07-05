@@ -150,6 +150,9 @@ jobs:
           predicate_name="predicate.json"
           ./"$BUILDER_BINARY" attest --signature="" --predicate="$predicate_name"
 
+          # FIXME: is this necessary?
+          COSIGN_EXPERIMENTAL=1 cosign sign "$UNTRUSTED_IMAGE"
+
           # TODO: Set --no-upload if inputs.upload-to-registry is false.
           COSIGN_EXPERIMENTAL=1 cosign attest --predicate="$predicate_name" \
             --type slsaprovenance \
