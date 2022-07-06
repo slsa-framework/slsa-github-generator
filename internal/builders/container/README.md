@@ -33,7 +33,7 @@ approaching an initial release.
 
 ## Benefits of Provenance
 
-Using the generic workflow will generate a non-forgeable attestation to the
+Using the container workflow will generate a non-forgeable attestation to the
 container image using the identity of the GitHub workflow. This can be used
 to create a positive attestation to a container image coming from your
 repository.
@@ -209,7 +209,7 @@ generated as an [in-toto](https://in-toto.io/) statement with a SLSA predicate.
   ],
   "predicate": {
     "builder": {
-      "id": "https://github.com/slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@refs/tags/v1.1.1"
+      "id": "https://github.com/slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@refs/tags/v1.1.1"
     },
     "buildType": "https://github.com/slsa-framework/slsa-github-generator@v1",
     "invocation": {
