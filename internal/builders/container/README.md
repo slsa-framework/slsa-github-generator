@@ -20,7 +20,6 @@ project simply generates provenance as a separate step in an existing workflow.
   - [Getting Started](#getting-started)
   - [Supported Triggers](#supported-triggers)
   - [Workflow Inputs](#workflow-inputs)
-  - [Workflow Outputs](#workflow-outputs)
   - [Provenance Format](#provenance-format)
   - [Provenance Example](#provenance-example)
 
@@ -165,11 +164,12 @@ The [container workflow](https://github.com/slsa-framework/slsa-github-generator
 
 Inputs:
 
-| Name                | Required | Description                                                        |
-| ------------------- | -------- | ------------------------------------------------------------------ |
-| `image`             | yes      | The OCI image name.                                                |
-| `registry-username` | yes      | Username to log into the container registry.                       |
-| `compile-generator` | false    | Build the generator from source. This increases build time by ~2m. |
+| Name                | Required | Description                                                                                         |
+| ------------------- | -------- | --------------------------------------------------------------------------------------------------- |
+| `image`             | yes      | The OCI image name. This must not include a tag or digest.                                          |
+| `digest`            | yes      | The OCI image digest. The image digest of the form '<algorithm>:<digest>' (e.g. 'sha256:abcdef...') |
+| `registry-username` | yes      | Username to log into the container registry.                                                        |
+| `compile-generator` | false    | Build the generator from source. This increases build time by ~2m.                                  |
 
 Secrets:
 
