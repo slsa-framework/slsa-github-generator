@@ -82,8 +82,7 @@ jobs:
       contents: read
       packages: write
     outputs:
-      tag: ${{ steps.hash.outputs.tag }}
-      sha: ${{ steps.hash.outputs.sha }}
+      image-and-digest: ${{ steps.digest.outputs.image }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout the repository
@@ -113,19 +112,17 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
 
-      - name: Output digest
-        id: hash
+      - name: Output image and digest
+        id: digest
         env:
-          IMAGE_TAGS: ${{ steps.meta.outputs.tags }}
-          SHA: ${{ steps.build.outputs.digest }}
+          DIGEST: ${{ steps.build.outputs.digest }}
         run: |
-          # sha output of docker/build-push-action is of the form 'sha256:<digest>'
-          sha=$(echo $SHA | cut -d':' -f2)
-          # docker/build-push-action outputs multiple tags including latest.
-          # It seems to put latest at the end of the list.
-          tag=$(echo "$IMAGE_TAGS" | head -n1)
-          echo "::set-output name=tag::$tag"
-          echo "::set-output name=sha::$sha"
+          # NOTE: We need to use the image and digest in order to make sure
+          # that the image we attest has not been modified.
+          # NOTE: The digest output from docker/build-push-action is of the
+          # form "sha256:<digest>"
+          image_name="${IMAGE_REGISTRY}/${IMAGE_NAME}@${DIGEST}"
+          echo "::set-output name=image::$image_name"
 
   # This step calls the container workflow to generate provenance and push it to
   # the container registry.
@@ -139,8 +136,7 @@ jobs:
     if: startsWith(github.ref, 'refs/tags/')
     uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@main
     with:
-      # XXX: should this use the sha instead of the tag?
-      image: ${{ needs.build.outputs.tag }}
+      image: ${{ needs.build.outputs.image-and-digest }}
       registry-username: ${{ github.actor }}
       # TODO(https://github.com/slsa-framework/slsa-github-generator/issues/492): Remove after GA release.
       compile-generator: true
