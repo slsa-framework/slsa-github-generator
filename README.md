@@ -55,9 +55,9 @@ This is a pre-release only and we will have the official release in July 2022.
 
 To verify the provenance, use the [github.com/slsa-framework/slsa-verifier](https://github.com/slsa-framework/slsa-verifier) project.
 
-**Note**: At present the GitHub Actions provided in this repository as builders and generators MUST be referenced by tag in order for the slsa-verifier to be able to verify the ref of the trusted builder/generator's reusable workflow.
+**Note**: At present the GitHub Actions provided in this repository as builders and generators **MUST** be referenced by tag in order for the `slsa-verifier` to be able to verify the ref of the trusted builder/generator's reusable workflow.
 
-This is contrary to the [best practice](https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions#using-third-party-actions) which recommends referencing by digest.
+This is contrary to the [best practice](https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions#using-third-party-actions) which recommends referencing by digest, but intentional due to limits in GitHub Actions.
 The desire to be able to verify reusable workflows pinned by hash, and the reasons for the current status, are tracked as [Issue #12](https://github.com/slsa-framework/slsa-verifier/issues/12) in the slsa-verifier project.
 
 ### Installation
