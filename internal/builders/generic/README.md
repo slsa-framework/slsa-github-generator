@@ -172,8 +172,7 @@ The following [GitHub trigger events](https://docs.github.com/en/actions/using-w
 
 However, in practice, most triggers should work with the exception of
 `pull_request`. If you would like support for `pull_request`, please tell us
-about your use case on [issue
-#358](https://github.com/slsa-framework/slsa-github-generator/issues/358). If
+about your use case on [issue #358](https://github.com/slsa-framework/slsa-github-generator/issues/358). If
 you have an issue in all other triggers please submit a [new
 issue](https://github.com/slsa-framework/slsa-github-generator/issues/new/choose).
 
@@ -181,9 +180,10 @@ issue](https://github.com/slsa-framework/slsa-github-generator/issues/new/choose
 
 The [generic workflow](https://github.com/slsa-framework/slsa-github-generator/blob/main/.github/workflows/generator_generic_slsa3.yml) accepts the following inputs:
 
-| Name              | Required | Description                                                                                                                                                                                                                                                      |
-| ----------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `base64-subjects` | yes      | Artifact(s) for which to generate provenance, formatted the same as the output of sha256sum (SHA256 NAME\n[...]) and base64 encoded. The encoded value should decode to, for example: `90f3f7d6c862883ab9d856563a81ea6466eb1123b55bff11198b4ed0030cac86 foo.zip` |
+| Name              | Required | Default | Description                                                                                                                                                                                                                                                      |
+| ----------------- | -------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `base64-subjects` | yes      |         | Artifact(s) for which to generate provenance, formatted the same as the output of sha256sum (SHA256 NAME\n[...]) and base64 encoded. The encoded value should decode to, for example: `90f3f7d6c862883ab9d856563a81ea6466eb1123b55bff11198b4ed0030cac86 foo.zip` |
+| `upload-assets`   | no       | false   | If true provenance is uploaded to a GitHub release for new tags.                                                                                                                                                                                                 |
 
 ### Workflow Outputs
 
