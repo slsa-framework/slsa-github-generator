@@ -1,30 +1,30 @@
-name: 'Secure artifact download'
-description: 'Download an artifact and verify its SHA256'
+name: "Secure artifact download"
+description: "Download an artifact and verify its SHA256"
 inputs:
   name:
-    description: 'Artifact name.'
+    description: "Artifact name."
     required: true
   path:
-    description: 'Destination path.'
+    description: "Destination path."
     required: false
   sha256:
-    description: 'SHA256 of the file for verification.'
+    description: "SHA256 of the file for verification."
     required: true
   set-executable:
-    description: 'Set the artifact as executable.'
+    description: "Set the artifact as executable."
     required: false
 
 runs:
   using: "composite"
   steps:
     - name: Download the artifact
-      uses: actions/download-artifact@fb598a63ae348fa914e94cd0ff38f362e927b741 # v3.0.0
+      uses: actions/download-artifact@fb598a63ae348fa914e94cd0ff38f362e927b741 # tag=v3.0.0
       with:
         name: "${{ inputs.name }}"
-    
+
     - name: Compute the hash
       id: compute
-      uses: ./.github/actions/compute-sha256
+      uses: slsa-framework/slsa-github-generator/.github/actions/compute-sha256@ab345b0851aceba69a2ce8f3d2084f6e7d887850
       with:
         path: "${{ inputs.name }}"
 
@@ -34,5 +34,28 @@ runs:
         UNTRUSTED_COMPUTED_HASH: "${{ steps.compute.outputs.sha256 }}"
         UNTRUSTED_PATH: "${{ inputs.name }}"
         UNTRUSTED_DST_PATH: "${{ inputs.path }}"
-        SET_EXECUTABLE: "${{ set-executable }}"
-      run: ./.github/actions/secure-artifact-download/validate-sha256.sh
+        SET_EXECUTABLE: "${{ inputs.set-executable }}"
+      shell: bash
+      run: |
+      
+        set -euo pipefail
+        if [[ ! -f "$UNTRUSTED_PATH" ]]; then
+            echo "File $UNTRUSTED_PATH not present"
+            exit 5
+        fi
+            
+        echo "expected hash is $UNTRUSTED_EXPECTED_HASH"
+        echo "computed hash is $UNTRUSTED_COMPUTED_HASH"
+        if [[ "$UNTRUSTED_COMPUTED_HASH" != "$UNTRUSTED_EXPECTED_HASH" ]]; then
+            echo "hashes do not match"
+            exit -2
+        fi
+        echo "hashes match"
+        if [[ "$SET_EXECUTABLE" == "true" ]]; then
+            echo "Setting $UNTRUSTED_PATH as executable"
+            chmod u+x "$UNTRUSTED_PATH"
+        fi
+        if [[ -n "$UNTRUSTED_DST_PATH" ]]; then
+            echo "Moving $UNTRUSTED_PATH to $UNTRUSTED_DST_PATH"
+            mv "$UNTRUSTED_PATH" "$UNTRUSTED_DST_PATH"
+        fi
