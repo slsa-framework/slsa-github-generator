@@ -1,0 +1,25 @@
+name: "PRNG"
+description: "Generate random using /dev/urandom. WARNING: only use for cryptographic purposes (the results will show in logs)."
+inputs:
+  length:
+    description: "Length to generate (in bytes)."
+    required: true
+outputs:
+  random:
+    description: "The output of the PRNG (hex-encoded)."
+    value: "${{ steps.prng.outputs.result }}"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Generate random
+      id: prng
+      env:
+        LENGTH: "${{ inputs.length }}"
+      run: |
+        set -euo pipefail
+
+        value=$(head -c"$LENGTH" /dev/urandom | xxd -p)
+        echo "::set-output name=result::$value"
+
+
