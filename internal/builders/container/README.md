@@ -55,10 +55,9 @@ will assume you have an existing Github Actions workflow to build your project.
 provenance:
   needs: [build]
   permissions:
-    actions: read
-    id-token: write
-    contents: read
-    packages: write
+    actions: read # for detecting the Github Actions environment.
+    id-token: write # for creating OCID tokens for signing.
+    packages: write # for uploading attestations.
   if: startsWith(github.ref, 'refs/tags/')
   # TODO(https://github.com/slsa-framework/slsa-github-generator/issues/492): Use a tagged release once we have one.
   uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@main
@@ -128,10 +127,9 @@ jobs:
   provenance:
     needs: [build]
     permissions:
-      actions: read
-      id-token: write
-      contents: read
-      packages: write
+      actions: read # for detecting the Github Actions environment.
+      id-token: write # for creating OCID tokens for signing.
+      packages: write # for uploading attestations.
     if: startsWith(github.ref, 'refs/tags/')
     uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@main
     with:
@@ -169,7 +167,7 @@ Inputs:
 | `image`             | yes      | The OCI image name. This must not include a tag or digest.                                          |
 | `digest`            | yes      | The OCI image digest. The image digest of the form '<algorithm>:<digest>' (e.g. 'sha256:abcdef...') |
 | `registry-username` | yes      | Username to log into the container registry.                                                        |
-| `compile-generator` | false    | Whether to build the generator from source. This increases build time by ~2m.                                  |
+| `compile-generator` | false    | Whether to build the generator from source. This increases build time by ~2m.                       |
 
 Secrets:
 
