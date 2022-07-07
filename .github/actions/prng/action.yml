@@ -1,5 +1,5 @@
 name: "PRNG"
-description: "Generate random using /dev/urandom. WARNING: only use for cryptographic purposes (the results will show in logs)."
+description: "Generate random bytes using /dev/urandom. WARNING: only use for non-cryptographic purposes (the results will show in logs)."
 inputs:
   length:
     description: "Length to generate (in bytes)."
