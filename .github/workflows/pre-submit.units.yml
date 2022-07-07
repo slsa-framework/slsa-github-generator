@@ -53,23 +53,11 @@ jobs:
         run: |
           set -euo pipefail
 
-          # Go tests.
-          cd internal/builders/go/
-
-          # Download dependencies.
-          go mod vendor
-
           # Build Go builder.
-          go build -mod=vendor
-
-          # Generic tests.
-          cd ../generic
-
-          # Download dependencies.
-          go mod vendor
+          go build -mod=vendor ./internal/builders/go
 
           # Build Generic builder.
-          go build -mod=vendor
+          go build -mod=vendor ./internal/builders/generic
 
   check-verifier:
     runs-on: ubuntu-latest
