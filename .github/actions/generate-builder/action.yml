@@ -34,7 +34,7 @@ runs:
   using: "composite"
   steps:
     - name: Checkout the Go builder repository
-      uses: slsa-framework/slsa-github-generator/.github/actions/checkout-go@fe4b511143bc6fb575303b60d4361decbe5a2df3
+      uses: slsa-framework/slsa-github-generator/.github/actions/checkout-go@ab345b0851aceba69a2ce8f3d2084f6e7d887850
       with:
         repository: "${{ inputs.repository }}"
         ref: "${{ inputs.ref }}"
@@ -52,7 +52,7 @@ runs:
       run: ./.github/actions/generate-builder/generate-builder.sh
 
     - name: Compute sha256 of builder
-      uses: slsa-framework/slsa-github-generator/.github/actions/compute-sha256@fe4b511143bc6fb575303b60d4361decbe5a2df3
+      uses: slsa-framework/slsa-github-generator/.github/actions/compute-sha256@ab345b0851aceba69a2ce8f3d2084f6e7d887850
       id: compute
       with:
         path: "${{ inputs.binary }}"
