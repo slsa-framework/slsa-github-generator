@@ -14,8 +14,8 @@
 
 name: SLSA container image provenance
 
-permissions:
-  contents: read
+# permissions:
+#   contents: read
 
 env:
   # Generator
