@@ -19,7 +19,7 @@ Set up env variables:
 ```
 $ export GH_TOKEN=<PAT-token>
 $ export GITHUB_USERNAME="laurentsimon"
-# This is the existing slsa-verifier version used by the builder. (https://github.com/slsa-framework/slsa-github-generator/blob/release/bad-verifier/.github/actions/generate-builder/action.yml_go_slsa3.yml#L54)
+# This is the existing slsa-verifier version used by the builder. (https://github.com/slsa-framework/slsa-github-generator/blob/release/bad-verifier/.github/actions/generate-builder/action.yml#L54)
 $ export VERIFIER_TAG="v0.0.1" 
 $ export VERIFIER_REPOSITORY="$GITHUB_USERNAME/slsa-verifier"
 # Release tag of the builder we want to release
