@@ -169,7 +169,7 @@ Inputs:
 | `image`             | yes      | The OCI image name. This must not include a tag or digest.                                          |
 | `digest`            | yes      | The OCI image digest. The image digest of the form '<algorithm>:<digest>' (e.g. 'sha256:abcdef...') |
 | `registry-username` | yes      | Username to log into the container registry.                                                        |
-| `compile-generator` | false    | Build the generator from source. This increases build time by ~2m.                                  |
+| `compile-generator` | false    | Whether to build the generator from source. This increases build time by ~2m.                                  |
 
 Secrets:
 
