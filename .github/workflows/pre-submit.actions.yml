@@ -10,7 +10,7 @@ jobs:
     name: verify no checkout in Actions
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b
+      - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # tag=v3.0.2
       - run: |
 
           set -euo pipefail
@@ -26,4 +26,3 @@ jobs:
               echo "$results"
               exit -1
           fi
-

@@ -25,7 +25,7 @@ project simply generates provenance as a separate step in an existing workflow.
   - [Provenance Format](#provenance-format)
   - [Provenance Example](#provenance-example)
 - [Integration With Other Build Systems](#integration-with-other-build-systems)
-  - [Provenance with GoReleaser](#provenance-with-goreleaser)
+  - [Provenance for GoReleaser](#provenance-for-goreleaser)
 
 ---
 
@@ -109,7 +109,7 @@ jobs:
           echo "::set-output name=hashes::$(sha256sum artifact1 artifact2 | base64 -w0)"
 
       - name: Upload artifact1
-        uses: actions/upload-artifact@3cea5372237819ed00197afe530f5a7ea3e805c8 # v3.1.0
+        uses: actions/upload-artifact@3cea5372237819ed00197afe530f5a7ea3e805c8 # tag=v3.1.0
         with:
           name: artifact1
           path: artifact1
@@ -117,7 +117,7 @@ jobs:
           retention-days: 5
 
       - name: Upload artifact2
-        uses: actions/upload-artifact@3cea5372237819ed00197afe530f5a7ea3e805c8 # v3.1.0
+        uses: actions/upload-artifact@3cea5372237819ed00197afe530f5a7ea3e805c8 # tag=v3.1.0
         with:
           name: artifact2
           path: artifact2
@@ -134,37 +134,31 @@ jobs:
     uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.1.1
     with:
       base64-subjects: "${{ needs.build.outputs.hashes }}"
+      # Upload provenance to a new release
+      upload-assets: true
 
-  # This step creates a GitHub release with our artifacts and provenance.
+  # This step uploads our artifacts to the tagged GitHub release.
   release:
     needs: [build, provenance]
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/')
     steps:
       - name: Download artifact1
-        uses: actions/download-artifact@fb598a63ae348fa914e94cd0ff38f362e927b741 # v2.1.0
+        uses: actions/download-artifact@fb598a63ae348fa914e94cd0ff38f362e927b741 # tag=v2.1.0
         with:
           name: artifact1
 
       - name: Download artifact2
-        uses: actions/download-artifact@fb598a63ae348fa914e94cd0ff38f362e927b741 # v2.1.0
+        uses: actions/download-artifact@fb598a63ae348fa914e94cd0ff38f362e927b741 # tag=v2.1.0
         with:
           name: artifact2
 
-      - name: Download provenance
-        uses: actions/download-artifact@fb598a63ae348fa914e94cd0ff38f362e927b741 # v2.1.0
-        with:
-          # The provenance step returns an output with the artifact name of
-          # our provenance.
-          name: ${{needs.provenance.outputs.attestation-name}}
-
-      - name: Create release
+      - name: Upload assets
         uses: softprops/action-gh-release@1e07f4398721186383de40550babbdf2b84acfc5 # v0.1.14
         with:
           files: |
             artifact1
             artifact2
-            ${{needs.provenance.outputs.attestation-name}}
 ```
 
 ### Supported Triggers
@@ -178,8 +172,7 @@ The following [GitHub trigger events](https://docs.github.com/en/actions/using-w
 
 However, in practice, most triggers should work with the exception of
 `pull_request`. If you would like support for `pull_request`, please tell us
-about your use case on [issue
-#358](https://github.com/slsa-framework/slsa-github-generator/issues/358). If
+about your use case on [issue #358](https://github.com/slsa-framework/slsa-github-generator/issues/358). If
 you have an issue in all other triggers please submit a [new
 issue](https://github.com/slsa-framework/slsa-github-generator/issues/new/choose).
 
@@ -187,9 +180,10 @@ issue](https://github.com/slsa-framework/slsa-github-generator/issues/new/choose
 
 The [generic workflow](https://github.com/slsa-framework/slsa-github-generator/blob/main/.github/workflows/generator_generic_slsa3.yml) accepts the following inputs:
 
-| Name              | Required | Description                                                                                                                                                                                                                                                      |
-| ----------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `base64-subjects` | yes      | Artifact(s) for which to generate provenance, formatted the same as the output of sha256sum (SHA256 NAME\n[...]) and base64 encoded. The encoded value should decode to, for example: `90f3f7d6c862883ab9d856563a81ea6466eb1123b55bff11198b4ed0030cac86 foo.zip` |
+| Name              | Required | Default | Description                                                                                                                                                                                                                                                      |
+| ----------------- | -------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `base64-subjects` | yes      |         | Artifact(s) for which to generate provenance, formatted the same as the output of sha256sum (SHA256 NAME\n[...]) and base64 encoded. The encoded value should decode to, for example: `90f3f7d6c862883ab9d856563a81ea6466eb1123b55bff11198b4ed0030cac86 foo.zip` |
+| `upload-assets`   | no       | false   | If true provenance is uploaded to a GitHub release for new tags.                                                                                                                                                                                                 |
 
 ### Workflow Outputs
 
@@ -297,19 +291,19 @@ jobs:
     # =================================================
     outputs:
       hashes: ${{ steps.hash.outputs.hashes }}
-    
+
     [...]
-    
+
     steps:
       [...]
       - name: Run GoReleaser
         # =================================================
         #
-        # Step 2: Add an `id: run-goreleaser` field 
+        # Step 2: Add an `id: run-goreleaser` field
         #         to your goreleaser step.
         #
         # =================================================
-        id: run-goreleaser 
+        id: run-goreleaser
         uses: goreleaser/goreleaser-action@b953231f81b8dfd023c58e0854a721e35037f28b
 
       # =================================================
@@ -343,4 +337,5 @@ jobs:
     uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.1.1
     with:
       base64-subjects: "${{ needs.goreleaser.outputs.hashes }}"
+      upload-assets: true # upload to a new release
 ```

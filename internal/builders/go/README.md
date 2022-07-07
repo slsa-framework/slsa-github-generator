@@ -116,7 +116,7 @@ If you think you need suppport for other variables, please [open an issue](https
 
 ### Workflow Inputs
 
-The builder workflow [slsa-framework/slsa-github-generator/.github/workflows/builder_go_slsa3.yml](.github/workflows/builder_go_slsa3.yml) accepts the following inputs:
+The builder workflow [slsa-framework/slsa-github-generator/.github/workflows/builder_go_slsa3.yml](https://github.com/slsa-framework/slsa-github-generator/blob/main/.github/workflows/builder_go_slsa3.yml) accepts the following inputs:
 
 | Name             | Required | Description                                                                                                                                                             | Default                                                                                                                                                                                                                                                   |
 | ---------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -157,7 +157,7 @@ jobs:
       tree-state: ${{ steps.ldflags.outputs.tree-state }}
     steps:
       - id: checkout
-        uses: actions/checkout@ec3a7ce113134d7a93b817d10a8272cb61118579 # v2.3.4
+        uses: actions/checkout@ec3a7ce113134d7a93b817d10a8272cb61118579 # tag=v2.3.4
         with:
           fetch-depth: 0
       - id: ldflags

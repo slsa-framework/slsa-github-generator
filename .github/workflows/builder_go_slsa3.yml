@@ -81,7 +81,7 @@ jobs:
     steps:
       - name: Detect the builder ref
         id: detect
-        uses: slsa-framework/slsa-github-generator/.github/actions/detect-workflow@ab345b0851aceba69a2ce8f3d2084f6e7d887850 # v1.1.1
+        uses: slsa-framework/slsa-github-generator/.github/actions/detect-workflow@ab345b0851aceba69a2ce8f3d2084f6e7d887850 # tag=v1.1.1
 
   ###################################################################
   #                                                                 #
@@ -106,7 +106,7 @@ jobs:
           directory: "${{ env.BUILDER_DIR }}/go"
 
       - name: Upload the builder
-        uses: actions/upload-artifact@3cea5372237819ed00197afe530f5a7ea3e805c8 # v3.1.0
+        uses: actions/upload-artifact@3cea5372237819ed00197afe530f5a7ea3e805c8 # tag=v3.1.0
         with:
           name: "${{ env.BUILDER_BINARY }}"
           path: "${{ env.BUILDER_BINARY }}"
@@ -266,7 +266,7 @@ jobs:
             --workingDir "$UNTRUSTED_WORKING_DIR"
 
       - name: Upload the signed provenance
-        uses: actions/upload-artifact@3cea5372237819ed00197afe530f5a7ea3e805c8 # v3.1.0
+        uses: actions/upload-artifact@3cea5372237819ed00197afe530f5a7ea3e805c8 # tag=v3.1.0
         with:
           name: "${{ steps.sign-prov.outputs.signed-provenance-name }}"
           path: "${{ steps.sign-prov.outputs.signed-provenance-name }}"
@@ -289,7 +289,7 @@ jobs:
         uses: slsa-framework/slsa-github-generator/.github/actions/secure-download-artifact@ab345b0851aceba69a2ce8f3d2084f6e7d887850
         with:
           name: "${{ needs.build-dry.outputs.go-binary-name }}"
-          sha256: "${{ needs.builder.outputs.go-builder-sha256 }}"
+          sha256: "${{ needs.build.outputs.go-binary-sha256 }}"
 
       - name: Download provenance
         uses: slsa-framework/slsa-github-generator/.github/actions/secure-download-artifact@ab345b0851aceba69a2ce8f3d2084f6e7d887850
@@ -298,7 +298,7 @@ jobs:
           sha256: "${{ needs.provenance.outputs.go-provenance-sha256 }}"
 
       - name: Release
-        uses: softprops/action-gh-release@1e07f4398721186383de40550babbdf2b84acfc5 # v0.1.14
+        uses: softprops/action-gh-release@1e07f4398721186383de40550babbdf2b84acfc5 # tag=v0.1.14
         with:
           files: |
             ${{ needs.build-dry.outputs.go-binary-name }}
