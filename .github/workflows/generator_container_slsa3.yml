@@ -85,11 +85,13 @@ jobs:
     runs-on: ubuntu-latest
     needs: [detect-env]
     permissions:
-      id-token: write # Needed for keyless.
+      # id-token:write is needed to create an OCID token for keyless signing.
+      id-token: write
       contents: read
       # actions permissions are needed to read info on the workflow and
       # workflow run.
       actions: read
+      # packages:write permissions are needed to login and upload attestations.
       packages: write
     steps:
       - name: Generate builder
@@ -103,7 +105,6 @@ jobs:
           # NOTE: We are using the generic generator.
           directory: "${{ env.BUILDER_DIR }}/generic"
 
-      # Note: here we need packages permissions
       - uses: sigstore/cosign-installer@7e0881f8fe90b25e305bbf0309761e9314607e25 # v2.4.0
       - name: Login
         env:
