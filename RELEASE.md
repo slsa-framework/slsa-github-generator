@@ -19,7 +19,7 @@ Set up env variables:
 ```
 $ export GH_TOKEN=<PAT-token>
 $ export GITHUB_USERNAME="laurentsimon"
-# This is the existing slsa-verifier version used by the builder. (https://github.com/slsa-framework/slsa-github-generator/blob/release/bad-verifier/.github/workflows/builder_go_slsa3.yml#L31)
+# This is the existing slsa-verifier version used by the builder. (https://github.com/slsa-framework/slsa-github-generator/blob/release/bad-verifier/.github/actions/generate-builder/action.yml_go_slsa3.yml#L54)
 $ export VERIFIER_TAG="v0.0.1" 
 $ export VERIFIER_REPOSITORY="$GITHUB_USERNAME/slsa-verifier"
 # Release tag of the builder we want to release
@@ -47,7 +47,7 @@ $ "$GH" release -R "$VERIFIER_REPOSITORY" upload "$VERIFIER_TAG" slsa-verifier-l
 ```
 2. Ensure your fork of the builder is at the same commit hash as the offical builder's `$BUILDER_TAG` release.
 3. Create a new branch `git checkout -b "$BUILDER_REF"`
-4. Update the file `$BUILDER_REPOSITORY/main/.github/workflows/builder_go_slsa3.yml` by replacing the strings `BUILDER_REPOSITORY` and `VERIFIER_REPOSITORY` with your own username (value of `$GITHUB_USERNAME`). Then push the changes.
+4. Update the file `$BUILDER_REPOSITORY/main/.github/actions/generate-builder/action.yml` by replacing the strings `BUILDER_REPOSITORY` and `VERIFIER_REPOSITORY` with your own username (value of `$GITHUB_USERNAME`). Then push the changes.
 3. Create a release for your builder for this branch:
 ```
 $ "$GH" release -R "$BUILDER_REPOSITORY" create "$BUILDER_TAG" --title "$BUILDER_TAG" --notes "pre-release tests for $BUILDER_TAG $(date)" --target "$BUILDER_REF"
