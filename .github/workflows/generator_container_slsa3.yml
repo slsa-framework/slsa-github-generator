@@ -87,7 +87,7 @@ jobs:
     permissions:
       # id-token:write is needed to create an OCID token for keyless signing.
       id-token: write
-      contents: read
+      # contents: read
       # actions permissions are needed to read info on the workflow and
       # workflow run.
       actions: read
