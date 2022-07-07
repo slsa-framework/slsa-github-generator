@@ -1,11 +1,11 @@
 # detect-workflow
 
-detect-workflow is a Github Action that detects the repository and ref (the
+detect-workflow is a GitHub Action that detects the repository and ref (the
 branch, tag, or commit SHA) for a reusable workflow. This is useful in order to
 check out code from the reusable workflow's repository at the git ref that the
 user workflow specifies.
 
-detect-workflow creates an OIDC token from Github's OIDC provider and reads the
+detect-workflow creates an OIDC token from GitHub's OIDC provider and reads the
 [`job_workflow_ref`](https://docs.github.com/en/actions/deployment/security-hardening-your-deployments/about-security-hardening-with-openid-connect#understanding-the-oidc-token)
 in order to determine the reusable workflow's repository.
 

@@ -47,20 +47,20 @@ haven't been tampered with.
 
 ## Generating Provenance
 
-The generic workflow uses a Github Actions reusable workflow to generate the
+The generic workflow uses a GitHub Actions reusable workflow to generate the
 provenance.
 
 ### Getting Started
 
 To get started, you will need to add some steps to your current workflow. We
-will assume you have an existing Github Actions workflow to build your project.
+will assume you have an existing GitHub Actions workflow to build your project.
 
 Add a step to your workflow after you have built your project to generate a
 sha256 hash of your artifacts and base64 encode it.
 
 Assuming you have a binary called `binary-linux-amd64` you can use the
 `sha256sum` and `base64` commands to create the digest. Here we use the `-w0` to
-output the encoded data on one line and make it easier to use as a Github Actions
+output the encoded data on one line and make it easier to use as a GitHub Actions
 output:
 
 ```shell
@@ -188,7 +188,7 @@ issue](https://github.com/slsa-framework/slsa-github-generator/issues/new/choose
 The [generic workflow](https://github.com/slsa-framework/slsa-github-generator/blob/main/.github/workflows/generator_generic_slsa3.yml) accepts the following inputs:
 
 | Name              | Required | Description                                                                                                                                                                                                                                                      |
-| ----------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+|-------------------|----------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `base64-subjects` | yes      | Artifact(s) for which to generate provenance, formatted the same as the output of sha256sum (SHA256 NAME\n[...]) and base64 encoded. The encoded value should decode to, for example: `90f3f7d6c862883ab9d856563a81ea6466eb1123b55bff11198b4ed0030cac86 foo.zip` |
 
 ### Workflow Outputs
@@ -196,7 +196,7 @@ The [generic workflow](https://github.com/slsa-framework/slsa-github-generator/b
 The [generic workflow](https://github.com/slsa-framework/slsa-github-generator/blob/main/.github/workflows/generator_generic_slsa3.yml) produces the following outputs:
 
 | Name               | Description                                |
-| ------------------ | ------------------------------------------ |
+|--------------------|--------------------------------------------|
 | `attestation-name` | The artifact name of the signed provenance |
 
 ### Provenance Format
@@ -204,13 +204,13 @@ The [generic workflow](https://github.com/slsa-framework/slsa-github-generator/b
 The project generates SLSA provenance with the following values.
 
 | Name                         | Value                                                          | Description                                                                                                                                                                                                            |
-| ---------------------------- | -------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+|------------------------------|----------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `buildType`                  | `"https://github.com/slsa-framework/slsa-github-generator@v1"` | Identifies a generic GitHub Actions build.                                                                                                                                                                             |
 | `metadata.buildInvocationID` | `"[run_id]-[run_attempt]"`                                     | The GitHub Actions [`run_id`](https://docs.github.com/en/actions/learn-github-actions/contexts#github-context) does not update when a workflow is re-run. Run attempt is added to make the build invocation ID unique. |
 
 ### Provenance Example
 
-The following is an example of the generated proveanance. Provenance is
+The following is an example of the generated provenance. Provenance is
 generated as an [in-toto](https://in-toto.io/) statement with a SLSA predicate.
 
 ```json
