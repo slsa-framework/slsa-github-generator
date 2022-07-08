@@ -1,4 +1,4 @@
-name: "PRNG"
+name: "RRNG"
 description: "Generate random bytes using /dev/urandom. WARNING: only use for non-cryptographic purposes (the results will show in logs)."
 inputs:
   length:
@@ -6,7 +6,7 @@ inputs:
     required: true
 outputs:
   random:
-    description: "The output of the PRNG (hex-encoded)."
+    description: "The output of the RNG (hex-encoded)."
     value: "${{ steps.prng.outputs.result }}"
 
 runs:
