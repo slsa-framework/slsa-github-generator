@@ -289,7 +289,7 @@ jobs:
         uses: slsa-framework/slsa-github-generator/.github/actions/secure-download-artifact@ab345b0851aceba69a2ce8f3d2084f6e7d887850
         with:
           name: "${{ needs.build-dry.outputs.go-binary-name }}"
-          sha256: "${{ needs.builder.outputs.go-builder-sha256 }}"
+          sha256: "${{ needs.build.outputs.go-binary-sha256 }}"
 
       - name: Download provenance
         uses: slsa-framework/slsa-github-generator/.github/actions/secure-download-artifact@ab345b0851aceba69a2ce8f3d2084f6e7d887850
