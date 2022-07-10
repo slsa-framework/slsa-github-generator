@@ -115,7 +115,8 @@ jobs:
           # character in it to see if it's a domain name.
           # See: https://stackoverflow.com/questions/37861791/how-are-docker-image-names-parsed#37867949
           untrusted_registry="docker.io"
-          maybe_domain=$(echo "$UNTRUSTED_IMAGE" | cut -f1 -d "/" | grep -E "\.|:")
+          # NOTE: Do not fail the script if grep does not match.
+          maybe_domain=$(echo "$UNTRUSTED_IMAGE" | cut -f1 -d "/" | { grep -E "\.|:" || true; })
           if [ "$maybe_domain" != "" ]; then
             untrusted_registry="$maybe_domain"
           fi
