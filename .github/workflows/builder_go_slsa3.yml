@@ -104,7 +104,7 @@ jobs:
           compile-builder: "${{ inputs.compile-builder }}"
           directory: "${{ env.BUILDER_DIR }}"
 
-      - name: Upload the builder
+      - name: Upload builder
         uses: actions/upload-artifact@3cea5372237819ed00197afe530f5a7ea3e805c8 # tag=v3.1.0
         with:
           name: "${{ env.BUILDER_BINARY }}-${{ needs.rng.outputs.value }}"
