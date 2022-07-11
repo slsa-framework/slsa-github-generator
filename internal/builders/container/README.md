@@ -73,6 +73,10 @@ provenance:
 Here's an example of what it might look like all together.
 
 ```yaml
+env:
+  IMAGE_REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
 jobs:
   # This step builds our image, pushes it, and outputs the repo hash digest.
   build:
@@ -80,7 +84,7 @@ jobs:
       contents: read
       packages: write
     outputs:
-      image-and-digest: ${{ steps.digest.outputs.image }}
+      image: ${{ steps.image.outputs.image }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout the repository
@@ -110,16 +114,12 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
 
-      - name: Output image and digest
-        id: digest
-        env:
-          DIGEST: ${{ steps.build.outputs.digest }}
+      - name: Output image
+        id: image
         run: |
-          # NOTE: We need to use the image and digest in order to make sure
-          # that the image we attest has not been modified.
-          # NOTE: The digest output from docker/build-push-action is of the
-          # form "sha256:<digest>"
-          image_name="${IMAGE_REGISTRY}/${IMAGE_NAME}@${DIGEST}"
+	  # NOTE: Set the image as an output because the `env` context is not
+          # available to the inputs of a reusable workflow call.
+          image_name="${IMAGE_REGISTRY}/${IMAGE_NAME}"
           echo "::set-output name=image::$image_name"
 
   # This step calls the container workflow to generate provenance and push it to
@@ -133,7 +133,7 @@ jobs:
     if: startsWith(github.ref, 'refs/tags/')
     uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@main
     with:
-      image: ${{ needs.build.outputs.image-and-digest }}
+      image: ${{ needs.build.outputs.image }}
       registry-username: ${{ github.actor }}
       # TODO(https://github.com/slsa-framework/slsa-github-generator/issues/492): Remove after GA release.
       compile-generator: true
