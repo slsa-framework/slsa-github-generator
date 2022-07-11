@@ -28,7 +28,7 @@ type jsonToken struct {
 	ActorID           string   `json:"actor_id"`
 }
 
-// testKeySet is a oidc.KeySet that can be used in tests.
+// testKeySet is an oidc.KeySet that can be used in tests.
 type testKeySet struct{}
 
 // VerifySignature implements oidc.KeySet.VerifySignature.
@@ -40,12 +40,12 @@ func (ks *testKeySet) VerifySignature(ctx context.Context, jwt string) ([]byte, 
 	}
 	payload, err := base64.RawURLEncoding.DecodeString(parts[1])
 	if err != nil {
-		return nil, fmt.Errorf("jwt payload: %v", err)
+		return nil, fmt.Errorf("jwt payload: %w", err)
 	}
 	return payload, nil
 }
 
-// NewTestOIDCServer returns an httptest.Server that can be used as the OIDC
+// NewTestOIDCServer returns a httptest.Server that can be used as the OIDC
 // server, and an OIDClient that will use the test server. The server returns the
 // given token when queried. Now is the time used for token expiration
 // verification by the client.
@@ -62,7 +62,7 @@ func NewTestOIDCServer(t *testing.T, now time.Time, token *OIDCToken) (*httptest
 
 	// FIXME: Fix creating a test server that can return tokens that can be verified.
 	var issuerURL string
-	s, c := newTestOIDCServer(t, now, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	s, c := newTestOIDCServer(t, now, func(w http.ResponseWriter, r *http.Request) {
 		// Allow the token to override the issuer for verification testing.
 		issuer := issuerURL
 		if token.Issuer != "" {
@@ -95,18 +95,18 @@ func NewTestOIDCServer(t *testing.T, now time.Time, token *OIDCToken) (*httptest
 		}
 
 		fmt.Fprintf(w, `{"value": "%s"}`, value)
-	}))
+	})
 	issuerURL = s.URL
 
 	return s, c
 }
 
 func newRawTestOIDCServer(t *testing.T, now time.Time, status int, raw string) (*httptest.Server, *OIDCClient) {
-	return newTestOIDCServer(t, now, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	return newTestOIDCServer(t, now, func(w http.ResponseWriter, r *http.Request) {
 		// Respond with a very basic 3-part JWT token.
 		w.WriteHeader(status)
 		fmt.Fprintln(w, raw)
-	}))
+	})
 }
 
 func newTestOIDCServer(t *testing.T, now time.Time, f http.HandlerFunc) (*httptest.Server, *OIDCClient) {

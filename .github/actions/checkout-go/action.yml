@@ -32,7 +32,7 @@ runs:
     # value set https://github.com/actions/checkout/blob/main/action.yml#L7-L11.
     # However, if this were to change in the future, we'd be setting an empty value
     # when the developer has not defined it; and it would overwrite the default value
-    # set by the `actions/checkout`. Even if it is highlely unlikely the `actions/checkout` team
+    # set by the `actions/checkout`. Even if it is highly unlikely the `actions/checkout` team
     # will set a default value in the future, we want to be sure it does not affect us if they do.
     # This is why we use 2 blocks to call the `actions/checkout`:
     #   1. if inputs.ref != ''
