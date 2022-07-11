@@ -10,18 +10,17 @@ if [[ "$COMPILE_BUILDER" = true ]]; then
     go mod vendor
 
     # https://go.dev/ref/mod#build-commands.
-    go build -mod=vendor -o "$BUILDER_BINARY"
+    go build -mod=vendor -o "$BUILDER_RELEASE_BINARY"
 
     cd -
 
-    mv "$BUILDER_DIR/$BUILDER_BINARY" .
+    mv "$BUILDER_DIR/$BUILDER_RELEASE_BINARY" .
 
 else
     echo "Fetching the builder with ref: $BUILDER_REF"
 
     .github/actions/generate-builder/builder-fetch.sh
 
-    mv "$BUILDER_RELEASE_BINARY" "$BUILDER_BINARY"
 fi
 
-chmod u+x "$BUILDER_BINARY"
+chmod u+x "$BUILDER_RELEASE_BINARY"

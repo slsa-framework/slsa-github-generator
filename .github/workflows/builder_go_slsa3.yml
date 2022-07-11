@@ -20,19 +20,9 @@ permissions:
 env:
   # Project.
   GENERATED_BINARY_NAME: go-compiled-binary
-  # Builder
-  BUILDER_BINARY: go-builder
-  BUILDER_RELEASE_BINARY: slsa-builder-go-linux-amd64
-  BUILDER_REPOSITORY: slsa-framework/slsa-github-generator
-  # Verifier
-  # NOTE: These VERIFIER_* variables are used for verification of builder
-  # release binaries when the compile-builder input is false.
-  VERIFIER_REPOSITORY: slsa-framework/slsa-verifier
-  VERIFIER_RELEASE_BINARY: slsa-verifier-linux-amd64
-  VERIFIER_RELEASE_BINARY_SHA256: f92fc4e571949c796d7709bb3f0814a733124b0155e484fad095b5ca68b4cb21
-  VERIFIER_RELEASE: v1.1.1
-  # Builder location
-  BUILDER_DIR: internal/builders
+  # Builder.
+  BUILDER_BINARY: slsa-builder-go-linux-amd64         # Name of the binary in the release assets.
+  BUILDER_DIR: internal/builders/go                   # Source directory if we compile the builder.
 
 ###################################################################
 #                                                                 #
@@ -103,7 +93,7 @@ jobs:
           go-version: 1.18
           binary: "${{ env.BUILDER_BINARY }}"
           compile-builder: "${{ inputs.compile-builder }}"
-          directory: "${{ env.BUILDER_DIR }}/go"
+          directory: "${{ env.BUILDER_DIR }}"
 
       - name: Upload the builder
         uses: actions/upload-artifact@3cea5372237819ed00197afe530f5a7ea3e805c8 # tag=v3.1.0
