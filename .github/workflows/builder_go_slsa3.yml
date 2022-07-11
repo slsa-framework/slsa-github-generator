@@ -95,7 +95,7 @@ jobs:
     steps:
       - name: Generate builder
         id: generate
-        uses: slsa-framework/slsa-github-generator/.github/actions/generate-builder@ab345b0851aceba69a2ce8f3d2084f6e7d887850
+        uses: slsa-framework/slsa-github-generator/.github/actions/generate-builder@02b4d7172a693a534df95b387b07fdd1bb16d9e0
         with:
           repository: "${{ needs.detect-env.outputs.repository }}"
           ref: "${{ needs.detect-env.outputs.ref }}"
