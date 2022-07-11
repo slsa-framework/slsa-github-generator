@@ -23,13 +23,6 @@ runs:
         name: "${{ inputs.name }}"
         path: "${{ inputs.path }}"
 
-    - name: DEBUG
-      shell: bash
-      run: |
-
-        pwd
-        ls
-
     - name: Compute the hash
       id: compute
       uses: slsa-framework/slsa-github-generator/.github/actions/compute-sha256@ab345b0851aceba69a2ce8f3d2084f6e7d887850
@@ -46,6 +39,10 @@ runs:
       run: |
       
         set -euo pipefail
+
+        pwd
+        ls
+
         if [[ ! -f "$UNTRUSTED_PATH" ]]; then
             echo "File $UNTRUSTED_PATH not present"
             exit 5
