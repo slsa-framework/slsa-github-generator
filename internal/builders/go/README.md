@@ -124,7 +124,6 @@ The builder workflow [slsa-framework/slsa-github-generator/.github/workflows/bui
 | `evaluated-envs` | no       | empty value                                                                                                                                                             | A list of environment variables, seperated by `,`: `VAR1: value, VAR2: value`. This is typically used to pass dynamically-generated values, such as `ldflags`. Note that only environment variables with names starting with `CGO_` or `GO` are accepted. |
 | `go-version`     | yes      | The go version for your project. This value is passed, unchanged, to the [actions/setup-go](https://github.com/actions/setup-go) action when setting up the environment |
 | `upload-assets`  | no       | true on new tags                                                                                                                                                        | Whether to upload assets to a GitHub release or not.                                                                                                                                                                                                      |
-| `staging` | no      | Boolean to use Sigstore's staging instance for certificate issuance and transparency log uploads. By default, false. |
 
 ### Workflow Example
 

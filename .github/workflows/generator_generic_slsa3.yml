@@ -49,8 +49,8 @@ on:
         required: false
         type: boolean
         default: false
-      staging:
-        description: "Use Sigstore's staging instance for certificate issuance and transparency log uploads"
+      experimental-staging:
+        description: "Experimental: Use Sigstore's staging instance for certificate issuance and transparency log uploads"
         required: false
         type: boolean
         default: false
@@ -118,7 +118,7 @@ jobs:
         env:
           SUBJECTS: "${{ inputs.base64-subjects }}"
           GITHUB_CONTEXT: "${{ toJSON(github) }}"
-          STAGING: "${{ inputs.staging }}"
+          STAGING: "${{ inputs.experimental-staging }}"
         run: |
           set -euo pipefail
           # Create and sign provenance

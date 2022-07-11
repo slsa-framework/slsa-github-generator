@@ -65,8 +65,8 @@ on:
         required: false
         type: boolean
         default: false
-      staging:
-        description: "Use Sigstore's staging instance for certificate issuance and transparency log uploads"
+      experimental-staging:
+        description: "Experimental: Use Sigstore's staging instance for certificate issuance and transparency log uploads"
         required: false
         type: boolean
         default: false
@@ -256,7 +256,7 @@ jobs:
           UNTRUSTED_ENV: "${{ needs.build-dry.outputs.go-env }}"
           UNTRUSTED_WORKING_DIR: "${{ needs.build-dry.outputs.go-working-dir }}"
           GITHUB_CONTEXT: "${{ toJSON(github) }}"
-          STAGING: "${{ inputs.staging }}"
+          STAGING: "${{ inputs.experimental-staging }}"
         run: |
           set -euo pipefail
 
