@@ -17,6 +17,7 @@ runs:
   steps:
     - name: Generate random
       id: prng
+      shell: bash
       env:
         LENGTH: "${{ inputs.length }}"
       run: |
