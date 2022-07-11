@@ -16,7 +16,7 @@ runs:
   using: "composite"
   steps:
     - name: Generate random
-      id: prng
+      id: rng
       shell: bash
       env:
         LENGTH: "${{ inputs.length }}"

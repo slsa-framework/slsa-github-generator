@@ -63,7 +63,7 @@ on:
 jobs:
   rng:
     outputs:
-      value: ${{ steps.rng.outputs.result }}
+      value: ${{ steps.rng.outputs.random }}
     runs-on: ubuntu-latest
     steps:
       - name: Generate random 16-byte value (32-char hex encoded)
