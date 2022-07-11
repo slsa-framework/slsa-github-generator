@@ -10,7 +10,7 @@ outputs:
     description: >
       The output of the RNG encoded in hexadecimal.
       Note: Due to the encoding, the length of the string will be twice as long as the input length requested by the user.
-    value: "${{ steps.prng.outputs.result }}"
+    value: "${{ steps.rng.outputs.result }}"
 
 runs:
   using: "composite"
