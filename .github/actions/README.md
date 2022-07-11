@@ -16,7 +16,7 @@ Actions that are called with a copy of the calling repository on disk (`actions/
 should *NEVER* "checkout" the builder's repository, because it creates interference with the calling repository
 and is difficult to get right.
     
-In particular, *composite actions* need to use inline scripts and cannot invoke script files stored in the builder's repository.
+In particular, *composite actions* need should not invoke script files stored in the git repository. Only inline scripts are permitted under these rules.
 
 In general, Actions that need to "checkout" their code should use [Dockerfile](https://docs.github.com/en/actions/creating-actions/creating-a-docker-container-action) or [nodejs](https://docs.github.com/en/actions/creating-actions/creating-a-javascript-action)-type projects "compiled" with [ncc](https://docs.github.com/en/actions/creating-actions/creating-a-javascript-action#commit-tag-and-push-your-action-to-github). An example of such an Action
 is the `./github/actions/detect-workflow` Action.
