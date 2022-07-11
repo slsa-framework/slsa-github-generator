@@ -23,8 +23,10 @@ runs:
         pwd
         ls
 
+        ls -l "$UNTRUSTED_PATH"
+
         echo "Computing SHA256 for $UNTRUSTED_PATH"
-        if [[ ! -f "$UNTRUSTED_PATH" ]]; then
+        if ! [[ -f "$UNTRUSTED_PATH" ]]; then
             echo "File $UNTRUSTED_PATH not present"
             exit 5
         fi
