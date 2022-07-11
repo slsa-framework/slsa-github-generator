@@ -207,10 +207,10 @@ jobs:
 
           echo "./$BUILDER_BINARY" build "$PWD/$CONFIG_FILE" "$UNTRUSTED_ENVS"
           # Note: We need to provide the asbolute path to the output binary.
-          export OUTPUT_BINARY="$PWD/$GENERATED_BINARY_NAME"
+          export OUTPUT_BINARY="$PWD/${{ env.GENERATED_BINARY_NAME }}"
           ./"$BUILDER_BINARY" build "$CONFIG_FILE" "$UNTRUSTED_ENVS"
 
-          mv "$GENERATED_BINARY_NAME" "$UNTRUSTED_BINARY_NAME"
+          mv "${{ env.GENERATED_BINARY_NAME }}" "$UNTRUSTED_BINARY_NAME"
 
       - name: Upload generated binary
         id: upload
