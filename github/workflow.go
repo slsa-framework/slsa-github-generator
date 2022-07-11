@@ -25,8 +25,8 @@ const (
 	githubContextEnvKey = "GITHUB_CONTEXT"
 )
 
-// WorkflowContext is the 'github' context given to workflows that contains
-// information about the Github Actions workflow run.
+// WorkflowContext is the `github` context given to workflows that contains
+// information about the GitHub Actions workflow run.
 //
 // See: https://docs.github.com/en/actions/learn-github-actions/contexts#github-context.
 type WorkflowContext struct {
@@ -65,7 +65,7 @@ func (c WorkflowContext) RepositoryURI() string {
 	)
 }
 
-// GetWorkflowContext returns the current Github Actions 'github' context.
+// GetWorkflowContext returns the current GitHub Actions 'github' context.
 func GetWorkflowContext() (WorkflowContext, error) {
 	w := WorkflowContext{}
 	ghContext, ok := os.LookupEnv(githubContextEnvKey)

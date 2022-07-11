@@ -27,7 +27,7 @@ if [[ "$BUILDER_TAG" == "$(echo -n "$BUILDER_TAG" | grep -P '^[a-f\d]{40}$')" ]]
 
     RELEASE_TAG=""
 
-    # List the releases and find the corepsonding hash.
+    # List the releases and find the corresponding hash.
     RELEASE_LIST=$(gh release -R "$BUILDER_REPOSITORY" -L 50 list)
     while read -r line; do
         TAG=$(echo "$line" | cut -f1)
