@@ -6,6 +6,7 @@ inputs:
     required: true
   path:
     description: "Destination path."
+    default: "${{ inputs.name }}"
     required: false
   sha256:
     description: "SHA256 of the file for verification."
@@ -26,7 +27,7 @@ runs:
       id: compute
       uses: slsa-framework/slsa-github-generator/.github/actions/compute-sha256@ab345b0851aceba69a2ce8f3d2084f6e7d887850
       with:
-        path: "${{ inputs.name }}"
+        path: "${{ inputs.path }}"
 
     - name: Verify the SHA256
       env:
