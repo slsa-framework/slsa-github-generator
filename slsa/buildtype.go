@@ -49,7 +49,7 @@ type BuildType interface {
 	Metadata(context.Context) (*slsa.ProvenanceMetadata, error)
 }
 
-// GithubActionsBuild is a basic build type for builders running in Github Actions.
+// GithubActionsBuild is a basic build type for builders running in GitHub Actions.
 type GithubActionsBuild struct {
 	subject []intoto.Subject
 	Context github.WorkflowContext
@@ -63,7 +63,7 @@ type WorkflowParameters struct {
 }
 
 // NewGithubActionsBuild returns a new GithubActionsBuild that uses the
-// github context to generate information.
+// GitHub context to generate information.
 func NewGithubActionsBuild(s []intoto.Subject, c github.WorkflowContext) *GithubActionsBuild {
 	return &GithubActionsBuild{
 		subject: s,
@@ -92,7 +92,7 @@ func addEnvKeyString(m map[string]interface{}, k string, v string) {
 // getEntryPoint retrieves the path to the user workflow that initiated the
 // workflow run. The `github` context contains the path in `workflow` but it
 // will be the name of the workflow if it's set. The name will not uniquely
-// identify the workflow so we need to retrieve the path via the Github API to
+// identify the workflow, so we need to retrieve the path via the GitHub API to
 // get it reliably.
 func (b *GithubActionsBuild) getEntryPoint(ctx context.Context) (string, error) {
 	ghClient, err := b.Clients.GithubClient(ctx)
@@ -232,8 +232,8 @@ func (b *GithubActionsBuild) Invocation(ctx context.Context) (slsa.ProvenanceInv
 }
 
 // Materials implements BuildType.Materials. It returns a list of materials
-// that includes the repository that triggered the Github Actions workflow.
-func (b *GithubActionsBuild) Materials(ctx context.Context) ([]slsa.ProvenanceMaterial, error) {
+// that includes the repository that triggered the GitHub Actions workflow.
+func (b *GithubActionsBuild) Materials(context.Context) ([]slsa.ProvenanceMaterial, error) {
 	var material []slsa.ProvenanceMaterial
 	if b.Context.RepositoryURI() != "" {
 		material = append(material, slsa.ProvenanceMaterial{

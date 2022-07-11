@@ -27,7 +27,7 @@ if [[ "$BUILDER_TAG" == "$(echo -n "$BUILDER_TAG" | grep -P '^[a-f\d]{40}$')" ]]
 
     RELEASE_TAG=""
 
-    # List the releases and find the corepsonding hash.
+    # List the releases and find the corresponding hash.
     RELEASE_LIST=$(gh release -R "$BUILDER_REPOSITORY" -L 50 list)
     while read -r line; do
         TAG=$(echo "$line" | cut -f1)
@@ -52,7 +52,8 @@ if [[ "$BUILDER_TAG" == "$(echo -n "$BUILDER_TAG" | grep -P '^[a-f\d]{40}$')" ]]
 fi
 
 if [[ "$BUILDER_TAG" != "$(echo -n "$BUILDER_TAG" | grep -P '^v\d*(\.([\d]{1,})){0,2}$')" ]]; then
-    echo "Invalid version: $BUILDER_TAG. Expected version of the form vX.Y.Z"
+    echo "Invalid builder version: $BUILDER_TAG. Expected version of the form vX.Y.Z"
+    echo "For details see https://github.com/slsa-framework/slsa-github-generator#verification-of-provenance"
     exit 7
 fi
 

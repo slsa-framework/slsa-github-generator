@@ -1,0 +1,28 @@
+name: pre-submit actions
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  checkout:
+    name: verify no checkout in Actions
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # tag=v3.0.2
+      - run: |
+
+          set -euo pipefail
+
+          # Verify that no internal Actions are using `actions/checkout`
+          # See reasoning in ./github/actions/README.md
+
+          # Split the command to ignore the `1` error `grep` returns when there is no match.
+          results=$(grep -r --include='*.yml' --include='*.yaml' -e 'actions/checkout@\|actions/checkout-go@' .github/actions/* || true)
+          results=$(grep -v 'checkout-go\|generate-builder' <<<"$results" || true)
+          if [[ "$results" != "" ]]; then
+              echo "Some Actions are using 'actions/checkout'"
+              echo "$results"
+              exit -1
+          fi

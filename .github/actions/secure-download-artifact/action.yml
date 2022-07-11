@@ -18,13 +18,13 @@ runs:
   using: "composite"
   steps:
     - name: Download the artifact
-      uses: actions/download-artifact@fb598a63ae348fa914e94cd0ff38f362e927b741 # v3.0.0
+      uses: actions/download-artifact@fb598a63ae348fa914e94cd0ff38f362e927b741 # tag=v3.0.0
       with:
         name: "${{ inputs.name }}"
 
     - name: Compute the hash
       id: compute
-      uses: slsa-framework/slsa-github-generator/.github/actions/compute-sha256@49e648aa7f5f4f88513b6cd54f6b189516184e6b
+      uses: slsa-framework/slsa-github-generator/.github/actions/compute-sha256@ab345b0851aceba69a2ce8f3d2084f6e7d887850
       with:
         path: "${{ inputs.name }}"
 

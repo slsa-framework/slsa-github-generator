@@ -12,3 +12,7 @@ goos: linux
 goarch: amd64
 dir: internal/builders/go/
 binary: slsa-builder-go-{{ .Os }}-{{ .Arch }}
+# ldflags: -s -w ldflags remove the debugging information from the binary, which reduce the size of the binary.
+ldflags:
+  - "-s"
+  - "-w"
