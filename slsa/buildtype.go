@@ -90,7 +90,7 @@ func addEnvKeyString(m map[string]interface{}, k string, v string) {
 }
 
 // getEntryPoint retrieves the path to the user workflow that initiated the
-// workflow run. The `GitHub` context contains the path in `workflow` but it
+// workflow run. The `github` context contains the path in `workflow` but it
 // will be the name of the workflow if it's set. The name will not uniquely
 // identify the workflow, so we need to retrieve the path via the GitHub API to
 // get it reliably.
