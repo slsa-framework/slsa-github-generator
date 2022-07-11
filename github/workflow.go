@@ -25,7 +25,7 @@ const (
 	githubContextEnvKey = "GITHUB_CONTEXT"
 )
 
-// WorkflowContext is the 'GitHub' context given to workflows that contains
+// WorkflowContext is the `github` context given to workflows that contains
 // information about the GitHub Actions workflow run.
 //
 // See: https://docs.github.com/en/actions/learn-github-actions/contexts#github-context.
