@@ -8,12 +8,9 @@ import (
 var (
 	// New is the same as errors.New.
 	New = stderrors.New
-	// Is is the same as errors.Is.
-	Is = stderrors.Is
+
 	// As is the same as errors.As.
 	As = stderrors.As
-	// Unwrap is the same as errors.Unwrap.
-	Unwrap = stderrors.Unwrap
 )
 
 // Wrappable is a wrappable error.

@@ -37,7 +37,7 @@ type Signature struct {
 // AddCertToEnvelope takes a signed DSSE Envelope and a PEM-encoded certificate, and
 // returns an Envelope with the certificate inside the Signature of the Envelope.
 // This assumes there is only one signature present in the envelope.
-func AddCertToEnvelope(signedAtt []byte, cert []byte) ([]byte, error) {
+func AddCertToEnvelope(signedAtt, cert []byte) ([]byte, error) {
 	// Unmarshal into a DSSE envelope.
 	env := &dsse.Envelope{}
 	if err := json.Unmarshal(signedAtt, env); err != nil {

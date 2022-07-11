@@ -97,7 +97,7 @@ jobs:
       - name: Create and sign provenance
         id: sign-prov
         shell: bash
-        # NOTE: Inputs and github context are set to environment variables in
+        # NOTE: Inputs and `github` context are set to environment variables in
         # order to avoid script injection.
         # See: https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions#understanding-the-risk-of-script-injections
         env:
