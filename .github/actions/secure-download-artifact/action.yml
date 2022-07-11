@@ -29,7 +29,12 @@ runs:
       uses: slsa-framework/slsa-github-generator/.github/actions/compute-sha256@ab345b0851aceba69a2ce8f3d2084f6e7d887850
       with:
         path: "${{ inputs.path }}"
+    - name: DEBUG
+      run: |
 
+        pwd
+        ls
+        
     - name: Verify the SHA256
       env:
         UNTRUSTED_EXPECTED_HASH: "${{ inputs.sha256 }}"
