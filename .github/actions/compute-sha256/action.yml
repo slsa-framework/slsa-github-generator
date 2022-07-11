@@ -20,16 +20,11 @@ runs:
       run: |
         set -euo pipefail
 
-        pwd
-        ls
-
-        ls -l "$UNTRUSTED_PATH"
-
         echo "Computing SHA256 for $UNTRUSTED_PATH"
-        # if ! [[ -f "$UNTRUSTED_PATH" ]]; then
-        #     echo "File $UNTRUSTED_PATH not present"
-        #     exit 5
-        # fi
+        if ! [[ -f "$UNTRUSTED_PATH" ]]; then
+            echo "File $UNTRUSTED_PATH not present"
+            exit 5
+        fi
         digest=$(sha256sum "$UNTRUSTED_PATH" | awk '{print $1}')
         echo "computed sha: $digest"
         
