@@ -68,7 +68,7 @@ jobs:
     steps:
       - name: Generate random 16-byte value (32-char hex encoded)
         id: rng
-        uses: slsa-framework/slsa-github-generator/.github/actions/rng@02b4d7172a693a534df95b387b07fdd1bb16d9e0
+        uses: slsa-framework/slsa-github-generator/.github/actions/rng@aa37b206ed0a2326ecad4023d24a07eaeca4520c
 
   detect-env:
     outputs:
@@ -95,7 +95,7 @@ jobs:
     steps:
       - name: Generate builder
         id: generate
-        uses: slsa-framework/slsa-github-generator/.github/actions/generate-builder@02b4d7172a693a534df95b387b07fdd1bb16d9e0
+        uses: slsa-framework/slsa-github-generator/.github/actions/generate-builder@aa37b206ed0a2326ecad4023d24a07eaeca4520c
         with:
           repository: "${{ needs.detect-env.outputs.repository }}"
           ref: "${{ needs.detect-env.outputs.ref }}"
