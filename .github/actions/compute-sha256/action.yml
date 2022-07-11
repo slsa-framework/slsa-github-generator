@@ -19,6 +19,10 @@ runs:
         UNTRUSTED_PATH: "${{ inputs.path }}"
       run: |
         set -euo pipefail
+
+        pwd
+        ls
+
         echo "Computing SHA256 for $UNTRUSTED_PATH"
         if [[ ! -f "$UNTRUSTED_PATH" ]]; then
             echo "File $UNTRUSTED_PATH not present"
