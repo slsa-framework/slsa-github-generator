@@ -3,11 +3,11 @@ description: "Download an artifact and verify its SHA256"
 inputs:
   name:
     description: "Artifact name."
-    required: true
+    default: 'artifact'
+    required: false
   path:
     description: "Destination path."
-    default: "${{ inputs.name }}"
-    required: false
+    required: true
   sha256:
     description: "SHA256 of the file for verification."
     required: true
@@ -22,6 +22,7 @@ runs:
       uses: actions/download-artifact@fb598a63ae348fa914e94cd0ff38f362e927b741 # tag=v3.0.0
       with:
         name: "${{ inputs.name }}"
+        path: "${{ inputs.path }}"
 
     - name: Compute the hash
       id: compute
@@ -33,8 +34,7 @@ runs:
       env:
         UNTRUSTED_EXPECTED_HASH: "${{ inputs.sha256 }}"
         UNTRUSTED_COMPUTED_HASH: "${{ steps.compute.outputs.sha256 }}"
-        UNTRUSTED_PATH: "${{ inputs.name }}"
-        UNTRUSTED_DST_PATH: "${{ inputs.path }}"
+        UNTRUSTED_PATH: "${{ inputs.path }}"
         SET_EXECUTABLE: "${{ inputs.set-executable }}"
       shell: bash
       run: |
@@ -56,7 +56,4 @@ runs:
             echo "Setting $UNTRUSTED_PATH as executable"
             chmod u+x "$UNTRUSTED_PATH"
         fi
-        if [[ -n "$UNTRUSTED_DST_PATH" ]]; then
-            echo "Moving $UNTRUSTED_PATH to $UNTRUSTED_DST_PATH"
-            mv "$UNTRUSTED_PATH" "$UNTRUSTED_DST_PATH"
-        fi
+
