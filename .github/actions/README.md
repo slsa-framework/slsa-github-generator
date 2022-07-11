@@ -23,7 +23,7 @@ is the `./github/actions/detect-workflow` Action.
 
 There is one exception today: the `./github/actions/generate-builder` Action. It "checkouts" its own code and is allowed to do it
 because it does so in a job that never "checkouts" the calling repository. (Note: the code will be migrated to 
-a Dockerfile or nodejs-type project in the future).
+a Dockerfile or nodejs-type projects in the future).
 
 ## Development
 
