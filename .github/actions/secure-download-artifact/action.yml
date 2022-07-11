@@ -44,7 +44,9 @@ runs:
         pwd
         ls
 
-        if [[ ! -f "$UNTRUSTED_PATH" ]]; then
+        ls -l "$UNTRUSTED_PATH"
+
+        if ! [[ -f "$UNTRUSTED_PATH" ]]; then
             echo "File $UNTRUSTED_PATH not present"
             exit 5
         fi
