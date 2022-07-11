@@ -1661,6 +1661,8 @@ github.com/sigstore/rekor v0.8.2 h1:EjKptG+F5LXQM6H/bHHVhm6pT+zuAuwKhHqR3sDO3gE=
 github.com/sigstore/rekor v0.8.2/go.mod h1:N5EhbXF8pZRGNbtLiyAkCvaW6O3PRNa6NKLwzN/3Scw=
 github.com/sigstore/rekor v0.9.0 h1:4h6Z+PHBoDOxnVnmFldqKlDA+RN/xsuhpA7BSje+W0I=
 github.com/sigstore/rekor v0.9.0/go.mod h1:ulCPpuSiKMhxMoYC4UOhJEObskh5tV6sXOdRwjGnvG0=
+github.com/sigstore/rekor v0.9.1 h1:xk+Sg6xWLYctIqlIxZP+sxZl9sfEl0OIbPgxo527Gxg=
+github.com/sigstore/rekor v0.9.1/go.mod h1:7YBvw8sKQpTUD8jwahpAgex3zF+q2+RAEsgnWXb3O4I=
 github.com/sigstore/sigstore v1.1.0/go.mod h1:gDpcHw4VwpoL5C6N1Ud1YtBsc+ikRDwDelDlWRyYoE8=
 github.com/sigstore/sigstore v1.2.1-0.20220526001230-8dc4fa90a468 h1:UZfTfGy/yiCG+pNyVwTw+PA2aiR33VIb0z0LORq9Gvg=
 github.com/sigstore/sigstore v1.2.1-0.20220526001230-8dc4fa90a468/go.mod h1:xAQdMn1pZ7FcOtHU6chqIsvVKt9KGb4mJZljPQUdcpA=
@@ -1781,6 +1783,8 @@ github.com/thales-e-security/pool v0.0.2/go.mod h1:qtpMm2+thHtqhLzTwgDBj/OuNnMpu
 github.com/theupdateframework/go-tuf v0.0.0-20211203210025-7ded50136bf9/go.mod h1:n2n6wwC9BEnYS/C/APAtNln0eM5zYAYOkOTx6VEG/mA=
 github.com/theupdateframework/go-tuf v0.3.0 h1:od2sc5+BSkKZhmUG2o2rmruy0BGSmhrbDhCnpxh87X8=
 github.com/theupdateframework/go-tuf v0.3.0/go.mod h1:E5XP0wXitrFUHe4b8cUcAAdxBW4LbfnqF4WXXGLgWNo=
+github.com/theupdateframework/go-tuf v0.3.1 h1:NkjMlCuLcDpHNtsWXY4lTmbbQQ5nOM7JSBbOKEEiI1c=
+github.com/theupdateframework/go-tuf v0.3.1/go.mod h1:lhHZ3Vt2pdAh15h0Cc6gWdlI+Okn2ZznD3q/cNjd5jw=
 github.com/tidwall/pretty v1.0.0/go.mod h1:XNkn88O1ChpSDQmQeStsy+sBenx6DDtFZJxhVysOjyk=
 github.com/tidwall/pretty v1.2.0 h1:RWIZEg2iJ8/g6fDDYzMpobmaoGh5OLl4AXtGUGPcqCs=
 github.com/timakin/bodyclose v0.0.0-20200424151742-cb6215831a94/go.mod h1:Qimiffbc6q9tBWlVV6x0P9sat/ao1xEkREYPPj9hphk=
@@ -2903,6 +2907,8 @@ sigs.k8s.io/json v0.0.0-20211208200746-9f7c6b3444d2 h1:kDi4JBNAsJWfz1aEXhO8Jg87J
 sigs.k8s.io/json v0.0.0-20211208200746-9f7c6b3444d2/go.mod h1:B+TnT182UBxE84DiCz4CVE26eOSDAeYCpfDnC2kdKMY=
 sigs.k8s.io/release-utils v0.6.0 h1:wJDuzWJqPH4a5FAxAXE2aBvbB6UMIW7iYMhsKnIMQkA=
 sigs.k8s.io/release-utils v0.6.0/go.mod h1:kR1/DuYCJ4covppUasYNcA11OixC9O37B/E0ejRfb+c=
+sigs.k8s.io/release-utils v0.7.1 h1:dQuGqQi7XGW4PSLJ6JRlN2JUDkeXSepDL1nTdl9QTPY=
+sigs.k8s.io/release-utils v0.7.1/go.mod h1:SK+/kkc2i7ZO0CFXDCvXpzIZyt13cPlscaApaZD7VmU=
 sigs.k8s.io/structured-merge-diff/v4 v4.0.2/go.mod h1:bJZC9H9iH24zzfZ/41RGcq60oK1F7G282QMXDPYydCw=
 sigs.k8s.io/structured-merge-diff/v4 v4.0.3/go.mod h1:bJZC9H9iH24zzfZ/41RGcq60oK1F7G282QMXDPYydCw=
 sigs.k8s.io/structured-merge-diff/v4 v4.2.1 h1:bKCqE9GvQ5tiVHn5rfn1r+yao3aLQEaLzkkmAkf+A6Y=
