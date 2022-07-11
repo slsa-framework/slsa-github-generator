@@ -3,8 +3,7 @@ description: "Download an artifact and verify its SHA256"
 inputs:
   name:
     description: "Artifact name."
-    default: 'artifact'
-    required: false
+    required: true
   path:
     description: "Destination path."
     required: true
@@ -30,11 +29,12 @@ runs:
       with:
         path: "${{ inputs.path }}"
     - name: DEBUG
+      shell: bash
       run: |
 
         pwd
         ls
-        
+
     - name: Verify the SHA256
       env:
         UNTRUSTED_EXPECTED_HASH: "${{ inputs.sha256 }}"
