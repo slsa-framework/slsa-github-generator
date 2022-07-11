@@ -30,7 +30,7 @@ a Dockerfile or nodejs-type project in the future).
 To create or update an internal Action, follow the 2 following steps:
 
 1. Create / modify the Action under `./github/actions/<your-action>` and get the changes merged. Let's call the resulting
-commit hash after merge `CH`. (Note: This won't affect builder's behavior since
+commit hash after merge `CH`. (Note: This won't affect any workflow's behavior since
 the existing code will still be calling the Action at an older commit hash).
 
 1. Update the re-usable workflow / Actions to use them in a follow-up PR:
