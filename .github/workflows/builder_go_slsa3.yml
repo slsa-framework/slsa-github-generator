@@ -164,7 +164,7 @@ jobs:
     outputs:
       go-binary-sha256: ${{ steps.upload.outputs.sha256 }}
     runs-on: ubuntu-latest
-    needs: [builder, build-dry]
+    needs: [builder, build-dry, rng]
     steps:
       - name: Checkout the Go repository
         uses: slsa-framework/slsa-github-generator/.github/actions/checkout-go@ab345b0851aceba69a2ce8f3d2084f6e7d887850
