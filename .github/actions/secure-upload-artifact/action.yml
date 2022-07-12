@@ -1,6 +1,10 @@
 name: "Secure artifact upload"
 description: "Upload an artifact and outputs its SHA256"
 inputs:
+  name:
+    description: "Artifact name."
+    default: "artifact"
+    required: false
   path:
     description: "Artifact path. (Note: This is expected to be a file name in the working directory)."
     required: true
@@ -21,7 +25,7 @@ runs:
     - name: Upload the artifact
       uses: actions/upload-artifact@3cea5372237819ed00197afe530f5a7ea3e805c8 # tag=v3.1.0
       with:
-        name: "${{ inputs.path }}"
+        name: "${{ inputs.name }}"
         path: "${{ inputs.path }}"
         if-no-files-found: error
         retention-days: 5
