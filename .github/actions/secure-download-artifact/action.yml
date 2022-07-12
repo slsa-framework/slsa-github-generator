@@ -24,8 +24,7 @@ runs:
 
     - name: Compute the hash
       id: compute
-      #uses: slsa-framework/slsa-github-generator/.github/actions/compute-sha256@ab345b0851aceba69a2ce8f3d2084f6e7d887850
-      uses: laurentsimon/slsa-github-generator/.github/actions/compute-sha256@feat/random-names
+      uses: slsa-framework/slsa-github-generator/.github/actions/compute-sha256@ab345b0851aceba69a2ce8f3d2084f6e7d887850
       with:
         path: "${{ inputs.path }}"
 
