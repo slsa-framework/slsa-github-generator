@@ -2,11 +2,11 @@ name: "Secure artifact download"
 description: "Download an artifact and verify its SHA256"
 inputs:
   name:
-    description: "Artifact name."
+    description: "Artifact name. (Note: this is a name given to an upload, not the path or filename)"
     required: true
   path:
-    description: "Destination path."
-    required: false
+    description: "The path of the artifact."
+    required: true
   sha256:
     description: "SHA256 of the file for verification."
     required: true
@@ -27,7 +27,7 @@ runs:
       #uses: slsa-framework/slsa-github-generator/.github/actions/compute-sha256@ab345b0851aceba69a2ce8f3d2084f6e7d887850
       uses: laurentsimon/slsa-github-generator/.github/actions/compute-sha256@feat/random-names
       with:
-        path: "${{ inputs.name }}"
+        path: "${{ inputs.path }}"
 
     - name: Verify the SHA256
       env:
@@ -57,7 +57,4 @@ runs:
             echo "Setting $UNTRUSTED_PATH as executable"
             chmod u+x "$UNTRUSTED_PATH"
         fi
-        if [[ -n "$UNTRUSTED_DST_PATH" ]]; then
-            echo "Moving $UNTRUSTED_PATH to $UNTRUSTED_DST_PATH"
-            mv "$UNTRUSTED_PATH" "$UNTRUSTED_DST_PATH"
-        fi
+
