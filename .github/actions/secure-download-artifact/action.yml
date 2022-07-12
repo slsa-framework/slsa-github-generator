@@ -27,7 +27,7 @@ runs:
       #uses: slsa-framework/slsa-github-generator/.github/actions/compute-sha256@ab345b0851aceba69a2ce8f3d2084f6e7d887850
       uses: laurentsimon/slsa-github-generator/.github/actions/compute-sha256@feat/random-names
       with:
-        path: "${{ inputs.file }}"
+        path: "${{ inputs.name }}"
 
     - name: Verify the SHA256
       env:
