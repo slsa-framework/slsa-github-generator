@@ -33,8 +33,7 @@ runs:
       env:
         UNTRUSTED_EXPECTED_HASH: "${{ inputs.sha256 }}"
         UNTRUSTED_COMPUTED_HASH: "${{ steps.compute.outputs.sha256 }}"
-        UNTRUSTED_PATH: "${{ inputs.name }}"
-        UNTRUSTED_DST_PATH: "${{ inputs.path }}"
+        UNTRUSTED_PATH: "${{ inputs.path }}"
         SET_EXECUTABLE: "${{ inputs.set-executable }}"
       shell: bash
       run: |
