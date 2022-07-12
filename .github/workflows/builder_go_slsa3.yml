@@ -61,6 +61,15 @@ on:
         value: ${{ jobs.build-dry.outputs.go-binary-name }}
 
 jobs:
+  rng:
+    outputs:
+      value: ${{ steps.rng.outputs.random }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Generate random 16-byte value (32-char hex encoded)
+        id: rng
+        uses: slsa-framework/slsa-github-generator/.github/actions/rng@aa37b206ed0a2326ecad4023d24a07eaeca4520c
+
   detect-env:
     outputs:
       repository: ${{ steps.detect.outputs.repository }}
@@ -82,23 +91,24 @@ jobs:
     outputs:
       go-builder-sha256: ${{ steps.generate.outputs.sha256 }}
     runs-on: ubuntu-latest
-    needs: [detect-env]
+    needs: [detect-env, rng]
     steps:
       - name: Generate builder
         id: generate
-        uses: slsa-framework/slsa-github-generator/.github/actions/generate-builder@ab345b0851aceba69a2ce8f3d2084f6e7d887850
+        uses: slsa-framework/slsa-github-generator/.github/actions/generate-builder@aa37b206ed0a2326ecad4023d24a07eaeca4520c
         with:
           repository: "${{ needs.detect-env.outputs.repository }}"
           ref: "${{ needs.detect-env.outputs.ref }}"
           go-version: 1.18
+          # Note: This must be the non-randomized binary name, so that it can be downloaded from the release assets.
           binary: "${{ env.BUILDER_BINARY }}"
           compile-builder: "${{ inputs.compile-builder }}"
           directory: "${{ env.BUILDER_DIR }}"
 
-      - name: Upload the builder
+      - name: Upload builder
         uses: actions/upload-artifact@3cea5372237819ed00197afe530f5a7ea3e805c8 # tag=v3.1.0
         with:
-          name: "${{ env.BUILDER_BINARY }}"
+          name: "${{ env.BUILDER_BINARY }}-${{ needs.rng.outputs.value }}"
           path: "${{ env.BUILDER_BINARY }}"
           if-no-files-found: error
           retention-days: 5
@@ -115,7 +125,7 @@ jobs:
       go-env: ${{ steps.build-dry.outputs.go-env }}
       go-working-dir: ${{ steps.build-dry.outputs.go-working-dir }}
     runs-on: ubuntu-latest
-    needs: builder
+    needs: [builder, rng]
     steps:
       - name: Checkout the Go repository
         uses: slsa-framework/slsa-github-generator/.github/actions/checkout-go@ab345b0851aceba69a2ce8f3d2084f6e7d887850
@@ -125,7 +135,8 @@ jobs:
       - name: Download builder
         uses: slsa-framework/slsa-github-generator/.github/actions/secure-download-artifact@ab345b0851aceba69a2ce8f3d2084f6e7d887850
         with:
-          name: "${{ env.BUILDER_BINARY }}"
+          name: "${{ env.BUILDER_BINARY }}-${{ needs.rng.outputs.value }}"
+          path: "${{ env.BUILDER_BINARY }}"
           sha256: "${{ needs.builder.outputs.go-builder-sha256 }}"
           set-executable: true
 
@@ -152,7 +163,7 @@ jobs:
     outputs:
       go-binary-sha256: ${{ steps.upload.outputs.sha256 }}
     runs-on: ubuntu-latest
-    needs: [builder, build-dry]
+    needs: [builder, build-dry, rng]
     steps:
       - name: Checkout the Go repository
         uses: slsa-framework/slsa-github-generator/.github/actions/checkout-go@ab345b0851aceba69a2ce8f3d2084f6e7d887850
@@ -162,7 +173,8 @@ jobs:
       - name: Download builder
         uses: slsa-framework/slsa-github-generator/.github/actions/secure-download-artifact@ab345b0851aceba69a2ce8f3d2084f6e7d887850
         with:
-          name: "${{ env.BUILDER_BINARY }}"
+          name: "${{ env.BUILDER_BINARY }}-${{ needs.rng.outputs.value }}"
+          path: "${{ env.BUILDER_BINARY }}"
           sha256: "${{ needs.builder.outputs.go-builder-sha256 }}"
           set-executable: true
 
@@ -207,6 +219,7 @@ jobs:
         id: upload
         uses: slsa-framework/slsa-github-generator/.github/actions/secure-upload-artifact@ab345b0851aceba69a2ce8f3d2084f6e7d887850
         with:
+          name: "${{ needs.build-dry.outputs.go-binary-name }}"
           path: "${{ needs.build-dry.outputs.go-binary-name }}"
 
   ###################################################################
@@ -216,7 +229,7 @@ jobs:
   ###################################################################
   provenance:
     runs-on: ubuntu-latest
-    needs: [builder, build, build-dry]
+    needs: [builder, build, build-dry, rng]
     permissions:
       id-token: write # Needed for keyless.
       contents: read
@@ -227,7 +240,8 @@ jobs:
       - name: Download builder
         uses: slsa-framework/slsa-github-generator/.github/actions/secure-download-artifact@ab345b0851aceba69a2ce8f3d2084f6e7d887850
         with:
-          name: "${{ env.BUILDER_BINARY }}"
+          name: "${{ env.BUILDER_BINARY }}-${{ needs.rng.outputs.value }}"
+          path: "${{ env.BUILDER_BINARY }}"
           sha256: "${{ needs.builder.outputs.go-builder-sha256 }}"
           set-executable: true
 
@@ -279,12 +293,14 @@ jobs:
         uses: slsa-framework/slsa-github-generator/.github/actions/secure-download-artifact@ab345b0851aceba69a2ce8f3d2084f6e7d887850
         with:
           name: "${{ needs.build-dry.outputs.go-binary-name }}"
+          path: "${{ needs.build-dry.outputs.go-binary-name }}"
           sha256: "${{ needs.build.outputs.go-binary-sha256 }}"
 
       - name: Download provenance
         uses: slsa-framework/slsa-github-generator/.github/actions/secure-download-artifact@ab345b0851aceba69a2ce8f3d2084f6e7d887850
         with:
           name: "${{ needs.provenance.outputs.go-provenance-name }}"
+          path: "${{ needs.provenance.outputs.go-provenance-name }}"
           sha256: "${{ needs.provenance.outputs.go-provenance-sha256 }}"
 
       - name: Release
