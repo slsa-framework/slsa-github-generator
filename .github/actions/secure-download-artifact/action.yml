@@ -5,7 +5,7 @@ inputs:
     description: "Artifact name. (Note: this is a name given to an upload, not the path or filename)"
     required: true
   path:
-    description: "The path of the artifact, as uploaded by the secure-upload-artifact or actions/upload-artifact GHA."
+    description: "The path of the artifact, as provided via the `path` argument to secure-upload-artifact or actions/upload-artifact GHA."
     required: true
   sha256:
     description: "SHA256 of the file for verification."
@@ -24,7 +24,7 @@ runs:
 
     - name: Compute the hash
       id: compute
-      uses: slsa-framework/slsa-github-generator/.github/actions/compute-sha256@ab345b0851aceba69a2ce8f3d2084f6e7d887850
+      uses: slsa-framework/slsa-github-generator/.github/actions/compute-sha256@1d646d70aeba1516af69fb0ef48206580122449b
       with:
         path: "${{ inputs.path }}"
 
