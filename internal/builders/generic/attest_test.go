@@ -7,12 +7,9 @@ import (
 	"github.com/google/go-cmp/cmp/cmpopts"
 	intoto "github.com/in-toto/in-toto-golang/in_toto"
 	slsav02 "github.com/in-toto/in-toto-golang/in_toto/slsa_provenance/v0.2"
+
 	"github.com/slsa-framework/slsa-github-generator/internal/errors"
 )
-
-func errCmp(e1, e2 error) bool {
-	return errors.Is(e1, e2) || errors.Is(e2, e1)
-}
 
 func Test_pathIsUnderCurrentDirectory(t *testing.T) {
 	t.Parallel()
@@ -50,12 +47,12 @@ func Test_pathIsUnderCurrentDirectory(t *testing.T) {
 		{
 			name:     "parent invalid path",
 			path:     "../invalid/path",
-			expected: ErrorInvalidDirectory,
+			expected: &errInvalidPath{},
 		},
 		{
 			name:     "some invalid fullpath",
 			path:     "/some/invalid/fullpath",
-			expected: ErrorInvalidDirectory,
+			expected: &errInvalidPath{},
 		},
 	}
 	for _, tt := range tests {
@@ -64,8 +61,13 @@ func Test_pathIsUnderCurrentDirectory(t *testing.T) {
 			t.Parallel()
 
 			err := pathIsUnderCurrentDirectory(tt.path)
-			if !errCmp(err, tt.expected) {
-				t.Errorf(cmp.Diff(err, tt.expected))
+			if (err == nil && tt.expected != nil) ||
+				(err != nil && tt.expected == nil) {
+				t.Fatalf("unexpected error: %v", cmp.Diff(err, tt.expected, cmpopts.EquateErrors()))
+			}
+
+			if !errors.As(err, &tt.expected) {
+				t.Fatalf("unexpected error: %v", cmp.Diff(err, tt.expected, cmpopts.EquateErrors()))
 			}
 		})
 	}
