@@ -19,18 +19,8 @@ permissions:
 
 env:
   # Generator
-  BUILDER_BINARY: generic-generator
-  BUILDER_RELEASE_BINARY: slsa-generator-generic-linux-amd64
-  BUILDER_REPOSITORY: slsa-framework/slsa-github-generator
-  # Verifier
-  # NOTE: These VERIFIER_* variables are used for verification of generator
-  # release binaries when the compile-generator input is false.
-  VERIFIER_REPOSITORY: slsa-framework/slsa-verifier
-  VERIFIER_RELEASE_BINARY: slsa-verifier-linux-amd64
-  VERIFIER_RELEASE_BINARY_SHA256: f92fc4e571949c796d7709bb3f0814a733124b0155e484fad095b5ca68b4cb21
-  VERIFIER_RELEASE: v1.1.1
-  # Builder location
-  BUILDER_DIR: internal/builders
+  BUILDER_BINARY: slsa-generator-generic-linux-amd64  # Name of the binary in the release assets.
+  BUILDER_DIR: internal/builders/generic              # Source directory if we compile the builder.
 
 on:
   workflow_call:
@@ -70,7 +60,7 @@ jobs:
     steps:
       - name: Detect the generator ref
         id: detect
-        uses: slsa-framework/slsa-github-generator/.github/actions/detect-workflow@ab345b0851aceba69a2ce8f3d2084f6e7d887850
+        uses: slsa-framework/slsa-github-generator/.github/actions/detect-workflow@1d646d70aeba1516af69fb0ef48206580122449b
 
   # generator builds the generator binary and runs it to generate SLSA
   # provenance.
@@ -95,19 +85,19 @@ jobs:
       actions: read
     steps:
       - name: Generate builder
-        uses: slsa-framework/slsa-github-generator/.github/actions/generate-builder@ab345b0851aceba69a2ce8f3d2084f6e7d887850
+        uses: slsa-framework/slsa-github-generator/.github/actions/generate-builder@1d646d70aeba1516af69fb0ef48206580122449b
         with:
           repository: "${{ needs.detect-env.outputs.repository }}"
           ref: "${{ needs.detect-env.outputs.ref }}"
           go-version: 1.18
           binary: "${{ env.BUILDER_BINARY }}"
           compile-builder: "${{ inputs.compile-generator }}"
-          directory: "${{ env.BUILDER_DIR }}/generic"
+          directory: "${{ env.BUILDER_DIR }}"
 
       - name: Create and sign provenance
         id: sign-prov
         shell: bash
-        # NOTE: Inputs and github context are set to environment variables in
+        # NOTE: Inputs and `github` context are set to environment variables in
         # order to avoid script injection.
         # See: https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions#understanding-the-risk-of-script-injections
         env:
@@ -143,7 +133,7 @@ jobs:
     if: startsWith(github.ref, 'refs/tags/') && inputs.upload-assets == true
     steps:
       - name: Download the provenance
-        uses: slsa-framework/slsa-github-generator/.github/actions/secure-download-artifact@ab345b0851aceba69a2ce8f3d2084f6e7d887850
+        uses: slsa-framework/slsa-github-generator/.github/actions/secure-download-artifact@1d646d70aeba1516af69fb0ef48206580122449b
         with:
           name: "${{ needs.generator.outputs.attestation-name }}"
           sha256: "${{ needs.generator.outputs.attestation-sha256 }}"

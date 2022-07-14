@@ -1,0 +1,32 @@
+name: "RNG"
+description: "Generate random bytes using /dev/urandom. WARNING: only use for non-cryptographic purposes (the results will show in logs)."
+inputs:
+  length:
+    description: "Number of raw random bytes to generate."
+    default: 16
+    required: false
+outputs:
+  random:
+    description: >
+      The output of the RNG encoded in hexadecimal.
+      Note: Due to the encoding, the length of the string will be twice as long as the input length requested by the user.
+    value: "${{ steps.rng.outputs.result }}"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Generate random
+      id: rng
+      shell: bash
+      env:
+        LENGTH: "${{ inputs.length }}"
+      run: |
+        set -euo pipefail
+
+        # Note: if we need to support different encoding, we can use
+        # `head -c"$LENGTH" /dev/urandom | xxd ...` instead.
+        # -l: the number of bytes
+        # -c: the number of bytes displayed per column
+        value=$(xxd -p -l "$LENGTH" -c "$LENGTH" /dev/urandom)
+        echo "::set-output name=result::$value"
+

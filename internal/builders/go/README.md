@@ -294,21 +294,21 @@ The `BuildConfig` contains the following fields:
 
 ```json
   "command": [
-    "/opt/hostedtoolcache/go/1.17.10/x64/bin/go",
-    "mod",
-    "vendor"
-  ],
+"/opt/hostedtoolcache/go/1.17.10/x64/bin/go",
+"mod",
+"vendor"
+],
 ```
 
 `steps[*].env`: Any environment variables used in the command, including any OS environment variables and those set in the configuration file.
 
 ```json
   "env": [
-    "GOOS=linux",
-    "GOARCH=amd64",
-    "GO111MODULE=on",
-    "CGO_ENABLED=0"
-  ],
+"GOOS=linux",
+"GOARCH=amd64",
+"GO111MODULE=on",
+"CGO_ENABLED=0"
+],
 ```
 
 `steps[*].workingDir`: The working directory where the steps were performed in the runner.
