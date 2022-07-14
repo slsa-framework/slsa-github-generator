@@ -10,6 +10,63 @@ import (
 	"github.com/slsa-framework/slsa-github-generator/internal/errors"
 )
 
+func Test_pathIsUnderCurrentDirectory(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name     string
+		path     string
+		expected error
+	}{
+		{
+			name:     "valid same path",
+			path:     "./",
+			expected: nil,
+		},
+		{
+			name:     "valid path no slash",
+			path:     "./some/valid/path",
+			expected: nil,
+		},
+		{
+			name:     "valid path with slash",
+			path:     "./some/valid/path/",
+			expected: nil,
+		},
+		{
+			name:     "valid path with no dot",
+			path:     "some/valid/path/",
+			expected: nil,
+		},
+		{
+			name:     "some valid path",
+			path:     "../pkg/some/valid/path",
+			expected: nil,
+		},
+		{
+			name:     "parent invalid path",
+			path:     "../invalid/path",
+			expected: ErrorInvalidDirectory,
+		},
+		{
+			name:     "some invalid fullpath",
+			path:     "/some/invalid/fullpath",
+			expected: ErrorInvalidDirectory,
+		},
+	}
+	for _, tt := range tests {
+		tt := tt // Re-initializing variable so it is not changed while executing the closure below
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			err := pathIsUnderCurrentDirectory(tt.path)
+			if !errCmp(err, tt.expected) {
+				t.Errorf(cmp.Diff(err, tt.expected))
+			}
+		})
+	}
+}
+
 // TestParseSubjects tests the parseSubjects function.
 func TestParseSubjects(t *testing.T) {
 	testCases := []struct {

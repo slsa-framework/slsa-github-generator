@@ -64,6 +64,16 @@ type errNoName struct {
 	errors.WrappableError
 }
 
+// errInvalidPath indicates an invalid path.
+type errInvalidPath struct {
+	errors.WrappableError
+}
+
+// errInternal indicates an internal error.
+type errInternal struct {
+	errors.WrappableError
+}
+
 // errDuplicateSubject indicates a duplicate subject name.
 type errDuplicateSubject struct {
 	errors.WrappableError
@@ -125,9 +135,30 @@ func parseSubjects(b64str string) ([]intoto.Subject, error) {
 	return parsed, nil
 }
 
+func pathIsUnderCurrentDirectory(path string) error {
+	wd, err := os.Getwd()
+	if err != nil {
+		return errors.Errorf(&errInternal{}, "os.Getwd(): %w", err)
+	}
+	p, err := filepath.Abs(path)
+	if err != nil {
+		return errors.Errorf(&errInternal{}, "filepath.Abs(): %w", err)
+	}
+
+	if !strings.HasPrefix(p, wd+"/") &&
+		wd != p {
+		return errors.Errorf(&errInvalidPath{}, "path: %q", path)
+	}
+
+	return nil
+}
+
 func getFile(path string) (io.Writer, error) {
 	if path == "-" {
 		return os.Stdout, nil
+	}
+	if err := pathIsUnderCurrentDirectory(path); err != nil {
+		return nil, err
 	}
 	return os.OpenFile(filepath.Clean(path), os.O_WRONLY|os.O_CREATE, 0o600)
 }
