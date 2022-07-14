@@ -60,6 +60,7 @@ jobs:
           go build -mod=vendor ./internal/builders/generic
 
   check-verifier:
+    name: verify slsa-verifier is latest
     runs-on: ubuntu-latest
     if: ${{ always() }}
     steps:

@@ -37,8 +37,7 @@ jobs:
       go-version: 1.18
       config-file: .github/workflows/configs-go/config-ldflags-main-dir.yml
       evaluated-envs: "VERSION:${{needs.args.outputs.version}},COMMIT:${{needs.args.outputs.commit}},BRANCH:${{needs.args.outputs.branch}}"
-      # forcing a failure for testing pre-submit.
-      #compile-builder: true
+      compile-builder: true
 
   verify:
     # NOTE: this name is used as the status check name and by protected
