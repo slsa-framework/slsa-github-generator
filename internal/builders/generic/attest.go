@@ -158,11 +158,16 @@ run in the context of a Github Actions workflow.`,
 			ghContext, err := github.GetWorkflowContext()
 			check(err)
 
-			parsedSubjects, err := parseSubjects(subjects)
-			check(err)
+			var parsedSubjects []intoto.Subject
+			// We don't actually care about the subjects if we aren't writing an attestation.
+			if attPath != "" {
+				var err error
+				parsedSubjects, err = parseSubjects(subjects)
+				check(err)
 
-			if len(parsedSubjects) == 0 {
-				check(errors.New("expected at least one subject"))
+				if len(parsedSubjects) == 0 {
+					check(errors.New("expected at least one subject"))
+				}
 			}
 
 			ctx := context.Background()
