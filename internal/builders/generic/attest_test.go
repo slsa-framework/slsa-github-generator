@@ -41,7 +41,7 @@ func Test_pathIsUnderCurrentDirectory(t *testing.T) {
 		},
 		{
 			name:     "some valid path",
-			path:     "../pkg/some/valid/path",
+			path:     "../generic/some/valid/path",
 			expected: nil,
 		},
 		{
@@ -63,10 +63,10 @@ func Test_pathIsUnderCurrentDirectory(t *testing.T) {
 			err := pathIsUnderCurrentDirectory(tt.path)
 			if (err == nil && tt.expected != nil) ||
 				(err != nil && tt.expected == nil) {
-				t.Fatalf("unexpected error: %v", cmp.Diff(err, tt.expected, cmpopts.EquateErrors()))
+				t.Fatalf("unexpected error1: %v", cmp.Diff(err, tt.expected, cmpopts.EquateErrors()))
 			}
 
-			if !errors.As(err, &tt.expected) {
+			if err != nil && !errors.As(err, &tt.expected) {
 				t.Fatalf("unexpected error: %v", cmp.Diff(err, tt.expected, cmpopts.EquateErrors()))
 			}
 		})
