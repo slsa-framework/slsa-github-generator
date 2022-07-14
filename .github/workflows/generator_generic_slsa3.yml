@@ -37,7 +37,7 @@ on:
       attestation-name:
         description: >
           The artifact name of the signed provenance. 
-          The file must have the intoto.json extension.
+          The file must have the intoto.jsonl extension.
 
           Default: attestation.intoto.jsonl
         required: false
@@ -53,7 +53,7 @@ on:
         description: "The name of the release where provenance was uploaded."
         value: ${{ jobs.create-release.outputs.release-id }}
       attestation-name:
-        description: "The artifact name of the signed provenance. (A file with the intoto.json extension)."
+        description: "The artifact name of the signed provenance. (A file with the intoto.jsonl extension)."
         value: "${{ inputs.attestation-name }}"
 
 jobs:
