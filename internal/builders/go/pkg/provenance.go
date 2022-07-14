@@ -163,10 +163,11 @@ func GenerateProvenance(name, digest, command, envs, workingDir string, s signin
 	}
 
 	// Upload the signed attestation to rekor.
-	if logEntry, err := r.Upload(ctx, att); err != nil {
-		fmt.Printf("Uploaded signed attestation to rekor with UUID %s.\n", logEntry.UUID())
+	logEntry, err := r.Upload(ctx, att)
+	if err != nil {
 		return nil, err
 	}
 
+	fmt.Printf("Uploaded signed attestation to rekor with UUID %s.\n", logEntry.UUID())
 	return att.Bytes(), nil
 }

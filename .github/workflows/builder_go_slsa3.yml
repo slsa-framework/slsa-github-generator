@@ -55,6 +55,11 @@ on:
         required: false
         type: boolean
         default: false
+      experimental-staging:
+        description: "Experimental: Use Sigstore's staging instance for certificate issuance and transparency log uploads"
+        required: false
+        type: boolean
+        default: false
     outputs:
       go-binary-name:
         description: "The name of the generated binary uploaded to the artifact registry."
@@ -255,6 +260,7 @@ jobs:
           UNTRUSTED_ENV: "${{ needs.build-dry.outputs.go-env }}"
           UNTRUSTED_WORKING_DIR: "${{ needs.build-dry.outputs.go-working-dir }}"
           GITHUB_CONTEXT: "${{ toJSON(github) }}"
+          STAGING: "${{ inputs.experimental-staging }}"
         run: |
           set -euo pipefail
 
@@ -267,7 +273,8 @@ jobs:
             --digest "$UNTRUSTED_BINARY_HASH" \
             --command "$UNTRUSTED_COMMAND" \
             --env "$UNTRUSTED_ENV" \
-            --workingDir "$UNTRUSTED_WORKING_DIR"
+            --workingDir "$UNTRUSTED_WORKING_DIR" \
+            --staging "$STAGING"
 
       - name: Upload the signed provenance
         uses: actions/upload-artifact@3cea5372237819ed00197afe530f5a7ea3e805c8 # tag=v3.1.0

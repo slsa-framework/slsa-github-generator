@@ -39,6 +39,11 @@ on:
         required: false
         type: boolean
         default: false
+      experimental-staging:
+        description: "Experimental: Use Sigstore's staging instance for certificate issuance and transparency log uploads"
+        required: false
+        type: boolean
+        default: false
     outputs:
       release-id:
         description: "The name of the release where provenance was uploaded."
@@ -103,12 +108,13 @@ jobs:
         env:
           SUBJECTS: "${{ inputs.base64-subjects }}"
           GITHUB_CONTEXT: "${{ toJSON(github) }}"
+          STAGING: "${{ inputs.experimental-staging }}"
         run: |
           set -euo pipefail
           # Create and sign provenance
           # This sets attestation-name to the name of the signed DSSE envelope.
           attestation_name="attestation.intoto.jsonl"
-          ./"$BUILDER_BINARY" attest --subjects "${SUBJECTS}" -g $attestation_name
+          ./"$BUILDER_BINARY" attest --subjects "${SUBJECTS}" -g $attestation_name -s "$STAGING"
           attestation_sha256=$(sha256sum $attestation_name | awk '{print $1}')
           echo "::set-output name=attestation-name::$attestation_name"
           echo "::set-output name=attestation-sha256::$attestation_sha256"
