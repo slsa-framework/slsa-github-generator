@@ -157,10 +157,22 @@ func getFile(path string) (io.Writer, error) {
 	if path == "-" {
 		return os.Stdout, nil
 	}
+
 	if err := pathIsUnderCurrentDirectory(path); err != nil {
 		return nil, err
 	}
+
 	return os.OpenFile(filepath.Clean(path), os.O_WRONLY|os.O_CREATE, 0o600)
+}
+
+func verifyAttestationPath(path string) error {
+	if !strings.HasSuffix(path, "intoto.jsonl") {
+		return errors.Errorf(&errInvalidPath{}, "invalid suffix: %q. Must be .intoto.jsonl", path)
+	}
+	if err := pathIsUnderCurrentDirectory(path); err != nil {
+		return err
+	}
+	return nil
 }
 
 type provenanceOnlyBuild struct {
@@ -187,6 +199,10 @@ run in the context of a Github Actions workflow.`,
 
 		Run: func(cmd *cobra.Command, args []string) {
 			ghContext, err := github.GetWorkflowContext()
+			check(err)
+
+			// Verify the extension path and extension.
+			err = verifyAttestationPath(attPath)
 			check(err)
 
 			var parsedSubjects []intoto.Subject

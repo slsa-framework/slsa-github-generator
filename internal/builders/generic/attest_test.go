@@ -63,7 +63,59 @@ func Test_pathIsUnderCurrentDirectory(t *testing.T) {
 			err := pathIsUnderCurrentDirectory(tt.path)
 			if (err == nil && tt.expected != nil) ||
 				(err != nil && tt.expected == nil) {
-				t.Fatalf("unexpected error1: %v", cmp.Diff(err, tt.expected, cmpopts.EquateErrors()))
+				t.Fatalf("unexpected error: %v", cmp.Diff(err, tt.expected, cmpopts.EquateErrors()))
+			}
+
+			if err != nil && !errors.As(err, &tt.expected) {
+				t.Fatalf("unexpected error: %v", cmp.Diff(err, tt.expected, cmpopts.EquateErrors()))
+			}
+		})
+	}
+}
+
+func Test_verifyAttestationPath(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name     string
+		path     string
+		expected error
+	}{
+		{
+			name:     "valid file",
+			path:     "./path/to/valid.intoto.jsonl",
+			expected: nil,
+		},
+		{
+			name:     "invalid path",
+			path:     "../some/invalid/valid.intoto.jsonl",
+			expected: &errInvalidPath{},
+		},
+		{
+			name:     "invalid extension",
+			path:     "some/file.ntoto.jsonl",
+			expected: &errInvalidPath{},
+		},
+		{
+			name:     "invalid not exntension",
+			path:     "some/file.intoto.jsonl.",
+			expected: &errInvalidPath{},
+		},
+		{
+			name:     "invalid folder exntension",
+			path:     "file.intoto.jsonl/file",
+			expected: &errInvalidPath{},
+		},
+	}
+	for _, tt := range tests {
+		tt := tt // Re-initializing variable so it is not changed while executing the closure below
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			err := verifyAttestationPath(tt.path)
+			if (err == nil && tt.expected != nil) ||
+				(err != nil && tt.expected == nil) {
+				t.Fatalf("unexpected error: %v", cmp.Diff(err, tt.expected, cmpopts.EquateErrors()))
 			}
 
 			if err != nil && !errors.As(err, &tt.expected) {
