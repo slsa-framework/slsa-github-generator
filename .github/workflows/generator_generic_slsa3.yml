@@ -37,7 +37,7 @@ on:
       attestation-name:
         description: >
           The artifact name of the signed provenance. 
-          The file must have the an intoto.json extension.
+          The file must have the intoto.json extension.
 
           Default: attestation.intoto.jsonl
         required: false
