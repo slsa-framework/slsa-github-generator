@@ -147,7 +147,7 @@ func pathIsUnderCurrentDirectory(path string) error {
 
 	if !strings.HasPrefix(p, wd+"/") &&
 		wd != p {
-		return errors.Errorf(&errInvalidPath{}, "path: %q", path)
+		return errors.Errorf(&errInvalidPath{}, "invalid path: %q", path)
 	}
 
 	return nil
