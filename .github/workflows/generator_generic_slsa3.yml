@@ -38,7 +38,7 @@ on:
         description: "The artifact name of the signed provenance. (Default: attestation.intoto.jsonl)"
         required: false
         type: string
-        default: false
+        default: "attestation.intoto.jsonl"
       compile-generator:
         description: "Build the generator from source. This increases build time by ~2m."
         required: false
