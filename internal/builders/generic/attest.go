@@ -220,6 +220,7 @@ run in the context of a Github Actions workflow.`,
 			p, err := g.Generate(ctx)
 			check(err)
 
+			// Note: we verify the path within getFile().
 			if attPath != "" {
 				var attBytes []byte
 				if utils.IsPresubmitTests() {
