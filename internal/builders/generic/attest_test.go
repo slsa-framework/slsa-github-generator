@@ -10,6 +10,10 @@ import (
 	"github.com/slsa-framework/slsa-github-generator/internal/errors"
 )
 
+func errCmp(e1, e2 error) bool {
+	return errors.Is(e1, e2) || errors.Is(e2, e1)
+}
+
 func Test_pathIsUnderCurrentDirectory(t *testing.T) {
 	t.Parallel()
 
