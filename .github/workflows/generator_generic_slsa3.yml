@@ -114,7 +114,7 @@ jobs:
           # Note: The builder verifies that the UNTRUSTED_ATTESTATION_NAME is located
           # in the current directory.
           ./"$BUILDER_BINARY" attest --subjects "${SUBJECTS}" -g "$UNTRUSTED_ATTESTATION_NAME"
-          attestation_sha256=$(sha256sum $attestation_name | awk '{print $1}')
+          attestation_sha256=$(sha256sum "$UNTRUSTED_ATTESTATION_NAME" | awk '{print $1}')
           echo "::set-output name=attestation-sha256::$attestation_sha256"
 
       - name: Upload the signed provenance
