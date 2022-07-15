@@ -26,6 +26,7 @@ project simply generates provenance as a separate step in an existing workflow.
   - [Provenance Example](#provenance-example)
 - [Integration With Other Build Systems](#integration-with-other-build-systems)
   - [Provenance for GoReleaser](#provenance-for-goreleaser)
+  - [Provenance for Bazel](#provenance-for-bazel)
 
 ---
 
@@ -339,5 +340,84 @@ jobs:
     uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.1.1
     with:
       base64-subjects: "${{ needs.goreleaser.outputs.hashes }}"
+      upload-assets: true # upload to a new release
+```
+
+### Provenance for Bazel
+
+If you use [Bazel](https://bazel.build/) to generate your artifacts, you can
+easily generate SLSA3 provenance by updating your existing workflow with the 4
+steps indicated in the workflow below:
+
+```yaml
+jobs:
+  build:
+    # ==================================================
+    #
+    # Step 1: Declare an `outputs` for the hashes.
+    #
+    # ==================================================
+    outputs:
+      hashes: ${{ steps.hash.outputs.hashes }}
+
+    [...]
+
+    steps:
+      [...]
+      - name: Build using bazel
+        # =================================================
+        #
+        # Step 2: Add an `id: bazel-build` field
+        #         to your goreleaser step.
+        #
+        # =================================================
+        id: build
+        run: |
+          # Your normal build workflow targets here
+          bazel build //path/to/target_binary //path/to_another/binary
+          # ======================================================
+          #
+          # Step 3: Copy the binaries from `bazel-bin` path (i.e.,
+          #         Bazel sandbox) to the root of the repository
+          #         for easier reference (this makes it easier to
+          #         upload these to the release too!).
+          #
+          # =====================================================
+          cp bazel-bin/path/to/target_binary .
+          cp bazel-bin/path/to/another/binary .
+
+
+      # ========================================================
+      #
+      # Step 4: Add a step to generate the provenance subjects
+      #         as shown below. Update the sha256 sum arguments
+      #         to include all binaries that you generate
+      #         provenance for.
+      #
+      # ========================================================
+      - name: Generate subject
+        id: hash
+        run: |
+          set -euo pipefail
+
+          sha256sum target_binary binary > checksums
+
+          echo "::set-output name=hashes::$(cat checksums | base64 -w0)"
+
+  # =========================================================
+  #
+  # Step 5: Call the generic workflow to generate provenance
+  #         by declaring the job below.
+  #
+  # =========================================================
+  provenance:
+    needs: [build]
+    permissions:
+      actions: read
+      id-token: write
+      contents: read
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.1.1
+    with:
+      base64-subjects: "${{ needs.build.outputs.hashes }}"
       upload-assets: true # upload to a new release
 ```
