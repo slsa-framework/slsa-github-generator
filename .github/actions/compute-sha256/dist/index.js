@@ -37,20 +37,20 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core = __importStar(__nccwpck_require__(186));
 const fs = __importStar(__nccwpck_require__(747));
-const child_process_1 = __nccwpck_require__(129);
+const crypto = __importStar(__nccwpck_require__(417));
 function shasum256(untrustedPath) {
     if (!fs.existsSync(untrustedPath)) {
         throw new Error(`File ${untrustedPath} not present`);
     }
-    const sha = (0, child_process_1.execSync)(`sha256sum ${untrustedPath}`).toString().split(" ")[0];
-    return sha;
+    const untrustedFile = fs.readFileSync(untrustedPath);
+    return crypto.createHash('sha256').update(untrustedFile).digest('hex');
 }
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
         // Get the path to the untrusted file from ENV variable 'UNTRUSTED_PATH'
-        const untrustedPath = core.getInput("untrusted_path");
+        const untrustedPath = core.getInput('untrusted_path');
         const sha = shasum256(untrustedPath);
-        core.setOutput("sha256", sha);
+        core.setOutput('sha256', sha);
     });
 }
 run();
@@ -1620,11 +1620,11 @@ module.exports = require("assert");
 
 /***/ }),
 
-/***/ 129:
+/***/ 417:
 /***/ ((module) => {
 
 "use strict";
-module.exports = require("child_process");
+module.exports = require("crypto");
 
 /***/ }),
 
