@@ -30,7 +30,7 @@ The following [GitHub trigger events](https://docs.github.com/en/actions/using-w
 - `release`
 - Manual run via `workflow_dispatch`
 
-In practice, most triggers should work with the exception of `pull_request`. If you would like support for `pull_request`, please tell us about your use case on [issue #358](https://github.com/slsa-framework/slsa-github-generator/issues/358). If you have an issue in all other triggers please submit a [new issue](https://github.com/slsa-framework/slsa-github-generator/issues/new/choose).
+In practice, most triggers should work with the exception of `pull_request`. If you would like support for `pull_request`, please tell us about your use case on [issue #358](https://github.com/slsa-framework/slsa-github-generator/issues/358). If you have an issue with any other triggers please submit a [new issue](https://github.com/slsa-framework/slsa-github-generator/issues/new/choose).
 
 ### Configuration File
 
@@ -98,7 +98,7 @@ builds:
       goarch: amd64
 ```
 
-The configuration file accepts many of the common fields GoReleaser uses, as you can see in the [example](#configuration-file). The configuration file also supports two variables: `{{ .Os }}` and `{{ .Arch }}`. Other variables can be set manually as shows in the table below, in combination with the builder's `evaluated-envs`:
+The configuration file accepts many of the common fields GoReleaser uses, as you can see in the [example](#configuration-file). The configuration file also supports two variables: `{{ .Os }}` and `{{ .Arch }}`. Other variables can be set manually as shown in the table below, in combination with the builder's `evaluated-envs`:
 
 | Name                 | Value                                                                                                                            | Example                                    |
 | -------------------- | -------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------ |
