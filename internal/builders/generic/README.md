@@ -83,6 +83,9 @@ provenance:
     base64-subjects: "${{ needs.build.outputs.hashes }}"
 ```
 
+**Note**: Make sure that you reference the generator with a semantic version of the form `vX.Y.Z`. The build will fail
+if you reference it via a shorter tag like `vX.Y` or `vX`.
+
 Here's an example of what it might look like all together.
 
 ```yaml

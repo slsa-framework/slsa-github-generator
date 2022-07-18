@@ -80,7 +80,7 @@ If you are already using Goreleaser, you may be able to migrate to our builder u
 
 In the meantime, you can use both Goreleaser and this builder in the same repository. For example, you can pick one build you would like to start generating provenance for. Goreleaser and this builder can co-exist without interfering with one another, so long as the resulting binaries have different names (e.g., when building for different OS/Arch). If you want to keep the same name, you can use the Goreleaser `ignore` option in the `.goreleaser.yml`:
 
-```
+```yaml
 builds:
 ...
   goos:
@@ -129,7 +129,7 @@ The builder workflow [slsa-framework/slsa-github-generator/.github/workflows/bui
 
 Create a new workflow, say `.github/workflows/slsa-goreleaser.yml`.
 
-Make sure that you reference the trusted builder with a semantic version of the form `vX.Y.Z`. The build will fail
+**Note**: Make sure that you reference the trusted builder with a semantic version of the form `vX.Y.Z`. The build will fail
 if you reference it via a shorter tag like `vX.Y` or `vX`.
 
 Referencing via hash is currently not supported due to limitations
