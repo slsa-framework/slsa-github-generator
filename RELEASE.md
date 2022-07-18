@@ -16,7 +16,7 @@ This is a  document to describe the release process for the Go builder. Since al
 ## Prerequisites
 
 Set up env variables:
-```
+```shell
 $ export GH_TOKEN=<PAT-token>
 $ export GITHUB_USERNAME="laurentsimon"
 # This is the existing slsa-verifier version used by the builder. (https://github.com/slsa-framework/slsa-github-generator/blob/main/.github/actions/generate-builder/action.yml#L55)
@@ -37,7 +37,7 @@ Needless to say, only think about a release when all the e2e tests in [github.co
 There is one integration test we cannot easily test "live", so we need to simulate it by changing the code: malicious verifier binary in assets. We want to be sure the builder fails if the verifier's binary is tampered with. For this:
 
 1. Create a new release for your fork of the slsa-verifier repository with a malicious binary. 
-```
+```shell
 # Create a release
 $ "$GH" release -R "$VERIFIER_REPOSITORY" create "$VERIFIER_TAG" --title "$VERIFIER_TAG" --notes "pre-release tests for builder $BUILDER_TAG $(date)"
 $ # Note: this will create a release workflow: cancel it in the GitHub UI.
@@ -48,17 +48,23 @@ $ "$GH" release -R "$VERIFIER_REPOSITORY" upload "$VERIFIER_TAG" slsa-verifier-l
 1. Ensure your fork of the builder is at the same commit hash as the offical builder's `$BUILDER_TAG` release.
 1. Create a new branch `git checkout -b "$BUILDER_REF"`
 1. Update the file `$BUILDER_REPOSITORY/main/.github/actions/generate-builder/action.yml` by replacing the strings `BUILDER_REPOSITORY` and `VERIFIER_REPOSITORY` with your own username (value of `$GITHUB_USERNAME`). Then push the changes.
-1. For the Go builder, update the file `$BUILDER_REPOSITORY/main/.github/workflows/builder_go_slsa3.yml#L98` by replacing the strings `BUILDER_REPOSITORY` with your own username (value of `$GITHUB_USERNAME`). Then push the changes.
-1. For the Generic generator, update the file `$BUILDER_REPOSITORY/main/.github/workflows/generic_generator_slsa3.yml#L98` by replacing the strings `BUILDER_REPOSITORY` with your own username (value of `$GITHUB_USERNAME`). Then push the changes.
-1. Create a release for the builders for this branch:
+1. For the Go builder, update the file `$BUILDER_REPOSITORY/main/.github/workflows/builder_go_slsa3.yml#L98` to:
+```yaml
+    uses: $BUILDER_REPOSITORY/.github/workflows/builder_go_slsa3.yml@$BUILDER_TAG
 ```
+1. For the Generic generator, update the file `$BUILDER_REPOSITORY/main/.github/workflows/generic_generator_slsa3.yml#L98`to:
+```yaml
+    uses: $BUILDER_REPOSITORY/.github/workflows/generic_generator_slsa3.yml@$BUILDER_TAG
+```
+1. Create a release for the builders for this branch:
+```shell
 $ "$GH" release -R "$BUILDER_REPOSITORY" create "$BUILDER_TAG" --title "$BUILDER_TAG" --notes "pre-release tests for $BUILDER_TAG $(date)" --target "$BUILDER_REF"
 ```
 This will trigger a workflow release, let it complete and generate the release assets.
 
 ### Go builder
 1. Edit the file [slsa-framework/example-package/.github/workflows/e2e.go.workflow_dispatch.main.adversarial-verifier-binary.slsa3.yml#L14](https://github.com/slsa-framework/example-package/blob/main/.github/workflows/e2e.go.workflow_dispatch.main.adversarial-verifier-binary.slsa3.yml#L14) by using `$BUILDER_REPOSITORY` and `$BUILDER_TAG`:
-```
+```yaml
     uses: $BUILDER_REPOSITORY/.github/workflows/builder_go_slsa3.yml@$BUILDER_TAG
 ```
 1. Run the test manually via the GitHub UX in [https://github.com/slsa-framework/example-package/actions/workflows/e2e.go.workflow_dispatch.main.adversarial-verifier-binary.slsa3.yml](https://github.com/slsa-framework/example-package/actions/workflows/e2e.go.workflow_dispatch.main.adversarial-verifier-binary.slsa3.yml) by cliking `Run Workflow`.
@@ -70,7 +76,7 @@ Error: Process completed with exit code 4.
 
 ### Generic generator
 1. Edit the file [slsa-framework/example-package/.github/workflows/e2e.generic.workflow_dispatch.main.adversarial-verifier-binary.slsa3.yml#L36](https://github.com/slsa-framework/example-package/blob/main/.github/workflows/e2e.generic.workflow_dispatch.main.adversarial-verifier-binary.slsa3.yml#L36) by using `$BUILDER_REPOSITORY` and `$BUILDER_TAG`:
-```
+```yaml
     uses: $BUILDER_REPOSITORY/.github/workflows/generator_generic_slsa3.yml@$BUILDER_TAG
 ```
 1. Run the test manually via the GitHub UX in [https://github.com/slsa-framework/example-package/actions/workflows/e2e.generic.workflow_dispatch.main.adversarial-verifier-binary.slsa3.yml](https://github.com/slsa-framework/example-package/actions/workflows/e2e.generic.workflow_dispatch.main.adversarial-verifier-binary.slsa3.yml) by cliking `Run Workflow`.
