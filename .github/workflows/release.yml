@@ -26,7 +26,6 @@ jobs:
   go-builder:
     # Force the builds to rin sequentially, to avoid
     # the builder binaries being overwritten by each run.
-    needs: [generic-generator]
     permissions:
       id-token: write # For signing.
       contents: write # For asset uploads.
@@ -36,3 +35,4 @@ jobs:
       go-version: 1.18
       config-file: .github/workflows/configs-go/config-release.yml
       compile-builder: true
+
