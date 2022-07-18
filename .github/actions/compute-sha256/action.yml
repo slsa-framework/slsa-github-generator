@@ -10,14 +10,5 @@ outputs:
     value: "${{ steps.compute.outputs.sha256 }}"
 
 runs:
-  using: "composite"
-  steps:
-    - name: Compute the sha256
-    - id: compute
-    - uses: actions/setup-node@2fddd8803e2f5c9604345a0b591c3020ee971a93 # tag=v3.0.0
-        with:
-            node_version: "16"
-      id: compute
-      env:
-        UNTRUSTED_PATH: "${{ inputs.path }}"
-      run: node 'dist/index.js'
+  using: node16
+  main: 'dist/index.js'
