@@ -433,7 +433,7 @@ easily generate SLSA3 provenance by updating your existing workflow with the
 steps indicated in the workflow below:
 
 #### Maven
-```
+```yaml
 jobs:
   build:
     # ==================================================
@@ -511,7 +511,7 @@ jobs:
 ```
 
 #### Gradle
-```
+```yaml
 jobs:
   build:
     # ==================================================
