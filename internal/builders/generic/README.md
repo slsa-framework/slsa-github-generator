@@ -84,8 +84,8 @@ provenance:
     base64-subjects: "${{ needs.build.outputs.hashes }}"
 ```
 
-**Note**: Make sure that you reference the generator with a semantic version of the form `vX.Y.Z`. The build will fail
-if you reference it via a shorter tag like `vX.Y` or `vX`.
+**Note**: Make sure that you reference the generator with a semantic version of the form `@vX.Y.Z`. The build will fail
+if you reference it via a shorter tag like `@vX.Y` or `@vX`.
 
 Here's an example of what it might look like all together.
 
@@ -178,7 +178,7 @@ The following [GitHub trigger events](https://docs.github.com/en/actions/using-w
 However, in practice, most triggers should work with the exception of
 `pull_request`. If you would like support for `pull_request`, please tell us
 about your use case on [issue #358](https://github.com/slsa-framework/slsa-github-generator/issues/358). If
-you have an issue in all other triggers please submit a [new
+you have an issue with any other triggers please submit a [new
 issue](https://github.com/slsa-framework/slsa-github-generator/issues/new/choose).
 
 ### Workflow Inputs
