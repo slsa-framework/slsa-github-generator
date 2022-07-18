@@ -8,7 +8,7 @@ This document explains how to use the builder for [Go](https://go.dev/) projects
 
 - [Supported Triggers](#supported-triggers)
 - [Configuration File](#configuration-file)
-- [Migration from goreleaser](#migration-from-goreleaser)
+- [Migration from GoReleaser](#migration-from-GoReleaser)
 - [Workflow Inputs](#workflow-inputs)
 - [Workflow Example](#workflow-example)
 - [Provenance Example](#provenance-example)
@@ -18,7 +18,8 @@ This document explains how to use the builder for [Go](https://go.dev/) projects
 
 ## Generation
 
-To generate provenance for a Go binary, follow the steps below:
+The Go builder workflow uses a GitHub Actions reusable workflow to generate the
+provenance.
 
 ### Supported Triggers
 
@@ -29,13 +30,13 @@ The following [GitHub trigger events](https://docs.github.com/en/actions/using-w
 - `release`
 - Manual run via `workflow_dispatch`
 
-However, in practice, most triggers should work with the exception of `pull_request`. If you would like support for `pull_request`, please tell us about your use case on [issue #358](https://github.com/slsa-framework/slsa-github-generator/issues/358). If you have an issue in all other triggers please submit a [new issue](https://github.com/slsa-framework/slsa-github-generator/issues/new/choose).
+In practice, most triggers should work with the exception of `pull_request`. If you would like support for `pull_request`, please tell us about your use case on [issue #358](https://github.com/slsa-framework/slsa-github-generator/issues/358). If you have an issue in all other triggers please submit a [new issue](https://github.com/slsa-framework/slsa-github-generator/issues/new/choose).
 
 ### Configuration File
 
 Define a configuration file called `.slsa-goreleaser.yml` in the root of your project.
 
-```yml
+```yaml
 # Version for this file.
 version: 1
 
@@ -74,11 +75,11 @@ ldflags:
   - "-X main.TreeState={{ .Env.TREE_STATE }}"
 ```
 
-### Migration from goreleaser
+### Migration from GoReleaser
 
-If you are already using Goreleaser, you may be able to migrate to our builder using multiple config files for each build. However, this is cumbersome and we are working on supporting multiple builds in a single config file for future releases.
+If you are already using GoReleaser, you may be able to migrate to our builder using multiple config files for each build. However, this is cumbersome and we are working on supporting multiple builds in a single config file for future releases.
 
-In the meantime, you can use both Goreleaser and this builder in the same repository. For example, you can pick one build you would like to start generating provenance for. Goreleaser and this builder can co-exist without interfering with one another, so long as the resulting binaries have different names (e.g., when building for different OS/Arch). If you want to keep the same name, you can use the Goreleaser `ignore` option in the `.goreleaser.yml`:
+In the meantime, you can use both GoReleaser and this builder in the same repository. For example, you can select one build you would like to start generating provenance for. GoReleaser and this builder can co-exist without interfering with one another, so long as the resulting binaries have different names (e.g., when building for different OS/Arch). If you want to keep the same name, you can use the GoReleaser `ignore` option in the `.goreleaser.yml`:
 
 ```yaml
 builds:
@@ -91,15 +92,13 @@ builds:
     - amd64
     - arm64
     - s390x
-  # This instructs Goreleaser to not build for linux amd64.
+  # This instructs GoReleaser to not build for linux amd64.
   ignore:
     - goos: linux
       goarch: amd64
 ```
 
-We think gradual adoption is good for projects to get used to SLSA.
-
-The configuration file accepts many of the common fields Goreleaser uses, as you can see in the [example](#configuration-file). The configuration file also supports two variables: `{{ .Os }}` and `{{ .Arch }}`. Other variables can be set manually as shows in the table below, in combination with the builder's `evaluated-envs`:
+The configuration file accepts many of the common fields GoReleaser uses, as you can see in the [example](#configuration-file). The configuration file also supports two variables: `{{ .Os }}` and `{{ .Arch }}`. Other variables can be set manually as shows in the table below, in combination with the builder's `evaluated-envs`:
 
 | Name                 | Value                                                                                                                            | Example                                    |
 | -------------------- | -------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------ |
@@ -120,14 +119,14 @@ The builder workflow [slsa-framework/slsa-github-generator/.github/workflows/bui
 
 | Name             | Required | Description                                                                                                                                                             | Default                                                                                                                                                                                                                                                   |
 | ---------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `config-file`    | no       | `.github/workflows/slsa-goreleaser.yml`                                                                                                                                 | The configuration file for the builder. A path within the calling repository.                                                                                                                                                                             |
+| `config-file`    | no       | `.github/workflows/slsa-GoReleaser.yml`                                                                                                                                 | The configuration file for the builder. A path within the calling repository.                                                                                                                                                                             |
 | `evaluated-envs` | no       | empty value                                                                                                                                                             | A list of environment variables, seperated by `,`: `VAR1: value, VAR2: value`. This is typically used to pass dynamically-generated values, such as `ldflags`. Note that only environment variables with names starting with `CGO_` or `GO` are accepted. |
 | `go-version`     | yes      | The go version for your project. This value is passed, unchanged, to the [actions/setup-go](https://github.com/actions/setup-go) action when setting up the environment |
 | `upload-assets`  | no       | true on new tags                                                                                                                                                        | Whether to upload assets to a GitHub release or not.                                                                                                                                                                                                      |
 
 ### Workflow Example
 
-Create a new workflow, say `.github/workflows/slsa-goreleaser.yml`.
+Create a new workflow, e.g., `.github/workflows/slsa-goreleaser.yml`.
 
 **Note**: Make sure that you reference the trusted builder with a semantic version of the form `vX.Y.Z`. The build will fail
 if you reference it via a shorter tag like `vX.Y` or `vX`.

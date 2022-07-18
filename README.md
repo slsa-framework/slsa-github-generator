@@ -24,7 +24,8 @@ This repository contains the code, examples and technical design for system desc
 
 ## Generation of provenance
 
-Below we describe the various builders and generators in this repository.
+Below we describe the various builders and generators in this repository. They let you build and / or generate non-forgeable provenance
+using a trusted / isolated re-usable workflow. You can read up on the design in our [technical design document](#technical-design).
 
 **Note**: At present the GitHub Actions provided in this repository as builders and generators **MUST** be referenced by tag in order for the `slsa-verifier` to be able to verify the ref of the trusted builder/generator's reusable workflow.
 
