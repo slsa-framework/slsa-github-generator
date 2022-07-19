@@ -106,22 +106,25 @@ $ "$GH" release -R slsa-framework/slsa-github-generator download "$BUILDER_TAG" 
 
 End-to-end tests run daily in [github.com/slsa-framework/example-package/.github/workflows/](github.com/slsa-framework/example-package/.github/workflows/), and contain adversarial tests (developer tampers with the artifacts used by the builders). All these adversarial tests compile the builder from source (`compile-builder: true`). But we need to verify that the builder detects malicious builder's binary when `compile-builder: false` (default).
 
-For this:
+### Go builder
+
 1. Make sure you have downloaded the `$BUILDER_TAG` builder's binary locally `slsa-builder-go-linux-amd64`, either via the web UI or via:
+
 ```shell
 $ "$GH" release -R slsa-framework/slsa-github-generator download "$BUILDER_TAG" -p "slsa-builder-go-linux-amd64"
 $ mv slsa-builder-go-linux-amd64 slsa-builder-go-linux-amd64-"$BUILDER_TAG".original
 ```
+
 1. Upload a different binary to the assets:
 ```shell
 $ echo hello > slsa-builder-go-linux-amd64
 $ "$GH" release -R slsa-framework/slsa-github-generator upload "$BUILDER_TAG" slsa-builder-go-linux-amd64  --clobber
 ```
 
-### Go builder
-
 1. Update the version of the workflow [slsa-framework/example-package/.github/workflows/e2e.go.workflow_dispatch.main.adversarial-builder-binary.slsa3.yml#L14](https://github.com/slsa-framework/example-package/blob/main/.github/workflows/e2e.go.workflow_dispatch.main.adversarial-builder-binary.slsa3.yml#L14) with the `$BUILDER_TAG` to test.
+
 1. Trigger the test in [slsa-framework/example-package/actions/workflows/e2e.go.workflow_dispatch.main.adversarial-builder-binary.slsa3.yml](https://github.com/slsa-framework/example-package/actions/workflows/e2e.go.workflow_dispatch.main.adversarial-builder-binary.slsa3.yml) by cliking `Run workflow`. Verify that it fails, with a message:
+
 ```shell
 verifier hash computed is 60c91c9d5b9a059e37ac46da316f20c81da335b5d00e1f74d03dd50f819694bd
 verifier hash verification has passed
@@ -130,9 +133,31 @@ FAILED: SLSA verification failed: expected hash '5891b5b522d5df086d0ff0b110fbd9d
 Error: Process completed with exit code 6.
 ```
 
+1. If the test above failed with the expected message, re-upload the original binary back to the assets, e.g. via:
+```shell
+$ mv slsa-builder-go-linux-amd64-"$BUILDER_TAG".original slsa-builder-go-linux-amd64
+$ "$GH" release -R slsa-framework/slsa-github-generator upload "$BUILDER_TAG" slsa-builder-go-linux-amd64  --clobber
+```
+
+1. Re-run the workflow above and verify that it succeeds. (TODO: https://github.com/slsa-framework/slsa-github-generator/issues/116).
+
 If it does not, delete the release, fix the bug and re-start the release process at the top of this page.
 
 ### Generic genrator
+
+1. Make sure you have downloaded the `$BUILDER_TAG` builder's binary locally `slsa-generic-generator-linux-amd64`, either via the web UI or via:
+
+```shell
+$ "$GH" release -R slsa-framework/slsa-github-generator download "$BUILDER_TAG" -p "slsa-generic-generator-linux-amd64"
+$ mv slsa-generic-generator-linux-amd64 slsa-generic-generator-linux-amd64-"$BUILDER_TAG".original
+```
+
+1. Upload a different binary to the assets:
+
+```shell
+$ echo hello > slsa-builder-go-linux-amd64
+$ "$GH" release -R slsa-framework/slsa-github-generator upload "$BUILDER_TAG" slsa-generic-generator-linux-amd64  --clobber
+```
 
 1. Update the version of the workflow [slsa-framework/example-package/.github/workflows/e2e.generic.workflow_dispatch.main.adversarial-builder-binary.slsa3.yml#L14](https://github.com/slsa-framework/example-package/blob/main/.github/workflows/e2e.generic.workflow_dispatch.main.adversarial-builder-binary.slsa3.yml#L14) with the `$BUILDER_TAG` to test.
 1. Trigger the test in [slsa-framework/example-package/actions/workflows/e2e.generic.workflow_dispatch.main.adversarial-builder-binary.slsa3.yml](https://github.com/slsa-framework/example-package/actions/workflows/e2e.generic.workflow_dispatch.main.adversarial-builder-binary.slsa3.yml) by cliking `Run workflow`. Verify that it fails, with a message:
@@ -145,16 +170,15 @@ FAILED: SLSA verification failed: expected hash '5891b5b522d5df086d0ff0b110fbd9d
 Error: Process completed with exit code 6.
 ```
 
-If it does not, delete the release, fix the bug and re-start the release process at the top of this page.
-
-
 1. If the test above failed with the expected message, re-upload the original binary back to the assets, e.g. via:
 ```shell
-$ mv slsa-builder-go-linux-amd64-"$BUILDER_TAG".original slsa-builder-go-linux-amd64
-$ "$GH" release -R slsa-framework/slsa-github-generator upload "$BUILDER_TAG" slsa-builder-go-linux-amd64  --clobber
+$ mv slsa-generic-generator-linux-amd64-"$BUILDER_TAG".original slsa-generic-generator-linux-amd64
+$ "$GH" release -R slsa-framework/slsa-github-generator upload "$BUILDER_TAG" slsa-generic-generator-linux-amd64  --clobber
 ```
 
 1. Re-run the workflow above and verify that it succeeds. (TODO: https://github.com/slsa-framework/slsa-github-generator/issues/116).
+
+If it does not, delete the release, fix the bug and re-start the release process at the top of this page.
 
 ## Update verifier
 
