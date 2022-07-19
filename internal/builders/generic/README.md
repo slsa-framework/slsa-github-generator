@@ -371,8 +371,8 @@ jobs:
       - name: Build using bazel
         # =================================================
         #
-        # Step 2: Add an `id: bazel-build` field
-        #         to your goreleaser step.
+        # Step 2: Add an `id: build` field
+        #         to your build step.
         #
         # =================================================
         id: build
