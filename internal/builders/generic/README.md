@@ -338,9 +338,9 @@ jobs:
   provenance:
     needs: [goreleaser]
     permissions:
-      actions: read
-      id-token: write
-      contents: read
+      actions: read   # To read the workflow path.
+      id-token: write # To sign the provenance.
+      contents: write # To add assets to a release.
     uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.1.1
     with:
       base64-subjects: "${{ needs.goreleaser.outputs.hashes }}"
@@ -417,9 +417,9 @@ jobs:
   provenance:
     needs: [build]
     permissions:
-      actions: read
-      id-token: write
-      contents: read
+      actions: read   # To read the workflow path.
+      id-token: write # To sign the provenance.
+      contents: write # To add assets to a release.
     uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.1.1
     with:
       base64-subjects: "${{ needs.build.outputs.hashes }}"
@@ -500,9 +500,9 @@ jobs:
   provenance:
     needs: [build]
     permissions:
-      actions: read
-      id-token: write
-      contents: read
+      actions: read   # To read the workflow path.
+      id-token: write # To sign the provenance.
+      contents: write # To add assets to a release.
     uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.1.1
     with:
       base64-subjects: "${{ needs.build.outputs.hashes }}"
