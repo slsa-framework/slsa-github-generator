@@ -108,12 +108,12 @@ End-to-end tests run daily in [github.com/slsa-framework/example-package/.github
 
 For this:
 1. Make sure you have downloaded the `$BUILDER_TAG` builder's binary locally `slsa-builder-go-linux-amd64`, either via the web UI or via:
-```
+```shell
 $ "$GH" release -R slsa-framework/slsa-github-generator download "$BUILDER_TAG" -p "slsa-builder-go-linux-amd64"
 $ mv slsa-builder-go-linux-amd64 slsa-builder-go-linux-amd64-"$BUILDER_TAG".original
 ```
 1. Upload a different binary to the assets:
-```
+```shell
 $ echo hello > slsa-builder-go-linux-amd64
 $ "$GH" release -R slsa-framework/slsa-github-generator upload "$BUILDER_TAG" slsa-builder-go-linux-amd64  --clobber
 ```
@@ -130,7 +130,7 @@ Error: Process completed with exit code 6.
 If it does not, delete the release, fix the bug and re-start the release process at the top of this page.
 
 1. If the test above failed with the expected message, re-upload the original binary back to the assets, e.g. via:
-```
+```shell
 $ mv slsa-builder-go-linux-amd64-"$BUILDER_TAG".original slsa-builder-go-linux-amd64
 $ "$GH" release -R slsa-framework/slsa-github-generator upload "$BUILDER_TAG" slsa-builder-go-linux-amd64  --clobber
 ```
