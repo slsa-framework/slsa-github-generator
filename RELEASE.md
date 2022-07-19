@@ -145,18 +145,18 @@ If it does not, delete the release, fix the bug and re-start the release process
 
 ### Generic genrator
 
-1. Make sure you have downloaded the `$BUILDER_TAG` builder's binary locally `slsa-generic-generator-linux-amd64`, either via the web UI or via:
+1. Make sure you have downloaded the `$BUILDER_TAG` builder's binary locally `slsa-generator-generic-linux-amd64`, either via the web UI or via:
 
 ```shell
-$ "$GH" release -R slsa-framework/slsa-github-generator download "$BUILDER_TAG" -p "slsa-generic-generator-linux-amd64"
-$ mv slsa-generic-generator-linux-amd64 slsa-generic-generator-linux-amd64-"$BUILDER_TAG".original
+$ "$GH" release -R slsa-framework/slsa-github-generator download "$BUILDER_TAG" -p "slsa-generator-generic-linux-amd64"
+$ mv slsa-generator-generic-linux-amd64 slsa-generator-generic-linux-amd64-"$BUILDER_TAG".original
 ```
 
 1. Upload a different binary to the assets:
 
 ```shell
 $ echo hello > slsa-builder-go-linux-amd64
-$ "$GH" release -R slsa-framework/slsa-github-generator upload "$BUILDER_TAG" slsa-generic-generator-linux-amd64  --clobber
+$ "$GH" release -R slsa-framework/slsa-github-generator upload "$BUILDER_TAG" slsa-generator-generic-linux-amd64  --clobber
 ```
 
 1. Update the version of the workflow [slsa-framework/example-package/.github/workflows/e2e.generic.workflow_dispatch.main.adversarial-builder-binary.slsa3.yml#L14](https://github.com/slsa-framework/example-package/blob/main/.github/workflows/e2e.generic.workflow_dispatch.main.adversarial-builder-binary.slsa3.yml#L14) with the `$BUILDER_TAG` to test.
@@ -172,8 +172,8 @@ Error: Process completed with exit code 6.
 
 1. If the test above failed with the expected message, re-upload the original binary back to the assets, e.g. via:
 ```shell
-$ mv slsa-generic-generator-linux-amd64-"$BUILDER_TAG".original slsa-generic-generator-linux-amd64
-$ "$GH" release -R slsa-framework/slsa-github-generator upload "$BUILDER_TAG" slsa-generic-generator-linux-amd64  --clobber
+$ mv slsa-generator-generic-linux-amd64-"$BUILDER_TAG".original slsa-generator-generic-linux-amd64
+$ "$GH" release -R slsa-framework/slsa-github-generator upload "$BUILDER_TAG" slsa-generator-generic-linux-amd64  --clobber
 ```
 
 1. Re-run the workflow above and verify that it succeeds. (TODO: https://github.com/slsa-framework/slsa-github-generator/issues/116).
