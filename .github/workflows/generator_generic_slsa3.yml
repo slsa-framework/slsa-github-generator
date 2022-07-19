@@ -144,6 +144,7 @@ jobs:
         uses: slsa-framework/slsa-github-generator/.github/actions/secure-download-artifact@1d646d70aeba1516af69fb0ef48206580122449b
         with:
           name: "${{ inputs.attestation-name }}"
+          path: "${{ inputs.attestation-name }}"
           sha256: "${{ needs.generator.outputs.attestation-sha256 }}"
 
       - name: Release
