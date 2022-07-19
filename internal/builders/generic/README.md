@@ -579,7 +579,7 @@ jobs:
       upload-assets: true # Optional: Upload to a new release
 ```
 
-### Provenance for Rust / Cargo
+### Provenance for Rust
 
 If you use [Cargo](https://doc.rust-lang.org/cargo/) to generate your artifacts, you can
 easily generate SLSA3 provenance by updating your existing workflow with the 4
