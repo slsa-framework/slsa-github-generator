@@ -28,6 +28,7 @@ project simply generates provenance as a separate step in an existing workflow.
   - [Provenance for GoReleaser](#provenance-for-goreleaser)
   - [Provenance for Bazel](#provenance-for-bazel)
   - [Provenance for Java](#provenance-for-java)
+  - [Provenance for Rust](#provenance-for-rust)
 
 ---
 
@@ -423,7 +424,7 @@ jobs:
     uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.1.1
     with:
       base64-subjects: "${{ needs.build.outputs.hashes }}"
-      upload-assets: true # upload to a new release
+      upload-assets: true # Optional: Upload to a new release
 ```
 
 ### Provenance for Java
@@ -572,6 +573,73 @@ jobs:
       actions: read
       id-token: write
       contents: read
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.1.1
+    with:
+      base64-subjects: "${{ needs.build.outputs.hashes }}"
+      upload-assets: true # Optional: Upload to a new release
+```
+
+### Provenance for Rust
+
+If you use [Rust](https://www.rust-lang.org/) to generate your artifacts, you can
+easily generate SLSA3 provenance by updating your existing workflow with the 4
+steps indicated in the workflow below:
+
+```yaml
+jobs:
+  build:
+    # ==================================================
+    #
+    # Step 1: Declare an `outputs` for the hashes.
+    #
+    # ==================================================
+    outputs:
+      hashes: ${{ steps.hash.outputs.hashes }}
+
+    [...]
+
+    steps:
+      [...]
+      - name: Build using rustc
+        # =================================================
+        #
+        # Step 2: Add an `id: build` field
+        #         to your build step.
+        #
+        # =================================================
+        id: build
+        run: |
+          # Your normal build workflow targets here.
+          rustc hello.rs
+
+      # ========================================================
+      #
+      # Step 4: Add a step to generate the provenance subjects
+      #         as shown below. Update the sha256 sum arguments
+      #         to include all binaries that you generate
+      #         provenance for.
+      #
+      # ========================================================
+      - name: Generate subject
+        id: hash
+        run: |
+          set -euo pipefail
+
+          # This assumes the hello binary is in the currect directory.
+          echo "::set-output name=hashes::$(sha256sum hello | base64 -w0)"
+
+  # =========================================================
+  #
+  # Step 5: Call the generic workflow to generate provenance
+  #         by declaring the job below.
+  #
+  # =========================================================
+  provenance:
+    needs: [build]
+    permissions:
+      actions: read   # To read the workflow path.
+      id-token: write # To sign the provenance.
+      contents: write # To add assets to a release.
     uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.1.1
     with:
       base64-subjects: "${{ needs.build.outputs.hashes }}"
