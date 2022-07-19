@@ -155,7 +155,7 @@ $ mv slsa-generator-generic-linux-amd64 slsa-generator-generic-linux-amd64-"$BUI
 1. Upload a different binary to the assets:
 
 ```shell
-$ echo hello > slsa-builder-go-linux-amd64
+$ echo hello > slsa-generator-generic-linux-amd64
 $ "$GH" release -R slsa-framework/slsa-github-generator upload "$BUILDER_TAG" slsa-generator-generic-linux-amd64  --clobber
 ```
 
