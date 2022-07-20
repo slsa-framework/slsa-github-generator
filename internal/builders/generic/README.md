@@ -352,7 +352,7 @@ jobs:
 ### Provenance for Bazel
 
 If you use [Bazel](https://bazel.build/) to generate your artifacts, you can
-easily generate SLSA3 provenance by updating your existing workflow with the 4
+easily generate SLSA3 provenance by updating your existing workflow with the 5
 steps indicated in the workflow below:
 
 ```yaml
@@ -542,7 +542,7 @@ jobs:
 
       # ========================================================
       #
-      # Step 4: Add a step to generate the provenance subjects
+      # Step 3: Add a step to generate the provenance subjects
       #         as shown below. Update the sha256 sum arguments
       #         to include all binaries that you generate
       #         provenance for.
@@ -564,7 +564,7 @@ jobs:
 
   # =========================================================
   #
-  # Step 5: Call the generic workflow to generate provenance
+  # Step 4: Call the generic workflow to generate provenance
   #         by declaring the job below.
   #
   # =========================================================
@@ -617,7 +617,7 @@ jobs:
 
       # ========================================================
       #
-      # Step 4: Add a step to generate the provenance subjects
+      # Step 3: Add a step to generate the provenance subjects
       #         as shown below. Update the sha256 sum arguments
       #         to include all binaries that you generate
       #         provenance for.
@@ -632,7 +632,7 @@ jobs:
 
   # =========================================================
   #
-  # Step 5: Call the generic workflow to generate provenance
+  # Step 4: Call the generic workflow to generate provenance
   #         by declaring the job below.
   #
   # =========================================================
