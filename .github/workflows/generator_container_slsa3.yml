@@ -1,0 +1,144 @@
+# Copyright 2022 SLSA Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+name: SLSA container image provenance
+
+env:
+  # Generator
+  BUILDER_BINARY: generic-generator
+  BUILDER_RELEASE_BINARY: slsa-generator-generic-linux-amd64
+  BUILDER_REPOSITORY: slsa-framework/slsa-github-generator
+  # Verifier
+  # NOTE: These VERIFIER_* variables are used for verification of generator
+  # release binaries when the compile-generator input is false.
+  VERIFIER_REPOSITORY: slsa-framework/slsa-verifier
+  VERIFIER_RELEASE_BINARY: slsa-verifier-linux-amd64
+  VERIFIER_RELEASE_BINARY_SHA256: f92fc4e571949c796d7709bb3f0814a733124b0155e484fad095b5ca68b4cb21
+  VERIFIER_RELEASE: v1.1.1
+  # Builder location
+  BUILDER_DIR: internal/builders
+
+on:
+  workflow_call:
+    secrets:
+      registry-password:
+        description: "Password to log in the container registry."
+        required: true
+    inputs:
+      image:
+        description: "The OCI image name. This must not include a tag or digest."
+        required: true
+        type: string
+      digest:
+        description: "The OCI image digest. The image digest of the form '<algorithm>:<digest>' (e.g. 'sha256:abcdef...')"
+        required: true
+        type: string
+      registry-username:
+        description: "Username to log into the container registry."
+        required: true
+        type: string
+      compile-generator:
+        description: "Build the generator from source. This increases build time by ~2m."
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  # detect-env detects the reusable workflow's repository and ref for use later
+  # in the workflow.
+  detect-env:
+    outputs:
+      repository: ${{ steps.detect.outputs.repository }}
+      ref: ${{ steps.detect.outputs.ref }}
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write # Needed to detect the current reusable repository and ref.
+    steps:
+      - name: Detect the generator ref
+        id: detect
+        uses: slsa-framework/slsa-github-generator/.github/actions/detect-workflow@49e648aa7f5f4f88513b6cd54f6b189516184e6b
+
+  # generator builds the generator binary and runs it to generate SLSA
+  # provenance.
+  #
+  # If `compile-generator` is true then the generator is compiled
+  # from source at the ref detected by `detect-env`.
+  #
+  # If `compile-generator` is false, then the generator binary is downloaded
+  # with the release at the ref detected by `detect-env`. This must be a tag
+  # reference.
+  generator:
+    runs-on: ubuntu-latest
+    needs: [detect-env]
+    permissions:
+      # id-token:write is needed to create an OCID token for keyless signing.
+      id-token: write
+      # actions permissions are needed to read info on the workflow and
+      # workflow run.
+      actions: read
+      # packages:write permissions are needed to login and upload attestations.
+      packages: write
+    steps:
+      - name: Generate builder
+        uses: slsa-framework/slsa-github-generator/.github/actions/generate-builder@49e648aa7f5f4f88513b6cd54f6b189516184e6b
+        with:
+          repository: "${{ needs.detect-env.outputs.repository }}"
+          ref: "${{ needs.detect-env.outputs.ref }}"
+          go-version: 1.18
+          binary: "${{ env.BUILDER_BINARY }}"
+          compile-builder: "${{ inputs.compile-generator }}"
+          # NOTE: We are using the generic generator.
+          directory: "${{ env.BUILDER_DIR }}/generic"
+
+      - uses: sigstore/cosign-installer@7e0881f8fe90b25e305bbf0309761e9314607e25 # tag=v2.4.0
+      - name: Login
+        env:
+          UNTRUSTED_IMAGE: "${{ inputs.image }}"
+          UNTRUSTED_USERNAME: "${{ inputs.registry-username }}"
+          UNTRUSTED_PASSWORD: "${{ secrets.registry-password }}"
+        run: |
+          set -euo pipefail
+
+          # NOTE: Some docker images are of the form <org>/<name>
+          # Here we get the first part and check if it has a '.' or ':'
+          # character in it to see if it's a domain name.
+          # See: https://stackoverflow.com/questions/37861791/how-are-docker-image-names-parsed#37867949
+          untrusted_registry="docker.io"
+          # NOTE: Do not fail the script if grep does not match.
+          maybe_domain=$(echo "$UNTRUSTED_IMAGE" | cut -f1 -d "/" | { grep -E "\.|:" || true; })
+          if [ "$maybe_domain" != "" ]; then
+            untrusted_registry="$maybe_domain"
+          fi
+
+          echo "login to $untrusted_registry"
+          cosign login "$untrusted_registry" -u "$UNTRUSTED_USERNAME" -p "$UNTRUSTED_PASSWORD"
+
+      - name: Create and sign provenance
+        id: sign-prov
+        shell: bash
+        env:
+          UNTRUSTED_IMAGE: "${{ inputs.image }}"
+          UNTRUSTED_DIGEST: "${{ inputs.digest }}"
+          GITHUB_CONTEXT: "${{ toJSON(github) }}"
+        run: |
+          set -euo pipefail
+
+          # Generate a predicate only.
+          predicate_name="predicate.json"
+          ./"$BUILDER_BINARY" attest --signature="" --predicate="$predicate_name"
+
+          COSIGN_EXPERIMENTAL=1 cosign attest --predicate="$predicate_name" \
+            --type slsaprovenance \
+            --force \
+            "${UNTRUSTED_IMAGE}@${UNTRUSTED_DIGEST}"

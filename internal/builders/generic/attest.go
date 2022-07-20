@@ -64,6 +64,16 @@ type errNoName struct {
 	errors.WrappableError
 }
 
+// errInvalidPath indicates an invalid path.
+type errInvalidPath struct {
+	errors.WrappableError
+}
+
+// errInternal indicates an internal error.
+type errInternal struct {
+	errors.WrappableError
+}
+
 // errDuplicateSubject indicates a duplicate subject name.
 type errDuplicateSubject struct {
 	errors.WrappableError
@@ -125,11 +135,44 @@ func parseSubjects(b64str string) ([]intoto.Subject, error) {
 	return parsed, nil
 }
 
+func pathIsUnderCurrentDirectory(path string) error {
+	wd, err := os.Getwd()
+	if err != nil {
+		return errors.Errorf(&errInternal{}, "os.Getwd(): %w", err)
+	}
+	p, err := filepath.Abs(path)
+	if err != nil {
+		return errors.Errorf(&errInternal{}, "filepath.Abs(): %w", err)
+	}
+
+	if !strings.HasPrefix(p, wd+"/") &&
+		wd != p {
+		return errors.Errorf(&errInvalidPath{}, "invalid path: %q", path)
+	}
+
+	return nil
+}
+
 func getFile(path string) (io.Writer, error) {
 	if path == "-" {
 		return os.Stdout, nil
 	}
+
+	if err := pathIsUnderCurrentDirectory(path); err != nil {
+		return nil, err
+	}
+
 	return os.OpenFile(filepath.Clean(path), os.O_WRONLY|os.O_CREATE, 0o600)
+}
+
+func verifyAttestationPath(path string) error {
+	if !strings.HasSuffix(path, "intoto.jsonl") {
+		return errors.Errorf(&errInvalidPath{}, "invalid suffix: %q. Must be .intoto.jsonl", path)
+	}
+	if err := pathIsUnderCurrentDirectory(path); err != nil {
+		return err
+	}
+	return nil
 }
 
 type provenanceOnlyBuild struct {
@@ -158,11 +201,20 @@ run in the context of a Github Actions workflow.`,
 			ghContext, err := github.GetWorkflowContext()
 			check(err)
 
-			parsedSubjects, err := parseSubjects(subjects)
+			// Verify the extension path and extension.
+			err = verifyAttestationPath(attPath)
 			check(err)
 
-			if len(parsedSubjects) == 0 {
-				check(errors.New("expected at least one subject"))
+			var parsedSubjects []intoto.Subject
+			// We don't actually care about the subjects if we aren't writing an attestation.
+			if attPath != "" {
+				var err error
+				parsedSubjects, err = parseSubjects(subjects)
+				check(err)
+
+				if len(parsedSubjects) == 0 {
+					check(errors.New("expected at least one subject"))
+				}
 			}
 
 			ctx := context.Background()
@@ -184,6 +236,7 @@ run in the context of a Github Actions workflow.`,
 			p, err := g.Generate(ctx)
 			check(err)
 
+			// Note: we verify the path within getFile().
 			if attPath != "" {
 				var attBytes []byte
 				if utils.IsPresubmitTests() {

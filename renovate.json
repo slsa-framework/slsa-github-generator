@@ -3,5 +3,11 @@
   "extends": [
     "config:base"
   ],
-  "schedule": ["every weekend"]
+  "schedule": ["every weekend"],
+  "packageRules": [
+    {
+      "matchManagers": ["github-actions"],
+      "groupName": "github-actions"
+    }
+  ]
 }
