@@ -654,7 +654,7 @@ If you use [Haskell](https://www.haskell.org/) (either via
 [`cabal`](https://www.haskell.org/cabal/) or
 [`stack`](https://docs.haskellstack.org/en/stable/README/)) to generate your
 artifacts, you can easily generate SLSA3 provenance by updating your existing
-workflow with the 5 steps indicated in the workflow below.
+workflow with the 3 steps indicated in the workflow below.
 
 ```yaml
 jobs:
@@ -673,13 +673,6 @@ jobs:
     steps:
       [...]
       - name: Build using Haskell
-        # =================================================
-        #
-        # Step 2: Add an `id: build` field
-        #         to your build step
-        #
-        # =================================================
-        id: build
         run: |
           # Your normal build workflow targets here.
           cabal build   # or stack build
@@ -692,7 +685,7 @@ jobs:
 
       # ========================================================
       #
-      # Step 3: Add a step to generate the provenance subjects
+      # Step 2: Add a step to generate the provenance subjects
       #         as shown below. Update the sha256 sum arguments
       #         to include all binaries that you generate
       #         provenance for.
@@ -707,7 +700,7 @@ jobs:
 
   # =========================================================
   #
-  # Step 4: Call the generic workflow to generate provenance
+  # Step 3: Call the generic workflow to generate provenance
   #         by declaring the job below.
   #
   # =========================================================
