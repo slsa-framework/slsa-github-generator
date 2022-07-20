@@ -29,6 +29,7 @@ project simply generates provenance as a separate step in an existing workflow.
   - [Provenance for Bazel](#provenance-for-bazel)
   - [Provenance for Java](#provenance-for-java)
   - [Provenance for Rust](#provenance-for-rust)
+  - [Provenance for Haskell](#provenance-for-haskell)
 
 ---
 
@@ -632,6 +633,81 @@ jobs:
   # =========================================================
   #
   # Step 5: Call the generic workflow to generate provenance
+  #         by declaring the job below.
+  #
+  # =========================================================
+  provenance:
+    needs: [build]
+    permissions:
+      actions: read   # To read the workflow path.
+      id-token: write # To sign the provenance.
+      contents: write # To add assets to a release.
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.2.0
+    with:
+      base64-subjects: "${{ needs.build.outputs.hashes }}"
+      upload-assets: true # Optional: Upload to a new release
+```
+
+### Provenance for Haskell
+
+If you use [Haskell](https://www.haskell.org/) (either via
+[`cabal`](https://www.haskell.org/cabal/) or
+[`stack`](https://docs.haskellstack.org/en/stable/README/)) to generate your
+artifacts, you can easily generate SLSA3 provenance by updating your existing
+workflow with the 5 steps indicated in the workflow below.
+
+```yaml
+jobs:
+  build:
+    # ==================================================
+    #
+    # Step 1: Declare an `outputs` for the hashes to be
+    #         used during the provenance steps.
+    #
+    # ==================================================
+    outputs:
+      hashes: ${{ steps.hash.outputs.hashes }}
+
+    [...]
+
+    steps:
+      [...]
+      - name: Build using Haskell
+        # =================================================
+        #
+        # Step 2: Add an `id: build` field
+        #         to your build step
+        #
+        # =================================================
+        id: build
+        run: |
+          # Your normal build workflow targets here.
+          cabal build   # or stack build
+
+          # Copy the binary to the root directory for easier reference
+          # For Cabal, use the following command
+          cp $(cabal list-bin .) .
+          # For Stack, use the following command instead
+          # cp $(stack path --local-install-root)/bin/target_binary .
+
+      # ========================================================
+      #
+      # Step 3: Add a step to generate the provenance subjects
+      #         as shown below. Update the sha256 sum arguments
+      #         to include all binaries that you generate
+      #         provenance for.
+      #
+      # ========================================================
+      - name: Generate subject
+        id: hash
+        run: |
+          set -euo pipefail
+
+          echo "::set-output name=hashes::$(sha256sum target_binary | base64 -w0)"
+
+  # =========================================================
+  #
+  # Step 4: Call the generic workflow to generate provenance
   #         by declaring the job below.
   #
   # =========================================================
