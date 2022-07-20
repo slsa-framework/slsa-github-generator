@@ -654,7 +654,7 @@ If you use [Haskell](https://www.haskell.org/) (either via
 [`cabal`](https://www.haskell.org/cabal/) or
 [`stack`](https://docs.haskellstack.org/en/stable/README/)) to generate your
 artifacts, you can easily generate SLSA3 provenance by updating your existing
-workflow with the 3 steps indicated in the workflow below.
+workflow with the steps indicated in the workflow below.
 
 ```yaml
 jobs:
