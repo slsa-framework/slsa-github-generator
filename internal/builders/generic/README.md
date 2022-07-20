@@ -463,7 +463,7 @@ jobs:
         run: |
           # Your normal build workflow targets here
           mvn clean package
-          
+
           # ======================================================
           #
           # Step 3: Save the location of the maven output files
@@ -485,7 +485,7 @@ jobs:
         id: hash
         run: |
           echo "::set-output name=hashes::$(sha256sum ${{ steps.build.outputs.artifact_pattern }} | base64 -w0)"
-      
+
       - name: Upload build artifacts
         uses: actions/upload-artifact@3cea5372237819ed00197afe530f5a7ea3e805c8 # tag=v3.1.0
         with:
@@ -554,7 +554,7 @@ jobs:
         id: hash
         run: |
           echo "::set-output name=hashes::$(sha256sum ./build/libs/* | base64 -w0)"
-      
+
       - name: Upload build artifacts
         uses: actions/upload-artifact@3cea5372237819ed00197afe530f5a7ea3e805c8 # tag=v3.1.0
         with:
