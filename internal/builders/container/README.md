@@ -66,7 +66,7 @@ provenance:
     registry-username: ${{ github.actor }}
     digest: ${{ needs.build.outputs.digest }}
     # TODO(https://github.com/slsa-framework/slsa-github-generator/issues/492): Remove after GA release.
-    compile-generator: true
+    compile-generator: true # currently has to be set true to work
   secrets:
     registry-password: ${{ secrets.GITHUB_TOKEN }}
 ```
@@ -139,7 +139,7 @@ jobs:
       registry-username: ${{ github.actor }}
       digest: ${{ needs.build.outputs.digest }}
       # TODO(https://github.com/slsa-framework/slsa-github-generator/issues/492): Remove after GA release.
-      compile-generator: true
+      compile-generator: true # currently has to be set true to work
     secrets:
       registry-password: ${{ secrets.GITHUB_TOKEN }}
 ```
