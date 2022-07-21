@@ -22,6 +22,8 @@ import (
 	"regexp"
 	"strings"
 	"syscall"
+
+	"github.com/slsa-framework/slsa-github-generator/internal/utils"
 )
 
 var (
@@ -117,7 +119,7 @@ func (b *GoBuild) Run(dry bool) error {
 
 		// Share the resolved name of the binary.
 		fmt.Printf("::set-output name=go-binary-name::%s\n", filename)
-		command, err := marshallToString(com)
+		command, err := utils.MarshallToString(com)
 		if err != nil {
 			return err
 		}
@@ -129,7 +131,7 @@ func (b *GoBuild) Run(dry bool) error {
 			return err
 		}
 
-		menv, err := marshallToString(env)
+		menv, err := utils.MarshallToString(env)
 		if err != nil {
 			return err
 		}
