@@ -172,7 +172,7 @@ func Test_CreateNewFileUnderCurrentDirectory(t *testing.T) {
 			if tt.existingPath {
 				if _, err := os.Stat(tt.path); err != nil {
 					if _, err := CreateNewFileUnderCurrentDirectory(tt.path, os.O_WRONLY); err != nil {
-						t.Fatalf("unexpected error 1: %v", err)
+						t.Fatalf("unexpected error: %v", err)
 					}
 				}
 			}
@@ -180,11 +180,11 @@ func Test_CreateNewFileUnderCurrentDirectory(t *testing.T) {
 			_, err := CreateNewFileUnderCurrentDirectory(tt.path, os.O_WRONLY)
 			if (err == nil && tt.expected != nil) ||
 				(err != nil && tt.expected == nil) {
-				t.Fatalf("unexpected error 3: %v", cmp.Diff(err, tt.expected, cmpopts.EquateErrors()))
+				t.Fatalf("unexpected error: %v", cmp.Diff(err, tt.expected, cmpopts.EquateErrors()))
 			}
 
 			if err != nil && !errors.As(err, &tt.expected) {
-				t.Fatalf("unexpected error 4: %v", cmp.Diff(err, tt.expected, cmpopts.EquateErrors()))
+				t.Fatalf("unexpected error: %v", cmp.Diff(err, tt.expected, cmpopts.EquateErrors()))
 			}
 		})
 	}
