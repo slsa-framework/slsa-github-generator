@@ -10,9 +10,9 @@ function shasum256(untrustedPath: string): string {
   return crypto.createHash("sha256").update(untrustedFile).digest("hex");
 }
 
-async function run(): Promise<void> {
+function run(): void {
   // Get the path to the untrusted file from ENV variable 'UNTRUSTED_PATH'
-  const untrustedPath = core.getInput("untrusted_path");
+  const untrustedPath = core.getInput("path");
   core.info(`Computing sha256 of ${untrustedPath}`);
   const sha = shasum256(untrustedPath);
   core.info(`Computed sha256 of ${untrustedPath} as ${sha}`);

@@ -8,6 +8,6 @@
 
 ## Compare the dist/index.js with the actual source
 This is to ensure that the source is correct.
-- `diff dist/index.js prdist/index.js`. In this case the prdist/index.js is the Pull Request version.
+- `git diff --ignore-space-at-eol dist diff`. In this case the prdist/index.js is the Pull Request version.
 - The diff should be empty
 
