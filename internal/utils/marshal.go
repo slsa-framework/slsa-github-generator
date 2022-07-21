@@ -20,7 +20,8 @@ import (
 	"fmt"
 )
 
-func UnmarshallList(arg string) ([]string, error) {
+// UnmarshalList unmarshals a string into a list of strings.
+func UnmarshalList(arg string) ([]string, error) {
 	var res []string
 	// If argument is empty, return an empty list early,
 	// because `json.Unmarshal` would fail.
@@ -39,7 +40,8 @@ func UnmarshallList(arg string) ([]string, error) {
 	return res, nil
 }
 
-func MarshallToString(args interface{}) (string, error) {
+// MarshalToString marshals to a string.
+func MarshalToString(args interface{}) (string, error) {
 	jsonData, err := json.Marshal(args)
 	if err != nil {
 		return "", fmt.Errorf("json.Marshal: %w", err)
@@ -52,10 +54,11 @@ func MarshallToString(args interface{}) (string, error) {
 	return encoded, nil
 }
 
-func MarshallToBytes(args interface{}) ([]byte, error) {
-	encoded, err := MarshallToString(args)
+// MarshalToBytes marshals to a byte array.
+func MarshalToBytes(args interface{}) ([]byte, error) {
+	encoded, err := MarshalToString(args)
 	if err != nil {
-		return []byte{}, nil
+		return nil, err
 	}
 	return []byte(encoded), nil
 }

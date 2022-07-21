@@ -119,7 +119,7 @@ func (b *GoBuild) Run(dry bool) error {
 
 		// Share the resolved name of the binary.
 		fmt.Printf("::set-output name=go-binary-name::%s\n", filename)
-		command, err := utils.MarshallToString(com)
+		command, err := utils.MarshalToString(com)
 		if err != nil {
 			return err
 		}
@@ -131,7 +131,7 @@ func (b *GoBuild) Run(dry bool) error {
 			return err
 		}
 
-		menv, err := utils.MarshallToString(env)
+		menv, err := utils.MarshalToString(env)
 		if err != nil {
 			return err
 		}

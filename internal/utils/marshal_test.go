@@ -20,7 +20,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
-func Test_MarshallToString(t *testing.T) {
+func Test_MarshalToString(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
@@ -49,9 +49,9 @@ func Test_MarshallToString(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			r, err := MarshallToString(tt.variables)
+			r, err := MarshalToString(tt.variables)
 			if err != nil {
-				t.Errorf("marshallToString: %v", err)
+				t.Errorf("MarshalToString: %v", err)
 			}
 			if !cmp.Equal(r, tt.expected) {
 				t.Errorf(cmp.Diff(r, tt.expected))
@@ -60,7 +60,7 @@ func Test_MarshallToString(t *testing.T) {
 	}
 }
 
-func Test_UnmarshallList(t *testing.T) {
+func Test_UnmarshalList(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
@@ -93,9 +93,9 @@ func Test_UnmarshallList(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			r, err := UnmarshallList(tt.value)
+			r, err := UnmarshalList(tt.value)
 			if err != nil && len(tt.expected) != 0 {
-				t.Errorf("UnmarshallList: %v", err)
+				t.Errorf("UnmarshalList: %v", err)
 			}
 
 			if !cmp.Equal(r, tt.expected) {

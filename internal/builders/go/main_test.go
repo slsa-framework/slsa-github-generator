@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"bytes"
 	"errors"
-	"fmt"
 	"io"
 	"os"
 	"os/exec"
@@ -267,7 +266,6 @@ func Test_runBuild(t *testing.T) {
 			s := r.end()
 
 			if !errCmp(err, tt.err) {
-				fmt.Println(err, tt.err)
 				t.Errorf(cmp.Diff(err, tt.err, cmpopts.EquateErrors()))
 			}
 
@@ -389,12 +387,12 @@ func extract(lines string) ([]string, []string, string, string, error) {
 		return []string{}, []string{}, "", "", err
 	}
 
-	cmd, err := utils.UnmarshallList(scmd)
+	cmd, err := utils.UnmarshalList(scmd)
 	if err != nil {
 		return []string{}, []string{}, "", "", err
 	}
 
-	env, err := utils.UnmarshallList(senv)
+	env, err := utils.UnmarshalList(senv)
 	if err != nil {
 		return []string{}, []string{}, "", "", err
 	}

@@ -74,12 +74,12 @@ func GenerateProvenance(name, digest, command, envs, workingDir string, s signin
 		return nil, fmt.Errorf("sha256 digest is not valid: %s", digest)
 	}
 
-	com, err := utils.UnmarshallList(command)
+	com, err := utils.UnmarshalList(command)
 	if err != nil {
 		return nil, err
 	}
 
-	env, err := utils.UnmarshallList(envs)
+	env, err := utils.UnmarshalList(envs)
 	if err != nil {
 		return nil, err
 	}
@@ -150,7 +150,7 @@ func GenerateProvenance(name, digest, command, envs, workingDir string, s signin
 
 	if utils.IsPresubmitTests() {
 		fmt.Println("Pre-submit tests detected. Skipping signing.")
-		return utils.MarshallToBytes(*p)
+		return utils.MarshalToBytes(*p)
 	}
 
 	// Sign the provenance.
