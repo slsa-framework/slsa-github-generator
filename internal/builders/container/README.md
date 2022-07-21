@@ -64,6 +64,7 @@ provenance:
   with:
     image: ${{ needs.build.outputs.tag }}
     registry-username: ${{ github.actor }}
+    digest: ${{ needs.build.outputs.digest }}
     # TODO(https://github.com/slsa-framework/slsa-github-generator/issues/492): Remove after GA release.
     compile-generator: true
   secrets:
@@ -85,6 +86,7 @@ jobs:
       packages: write
     outputs:
       image: ${{ steps.image.outputs.image }}
+      digest: ${{ steps.build.outputs.digest }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout the repository
@@ -135,6 +137,7 @@ jobs:
     with:
       image: ${{ needs.build.outputs.image }}
       registry-username: ${{ github.actor }}
+      digest: ${{ needs.build.outputs.digest }}
       # TODO(https://github.com/slsa-framework/slsa-github-generator/issues/492): Remove after GA release.
       compile-generator: true
     secrets:
