@@ -56,21 +56,21 @@ There is one integration test we cannot easily test "live", so we need to simula
 1. Update the file `$BUILDER_REPOSITORY/main/.github/actions/generate-builder/action.yml` by replacing the strings `BUILDER_REPOSITORY` and `VERIFIER_REPOSITORY` with your own username (value of `$GITHUB_USERNAME`). Then push the changes.
 1. For the Go builder, update the file `$BUILDER_REPOSITORY/main/.github/workflows/builder_go_slsa3.yml#L98` to:
 
-```yaml
-uses: $BUILDER_REPOSITORY/.github/actions/generate-builder@$BUILDER_TAG
-```
+   ```yaml
+   uses: $BUILDER_REPOSITORY/.github/actions/generate-builder@$BUILDER_TAG
+   ```
 
 1. For the Generic generator, update the file `$BUILDER_REPOSITORY/main/.github/workflows/generic_generator_slsa3.yml#L98`to:
 
-```yaml
-uses: $BUILDER_REPOSITORY/.github/actions/generate-builder@$BUILDER_TAG
-```
+   ```yaml
+   uses: $BUILDER_REPOSITORY/.github/actions/generate-builder@$BUILDER_TAG
+   ```
 
 1. Create a release for the builders for this branch:
 
-```shell
-$ "$GH" release -R "$BUILDER_REPOSITORY" create "$BUILDER_TAG" --title "$BUILDER_TAG" --notes "pre-release tests for $BUILDER_TAG $(date)" --target "$BUILDER_REF"
-```
+   ```shell
+   $ "$GH" release -R "$BUILDER_REPOSITORY" create "$BUILDER_TAG" --title "$BUILDER_TAG" --notes "pre-release tests for $BUILDER_TAG $(date)" --target "$BUILDER_REF"
+   ```
 
 This will trigger a workflow release, let it complete and generate the release assets.
 
@@ -78,33 +78,33 @@ This will trigger a workflow release, let it complete and generate the release a
 
 1. Edit the file [slsa-framework/example-package/.github/workflows/e2e.go.workflow_dispatch.main.adversarial-verifier-binary.slsa3.yml#L14](https://github.com/slsa-framework/example-package/blob/main/.github/workflows/e2e.go.workflow_dispatch.main.adversarial-verifier-binary.slsa3.yml#L14) by using `$BUILDER_REPOSITORY` and `$BUILDER_TAG`:
 
-```yaml
-uses: $BUILDER_REPOSITORY/.github/workflows/builder_go_slsa3.yml@$BUILDER_TAG
-```
+   ```yaml
+   uses: $BUILDER_REPOSITORY/.github/workflows/builder_go_slsa3.yml@$BUILDER_TAG
+   ```
 
 1. Run the test manually via the GitHub UX in [https://github.com/slsa-framework/example-package/actions/workflows/e2e.go.workflow_dispatch.main.adversarial-verifier-binary.slsa3.yml](https://github.com/slsa-framework/example-package/actions/workflows/e2e.go.workflow_dispatch.main.adversarial-verifier-binary.slsa3.yml) by cliking `Run Workflow`.
 1. Verify the run fails with log message:
 
-```
-verifier hash computed is 5891b5b522d5df086d0ff0b110fbd9d21bb4fc7163af34d08286a2e846f6be03
-Error: Process completed with exit code 4.
-```
+   ```
+   verifier hash computed is 5891b5b522d5df086d0ff0b110fbd9d21bb4fc7163af34d08286a2e846f6be03
+   Error: Process completed with exit code 4.
+   ```
 
 ### Generic generator
 
 1. Edit the file [slsa-framework/example-package/.github/workflows/e2e.generic.workflow_dispatch.main.adversarial-verifier-binary.slsa3.yml#L36](https://github.com/slsa-framework/example-package/blob/main/.github/workflows/e2e.generic.workflow_dispatch.main.adversarial-verifier-binary.slsa3.yml#L36) by using `$BUILDER_REPOSITORY` and `$BUILDER_TAG`:
 
-```yaml
-uses: $BUILDER_REPOSITORY/.github/workflows/generator_generic_slsa3.yml@$BUILDER_TAG
-```
+   ```yaml
+   uses: $BUILDER_REPOSITORY/.github/workflows/generator_generic_slsa3.yml@$BUILDER_TAG
+   ```
 
 1. Run the test manually via the GitHub UX in [https://github.com/slsa-framework/example-package/actions/workflows/e2e.generic.workflow_dispatch.main.adversarial-verifier-binary.slsa3.yml](https://github.com/slsa-framework/example-package/actions/workflows/e2e.generic.workflow_dispatch.main.adversarial-verifier-binary.slsa3.yml) by cliking `Run Workflow`.
 1. Verify the run fails with log message:
 
-```
-verifier hash computed is 5891b5b522d5df086d0ff0b110fbd9d21bb4fc7163af34d08286a2e846f6be03
-Error: Process completed with exit code 4.
-```
+   ```
+   verifier hash computed is 5891b5b522d5df086d0ff0b110fbd9d21bb4fc7163af34d08286a2e846f6be03
+   Error: Process completed with exit code 4.
+   ```
 
 ## Tagging
 
@@ -131,79 +131,79 @@ End-to-end tests run daily in [github.com/slsa-framework/example-package/.github
 
 1. Make sure you have downloaded the `$BUILDER_TAG` builder's binary locally `slsa-builder-go-linux-amd64`, either via the web UI or via:
 
-```shell
-$ "$GH" release -R slsa-framework/slsa-github-generator download "$BUILDER_TAG" -p "slsa-builder-go-linux-amd64"
-$ mv slsa-builder-go-linux-amd64 slsa-builder-go-linux-amd64-"$BUILDER_TAG".original
-```
+   ```shell
+   $ "$GH" release -R slsa-framework/slsa-github-generator download "$BUILDER_TAG" -p "slsa-builder-go-linux-amd64"
+   $ mv slsa-builder-go-linux-amd64 slsa-builder-go-linux-amd64-"$BUILDER_TAG".original
+   ```
 
 1. Upload a different binary to the assets:
 
-```shell
-$ echo hello > slsa-builder-go-linux-amd64
-$ "$GH" release -R slsa-framework/slsa-github-generator upload "$BUILDER_TAG" slsa-builder-go-linux-amd64  --clobber
-```
+   ```shell
+   $ echo hello > slsa-builder-go-linux-amd64
+   $ "$GH" release -R slsa-framework/slsa-github-generator upload "$BUILDER_TAG" slsa-builder-go-linux-amd64  --clobber
+   ```
 
 1. Update the version of the workflow [slsa-framework/example-package/.github/workflows/e2e.go.workflow_dispatch.main.adversarial-builder-binary.slsa3.yml#L14](https://github.com/slsa-framework/example-package/blob/main/.github/workflows/e2e.go.workflow_dispatch.main.adversarial-builder-binary.slsa3.yml#L14) with the `$BUILDER_TAG` to test.
 
 1. Trigger the test in [slsa-framework/example-package/actions/workflows/e2e.go.workflow_dispatch.main.adversarial-builder-binary.slsa3.yml](https://github.com/slsa-framework/example-package/actions/workflows/e2e.go.workflow_dispatch.main.adversarial-builder-binary.slsa3.yml) by cliking `Run workflow`. Verify that it fails, with a message:
 
-```shell
-verifier hash computed is 60c91c9d5b9a059e37ac46da316f20c81da335b5d00e1f74d03dd50f819694bd
-verifier hash verification has passed
-...
-FAILED: SLSA verification failed: expected hash '5891b5b522d5df086d0ff0b110fbd9d21bb4fc7163af34d08286a2e846f6be03', got 'e8af48495ca3c5a7737b4a34322afc7e95a85cf1457a37473fb81cff9b4f0d05': binary artifact hash does not match provenance subject
-Error: Process completed with exit code 6.
-```
+   ```shell
+   verifier hash computed is 60c91c9d5b9a059e37ac46da316f20c81da335b5d00e1f74d03dd50f819694bd
+   verifier hash verification has passed
+   ...
+   FAILED: SLSA verification failed: expected hash '5891b5b522d5df086d0ff0b110fbd9d21bb4fc7163af34d08286a2e846f6be03', got 'e8af48495ca3c5a7737b4a34322afc7e95a85cf1457a37473fb81cff9b4f0d05': binary artifact hash does not match provenance subject
+   Error: Process completed with exit code 6.
+   ```
 
 1. If the test above failed with the expected message, re-upload the original binary back to the assets, e.g. via:
 
-```shell
-$ mv slsa-builder-go-linux-amd64-"$BUILDER_TAG".original slsa-builder-go-linux-amd64
-$ "$GH" release -R slsa-framework/slsa-github-generator upload "$BUILDER_TAG" slsa-builder-go-linux-amd64  --clobber
-```
+   ```shell
+   $ mv slsa-builder-go-linux-amd64-"$BUILDER_TAG".original slsa-builder-go-linux-amd64
+   $ "$GH" release -R slsa-framework/slsa-github-generator upload "$BUILDER_TAG" slsa-builder-go-linux-amd64  --clobber
+   ```
 
 1. Re-run the workflow above and verify that it succeeds. (TODO: https://github.com/slsa-framework/slsa-github-generator/issues/116).
 
-If it does not, delete the release, fix the bug and re-start the release process at the top of this page.
+   If it does not, delete the release, fix the bug and re-start the release process at the top of this page.
 
 ### Generic generator
 
 1. Make sure you have downloaded the `$BUILDER_TAG` builder's binary locally `slsa-generator-generic-linux-amd64`, either via the web UI or via:
 
-```shell
-$ "$GH" release -R slsa-framework/slsa-github-generator download "$BUILDER_TAG" -p "slsa-generator-generic-linux-amd64"
-$ mv slsa-generator-generic-linux-amd64 slsa-generator-generic-linux-amd64-"$BUILDER_TAG".original
-```
+   ```shell
+   $ "$GH" release -R slsa-framework/slsa-github-generator download "$BUILDER_TAG" -p "slsa-generator-generic-linux-amd64"
+   $ mv slsa-generator-generic-linux-amd64 slsa-generator-generic-linux-amd64-"$BUILDER_TAG".original
+   ```
 
 1. Upload a different binary to the assets:
 
-```shell
-$ echo hello > slsa-generator-generic-linux-amd64
-$ "$GH" release -R slsa-framework/slsa-github-generator upload "$BUILDER_TAG" slsa-generator-generic-linux-amd64  --clobber
-```
+   ```shell
+   $ echo hello > slsa-generator-generic-linux-amd64
+   $ "$GH" release -R slsa-framework/slsa-github-generator upload "$BUILDER_TAG" slsa-generator-generic-linux-amd64  --clobber
+   ```
 
 1. Update the version of the workflow [slsa-framework/example-package/.github/workflows/e2e.generic.workflow_dispatch.main.adversarial-builder-binary.slsa3.yml#L35](https://github.com/slsa-framework/example-package/blob/main/.github/workflows/e2e.generic.workflow_dispatch.main.adversarial-builder-binary.slsa3.yml#L35) with the `$BUILDER_TAG` to test.
 
 1. Trigger the test in [slsa-framework/example-package/actions/workflows/e2e.generic.workflow_dispatch.main.adversarial-builder-binary.slsa3.yml](https://github.com/slsa-framework/example-package/actions/workflows/e2e.generic.workflow_dispatch.main.adversarial-builder-binary.slsa3.yml) by cliking `Run workflow`. Verify that it fails, with a message:
 
-```shell
-verifier hash computed is 60c91c9d5b9a059e37ac46da316f20c81da335b5d00e1f74d03dd50f819694bd
-verifier hash verification has passed
-...
-FAILED: SLSA verification failed: expected hash '5891b5b522d5df086d0ff0b110fbd9d21bb4fc7163af34d08286a2e846f6be03', got 'e8af48495ca3c5a7737b4a34322afc7e95a85cf1457a37473fb81cff9b4f0d05': binary artifact hash does not match provenance subject
-Error: Process completed with exit code 6.
-```
+   ```shell
+   verifier hash computed is 60c91c9d5b9a059e37ac46da316f20c81da335b5d00e1f74d03dd50f819694bd
+   verifier hash verification has passed
+   ...
+   FAILED: SLSA verification failed: expected hash '5891b5b522d5df086d0ff0b110fbd9d21bb4fc7163af34d08286a2e846f6be03', got 'e8af48495ca3c5a7737b4a34322afc7e95a85cf1457a37473fb81cff9b4f0d05': binary artifact hash does not match provenance subject
+   Error: Process completed with exit code 6.
+   ```
 
 1. If the test above failed with the expected message, re-upload the original binary back to the assets, e.g. via:
 
-```shell
-$ mv slsa-generator-generic-linux-amd64-"$BUILDER_TAG".original slsa-generator-generic-linux-amd64
-$ "$GH" release -R slsa-framework/slsa-github-generator upload "$BUILDER_TAG" slsa-generator-generic-linux-amd64  --clobber
-```
+   ```shell
+   $ mv slsa-generator-generic-linux-amd64-"$BUILDER_TAG".original slsa-generator-generic-linux-amd64
+   $ "$GH" release -R slsa-framework/slsa-github-generator upload "$BUILDER_TAG" slsa-generator-generic-linux-amd64  --clobber
+   ```
 
 1. Re-run the workflow above and verify that it succeeds. (TODO: https://github.com/slsa-framework/slsa-github-generator/issues/116).
 
-If it does not, delete the release, fix the bug and re-start the release process at the top of this page.
+   If it does not, delete the release, fix the bug and re-start the release process at the top of this page.
 
 ## Update verifier
 
@@ -215,7 +215,7 @@ The next step is to update the verifier's e2e tests. For this, you need to:
 
 1. Add the new release to the list defined in [slsa-framework/slsa-verifier/blob/main/main_test.go](https://github.com/slsa-framework/slsa-verifier/blob/main/main_test.go).
 
-Send a pull request to merge the changes into the verifier's repository. The pre-submits will validate that the verifier is able to verify provenance from the `$BUILDER_TAG` builder.
+   Send a pull request to merge the changes into the verifier's repository. The pre-submits will validate that the verifier is able to verify provenance from the `$BUILDER_TAG` builder.
 
 ## Finalize release
 
