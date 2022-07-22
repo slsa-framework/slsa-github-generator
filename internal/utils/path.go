@@ -33,6 +33,10 @@ type ErrInvalidPath struct {
 	errors.WrappableError
 }
 
+// PathIsUnderCurrentDirectory checks whether the `path`
+// is under the current working directory. Examples:
+// ./file, ./some/path, ../<cwd>.file would return `nil`.
+// `../etc/password` would return an error.
 func PathIsUnderCurrentDirectory(path string) error {
 	wd, err := os.Getwd()
 	if err != nil {
@@ -51,6 +55,9 @@ func PathIsUnderCurrentDirectory(path string) error {
 	return nil
 }
 
+// VerifyAttestationPath verifies that the path of an attestation
+// is valid. It checks that the path is under the current working directory
+// and that the extension of the file is `intoto.jsonl`.
 func VerifyAttestationPath(path string) error {
 	if !strings.HasSuffix(path, "intoto.jsonl") {
 		return errors.Errorf(&ErrInvalidPath{}, "invalid suffix: %q. Must be .intoto.jsonl", path)
@@ -61,6 +68,9 @@ func VerifyAttestationPath(path string) error {
 	return nil
 }
 
+// CreateNewFileUnderCurrentDirectory create a new file under the current directory
+// and fails if the file already exists. The file is always created with the pemisisons
+// `0o600`.
 func CreateNewFileUnderCurrentDirectory(path string, flag int) (io.Writer, error) {
 	if path == "-" {
 		return os.Stdout, nil
@@ -71,5 +81,10 @@ func CreateNewFileUnderCurrentDirectory(path string, flag int) (io.Writer, error
 	}
 
 	// Ensure we never overwrite an existing file.
-	return os.OpenFile(filepath.Clean(path), flag|os.O_CREATE|os.O_EXCL, 0o600)
+	fp, err := os.OpenFile(filepath.Clean(path), flag|os.O_CREATE|os.O_EXCL, 0o600)
+	if err != nil {
+		return nil, errors.Errorf(&ErrInternal{}, "os.OpenFile(): %v", err)
+	}
+
+	return fp, nil
 }

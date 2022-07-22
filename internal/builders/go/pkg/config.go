@@ -143,9 +143,9 @@ func validateMain(cf *goReleaserConfigFile) error {
 
 func convertPathError(e error, msg string) error {
 	// TODO(https://github.com/slsa-framework/slsa-github-generator/issues/599): use same error contructions.
-	var errInternal *utils.ErrInternal
-	var errPath *utils.ErrInvalidPath
 	if e != nil {
+		var errInternal *utils.ErrInternal
+		var errPath *utils.ErrInvalidPath
 		if errors.As(e, &errInternal) ||
 			errors.As(e, &errPath) {
 			return ErrorInvalidDirectory
