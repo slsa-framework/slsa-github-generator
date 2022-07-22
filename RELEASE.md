@@ -39,6 +39,7 @@ There is one integration test we cannot easily test "live", so we need to simula
 
 1. Create a new release for your fork of the slsa-verifier repository with a malicious binary.
 
+```shell
 # Create a release
 
 $ "$GH" release -R "$VERIFIER_REPOSITORY" create "$VERIFIER_TAG" --title "$VERIFIER_TAG" --notes "pre-release tests for builder $BUILDER_TAG $(date)"
@@ -49,7 +50,7 @@ $ # Note: this will create a release workflow: cancel it in the GitHub UI.
 $ echo hello > slsa-verifier-linux-amd64
 $ "$GH" release -R "$VERIFIER_REPOSITORY" upload "$VERIFIER_TAG" slsa-verifier-linux-amd64
 
-````
+```
 
 1. Ensure your fork of the builder is at the same commit hash as the offical builder's `$BUILDER_TAG` release.
 1. Create a new branch `git checkout -b "$BUILDER_REF"`
@@ -57,7 +58,7 @@ $ "$GH" release -R "$VERIFIER_REPOSITORY" upload "$VERIFIER_TAG" slsa-verifier-l
 1. For the Go builder, update the file `$BUILDER_REPOSITORY/main/.github/workflows/builder_go_slsa3.yml#L98` to:
 
 ```yaml
-    uses: $BUILDER_REPOSITORY/.github/actions/generate-builder@$BUILDER_TAG
+uses: $BUILDER_REPOSITORY/.github/actions/generate-builder@$BUILDER_TAG
 ```
 
 1. For the Generic generator, update the file `$BUILDER_REPOSITORY/main/.github/workflows/generic_generator_slsa3.yml#L98`to:
@@ -137,6 +138,15 @@ $ mv slsa-builder-go-linux-amd64 slsa-builder-go-linux-amd64-"$BUILDER_TAG".orig
 ```
 
 1. Upload a different binary to the assets:
+
+```shell
+$ echo hello > slsa-builder-go-linux-amd64
+$ "$GH" release -R slsa-framework/slsa-github-generator upload "$BUILDER_TAG" slsa-builder-go-linux-amd64  --clobber
+```
+
+1. Update the version of the workflow [slsa-framework/example-package/.github/workflows/e2e.go.workflow_dispatch.main.adversarial-builder-binary.slsa3.yml#L14](https://github.com/slsa-framework/example-package/blob/main/.github/workflows/e2e.go.workflow_dispatch.main.adversarial-builder-binary.slsa3.yml#L14) with the `$BUILDER_TAG` to test.
+
+1. Trigger the test in [slsa-framework/example-package/actions/workflows/e2e.go.workflow_dispatch.main.adversarial-builder-binary.slsa3.yml](https://github.com/slsa-framework/example-package/actions/workflows/e2e.go.workflow_dispatch.main.adversarial-builder-binary.slsa3.yml) by cliking `Run workflow`. Verify that it fails, with a message:
 
 ```shell
 verifier hash computed is 60c91c9d5b9a059e37ac46da316f20c81da335b5d00e1f74d03dd50f819694bd
@@ -228,4 +238,3 @@ Update:
 ## Announce
 
 <!-- TODO(release): Provide details -->
-````
