@@ -5,6 +5,8 @@ on:
     branches: [main]
   workflow_dispatch:
 
+permissions: read-all
+
 jobs:
   checkout:
     name: verify no checkout in Actions

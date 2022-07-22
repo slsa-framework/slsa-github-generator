@@ -1,6 +1,10 @@
 ---
 extends: default
 
+ignore: |
+  node_modules/
+  vendor/
+
 rules:
   comments:
     # prettier formats comments one space from content

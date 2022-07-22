@@ -7,8 +7,8 @@ import (
 	"golang.org/x/oauth2"
 )
 
-// NewGithubClient returns a new Github API client authenticated using the
-// token from the github context.
+// NewGithubClient returns a new GitHub API client authenticated using the
+// token from the GitHub context.
 func NewGithubClient(ctx context.Context) (*github.Client, error) {
 	t, err := GetToken()
 	if err != nil {

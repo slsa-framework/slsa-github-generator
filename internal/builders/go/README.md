@@ -8,7 +8,7 @@ This document explains how to use the builder for [Go](https://go.dev/) projects
 
 - [Supported Triggers](#supported-triggers)
 - [Configuration File](#configuration-file)
-- [Migration from goreleaser](#migration-from-goreleaser)
+- [Migration from GoReleaser](#migration-from-GoReleaser)
 - [Workflow Inputs](#workflow-inputs)
 - [Workflow Example](#workflow-example)
 - [Provenance Example](#provenance-example)
@@ -18,7 +18,8 @@ This document explains how to use the builder for [Go](https://go.dev/) projects
 
 ## Generation
 
-To generate provenance for a Go binary, follow the steps below:
+The Go builder workflow uses a GitHub Actions reusable workflow to generate the
+provenance.
 
 ### Supported Triggers
 
@@ -29,13 +30,13 @@ The following [GitHub trigger events](https://docs.github.com/en/actions/using-w
 - `release`
 - Manual run via `workflow_dispatch`
 
-However, in practice, most triggers should work with the exception of `pull_request`. If you would like support for `pull_request`, please tell us about your use case on [issue #358](https://github.com/slsa-framework/slsa-github-generator/issues/358). If you have an issue in all other triggers please submit a [new issue](https://github.com/slsa-framework/slsa-github-generator/issues/new/choose).
+In practice, most triggers should work with the exception of `pull_request`. If you would like support for `pull_request`, please tell us about your use case on [issue #358](https://github.com/slsa-framework/slsa-github-generator/issues/358). If you have an issue with any other triggers please submit a [new issue](https://github.com/slsa-framework/slsa-github-generator/issues/new/choose).
 
 ### Configuration File
 
 Define a configuration file called `.slsa-goreleaser.yml` in the root of your project.
 
-```yml
+```yaml
 # Version for this file.
 version: 1
 
@@ -74,13 +75,13 @@ ldflags:
   - "-X main.TreeState={{ .Env.TREE_STATE }}"
 ```
 
-### Migration from goreleaser
+### Migration from GoReleaser
 
-If you are already using Goreleaser, you may be able to migrate to our builder using multiple config files for each build. However, this is cumbersome and we are working on supporting multiple builds in a single config file for future releases.
+If you are already using GoReleaser, you may be able to migrate to our builder using multiple config files for each build. However, this is cumbersome and we are working on supporting multiple builds in a single config file for future releases.
 
-In the meantime, you can use both Goreleaser and this builder in the same repository. For example, you can pick one build you would like to start generating provenance for. Goreleaser and this builder can co-exist without interfering with one another, so long as the resulting binaries have different names (e.g., when building for different OS/Arch). If you want to keep the same name, you can use the Goreleaser `ignore` option in the `.goreleaser.yml`:
+In the meantime, you can use both GoReleaser and this builder in the same repository. For example, you can select one build you would like to start generating provenance for. GoReleaser and this builder can co-exist without interfering with one another, so long as the resulting binaries have different names (e.g., when building for different OS/Arch). If you want to keep the same name, you can use the GoReleaser `ignore` option in the `.goreleaser.yml`:
 
-```
+```yaml
 builds:
 ...
   goos:
@@ -91,15 +92,13 @@ builds:
     - amd64
     - arm64
     - s390x
-  # This instructs Goreleaser to not build for linux amd64.
+  # This instructs GoReleaser to not build for linux amd64.
   ignore:
     - goos: linux
       goarch: amd64
 ```
 
-We think gradual adoption is good for projects to get used to SLSA.
-
-The configuration file accepts many of the common fields Goreleaser uses, as you can see in the [example](#configuration-file). The configuration file also supports two variables: `{{ .Os }}` and `{{ .Arch }}`. Other variables can be set manually as shows in the table below, in combination with the builder's `evaluated-envs`:
+The configuration file accepts many of the common fields GoReleaser uses, as you can see in the [example](#configuration-file). The configuration file also supports two variables: `{{ .Os }}` and `{{ .Arch }}`. Other variables can be set manually as shown in the table below, in combination with the builder's `evaluated-envs`:
 
 | Name                 | Value                                                                                                                            | Example                                    |
 | -------------------- | -------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------ |
@@ -127,10 +126,10 @@ The builder workflow [slsa-framework/slsa-github-generator/.github/workflows/bui
 
 ### Workflow Example
 
-Create a new workflow, say `.github/workflows/slsa-goreleaser.yml`.
+Create a new workflow, e.g., `.github/workflows/slsa-goreleaser.yml`.
 
-Make sure that you reference the trusted builder with a semantic version of the form `vX.Y.Z`. The build will fail
-if you reference it via a shorter tag like `vX.Y` or `vX`.
+**Note**: Make sure that you reference the trusted builder with a semantic version of the form `@vX.Y.Z`. The build will fail
+if you reference it via a shorter tag like `@vX.Y` or `@vX`.
 
 Referencing via hash is currently not supported due to limitations
 of the reusable workflow APIs. (We are working with GitHub to address this limitation).
@@ -294,21 +293,21 @@ The `BuildConfig` contains the following fields:
 
 ```json
   "command": [
-    "/opt/hostedtoolcache/go/1.17.10/x64/bin/go",
-    "mod",
-    "vendor"
-  ],
+"/opt/hostedtoolcache/go/1.17.10/x64/bin/go",
+"mod",
+"vendor"
+],
 ```
 
 `steps[*].env`: Any environment variables used in the command, including any OS environment variables and those set in the configuration file.
 
 ```json
   "env": [
-    "GOOS=linux",
-    "GOARCH=amd64",
-    "GO111MODULE=on",
-    "CGO_ENABLED=0"
-  ],
+"GOOS=linux",
+"GOARCH=amd64",
+"GO111MODULE=on",
+"CGO_ENABLED=0"
+],
 ```
 
 `steps[*].workingDir`: The working directory where the steps were performed in the runner.

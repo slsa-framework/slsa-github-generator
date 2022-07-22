@@ -22,6 +22,8 @@ import (
 	"regexp"
 	"strings"
 	"syscall"
+
+	"github.com/slsa-framework/slsa-github-generator/internal/utils"
 )
 
 var (
@@ -56,8 +58,7 @@ type GoBuild struct {
 	cfg *GoReleaserConfig
 	goc string
 	// Note: static env variables are contained in cfg.Env.
-	argEnv  map[string]string
-	ldflags string
+	argEnv map[string]string
 }
 
 func GoBuildNew(goc string, cfg *GoReleaserConfig) *GoBuild {
@@ -117,7 +118,7 @@ func (b *GoBuild) Run(dry bool) error {
 
 		// Share the resolved name of the binary.
 		fmt.Printf("::set-output name=go-binary-name::%s\n", filename)
-		command, err := marshallToString(com)
+		command, err := utils.MarshalToString(com)
 		if err != nil {
 			return err
 		}
@@ -129,7 +130,7 @@ func (b *GoBuild) Run(dry bool) error {
 			return err
 		}
 
-		menv, err := marshallToString(env)
+		menv, err := utils.MarshalToString(env)
 		if err != nil {
 			return err
 		}

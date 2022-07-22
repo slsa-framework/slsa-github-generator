@@ -20,9 +20,7 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/json"
-	"io"
 	"os"
-	"path/filepath"
 	"regexp"
 	"strings"
 
@@ -125,13 +123,6 @@ func parseSubjects(b64str string) ([]intoto.Subject, error) {
 	return parsed, nil
 }
 
-func getFile(path string) (io.Writer, error) {
-	if path == "-" {
-		return os.Stdout, nil
-	}
-	return os.OpenFile(filepath.Clean(path), os.O_WRONLY|os.O_CREATE, 0o600)
-}
-
 type provenanceOnlyBuild struct {
 	*slsa.GithubActionsBuild
 }
@@ -158,11 +149,20 @@ run in the context of a Github Actions workflow.`,
 			ghContext, err := github.GetWorkflowContext()
 			check(err)
 
-			parsedSubjects, err := parseSubjects(subjects)
+			// Verify the extension path and extension.
+			err = utils.VerifyAttestationPath(attPath)
 			check(err)
 
-			if len(parsedSubjects) == 0 {
-				check(errors.New("expected at least one subject"))
+			var parsedSubjects []intoto.Subject
+			// We don't actually care about the subjects if we aren't writing an attestation.
+			if attPath != "" {
+				var err error
+				parsedSubjects, err = parseSubjects(subjects)
+				check(err)
+
+				if len(parsedSubjects) == 0 {
+					check(errors.New("expected at least one subject"))
+				}
 			}
 
 			ctx := context.Background()
@@ -184,6 +184,7 @@ run in the context of a Github Actions workflow.`,
 			p, err := g.Generate(ctx)
 			check(err)
 
+			// Note: the path is validated within CreateNewFileUnderCurrentDirectory().
 			if attPath != "" {
 				var attBytes []byte
 				if utils.IsPresubmitTests() {
@@ -204,7 +205,7 @@ run in the context of a Github Actions workflow.`,
 					attBytes = att.Bytes()
 				}
 
-				f, err := getFile(attPath)
+				f, err := utils.CreateNewFileUnderCurrentDirectory(attPath, os.O_WRONLY)
 				check(err)
 
 				_, err = f.Write(attBytes)
@@ -215,7 +216,7 @@ run in the context of a Github Actions workflow.`,
 				pb, err := json.Marshal(p.Predicate)
 				check(err)
 
-				pf, err := getFile(predicatePath)
+				pf, err := utils.CreateNewFileUnderCurrentDirectory(predicatePath, os.O_WRONLY)
 				check(err)
 
 				_, err = pf.Write(pb)
