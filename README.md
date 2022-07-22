@@ -29,8 +29,9 @@ This repository contains the code, examples and technical design for system desc
 ## Roadmap
 
 The project roadmap is tracked via milestones. You can track progress and open
-issues via the [milestones page](./milestones). Each milestone includes a
-description of what is being worked on and a rough timeline for completion.
+issues via the [milestones page](https://github.com/slsa-framework/slsa-github-generator/milestones).
+Each milestone includes a description of what is being worked on and a rough
+timeline for completion.
 
 ## Generation of provenance
 
