@@ -21,8 +21,8 @@ env:
   # Project.
   GENERATED_BINARY_NAME: go-compiled-binary
   # Builder.
-  BUILDER_BINARY: slsa-builder-go-linux-amd64         # Name of the binary in the release assets.
-  BUILDER_DIR: internal/builders/go                   # Source directory if we compile the builder.
+  BUILDER_BINARY: slsa-builder-go-linux-amd64 # Name of the binary in the release assets.
+  BUILDER_DIR: internal/builders/go # Source directory if we compile the builder.
 
 ###################################################################
 #                                                                 #

@@ -63,6 +63,7 @@ provenance:
   uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@main
   with:
     image: ${{ needs.build.outputs.tag }}
+    digest: ${{ needs.build.outputs.digest }}
     registry-username: ${{ github.actor }}
     # TODO(https://github.com/slsa-framework/slsa-github-generator/issues/492): Remove after GA release.
     compile-generator: true
@@ -85,6 +86,7 @@ jobs:
       packages: write
     outputs:
       image: ${{ steps.image.outputs.image }}
+      digest: ${{ steps.build.outputs.digest }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout the repository
@@ -134,6 +136,7 @@ jobs:
     uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@main
     with:
       image: ${{ needs.build.outputs.image }}
+      digest: ${{ needs.build.outputs.digest }}
       registry-username: ${{ github.actor }}
       # TODO(https://github.com/slsa-framework/slsa-github-generator/issues/492): Remove after GA release.
       compile-generator: true

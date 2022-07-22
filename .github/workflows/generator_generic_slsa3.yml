@@ -19,8 +19,8 @@ permissions:
 
 env:
   # Generator
-  BUILDER_BINARY: slsa-generator-generic-linux-amd64  # Name of the binary in the release assets.
-  BUILDER_DIR: internal/builders/generic              # Source directory if we compile the builder.
+  BUILDER_BINARY: slsa-generator-generic-linux-amd64 # Name of the binary in the release assets.
+  BUILDER_DIR: internal/builders/generic # Source directory if we compile the builder.
 
 on:
   workflow_call:
@@ -34,6 +34,15 @@ on:
         required: false
         type: boolean
         default: false
+      attestation-name:
+        description: >
+          The artifact name of the signed provenance.
+          The file must have the intoto.jsonl extension.
+
+          Default: attestation.intoto.jsonl
+        required: false
+        type: string
+        default: "attestation.intoto.jsonl"
       compile-generator:
         description: "Build the generator from source. This increases build time by ~2m."
         required: false
@@ -44,8 +53,8 @@ on:
         description: "The name of the release where provenance was uploaded."
         value: ${{ jobs.create-release.outputs.release-id }}
       attestation-name:
-        description: "The artifact name of the signed provenance"
-        value: ${{ jobs.generator.outputs.attestation-name }}
+        description: "The artifact name of the signed provenance. (A file with the intoto.jsonl extension)."
+        value: "${{ inputs.attestation-name }}"
 
 jobs:
   # detect-env detects the reusable workflow's repository and ref for use later
@@ -73,7 +82,6 @@ jobs:
   # reference.
   generator:
     outputs:
-      attestation-name: ${{ steps.sign-prov.outputs.attestation-name }}
       attestation-sha256: ${{ steps.sign-prov.outputs.attestation-sha256 }}
     runs-on: ubuntu-latest
     needs: [detect-env]
@@ -103,21 +111,21 @@ jobs:
         env:
           SUBJECTS: "${{ inputs.base64-subjects }}"
           GITHUB_CONTEXT: "${{ toJSON(github) }}"
+          UNTRUSTED_ATTESTATION_NAME: "${{ inputs.attestation-name }}"
         run: |
           set -euo pipefail
-          # Create and sign provenance
-          # This sets attestation-name to the name of the signed DSSE envelope.
-          attestation_name="attestation.intoto.jsonl"
-          ./"$BUILDER_BINARY" attest --subjects "${SUBJECTS}" -g $attestation_name
-          attestation_sha256=$(sha256sum $attestation_name | awk '{print $1}')
-          echo "::set-output name=attestation-name::$attestation_name"
+          # Create and sign provenance.
+          # Note: The builder verifies that the UNTRUSTED_ATTESTATION_NAME is located
+          # in the current directory.
+          ./"$BUILDER_BINARY" attest --subjects "${SUBJECTS}" -g "$UNTRUSTED_ATTESTATION_NAME"
+          attestation_sha256=$(sha256sum "$UNTRUSTED_ATTESTATION_NAME" | awk '{print $1}')
           echo "::set-output name=attestation-sha256::$attestation_sha256"
 
       - name: Upload the signed provenance
         uses: actions/upload-artifact@3cea5372237819ed00197afe530f5a7ea3e805c8 # tag=v3.1.0
         with:
-          name: "${{ steps.sign-prov.outputs.attestation-name }}"
-          path: "${{ steps.sign-prov.outputs.attestation-name }}"
+          name: "${{ inputs.attestation-name }}"
+          path: "${{ inputs.attestation-name }}"
           if-no-files-found: error
           retention-days: 5
 
@@ -135,7 +143,8 @@ jobs:
       - name: Download the provenance
         uses: slsa-framework/slsa-github-generator/.github/actions/secure-download-artifact@1d646d70aeba1516af69fb0ef48206580122449b
         with:
-          name: "${{ needs.generator.outputs.attestation-name }}"
+          name: "${{ inputs.attestation-name }}"
+          path: "${{ inputs.attestation-name }}"
           sha256: "${{ needs.generator.outputs.attestation-sha256 }}"
 
       - name: Release
@@ -143,4 +152,4 @@ jobs:
         id: release
         with:
           files: |
-            ${{ needs.generator.outputs.attestation-name }}
+            ${{ inputs.attestation-name }}

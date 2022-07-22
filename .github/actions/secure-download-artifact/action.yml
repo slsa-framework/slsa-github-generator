@@ -17,6 +17,18 @@ inputs:
 runs:
   using: "composite"
   steps:
+    - name: Validate the artifact path
+      shell: bash
+      env:
+        UNTRUSTED_PATH: "${{ inputs.path }}"
+      run: |
+        set -euo pipefail
+
+        if [ -e "$UNTRUSTED_PATH" ]; then
+            echo "Path $UNTRUSTED_PATH already exists"
+            exit 5
+        fi
+
     - name: Download the artifact
       uses: actions/download-artifact@fb598a63ae348fa914e94cd0ff38f362e927b741 # tag=v3.0.0
       with:
@@ -36,14 +48,13 @@ runs:
         SET_EXECUTABLE: "${{ inputs.set-executable }}"
       shell: bash
       run: |
-      
         set -euo pipefail
 
         if ! [[ -f "$UNTRUSTED_PATH" ]]; then
             echo "File $UNTRUSTED_PATH not present"
             exit 5
         fi
-            
+
         echo "expected hash is $UNTRUSTED_EXPECTED_HASH"
         echo "computed hash is $UNTRUSTED_COMPUTED_HASH"
         if [[ "$UNTRUSTED_COMPUTED_HASH" != "$UNTRUSTED_EXPECTED_HASH" ]]; then
@@ -55,4 +66,3 @@ runs:
             echo "Setting $UNTRUSTED_PATH as executable"
             chmod u+x "$UNTRUSTED_PATH"
         fi
-

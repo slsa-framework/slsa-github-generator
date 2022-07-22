@@ -20,7 +20,6 @@ import (
 	"flag"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -31,6 +30,7 @@ import (
 	_ "github.com/sigstore/cosign/pkg/providers/github"
 
 	"github.com/slsa-framework/slsa-github-generator/internal/builders/go/pkg"
+	"github.com/slsa-framework/slsa-github-generator/internal/utils"
 )
 
 func usage(p string) {
@@ -41,7 +41,7 @@ func usage(p string) {
 
 func check(e error) {
 	if e != nil {
-		fmt.Fprintf(os.Stderr, e.Error())
+		fmt.Fprint(os.Stderr, e.Error())
 		os.Exit(1)
 	}
 }
@@ -84,7 +84,11 @@ func runProvenanceGeneration(subject, digest, commands, envs, workingDir, rekor 
 	}
 
 	filename := fmt.Sprintf("%s.intoto.jsonl", subject)
-	err = ioutil.WriteFile(filename, attBytes, 0o600)
+	f, err := utils.CreateNewFileUnderCurrentDirectory(filename, os.O_WRONLY)
+	if err != nil {
+		return err
+	}
+	_, err = f.Write(attBytes)
 	if err != nil {
 		return err
 	}
