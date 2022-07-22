@@ -27,5 +27,5 @@ runs:
         fi
         digest=$(sha256sum "$UNTRUSTED_PATH" | awk '{print $1}')
         echo "computed sha: $digest"
-        
+
         echo "::set-output name=sha256::$digest"

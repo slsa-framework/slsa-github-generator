@@ -58,8 +58,7 @@ type GoBuild struct {
 	cfg *GoReleaserConfig
 	goc string
 	// Note: static env variables are contained in cfg.Env.
-	argEnv  map[string]string
-	ldflags string
+	argEnv map[string]string
 }
 
 func GoBuildNew(goc string, cfg *GoReleaserConfig) *GoBuild {

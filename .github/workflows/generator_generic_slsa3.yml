@@ -19,8 +19,8 @@ permissions:
 
 env:
   # Generator
-  BUILDER_BINARY: slsa-generator-generic-linux-amd64  # Name of the binary in the release assets.
-  BUILDER_DIR: internal/builders/generic              # Source directory if we compile the builder.
+  BUILDER_BINARY: slsa-generator-generic-linux-amd64 # Name of the binary in the release assets.
+  BUILDER_DIR: internal/builders/generic # Source directory if we compile the builder.
 
 on:
   workflow_call:
@@ -36,7 +36,7 @@ on:
         default: false
       attestation-name:
         description: >
-          The artifact name of the signed provenance. 
+          The artifact name of the signed provenance.
           The file must have the intoto.jsonl extension.
 
           Default: attestation.intoto.jsonl

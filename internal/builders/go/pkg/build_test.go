@@ -1051,10 +1051,9 @@ func asPointer(s string) *string {
 
 func TestGoBuild_Run(t *testing.T) {
 	type fields struct {
-		cfg     *GoReleaserConfig
-		goc     string
-		argEnv  map[string]string
-		ldflags string
+		cfg    *GoReleaserConfig
+		goc    string
+		argEnv map[string]string
 	}
 	type args struct {
 		dry bool
@@ -1140,10 +1139,9 @@ func TestGoBuild_Run(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			b := &GoBuild{
-				cfg:     tt.fields.cfg,
-				goc:     tt.fields.goc,
-				argEnv:  tt.fields.argEnv,
-				ldflags: tt.fields.ldflags,
+				cfg:    tt.fields.cfg,
+				goc:    tt.fields.goc,
+				argEnv: tt.fields.argEnv,
 			}
 			t.Setenv("OUTPUT_BINARY", tt.fields.cfg.Binary)
 			// if the test is not dry run , then code has to look for golang binary

@@ -41,7 +41,7 @@ func usage(p string) {
 
 func check(e error) {
 	if e != nil {
-		fmt.Fprintf(os.Stderr, e.Error())
+		fmt.Fprint(os.Stderr, e.Error())
 		os.Exit(1)
 	}
 }
