@@ -20,8 +20,16 @@ help: ## Shows all targets and help from the Makefile (this message).
 ## Testing
 #####################################################################
 
-unit-test: ## Runs unit tests.
-	go test -v ./...
+unit-test: ## Runs all unit tests.
+	# Run unit tests for the detect-workflow action.
+	cd .github/actions/detect-workflow
+	go mod vendor
+	go test -mod=vendor -v ./...
+	# Run unit tests for the main package.
+	cd -
+	go mod vendor
+	go test -mod=vendor -v ./...
+
 
 ## Linters
 #####################################################################
