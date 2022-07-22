@@ -47,7 +47,7 @@ golangci-lint: ## Runs the golangci-lint linter.
 
 shellcheck: ## Runs the shellcheck linter.
 	@set -e;\
-		FILES=$$(find . -type f -not -iwholename '*/.git/*' -exec bash -c 'file "$$1" | cut -d':' -f2 | grep --quiet shell' _ {} \; -print); \
+		FILES=$$(find . -type f -not -iwholename '*/.git/*' -not -iwholename '*/vendor/*' -not -iwholename '*/node_modules/*' -exec bash -c 'file "$$1" | cut -d':' -f2 | grep --quiet shell' _ {} \; -print); \
 		if [ "$(OUTPUT_FORMAT)" == "github" ]; then \
 			echo -n $$FILES | xargs shellcheck -f json --external-sources | jq -c '.[]' | while IFS="" read -r p || [ -n "$$p" ]; do \
 				LEVEL=$$(echo "$$p" | jq -c '.level // empty' | tr -d '"'); \
