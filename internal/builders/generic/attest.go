@@ -20,9 +20,7 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/json"
-	"io"
 	"os"
-	"path/filepath"
 	"regexp"
 	"strings"
 
@@ -61,16 +59,6 @@ type errSha struct {
 
 // errNoName indicates a missing subject name.
 type errNoName struct {
-	errors.WrappableError
-}
-
-// errInvalidPath indicates an invalid path.
-type errInvalidPath struct {
-	errors.WrappableError
-}
-
-// errInternal indicates an internal error.
-type errInternal struct {
 	errors.WrappableError
 }
 
@@ -135,46 +123,6 @@ func parseSubjects(b64str string) ([]intoto.Subject, error) {
 	return parsed, nil
 }
 
-func pathIsUnderCurrentDirectory(path string) error {
-	wd, err := os.Getwd()
-	if err != nil {
-		return errors.Errorf(&errInternal{}, "os.Getwd(): %w", err)
-	}
-	p, err := filepath.Abs(path)
-	if err != nil {
-		return errors.Errorf(&errInternal{}, "filepath.Abs(): %w", err)
-	}
-
-	if !strings.HasPrefix(p, wd+"/") &&
-		wd != p {
-		return errors.Errorf(&errInvalidPath{}, "invalid path: %q", path)
-	}
-
-	return nil
-}
-
-func getFile(path string) (io.Writer, error) {
-	if path == "-" {
-		return os.Stdout, nil
-	}
-
-	if err := pathIsUnderCurrentDirectory(path); err != nil {
-		return nil, err
-	}
-
-	return os.OpenFile(filepath.Clean(path), os.O_WRONLY|os.O_CREATE, 0o600)
-}
-
-func verifyAttestationPath(path string) error {
-	if !strings.HasSuffix(path, "intoto.jsonl") {
-		return errors.Errorf(&errInvalidPath{}, "invalid suffix: %q. Must be .intoto.jsonl", path)
-	}
-	if err := pathIsUnderCurrentDirectory(path); err != nil {
-		return err
-	}
-	return nil
-}
-
 type provenanceOnlyBuild struct {
 	*slsa.GithubActionsBuild
 }
@@ -202,7 +150,7 @@ run in the context of a Github Actions workflow.`,
 			check(err)
 
 			// Verify the extension path and extension.
-			err = verifyAttestationPath(attPath)
+			err = utils.VerifyAttestationPath(attPath)
 			check(err)
 
 			var parsedSubjects []intoto.Subject
@@ -236,7 +184,7 @@ run in the context of a Github Actions workflow.`,
 			p, err := g.Generate(ctx)
 			check(err)
 
-			// Note: we verify the path within getFile().
+			// Note: the path is validated within CreateNewFileUnderCurrentDirectory().
 			if attPath != "" {
 				var attBytes []byte
 				if utils.IsPresubmitTests() {
@@ -257,7 +205,7 @@ run in the context of a Github Actions workflow.`,
 					attBytes = att.Bytes()
 				}
 
-				f, err := getFile(attPath)
+				f, err := utils.CreateNewFileUnderCurrentDirectory(attPath, os.O_WRONLY)
 				check(err)
 
 				_, err = f.Write(attBytes)
@@ -268,7 +216,7 @@ run in the context of a Github Actions workflow.`,
 				pb, err := json.Marshal(p.Predicate)
 				check(err)
 
-				pf, err := getFile(predicatePath)
+				pf, err := utils.CreateNewFileUnderCurrentDirectory(predicatePath, os.O_WRONLY)
 				check(err)
 
 				_, err = pf.Write(pb)

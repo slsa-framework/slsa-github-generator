@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package pkg
+package utils
 
 import (
 	"encoding/base64"
@@ -20,7 +20,28 @@ import (
 	"fmt"
 )
 
-func marshallToString(args interface{}) (string, error) {
+// UnmarshalList unmarshals a string into a list of strings.
+func UnmarshalList(arg string) ([]string, error) {
+	var res []string
+	// If argument is empty, return an empty list early,
+	// because `json.Unmarshal` would fail.
+	if arg == "" {
+		return res, nil
+	}
+
+	cs, err := base64.StdEncoding.DecodeString(arg)
+	if err != nil {
+		return res, fmt.Errorf("base64.StdEncoding.DecodeString: %w", err)
+	}
+
+	if err := json.Unmarshal(cs, &res); err != nil {
+		return []string{}, fmt.Errorf("json.Unmarshal: %w", err)
+	}
+	return res, nil
+}
+
+// MarshalToString marshals to a string.
+func MarshalToString(args interface{}) (string, error) {
 	jsonData, err := json.Marshal(args)
 	if err != nil {
 		return "", fmt.Errorf("json.Marshal: %w", err)
@@ -33,10 +54,11 @@ func marshallToString(args interface{}) (string, error) {
 	return encoded, nil
 }
 
-func marshallToBytes(args interface{}) ([]byte, error) {
-	encoded, err := marshallToString(args)
+// MarshalToBytes marshals to a byte array.
+func MarshalToBytes(args interface{}) ([]byte, error) {
+	encoded, err := MarshalToString(args)
 	if err != nil {
-		return []byte{}, nil
+		return nil, err
 	}
 	return []byte(encoded), nil
 }

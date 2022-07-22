@@ -29,6 +29,7 @@ project simply generates provenance as a separate step in an existing workflow.
   - [Provenance for Bazel](#provenance-for-bazel)
   - [Provenance for Java](#provenance-for-java)
   - [Provenance for Rust](#provenance-for-rust)
+  - [Provenance for Haskell](#provenance-for-haskell)
 
 ---
 
@@ -287,39 +288,32 @@ This section explains how to generate non-forgeable SLSA provenance with existin
 ### Provenance for GoReleaser
 
 If you use [GoReleaser](https://github.com/goreleaser/goreleaser-action) to generate your build, you can easily
-generate SLSA3 provenance by updating your existing workflow with the 4 steps indicated in the workflow below:
+generate SLSA3 provenance by updating your existing workflow with the steps indicated in the workflow below:
+
+1. Declare an `outputs` for the GoReleaser job:
 
 ```yaml
 jobs:
   goreleaser:
-    # =================================================
-    #
-    # Step 1: Declare an `outputs` for the GoReleaser job.
-    #
-    # =================================================
     outputs:
       hashes: ${{ steps.hash.outputs.hashes }}
 
-    [...]
+```
 
+2. Add an `id: run-goreleaser` field to your goreleaser step:
+
+```yaml
     steps:
       [...]
       - name: Run GoReleaser
-        # =================================================
-        #
-        # Step 2: Add an `id: run-goreleaser` field
-        #         to your goreleaser step.
-        #
-        # =================================================
         id: run-goreleaser
-        uses: goreleaser/goreleaser-action@b953231f81b8dfd023c58e0854a721e35037f28b
+        uses: goreleaser/goreleaser-action@b953231f81b8dfd023c58e0854a721e35037f28b # tag=v3
 
-      # =================================================
-      #
-      # Step 3: Add a step to generate the provenance subjects
-      #         as shown below.
-      #
-      # =================================================
+```
+
+3. Add a step to generate the provenance subjects as shown below:
+
+```yaml
       - name: Generate subject
         id: hash
         env:
@@ -330,12 +324,11 @@ jobs:
           checksum_file=$(echo "$ARTIFACTS" | jq -r '.[] | select (.type=="Checksum") | .path')
           echo "::set-output name=hashes::$(cat $checksum_file | base64 -w0)"
 
-  # =========================================================
-  #
-  # Step 4: Call the generic workflow to generate provenance
-  #         by declaring the job below.
-  #
-  # =========================================================
+```
+
+4. Call the generic workflow to generate provenance by declaring the job below:
+
+```yaml
   provenance:
     needs: [goreleaser]
     permissions:
@@ -346,60 +339,81 @@ jobs:
     with:
       base64-subjects: "${{ needs.goreleaser.outputs.hashes }}"
       upload-assets: true # upload to a new release
+
+```
+
+All in all, it will look as the following:
+
+```yaml
+jobs:
+  goreleaser:
+    outputs:
+      hashes: ${{ steps.hash.outputs.hashes }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # tag=v3
+
+      - name: Run GoReleaser
+        id: run-goreleaser
+        uses: goreleaser/goreleaser-action@b953231f81b8dfd023c58e0854a721e35037f28b # tag=v3
+
+      - name: Generate subject
+        id: hash
+        env:
+          ARTIFACTS: "${{ steps.run-goreleaser.outputs.artifacts }}"
+        run: |
+          set -euo pipefail
+
+          checksum_file=$(echo "$ARTIFACTS" | jq -r '.[] | select (.type=="Checksum") | .path')
+          echo "::set-output name=hashes::$(cat $checksum_file | base64 -w0)"
+
+  provenance:
+    needs: [goreleaser]
+    permissions:
+      actions: read   # To read the workflow path.
+      id-token: write # To sign the provenance.
+      contents: write # To add assets to a release.
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.2.0
+    with:
+      base64-subjects: "${{ needs.goreleaser.outputs.hashes }}"
+      upload-assets: true # upload to a new release
+
 ```
 
 ### Provenance for Bazel
 
-If you use [Bazel](https://bazel.build/) to generate your artifacts, you can
-easily generate SLSA3 provenance by updating your existing workflow with the 4
-steps indicated in the workflow below:
+If you use [Bazel](https://bazel.build/) to generate your artifacts, you can easily generate SLSA3 provenance by updating your existing workflow with steps indicated in the workflow below:
+
+1. Declare an `outputs` for the hashes:
 
 ```yaml
 jobs:
   build:
-    # ==================================================
-    #
-    # Step 1: Declare an `outputs` for the hashes.
-    #
-    # ==================================================
     outputs:
       hashes: ${{ steps.hash.outputs.hashes }}
 
-    [...]
+```
 
+2. Build your project and copy the binaries from `bazel-bin` path (i.e., Bazel sandbox) to the root of the repository for easier reference (this makes it easier to upload these to the release too!):
+
+```yaml
     steps:
       [...]
       - name: Build using bazel
-        # =================================================
-        #
-        # Step 2: Add an `id: build` field
-        #         to your build step.
-        #
-        # =================================================
-        id: build
         run: |
           # Your normal build workflow targets here
           bazel build //path/to/target_binary //path/to_another/binary
-          # ======================================================
-          #
-          # Step 3: Copy the binaries from `bazel-bin` path (i.e.,
-          #         Bazel sandbox) to the root of the repository
-          #         for easier reference (this makes it easier to
-          #         upload these to the release too!).
-          #
-          # =====================================================
+
+          # Copy the binaries.
           cp bazel-bin/path/to/target_binary .
           cp bazel-bin/path/to/another/binary .
 
+```
 
-      # ========================================================
-      #
-      # Step 4: Add a step to generate the provenance subjects
-      #         as shown below. Update the sha256 sum arguments
-      #         to include all binaries that you generate
-      #         provenance for.
-      #
-      # ========================================================
+3. Add a step to generate the provenance subjects as shown below. Update the sha256 sum arguments to include all binaries that you generate provenance for:
+
+```yaml
       - name: Generate subject
         id: hash
         run: |
@@ -409,12 +423,11 @@ jobs:
 
           echo "::set-output name=hashes::$(cat checksums | base64 -w0)"
 
-  # =========================================================
-  #
-  # Step 5: Call the generic workflow to generate provenance
-  #         by declaring the job below.
-  #
-  # =========================================================
+```
+
+4. Call the generic workflow to generate provenance by declaring the job below:
+
+```yaml
   provenance:
     needs: [build]
     permissions:
@@ -425,6 +438,50 @@ jobs:
     with:
       base64-subjects: "${{ needs.build.outputs.hashes }}"
       upload-assets: true # Optional: Upload to a new release
+
+```
+
+All in all, it will look as the following:
+
+```yaml
+jobs:
+  build:
+    outputs:
+      hashes: ${{ steps.hash.outputs.hashes }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # tag=v3
+
+      - name: Build using bazel
+        run: |
+          # Your normal build workflow targets here
+          bazel build //path/to/target_binary //path/to_another/binary
+
+          # Copy the binaries.
+          cp bazel-bin/path/to/target_binary .
+          cp bazel-bin/path/to/another/binary .
+
+      - name: Generate subject
+        id: hash
+        run: |
+          set -euo pipefail
+
+          sha256sum target_binary binary > checksums
+
+          echo "::set-output name=hashes::$(cat checksums | base64 -w0)"
+
+  provenance:
+    needs: [build]
+    permissions:
+      actions: read   # To read the workflow path.
+      id-token: write # To sign the provenance.
+      contents: write # To add assets to a release.
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.2.0
+    with:
+      base64-subjects: "${{ needs.build.outputs.hashes }}"
+      upload-assets: true # Optional: Upload to a new release
+
 ```
 
 ### Provenance for Java
@@ -434,70 +491,48 @@ easily generate SLSA3 provenance by updating your existing workflow with the
 steps indicated in the workflow below:
 
 #### Maven
+
+1. Declare an `outputs` for the artifacts generated by the build and their hashes:
+
 ```yaml
 jobs:
   build:
-    # ==================================================
-    #
-    # Step 1: Declare an `outputs` for the artifacts generated by
-    # the build and their hashes.
-    #
-    # ==================================================
     outputs:
       artifacts: ${{ steps.build.outputs.artifacts }}
       hashes: ${{ steps.hash.outputs.hashes }}
 
-    [...]
+```
 
+2. Add an `id: build` field to your maven build step; and save the location of the maven output files for easier reference:
+
+```yaml
     steps:
       [...]
       - name: Build using maven
-        # =================================================
-        #
-        # Step 2: Add an `id: build` field
-        #         to your maven build step.
-        #
-        # =================================================
         id: build
         run: |
           # Your normal build workflow targets here
           mvn clean package
-          
-          # ======================================================
-          #
-          # Step 3: Save the location of the maven output files
-          #         for easier reference
-          #
-          # =====================================================
+
+          # Save the location of the maven output files for easier reference
           ARTIFACT_PATTERN=./target/$(mvn help:evaluate -Dexpression=project.artifactId -q -DforceStdout)-$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)*.jar
           echo "::set-output name=artifact_pattern::$ARTIFACT_PATTERN"
 
-      # ========================================================
-      #
-      # Step 4: Add a step to generate the provenance subjects
-      #         as shown below. Update the sha256 sum arguments
-      #         to include all binaries that you generate
-      #         provenance for.
-      #
-      # ========================================================
+```
+
+3. Add a step to generate the provenance subjects as shown below. Update the sha256 sum arguments to include all binaries that you generate provenance for:
+
+```yaml
       - name: Generate subject
         id: hash
         run: |
           echo "::set-output name=hashes::$(sha256sum ${{ steps.build.outputs.artifact_pattern }} | base64 -w0)"
-      
-      - name: Upload build artifacts
-        uses: actions/upload-artifact@3cea5372237819ed00197afe530f5a7ea3e805c8 # tag=v3.1.0
-        with:
-          name: maven-build-outputs
-          path: ${{ steps.build.outputs.artifact_pattern }}
-          if-no-files-found: error
 
-  # =========================================================
-  #
-  # Step 5: Call the generic workflow to generate provenance
-  #         by declaring the job below.
-  #
-  # =========================================================
+```
+
+4. Call the generic workflow to generate provenance by declaring the job below:
+
+```yaml
   provenance:
     needs: [build]
     permissions:
@@ -508,65 +543,94 @@ jobs:
     with:
       base64-subjects: "${{ needs.build.outputs.hashes }}"
       upload-assets: true # Optional: Upload to a new release
+
 ```
 
-#### Gradle
+All in all, it will look as the following:
+
 ```yaml
 jobs:
   build:
-    # ==================================================
-    #
-    # Step 1: Declare an `outputs` for the artifacts generated by
-    # the build and their hashes.
-    #
-    # ==================================================
+    outputs:
+      artifacts: ${{ steps.build.outputs.artifacts }}
+      hashes: ${{ steps.hash.outputs.hashes }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # tag=v3
+
+      - name: Build using maven
+        id: build
+        run: |
+          # Your normal build workflow targets here
+          mvn clean package
+
+          # Save the location of the maven output files for easier reference
+          ARTIFACT_PATTERN=./target/$(mvn help:evaluate -Dexpression=project.artifactId -q -DforceStdout)-$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)*.jar
+          echo "::set-output name=artifact_pattern::$ARTIFACT_PATTERN"
+
+      - name: Generate subject
+        id: hash
+        run: |
+          echo "::set-output name=hashes::$(sha256sum ${{ steps.build.outputs.artifact_pattern }} | base64 -w0)"
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@3cea5372237819ed00197afe530f5a7ea3e805c8 # tag=v3
+        with:
+          name: maven-build-outputs
+          path: ${{ steps.build.outputs.artifact_pattern }}
+          if-no-files-found: error
+
+  provenance:
+    needs: [build]
+    permissions:
+      actions: read   # To read the workflow path.
+      id-token: write # To sign the provenance.
+      contents: write # To add assets to a release.
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.2.0
+    with:
+      base64-subjects: "${{ needs.build.outputs.hashes }}"
+      upload-assets: true # Optional: Upload to a new release
+
+```
+
+#### Gradle
+
+1. Declare an `outputs` for the artifacts generated by the build and their hashes:
+
+```yaml
+jobs:
+  build:
     outputs:
       hashes: ${{ steps.hash.outputs.hashes }}
 
-    [...]
+```
 
+2. Add an `id: build` field to your gradle build ste:
+
+```yaml
     steps:
       [...]
       - name: Build using gradle
-        # =================================================
-        #
-        # Step 2: Add an `id: build` field
-        #         to your gradle build step.
-        #
-        # =================================================
         id: build
         run: |
           # Your normal build workflow targets here
           ./gradlew clean build
+```
 
-      # ========================================================
-      #
-      # Step 4: Add a step to generate the provenance subjects
-      #         as shown below. Update the sha256 sum arguments
-      #         to include all binaries that you generate
-      #         provenance for.
-      #         This build assumes build artifacts are saved
-      #         in ./build/libs
-      #
-      # ========================================================
+3. Add a step to generate the provenance subjects as shown below. Update the sha256 sum arguments to include all binaries that you generate provenance for. (This build assumes build artifacts are saved in ./build/libs).
+
+```yaml
       - name: Generate subject
         id: hash
         run: |
           echo "::set-output name=hashes::$(sha256sum ./build/libs/* | base64 -w0)"
-      
-      - name: Upload build artifacts
-        uses: actions/upload-artifact@3cea5372237819ed00197afe530f5a7ea3e805c8 # tag=v3.1.0
-        with:
-          name: gradle-build-outputs
-          path: ./build/libs/
-          if-no-files-found: error
 
-  # =========================================================
-  #
-  # Step 5: Call the generic workflow to generate provenance
-  #         by declaring the job below.
-  #
-  # =========================================================
+```
+
+4. Call the generic workflow to generate provenance by declaring the job below:
+
+```yaml
   provenance:
     needs: [build]
     permissions:
@@ -577,51 +641,81 @@ jobs:
     with:
       base64-subjects: "${{ needs.build.outputs.hashes }}"
       upload-assets: true # Optional: Upload to a new release
+
+```
+
+All in all, it will look as the following:
+
+```yaml
+jobs:
+  build:
+    outputs:
+      hashes: ${{ steps.hash.outputs.hashes }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # tag=v3
+
+      - name: Build using gradle
+        id: build
+        run: |
+          # Your normal build workflow targets here
+          ./gradlew clean build
+
+      - name: Generate subject
+        id: hash
+        run: |
+          echo "::set-output name=hashes::$(sha256sum ./build/libs/* | base64 -w0)"
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@3cea5372237819ed00197afe530f5a7ea3e805c8 # tag=v3
+        with:
+          name: gradle-build-outputs
+          path: ./build/libs/
+          if-no-files-found: error
+
+  provenance:
+    needs: [build]
+    permissions:
+      actions: read
+      id-token: write
+      contents: read
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.2.0
+    with:
+      base64-subjects: "${{ needs.build.outputs.hashes }}"
+      upload-assets: true # Optional: Upload to a new release
+
 ```
 
 ### Provenance for Rust
 
 If you use [Cargo](https://doc.rust-lang.org/cargo/) to generate your artifacts, you can
-easily generate SLSA3 provenance by updating your existing workflow with the 4
+easily generate SLSA3 provenance by updating your existing workflow with the
 steps indicated in the workflow below:
+
+1. Declare an `outputs` for the hashes:
 
 ```yaml
 jobs:
   build:
-    # ==================================================
-    #
-    # Step 1: Declare an `outputs` for the hashes.
-    #
-    # ==================================================
     outputs:
       hashes: ${{ steps.hash.outputs.hashes }}
 
-    [...]
+```
 
+2. Build your binaries. Then add a step to generate the provenance subjects as shown below. Update the sha256 sum arguments to include all binaries that you generate provenance for:
+
+```yaml
     steps:
       [...]
       - name: Build using cargo
-        # =================================================
-        #
-        # Step 2: Add an `id: build` field
-        #         to your build step.
-        #
-        # =================================================
-        id: build
         run: |
           # Your normal build workflow targets here.
           cargo build --release
 
           cp target/release/target_binary .
 
-      # ========================================================
-      #
-      # Step 4: Add a step to generate the provenance subjects
-      #         as shown below. Update the sha256 sum arguments
-      #         to include all binaries that you generate
-      #         provenance for.
-      #
-      # ========================================================
+      # Generate the subject.
       - name: Generate subject
         id: hash
         run: |
@@ -629,12 +723,157 @@ jobs:
 
           echo "::set-output name=hashes::$(sha256sum target_binary | base64 -w0)"
 
-  # =========================================================
-  #
-  # Step 5: Call the generic workflow to generate provenance
-  #         by declaring the job below.
-  #
-  # =========================================================
+```
+
+3. Call the generic workflow to generate provenance by declaring the job below:
+
+```yaml
+  provenance:
+    needs: [build]
+    permissions:
+      actions: read   # To read the workflow path.
+      id-token: write # To sign the provenance.
+      contents: write # To add assets to a release.
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.2.0
+    with:
+      base64-subjects: "${{ needs.build.outputs.hashes }}"
+      upload-assets: true # Optional: Upload to a new release
+
+```
+
+All in all, it will look as the following:
+
+```yaml
+jobs:
+  build:
+    outputs:
+      hashes: ${{ steps.hash.outputs.hashes }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # tag=v3
+
+      - name: Build using cargo
+        run: |
+          # Your normal build workflow targets here.
+          cargo build --release
+
+          cp target/release/target_binary .
+
+      # Generate the subject.
+      - name: Generate subject
+        id: hash
+        run: |
+          set -euo pipefail
+
+          echo "::set-output name=hashes::$(sha256sum target_binary | base64 -w0)"
+
+  provenance:
+    needs: [build]
+    permissions:
+      actions: read   # To read the workflow path.
+      id-token: write # To sign the provenance.
+      contents: write # To add assets to a release.
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.2.0
+    with:
+      base64-subjects: "${{ needs.build.outputs.hashes }}"
+      upload-assets: true # Optional: Upload to a new release
+
+```
+
+### Provenance for Haskell
+
+If you use [Haskell](https://www.haskell.org/) (either via
+[`cabal`](https://www.haskell.org/cabal/) or
+[`stack`](https://docs.haskellstack.org/en/stable/README/)) to generate your
+artifacts, you can easily generate SLSA3 provenance by updating your existing
+workflow with the steps indicated in the workflow below.
+
+1. Declare an `outputs` for the hashes:
+
+```yaml
+jobs:
+  build:
+    outputs:
+      hashes: ${{ steps.hash.outputs.hashes }}
+
+```
+
+2. Build your binaries. Then add a step to generate the provenance subjects as shown below. Update the sha256 sum arguments to include all binaries that you generate provenance for:
+
+```yaml
+    steps:
+      [...]
+      - name: Build using Haskell
+        run: |
+          # Your normal build workflow targets here.
+          cabal build  # or stack build
+
+          # Copy the binary to the root directory for easier reference
+          # For Cabal, use the following command
+          cp $(cabal list-bin .) .
+          # For Stack, use the following command instead
+          # cp $(stack path --local-install-root)/bin/target_binary .
+
+      # Generate the subject.
+      - name: Generate subject
+        id: hash
+        run: |
+          set -euo pipefail
+
+          echo "::set-output name=hashes::$(sha256sum target_binary | base64 -w0)"
+
+```
+
+3. Call the generic workflow to generate provenance by declaring the job below:
+
+```yaml
+  provenance:
+    needs: [build]
+    permissions:
+      actions: read   # To read the workflow path.
+      id-token: write # To sign the provenance.
+      contents: write # To add assets to a release.
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.2.0
+    with:
+      base64-subjects: "${{ needs.build.outputs.hashes }}"
+      upload-assets: true # Optional: Upload to a new release
+
+```
+
+All in all, it will look as the following:
+
+```yaml
+jobs:
+  build:
+    outputs:
+      hashes: ${{ steps.hash.outputs.hashes }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # tag=v3
+      - name: Setup Haskell
+        uses: haskell/actions/setup@745062a754c3c4b70b87cb93937ad443096cc94d # tag=v1
+
+      - name: Build using Haskell
+        run: |
+          # Your normal build workflow targets here.
+          cabal build  # or stack build
+
+          # Copy the binary to the root directory for easier reference
+          # For Cabal, use the following command
+          cp $(cabal list-bin .) .
+          # For Stack, use the following command instead
+          # cp $(stack path --local-install-root)/bin/target_binary .
+
+      # Generate the subject.
+      - name: Generate subject
+        id: hash
+        run: |
+          set -euo pipefail
+
+          echo "::set-output name=hashes::$(sha256sum target_binary | base64 -w0)"
+
   provenance:
     needs: [build]
     permissions:
