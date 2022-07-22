@@ -1,0 +1,51 @@
+name: pre-submit e2e generic adversarial-attestation-name
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions: read-all
+
+env:
+  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+jobs:
+  build:
+    permissions:
+      id-token: write # For signing.
+      contents: write # For asset uploads.
+      actions: read # For reading workflow info.
+    uses: ./.github/workflows/generator_generic_slsa3.yml
+    with:
+      # echo "2e0390eb024a52963db7b95e84a9c2b12c004054a7bad9a97ec0c7c89d4681d2    binary-name" | base64 -w0
+      base64-subjects: "MmUwMzkwZWIwMjRhNTI5NjNkYjdiOTVlODRhOWMyYjEyYzAwNDA1NGE3YmFkOWE5N2VjMGM3Yzg5ZDQ2ODFkMiAgICBiaW5hcnktbmFtZQo="
+      attestation-name: attestation.intoto.jsonl
+      compile-generator: true
+
+  build2:
+    permissions:
+      id-token: write # For signing.
+      contents: write # For asset uploads.
+      actions: read # For reading workflow info.
+    uses: ./.github/workflows/generator_generic_slsa3.yml
+    with:
+      # echo "7d865e959b2466918c9863afca942d0fb89d7c9ac0c99bafc3749504ded97730  binary-name2" | base64 -w0
+      base64-subjects: "N2Q4NjVlOTU5YjI0NjY5MThjOTg2M2FmY2E5NDJkMGZiODlkN2M5YWMwYzk5YmFmYzM3NDk1MDRkZWQ5NzczMCAgYmluYXJ5LW5hbWUyCg=="
+      # NOTE: duplicate attesation-name
+      attestation-name: attestation.intoto.jsonl
+      compile-generator: true
+
+  # NOTE: this is required to add the check as blocking for PRs to the main branch.
+  check:
+    name: pre-submit e2e generic adversarial-attestation-name
+    runs-on: ubuntu-latest
+    needs: [build, build2]
+    if: always()
+    env:
+      BUILD_RESULT: ${{ needs.build.result }}
+      BUILD2_RESULT: ${{ needs.build2.result }}
+    run: |
+      if [ "$BUILD_RESULT" == "success" ] && [ "$BUILD2_RESULT" == "success" ]; then
+        exit 5
+      fi
