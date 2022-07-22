@@ -72,7 +72,7 @@ There is one integration test we cannot easily test "live", so we need to simula
    $ "$GH" release -R "$BUILDER_REPOSITORY" create "$BUILDER_TAG" --title "$BUILDER_TAG" --notes "pre-release tests for $BUILDER_TAG $(date)" --target "$BUILDER_REF"
    ```
 
-This will trigger a workflow release, let it complete and generate the release assets.
+   This will trigger a workflow release, let it complete and generate the release assets.
 
 ### Go builder
 
