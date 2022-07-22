@@ -22,7 +22,6 @@ runs:
       env:
         UNTRUSTED_PATH: "${{ inputs.path }}"
       run: |
-      
         set -euo pipefail
 
         if [ -e "$UNTRUSTED_PATH" ]; then
@@ -49,7 +48,6 @@ runs:
         SET_EXECUTABLE: "${{ inputs.set-executable }}"
       shell: bash
       run: |
-
         set -euo pipefail
 
         if ! [[ -f "$UNTRUSTED_PATH" ]]; then
