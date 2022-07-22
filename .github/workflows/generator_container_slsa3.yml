@@ -136,9 +136,9 @@ jobs:
 
           # Generate a predicate only.
           predicate_name="predicate.json"
-          ./"$BUILDER_BINARY" attest --signature="" --predicate="$predicate_name"
-
+          echo $(echo $(echo $UNTRUSTED_DIGEST | cut -d: -f2) $UNTRUSTED_IMAGE) | base64
+          ./"$BUILDER_RELEASE_BINARY" attest --subjects $(echo $(echo $(echo $UNTRUSTED_DIGEST | cut -d: -f2) $UNTRUSTED_IMAGE) | base64 -w0) --predicate="$predicate_name"
           COSIGN_EXPERIMENTAL=1 cosign attest --predicate="$predicate_name" \
             --type slsaprovenance \
             --force \
-            "${UNTRUSTED_IMAGE}@${UNTRUSTED_DIGEST}"
+            "${UNTRUSTED_IMAGE}"

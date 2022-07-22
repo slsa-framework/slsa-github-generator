@@ -15,17 +15,15 @@ runs:
     - name: Compute the sha256
       id: compute
       shell: bash
-      env:
-        UNTRUSTED_PATH: "${{ inputs.path }}"
       run: |
         set -euo pipefail
 
-        echo "Computing SHA256 for $UNTRUSTED_PATH"
-        if ! [[ -f "$UNTRUSTED_PATH" ]]; then
-            echo "File $UNTRUSTED_PATH not present"
+        echo "Computing SHA256 for $BUILDER_RELEASE_BINARY"
+        if ! [[ -f "$BUILDER_RELEASE_BINARY" ]]; then
+            echo "File $BUILDER_RELEASE_BINARY not present"
             exit 5
         fi
-        digest=$(sha256sum "$UNTRUSTED_PATH" | awk '{print $1}')
+        digest=$(sha256sum "$BUILDER_RELEASE_BINARY" | awk '{print $1}')
         echo "computed sha: $digest"
         
         echo "::set-output name=sha256::$digest"
