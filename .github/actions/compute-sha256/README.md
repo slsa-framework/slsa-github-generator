@@ -3,7 +3,7 @@
 ## How to build this action in development
 - Install node
 - Install typescript
-- `npm install`
+- `npm ci`
 - `npm run all`
 
 ## Compare the dist/index.js with the actual source

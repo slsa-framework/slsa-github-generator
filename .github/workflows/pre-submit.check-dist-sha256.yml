@@ -22,7 +22,7 @@ jobs:
       - name: Install dependencies
         run: |
           cd .github/actions/compute-sha256
-          npm i
+          npm ci
 
       - name: Rebuild the dist/ directory
         run: |
