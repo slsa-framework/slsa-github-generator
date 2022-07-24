@@ -28,3 +28,42 @@ jobs:
               echo "$results"
               exit -1
           fi
+  check-dist:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # tag=v3.0.2
+
+      - name: Set Node.js 16
+        uses: actions/setup-node@2fddd8803e2f5c9604345a0b591c3020ee971a93 # tag=v3.4.1
+        with:
+          node-version: 16
+
+      - name: Install dependencies
+        run: |
+          cd .github/actions/compute-sha256
+          npm ci
+
+      - name: Rebuild the dist/ directory
+        run: |
+          cd .github/actions/compute-sha256
+          npm run all
+
+      - name: Compare the expected and actual dist/ directories
+        run: |
+          set -euo pipefail
+          cd .github/actions/compute-sha256
+          if [ "$(git diff --ignore-space-at-eol dist/ | wc -l)" -gt "0" ]; then
+            echo "Detected uncommitted changes after build.  See status below:"
+            git diff
+            exit 1
+          fi
+        id: diff
+
+      # If index.js was different from expected, upload the expected version as an artifact
+      - uses: actions/upload-artifact@3cea5372237819ed00197afe530f5a7ea3e805c8
+        if: ${{ failure() && steps.diff.conclusion == 'failure' }}
+        with:
+          name: dist
+          path: dist/
+
