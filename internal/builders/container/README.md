@@ -28,7 +28,8 @@ project simply generates provenance as a separate step in an existing workflow.
 ## Project Status
 
 This workflow is currently under active development. The API could change while
-approaching an initial release.
+approaching an initial release. You can track progress towards General
+Availability via [this milestone](https://github.com/slsa-framework/slsa-github-generator/milestone/3).
 
 ## Benefits of Provenance
 
