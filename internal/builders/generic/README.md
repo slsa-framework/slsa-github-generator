@@ -142,6 +142,8 @@ jobs:
     uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.2.0
     with:
       base64-subjects: "${{ needs.build.outputs.hashes }}"
+      # Set a custom name for the provenance attestation.
+      attestation-name: "artifacts.intoto.jsonl"
       # Upload provenance to a new release
       upload-assets: true
 
@@ -188,10 +190,11 @@ issue](https://github.com/slsa-framework/slsa-github-generator/issues/new/choose
 
 The [generic workflow](https://github.com/slsa-framework/slsa-github-generator/blob/main/.github/workflows/generator_generic_slsa3.yml) accepts the following inputs:
 
-| Name              | Required | Default | Description                                                                                                                                                                                                                                                      |
-| ----------------- | -------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `base64-subjects` | yes      |         | Artifact(s) for which to generate provenance, formatted the same as the output of sha256sum (SHA256 NAME\n[...]) and base64 encoded. The encoded value should decode to, for example: `90f3f7d6c862883ab9d856563a81ea6466eb1123b55bff11198b4ed0030cac86 foo.zip` |
-| `upload-assets`   | no       | false   | If true provenance is uploaded to a GitHub release for new tags.                                                                                                                                                                                                 |
+| Name               | Required | Default                    | Description                                                                                                                                                                                                                                                      |
+| ------------------ | -------- | -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `base64-subjects`  | yes      |                            | Artifact(s) for which to generate provenance, formatted the same as the output of sha256sum (SHA256 NAME\n[...]) and base64 encoded. The encoded value should decode to, for example: `90f3f7d6c862883ab9d856563a81ea6466eb1123b55bff11198b4ed0030cac86 foo.zip` |
+| `upload-assets`    | no       | false                      | If true provenance is uploaded to a GitHub release for new tags.                                                                                                                                                                                                 |
+| `attestation-name` | no       | "attestation.intoto.jsonl" | The artifact name of the signed provenance. The file must have the `intoto.jsonl` extension.                                                                                                                                                                     |
 
 ### Workflow Outputs
 
