@@ -8,6 +8,7 @@ This repository contains the code, examples and technical design for system desc
 
 ---
 
+- [Roadmap](#roadmap)
 - [Generation of provenance](#generation-of-provenance)
   - [Builders](#builders)
   - [Provenance-only generators](#provenance-only-generators)
@@ -24,6 +25,13 @@ This repository contains the code, examples and technical design for system desc
   - [Linters](#linters)
 
 ---
+
+## Roadmap
+
+The project roadmap is tracked via milestones. You can track progress and open
+issues via the [milestones page](https://github.com/slsa-framework/slsa-github-generator/milestones?direction=asc&sort=due_date&state=open).
+Each milestone includes a description of what is being worked on and a rough
+timeline for completion.
 
 ## Generation of provenance
 
