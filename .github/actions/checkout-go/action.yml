@@ -56,6 +56,6 @@ runs:
         token: "${{ inputs.token }}"
 
     - name: Set up Go environment
-      uses: actions/setup-go@b22fbbc2921299758641fab08929b4ac52b32923 # tag=v3.2.0
+      uses: actions/setup-go@84cbf8094393cdc5fe1fe1671ff2647332956b1a # tag=v3.2.1
       with:
         go-version: "${{ inputs.go-version }}"

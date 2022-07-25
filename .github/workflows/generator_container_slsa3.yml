@@ -16,18 +16,8 @@ name: SLSA container image provenance
 
 env:
   # Generator
-  BUILDER_BINARY: generic-generator
-  BUILDER_RELEASE_BINARY: slsa-generator-generic-linux-amd64
-  BUILDER_REPOSITORY: slsa-framework/slsa-github-generator
-  # Verifier
-  # NOTE: These VERIFIER_* variables are used for verification of generator
-  # release binaries when the compile-generator input is false.
-  VERIFIER_REPOSITORY: slsa-framework/slsa-verifier
-  VERIFIER_RELEASE_BINARY: slsa-verifier-linux-amd64
-  VERIFIER_RELEASE_BINARY_SHA256: f92fc4e571949c796d7709bb3f0814a733124b0155e484fad095b5ca68b4cb21
-  VERIFIER_RELEASE: v1.1.1
-  # Builder location
-  BUILDER_DIR: internal/builders
+  BUILDER_BINARY: slsa-generator-generic-linux-amd64 # Name of the binary in the release assets.
+  BUILDER_DIR: internal/builders/generic # Source directory if we compile the builder.
 
 on:
   workflow_call:
@@ -67,7 +57,7 @@ jobs:
     steps:
       - name: Detect the generator ref
         id: detect
-        uses: slsa-framework/slsa-github-generator/.github/actions/detect-workflow@49e648aa7f5f4f88513b6cd54f6b189516184e6b
+        uses: slsa-framework/slsa-github-generator/.github/actions/detect-workflow@575bdd242ac0bc503966cedac1dabb42515b545f
 
   # generator builds the generator binary and runs it to generate SLSA
   # provenance.
@@ -91,7 +81,7 @@ jobs:
       packages: write
     steps:
       - name: Generate builder
-        uses: slsa-framework/slsa-github-generator/.github/actions/generate-builder@49e648aa7f5f4f88513b6cd54f6b189516184e6b
+        uses: slsa-framework/slsa-github-generator/.github/actions/generate-builder@575bdd242ac0bc503966cedac1dabb42515b545f
         with:
           repository: "${{ needs.detect-env.outputs.repository }}"
           ref: "${{ needs.detect-env.outputs.ref }}"
@@ -101,7 +91,7 @@ jobs:
           # NOTE: We are using the generic generator.
           directory: "${{ env.BUILDER_DIR }}/generic"
 
-      - uses: sigstore/cosign-installer@7e0881f8fe90b25e305bbf0309761e9314607e25 # tag=v2.4.0
+      - uses: sigstore/cosign-installer@48866aa521d8bf870604709cd43ec2f602d03ff2 # tag=v2.4.1
       - name: Login
         env:
           UNTRUSTED_IMAGE: "${{ inputs.image }}"
