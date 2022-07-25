@@ -114,6 +114,13 @@ jobs:
           UNTRUSTED_ATTESTATION_NAME: "${{ inputs.attestation-name }}"
         run: |
           set -euo pipefail
+          # NOTE: The generator binary allows the attestation to be "" in which
+          # case it does not sign or generate provenance. However, this workflow
+          # requires it to be non-empty so we validate it here.
+          if [ "$UNTRUSTED_ATTESTATION_NAME" == "" ]; then
+            echo "attestation-name cannot be empty."
+            exit 5
+          fi
           # Create and sign provenance.
           # Note: The builder verifies that the UNTRUSTED_ATTESTATION_NAME is located
           # in the current directory.
