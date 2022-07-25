@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -9,6 +10,7 @@ import (
 	slsav02 "github.com/in-toto/in-toto-golang/in_toto/slsa_provenance/v0.2"
 
 	"github.com/slsa-framework/slsa-github-generator/internal/errors"
+	"github.com/slsa-framework/slsa-github-generator/slsa"
 )
 
 // TestParseSubjects tests the parseSubjects function.
@@ -144,4 +146,18 @@ func TestParseSubjects(t *testing.T) {
 			}
 		})
 	}
+}
+
+// Test_attestCmd tests the attest command.
+func Test_attestCmd(t *testing.T) {
+	t.Run("empty attestation path", func(t *testing.T) {
+		t.Setenv("GITHUB_CONTEXT", "{}")
+
+		c := attestCmd(&slsa.NilClientProvider{})
+		c.SetOut(new(bytes.Buffer))
+		c.SetArgs([]string{"--signature", ""})
+		if err := c.Execute(); err != nil {
+			t.Errorf("unexpected failure: %v", err)
+		}
+	})
 }

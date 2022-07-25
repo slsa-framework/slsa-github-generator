@@ -133,7 +133,7 @@ func (b *provenanceOnlyBuild) URI() string {
 }
 
 // attestCmd returns the 'attest' command.
-func attestCmd() *cobra.Command {
+func attestCmd(provider slsa.ClientProvider) *cobra.Command {
 	var predicatePath string
 	var attPath string
 	var subjects string
@@ -148,15 +148,13 @@ run in the context of a Github Actions workflow.`,
 		Run: func(cmd *cobra.Command, args []string) {
 			ghContext, err := github.GetWorkflowContext()
 			check(err)
-
-			// Verify the extension path and extension.
-			err = utils.VerifyAttestationPath(attPath)
-			check(err)
-
 			var parsedSubjects []intoto.Subject
 			// We don't actually care about the subjects if we aren't writing an attestation.
 			if attPath != "" {
-				var err error
+				// Verify the extension path and extension.
+				err = utils.VerifyAttestationPath(attPath)
+				check(err)
+
 				parsedSubjects, err = parseSubjects(subjects)
 				check(err)
 
@@ -170,15 +168,23 @@ run in the context of a Github Actions workflow.`,
 			b := provenanceOnlyBuild{
 				GithubActionsBuild: slsa.NewGithubActionsBuild(parsedSubjects, ghContext),
 			}
-			// TODO(github.com/slsa-framework/slsa-github-generator/issues/124): Remove
-			if utils.IsPresubmitTests() {
-				b.WithClients(&slsa.NilClientProvider{})
+			if provider != nil {
+				b.WithClients(provider)
+			} else {
+				// TODO(github.com/slsa-framework/slsa-github-generator/issues/124): Remove
+				if utils.IsPresubmitTests() {
+					b.WithClients(&slsa.NilClientProvider{})
+				}
 			}
 
 			g := slsa.NewHostedActionsGenerator(&b)
-			// TODO(github.com/slsa-framework/slsa-github-generator/issues/124): Remove
-			if utils.IsPresubmitTests() {
-				g.WithClients(&slsa.NilClientProvider{})
+			if provider != nil {
+				g.WithClients(provider)
+			} else {
+				// TODO(github.com/slsa-framework/slsa-github-generator/issues/124): Remove
+				if utils.IsPresubmitTests() {
+					g.WithClients(&slsa.NilClientProvider{})
+				}
 			}
 
 			p, err := g.Generate(ctx)
