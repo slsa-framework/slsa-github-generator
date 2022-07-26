@@ -44,7 +44,7 @@ var (
 	wsSplit = regexp.MustCompile(`[\t ]`)
 
 	// provenanceOnlyBuildType is the URI for provenance only SLSA generation.
-	provenanceOnlyBuildType = "https://github.com/slsa-framework/slsa-github-generator@v1"
+	provenanceOnlyBuildType = "https://github.com/slsa-framework/slsa-github-generator/generic@v1"
 )
 
 // errBase64 indicates a base64 error in the subject.
