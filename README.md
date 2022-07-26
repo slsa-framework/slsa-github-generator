@@ -51,7 +51,7 @@ Builders are able to report the commands used to generate your artifact in the p
 
 This repository hosts the following builders:
 
-1. [Go Builder SLSA Level 3](internal/builders/go/README.md). **Status**: available.
+1. [Go Builder SLSA Level 3](internal/builders/go/README.md). **Status**: available since v1.0.0.
    This builder builds and generates provenance for your [Go](https://go.dev/) projects. To use it,
    follow the [Go builder's README.md](internal/builders/go/README.md).
 1. [Container Builder SLSA Level 3](TODO). **Status**: WIP, expected release in Sept 2022.
@@ -74,7 +74,7 @@ Generators are _not_ able to report the commands used to generate your artifact 
 
 This repository hosts the following generators:
 
-1. [Generic generator SLSA Level 3](internal/builders/generic/README.md). **Status**: WIP, expected release July 2022.
+1. [Generic generator SLSA Level 3](internal/builders/generic/README.md). **Status**: available since v1.2.0.
    This generator generates provenance for arbitrary artifacts of your choice. To use it,
    follow the [Generic generator's README.md](internal/builders/generic/README.md).
 1. [Container generator SLSA Level 3](TODO). **Status**: WIP, expected release Aug-Sept 2022, see [#409](https://github.com/slsa-framework/slsa-github-generator/issues/409).
