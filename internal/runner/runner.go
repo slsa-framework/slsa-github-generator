@@ -57,46 +57,51 @@ func (r *CommandRunner) Run() (steps []*CommandStep, err error) {
 	}()
 
 	for _, step := range r.Steps {
-		if len(step.Command) == 0 {
-			err = errors.New("command is empty")
-			return // steps, err
-		}
-
-		cmd := step.Command[0]
-		args := step.Command[1:]
-		// TODO: Add some kind of LD_PRELOAD protection?
-		env := dedupEnv(append(r.Env, step.Env...))
-
-		// Set the POSIX PWD env var.
-		var pwd string
-		pwd, err = filepath.Abs(step.WorkingDir)
+		var runStep *CommandStep
+		runStep, err = r.runStep(step)
 		if err != nil {
 			return // steps, err
 		}
-		env = append(env, "PWD="+pwd)
-
-		err = os.Chdir(pwd)
-		if err != nil {
-			return // steps, err
-		}
-
-		// NOTE: We use syscall.Exec directly because we are executing the
-		// commands in sequence and we want full control over the environment.
-		// The stdlib exec package deduplicates env vars and so it's hard to
-		// know exactly what the command was run with.
-		// NOTE: The executed command will inherit stdout/stderr.
-		err = syscall.Exec(cmd, args, env)
-		if err != nil {
-			return // steps, err
-		}
-
-		steps = append(steps, &CommandStep{
-			Command:    append([]string{cmd}, args...),
-			Env:        env,
-			WorkingDir: pwd,
-		})
+		steps = append(steps, runStep)
 	}
 	return // steps, err
+}
+
+func (r *CommandRunner) runStep(step *CommandStep) (*CommandStep, error) {
+	if len(step.Command) == 0 {
+		return nil, errors.New("command is empty")
+	}
+
+	cmd := step.Command[0]
+	args := step.Command[1:]
+	// TODO: Add some kind of LD_PRELOAD protection?
+	env := dedupEnv(append(r.Env, step.Env...))
+
+	// Set the POSIX PWD env var.
+	pwd, err := filepath.Abs(step.WorkingDir)
+	if err != nil {
+		return nil, err
+	}
+	env = append(env, "PWD="+pwd)
+
+	if err = os.Chdir(pwd); err != nil {
+		return nil, err
+	}
+
+	// NOTE: We use syscall.Exec directly because we are executing the
+	// commands in sequence and we want full control over the environment.
+	// The stdlib exec package deduplicates env vars and so it's hard to
+	// know exactly what the command was run with.
+	// NOTE: The executed command will inherit stdout/stderr.
+	if err := syscall.Exec(cmd, args, env); err != nil {
+		return nil, err
+	}
+
+	return &CommandStep{
+		Command:    append([]string{cmd}, args...),
+		Env:        env,
+		WorkingDir: pwd,
+	}, nil
 }
 
 // dedupEnv returns a copy of env with any duplicates removed, in favor of
