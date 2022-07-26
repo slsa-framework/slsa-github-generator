@@ -208,10 +208,10 @@ The [generic workflow](https://github.com/slsa-framework/slsa-github-generator/b
 
 The project generates SLSA provenance with the following values.
 
-| Name                         | Value                                                          | Description                                                                                                                                                                                                            |
-| ---------------------------- | -------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `buildType`                  | `"https://github.com/slsa-framework/slsa-github-generator@v1"` | Identifies a generic GitHub Actions build.                                                                                                                                                                             |
-| `metadata.buildInvocationID` | `"[run_id]-[run_attempt]"`                                     | The GitHub Actions [`run_id`](https://docs.github.com/en/actions/learn-github-actions/contexts#github-context) does not update when a workflow is re-run. Run attempt is added to make the build invocation ID unique. |
+| Name                         | Value                                                                  | Description                                                                                                                                                                                                            |
+| ---------------------------- | ---------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `buildType`                  | `"https://github.com/slsa-framework/slsa-github-generator/generic@v1"` | Identifies a generic GitHub Actions build.                                                                                                                                                                             |
+| `metadata.buildInvocationID` | `"[run_id]-[run_attempt]"`                                             | The GitHub Actions [`run_id`](https://docs.github.com/en/actions/learn-github-actions/contexts#github-context) does not update when a workflow is re-run. Run attempt is added to make the build invocation ID unique. |
 
 ### Provenance Example
 
@@ -234,7 +234,7 @@ generated as an [in-toto](https://in-toto.io/) statement with a SLSA predicate.
     "builder": {
       "id": "https://github.com/slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@refs/tags/v1.2.0"
     },
-    "buildType": "https://github.com/slsa-framework/slsa-github-generator@v1",
+    "buildType": "https://github.com/slsa-framework/slsa-github-generator/generic@v1",
     "invocation": {
       "configSource": {
         "uri": "git+https://github.com/ianlewis/actions-test@refs/heads/main.git",
