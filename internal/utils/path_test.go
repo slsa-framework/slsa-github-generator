@@ -25,8 +25,6 @@ import (
 )
 
 func Test_PathIsUnderCurrentDirectory(t *testing.T) {
-	t.Parallel()
-
 	tests := []struct {
 		name     string
 		path     string
@@ -167,7 +165,22 @@ func Test_CreateNewFileUnderCurrentDirectory(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt // Re-initializing variable so it is not changed while executing the closure below
 		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
+			// Set up a temporary working directory for the test.
+			cwd, err := os.Getwd()
+			if err != nil {
+				t.Fatal(err)
+			}
+			tempwd, err := os.MkdirTemp("", "slsa-github-generator-tests")
+			if err != nil {
+				t.Fatal(err)
+			}
+			if err := os.Chdir(tempwd); err != nil {
+				t.Fatal(err)
+			}
+			defer func() {
+				os.RemoveAll(tempwd)
+				os.Chdir(cwd)
+			}()
 
 			if tt.existingPath {
 				if _, err := os.Stat(tt.path); err != nil {
@@ -177,7 +190,7 @@ func Test_CreateNewFileUnderCurrentDirectory(t *testing.T) {
 				}
 			}
 
-			_, err := CreateNewFileUnderCurrentDirectory(tt.path, os.O_WRONLY)
+			_, err = CreateNewFileUnderCurrentDirectory(tt.path, os.O_WRONLY)
 			if (err == nil && tt.expected != nil) ||
 				(err != nil && tt.expected == nil) {
 				t.Fatalf("unexpected error: %v", cmp.Diff(err, tt.expected, cmpopts.EquateErrors()))
