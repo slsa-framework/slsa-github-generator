@@ -9,6 +9,8 @@ permissions: read-all
 
 env:
   IMAGE_REGISTRY: ghcr.io
+  # NOTE: This pre-submit pushes a container image to a "package" under the
+  # slsa-framework GitHub org.
   IMAGE_NAME: ${{ github.repository }}-pre-submit
   GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
