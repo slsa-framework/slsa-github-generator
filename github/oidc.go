@@ -25,7 +25,7 @@ import (
 	"sort"
 	"time"
 
-	"github.com/coreos/go-oidc"
+	"github.com/coreos/go-oidc/v3/oidc"
 
 	"github.com/slsa-framework/slsa-github-generator/internal/errors"
 )
