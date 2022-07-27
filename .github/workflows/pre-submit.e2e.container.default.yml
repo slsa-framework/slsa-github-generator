@@ -97,3 +97,4 @@ jobs:
           # TODO: use --enforce-sct
           # TODO: add cue policy for further validation.
           COSIGN_EXPERIMENTAL=1 cosign verify-attesation --type slsaprovenance "${IMAGE_NAME}"
+      # TODO(github.com/slsa-framework/slsa-verifier/issues/92): Add step to verify using slsa-verifier
