@@ -1,0 +1,97 @@
+name: pre-submit e2e container default
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions: read-all
+
+env:
+  IMAGE_REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}-pre-submit
+  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+jobs:
+  build:
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      image: ${{ steps.image.outputs.image }}
+      digest: ${{ steps.build.outputs.digest }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # v2.3.4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@dc7b9719a96d48369863986a06765841d7ea23f6 # v2.0.0
+
+      - name: Authenticate Docker
+        uses: docker/login-action@49ed152c8eca782a232dede0303416e8f356c37b # v2.0.0
+        with:
+          registry: ${{ env.IMAGE_REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@69f6fc9d46f2f8bf0d5491e4aabe0bb8c6a4678a # v4.0.1
+        with:
+          images: ${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAME }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@e551b19e49efd4e98792db7592c17c09b89db8d8 # v3.0.0
+        id: build
+        with:
+          context: go/
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+      - name: Output image
+        id: image
+        run: |
+          # NOTE: We need to use the image and digest in order to make sure
+          # that the image we attest has not been modified.
+          # NOTE: The digest output from docker/build-push-action is of the
+          # form "sha256:<digest>"
+          image_name="${IMAGE_REGISTRY}/${IMAGE_NAME}"
+          echo "::set-output name=image::$image_name"
+
+  provenance:
+    needs: [build]
+    permissions:
+      id-token: write # For signing.
+      actions: read # For reading workflow info.
+      packages: write # For uploading attestations.
+    uses: ./.github/workflows/generator_container_slsa3.yml
+    with:
+      image: ${{ needs.build.outputs.image }}
+      digest: ${{ needs.build.outputs.digest }}
+      registry-username: ${{ github.actor }}
+      compile-generator: true
+    secrets:
+      registry-password: ${{ secrets.GITHUB_TOKEN }}
+
+  verify:
+    # NOTE: this name is used as the status check name and by protected
+    # branches for required status checks. It should have a unique name among
+    # other pre-submits.
+    name: verify container provenance
+    runs-on: ubuntu-latest
+    needs: [build, provenance]
+    if: ${{ always() }}
+    steps:
+      - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # tag=v3.0.2
+      - uses: sigstore/cosign-installer@48866aa521d8bf870604709cd43ec2f602d03ff2 # tag=v2.4.1
+      - env:
+          REGISTRY_USERNAME: ${{ github.actor }}
+          REGISTRY_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
+          IMAGE_NAME: ${{needs.build.outputs.image-name}}
+        run: |
+          cosign login "${IMAGE_REGISTRY}" -u "${REGISTRY_USERNAME}" -p "${REGISTRY_PASSWORD}"
+          # TODO: use --enforce-sct
+          # TODO: add cue policy for further validation.
+          COSIGN_EXPERIMENTAL=1 cosign verify-attesation --type slsaprovenance "${IMAGE_NAME}"
