@@ -3,12 +3,12 @@ run:
   concurrency: 2
   deadline: 5m
 issues:
-  include:
-    # revive `package-comments` and `exported` rules.
-    - EXC0012
-    - EXC0013
-    - EXC0014
-    - EXC0015
+  # TODO(github.com/slsa-framework/slsa-github-generator/issues/450): revive `package-comments` and `exported` rules.
+  # include:
+  #   - EXC0012
+  #   - EXC0013
+  #   - EXC0014
+  #   - EXC0015
   # Maximum issues count per one linter.
   # Set to 0 to disable.
   # Default: 50
@@ -27,47 +27,62 @@ linters:
     - deadcode
     - depguard
     - dogsled
-    - errcheck
-    - errorlint
+    # TODO(github.com/slsa-framework/slsa-github-generator/issues/450): enable errcheck
+    # - errcheck
+    # TODO(github.com/slsa-framework/slsa-github-generator/issues/450): enable errorlint
+    # - errorlint
     - exhaustive
-    - exportloopref
-    - gci
+    # TODO(github.com/slsa-framework/slsa-github-generator/issues/450): enable exportloopref
+    # - exportloopref
+    # TODO(github.com/slsa-framework/slsa-github-generator/issues/450): enable gci
+    # - gci
     - gochecknoinits
     - gocognit
     - goconst
-    - gocritic
+    # TODO(github.com/slsa-framework/slsa-github-generator/issues/450): enable gocritic
+    # - gocritic
     - gocyclo
     - godot
-    - godox
-    - goerr113
+    # TODO(github.com/slsa-framework/slsa-github-generator/issues/450): enable godox
+    # - godox
+    # TODO(github.com/slsa-framework/slsa-github-generator/issues/450): enable goerr113
+    # - goerr113
     - gofmt
     - gofumpt
     - goheader
     - goimports
     - gomodguard
     - goprintffuncname
-    - gosec
+    # TODO(github.com/slsa-framework/slsa-github-generator/issues/450): enable gosec
+    # - gosec
     - gosimple
-    - govet
+    # TODO(github.com/slsa-framework/slsa-github-generator/issues/450): enable govet
+    # - govet
     - ineffassign
-    - lll
+    # TODO(github.com/slsa-framework/slsa-github-generator/issues/450): enable lll
+    # - lll
     - makezero
     - misspell
     - nakedret
-    - nestif
+    # TODO(github.com/slsa-framework/slsa-github-generator/issues/450): enable nestif
+    # - nestif
     - nolintlint
-    - paralleltest
+    # TODO(github.com/slsa-framework/slsa-github-generator/issues/450): enable paralleltest
+    # - paralleltest
     - predeclared
     - revive
     - staticcheck
-    - stylecheck
-    - thelper
+    # TODO(github.com/slsa-framework/slsa-github-generator/issues/450): enable stylecheck
+    # - stylecheck
+    # TODO(github.com/slsa-framework/slsa-github-generator/issues/450): enable thelper
+    # - thelper
     - typecheck
     - unconvert
     - unused
     - varcheck
     - whitespace
-    - wrapcheck
+    # TODO(github.com/slsa-framework/slsa-github-generator/issues/450): enable thelper
+    # - wrapcheck
 linters-settings:
   errcheck:
     check-type-assertions: true

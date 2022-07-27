@@ -34,7 +34,7 @@ runs:
   using: "composite"
   steps:
     - name: Checkout the Go builder repository
-      uses: slsa-framework/slsa-github-generator/.github/actions/checkout-go@1d646d70aeba1516af69fb0ef48206580122449b
+      uses: slsa-framework/slsa-github-generator/.github/actions/checkout-go@575bdd242ac0bc503966cedac1dabb42515b545f
       with:
         repository: "${{ inputs.repository }}"
         ref: "${{ inputs.ref }}"
@@ -44,15 +44,15 @@ runs:
       shell: bash
       env:
         # Builder.
-        BUILDER_REPOSITORY: slsa-framework/slsa-github-generator  # The repository to download the pre-built builder binary from.
-        BUILDER_RELEASE_BINARY: "${{ inputs.binary }}"            # The name of the pre-built binary in the release assets. This is also used as the final binary name when compiling the builder from source.
+        BUILDER_REPOSITORY: slsa-framework/slsa-github-generator # The repository to download the pre-built builder binary from.
+        BUILDER_RELEASE_BINARY: "${{ inputs.binary }}" # The name of the pre-built binary in the release assets. This is also used as the final binary name when compiling the builder from source.
         # Verifier
         # NOTE: These VERIFIER_* variables are used in the builder-fetch.sh script for verification of builder
         # release binaries when the compile-builder input is false.
-        VERIFIER_REPOSITORY: slsa-framework/slsa-verifier         # The repository to download the pre-built verifier binary from.
-        VERIFIER_RELEASE_BINARY: slsa-verifier-linux-amd64        # The name of the verifier binary in the release assets.
-        VERIFIER_RELEASE_BINARY_SHA256: f92fc4e571949c796d7709bb3f0814a733124b0155e484fad095b5ca68b4cb21  # The expected hash of the verifier binary.
-        VERIFIER_RELEASE: v1.1.1                                   # The version of the verifier to download.
+        VERIFIER_REPOSITORY: slsa-framework/slsa-verifier # The repository to download the pre-built verifier binary from.
+        VERIFIER_RELEASE_BINARY: slsa-verifier-linux-amd64 # The name of the verifier binary in the release assets.
+        VERIFIER_RELEASE_BINARY_SHA256: f92fc4e571949c796d7709bb3f0814a733124b0155e484fad095b5ca68b4cb21 # The expected hash of the verifier binary.
+        VERIFIER_RELEASE: v1.1.1 # The version of the verifier to download.
 
         COMPILE_BUILDER: "${{ inputs.compile-builder }}"
         BUILDER_REF: "${{ inputs.ref }}"
@@ -62,7 +62,7 @@ runs:
       run: ./.github/actions/generate-builder/generate-builder.sh
 
     - name: Compute sha256 of builder
-      uses: slsa-framework/slsa-github-generator/.github/actions/compute-sha256@1d646d70aeba1516af69fb0ef48206580122449b
+      uses: slsa-framework/slsa-github-generator/.github/actions/compute-sha256@575bdd242ac0bc503966cedac1dabb42515b545f
       id: compute
       with:
         path: "${{ inputs.binary }}"

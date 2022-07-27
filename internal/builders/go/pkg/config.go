@@ -22,11 +22,17 @@ import (
 	"strings"
 
 	"gopkg.in/yaml.v3"
+
+	"github.com/slsa-framework/slsa-github-generator/internal/utils"
 )
 
 var (
+	// ErrorInvalidEnvironmentVariable is an invalid environment variable.
 	ErrorInvalidEnvironmentVariable = errors.New("invalid environment variable")
-	ErrorUnsupportedVersion         = errors.New("version not supported")
+	// ErrorUnsupportedVersion is non-supported version.
+	ErrorUnsupportedVersion = errors.New("version not supported")
+	// ErrorInvalidDirectory is an invalid directory.
+	ErrorInvalidDirectory = errors.New("invalid directory")
 )
 
 var supportedVersions = map[int]bool{
@@ -109,7 +115,11 @@ func fromConfig(cf *goReleaserConfigFile) (*GoReleaserConfig, error) {
 }
 
 func validatePath(path string) error {
-	return pathIsUnderCurrentDirectory(path)
+	err := utils.PathIsUnderCurrentDirectory(path)
+	if err != nil {
+		return convertPathError(err, "PathIsUnderCurrentDirectory")
+	}
+	return nil
 }
 
 func validateDir(cf *goReleaserConfigFile) error {
@@ -125,7 +135,24 @@ func validateMain(cf *goReleaserConfigFile) error {
 	}
 
 	// Validate the main path is under the current directory.
-	return pathIsUnderCurrentDirectory(*cf.Main)
+	if err := utils.PathIsUnderCurrentDirectory(*cf.Main); err != nil {
+		return convertPathError(err, "PathIsUnderCurrentDirectory")
+	}
+	return nil
+}
+
+func convertPathError(e error, msg string) error {
+	// TODO(https://github.com/slsa-framework/slsa-github-generator/issues/599): use same error types.
+	if e != nil {
+		var errInternal *utils.ErrInternal
+		var errPath *utils.ErrInvalidPath
+		if errors.As(e, &errInternal) ||
+			errors.As(e, &errPath) {
+			return ErrorInvalidDirectory
+		}
+		return fmt.Errorf("%s: %w", msg, e)
+	}
+	return e
 }
 
 func validateVersion(cf *goReleaserConfigFile) error {

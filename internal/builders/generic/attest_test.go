@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -9,121 +10,8 @@ import (
 	slsav02 "github.com/in-toto/in-toto-golang/in_toto/slsa_provenance/v0.2"
 
 	"github.com/slsa-framework/slsa-github-generator/internal/errors"
+	"github.com/slsa-framework/slsa-github-generator/slsa"
 )
-
-func Test_pathIsUnderCurrentDirectory(t *testing.T) {
-	t.Parallel()
-
-	tests := []struct {
-		name     string
-		path     string
-		expected error
-	}{
-		{
-			name:     "valid same path",
-			path:     "./",
-			expected: nil,
-		},
-		{
-			name:     "valid path no slash",
-			path:     "./some/valid/path",
-			expected: nil,
-		},
-		{
-			name:     "valid path with slash",
-			path:     "./some/valid/path/",
-			expected: nil,
-		},
-		{
-			name:     "valid path with no dot",
-			path:     "some/valid/path/",
-			expected: nil,
-		},
-		{
-			name:     "some valid path",
-			path:     "../generic/some/valid/path",
-			expected: nil,
-		},
-		{
-			name:     "parent invalid path",
-			path:     "../invalid/path",
-			expected: &errInvalidPath{},
-		},
-		{
-			name:     "some invalid fullpath",
-			path:     "/some/invalid/fullpath",
-			expected: &errInvalidPath{},
-		},
-	}
-	for _, tt := range tests {
-		tt := tt // Re-initializing variable so it is not changed while executing the closure below
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
-
-			err := pathIsUnderCurrentDirectory(tt.path)
-			if (err == nil && tt.expected != nil) ||
-				(err != nil && tt.expected == nil) {
-				t.Fatalf("unexpected error: %v", cmp.Diff(err, tt.expected, cmpopts.EquateErrors()))
-			}
-
-			if err != nil && !errors.As(err, &tt.expected) {
-				t.Fatalf("unexpected error: %v", cmp.Diff(err, tt.expected, cmpopts.EquateErrors()))
-			}
-		})
-	}
-}
-
-func Test_verifyAttestationPath(t *testing.T) {
-	t.Parallel()
-
-	tests := []struct {
-		name     string
-		path     string
-		expected error
-	}{
-		{
-			name:     "valid file",
-			path:     "./path/to/valid.intoto.jsonl",
-			expected: nil,
-		},
-		{
-			name:     "invalid path",
-			path:     "../some/invalid/valid.intoto.jsonl",
-			expected: &errInvalidPath{},
-		},
-		{
-			name:     "invalid extension",
-			path:     "some/file.ntoto.jsonl",
-			expected: &errInvalidPath{},
-		},
-		{
-			name:     "invalid not exntension",
-			path:     "some/file.intoto.jsonl.",
-			expected: &errInvalidPath{},
-		},
-		{
-			name:     "invalid folder exntension",
-			path:     "file.intoto.jsonl/file",
-			expected: &errInvalidPath{},
-		},
-	}
-	for _, tt := range tests {
-		tt := tt // Re-initializing variable so it is not changed while executing the closure below
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
-
-			err := verifyAttestationPath(tt.path)
-			if (err == nil && tt.expected != nil) ||
-				(err != nil && tt.expected == nil) {
-				t.Fatalf("unexpected error: %v", cmp.Diff(err, tt.expected, cmpopts.EquateErrors()))
-			}
-
-			if err != nil && !errors.As(err, &tt.expected) {
-				t.Fatalf("unexpected error: %v", cmp.Diff(err, tt.expected, cmpopts.EquateErrors()))
-			}
-		})
-	}
-}
 
 // TestParseSubjects tests the parseSubjects function.
 func TestParseSubjects(t *testing.T) {
@@ -258,4 +146,18 @@ func TestParseSubjects(t *testing.T) {
 			}
 		})
 	}
+}
+
+// Test_attestCmd tests the attest command.
+func Test_attestCmd(t *testing.T) {
+	t.Run("empty attestation path", func(t *testing.T) {
+		t.Setenv("GITHUB_CONTEXT", "{}")
+
+		c := attestCmd(&slsa.NilClientProvider{})
+		c.SetOut(new(bytes.Buffer))
+		c.SetArgs([]string{"--signature", ""})
+		if err := c.Execute(); err != nil {
+			t.Errorf("unexpected failure: %v", err)
+		}
+	})
 }
