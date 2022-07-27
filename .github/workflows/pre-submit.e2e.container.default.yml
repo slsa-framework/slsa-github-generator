@@ -47,7 +47,8 @@ jobs:
         uses: docker/build-push-action@e551b19e49efd4e98792db7592c17c09b89db8d8 # v3.0.0
         id: build
         with:
-          context: go/
+          file: .github/workflows/configs-container/Dockerfile.pre-submit
+          context: .github/workflows/configs-container/
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}

@@ -1,0 +1,2 @@
+# Basic Dockerfile used for pre-submits
+FROM scratch
