@@ -25,7 +25,7 @@ import (
 	"sort"
 	"time"
 
-	"github.com/coreos/go-oidc"
+	"github.com/coreos/go-oidc/v3/oidc"
 
 	"github.com/slsa-framework/slsa-github-generator/internal/errors"
 )
@@ -37,7 +37,7 @@ const (
 	requestURLEnvKey   = "ACTIONS_ID_TOKEN_REQUEST_URL"
 )
 
-// OIDCToken represents the contents of a Github OIDC JWT token.
+// OIDCToken represents the contents of a GitHub OIDC JWT token.
 type OIDCToken struct {
 	// Issuer is the token issuer.
 	Issuer string
@@ -224,7 +224,7 @@ func (c *OIDCClient) verifyClaims(token *OIDCToken) error {
 	return nil
 }
 
-// Token requests an OIDC token from Github's provider, verifies it, and
+// Token requests an OIDC token from GitHub's provider, verifies it, and
 // returns the token.
 func (c *OIDCClient) Token(ctx context.Context, audience []string) (*OIDCToken, error) {
 	tokenBytes, err := c.requestToken(ctx, audience)

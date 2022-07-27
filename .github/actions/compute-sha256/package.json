@@ -1,0 +1,28 @@
+{
+  "name": "typescript-action",
+  "version": "0.0.0",
+  "private": true,
+  "description": "TypeScript template action",
+  "main": "lib/main.js",
+  "scripts": {
+    "build": "tsc",
+    "format": "prettier --write '**/*.ts'",
+    "format-check": "prettier --check '**/*.ts'",
+    "package": "ncc build --source-map",
+    "all": "npm run build && npm run format && npm run package"
+  },
+  "keywords": [
+    "actions",
+    "node",
+    "setup"
+  ],
+  "dependencies": {
+    "@actions/core": "1.6.0"
+  },
+  "devDependencies": {
+    "@types/node": "16.10.5",
+    "@vercel/ncc": "0.31.1",
+    "prettier": "2.5.1",
+    "typescript": "4.4.4"
+  }
+}

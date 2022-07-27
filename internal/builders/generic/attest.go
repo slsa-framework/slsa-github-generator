@@ -20,9 +20,7 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/json"
-	"io"
 	"os"
-	"path/filepath"
 	"regexp"
 	"strings"
 
@@ -46,7 +44,7 @@ var (
 	wsSplit = regexp.MustCompile(`[\t ]`)
 
 	// provenanceOnlyBuildType is the URI for provenance only SLSA generation.
-	provenanceOnlyBuildType = "https://github.com/slsa-framework/slsa-github-generator@v1"
+	provenanceOnlyBuildType = "https://github.com/slsa-framework/slsa-github-generator/generic@v1"
 )
 
 // errBase64 indicates a base64 error in the subject.
@@ -125,13 +123,6 @@ func parseSubjects(b64str string) ([]intoto.Subject, error) {
 	return parsed, nil
 }
 
-func getFile(path string) (io.Writer, error) {
-	if path == "-" {
-		return os.Stdout, nil
-	}
-	return os.OpenFile(filepath.Clean(path), os.O_WRONLY|os.O_CREATE, 0o600)
-}
-
 type provenanceOnlyBuild struct {
 	*slsa.GithubActionsBuild
 }
@@ -142,7 +133,7 @@ func (b *provenanceOnlyBuild) URI() string {
 }
 
 // attestCmd returns the 'attest' command.
-func attestCmd() *cobra.Command {
+func attestCmd(provider slsa.ClientProvider) *cobra.Command {
 	var predicatePath string
 	var attPath string
 	var subjects string
@@ -157,12 +148,19 @@ run in the context of a Github Actions workflow.`,
 		Run: func(cmd *cobra.Command, args []string) {
 			ghContext, err := github.GetWorkflowContext()
 			check(err)
+			var parsedSubjects []intoto.Subject
+			// We don't actually care about the subjects if we aren't writing an attestation.
+			if attPath != "" {
+				// Verify the extension path and extension.
+				err = utils.VerifyAttestationPath(attPath)
+				check(err)
 
-			parsedSubjects, err := parseSubjects(subjects)
-			check(err)
+				parsedSubjects, err = parseSubjects(subjects)
+				check(err)
 
-			if len(parsedSubjects) == 0 {
-				check(errors.New("expected at least one subject"))
+				if len(parsedSubjects) == 0 {
+					check(errors.New("expected at least one subject"))
+				}
 			}
 
 			ctx := context.Background()
@@ -170,20 +168,29 @@ run in the context of a Github Actions workflow.`,
 			b := provenanceOnlyBuild{
 				GithubActionsBuild: slsa.NewGithubActionsBuild(parsedSubjects, ghContext),
 			}
-			// TODO(github.com/slsa-framework/slsa-github-generator/issues/124): Remove
-			if utils.IsPresubmitTests() {
-				b.WithClients(&slsa.NilClientProvider{})
+			if provider != nil {
+				b.WithClients(provider)
+			} else {
+				// TODO(github.com/slsa-framework/slsa-github-generator/issues/124): Remove
+				if utils.IsPresubmitTests() {
+					b.WithClients(&slsa.NilClientProvider{})
+				}
 			}
 
 			g := slsa.NewHostedActionsGenerator(&b)
-			// TODO(github.com/slsa-framework/slsa-github-generator/issues/124): Remove
-			if utils.IsPresubmitTests() {
-				g.WithClients(&slsa.NilClientProvider{})
+			if provider != nil {
+				g.WithClients(provider)
+			} else {
+				// TODO(github.com/slsa-framework/slsa-github-generator/issues/124): Remove
+				if utils.IsPresubmitTests() {
+					g.WithClients(&slsa.NilClientProvider{})
+				}
 			}
 
 			p, err := g.Generate(ctx)
 			check(err)
 
+			// Note: the path is validated within CreateNewFileUnderCurrentDirectory().
 			if attPath != "" {
 				var attBytes []byte
 				if utils.IsPresubmitTests() {
@@ -204,7 +211,7 @@ run in the context of a Github Actions workflow.`,
 					attBytes = att.Bytes()
 				}
 
-				f, err := getFile(attPath)
+				f, err := utils.CreateNewFileUnderCurrentDirectory(attPath, os.O_WRONLY)
 				check(err)
 
 				_, err = f.Write(attBytes)
@@ -215,7 +222,7 @@ run in the context of a Github Actions workflow.`,
 				pb, err := json.Marshal(p.Predicate)
 				check(err)
 
-				pf, err := getFile(predicatePath)
+				pf, err := utils.CreateNewFileUnderCurrentDirectory(predicatePath, os.O_WRONLY)
 				check(err)
 
 				_, err = pf.Write(pb)

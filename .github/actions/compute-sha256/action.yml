@@ -1,0 +1,14 @@
+name: "SHA256 of a file"
+description: "Compute the SHA256 of a file"
+inputs:
+  path:
+    description: "Path to a file."
+    required: true
+outputs:
+  sha256:
+    description: "The SHA256 of the file."
+    value: "${{ steps.compute.outputs.sha256 }}"
+
+runs:
+  using: node16
+  main: 'dist/index.js'

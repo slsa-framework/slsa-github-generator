@@ -1,17 +1,28 @@
-name: PR units
-on: [pull_request, workflow_dispatch]
+name: unit tests
+
+on:
+  push:
+    branches: [main, "*"]
+  pull_request:
+    # The branches below must be a subset of the branches above
+    branches: [main]
+  workflow_dispatch:
 
 permissions: read-all
 
 jobs:
   pre-submit:
+    # NOTE: this name is used as the status check name and by protected
+    # branches for required status checks. It should have a unique name among
+    # other pre-submits.
+    name: unit tests
     runs-on: ubuntu-latest
+    if: ${{ always() }}
     steps:
       - name: Checkout
-        uses: actions/checkout@ec3a7ce113134d7a93b817d10a8272cb61118579 # v2.3.4
-
+        uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # tag=v3.0.2
       - name: setup-go
-        uses: actions/setup-go@b22fbbc2921299758641fab08929b4ac52b32923 # v3.2.0
+        uses: actions/setup-go@84cbf8094393cdc5fe1fe1671ff2647332956b1a # tag=v3.2.1
         with:
           go-version: "1.18"
 
@@ -27,8 +38,9 @@ jobs:
           # Test.
           go test -mod=vendor -v ./...
 
-      - name: Generic API tests
+      - name: API tests
         run: |
+          # Tests unit tests, including in generic and go builders
           set -euo pipefail
 
           # Download dependencies.
@@ -37,18 +49,68 @@ jobs:
           # Test.
           go test -mod=vendor -v ./...
 
-      - name: Go builder tests
+      - name: Builder builds
         run: |
           set -euo pipefail
 
-          # Go tests.
-          cd internal/builders/go/
+          # Build Go builder.
+          go build -mod=vendor ./internal/builders/go
 
-          # Download dependencies.
-          go mod vendor
+          # Build Generic builder.
+          go build -mod=vendor ./internal/builders/generic
 
-          # Build.
-          go build -mod=vendor
+  check-verifier:
+    name: verify slsa-verifier is latest
+    runs-on: ubuntu-latest
+    if: ${{ always() }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@ec3a7ce113134d7a93b817d10a8272cb61118579 # tag=v2.3.4
+        with:
+          path: generator
 
-          # Tests.
-          go test -mod=vendor -v ./...
+      - name: Checkout
+        uses: actions/checkout@ec3a7ce113134d7a93b817d10a8272cb61118579 # tag=v2.3.4
+        with:
+          path: verifier
+          repository: slsa-framework/slsa-verifier
+
+      - name: Check verifier references
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          # The first sha in SHA256SUM.md is the latest verifier release sha
+          expected_sha=$(cat verifier/SHA256SUM.md | grep -m 1  -w -o -e '[0-9a-f]\{64\}')
+          echo "$expected_sha"
+
+          # The first vX.Y.Z in SHA256SUM.md is the latest verifier release version
+          expected_version=$(cat verifier/SHA256SUM.md | grep -e 'v[0-9].[0-9].[0-9]' -o -m 1 -w | head -1)
+          echo "$expected_version"
+
+          # Check for expected verifier releases in the builders
+          cd generator
+          error=0
+          grep -r -e 'VERIFIER_RELEASE_BINARY_SHA256: [0-9a-f]\{64\}' --include=*.yml |
+          while read -r  line ; do
+            sha=$(echo $line | grep -o -e '[0-9a-f]\{64\}')
+            file=$(echo $line | awk '{print $1;}')
+            if [ "$sha" != "$expected_sha" ]; then
+              echo "SHA out of date in file $file expected $expected_sha"
+              error=1
+            fi
+          done
+
+          grep -r -e 'VERIFIER_RELEASE: v[0-9].[0-9].[0-9]' --include=*.yml |
+          while read -r  line ; do
+            version=$(echo $line | grep -o -e 'v[0-9].[0-9].[0-9]')
+            file=$(echo $line | awk '{print $1;}')
+            if [ "$version" != "$expected_version" ]; then
+              echo "Verifier version out of date in file $file expected $expected_version"
+              error=1
+            fi
+          done
+
+          if [ $error -ne 0 ]; then
+            exit 1
+          fi
