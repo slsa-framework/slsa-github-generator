@@ -15,7 +15,6 @@ project simply generates provenance as a separate step in an existing workflow.
 
 ---
 
-- [Project Status](#project-status)
 - [Benefits of Provenance](#benefits-of-provenance)
 - [Generating Provenance](#generating-provenance)
   - [Getting Started](#getting-started)
@@ -32,11 +31,6 @@ project simply generates provenance as a separate step in an existing workflow.
   - [Provenance for Haskell](#provenance-for-haskell)
 
 ---
-
-## Project Status
-
-This project is currently under active development. The API could change while
-approaching an initial release.
 
 ## Benefits of Provenance
 
@@ -193,7 +187,7 @@ The [generic workflow](https://github.com/slsa-framework/slsa-github-generator/b
 | ------------------ | -------- | -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `base64-subjects`  | yes      |                            | Artifact(s) for which to generate provenance, formatted the same as the output of sha256sum (SHA256 NAME\n[...]) and base64 encoded. The encoded value should decode to, for example: `90f3f7d6c862883ab9d856563a81ea6466eb1123b55bff11198b4ed0030cac86 foo.zip` |
 | `upload-assets`    | no       | false                      | If true provenance is uploaded to a GitHub release for new tags.                                                                                                                                                                                                 |
-| `attestation-name` | no       | "attestation.intoto.jsonl" | The artifact name of the signed provenance. The file must have the `intoto.jsonl` extension.                                                                                                                                                                       |
+| `attestation-name` | no       | "attestation.intoto.jsonl" | The artifact name of the signed provenance. The file must have the `intoto.jsonl` extension.                                                                                                                                                                     |
 
 ### Workflow Outputs
 
@@ -207,10 +201,10 @@ The [generic workflow](https://github.com/slsa-framework/slsa-github-generator/b
 
 The project generates SLSA provenance with the following values.
 
-| Name                         | Value                                                          | Description                                                                                                                                                                                                            |
-| ---------------------------- | -------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `buildType`                  | `"https://github.com/slsa-framework/slsa-github-generator@v1"` | Identifies a generic GitHub Actions build.                                                                                                                                                                             |
-| `metadata.buildInvocationID` | `"[run_id]-[run_attempt]"`                                     | The GitHub Actions [`run_id`](https://docs.github.com/en/actions/learn-github-actions/contexts#github-context) does not update when a workflow is re-run. Run attempt is added to make the build invocation ID unique. |
+| Name                         | Value                                                                  | Description                                                                                                                                                                                                            |
+| ---------------------------- | ---------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `buildType`                  | `"https://github.com/slsa-framework/slsa-github-generator/generic@v1"` | Identifies a generic GitHub Actions build.                                                                                                                                                                             |
+| `metadata.buildInvocationID` | `"[run_id]-[run_attempt]"`                                             | The GitHub Actions [`run_id`](https://docs.github.com/en/actions/learn-github-actions/contexts#github-context) does not update when a workflow is re-run. Run attempt is added to make the build invocation ID unique. |
 
 ### Provenance Example
 
@@ -233,7 +227,7 @@ generated as an [in-toto](https://in-toto.io/) statement with a SLSA predicate.
     "builder": {
       "id": "https://github.com/slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@refs/tags/v1.2.0"
     },
-    "buildType": "https://github.com/slsa-framework/slsa-github-generator@v1",
+    "buildType": "https://github.com/slsa-framework/slsa-github-generator/generic@v1",
     "invocation": {
       "configSource": {
         "uri": "git+https://github.com/ianlewis/actions-test@refs/heads/main.git",
