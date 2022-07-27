@@ -97,5 +97,5 @@ jobs:
           cosign login "${IMAGE_REGISTRY}" -u "${REGISTRY_USERNAME}" -p "${REGISTRY_PASSWORD}"
           # TODO: use --enforce-sct
           # TODO: add cue policy for further validation.
-          COSIGN_EXPERIMENTAL=1 cosign verify-attesation --type slsaprovenance "${IMAGE_NAME}"
+          COSIGN_EXPERIMENTAL=1 cosign verify-attestation --type slsaprovenance "${IMAGE_NAME}"
       # TODO(github.com/slsa-framework/slsa-verifier/issues/92): Add step to verify using slsa-verifier
