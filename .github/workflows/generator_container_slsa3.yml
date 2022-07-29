@@ -89,7 +89,7 @@ jobs:
           binary: "${{ env.BUILDER_BINARY }}"
           compile-builder: "${{ inputs.compile-generator }}"
           # NOTE: We are using the generic generator.
-          directory: "${{ env.BUILDER_DIR }}/generic"
+          directory: "${{ env.BUILDER_DIR }}"
 
       - uses: sigstore/cosign-installer@48866aa521d8bf870604709cd43ec2f602d03ff2 # tag=v2.4.1
       - name: Login
