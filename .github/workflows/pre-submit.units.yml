@@ -58,6 +58,10 @@ jobs:
 
           # Build Generic builder.
           go build -mod=vendor ./internal/builders/generic
+      - name: Verify coverage
+        run: |
+              set -euo pipefail
+              make coverage
 
   check-verifier:
     name: verify slsa-verifier is latest

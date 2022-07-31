@@ -1,0 +1,9 @@
+{
+"github.com/slsa-framework/slsa-github-generator/github":70.4,
+"github.com/slsa-framework/slsa-github-generator/internal/builders/generic": 52.3,
+"github.com/slsa-framework/slsa-github-generator/internal/builders/go":17.1,
+"github.com/slsa-framework/slsa-github-generator/internal/errors":100.0,
+"github.com/slsa-framework/slsa-github-generator/internal/utils":72.1,
+"github.com/slsa-framework/slsa-github-generator/signing/envelope":82.4,
+"github.com/slsa-framework/slsa-github-generator/slsa":54.6
+}
