@@ -7,7 +7,17 @@
   "packageRules": [
     {
       "matchManagers": ["github-actions"],
-      "groupName": "github-actions"
+      "groupName": "github-actions",
+      "commitMessageTopic": "github-actions"
+    },
+    {
+      "extends": "group:nodeJs",
+      "matchUpdateTypes": [
+        "minor",
+        "patch"
+      ],
+      "groupName": "nodeJs",
+      "commitMessageTopic": "NodeJs"
     }
   ]
 }
