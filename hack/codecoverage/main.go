@@ -23,19 +23,22 @@ import (
 )
 
 func main() {
-	thresholdFile := os.Getenv("THRESHOLD_FILE")
+	if len(os.Args) != 3 {
+		log.Fatal("Usage: <threshold-file> <coverage-percent>")
+	}
+	thresholdFile := os.Args[1]
 	if thresholdFile == "" {
-		log.Fatalf("THRESHOLD_FILE environment variable is not set")
+		log.Fatalf("The thresholdfile cannot be empty.")
 	}
 	thresholdMap, err := parseCoverageThreshold(thresholdFile)
 	if err != nil {
 		log.Fatalf("Error parsing threshold file: %v", err)
 	}
-	coveragePercentage := os.Getenv("COVERAGE_PERCENTAGE")
+	coveragePercentage := os.Args[2]
 	if coveragePercentage == "" {
-		log.Fatalf("COVERAGE_PERCENTAGE environment variable is not set")
+		log.Fatalf("The coverage percentage cannot be empty.")
 	}
-	coveragePercentageFloat, err := strconv.ParseFloat(coveragePercentage, 32)
+	coveragePercentageFloat, err := strconv.ParseFloat(coveragePercentage, 64)
 	if err != nil {
 		log.Fatalf("Error parsing coverage percentage: %v", err)
 	}
@@ -48,19 +51,20 @@ func main() {
 			if len(parts) < 5 {
 				continue
 			}
-			percentage, err := strconv.ParseFloat(strings.Trim(parts[4], "%"), 32)
+			percentage, err := strconv.ParseFloat(strings.Trim(parts[4], "%"), 64)
 			if err != nil {
 				log.Fatalf("invalid line: %s", line)
 			}
 			pack := parts[1]
-			if val, ok := thresholdMap[pack]; !ok {
-				if float32(int(percentage*100)/100) < float32(int(coveragePercentageFloat*100)/100) {
-					log.Fatalf("coverage for %s is below threshold: %f < %f", pack, percentage, coveragePercentageFloat)
-				}
-			} else {
-				if float32(int(percentage*100)/100) < float32(int(val*100)/100) {
+			if val, ok := thresholdMap[pack]; ok {
+				if percentage < val {
 					log.Fatalf("coverage for %s is below threshold: %f < %f", pack, percentage, val)
 				}
+				continue
+			}
+			// if the package is not in the threshold map, then we check if the coverage is below the threshold
+			if percentage < coveragePercentageFloat {
+				log.Fatalf("coverage for %s is below threshold: %f < %f", pack, percentage, coveragePercentageFloat)
 			}
 		}
 	}

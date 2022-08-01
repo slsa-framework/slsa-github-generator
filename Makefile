@@ -36,7 +36,7 @@ unit-test: ## Runs all unit tests.
 coverage: ## Runs all unit tests and generates a coverage report.
 	echo "Ensuring the code coverage is met"
 	go mod vendor
-	go test -mod=vendor -coverprofile=coverage ./... | THRESHOLD_FILE=$(COVERAGE_THRESHOLD_FILE) COVERAGE_PERCENTAGE=$(TEST_COVERAGE_PERCENTAGE) go run ./hack/codecoverage/main.go
+	go test -mod=vendor -coverprofile=coverage ./... | go run ./hack/codecoverage/main.go $(COVERAGE_THRESHOLD_FILE) $(TEST_COVERAGE_PERCENTAGE)
 
 ## Linters
 #####################################################################

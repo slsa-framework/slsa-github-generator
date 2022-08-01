@@ -4,9 +4,8 @@ The goal of the coverage tool is to measure the coverage of the code base for Go
 
 ## Usage
 Execute the following command to get the coverage and store it in a file:
-1. `go test  -coverprofile=coverage ./... | THRESHOLD_FILE=./coverage.json COVERAGE_PERCENTAGE=70 go run ./hack/codecoverage/main.go`
-2. The `THRESHOLD_FILE` is the path to the file containing the coverage threshold.
-3. The THRESHOLD_FILE contains the percentage of the code coverage that is required to pass for certain packages. This is usually because they don't match the desired coverage.
+1. `go test  -coverprofile=coverage ./... |  run ./hack/codecoverage/main.go coverage.json 70`
+2. The coverage.json contains the percentage of the code coverage that is required to pass for certain packages. This is usually because they don't match the desired coverage.
 ```json
 {
   "github.com/slsa-framework/slsa-github-generator/github":70.4,
