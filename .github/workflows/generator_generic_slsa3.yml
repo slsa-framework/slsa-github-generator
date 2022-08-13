@@ -193,7 +193,7 @@ jobs:
 
   # create-release creates a release and uploads provenance to the release if
   # `upload-assets` is true.
-  create-release:
+  upload-tag:
     outputs:
       outcome: ${{ steps.final.outputs.outcome }}
       release-id: ${{ steps.release.outputs.id }}
