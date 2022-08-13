@@ -1,0 +1,55 @@
+{
+  "name": "upload-release-asset",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Upload a release asset to an existing GitHub Release",
+  "main": "dist/index.js",
+  "scripts": {
+    "lint": "eslint 'src/**.js' 'tests/**.js' --fix",
+    "test": "eslint 'src/**.js' 'tests/**.js' && jest --coverage",
+    "build": "ncc build src/main.js",
+    "precommit": "npm run build && git add dist/"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/actions/upload-release-asset"
+  },
+  "keywords": [
+    "actions",
+    "node"
+  ],
+  "author": "GitHub",
+  "license": "MIT",
+  "dependencies": {
+    "@actions/core": "^1.0.0",
+    "@actions/exec": "^1.0.0",
+    "@actions/github": "^1.0.0"
+  },
+  "devDependencies": {
+    "@zeit/ncc": "^0.20.4",
+    "eslint": "^5.13.0",
+    "eslint-config-airbnb": "^17.1.0",
+    "eslint-config-prettier": "^3.6.0",
+    "eslint-plugin-import": "^2.16.0",
+    "eslint-plugin-jsx-a11y": "^6.2.1",
+    "eslint-plugin-prettier": "^2.7.0",
+    "eslint-plugin-react": "^7.12.4",
+    "husky": "^3.0.5",
+    "jest": "^28.1.3",
+    "prettier": "^1.16.4"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "collectCoverageFrom": [
+      "src/upload-release-asset.js"
+    ],
+    "coverageThreshold": {
+      "global": {
+        "branches": 80,
+        "functions": 80,
+        "lines": 80,
+        "statements": 80
+      }
+    }
+  }
+}

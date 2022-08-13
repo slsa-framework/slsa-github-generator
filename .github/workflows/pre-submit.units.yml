@@ -32,7 +32,7 @@ jobs:
           make unit-test
 
   check-verifier:
-    name: verify slsa-verifier is latest
+    name: Verify slsa-verifier is latest
     runs-on: ubuntu-latest
     if: ${{ always() }}
     steps:
