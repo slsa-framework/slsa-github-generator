@@ -40,10 +40,19 @@ on:
         required: true
         type: string
       upload-assets:
-        description: "If true provenance is uploaded to a GitHub release for new tags."
+        description: >
+          If true provenance is uploaded to a GitHub release for new tags.
+          When the workflow does not run on a new tag, such as on a workflow_dispatch,
+          the `upload-url` argument must be provided as well.
         required: false
         type: boolean
         default: true
+      upload-url:
+        description: >
+          If non-empty and `upload-assets` is set to true, the provenance is uploaded to the GitHub
+          release identified by the URL.
+        type: string
+        default: ""
       config-file:
         description: "The configuration file for the builder. A path within the calling repository."
         required: false
