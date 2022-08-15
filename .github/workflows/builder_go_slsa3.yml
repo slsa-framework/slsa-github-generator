@@ -362,7 +362,7 @@ jobs:
     needs: [generator]
     permissions:
       contents: write
-    if: inputs.upload-url != ''
+    if: inputs.upload-url != '' && inputs.upload-assets == true
     steps:
       - name: Download binary
         uses: slsa-framework/slsa-github-generator/.github/actions/secure-download-artifact@bd5d98277f41bbe5ef9f7a4fd7e0031c9b8aef68
