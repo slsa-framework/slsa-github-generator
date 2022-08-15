@@ -313,7 +313,7 @@ jobs:
   #           Upload binaries and provenances as assets             #
   #                                                                 #
   ###################################################################
-  upload-assets:
+  upload-tag:
     permissions:
       contents: write # Needed to write artifacts to a release.
     runs-on: ubuntu-latest
@@ -347,3 +347,45 @@ jobs:
           files: |
             ${{ needs.build-dry.outputs.go-binary-name }}
             ${{ needs.provenance.outputs.go-provenance-name }}
+
+  upload-url:
+    runs-on: ubuntu-latest
+    needs: [generator]
+    permissions:
+      contents: write
+    if: inputs.upload-url != ''
+    steps:
+      - name: Download binary
+        uses: slsa-framework/slsa-github-generator/.github/actions/secure-download-artifact@bd5d98277f41bbe5ef9f7a4fd7e0031c9b8aef68
+        with:
+          name: "${{ needs.build-dry.outputs.go-binary-name }}"
+          path: "${{ needs.build-dry.outputs.go-binary-name }}"
+          sha256: "${{ needs.build.outputs.go-binary-sha256 }}"
+
+      - name: Download provenance
+        uses: slsa-framework/slsa-github-generator/.github/actions/secure-download-artifact@bd5d98277f41bbe5ef9f7a4fd7e0031c9b8aef68
+        with:
+          name: "${{ needs.provenance.outputs.go-provenance-name }}"
+          path: "${{ needs.provenance.outputs.go-provenance-name }}"
+          sha256: "${{ needs.provenance.outputs.go-provenance-sha256 }}"
+
+      - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # tag=v3.0.2
+      - name: Upload provenance
+        uses: ./.github/actions/upload-assets
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ inputs.upload-url }}
+          asset_path: "${{ needs.provenance.outputs.go-provenance-name }}"
+          asset_name: "${{ needs.provenance.outputs.go-provenance-name }}"
+          asset_content_type: application/json
+
+      - name: Upload binary
+        uses: ./.github/actions/upload-assets
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ inputs.upload-url }}
+          asset_path: "${{ needs.build-dry.outputs.go-binary-name }}"
+          asset_name: "${{ needs.build-dry.outputs.go-binary-name }}"
+          asset_content_type: application/x-executable
