@@ -57,7 +57,7 @@ jobs:
     steps:
       - name: Detect the generator ref
         id: detect
-        uses: slsa-framework/slsa-github-generator/.github/actions/detect-workflow@bd5d98277f41bbe5ef9f7a4fd7e0031c9b8aef68
+        uses: slsa-framework/slsa-github-generator/.github/actions/detect-workflow@869ca2ccfe0cab8dee38ea6654ceac5823c1934d
 
   # generator builds the generator binary and runs it to generate SLSA
   # provenance.
@@ -81,7 +81,7 @@ jobs:
       packages: write
     steps:
       - name: Generate builder
-        uses: slsa-framework/slsa-github-generator/.github/actions/generate-builder@bd5d98277f41bbe5ef9f7a4fd7e0031c9b8aef68
+        uses: slsa-framework/slsa-github-generator/.github/actions/generate-builder@869ca2ccfe0cab8dee38ea6654ceac5823c1934d
         with:
           repository: "${{ needs.detect-env.outputs.repository }}"
           ref: "${{ needs.detect-env.outputs.ref }}"
@@ -91,7 +91,7 @@ jobs:
           # NOTE: We are using the generic generator.
           directory: "${{ env.BUILDER_DIR }}"
 
-      - uses: sigstore/cosign-installer@09a077b27eb1310dcfb21981bee195b30ce09de0 # tag=v2.5.0
+      - uses: sigstore/cosign-installer@b3413d484cc23cf8778c3d2aa361568d4eb54679 # tag=v2.5.1
       - name: Login
         env:
           UNTRUSTED_IMAGE: "${{ inputs.image }}"
