@@ -18,7 +18,7 @@ runs:
   steps:
     - name: Compute binary hash
       id: compute-digest
-      uses: slsa-framework/slsa-github-generator/.github/actions/compute-sha256@869ca2ccfe0cab8dee38ea6654ceac5823c1934d
+      uses: slsa-framework/slsa-github-generator/.github/actions/compute-sha256@950808bd3049727b4caea680f48b367fc596adf6
       with:
         path: "${{ inputs.path }}"
 
