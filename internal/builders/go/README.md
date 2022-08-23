@@ -60,7 +60,7 @@ goarch: amd64
 # main: ./path/to/main.go
 
 # (Optional) Working directory. (default: root of the project)
-# dir: /path/to/dir
+# dir: ./relative/path/to/dir
 
 # Binary output name.
 # {{ .Os }} will be replaced by goos field in the config file.
