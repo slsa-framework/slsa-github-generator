@@ -36,7 +36,7 @@ runs:
 
     - name: Compute the hash
       id: compute
-      uses: slsa-framework/slsa-github-generator/.github/actions/compute-sha256@bd5d98277f41bbe5ef9f7a4fd7e0031c9b8aef68
+      uses: slsa-framework/slsa-github-generator/.github/actions/compute-sha256@950808bd3049727b4caea680f48b367fc596adf6
       with:
         path: "${{ inputs.path }}"
 
