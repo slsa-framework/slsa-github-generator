@@ -74,7 +74,7 @@ provenance:
   permissions:
     actions: read # Needed for detection of GitHub Actions environment.
     id-token: write # Needed for provenance signing and ID
-    contents: read # Needed for API access
+    contents: write # Needed for release uploads
   uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.2.0
   with:
     base64-subjects: "${{ needs.build.outputs.hashes }}"
