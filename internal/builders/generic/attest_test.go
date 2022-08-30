@@ -2,6 +2,8 @@ package main
 
 import (
 	"bytes"
+	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -10,6 +12,7 @@ import (
 	slsav02 "github.com/in-toto/in-toto-golang/in_toto/slsa_provenance/v0.2"
 
 	"github.com/slsa-framework/slsa-github-generator/internal/errors"
+	"github.com/slsa-framework/slsa-github-generator/internal/utils"
 	"github.com/slsa-framework/slsa-github-generator/slsa"
 )
 
@@ -150,14 +153,98 @@ func TestParseSubjects(t *testing.T) {
 
 // Test_attestCmd tests the attest command.
 func Test_attestCmd(t *testing.T) {
-	t.Run("empty attestation path", func(t *testing.T) {
+	t.Run("default single artifact", func(t *testing.T) {
 		t.Setenv("GITHUB_CONTEXT", "{}")
 
-		c := attestCmd(&slsa.NilClientProvider{})
+		// Change to temporary dir
+		dir, err := os.MkdirTemp("", "")
+		if err != nil {
+			t.Errorf("unexpected failure: %v", err)
+		}
+		if err := os.Chdir(dir); err != nil {
+			t.Errorf("unexpected failure: %v", err)
+		}
+		defer os.RemoveAll(dir)
+
+		c := attestCmd(&slsa.NilClientProvider{}, checkTest(t))
 		c.SetOut(new(bytes.Buffer))
-		c.SetArgs([]string{"--signature", ""})
 		if err := c.Execute(); err != nil {
 			t.Errorf("unexpected failure: %v", err)
+		}
+
+		// check that the expected file exists.
+		if _, err := os.Stat(filepath.Join(dir, "artifact1.intoto.jsonl")); err != nil {
+			t.Errorf("error checking file: %v", err)
+		}
+	})
+
+	t.Run("default multi artifact", func(t *testing.T) {
+		t.Setenv("GITHUB_CONTEXT", "{}")
+
+		// Change to temporary dir
+		dir, err := os.MkdirTemp("", "")
+		if err != nil {
+			t.Errorf("unexpected failure: %v", err)
+		}
+		if err := os.Chdir(dir); err != nil {
+			t.Errorf("unexpected failure: %v", err)
+		}
+		defer os.RemoveAll(dir)
+
+		c := attestCmd(&slsa.NilClientProvider{}, checkTest(t))
+		c.SetOut(new(bytes.Buffer))
+		if err := c.Execute(); err != nil {
+			t.Errorf("unexpected failure: %v", err)
+		}
+
+		// check that the expected file exists.
+		if _, err := os.Stat(filepath.Join(dir, "multiple.intoto.jsonl")); err != nil {
+			t.Errorf("error checking file: %v", err)
+		}
+	})
+
+	t.Run("custom provenance name", func(t *testing.T) {
+		t.Setenv("GITHUB_CONTEXT", "{}")
+
+		// Generate a temporary file name.
+		f, err := os.CreateTemp("", "*.intoto.jsonl")
+		if err != nil {
+			t.Errorf("unexpected failure: %v", err)
+		}
+		tmpName := f.Name()
+		_ = os.Remove(f.Name())
+
+		c := attestCmd(&slsa.NilClientProvider{}, checkTest(t))
+		c.SetOut(new(bytes.Buffer))
+		c.SetArgs([]string{"--signature", tmpName})
+		if err := c.Execute(); err != nil {
+			t.Errorf("unexpected failure: %v", err)
+		}
+
+		// check that the file exists.
+		if _, err := os.Stat(tmpName); err != nil {
+			t.Errorf("error checking file: %v", err)
+		}
+	})
+
+	t.Run("invalid provenance name", func(t *testing.T) {
+		t.Setenv("GITHUB_CONTEXT", "{}")
+
+		// Generate a temporary file name.
+		f, err := os.CreateTemp("", "*.txt")
+		if err != nil {
+			t.Errorf("unexpected failure: %v", err)
+		}
+		tmpName := f.Name()
+		_ = os.Remove(f.Name())
+
+		c := attestCmd(&slsa.NilClientProvider{}, checkTest(t))
+		c.SetOut(new(bytes.Buffer))
+		c.SetArgs([]string{"--signature", tmpName})
+
+		errInvalidPath := &utils.ErrInvalidPath{}
+		if err := c.Execute(); !errors.As(err, &errInvalidPath) {
+			t.Errorf("expected %v but got %v", errInvalidPath, err)
 		}
 	})
 }
