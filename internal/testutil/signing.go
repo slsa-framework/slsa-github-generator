@@ -55,17 +55,17 @@ type TestLogEntry struct {
 	UUIDVal     string
 }
 
-// ID implements LogEntry.ID
+// ID implements LogEntry.ID.
 func (e *TestLogEntry) ID() string {
 	return e.IDVal
 }
 
-// LogIndex implements LogEntry.LogIndex
+// LogIndex implements LogEntry.LogIndex.
 func (e *TestLogEntry) LogIndex() int64 {
 	return e.LogIndexVal
 }
 
-// UUID implements LogEntry.UUID
+// UUID implements LogEntry.UUID.
 func (e *TestLogEntry) UUID() string {
 	return e.UUIDVal
 }
