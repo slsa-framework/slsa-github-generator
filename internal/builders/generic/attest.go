@@ -16,6 +16,7 @@ package main
 
 import (
 	"context"
+	"crypto/sha256"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -115,6 +116,10 @@ run in the context of a Github Actions workflow.`,
 
 			_, err = f.Write(attBytes)
 			check(err)
+
+			// Print the provenance name and sha256 so it can be used by the workflow.
+			fmt.Printf("::set-output name=provenance-name::%s", attPath)
+			fmt.Printf("::set-output name=provenance-sha256::%x", sha256.Sum256(attBytes))
 		},
 	}
 
