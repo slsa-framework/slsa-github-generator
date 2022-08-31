@@ -35,10 +35,9 @@ on:
         type: boolean
         default: false
       attestation-name:
-        description: The artifact name of the signed provenance. The file must have the intoto.jsonl extension. Defaults to <filename>.intoto.jsonl for single artifact or multiple.intoto.jsonl for multiple artifacts.
+        description: "The artifact name of the signed provenance. The file must have the intoto.jsonl extension. Defaults to <filename>.intoto.jsonl for single artifact or multiple.intoto.jsonl for multiple artifacts. DEPRECATED: Use provenance-name instead."
         required: false
         type: string
-        deprecationMessage: "Use provenance-name instead."
       provenance-name:
         description: The artifact name of the signed provenance. The file must have the intoto.jsonl extension. Defaults to <filename>.intoto.jsonl for single artifact or multiple.intoto.jsonl for multiple artifacts.
         required: false
@@ -124,6 +123,7 @@ jobs:
             untrusted_provenance_name="$UNTRUSTED_PROVENANCE_NAME"
           else
             if [ "$UNTRUSTED_DEPRECATED_ATTESTATION_NAME" != "" ]; then
+              echo "WARNING: deprecated attestation-name was used. Use provenance-name instead."
               untrusted_provenance_name="$UNTRUSTED_DEPRECATED_ATTESTATION_NAME"
             fi
           fi
