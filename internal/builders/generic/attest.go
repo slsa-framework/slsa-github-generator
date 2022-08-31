@@ -44,6 +44,8 @@ and upload to a Rekor transparency log. This command assumes that it is being
 run in the context of a Github Actions workflow.`,
 
 		Run: func(cmd *cobra.Command, args []string) {
+			fmt.Println("Running")
+
 			ghContext, err := github.GetWorkflowContext()
 			check(err)
 
@@ -116,6 +118,8 @@ run in the context of a Github Actions workflow.`,
 
 			_, err = f.Write(attBytes)
 			check(err)
+
+			fmt.Printf("att path: %s\n", attPath)
 
 			// Print the provenance name and sha256 so it can be used by the workflow.
 			fmt.Printf("::set-output name=provenance-name::%s\n", attPath)
