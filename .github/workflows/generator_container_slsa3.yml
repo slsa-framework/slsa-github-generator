@@ -57,7 +57,7 @@ jobs:
     steps:
       - name: Detect the generator ref
         id: detect
-        uses: slsa-framework/slsa-github-generator/.github/actions/detect-workflow@950808bd3049727b4caea680f48b367fc596adf6
+        uses: slsa-framework/slsa-github-generator/.github/actions/detect-workflow@07d42a79c8531365637e425fac6a95bf0f5dc29e
 
   # generator builds the generator binary and runs it to generate SLSA
   # provenance.
@@ -72,7 +72,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [detect-env]
     permissions:
-      # id-token:write is needed to create an OCID token for keyless signing.
+      # id-token:write is needed to create an OIDC token for keyless signing.
       id-token: write
       # actions permissions are needed to read info on the workflow and
       # workflow run.
@@ -81,7 +81,7 @@ jobs:
       packages: write
     steps:
       - name: Generate builder
-        uses: slsa-framework/slsa-github-generator/.github/actions/generate-builder@950808bd3049727b4caea680f48b367fc596adf6
+        uses: slsa-framework/slsa-github-generator/.github/actions/generate-builder@07d42a79c8531365637e425fac6a95bf0f5dc29e
         with:
           repository: "${{ needs.detect-env.outputs.repository }}"
           ref: "${{ needs.detect-env.outputs.ref }}"
