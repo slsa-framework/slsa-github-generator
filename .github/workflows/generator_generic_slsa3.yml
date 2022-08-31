@@ -135,15 +135,13 @@ jobs:
           # number of subjects based on in-toto attestation bundle file naming conventions.
           # See: https://github.com/in-toto/attestation/blob/main/spec/bundle.md#file-naming-convention
           # NOTE: The attest commmand outputs the provenance-name and provenance-sha256
-          echo "Running builder..."
-          set -x
           ./"$BUILDER_BINARY" attest --subjects "${UNTRUSTED_SUBJECTS}" -g "$untrusted_provenance_name"
 
       - name: Upload the signed provenance
         uses: actions/upload-artifact@3cea5372237819ed00197afe530f5a7ea3e805c8 # tag=v3.1.0
         with:
-          name: "${{ steps.sign-prov.provenance-name }}"
-          path: "${{ steps.sign-prov.provenance-name }}"
+          name: "${{ steps.sign-prov.outputs.provenance-name }}"
+          path: "${{ steps.sign-prov.outputs.provenance-name }}"
           if-no-files-found: error
           retention-days: 5
 
