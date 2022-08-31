@@ -48,6 +48,38 @@ func (s TestSigner) Sign(context.Context, *intoto.Statement) (signing.Attestatio
 	return &s.Att, nil
 }
 
+// TestLogEntry is a basic LogEntry implementation.
+type TestLogEntry struct {
+	IDVal       string
+	LogIndexVal int64
+	UUIDVal     string
+}
+
+// ID implements LogEntry.ID
+func (e *TestLogEntry) ID() string {
+	return e.IDVal
+}
+
+// LogIndex implements LogEntry.LogIndex
+func (e *TestLogEntry) LogIndex() int64 {
+	return e.LogIndexVal
+}
+
+// UUID implements LogEntry.UUID
+func (e *TestLogEntry) UUID() string {
+	return e.UUIDVal
+}
+
+// TestTransparencyLog is an implementation of TransparencyLog that returns an ErrTransparencyLog.
+type TestTransparencyLog struct {
+	Entry *TestLogEntry
+}
+
+// Upload implements TransparencyLog.Upload.
+func (l TestTransparencyLog) Upload(context.Context, signing.Attestation) (signing.LogEntry, error) {
+	return l.Entry, nil
+}
+
 // TransparencyLogWithErr is an implementation of TransparencyLog that returns an ErrTransparencyLog.
 type TransparencyLogWithErr struct{}
 

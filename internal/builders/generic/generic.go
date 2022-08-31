@@ -40,7 +40,7 @@ func checkExit(err error) {
 func checkTest(t *testing.T) func(err error) {
 	return func(err error) {
 		if err != nil {
-			t.Errorf("%v", err)
+			t.Fatalf("%v", err)
 		}
 	}
 }

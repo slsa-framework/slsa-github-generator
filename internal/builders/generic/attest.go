@@ -17,6 +17,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"os"
 
 	intoto "github.com/in-toto/in-toto-golang/in_toto"
@@ -25,12 +26,12 @@ import (
 	"github.com/slsa-framework/slsa-github-generator/github"
 	"github.com/slsa-framework/slsa-github-generator/internal/errors"
 	"github.com/slsa-framework/slsa-github-generator/internal/utils"
-	"github.com/slsa-framework/slsa-github-generator/signing/sigstore"
+	"github.com/slsa-framework/slsa-github-generator/signing"
 	"github.com/slsa-framework/slsa-github-generator/slsa"
 )
 
 // attestCmd returns the 'attest' command.
-func attestCmd(provider slsa.ClientProvider, check func(error)) *cobra.Command {
+func attestCmd(provider slsa.ClientProvider, check func(error), signer signing.Signer, tlog signing.TransparencyLog) *cobra.Command {
 	var attPath string
 	var subjects string
 
@@ -45,16 +46,24 @@ run in the context of a Github Actions workflow.`,
 			ghContext, err := github.GetWorkflowContext()
 			check(err)
 
-			// Verify the extension path and extension.
-			err = utils.VerifyAttestationPath(attPath)
-			check(err)
-
 			parsedSubjects, err := parseSubjects(subjects)
 			check(err)
 
 			if len(parsedSubjects) == 0 {
 				check(errors.New("expected at least one subject"))
 			}
+			if attPath == "" {
+				if len(parsedSubjects) == 1 {
+					attPath = fmt.Sprintf("%s.intoto.jsonl", parsedSubjects[0].Name)
+				} else {
+					// len(parsedSubjects) > 1
+					attPath = "multiple.intoto.jsonl"
+				}
+			}
+
+			// Verify the extension path and extension.
+			err = utils.VerifyAttestationPath(attPath)
+			check(err)
 
 			ctx := context.Background()
 
@@ -89,15 +98,13 @@ run in the context of a Github Actions workflow.`,
 				attBytes, err = json.Marshal(p)
 				check(err)
 			} else {
-				s := sigstore.NewDefaultFulcio()
-				att, err := s.Sign(ctx, &intoto.Statement{
+				att, err := signer.Sign(ctx, &intoto.Statement{
 					StatementHeader: p.StatementHeader,
 					Predicate:       p.Predicate,
 				})
 				check(err)
 
-				r := sigstore.NewDefaultRekor()
-				_, err = r.Upload(ctx, att)
+				_, err = tlog.Upload(ctx, att)
 				check(err)
 
 				attBytes = att.Bytes()
