@@ -53,6 +53,9 @@ run in the context of a Github Actions workflow.`,
 			if len(parsedSubjects) == 0 {
 				check(errors.New("expected at least one subject"))
 			}
+
+			// NOTE: The provenance file path is untrusted and should be
+			// validated. This is done by CreateNewFileUnderCurrentDirectory.
 			if attPath == "" {
 				if len(parsedSubjects) == 1 {
 					attPath = fmt.Sprintf("%s.intoto.jsonl", parsedSubjects[0].Name)
