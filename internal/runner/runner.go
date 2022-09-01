@@ -20,7 +20,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"strings"
 )
 
 // CommandRunner runs commands and returns the build steps that were run.
@@ -121,47 +120,4 @@ func (r *CommandRunner) runStep(ctx context.Context, step *CommandStep) (*Comman
 		Env:        env,
 		WorkingDir: pwd,
 	}, nil
-}
-
-// dedupEnv returns a copy of env with any duplicates removed, in favor of
-// later values.
-// Items not of the normal environment "key=value" form are preserved unchanged.
-// NOTE: adapted from the stdlib os/exec package.
-func dedupEnv(env []string) []string {
-	// Construct the output in reverse order, to preserve the
-	// last occurrence of each key.
-	out := make([]string, 0, len(env))
-	saw := make(map[string]bool, len(env))
-	for n := len(env); n > 0; n-- {
-		kv := env[n-1]
-
-		i := strings.Index(kv, "=")
-		if i == 0 {
-			// We observe in practice keys with a single leading "=" on Windows.
-			i = strings.Index(kv[1:], "=") + 1
-		}
-		if i < 0 {
-			if kv != "" {
-				// The entry is not of the form "key=value" (as it is required to be).
-				// Leave it as-is for now.
-				out = append(out, kv)
-			}
-			continue
-		}
-		k := kv[:i]
-		if saw[k] {
-			continue
-		}
-
-		saw[k] = true
-		out = append(out, kv)
-	}
-
-	// Now reverse the slice to restore the original order.
-	for i := 0; i < len(out)/2; i++ {
-		j := len(out) - i - 1
-		out[i], out[j] = out[j], out[i]
-	}
-
-	return out
 }
