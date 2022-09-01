@@ -1,11 +1,26 @@
+// Copyright 2022 SLSA Authors
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     https://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package runner
 
 import (
+	"context"
 	"errors"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
-	"syscall"
 )
 
 // CommandRunner runs commands and returns the build steps that were run.
@@ -41,7 +56,7 @@ type CommandStep struct {
 // These are *not* the same as the runner commands. Env vars are sanitized, pwd
 // is changed to the absolute path, and only commands that executed
 // successfully are returned.
-func (r *CommandRunner) Run() (steps []*CommandStep, err error) {
+func (r *CommandRunner) Run(ctx context.Context) (steps []*CommandStep, err error) {
 	var originalwd string
 	originalwd, err = os.Getwd()
 	if err != nil {
@@ -58,7 +73,7 @@ func (r *CommandRunner) Run() (steps []*CommandStep, err error) {
 
 	for _, step := range r.Steps {
 		var runStep *CommandStep
-		runStep, err = r.runStep(step)
+		runStep, err = r.runStep(ctx, step)
 		if err != nil {
 			return // steps, err
 		}
@@ -67,15 +82,17 @@ func (r *CommandRunner) Run() (steps []*CommandStep, err error) {
 	return // steps, err
 }
 
-func (r *CommandRunner) runStep(step *CommandStep) (*CommandStep, error) {
+func (r *CommandRunner) runStep(ctx context.Context, step *CommandStep) (*CommandStep, error) {
 	if len(step.Command) == 0 {
 		return nil, errors.New("command is empty")
 	}
 
-	cmd := step.Command[0]
+	name := step.Command[0]
 	args := step.Command[1:]
+
 	// TODO: Add some kind of LD_PRELOAD protection?
-	env := dedupEnv(append(r.Env, step.Env...))
+	env := make([]string, len(step.Env))
+	copy(env, step.Env)
 
 	// Set the POSIX PWD env var.
 	pwd, err := filepath.Abs(step.WorkingDir)
@@ -84,21 +101,23 @@ func (r *CommandRunner) runStep(step *CommandStep) (*CommandStep, error) {
 	}
 	env = append(env, "PWD="+pwd)
 
-	if err = os.Chdir(pwd); err != nil {
-		return nil, err
-	}
+	cmd := exec.CommandContext(ctx, name, args...)
+	cmd.Dir = pwd
+	cmd.Env = env
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
 
-	// NOTE: We use syscall.Exec directly because we are executing the
-	// commands in sequence and we want full control over the environment.
-	// The stdlib exec package deduplicates env vars and so it's hard to
-	// know exactly what the command was run with.
-	// NOTE: The executed command will inherit stdout/stderr.
-	if err := syscall.Exec(cmd, args, env); err != nil {
+	// TODO(https://github.com/slsa-framework/slsa-github-generator/issues/782): Update to Go 1.19.
+	// Get the environment that will be used as currently configured. Environ
+	// is needed to capture the actual environment used.
+	// env = cmd.Environ()
+
+	if err := cmd.Run(); err != nil {
 		return nil, err
 	}
 
 	return &CommandStep{
-		Command:    append([]string{cmd}, args...),
+		Command:    append([]string{name}, args...),
 		Env:        env,
 		WorkingDir: pwd,
 	}, nil
@@ -107,7 +126,7 @@ func (r *CommandRunner) runStep(step *CommandStep) (*CommandStep, error) {
 // dedupEnv returns a copy of env with any duplicates removed, in favor of
 // later values.
 // Items not of the normal environment "key=value" form are preserved unchanged.
-// NOTE: adapted from the stdlib exec package.
+// NOTE: adapted from the stdlib os/exec package.
 func dedupEnv(env []string) []string {
 	// Construct the output in reverse order, to preserve the
 	// last occurrence of each key.
