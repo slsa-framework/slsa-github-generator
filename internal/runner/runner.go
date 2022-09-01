@@ -17,6 +17,7 @@ package runner
 import (
 	"context"
 	"errors"
+	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -29,6 +30,12 @@ type CommandRunner struct {
 
 	// Steps are the steps to execute.
 	Steps []*CommandStep
+
+	// Stdout is the Writer used for Stdout. If nil then os.Stdout is used.
+	Stdout io.Writer
+
+	// Stderr is the Writer used for Stderr. If nil then os.Stderr is used.
+	Stderr io.Writer
 }
 
 // CommandStep is a command that was executed by the builder.
@@ -56,20 +63,6 @@ type CommandStep struct {
 // is changed to the absolute path, and only commands that executed
 // successfully are returned.
 func (r *CommandRunner) Run(ctx context.Context) (steps []*CommandStep, err error) {
-	var originalwd string
-	originalwd, err = os.Getwd()
-	if err != nil {
-		return // steps, err
-	}
-	defer func() {
-		// Change directories back to the original working directory but only
-		// return the error returned by Chdir if no other error occurred.
-		if chDirErr := os.Chdir(originalwd); err == nil {
-			// NOTE: err is returned by the function after the defer is called.
-			err = chDirErr
-		}
-	}()
-
 	for _, step := range r.Steps {
 		var runStep *CommandStep
 		runStep, err = r.runStep(ctx, step)
@@ -89,9 +82,10 @@ func (r *CommandRunner) runStep(ctx context.Context, step *CommandStep) (*Comman
 	name := step.Command[0]
 	args := step.Command[1:]
 
-	// TODO: Add some kind of LD_PRELOAD protection?
-	env := make([]string, len(step.Env))
-	copy(env, step.Env)
+	// Copy and merge the environment.
+	env := make([]string, len(r.Env), len(r.Env)+len(step.Env)+1)
+	copy(env, r.Env)
+	env = append(env, step.Env...)
 
 	// Set the POSIX PWD env var.
 	pwd, err := filepath.Abs(step.WorkingDir)
@@ -104,7 +98,13 @@ func (r *CommandRunner) runStep(ctx context.Context, step *CommandStep) (*Comman
 	cmd.Dir = pwd
 	cmd.Env = env
 	cmd.Stdout = os.Stdout
+	if r.Stdout != nil {
+		cmd.Stdout = r.Stdout
+	}
 	cmd.Stderr = os.Stderr
+	if r.Stderr != nil {
+		cmd.Stderr = r.Stderr
+	}
 
 	// TODO(https://github.com/slsa-framework/slsa-github-generator/issues/782): Update to Go 1.19.
 	// Get the environment that will be used as currently configured. Environ
