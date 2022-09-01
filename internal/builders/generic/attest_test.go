@@ -279,7 +279,7 @@ func Test_attestCmd_invalid_extension(t *testing.T) {
 		if err != nil {
 			errInvalidPath := &utils.ErrInvalidPath{}
 			if !errors.As(err, &errInvalidPath) {
-				t.Errorf("expected %v but got %v", &utils.ErrInvalidPath{}, err)
+				t.Fatalf("expected %v but got %v", &utils.ErrInvalidPath{}, err)
 			}
 			// Check should exit the program so we skip the rest of the test if we got the expected error.
 			t.SkipNow()
@@ -291,6 +291,50 @@ func Test_attestCmd_invalid_extension(t *testing.T) {
 	c.SetArgs([]string{
 		"--subjects", base64.StdEncoding.EncodeToString([]byte("b5bb9d8014a0f9b1d61e21e796d78dccdf1352f23cd32812f4850b878ae4944c  artifact1")),
 		"--signature", "invalid_name",
+	})
+	if err := c.Execute(); err != nil {
+		t.Errorf("unexpected failure: %v", err)
+	}
+
+	// If no error occurs we catch it here. SkipNow will exit the test process so this code should be unreachable.
+	t.Errorf("expected an error to occur.")
+}
+
+func Test_attestCmd_invalid_path(t *testing.T) {
+	t.Setenv("GITHUB_CONTEXT", "{}")
+
+	// Change to temporary dir
+	currentDir, err := os.Getwd()
+	if err != nil {
+		t.Errorf("unexpected failure: %v", err)
+	}
+	dir, err := os.MkdirTemp("", "")
+	if err != nil {
+		t.Errorf("unexpected failure: %v", err)
+	}
+	defer os.RemoveAll(dir)
+	if err := os.Chdir(dir); err != nil {
+		t.Errorf("unexpected failure: %v", err)
+	}
+	defer os.Chdir(currentDir)
+
+	// A custom check function that checks the error type is the expected error type.
+	check := func(err error) {
+		if err != nil {
+			errInvalidPath := &utils.ErrInvalidPath{}
+			if !errors.As(err, &errInvalidPath) {
+				t.Fatalf("expected %v but got %v", &utils.ErrInvalidPath{}, err)
+			}
+			// Check should exit the program so we skip the rest of the test if we got the expected error.
+			t.SkipNow()
+		}
+	}
+
+	c := attestCmd(&slsa.NilClientProvider{}, check, &testutil.TestSigner{}, &testutil.TestTransparencyLog{})
+	c.SetOut(new(bytes.Buffer))
+	c.SetArgs([]string{
+		"--subjects", base64.StdEncoding.EncodeToString([]byte("b5bb9d8014a0f9b1d61e21e796d78dccdf1352f23cd32812f4850b878ae4944c  artifact1")),
+		"--signature", "/provenance.intoto.jsonl",
 	})
 	if err := c.Execute(); err != nil {
 		t.Errorf("unexpected failure: %v", err)
