@@ -15,43 +15,11 @@
 package pkg
 
 import (
-	"context"
-	"errors"
-	"fmt"
 	"testing"
 
-	intoto "github.com/in-toto/in-toto-golang/in_toto"
-	"github.com/slsa-framework/slsa-github-generator/signing"
+	"github.com/slsa-framework/slsa-github-generator/internal/testutil"
 	"github.com/slsa-framework/slsa-github-generator/slsa"
 )
-
-type testAttestation struct {
-	cert  []byte
-	bytes []byte
-}
-
-func (a *testAttestation) Cert() []byte {
-	return a.cert
-}
-
-func (a *testAttestation) Bytes() []byte {
-	return a.bytes
-}
-
-type testSigner struct{}
-
-func (s testSigner) Sign(context.Context, *intoto.Statement) (signing.Attestation, error) {
-	return &testAttestation{}, nil
-}
-
-type tLogWithErr struct{}
-
-var errTransparencyLog = errors.New("transparency log error")
-
-func (tLogWithErr) Upload(context.Context, signing.Attestation) (signing.LogEntry, error) {
-	fmt.Printf("Upload")
-	return nil, errTransparencyLog
-}
 
 func TestGenerateProvenance_withErr(t *testing.T) {
 	// Disable pre-submit detection.
@@ -59,8 +27,8 @@ func TestGenerateProvenance_withErr(t *testing.T) {
 	t.Setenv("GITHUB_EVENT_NAME", "non_event")
 	t.Setenv("GITHUB_CONTEXT", "{}")
 	sha256 := "2e0390eb024a52963db7b95e84a9c2b12c004054a7bad9a97ec0c7c89d4681d2"
-	_, err := GenerateProvenance("foo", sha256, "", "", "/home/foo", &testSigner{}, &tLogWithErr{}, &slsa.NilClientProvider{})
-	if want, got := errTransparencyLog, err; want != got {
+	_, err := GenerateProvenance("foo", sha256, "", "", "/home/foo", &testutil.TestSigner{}, &testutil.TransparencyLogWithErr{}, &slsa.NilClientProvider{})
+	if want, got := testutil.ErrTransparencyLog, err; want != got {
 		t.Errorf("expected error, want: %v, got: %v", want, got)
 	}
 }

@@ -126,7 +126,7 @@ jobs:
 
           # Generate a predicate only.
           predicate_name="predicate.json"
-          ./"$BUILDER_BINARY" attest --signature="" --predicate="$predicate_name"
+          ./"$BUILDER_BINARY" generate --predicate="$predicate_name"
 
           COSIGN_EXPERIMENTAL=1 cosign attest --predicate="$predicate_name" \
             --type slsaprovenance \
