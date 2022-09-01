@@ -15,14 +15,15 @@
 package pkg
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
-	"syscall"
 
+	"github.com/slsa-framework/slsa-github-generator/internal/runner"
 	"github.com/slsa-framework/slsa-github-generator/internal/utils"
 )
 
@@ -151,17 +152,26 @@ func (b *GoBuild) Run(dry bool) error {
 	// Generate the command.
 	command := b.generateCommand(flags, binary)
 
-	// Change directory.
-	if err := os.Chdir(dir); err != nil {
-		return err
-	}
-
 	fmt.Println("dir", dir)
 	fmt.Println("binary", binary)
 	fmt.Println("command", command)
 	fmt.Println("env", envs)
 
-	return syscall.Exec(b.goc, command, envs)
+	r := runner.CommandRunner{
+		Steps: []*runner.CommandStep{
+			{
+				Command:    command,
+				Env:        envs,
+				WorkingDir: dir,
+			},
+		},
+	}
+
+	// TODO: Add steps to buildConfig
+	// TODO: Support dry-run in runner.
+	// TODO: Add a timeout?
+	_, err = r.Run(context.Background())
+	return err
 }
 
 func getOutputBinaryPath(binary string) (string, error) {
