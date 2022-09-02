@@ -186,8 +186,6 @@ func (b *GoBuild) Run(dry bool) error {
 		},
 	}
 
-	// TODO: Add steps to buildConfig
-	// TODO: Support dry-run in runner.
 	// TODO: Add a timeout?
 	_, err = r.Run(context.Background())
 	return err
