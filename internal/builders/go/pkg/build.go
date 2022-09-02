@@ -55,6 +55,7 @@ var allowedEnvVariablePrefix = map[string]bool{
 	"GO": true, "CGO_": true,
 }
 
+// GoBuild implements building a Go application.
 type GoBuild struct {
 	cfg *GoReleaserConfig
 	goc string
@@ -62,6 +63,7 @@ type GoBuild struct {
 	argEnv map[string]string
 }
 
+// GoBuildNew returns a new GoBuild.
 func GoBuildNew(goc string, cfg *GoReleaserConfig) *GoBuild {
 	c := GoBuild{
 		cfg:    cfg,
@@ -72,6 +74,7 @@ func GoBuildNew(goc string, cfg *GoReleaserConfig) *GoBuild {
 	return &c
 }
 
+// Run executes the build.
 func (b *GoBuild) Run(dry bool) error {
 	// Get directory.
 	dir, err := b.getDir()
@@ -256,6 +259,7 @@ func (b *GoBuild) generateEnvVariables() ([]string, error) {
 	return env, nil
 }
 
+// SetArgEnvVariables sets static environment variables.
 func (b *GoBuild) SetArgEnvVariables(envs string) error {
 	// Notes:
 	// - I've tried running the re-usable workflow in a step
