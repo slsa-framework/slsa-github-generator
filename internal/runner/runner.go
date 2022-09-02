@@ -50,7 +50,24 @@ type CommandStep struct {
 	WorkingDir string `json:"workingDir"`
 }
 
-// Run excutes a series of commands and returns the steps that were executed
+// Dry returns the command steps as they would be executed by the runner
+// without actually executing the commands. This allows builders to get an
+// accurate set of steps in a trusted environment as executing commands will
+// execute untrusted code.
+func (r *CommandRunner) Dry() (steps []*CommandStep, err error) {
+	ctx := context.Background()
+	for _, step := range r.Steps {
+		var runStep *CommandStep
+		runStep, err = r.runStep(ctx, step, true)
+		if err != nil {
+			return // steps, err
+		}
+		steps = append(steps, runStep)
+	}
+	return // steps, err
+}
+
+// Run executes a series of commands and returns the steps that were executed
 // successfully. Commands are run in sequence and are expected to return a zero
 // exit status.
 //
@@ -65,7 +82,7 @@ type CommandStep struct {
 func (r *CommandRunner) Run(ctx context.Context) (steps []*CommandStep, err error) {
 	for _, step := range r.Steps {
 		var runStep *CommandStep
-		runStep, err = r.runStep(ctx, step)
+		runStep, err = r.runStep(ctx, step, false)
 		if err != nil {
 			return // steps, err
 		}
@@ -74,7 +91,10 @@ func (r *CommandRunner) Run(ctx context.Context) (steps []*CommandStep, err erro
 	return // steps, err
 }
 
-func (r *CommandRunner) runStep(ctx context.Context, step *CommandStep) (*CommandStep, error) {
+// runStep runs the build step and returns the CommandStep configuration
+// actually used to run the command. If dry is true then the CommandStep is
+// returned without executing the command.
+func (r *CommandRunner) runStep(ctx context.Context, step *CommandStep, dry bool) (*CommandStep, error) {
 	if len(step.Command) == 0 {
 		return nil, errors.New("command is empty")
 	}
@@ -111,8 +131,10 @@ func (r *CommandRunner) runStep(ctx context.Context, step *CommandStep) (*Comman
 	// is needed to capture the actual environment used.
 	// env = cmd.Environ()
 
-	if err := cmd.Run(); err != nil {
-		return nil, err
+	if !dry {
+		if err := cmd.Run(); err != nil {
+			return nil, err
+		}
 	}
 
 	return &CommandStep{

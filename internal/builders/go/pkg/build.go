@@ -120,24 +120,40 @@ func (b *GoBuild) Run(dry bool) error {
 		// Generate the command.
 		com := b.generateCommand(flags, filename)
 
-		// Share the resolved name of the binary.
-		fmt.Printf("::set-output name=go-binary-name::%s\n", filename)
-		command, err := utils.MarshalToString(com)
-		if err != nil {
-			return err
-		}
-		// Share the command used.
-		fmt.Printf("::set-output name=go-command::%s\n", command)
-
 		env, err := b.generateCommandEnvVariables()
 		if err != nil {
 			return err
 		}
 
-		menv, err := utils.MarshalToString(env)
+		r := runner.CommandRunner{
+			Steps: []*runner.CommandStep{
+				{
+					Command:    com,
+					Env:        env,
+					WorkingDir: dir,
+				},
+			},
+		}
+
+		steps, err := r.Dry()
 		if err != nil {
 			return err
 		}
+
+		menv, err := utils.MarshalToString(steps[0].Env)
+		if err != nil {
+			return err
+		}
+		command, err := utils.MarshalToString(steps[0].Command)
+		if err != nil {
+			return err
+		}
+
+		// Share the resolved name of the binary.
+		fmt.Printf("::set-output name=go-binary-name::%s\n", filename)
+
+		// Share the command used.
+		fmt.Printf("::set-output name=go-command::%s\n", command)
 
 		// Share the env variables used.
 		fmt.Printf("::set-output name=go-env::%s\n", menv)
