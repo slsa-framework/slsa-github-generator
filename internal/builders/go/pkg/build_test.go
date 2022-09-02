@@ -1049,7 +1049,6 @@ func asPointer(s string) *string {
 	return &s
 }
 
-// TODO(https://github.com/slsa-framework/slsa-github-generator/issues/771): reinstate test
 func TestGoBuild_Run(t *testing.T) {
 	type fields struct {
 		cfg    *GoReleaserConfig
