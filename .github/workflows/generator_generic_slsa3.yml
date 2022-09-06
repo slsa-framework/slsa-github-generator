@@ -35,14 +35,13 @@ on:
         type: boolean
         default: false
       attestation-name:
-        description: >
-          The artifact name of the signed provenance.
-          The file must have the intoto.jsonl extension.
-
-          Default: attestation.intoto.jsonl
+        description: "The artifact name of the signed provenance. The file must have the intoto.jsonl extension. Defaults to <filename>.intoto.jsonl for single artifact or multiple.intoto.jsonl for multiple artifacts. DEPRECATED: Use provenance-name instead."
         required: false
         type: string
-        default: "attestation.intoto.jsonl"
+      provenance-name:
+        description: The artifact name of the signed provenance. The file must have the intoto.jsonl extension. Defaults to <filename>.intoto.jsonl for single artifact or multiple.intoto.jsonl for multiple artifacts.
+        required: false
+        type: string
       compile-generator:
         description: "Build the generator from source. This increases build time by ~2m."
         required: false
@@ -53,8 +52,11 @@ on:
         description: "The name of the release where provenance was uploaded."
         value: ${{ jobs.create-release.outputs.release-id }}
       attestation-name:
+        description: "DEPRECATED: use the provenance-name output instead."
+        value: ${{ jobs.generator.outputs.provenance-name }}
+      provenance-name:
         description: "The artifact name of the signed provenance. (A file with the intoto.jsonl extension)."
-        value: "${{ inputs.attestation-name }}"
+        value: ${{ jobs.generator.outputs.provenance-name }}
 
 jobs:
   # detect-env detects the reusable workflow's repository and ref for use later
@@ -69,7 +71,7 @@ jobs:
     steps:
       - name: Detect the generator ref
         id: detect
-        uses: slsa-framework/slsa-github-generator/.github/actions/detect-workflow@e178bc7b362c7cb93899a9721da7a0d7d1286869
+        uses: slsa-framework/slsa-github-generator/.github/actions/detect-workflow@07d42a79c8531365637e425fac6a95bf0f5dc29e
 
   # generator builds the generator binary and runs it to generate SLSA
   # provenance.
@@ -82,7 +84,8 @@ jobs:
   # reference.
   generator:
     outputs:
-      attestation-sha256: ${{ steps.sign-prov.outputs.attestation-sha256 }}
+      provenance-sha256: ${{ steps.sign-prov.outputs.provenance-sha256 }}
+      provenance-name: ${{ steps.sign-prov.outputs.provenance-name }}
     runs-on: ubuntu-latest
     needs: [detect-env]
     permissions:
@@ -93,7 +96,7 @@ jobs:
       actions: read
     steps:
       - name: Generate builder
-        uses: slsa-framework/slsa-github-generator/.github/actions/generate-builder@e178bc7b362c7cb93899a9721da7a0d7d1286869
+        uses: slsa-framework/slsa-github-generator/.github/actions/generate-builder@07d42a79c8531365637e425fac6a95bf0f5dc29e
         with:
           repository: "${{ needs.detect-env.outputs.repository }}"
           ref: "${{ needs.detect-env.outputs.ref }}"
@@ -109,30 +112,36 @@ jobs:
         # order to avoid script injection.
         # See: https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions#understanding-the-risk-of-script-injections
         env:
-          SUBJECTS: "${{ inputs.base64-subjects }}"
           GITHUB_CONTEXT: "${{ toJSON(github) }}"
-          UNTRUSTED_ATTESTATION_NAME: "${{ inputs.attestation-name }}"
+          UNTRUSTED_SUBJECTS: "${{ inputs.base64-subjects }}"
+          UNTRUSTED_PROVENANCE_NAME: "${{ inputs.provenance-name }}"
+          UNTRUSTED_DEPRECATED_ATTESTATION_NAME: "${{ inputs.attestation-name }}"
         run: |
           set -euo pipefail
-          # NOTE: The generator binary allows the attestation to be "" in which
-          # case it does not sign or generate provenance. However, this workflow
-          # requires it to be non-empty so we validate it here.
-          if [ "$UNTRUSTED_ATTESTATION_NAME" == "" ]; then
-            echo "attestation-name cannot be empty."
-            exit 5
+          untrusted_provenance_name=""
+          if [ "$UNTRUSTED_PROVENANCE_NAME" != "" ]; then
+            untrusted_provenance_name="$UNTRUSTED_PROVENANCE_NAME"
+          else
+            if [ "$UNTRUSTED_DEPRECATED_ATTESTATION_NAME" != "" ]; then
+              echo "WARNING: deprecated attestation-name was used. Use provenance-name instead."
+              untrusted_provenance_name="$UNTRUSTED_DEPRECATED_ATTESTATION_NAME"
+            fi
           fi
           # Create and sign provenance.
-          # Note: The builder verifies that the UNTRUSTED_ATTESTATION_NAME is located
+          # NOTE: The builder verifies that the provenance path is located
           # in the current directory.
-          ./"$BUILDER_BINARY" attest --subjects "${SUBJECTS}" -g "$UNTRUSTED_ATTESTATION_NAME"
-          attestation_sha256=$(sha256sum "$UNTRUSTED_ATTESTATION_NAME" | awk '{print $1}')
-          echo "::set-output name=attestation-sha256::$attestation_sha256"
+          # NOTE: $untrusted_provenance_path may be empty. In this case the
+          # attest command chooses a file name based on the subject name and
+          # number of subjects based on in-toto attestation bundle file naming conventions.
+          # See: https://github.com/in-toto/attestation/blob/main/spec/bundle.md#file-naming-convention
+          # NOTE: The attest commmand outputs the provenance-name and provenance-sha256
+          ./"$BUILDER_BINARY" attest --subjects "${UNTRUSTED_SUBJECTS}" -g "$untrusted_provenance_name"
 
       - name: Upload the signed provenance
         uses: actions/upload-artifact@3cea5372237819ed00197afe530f5a7ea3e805c8 # tag=v3.1.0
         with:
-          name: "${{ inputs.attestation-name }}"
-          path: "${{ inputs.attestation-name }}"
+          name: "${{ steps.sign-prov.outputs.provenance-name }}"
+          path: "${{ steps.sign-prov.outputs.provenance-name }}"
           if-no-files-found: error
           retention-days: 5
 
@@ -148,15 +157,15 @@ jobs:
     if: startsWith(github.ref, 'refs/tags/') && inputs.upload-assets == true
     steps:
       - name: Download the provenance
-        uses: slsa-framework/slsa-github-generator/.github/actions/secure-download-artifact@e178bc7b362c7cb93899a9721da7a0d7d1286869
+        uses: slsa-framework/slsa-github-generator/.github/actions/secure-download-artifact@07d42a79c8531365637e425fac6a95bf0f5dc29e
         with:
-          name: "${{ inputs.attestation-name }}"
-          path: "${{ inputs.attestation-name }}"
-          sha256: "${{ needs.generator.outputs.attestation-sha256 }}"
+          name: "${{ needs.generator.outputs.provenance-name }}"
+          path: "${{ needs.generator.outputs.provenance-name }}"
+          sha256: "${{ needs.generator.outputs.provenance-sha256 }}"
 
       - name: Release
         uses: softprops/action-gh-release@1e07f4398721186383de40550babbdf2b84acfc5 # tag=v0.1.14
         id: release
         with:
           files: |
-            ${{ inputs.attestation-name }}
+            ${{ needs.generator.outputs.provenance-name }}

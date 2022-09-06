@@ -78,7 +78,7 @@ func runProvenanceGeneration(subject, digest, commands, envs, workingDir, rekor 
 	r := sigstore.NewRekor(rekor)
 	s := sigstore.NewDefaultFulcio()
 	attBytes, err := pkg.GenerateProvenance(subject, digest,
-		commands, envs, workingDir, s, r)
+		commands, envs, workingDir, s, r, nil)
 	if err != nil {
 		return err
 	}

@@ -31,8 +31,8 @@ import (
 )
 
 const (
-	defaultFulcioAddr   = "https://v1.fulcio.sigstore.dev"
-	defaultOIDCIssuer   = "https://oauth2.sigstore.dev/auth"
+	defaultFulcioAddr   = options.DefaultFulcioURL
+	defaultOIDCIssuer   = options.DefaultOIDCIssuerURL
 	defaultOIDCClientID = "sigstore"
 )
 
