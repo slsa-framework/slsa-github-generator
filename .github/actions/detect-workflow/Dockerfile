@@ -15,9 +15,7 @@
 # NOTE: Updates to the golang base image sha256 should be verified by checking
 # the Docker official images tag details.
 # https://raw.githubusercontent.com/docker-library/repo-info/master/repos/golang/tag-details.md
-
-# tag=1.18.4
-FROM golang@sha256:a452d6273ad03a47c2f29b898d6bb57630e77baf839651ef77d03e4e049c5bf3 as builder
+FROM golang:v1.18@sha256:5540a6a6b3b612c382accc545b3f6702de21e77b15d89ad947116c94b5f42993 as builder
 
 WORKDIR /app
 COPY . /app

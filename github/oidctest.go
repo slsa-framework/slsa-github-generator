@@ -14,7 +14,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/coreos/go-oidc"
+	"github.com/coreos/go-oidc/v3/oidc"
 	"gopkg.in/square/go-jose.v2"
 )
 

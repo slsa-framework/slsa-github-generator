@@ -25,4 +25,4 @@ ATTESTATION=$(cat "$PROVENANCE")
 e2e_verify_common_all "$ATTESTATION"
 
 e2e_verify_predicate_subject_name "$ATTESTATION" "$BINARY"
-e2e_verify_predicate_buildType "$ATTESTATION" "https://github.com/slsa-framework/slsa-github-generator@v1"
+e2e_verify_predicate_buildType "$ATTESTATION" "https://github.com/slsa-framework/slsa-github-generator/generic@v1"

@@ -1,0 +1,33 @@
+{
+  "name": "typescript-action",
+  "version": "0.0.0",
+  "private": true,
+  "description": "TypeScript template action",
+  "main": "lib/main.js",
+  "scripts": {
+    "build": "tsc",
+    "format": "prettier --write '**/*.ts'",
+    "format-check": "prettier --check '**/*.ts'",
+    "package": "ncc build --source-map",
+    "lint": "eslint src/**/*.ts",
+    "all": "npm run build && npm run format && npm run lint && npm run package"
+  },
+  "keywords": [
+    "actions",
+    "node",
+    "setup"
+  ],
+  "dependencies": {
+    "@actions/core": "1.6.0"
+  },
+  "devDependencies": {
+    "@types/node": "16.11.53",
+    "@typescript-eslint/eslint-plugin": "5.31.0",
+    "@typescript-eslint/parser": "5.31.0",
+    "@vercel/ncc": "0.31.1",
+    "eslint": "8.20.0",
+    "eslint-plugin-github": "4.3.7",
+    "prettier": "2.7.1",
+    "typescript": "4.7.4"
+  }
+}

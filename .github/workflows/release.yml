@@ -35,4 +35,3 @@ jobs:
       go-version: 1.18
       config-file: .github/workflows/configs-go/config-release.yml
       compile-builder: true
-

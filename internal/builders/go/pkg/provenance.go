@@ -64,7 +64,7 @@ func (b *goProvenanceBuild) BuildConfig(context.Context) (interface{}, error) {
 // GenerateProvenance translates github context into a SLSA provenance
 // attestation.
 // Spec: https://slsa.dev/provenance/v0.2
-func GenerateProvenance(name, digest, command, envs, workingDir string, s signing.Signer, r signing.TransparencyLog) ([]byte, error) {
+func GenerateProvenance(name, digest, command, envs, workingDir string, s signing.Signer, r signing.TransparencyLog, provider slsa.ClientProvider) ([]byte, error) {
 	gh, err := github.GetWorkflowContext()
 	if err != nil {
 		return nil, err
@@ -74,14 +74,19 @@ func GenerateProvenance(name, digest, command, envs, workingDir string, s signin
 		return nil, fmt.Errorf("sha256 digest is not valid: %s", digest)
 	}
 
-	com, err := UnmarshallList(command)
+	com, err := utils.UnmarshalList(command)
 	if err != nil {
 		return nil, err
 	}
 
-	env, err := UnmarshallList(envs)
+	env, err := utils.UnmarshalList(envs)
 	if err != nil {
 		return nil, err
+	}
+
+	var cmd []string
+	if len(com) > 0 {
+		cmd = []string{com[0], "mod", "vendor"}
 	}
 
 	b := goProvenanceBuild{
@@ -101,7 +106,7 @@ func GenerateProvenance(name, digest, command, envs, workingDir string, s signin
 					// Note: vendoring and compilation are
 					// performed in the same VM, so the compiler is
 					// the same.
-					Command:    []string{com[0], "mod", "vendor"},
+					Command:    cmd,
 					WorkingDir: workingDir,
 					// Note: No user-defined env set for this step.
 				},
@@ -116,15 +121,25 @@ func GenerateProvenance(name, digest, command, envs, workingDir string, s signin
 	}
 
 	// Pre-submit tests don't have access to write OIDC token.
-	if utils.IsPresubmitTests() {
-		b.GithubActionsBuild.WithClients(&slsa.NilClientProvider{})
+	if provider != nil {
+		b.WithClients(provider)
+	} else {
+		// TODO(github.com/slsa-framework/slsa-github-generator/issues/124): Remove
+		if utils.IsPresubmitTests() {
+			b.GithubActionsBuild.WithClients(&slsa.NilClientProvider{})
+		}
 	}
 
 	ctx := context.Background()
 	g := slsa.NewHostedActionsGenerator(&b)
 	// Pre-submit tests don't have access to write OIDC token.
-	if utils.IsPresubmitTests() {
-		g.WithClients(&slsa.NilClientProvider{})
+	if provider != nil {
+		g.WithClients(provider)
+	} else {
+		// TODO(github.com/slsa-framework/slsa-github-generator/issues/124): Remove
+		if utils.IsPresubmitTests() {
+			g.WithClients(&slsa.NilClientProvider{})
+		}
 	}
 	p, err := g.Generate(ctx)
 	if err != nil {
@@ -150,7 +165,7 @@ func GenerateProvenance(name, digest, command, envs, workingDir string, s signin
 
 	if utils.IsPresubmitTests() {
 		fmt.Println("Pre-submit tests detected. Skipping signing.")
-		return marshallToBytes(*p)
+		return utils.MarshalToBytes(*p)
 	}
 
 	// Sign the provenance.
@@ -163,10 +178,12 @@ func GenerateProvenance(name, digest, command, envs, workingDir string, s signin
 	}
 
 	// Upload the signed attestation to rekor.
-	if logEntry, err := r.Upload(ctx, att); err != nil {
-		fmt.Printf("Uploaded signed attestation to rekor with UUID %s.\n", logEntry.UUID())
+	logEntry, err := r.Upload(ctx, att)
+	if err != nil {
 		return nil, err
 	}
+
+	fmt.Printf("Uploaded signed attestation to rekor with UUID %s.\n", logEntry.UUID())
 
 	return att.Bytes(), nil
 }

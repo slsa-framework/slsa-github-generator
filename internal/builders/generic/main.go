@@ -16,22 +16,14 @@ package main
 
 import (
 	"errors"
-	"fmt"
-	"os"
 
 	// TODO: Allow use of other OIDC providers?
 	// Enable the github OIDC auth provider.
 	_ "github.com/sigstore/cosign/pkg/providers/github"
+	"github.com/slsa-framework/slsa-github-generator/signing/sigstore"
 
 	"github.com/spf13/cobra"
 )
-
-func check(err error) {
-	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
-	}
-}
 
 func rootCmd() *cobra.Command {
 	c := &cobra.Command{
@@ -44,10 +36,11 @@ For more information on SLSA, visit https://slsa.dev`,
 		},
 	}
 	c.AddCommand(versionCmd())
-	c.AddCommand(attestCmd())
+	c.AddCommand(attestCmd(nil, checkExit, sigstore.NewDefaultFulcio(), sigstore.NewDefaultRekor()))
+	c.AddCommand(generateCmd(nil, checkExit))
 	return c
 }
 
 func main() {
-	check(rootCmd().Execute())
+	checkExit(rootCmd().Execute())
 }

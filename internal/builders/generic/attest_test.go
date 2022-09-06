@@ -1,6 +1,10 @@
 package main
 
 import (
+	"bytes"
+	"encoding/base64"
+	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -9,121 +13,10 @@ import (
 	slsav02 "github.com/in-toto/in-toto-golang/in_toto/slsa_provenance/v0.2"
 
 	"github.com/slsa-framework/slsa-github-generator/internal/errors"
+	"github.com/slsa-framework/slsa-github-generator/internal/testutil"
+	"github.com/slsa-framework/slsa-github-generator/internal/utils"
+	"github.com/slsa-framework/slsa-github-generator/slsa"
 )
-
-func Test_pathIsUnderCurrentDirectory(t *testing.T) {
-	t.Parallel()
-
-	tests := []struct {
-		name     string
-		path     string
-		expected error
-	}{
-		{
-			name:     "valid same path",
-			path:     "./",
-			expected: nil,
-		},
-		{
-			name:     "valid path no slash",
-			path:     "./some/valid/path",
-			expected: nil,
-		},
-		{
-			name:     "valid path with slash",
-			path:     "./some/valid/path/",
-			expected: nil,
-		},
-		{
-			name:     "valid path with no dot",
-			path:     "some/valid/path/",
-			expected: nil,
-		},
-		{
-			name:     "some valid path",
-			path:     "../generic/some/valid/path",
-			expected: nil,
-		},
-		{
-			name:     "parent invalid path",
-			path:     "../invalid/path",
-			expected: &errInvalidPath{},
-		},
-		{
-			name:     "some invalid fullpath",
-			path:     "/some/invalid/fullpath",
-			expected: &errInvalidPath{},
-		},
-	}
-	for _, tt := range tests {
-		tt := tt // Re-initializing variable so it is not changed while executing the closure below
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
-
-			err := pathIsUnderCurrentDirectory(tt.path)
-			if (err == nil && tt.expected != nil) ||
-				(err != nil && tt.expected == nil) {
-				t.Fatalf("unexpected error: %v", cmp.Diff(err, tt.expected, cmpopts.EquateErrors()))
-			}
-
-			if err != nil && !errors.As(err, &tt.expected) {
-				t.Fatalf("unexpected error: %v", cmp.Diff(err, tt.expected, cmpopts.EquateErrors()))
-			}
-		})
-	}
-}
-
-func Test_verifyAttestationPath(t *testing.T) {
-	t.Parallel()
-
-	tests := []struct {
-		name     string
-		path     string
-		expected error
-	}{
-		{
-			name:     "valid file",
-			path:     "./path/to/valid.intoto.jsonl",
-			expected: nil,
-		},
-		{
-			name:     "invalid path",
-			path:     "../some/invalid/valid.intoto.jsonl",
-			expected: &errInvalidPath{},
-		},
-		{
-			name:     "invalid extension",
-			path:     "some/file.ntoto.jsonl",
-			expected: &errInvalidPath{},
-		},
-		{
-			name:     "invalid not exntension",
-			path:     "some/file.intoto.jsonl.",
-			expected: &errInvalidPath{},
-		},
-		{
-			name:     "invalid folder exntension",
-			path:     "file.intoto.jsonl/file",
-			expected: &errInvalidPath{},
-		},
-	}
-	for _, tt := range tests {
-		tt := tt // Re-initializing variable so it is not changed while executing the closure below
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
-
-			err := verifyAttestationPath(tt.path)
-			if (err == nil && tt.expected != nil) ||
-				(err != nil && tt.expected == nil) {
-				t.Fatalf("unexpected error: %v", cmp.Diff(err, tt.expected, cmpopts.EquateErrors()))
-			}
-
-			if err != nil && !errors.As(err, &tt.expected) {
-				t.Fatalf("unexpected error: %v", cmp.Diff(err, tt.expected, cmpopts.EquateErrors()))
-			}
-		})
-	}
-}
 
 // TestParseSubjects tests the parseSubjects function.
 func TestParseSubjects(t *testing.T) {
@@ -258,4 +151,195 @@ func TestParseSubjects(t *testing.T) {
 			}
 		})
 	}
+}
+
+// Test_attestCmd tests the attest command.
+func Test_attestCmd_default_single_artifact(t *testing.T) {
+	t.Setenv("GITHUB_CONTEXT", "{}")
+
+	// Change to temporary dir
+	currentDir, err := os.Getwd()
+	if err != nil {
+		t.Errorf("unexpected failure: %v", err)
+	}
+	dir, err := os.MkdirTemp("", "")
+	if err != nil {
+		t.Errorf("unexpected failure: %v", err)
+	}
+	defer os.RemoveAll(dir)
+	if err := os.Chdir(dir); err != nil {
+		t.Errorf("unexpected failure: %v", err)
+	}
+	defer os.Chdir(currentDir)
+
+	c := attestCmd(&slsa.NilClientProvider{}, checkTest(t), &testutil.TestSigner{}, &testutil.TestTransparencyLog{})
+	c.SetOut(new(bytes.Buffer))
+	c.SetArgs([]string{
+		"--subjects", base64.StdEncoding.EncodeToString([]byte("b5bb9d8014a0f9b1d61e21e796d78dccdf1352f23cd32812f4850b878ae4944c  artifact1")),
+	})
+	if err := c.Execute(); err != nil {
+		t.Errorf("unexpected failure: %v", err)
+	}
+
+	// check that the expected file exists.
+	if _, err := os.Stat(filepath.Join(dir, "artifact1.intoto.jsonl")); err != nil {
+		t.Errorf("error checking file: %v", err)
+	}
+}
+
+func Test_attestCmd_default_multi_artifact(t *testing.T) {
+	t.Setenv("GITHUB_CONTEXT", "{}")
+
+	// Change to temporary dir
+	currentDir, err := os.Getwd()
+	if err != nil {
+		t.Errorf("unexpected failure: %v", err)
+	}
+	dir, err := os.MkdirTemp("", "")
+	if err != nil {
+		t.Errorf("unexpected failure: %v", err)
+	}
+	defer os.RemoveAll(dir)
+	if err := os.Chdir(dir); err != nil {
+		t.Errorf("unexpected failure: %v", err)
+	}
+	defer os.Chdir(currentDir)
+
+	c := attestCmd(&slsa.NilClientProvider{}, checkTest(t), &testutil.TestSigner{}, &testutil.TestTransparencyLog{})
+	c.SetOut(new(bytes.Buffer))
+	c.SetArgs([]string{
+		"--subjects", base64.StdEncoding.EncodeToString([]byte(
+			`b5bb9d8014a0f9b1d61e21e796d78dccdf1352f23cd32812f4850b878ae4944c  artifact1
+b5bb9d8014a0f9b1d61e21e796d78dccdf1352f23cd32812f4850b878ae4944c  artifact2`)),
+	})
+	if err := c.Execute(); err != nil {
+		t.Errorf("unexpected failure: %v", err)
+	}
+
+	// check that the expected file exists.
+	if _, err := os.Stat(filepath.Join(dir, "multiple.intoto.jsonl")); err != nil {
+		t.Errorf("error checking file: %v", err)
+	}
+}
+
+func Test_attestCmd_custom_provenance_name(t *testing.T) {
+	t.Setenv("GITHUB_CONTEXT", "{}")
+
+	// Change to temporary dir
+	currentDir, err := os.Getwd()
+	if err != nil {
+		t.Errorf("unexpected failure: %v", err)
+	}
+	dir, err := os.MkdirTemp("", "")
+	if err != nil {
+		t.Errorf("unexpected failure: %v", err)
+	}
+	defer os.RemoveAll(dir)
+	if err := os.Chdir(dir); err != nil {
+		t.Errorf("unexpected failure: %v", err)
+	}
+	defer os.Chdir(currentDir)
+
+	c := attestCmd(&slsa.NilClientProvider{}, checkTest(t), &testutil.TestSigner{}, &testutil.TestTransparencyLog{})
+	c.SetOut(new(bytes.Buffer))
+	c.SetArgs([]string{
+		"--subjects", base64.StdEncoding.EncodeToString([]byte("b5bb9d8014a0f9b1d61e21e796d78dccdf1352f23cd32812f4850b878ae4944c  artifact1")),
+		"--signature", "custom.intoto.jsonl",
+	})
+	if err := c.Execute(); err != nil {
+		t.Errorf("unexpected failure: %v", err)
+	}
+
+	// check that the file exists.
+	if _, err := os.Stat("custom.intoto.jsonl"); err != nil {
+		t.Errorf("error checking file: %v", err)
+	}
+}
+
+func Test_attestCmd_invalid_extension(t *testing.T) {
+	t.Setenv("GITHUB_CONTEXT", "{}")
+
+	// Change to temporary dir
+	currentDir, err := os.Getwd()
+	if err != nil {
+		t.Errorf("unexpected failure: %v", err)
+	}
+	dir, err := os.MkdirTemp("", "")
+	if err != nil {
+		t.Errorf("unexpected failure: %v", err)
+	}
+	defer os.RemoveAll(dir)
+	if err := os.Chdir(dir); err != nil {
+		t.Errorf("unexpected failure: %v", err)
+	}
+	defer os.Chdir(currentDir)
+
+	// A custom check function that checks the error type is the expected error type.
+	check := func(err error) {
+		if err != nil {
+			errInvalidPath := &utils.ErrInvalidPath{}
+			if !errors.As(err, &errInvalidPath) {
+				t.Fatalf("expected %v but got %v", &utils.ErrInvalidPath{}, err)
+			}
+			// Check should exit the program so we skip the rest of the test if we got the expected error.
+			t.SkipNow()
+		}
+	}
+
+	c := attestCmd(&slsa.NilClientProvider{}, check, &testutil.TestSigner{}, &testutil.TestTransparencyLog{})
+	c.SetOut(new(bytes.Buffer))
+	c.SetArgs([]string{
+		"--subjects", base64.StdEncoding.EncodeToString([]byte("b5bb9d8014a0f9b1d61e21e796d78dccdf1352f23cd32812f4850b878ae4944c  artifact1")),
+		"--signature", "invalid_name",
+	})
+	if err := c.Execute(); err != nil {
+		t.Errorf("unexpected failure: %v", err)
+	}
+
+	// If no error occurs we catch it here. SkipNow will exit the test process so this code should be unreachable.
+	t.Errorf("expected an error to occur.")
+}
+
+func Test_attestCmd_invalid_path(t *testing.T) {
+	t.Setenv("GITHUB_CONTEXT", "{}")
+
+	// Change to temporary dir
+	currentDir, err := os.Getwd()
+	if err != nil {
+		t.Errorf("unexpected failure: %v", err)
+	}
+	dir, err := os.MkdirTemp("", "")
+	if err != nil {
+		t.Errorf("unexpected failure: %v", err)
+	}
+	defer os.RemoveAll(dir)
+	if err := os.Chdir(dir); err != nil {
+		t.Errorf("unexpected failure: %v", err)
+	}
+	defer os.Chdir(currentDir)
+
+	// A custom check function that checks the error type is the expected error type.
+	check := func(err error) {
+		if err != nil {
+			errInvalidPath := &utils.ErrInvalidPath{}
+			if !errors.As(err, &errInvalidPath) {
+				t.Fatalf("expected %v but got %v", &utils.ErrInvalidPath{}, err)
+			}
+			// Check should exit the program so we skip the rest of the test if we got the expected error.
+			t.SkipNow()
+		}
+	}
+
+	c := attestCmd(&slsa.NilClientProvider{}, check, &testutil.TestSigner{}, &testutil.TestTransparencyLog{})
+	c.SetOut(new(bytes.Buffer))
+	c.SetArgs([]string{
+		"--subjects", base64.StdEncoding.EncodeToString([]byte("b5bb9d8014a0f9b1d61e21e796d78dccdf1352f23cd32812f4850b878ae4944c  artifact1")),
+		"--signature", "/provenance.intoto.jsonl",
+	})
+	if err := c.Execute(); err != nil {
+		t.Errorf("unexpected failure: %v", err)
+	}
+
+	// If no error occurs we catch it here. SkipNow will exit the test process so this code should be unreachable.
+	t.Errorf("expected an error to occur.")
 }

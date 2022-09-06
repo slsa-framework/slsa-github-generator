@@ -11,17 +11,18 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/slsa-framework/slsa-github-generator/internal/builders/go/pkg"
-
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
+
+	"github.com/slsa-framework/slsa-github-generator/internal/builders/go/pkg"
+	"github.com/slsa-framework/slsa-github-generator/internal/utils"
 )
 
 func errCmp(e1, e2 error) bool {
 	return errors.Is(e1, e2) || errors.Is(e2, e1)
 }
 
-func Test_runVerify(t *testing.T) {
+func Test_runBuild(t *testing.T) {
 	t.Parallel()
 	tests := []struct {
 		subject    string
@@ -238,11 +239,6 @@ func Test_runVerify(t *testing.T) {
 			err:    pkg.ErrorInvalidEnvironmentVariable,
 		},
 		{
-			name:   "invalid main",
-			config: "./pkg/testdata/releaser-invalid-main.yml",
-			err:    pkg.ErrorInvalidDirectory,
-		},
-		{
 			name:   "invalid path",
 			config: "../pkg/testdata/releaser-invalid-main.yml",
 			err:    pkg.ErrorInvalidDirectory,
@@ -391,12 +387,12 @@ func extract(lines string) ([]string, []string, string, string, error) {
 		return []string{}, []string{}, "", "", err
 	}
 
-	cmd, err := pkg.UnmarshallList(scmd)
+	cmd, err := utils.UnmarshalList(scmd)
 	if err != nil {
 		return []string{}, []string{}, "", "", err
 	}
 
-	env, err := pkg.UnmarshallList(senv)
+	env, err := utils.UnmarshalList(senv)
 	if err != nil {
 		return []string{}, []string{}, "", "", err
 	}
