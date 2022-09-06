@@ -12,10 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# NOTE: Updates to the golang base image sha256 should be verified by checking
-# the Docker official images tag details.
-# https://raw.githubusercontent.com/docker-library/repo-info/master/repos/golang/tag-details.md
-FROM golang:v1.18@sha256:5540a6a6b3b612c382accc545b3f6702de21e77b15d89ad947116c94b5f42993 as builder
+FROM golang:1.18@sha256:5540a6a6b3b612c382accc545b3f6702de21e77b15d89ad947116c94b5f42993 as builder
 
 WORKDIR /app
 COPY . /app
@@ -25,10 +22,6 @@ RUN go get -d -v
 # Statically compile our app for use in a distroless container
 RUN CGO_ENABLED=0 go build -ldflags="-w -s" -v -o app .
 
-# A distroless container image with some basics like SSL certificates
-# NOTE: Updates to the distroless base image sha256 should be verified by checking
-# verifying the image signature.
-# https://github.com/GoogleContainerTools/distroless#how-do-i-verify-distroless-images
 FROM gcr.io/distroless/static@sha256:21d3f84a4f37c36199fd07ad5544dcafecc17776e3f3628baf9a57c8c0181b3f
 
 COPY --from=builder /app/app /app

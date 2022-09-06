@@ -1,0 +1,18 @@
+name: pre-submit base images
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions: read-all
+
+jobs:
+  verify-base-images:
+    name: verify base images
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # tag=v3.0.2
+      - name: verify images
+        run: ./.github/workflows/scripts/verify-base-images.sh
