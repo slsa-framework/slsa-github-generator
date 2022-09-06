@@ -56,11 +56,11 @@ goos: linux
 # The architecture to compile for. `GOARCH` env variable will be set to this value.
 goarch: amd64
 
-# (Optional) Entrypoint to compile. (Optional)
+# (Optional) Entrypoint to compile.
 # main: ./path/to/main.go
 
 # (Optional) Working directory. (default: root of the project)
-# dir: /path/to/dir
+# dir: ./relative/path/to/dir
 
 # Binary output name.
 # {{ .Os }} will be replaced by goos field in the config file.

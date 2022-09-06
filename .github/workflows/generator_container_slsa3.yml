@@ -57,7 +57,7 @@ jobs:
     steps:
       - name: Detect the generator ref
         id: detect
-        uses: slsa-framework/slsa-github-generator/.github/actions/detect-workflow@575bdd242ac0bc503966cedac1dabb42515b545f
+        uses: slsa-framework/slsa-github-generator/.github/actions/detect-workflow@07d42a79c8531365637e425fac6a95bf0f5dc29e
 
   # generator builds the generator binary and runs it to generate SLSA
   # provenance.
@@ -72,7 +72,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [detect-env]
     permissions:
-      # id-token:write is needed to create an OCID token for keyless signing.
+      # id-token:write is needed to create an OIDC token for keyless signing.
       id-token: write
       # actions permissions are needed to read info on the workflow and
       # workflow run.
@@ -81,7 +81,7 @@ jobs:
       packages: write
     steps:
       - name: Generate builder
-        uses: slsa-framework/slsa-github-generator/.github/actions/generate-builder@575bdd242ac0bc503966cedac1dabb42515b545f
+        uses: slsa-framework/slsa-github-generator/.github/actions/generate-builder@07d42a79c8531365637e425fac6a95bf0f5dc29e
         with:
           repository: "${{ needs.detect-env.outputs.repository }}"
           ref: "${{ needs.detect-env.outputs.ref }}"
@@ -91,7 +91,7 @@ jobs:
           # NOTE: We are using the generic generator.
           directory: "${{ env.BUILDER_DIR }}"
 
-      - uses: sigstore/cosign-installer@48866aa521d8bf870604709cd43ec2f602d03ff2 # tag=v2.4.1
+      - uses: sigstore/cosign-installer@b3413d484cc23cf8778c3d2aa361568d4eb54679 # tag=v2.5.1
       - name: Login
         env:
           UNTRUSTED_IMAGE: "${{ inputs.image }}"
@@ -126,7 +126,7 @@ jobs:
 
           # Generate a predicate only.
           predicate_name="predicate.json"
-          ./"$BUILDER_BINARY" attest --signature="" --predicate="$predicate_name"
+          ./"$BUILDER_BINARY" generate --predicate="$predicate_name"
 
           COSIGN_EXPERIMENTAL=1 cosign attest --predicate="$predicate_name" \
             --type slsaprovenance \

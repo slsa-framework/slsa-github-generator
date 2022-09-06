@@ -57,7 +57,7 @@ provenance:
   needs: [build]
   permissions:
     actions: read # for detecting the Github Actions environment.
-    id-token: write # for creating OCID tokens for signing.
+    id-token: write # for creating OIDC tokens for signing.
     packages: write # for uploading attestations.
   if: startsWith(github.ref, 'refs/tags/')
   # TODO(https://github.com/slsa-framework/slsa-github-generator/issues/492): Use a tagged release once we have one.
@@ -131,7 +131,7 @@ jobs:
     needs: [build]
     permissions:
       actions: read # for detecting the Github Actions environment.
-      id-token: write # for creating OCID tokens for signing.
+      id-token: write # for creating OIDC tokens for signing.
       packages: write # for uploading attestations.
     if: startsWith(github.ref, 'refs/tags/')
     uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@main
