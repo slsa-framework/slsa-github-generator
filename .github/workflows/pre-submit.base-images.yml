@@ -14,5 +14,7 @@ jobs:
     steps:
       - name: checkout
         uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # tag=v3.0.2
+      - name: install cosign
+        uses: sigstore/cosign-installer@b3413d484cc23cf8778c3d2aa361568d4eb54679 # tag=v2.5.1
       - name: verify images
         run: ./.github/workflows/scripts/verify-base-images.sh
