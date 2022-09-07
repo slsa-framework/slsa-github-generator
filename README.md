@@ -147,6 +147,8 @@ install them on your development machine.
 - [yamllint](https://yamllint.readthedocs.io/)
 - [golangci-lint](https://golangci-lint.run/)
 - [shellcheck](https://www.shellcheck.net/)
+- [eslint](https://eslint.org/) (NOTE: eslint is installed automatically so you
+  don't need to install it)
 
 Once each of these are installed you can run the linters using `make`.
 
