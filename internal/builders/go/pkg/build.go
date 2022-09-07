@@ -15,14 +15,15 @@
 package pkg
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
-	"syscall"
 
+	"github.com/slsa-framework/slsa-github-generator/internal/runner"
 	"github.com/slsa-framework/slsa-github-generator/internal/utils"
 )
 
@@ -54,6 +55,7 @@ var allowedEnvVariablePrefix = map[string]bool{
 	"GO": true, "CGO_": true,
 }
 
+// GoBuild implements building a Go application.
 type GoBuild struct {
 	cfg *GoReleaserConfig
 	goc string
@@ -61,6 +63,7 @@ type GoBuild struct {
 	argEnv map[string]string
 }
 
+// GoBuildNew returns a new GoBuild.
 func GoBuildNew(goc string, cfg *GoReleaserConfig) *GoBuild {
 	c := GoBuild{
 		cfg:    cfg,
@@ -71,6 +74,7 @@ func GoBuildNew(goc string, cfg *GoReleaserConfig) *GoBuild {
 	return &c
 }
 
+// Run executes the build.
 func (b *GoBuild) Run(dry bool) error {
 	// Get directory.
 	dir, err := b.getDir()
@@ -116,24 +120,42 @@ func (b *GoBuild) Run(dry bool) error {
 		// Generate the command.
 		com := b.generateCommand(flags, filename)
 
-		// Share the resolved name of the binary.
-		fmt.Printf("::set-output name=go-binary-name::%s\n", filename)
-		command, err := utils.MarshalToString(com)
-		if err != nil {
-			return err
-		}
-		// Share the command used.
-		fmt.Printf("::set-output name=go-command::%s\n", command)
-
 		env, err := b.generateCommandEnvVariables()
 		if err != nil {
 			return err
 		}
 
-		menv, err := utils.MarshalToString(env)
+		r := runner.CommandRunner{
+			Steps: []*runner.CommandStep{
+				{
+					Command:    com,
+					Env:        env,
+					WorkingDir: dir,
+				},
+			},
+		}
+
+		steps, err := r.Dry()
 		if err != nil {
 			return err
 		}
+
+		// There is a single command in steps given to the runner so we are
+		// assured to have only one step.
+		menv, err := utils.MarshalToString(steps[0].Env)
+		if err != nil {
+			return err
+		}
+		command, err := utils.MarshalToString(steps[0].Command)
+		if err != nil {
+			return err
+		}
+
+		// Share the resolved name of the binary.
+		fmt.Printf("::set-output name=go-binary-name::%s\n", filename)
+
+		// Share the command used.
+		fmt.Printf("::set-output name=go-command::%s\n", command)
 
 		// Share the env variables used.
 		fmt.Printf("::set-output name=go-env::%s\n", menv)
@@ -151,17 +173,24 @@ func (b *GoBuild) Run(dry bool) error {
 	// Generate the command.
 	command := b.generateCommand(flags, binary)
 
-	// Change directory.
-	if err := os.Chdir(dir); err != nil {
-		return err
-	}
-
 	fmt.Println("dir", dir)
 	fmt.Println("binary", binary)
 	fmt.Println("command", command)
 	fmt.Println("env", envs)
 
-	return syscall.Exec(b.goc, command, envs)
+	r := runner.CommandRunner{
+		Steps: []*runner.CommandStep{
+			{
+				Command:    command,
+				Env:        envs,
+				WorkingDir: dir,
+			},
+		},
+	}
+
+	// TODO: Add a timeout?
+	_, err = r.Run(context.Background())
+	return err
 }
 
 func getOutputBinaryPath(binary string) (string, error) {
@@ -246,6 +275,7 @@ func (b *GoBuild) generateEnvVariables() ([]string, error) {
 	return env, nil
 }
 
+// SetArgEnvVariables sets static environment variables.
 func (b *GoBuild) SetArgEnvVariables(envs string) error {
 	// Notes:
 	// - I've tried running the re-usable workflow in a step
