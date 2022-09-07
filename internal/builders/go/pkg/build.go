@@ -140,6 +140,8 @@ func (b *GoBuild) Run(dry bool) error {
 			return err
 		}
 
+		// There is a single command in steps given to the runner so we are
+		// assured to have only one step.
 		menv, err := utils.MarshalToString(steps[0].Env)
 		if err != nil {
 			return err
