@@ -32,6 +32,7 @@ func TestCommandRunner_StepEnv(t *testing.T) {
 				Command: []string{"bash", "-c", "echo -n $TEST"},
 				// NOTE: this overrides other env var.
 				Env: []string{"TEST=fuga"},
+				// NOTE: WorkingDir default to CWD
 			},
 		},
 		Stdout: out,
@@ -51,7 +52,7 @@ func TestCommandRunner_StepEnv(t *testing.T) {
 		{
 			Command: []string{"bash", "-c", "echo -n $TEST"},
 			// TODO(https://github.com/slsa-framework/slsa-github-generator/issues/782): de-duplicate env.
-			Env:        []string{"TEST=hoge", "TEST=fuga", "PWD=" + pwd},
+			Env:        []string{"TEST=hoge", "TEST=fuga"},
 			WorkingDir: pwd,
 		},
 	})
@@ -73,6 +74,7 @@ func TestCommandRunner_RunnerEnv(t *testing.T) {
 				Command: []string{"bash", "-c", "echo -n $STEP"},
 				// NOTE: this overrides other env var.
 				Env: []string{"STEP=fuga"},
+				// NOTE: WorkingDir default to CWD
 			},
 		},
 		Stdout: out,
@@ -91,7 +93,7 @@ func TestCommandRunner_RunnerEnv(t *testing.T) {
 	diff := cmp.Diff(steps, []*CommandStep{
 		{
 			Command:    []string{"bash", "-c", "echo -n $STEP"},
-			Env:        []string{"RUNNER=hoge", "STEP=fuga", "PWD=" + pwd},
+			Env:        []string{"RUNNER=hoge", "STEP=fuga"},
 			WorkingDir: pwd,
 		},
 	})
@@ -133,12 +135,12 @@ func TestCommandRunner_RunnerMulti(t *testing.T) {
 	diff := cmp.Diff(steps, []*CommandStep{
 		{
 			Command:    []string{"bash", "-c", "echo $STEP1"},
-			Env:        []string{"STEP1=hoge", "PWD=" + pwd},
+			Env:        []string{"STEP1=hoge"},
 			WorkingDir: pwd,
 		},
 		{
 			Command:    []string{"bash", "-c", "echo $STEP2"},
-			Env:        []string{"STEP2=fuga", "PWD=" + pwd},
+			Env:        []string{"STEP2=fuga"},
 			WorkingDir: pwd,
 		},
 	})

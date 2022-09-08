@@ -103,20 +103,22 @@ func (r *CommandRunner) runStep(ctx context.Context, step *CommandStep, dry bool
 	args := step.Command[1:]
 
 	// Copy and merge the environment.
-	env := make([]string, len(r.Env), len(r.Env)+len(step.Env)+1)
+	env := make([]string, len(r.Env), len(r.Env)+len(step.Env))
 	copy(env, r.Env)
 	env = append(env, step.Env...)
 
 	// Set the POSIX PWD env var.
+	posixEnv := make([]string, len(env)+1)
+	copy(posixEnv, env)
 	pwd, err := filepath.Abs(step.WorkingDir)
 	if err != nil {
 		return nil, err
 	}
-	env = append(env, "PWD="+pwd)
+	posixEnv = append(posixEnv, "PWD="+pwd)
 
 	cmd := exec.CommandContext(ctx, name, args...)
 	cmd.Dir = pwd
-	cmd.Env = env
+	cmd.Env = posixEnv
 	cmd.Stdout = os.Stdout
 	if r.Stdout != nil {
 		cmd.Stdout = r.Stdout
@@ -138,7 +140,8 @@ func (r *CommandRunner) runStep(ctx context.Context, step *CommandStep, dry bool
 	}
 
 	return &CommandStep{
-		Command:    append([]string{name}, args...),
+		Command: append([]string{name}, args...),
+		// NOTE: We don't actually include POSIX env vars as they are redundant.
 		Env:        env,
 		WorkingDir: pwd,
 	}, nil
