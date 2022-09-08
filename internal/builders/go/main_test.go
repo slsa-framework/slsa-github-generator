@@ -7,7 +7,6 @@ import (
 	"io"
 	"os"
 	"os/exec"
-	"path"
 	"path/filepath"
 	"regexp"
 	"testing"
@@ -310,10 +309,16 @@ func Test_runBuild(t *testing.T) {
 			}
 
 			var expectedWd string
-			if tt.workingDir == "" {
-				expectedWd = os.Getenv("PWD")
+			if tt.workingDir != "" {
+				expectedWd, err = filepath.Abs(tt.workingDir)
+				if err != nil {
+					t.Errorf("Abs: %v", err)
+				}
 			} else {
-				expectedWd = path.Join(os.Getenv("PWD"), tt.workingDir)
+				expectedWd, err = os.Getwd()
+				if err != nil {
+					t.Errorf("Getwd: %v", err)
+				}
 			}
 
 			if expectedWd != wd {
