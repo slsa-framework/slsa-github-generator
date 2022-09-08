@@ -108,7 +108,7 @@ func (r *CommandRunner) runStep(ctx context.Context, step *CommandStep, dry bool
 	env = append(env, step.Env...)
 
 	// Set the POSIX PWD env var.
-	posixEnv := make([]string, len(env)+1)
+	posixEnv := make([]string, len(env), len(env)+1)
 	copy(posixEnv, env)
 	pwd, err := filepath.Abs(step.WorkingDir)
 	if err != nil {
