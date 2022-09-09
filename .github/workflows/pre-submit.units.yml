@@ -26,38 +26,10 @@ jobs:
         with:
           go-version: "1.18"
 
-      - name: detect-workflow tests
+      - name: unit tests
         run: |
           set -euo pipefail
-
-          cd .github/actions/detect-workflow
-
-          # Download dependencies.
-          go mod vendor
-
-          # Test.
-          go test -mod=vendor -v ./...
-
-      - name: API tests
-        run: |
-          # Tests unit tests, including in generic and go builders
-          set -euo pipefail
-
-          # Download dependencies.
-          go mod vendor
-
-          # Test.
-          go test -mod=vendor -v ./...
-
-      - name: Builder builds
-        run: |
-          set -euo pipefail
-
-          # Build Go builder.
-          go build -mod=vendor ./internal/builders/go
-
-          # Build Generic builder.
-          go build -mod=vendor ./internal/builders/generic
+          make unit-test
 
   check-verifier:
     name: verify slsa-verifier is latest
