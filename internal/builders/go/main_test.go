@@ -7,7 +7,7 @@ import (
 	"io"
 	"os"
 	"os/exec"
-	"path"
+	"path/filepath"
 	"regexp"
 	"testing"
 
@@ -22,8 +22,29 @@ func errCmp(e1, e2 error) bool {
 	return errors.Is(e1, e2) || errors.Is(e2, e1)
 }
 
+func checkWorkingDir(t *testing.T, wd, expected string) {
+	var expectedWd string
+	var err error
+	if expected != "" {
+		expectedWd, err = filepath.Abs(expected)
+		if err != nil {
+			t.Errorf("Abs: %v", err)
+		}
+	} else {
+		expectedWd, err = os.Getwd()
+		if err != nil {
+			t.Errorf("Getwd: %v", err)
+		}
+	}
+
+	if expectedWd != wd {
+		t.Errorf(cmp.Diff(wd, expectedWd))
+	}
+}
+
 func Test_runBuild(t *testing.T) {
 	t.Parallel()
+
 	tests := []struct {
 		subject    string
 		name       string
@@ -292,16 +313,7 @@ func Test_runBuild(t *testing.T) {
 				t.Errorf(cmp.Diff(cmd, commands))
 			}
 
-			var expectedWd string
-			if tt.workingDir == "" {
-				expectedWd = os.Getenv("PWD")
-			} else {
-				expectedWd = path.Join(os.Getenv("PWD"), tt.workingDir)
-			}
-
-			if expectedWd != wd {
-				t.Errorf(cmp.Diff(wd, expectedWd))
-			}
+			checkWorkingDir(t, wd, tt.workingDir)
 
 			sorted := cmpopts.SortSlices(func(a, b string) bool { return a < b })
 			if !cmp.Equal(env, tt.envs, sorted) {

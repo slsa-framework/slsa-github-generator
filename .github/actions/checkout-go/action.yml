@@ -41,6 +41,7 @@ runs:
       if: inputs.ref != ''
       uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # tag=v3.0.2
       with:
+        fetch-depth: 1
         persist-credentials: false
         repository: "${{ inputs.repository }}"
         ref: "${{ inputs.ref }}"
@@ -54,6 +55,9 @@ runs:
         persist-credentials: false
         repository: "${{ inputs.repository }}"
         token: "${{ inputs.token }}"
+
+    - name: Verify checkout
+      uses: slsa-framework/slsa-github-generator/.github/actions/verify-checkout@96a2f25046e2f517c49c6ab1a258a7dc0c14687a
 
     - name: Set up Go environment
       uses: actions/setup-go@268d8c0ca0432bb2cf416faae41297df9d262d7f # tag=v3.3.0

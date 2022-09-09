@@ -20,13 +20,10 @@ help: ## Shows all targets and help from the Makefile (this message).
 ## Testing
 #####################################################################
 
+.PHONY: unit-test
 unit-test: ## Runs all unit tests.
 	# Run unit tests for the detect-workflow action.
-	cd .github/actions/detect-workflow
-	go mod vendor
-	go test -mod=vendor -v ./...
-	# Run unit tests for the main package.
-	cd -
+	make -C .github/actions/detect-workflow/ unit-test
 	go mod vendor
 	go test -mod=vendor -v ./...
 
@@ -34,9 +31,10 @@ unit-test: ## Runs all unit tests.
 ## Linters
 #####################################################################
 
-lint: ## Run all linters.
-lint: golangci-lint shellcheck yamllint
+.PHONY: lint
+lint: golangci-lint shellcheck eslint yamllint ## Run all linters.
 
+.PHONY: golangci-lint
 golangci-lint: ## Runs the golangci-lint linter.
 	@set -e;\
 		extraargs=""; \
@@ -45,6 +43,7 @@ golangci-lint: ## Runs the golangci-lint linter.
 		fi; \
 		golangci-lint run -c .golangci.yml ./... $$extraargs
 
+.PHONY: shellcheck
 shellcheck: ## Runs the shellcheck linter.
 	@set -e;\
 		FILES=$$(find . -type f -not -iwholename '*/.git/*' -not -iwholename '*/vendor/*' -not -iwholename '*/node_modules/*' -exec bash -c 'file "$$1" | cut -d':' -f2 | grep --quiet shell' _ {} \; -print); \
@@ -73,6 +72,11 @@ shellcheck: ## Runs the shellcheck linter.
 			echo -n $$FILES | xargs shellcheck --external-sources; \
 		fi
 
+.PHONY: eslint
+eslint: ## Runs the eslint linter.
+	make -C .github/actions/compute-sha256 lint
+
+.PHONY: yamllint
 yamllint: ## Runs the yamllint linter.
 	@set -e;\
 		extraargs=""; \
