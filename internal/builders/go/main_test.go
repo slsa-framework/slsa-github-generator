@@ -45,11 +45,6 @@ func checkWorkingDir(t *testing.T, wd, expected string) {
 func Test_runBuild(t *testing.T) {
 	t.Parallel()
 
-	pwd, err := os.Getwd()
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-
 	tests := []struct {
 		subject    string
 		name       string
@@ -77,7 +72,6 @@ func Test_runBuild(t *testing.T) {
 				"GOARCH=amd64",
 				"GO111MODULE=on",
 				"CGO_ENABLED=0",
-				"PWD=" + pwd,
 			},
 		},
 		{
@@ -95,7 +89,6 @@ func Test_runBuild(t *testing.T) {
 			envs: []string{
 				"GOOS=linux",
 				"GOARCH=amd64",
-				"PWD=" + pwd,
 			},
 		},
 		{
@@ -113,7 +106,6 @@ func Test_runBuild(t *testing.T) {
 			envs: []string{
 				"GOOS=linux",
 				"GOARCH=amd64",
-				"PWD=" + pwd,
 			},
 		},
 		{
@@ -131,7 +123,6 @@ func Test_runBuild(t *testing.T) {
 				"GOARCH=amd64",
 				"GO111MODULE=on",
 				"CGO_ENABLED=0",
-				"PWD=" + pwd,
 			},
 		},
 		{
@@ -149,7 +140,6 @@ func Test_runBuild(t *testing.T) {
 				"GOARCH=amd64",
 				"GO111MODULE=on",
 				"CGO_ENABLED=0",
-				"PWD=" + pwd,
 			},
 		},
 		{
@@ -169,7 +159,6 @@ func Test_runBuild(t *testing.T) {
 				"GOARCH=amd64",
 				"GO111MODULE=on",
 				"CGO_ENABLED=0",
-				"PWD=" + pwd,
 			},
 		},
 		{
@@ -188,7 +177,6 @@ func Test_runBuild(t *testing.T) {
 				"GOARCH=amd64",
 				"GO111MODULE=on",
 				"CGO_ENABLED=0",
-				"PWD=" + pwd,
 			},
 		},
 		{
@@ -207,7 +195,6 @@ func Test_runBuild(t *testing.T) {
 				"GOARCH=amd64",
 				"GO111MODULE=on",
 				"CGO_ENABLED=0",
-				"PWD=" + pwd,
 			},
 		},
 		{
@@ -228,7 +215,6 @@ func Test_runBuild(t *testing.T) {
 				"GOARCH=amd64",
 				"GO111MODULE=on",
 				"CGO_ENABLED=0",
-				"PWD=" + pwd,
 			},
 		},
 		{
@@ -249,7 +235,6 @@ func Test_runBuild(t *testing.T) {
 				"GOARCH=amd64",
 				"GO111MODULE=on",
 				"CGO_ENABLED=0",
-				"PWD=" + filepath.Join(pwd, "./valid/path/"),
 			},
 			workingDir: "./valid/path/",
 		},
