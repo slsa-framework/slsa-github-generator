@@ -1159,7 +1159,7 @@ func TestGoBuild_Run(t *testing.T) {
 			if tt.err != nil {
 				if err == nil {
 					t.Errorf("Run() error = nil, wantErr %v", tt.err)
-				} else if errCmp(err, tt.err) {
+				} else if !errCmp(err, tt.err) {
 					t.Errorf("Run() error = %v, wantErr %v %v", err, tt.err, cmp.Diff(err, tt.err))
 				}
 			}

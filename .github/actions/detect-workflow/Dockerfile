@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM golang@sha256:9349ed889adb906efa5ebc06485fe1b6a12fb265a01c9266a137bb1352565560 as builder
+FROM golang:1.18.5@sha256:5540a6a6b3b612c382accc545b3f6702de21e77b15d89ad947116c94b5f42993 as builder
 
 WORKDIR /app
 COPY . /app
@@ -22,9 +22,7 @@ RUN go get -d -v
 # Statically compile our app for use in a distroless container
 RUN CGO_ENABLED=0 go build -ldflags="-w -s" -v -o app .
 
-# A distroless container image with some basics like SSL certificates
-# https://github.com/GoogleContainerTools/distroless
-FROM gcr.io/distroless/static@sha256:21d3f84a4f37c36199fd07ad5544dcafecc17776e3f3628baf9a57c8c0181b3f
+FROM gcr.io/distroless/static@sha256:f4787e810dbc39dd59fcee319cf88e8a01181e1758dbd07c32ed4e14a9ba8904
 
 COPY --from=builder /app/app /app
 
