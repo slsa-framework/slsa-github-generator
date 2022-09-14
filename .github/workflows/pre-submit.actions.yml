@@ -69,3 +69,5 @@ jobs:
     runs-on: ubuntu-latest
     needs: [check-dist-matrix]
     if: ${{ always() }}
+    steps:
+      - run: true # noop
