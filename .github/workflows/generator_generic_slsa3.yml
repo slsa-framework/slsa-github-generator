@@ -72,7 +72,7 @@ jobs:
       - name: Check private repos
         uses: slsa-framework/slsa-github-generator/.github/actions/privacy-check@a3c7a56c8749c2c423f01bbcfd063315efc07a22
         with:
-          message: "Repository is private. The workflow has halted in order to keep the repository name from being exposed in the public transparency log. Set 'private-repository' to override."
+          error_message: "Repository is private. The workflow has halted in order to keep the repository name from being exposed in the public transparency log. Set 'private-repository' to override."
           override: ${{ inputs.private-repository }}
 
   # detect-env detects the reusable workflow's repository and ref for use later
