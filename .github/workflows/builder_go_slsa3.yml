@@ -233,7 +233,6 @@ jobs:
     permissions:
       id-token: write # Needed to create an OIDC token for keyless signing.
       contents: read
-      actions: read # Needed to read workflow info.
     outputs:
       go-provenance-name: ${{ steps.sign-prov.outputs.signed-provenance-name }}
       go-provenance-sha256: ${{ steps.sign-prov.outputs.signed-provenance-sha256 }}
