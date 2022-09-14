@@ -43,8 +43,24 @@ on:
         required: false
         type: boolean
         default: false
+      private-repository:
+        description: "If true, private repositories can post to the public transparency log."
+        required: false
+        type: boolean
+        default: false
 
 jobs:
+  privacy-check:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read # Needed to read repo info.
+    steps:
+      - name: Check private repos
+        uses: slsa-framework/slsa-github-generator/.github/actions/privacy-check@a3c7a56c8749c2c423f01bbcfd063315efc07a22
+        with:
+          error_message: "Repository is private. The workflow has halted in order to keep the repository name from being exposed in the public transparency log. Set 'private-repository' to override."
+          override: ${{ inputs.private-repository }}
+
   # detect-env detects the reusable workflow's repository and ref for use later
   # in the workflow.
   detect-env:
@@ -70,7 +86,7 @@ jobs:
   # reference.
   generator:
     runs-on: ubuntu-latest
-    needs: [detect-env]
+    needs: [privacy-check, detect-env]
     permissions:
       id-token: write # Needed to get OIDC token for keyless signing.
       actions: read # Needed to read workflow info.
