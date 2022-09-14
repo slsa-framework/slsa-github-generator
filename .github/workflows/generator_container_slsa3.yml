@@ -72,13 +72,9 @@ jobs:
     runs-on: ubuntu-latest
     needs: [detect-env]
     permissions:
-      # id-token:write is needed to create an OIDC token for keyless signing.
-      id-token: write
-      # actions permissions are needed to read info on the workflow and
-      # workflow run.
-      actions: read
-      # packages:write permissions are needed to login and upload attestations.
-      packages: write
+      id-token: write # Needed to get OIDC token for keyless signing.
+      actions: read # Needed to read workflow info.
+      packages: write # Needed to login and upload attestations to ghcr.io.
     steps:
       - name: Generate builder
         uses: slsa-framework/slsa-github-generator/.github/actions/generate-builder@e3220805577deb9d193f64e519abcb3b50851df5

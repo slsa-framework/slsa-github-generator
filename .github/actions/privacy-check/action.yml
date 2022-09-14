@@ -1,0 +1,23 @@
+name: "Privacy check"
+description: "Checks if a repository is private and fails if it is."
+inputs:
+  token:
+    description: "The GitHub Actions token. It must have contents:read or repo scope."
+    required: false
+    default: ${{ github.token }}
+  override:
+    description: "If set to true, allows the action to complete successfully even if the repo is private."
+    type: boolean
+    required: false
+    default: false
+  error_message:
+    description: "Override the error message."
+    required: false
+    default: "Repository is private."
+outputs:
+  is_private:
+    description: "True if the repository is private."
+
+runs:
+  using: node16
+  main: "dist/index.js"

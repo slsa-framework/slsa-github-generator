@@ -3,7 +3,7 @@ OUTPUT_FORMAT = $(shell if [ "${GITHUB_ACTIONS}" == "true" ]; then echo "github"
 
 .PHONY: help
 help: ## Shows all targets and help from the Makefile (this message).
-	@echo "compute-sha256 Makefile"
+	@echo "privacy-check Makefile"
 	@echo "Usage: make [COMMAND]"
 	@echo ""
 	@grep --no-filename -E '^([/a-z.A-Z0-9_%-]+:.*?|)##' $(MAKEFILE_LIST) | \
@@ -39,3 +39,4 @@ clean:
 .PHONY: lint
 lint: node_modules/.installed ## Runs eslint.
 	npm run lint
+
