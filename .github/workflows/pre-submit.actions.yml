@@ -30,7 +30,6 @@ jobs:
           fi
 
   check-dist:
-    name: Check dist
     runs-on: ubuntu-latest
     strategy:
       matrix:
