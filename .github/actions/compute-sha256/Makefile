@@ -21,6 +21,18 @@ node_modules/.installed: package.json package-lock.json
 	npm ci
 	touch node_modules/.installed
 
+.PHONY: action
+action: node_modules/.installed ## Builds the action.
+	npm run build
+
+.PHONY: package
+package: node_modules/.installed ## Builds the distribution package.
+	npm run all
+
+.PHONY: clean
+clean:
+	rm -rf dist lib node_modules
+
 ## Testing
 #####################################################################
 
