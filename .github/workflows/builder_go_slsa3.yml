@@ -68,8 +68,6 @@ on:
 jobs:
   privacy-check:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read # Needed to read repo info.
     steps:
       - name: Check private repos
         uses: slsa-framework/slsa-github-generator/.github/actions/privacy-check@a3c7a56c8749c2c423f01bbcfd063315efc07a22
