@@ -265,7 +265,7 @@ generated as an [in-toto](https://in-toto.io/) statement with a SLSA predicate.
 Verification of provenance attestations can be done via several different tools.
 This section shows examples of several popular tools.
 
-## Kyverno
+### Kyverno
 
 [Kyverno](https://kyverno.io/) is a policy management controller that can be
 used to write Kubernetes-native policies for SLSA provenance. The following
