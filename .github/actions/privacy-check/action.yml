@@ -2,7 +2,7 @@ name: "Privacy check"
 description: "Checks if a repository is private and fails if it is."
 inputs:
   token:
-    description: "The GitHub Actions token. It must have contents:read or repo scope."
+    description: "The GitHub Actions token."
     required: false
     default: ${{ github.token }}
   override:
