@@ -328,13 +328,8 @@ jobs:
     permissions:
       contents: write # Needed to write artifacts to a release.
     runs-on: ubuntu-latest
-<<<<<<< HEAD
-    needs: [build-dry, build, provenance, detect-env]
-    if: startsWith(github.ref, 'refs/tags/') && inputs.upload-assets == true
-=======
     needs: [build-dry, build, provenance]
     if: inputs.upload-assets == true
->>>>>>> 74d5df0 (use tag-name instead of url)
     steps:
       - name: Checkout builder repository
         uses: slsa-framework/slsa-github-generator/.github/actions/secure-builder-checkout@main
@@ -357,15 +352,10 @@ jobs:
           path: "${{ needs.provenance.outputs.go-provenance-name }}"
           sha256: "${{ needs.provenance.outputs.go-provenance-sha256 }}"
 
-<<<<<<< HEAD
-      - name: Release
-        uses: softprops/action-gh-release@de2c0eb89ae2a093876385947365aca7b0e5f844 # v0.1.15
-=======
       - name: Upload provenance new tag
         uses: softprops/action-gh-release@1e07f4398721186383de40550babbdf2b84acfc5 # tag=v0.1.14
         if: startsWith(github.ref, 'refs/tags/') && inputs.upload-tag-name == ''
         id: release-new-tags
->>>>>>> 74d5df0 (use tag-name instead of url)
         with:
           files: |
             ${{ needs.build-dry.outputs.go-binary-name }}
@@ -374,7 +364,6 @@ jobs:
       - name: Upload provenance tag name
         uses: softprops/action-gh-release@1e07f4398721186383de40550babbdf2b84acfc5 # tag=v0.1.14
         if: inputs.upload-tag-name != ''
-        id: release-tag-name
         with:
           tag_name: "${{ inputs.upload-tag-name }}"
           files: |

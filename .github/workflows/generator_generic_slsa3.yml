@@ -74,8 +74,12 @@ on:
         default: false
     outputs:
       release-id:
-        description: "The name of the release where provenance was uploaded. (Only for new tags)."
-        value: ${{ jobs.upload-tag.outputs.release-id }}
+        description: >
+          The name of the release where provenance was uploaded.
+
+          Note: This value is non-empty only when a release asset is uploaded, according to
+          the values of `upload-assets` and `upload-tag-name`.
+        value: ${{ jobs.upload-assets.outputs.release-id }}
       attestation-name:
         description: "DEPRECATED: use the provenance-name output instead."
         value: ${{ jobs.generator.outputs.provenance-name }}
