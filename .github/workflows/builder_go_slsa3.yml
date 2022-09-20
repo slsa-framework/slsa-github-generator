@@ -41,9 +41,9 @@ on:
         type: string
       upload-assets:
         description: >
-          If true provenance is uploaded to a GitHub release for new tags.
+          If true, provenance is uploaded to a GitHub release for new tags.
           When the workflow does not run on a new tag, such as on a workflow_dispatch,
-          the `upload-url` argument must be provided as well.
+          the `upload-tag-name` argument must be provided as well.
         required: false
         type: boolean
         default: true
