@@ -48,8 +48,7 @@ on:
           as `node-version` parameter.
         required: true
         type: string
-      # TODO: support uploading assets to GitHub releases once we have confirmation
-      # that we can run `npm pack` and `npm --publish` provide the same result.
+      # TODO: support uploading assets to GitHub release.
       directory:
         description: "The directory to change to before running commands."
         required: false
@@ -118,15 +117,13 @@ on:
         # Note: same value as action https://github.com/actions/setup-node/blob/main/action.yml#L5.
         default: false
 
-      # ======= Developer arguments ============
       compile-builder:
         description: "Build the builder from source. This increases build time by ~2m."
         required: false
         type: boolean
         default: false
       
-    # TODO: support outputing the final binary name, once we have confirmed
-    # that we can run `npm pack` and `npm --publish` provide the same result.
+    # TODO: support outputing the final tarball name.
 
 jobs:
   privacy-check:
