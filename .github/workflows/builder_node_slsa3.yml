@@ -40,7 +40,6 @@ on:
         # Note: set to the same value as actions/node-setup https://github.com/actions/setup-node/blob/main/action.yml#L19.
         default: ${{ github.token }}
     inputs:
-      # ======= General arguments ============
       node-version:
         description: >
           The node version to use.
