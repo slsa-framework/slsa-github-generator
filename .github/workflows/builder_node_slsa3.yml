@@ -1,0 +1,390 @@
+# Copyright The GOSST team.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+name: SLSA node builder
+
+permissions:
+  contents: read
+
+env:
+  # Builder.
+  BUILDER_BINARY: slsa-builder-go-linux-amd64 # Name of the binary in the release assets.
+  BUILDER_DIR: internal/builders/node # Source directory if we compile the builder.
+
+###################################################################
+#                                                                 #
+#            Input and output argument definitions                #
+#                                                                 #
+###################################################################
+on:
+  workflow_call:
+    inputs:
+      # ======= General arguments ============
+      node-version:
+        description: >
+          The node version to use.
+
+          This argument is passed, unchanged, to `actions/node-setup`'s
+          as `node-version` parameter.
+
+        required: true
+        type: string
+      # TODO: support uploading assets to GitHub releases once we have confirmation
+      # that we can run `npm pack` and `npm --publish` provide the same result.
+      directory:
+        description: "The directory to change to before running commands."
+        required: false
+        type: string
+        default: ""
+      private-repository:
+        description: "If true, private repositories can post to the public transparency log."
+        required: false
+        type: boolean
+        default: false
+
+      # ======= Build arguments ============
+      ci-arguments:
+        # TODO: check whether we should filter out some arguments.
+        description: >
+          Optional list of arguments for `npm ci`, separated by a comma `,`.
+
+          Example: `--arg1, --arg2`.
+        required: false
+        type: string
+        default: ""
+
+      run-scripts:
+        description: >
+          A list of scripts to run in order to build the package, separated by a comma `,`.
+
+          Example: `script1, script2`.
+
+          The scripts are run after `npm ci`.
+          The scripts are run using `npm run <script-name>`, in the same
+          order as they appear in the list.
+
+        required: false
+        type: string
+        default: ""
+
+      # ======= Publish arguments ============
+      publish-arguments:
+        description: >
+          Optional list of arguments to publish, separated by a comma `,`.
+
+          Example: `--tag v1.2.3, `.
+        required: false
+        default: ""
+        type: string
+
+      token:
+        description: >
+          Optional token used to publish.
+
+          This argument is passed, unchanged, to `actions/node-setup`'s
+          as `token` parameter.
+        required: false
+        # Note: set to the same value as actions/node-setup https://github.com/actions/setup-node/blob/main/action.yml#L19.
+        default: ${{ github.token }}
+        type: string
+
+      registry-url:
+        description: >
+          Optional registry to publish to.
+
+          This argument is passed, unchanged, to `actions/node-setup`'s
+          as `registry-url` parameter.
+        required: false
+        default: ""
+        type: string
+
+      scope:
+        description: >
+          Optional scope used to publish.
+
+          This argument is passed, unchanged, to `actions/node-setup`'s
+          as `scope` parameter.
+        required: false
+        default: ""
+        type: string
+
+      always-auth:
+        description: >
+          Enable always-auth in nmprc.
+
+          This argument is passed, unchanged, to `actions/node-setup`'s
+          as `always-auth` parameter.
+        required: false
+        type: boolean
+        # Note: same value as action https://github.com/actions/setup-node/blob/main/action.yml#L5.
+        default: false
+
+      # ======= Developer arguments ============
+      compile-builder:
+        description: "Build the builder from source. This increases build time by ~2m."
+        required: false
+        type: boolean
+        default: false
+      
+    # TODO: support outputing the final binary name, once we have confirmed
+    # that we can run `npm pack` and `npm --publish` provide the same result.
+
+jobs:
+  privacy-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check private repos
+        uses: slsa-framework/slsa-github-generator/.github/actions/privacy-check@a3c7a56c8749c2c423f01bbcfd063315efc07a22
+        with:
+          error_message: "Repository is private. The workflow has halted in order to keep the repository name from being exposed in the public transparency log. Set 'private-repository' to override."
+          override: ${{ inputs.private-repository }}
+
+  rng:
+    outputs:
+      value: ${{ steps.rng.outputs.random }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Generate random 16-byte value (32-char hex encoded)
+        id: rng
+        uses: slsa-framework/slsa-github-generator/.github/actions/rng@e3220805577deb9d193f64e519abcb3b50851df5
+
+  detect-env:
+    outputs:
+      repository: ${{ steps.detect.outputs.repository }}
+      ref: ${{ steps.detect.outputs.ref }}
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write # Needed to detect the current reusable repository and ref.
+    steps:
+      - name: Detect the builder ref
+        id: detect
+        uses: slsa-framework/slsa-github-generator/.github/actions/detect-workflow@bdd89e60dc5387d8f819bebc702987956bcd4913 # tag=v1.2.0
+
+  ###################################################################
+  #                                                                 #
+  #                       Build the builder                         #
+  #                                                                 #
+  ###################################################################
+  builder:
+    outputs:
+      node-builder-sha256: ${{ steps.generate.outputs.sha256 }}
+    runs-on: ubuntu-latest
+    needs: [privacy-check, detect-env, rng]
+    steps:
+      - name: Generate builder
+        id: generate
+        uses: slsa-framework/slsa-github-generator/.github/actions/generate-builder@e3220805577deb9d193f64e519abcb3b50851df5
+        with:
+          repository: "${{ needs.detect-env.outputs.repository }}"
+          ref: "${{ needs.detect-env.outputs.ref }}"
+          go-version: 1.18
+          # Note: This must be the non-randomized binary name, so that it can be downloaded from the release assets.
+          binary: "${{ env.BUILDER_BINARY }}"
+          compile-builder: "${{ inputs.compile-builder }}"
+          directory: "${{ env.BUILDER_DIR }}"
+
+      - name: Upload builder
+        uses: actions/upload-artifact@3cea5372237819ed00197afe530f5a7ea3e805c8 # tag=v3.1.0
+        with:
+          name: "${{ env.BUILDER_BINARY }}-${{ needs.rng.outputs.value }}"
+          path: "${{ env.BUILDER_BINARY }}"
+          if-no-files-found: error
+          retention-days: 5
+
+  ###################################################################
+  #                                                                 #
+  #                       Build the project                         #
+  #                                                                 #
+  ###################################################################
+  build:
+    outputs:
+      node-tarball-sha256: ${{ steps.upload.outputs.sha256 }}
+      node-tarball-name: ${{ steps.tarball.outputs.filename }}
+    runs-on: ubuntu-latest
+    needs: [privacy-check, builder, rng]
+    steps:
+      - name: Checkout the Node repository
+        uses: slsa-framework/slsa-github-generator/.github/actions/checkout-node # TODO: set a pin or use at head?
+        with:
+          node-version: ${{ inputs.node-version }}
+          scope: ${{ inputs.scope }}
+          token: ${{ inputs.token }}
+          always-auth: ${{ inputs.always-auth }}
+          registry-url: ${{ inputs.registry-url }}
+          cache: 'npm'
+
+      - name: Download builder
+        uses: slsa-framework/slsa-github-generator/.github/actions/secure-download-artifact@e3220805577deb9d193f64e519abcb3b50851df5
+        with:
+          name: "${{ env.BUILDER_BINARY }}-${{ needs.rng.outputs.value }}"
+          path: "${{ env.BUILDER_BINARY }}"
+          sha256: "${{ needs.builder.outputs.node-builder-sha256 }}"
+          set-executable: true
+
+      - name: Download dependencies
+        working-directory: "${{ inputs.directory }}"
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          # This will invoke the builder.
+          echo "TODO: npm ci + ${{ inputs.ci-arguments }}"
+
+      # TODO(hermeticity) OS-level.
+      # - name: Disable hermeticity
+      # uses: slsa/hermeticity@xxx
+      #   with:
+      #     to-state: enabled
+
+      - name: Build project
+        working-directory: "${{ inputs.directory }}"
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          # TODO: only run if non-empty.
+          # This will invoke the builder.
+          echo "npm run ${{ inputs.run-scripts }}"
+
+      - name: Create tarball
+        working-directory: "${{ inputs.directory }}"
+        shell: bash
+        id: tarball
+        run: |
+          set -euo pipefail
+
+          # TODO: only run if non-empty.
+          # This will invoke the builder.
+          # Note: pack-destination only supported version 7.x above.
+          # https://docs.npmjs.com/cli/v7/commands/npm-pack.
+          # This outputs a .tgz. Befoer running this command, let's record the .tgz
+          # files and their hashes, so that we can identify the new file without the need to parse
+          # the manifest.json.
+          echo "npm pack --pack-destination="./out"
+
+          # TODO: do all this in the builder. The path should be absolute.
+          echo '::set-output name=filename::$TARBALL'
+
+      - name: Upload generated tarball
+        working-directory: "${{ inputs.directory }}"
+        id: upload
+        uses: slsa-framework/slsa-github-generator/.github/actions/secure-upload-artifact@e3220805577deb9d193f64e519abcb3b50851df5
+        with:
+          name: "${{ steps.tarball.outputs.filename }}"
+          path: "${{ steps.tarball.outputs.filename }}"
+
+  ###################################################################
+  #                                                                 #
+  #                 Generate the SLSA provenance                    #
+  #                                                                 #
+  ###################################################################
+  provenance:
+    runs-on: ubuntu-latest
+    needs: [builder, build, rng]
+    permissions:
+      id-token: write # Needed to create an OIDC token for keyless signing.
+      contents: read
+      actions: read # Needed to read workflow info.
+    outputs:
+      node-provenance-name: ${{ steps.sign-prov.outputs.signed-provenance-name }}
+      node-provenance-sha256: ${{ steps.sign-prov.outputs.signed-provenance-sha256 }}
+    steps:
+      - name: Download builder
+        uses: slsa-framework/slsa-github-generator/.github/actions/secure-download-artifact@e3220805577deb9d193f64e519abcb3b50851df5
+        with:
+          name: "${{ env.BUILDER_BINARY }}-${{ needs.rng.outputs.value }}"
+          path: "${{ env.BUILDER_BINARY }}"
+          sha256: "${{ needs.builder.outputs.node-builder-sha256 }}"
+          set-executable: true
+
+      - name: Create and sign provenance
+        id: sign-prov
+        shell: bash
+        env:
+          UNTRUSTED_TARBALL_NAME: "${{ needs.build.outputs.node-tarball-name }}"
+          UNTRUSTED_TARBALL_HASH: "${{ needs.build.outputs.node-tarball-sha256 }}"
+          UNTRUSTED_CI_ARGUMENTS: "${{nputs.ci-arguments }}"
+          UNTRUSTED_RUN_SCRIPTS: "${{nputs.run-scripts }}"
+          GITHUB_CONTEXT: "${{ toJSON(github) }}"
+        run: |
+          set -euo pipefail
+
+          echo "provenance generator is $BUILDER_BINARY"
+
+          # Create and sign provenance
+          # This sets signed-provenance-name to the name of the signed DSSE envelope.
+          # Note: this command outputs the sha256 of the signed provenance, so the upload
+          # in the next step need not be secure-artifact-upload.
+          ./"$BUILDER_BINARY" provenance \
+            --tarball-name "$UNTRUSTED_TARBALL_NAME" \
+            --digest "$UNTRUSTED_TARBALL_HASH" \
+            --ci-arguments "$UNTRUSTED_CI_ARGUMENTS" \
+            --run-scripts "$UNTRUSTED_RUN_SCRIPTS"
+
+      - name: Upload the signed provenance
+        uses: actions/upload-artifact@3cea5372237819ed00197afe530f5a7ea3e805c8 # tag=v3.1.0
+        with:
+          name: "${{ steps.sign-prov.outputs.signed-provenance-name }}"
+          path: "${{ steps.sign-prov.outputs.signed-provenance-name }}"
+          if-no-files-found: error
+          retention-days: 5
+
+  ###################################################################
+  #                                                                 #
+  #           Publish the package and its provenance                #
+  #                                                                 #
+  ###################################################################
+  publish:
+    runs-on: ubuntu-latest
+    needs: [build, provenance]
+    steps:
+      - name: Checkout the Node repository
+        uses: slsa-framework/slsa-github-generator/.github/actions/checkout-node # TODO: set a pin or use at head?
+        with:
+          node-version: ${{ inputs.node-version }}
+          scope: ${{ inputs.scope }}
+          token: ${{ inputs.token }}
+          always-auth: ${{ inputs.always-auth }}
+          registry-url: ${{ inputs.registry-url }}
+
+      - name: Download binary
+        uses: slsa-framework/slsa-github-generator/.github/actions/secure-download-artifact@e3220805577deb9d193f64e519abcb3b50851df5
+        with:
+          name: "${{ needs.build.outputs.node-tarball-name }}"
+          path: "${{ needs.build.outputs.node-tarball-name }}"
+          sha256: "${{ needs.build.outputs.node-tarball-sha256 }}"
+
+      - name: Download provenance
+        uses: slsa-framework/slsa-github-generator/.github/actions/secure-download-artifact@e3220805577deb9d193f64e519abcb3b50851df5
+        with:
+          name: "${{ needs.provenance.outputs.node-provenance-name }}"
+          path: "${{ needs.provenance.outputs.node-provenance-name }}"
+          sha256: "${{ needs.provenance.outputs.node-provenance-sha256 }}"
+
+      - name: Download builder
+        uses: slsa-framework/slsa-github-generator/.github/actions/secure-download-artifact@e3220805577deb9d193f64e519abcb3b50851df5
+        with:
+          name: "${{ env.BUILDER_BINARY }}-${{ needs.rng.outputs.value }}"
+          path: "${{ env.BUILDER_BINARY }}"
+          sha256: "${{ needs.builder.outputs.go-builder-sha256 }}"
+          set-executable: true
+  
+      - name: Publish
+        bashe: shell
+        run: |
+          set -euo pipefail
+
+          # Note: this will be invoked by builder. It may be fine to
+          # use these untrusted steps to upload. TBD.
+          echo "npm publish ${{ inputs.publish-arguments }}"
