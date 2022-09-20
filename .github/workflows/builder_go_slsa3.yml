@@ -24,6 +24,10 @@ env:
   BUILDER_BINARY: slsa-builder-go-linux-amd64 # Name of the binary in the release assets.
   BUILDER_DIR: internal/builders/go # Source directory if we compile the builder.
 
+defaults:
+  run:
+    shell: bash
+
 ###################################################################
 #                                                                 #
 #            Input and output argument definitions                #
@@ -156,7 +160,6 @@ jobs:
 
       - name: Build dry project
         id: build-dry
-        shell: bash
         env:
           CONFIG_FILE: "${{ inputs.config-file }}"
           UNTRUSTED_ENVS: "${{ inputs.evaluated-envs }}"
@@ -195,7 +198,6 @@ jobs:
       - name: Download dependencies
         env:
           UNTRUSTED_WORKING_DIR: "${{ needs.build-dry.outputs.go-working-dir }}"
-        shell: bash
         run: |
           set -euo pipefail
 
@@ -211,7 +213,6 @@ jobs:
 
       - name: Build project
         id: build-gen
-        shell: bash
         env:
           CONFIG_FILE: "${{ inputs.config-file }}"
           UNTRUSTED_ENVS: "${{ inputs.evaluated-envs }}"
@@ -262,7 +263,6 @@ jobs:
 
       - name: Create and sign provenance
         id: sign-prov
-        shell: bash
         env:
           UNTRUSTED_BINARY_NAME: "${{ needs.build-dry.outputs.go-binary-name }}"
           UNTRUSTED_BINARY_HASH: "${{ needs.build.outputs.go-binary-sha256 }}"
