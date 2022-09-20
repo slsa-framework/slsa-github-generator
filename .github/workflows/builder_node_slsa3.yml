@@ -84,7 +84,7 @@ on:
         description: >
           Optional list of arguments to publish, separated by a comma `,`.
 
-          Example: `--tag v1.2.3, `.
+          Example: `--tag v1.2.3, --some-arg value`.
         required: false
         default: ""
         type: string
