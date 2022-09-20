@@ -29,6 +29,16 @@ env:
 ###################################################################
 on:
   workflow_call:
+    secrets:
+      token:
+        description: >
+          Optional token.
+
+          This argument is passed, unchanged, to `actions/node-setup`'s
+          as `token` parameter.
+        required: false
+        # Note: set to the same value as actions/node-setup https://github.com/actions/setup-node/blob/main/action.yml#L19.
+        default: ${{ github.token }}
     inputs:
       # ======= General arguments ============
       node-version:
@@ -37,7 +47,6 @@ on:
 
           This argument is passed, unchanged, to `actions/node-setup`'s
           as `node-version` parameter.
-
         required: true
         type: string
       # TODO: support uploading assets to GitHub releases once we have confirmation
@@ -52,8 +61,6 @@ on:
         required: false
         type: boolean
         default: false
-
-      # ======= Build arguments ============
       ci-arguments:
         # TODO: check whether we should filter out some arguments.
         description: >
@@ -63,7 +70,6 @@ on:
         required: false
         type: string
         default: ""
-
       run-scripts:
         description: >
           A list of scripts to run in order to build the package, separated by a comma `,`.
@@ -73,12 +79,9 @@ on:
           The scripts are run after `npm ci`.
           The scripts are run using `npm run <script-name>`, in the same
           order as they appear in the list.
-
         required: false
         type: string
         default: ""
-
-      # ======= Publish arguments ============
       publish-arguments:
         description: >
           Optional list of arguments to publish, separated by a comma `,`.
@@ -87,18 +90,6 @@ on:
         required: false
         default: ""
         type: string
-
-      token:
-        description: >
-          Optional token used to publish.
-
-          This argument is passed, unchanged, to `actions/node-setup`'s
-          as `token` parameter.
-        required: false
-        # Note: set to the same value as actions/node-setup https://github.com/actions/setup-node/blob/main/action.yml#L19.
-        default: ${{ github.token }}
-        type: string
-
       registry-url:
         description: >
           Optional registry to publish to.
@@ -108,7 +99,6 @@ on:
         required: false
         default: ""
         type: string
-
       scope:
         description: >
           Optional scope used to publish.
@@ -118,7 +108,6 @@ on:
         required: false
         default: ""
         type: string
-
       always-auth:
         description: >
           Enable always-auth in nmprc.
