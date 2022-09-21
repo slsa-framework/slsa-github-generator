@@ -19,7 +19,7 @@ permissions:
 
 env:
   # Builder.
-  BUILDER_BINARY: slsa-builder-go-linux-amd64 # Name of the binary in the release assets.
+  BUILDER_BINARY: slsa-builder-node-linux-amd64 # Name of the binary in the release assets.
   BUILDER_DIR: internal/builders/node # Source directory if we compile the builder.
 
 defaults:
@@ -52,7 +52,7 @@ on:
           as `node-version` parameter.
         required: true
         type: string
-      # TODO: support uploading assets to GitHub release.
+      # TODO(https://github.com/slsa-framework/slsa-github-generator/issues/888): support uploading assets to GitHub release.
       directory:
         description: "The directory to change to before running commands."
         required: false
@@ -64,7 +64,7 @@ on:
         type: boolean
         default: false
       ci-arguments:
-        # TODO: check whether we should filter out some arguments.
+        # TODO(https://github.com/slsa-framework/slsa-github-generator/issues/889): check whether we should filter out some arguments.
         description: >
           Optional list of arguments for `npm ci`, separated by a comma `,`.
 
@@ -126,8 +126,8 @@ on:
         required: false
         type: boolean
         default: false
-      
-    # TODO: support outputing the final tarball name.
+
+    # TODO(https://github.com/slsa-framework/slsa-github-generator/issues/890): support outputing the final tarball name.
 
 jobs:
   privacy-check:
@@ -222,7 +222,7 @@ jobs:
           set-executable: true
 
       - name: Download dependencies
-        env: 
+        env:
           UNTRUSTED_CI_ARGUMENTS: "${{ inputs.ci-arguments }}"
           UNTRUSTED_DIR: ${{ inputs.directory }}"
         run: |
@@ -233,14 +233,10 @@ jobs:
             --ci-arguments "$UNTRUSTED_CI_ARGUMENTS" \
             --directory "$UNTRUSTED_DIR"
 
-      # TODO(hermeticity) OS-level.
-      # - name: Disable hermeticity
-      # uses: slsa/hermeticity@xxx
-      #   with:
-      #     to-state: enabled
+      # TODO(hermeticity) Enable OS-level hermeticity.
 
       - name: Build project
-        env: 
+        env:
           UNTRUSTED_RUN_SCRIPTS: "${{ inputs.run-scripts }}"
           UNTRUSTED_DIR: ${{ inputs.directory }}"
         run: |
@@ -375,7 +371,7 @@ jobs:
           path: "${{ env.BUILDER_BINARY }}"
           sha256: "${{ needs.builder.outputs.go-builder-sha256 }}"
           set-executable: true
-  
+
       - name: Publish
         env:
           UNTRUSTED_PUBLISH_ARGUMENTS: "${{ inputs.publish-arguments }}"
