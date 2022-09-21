@@ -74,5 +74,5 @@ jobs:
       CHECK_DIST_RESULT: ${{ needs.check-dist-matrix.result }}
     steps:
       - run: |
-          # exit 0 if check-dist-matrix was successful.
+          # exit 0 if checks were successful.
           [ "${CHECK_DIST_RESULT}" == "success" ] && [ "${CHECKOUT_RESULT}" == "success" ]
