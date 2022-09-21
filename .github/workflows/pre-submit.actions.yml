@@ -67,7 +67,12 @@ jobs:
   # NOTE: needed for protected branch checks.
   check-dist:
     runs-on: ubuntu-latest
-    needs: [check-dist-matrix]
+    needs: [checkout, check-dist-matrix]
     if: ${{ always() }}
+    env:
+      CHECKOUT_RESULT: ${{ needs.checkout.result }}
+      CHECK_DIST_RESULT: ${{ needs.check-dist-matrix.result }}
     steps:
-      - run: true # noop
+      - run: |
+          # exit 0 if check-dist-matrix was successful.
+          [ "${CHECK_DIST_RESULT}" == "success" ] && [ "${CHECKOUT_RESULT}" == "success" ]
