@@ -195,7 +195,6 @@ jobs:
           if-no-files-found: error
           retention-days: 5
 
-<<<<<<< HEAD
       - name: Final outcome
         id: final
         env:
@@ -203,14 +202,9 @@ jobs:
         run: |
           echo "outcome=$([ "$SUCCESS" == "true" ] && echo "success" || echo "failure")" >> $GITHUB_OUTPUT
 
-  # create-release creates a release and uploads provenance to the release if
-  # `upload-assets` is true.
-  upload-tag:
-=======
-  # upload-assets uploads provenance to the release 
+  # upload-assets uploads provenance to the release
   # if `upload-assets` is true.
   upload-assets:
->>>>>>> 74d5df0 (use tag-name instead of url)
     outputs:
       outcome: ${{ steps.final.outputs.outcome }}
       release-id: ${{ steps.release.outputs.id }}
@@ -273,7 +267,6 @@ jobs:
             exit 1
           fi
           echo "::set-output name=id::$id"
-<<<<<<< HEAD
 
       - name: Final outcome
         id: final
@@ -300,5 +293,3 @@ jobs:
         run: |
           echo "outcome=$([ "$SUCCESS" == "true" ] && echo "success" || echo "failure")" >> $GITHUB_OUTPUT
           [ "$CONTINUE" == "true" ] || [ "$SUCCESS" == "true" ] || exit 27
-=======
->>>>>>> 74d5df0 (use tag-name instead of url)
