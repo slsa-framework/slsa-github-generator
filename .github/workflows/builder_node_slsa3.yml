@@ -43,6 +43,7 @@ on:
         required: false
         # Note: set to the same value as actions/node-setup https://github.com/actions/setup-node/blob/main/action.yml#L19.
         default: ${{ github.token }}
+    # TODO(https://github.com/slsa-framework/slsa-github-generator/issues/890): support outputing the final tarball name.
     inputs:
       node-version:
         description: >
@@ -126,8 +127,6 @@ on:
         required: false
         type: boolean
         default: false
-
-    # TODO(https://github.com/slsa-framework/slsa-github-generator/issues/890): support outputing the final tarball name.
 
 jobs:
   privacy-check:
@@ -249,7 +248,7 @@ jobs:
 
       - name: Create tarball
         id: tarball
-        env: 
+        env:
           UNTRUSTED_DIR: ${{ inputs.directory }}"
         run: |
           set -euo pipefail
