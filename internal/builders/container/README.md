@@ -23,6 +23,7 @@ project simply generates provenance as a separate step in an existing workflow.
   - [Provenance Format](#provenance-format)
   - [Provenance Example](#provenance-example)
 - [Verification](#verification)
+  - [Cosign](#cosign)
   - [Kyverno](#kyverno)
 
 ---
@@ -264,6 +265,52 @@ generated as an [in-toto](https://in-toto.io/) statement with a SLSA predicate.
 
 Verification of provenance attestations can be done via several different tools.
 This section shows examples of several popular tools.
+
+### Cosign
+
+[Cosign](https://docs.sigstore.dev/cosign/overview/) can be used to verify the
+provenance attestation for the image. A [CUE] policy can also be used to verify
+parts of the SLSA attestation.
+
+Here is an example:
+
+```shell
+$ cat policy.cue
+// The predicateType field must match this string
+predicateType: "https://slsa.dev/provenance/v0.2"
+
+predicate: {
+  // This condition verifies that the builder is the builder we
+  // expect and trust. The following condition can be used
+  // unmodified. It verifies that the builder is the container
+  // workflow.
+  builder: {
+    // TODO: update after GA
+    // id: =~"^https://github.com/slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@refs/tags/v[0-9]+.[0-9]+.[0-9]+$"
+    id: =~"^https://github.com/ianlewis/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@refs/heads/409-feature-add-generic-container-workflow$"
+  }
+  invocation: {
+    configSource: {
+      // This condition verifies the entrypoint of the workflow.
+      // Replace with the relative path to your workflow in your
+      // repository.
+      entryPoint: ".github/workflows/generic-container.yml"
+
+      // This condition verifies that the image was generated from
+      // the source repository we expect. Replace this with your
+      // repository.
+      uri: =~"^git\\+https://github.com/ianlewis/actions-test@refs/tags/v[0-9]+.[0-9]+.[0-9]+$"
+    }
+  }
+}
+
+$ COSIGN_EXPERIMENTAL=1 cosign verify-attestation \
+  --type slsaprovenance \
+  --policy policy.cue \
+  ghcr.io/ianlewis/actions-test:v0.0.38
+```
+
+You can read more in the [cosign documentation](https://docs.sigstore.dev/cosign/attestation/).
 
 ### Kyverno
 
