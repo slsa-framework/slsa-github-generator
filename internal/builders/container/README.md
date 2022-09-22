@@ -307,7 +307,16 @@ predicate: {
 $ COSIGN_EXPERIMENTAL=1 cosign verify-attestation \
   --type slsaprovenance \
   --policy policy.cue \
-  ghcr.io/ianlewis/actions-test:v0.0.38
+  ghcr.io/ianlewis/actions-test:v0.0.38 > /dev/null
+will be validating against CUE policies: [policy.cue]
+
+Verification for ghcr.io/ianlewis/actions-test:v0.0.38 --
+The following checks were performed on each of these signatures:
+  - The cosign claims were validated
+  - Existence of the claims in the transparency log was verified offline
+  - Any certificates were verified against the Fulcio roots.
+Certificate subject:  https://github.com/ianlewis/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@refs/heads/409-feature-add-generic-container-workflow
+Certificate issuer URL:  https://token.actions.githubusercontent.com
 ```
 
 You can read more in the [cosign documentation](https://docs.sigstore.dev/cosign/attestation/).
