@@ -263,14 +263,11 @@ generated as an [in-toto](https://in-toto.io/) statement with a SLSA predicate.
 
 ## Verification
 
-Verification of provenance attestations can be done via several different tools.
-This section shows examples of several popular tools.
+Verification of provenance attestations can be done via several different tools. This section shows examples of several popular tools.
 
 ### Cosign
 
-[Cosign](https://docs.sigstore.dev/cosign/overview/) can be used to verify the
-provenance attestation for the image. A [CUE] policy can also be used to verify
-parts of the SLSA attestation.
+[Cosign](https://docs.sigstore.dev/cosign/overview/) can be used to verify the provenance attestation for the image. A [CUE](https://cuelang.org/) policy can also be used to verify parts of the SLSA attestation.
 
 Here is an example:
 
