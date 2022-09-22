@@ -269,10 +269,9 @@ Verification of provenance attestations can be done via several different tools.
 
 [Cosign](https://docs.sigstore.dev/cosign/overview/) can be used to verify the provenance attestation for the image. A [CUE](https://cuelang.org/) policy can also be used to verify parts of the SLSA attestation.
 
-Here is an example:
+Here is an example policy stored in `policy.cue`:
 
-```shell
-$ cat policy.cue
+```
 // The predicateType field must match this string
 predicateType: "https://slsa.dev/provenance/v0.2"
 
@@ -300,7 +299,11 @@ predicate: {
     }
   }
 }
+```
 
+We can then use `cosign` to verify the attestation using the policy.
+
+```shell
 $ COSIGN_EXPERIMENTAL=1 cosign verify-attestation \
   --type slsaprovenance \
   --policy policy.cue \
