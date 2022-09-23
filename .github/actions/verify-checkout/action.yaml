@@ -12,5 +12,7 @@ runs:
         git_sha=$(git log -1 --format='%H')
         if [[ "$git_sha" != "$GITHUB_SHA" ]]; then
             echo "mismatch git sha $git_sha != $GITHUB_SHA"
+            echo "logs:"
+            git log
             exit 1
         fi
