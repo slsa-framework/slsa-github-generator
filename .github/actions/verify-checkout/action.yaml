@@ -6,13 +6,18 @@ runs:
   steps:
     - name: Verify commit sha
       shell: bash
+      env:
+        CONTEXT: "${{ toJSON(github) }}"
       run: |
         set -euo pipefail
 
         git_sha=$(git log -1 --format='%H')
         if [[ "$git_sha" != "$GITHUB_SHA" ]]; then
             echo "mismatch git sha $git_sha != $GITHUB_SHA"
-            echo "logs:"
-            git log
+            echo "GitHub context:"
+            echo "$CONTEXT"
+            echo
+            echo "Logs:"
+            git log -20
             exit 1
         fi
