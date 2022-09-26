@@ -21,8 +21,8 @@ jobs:
           # See reasoning in ./github/actions/README.md
 
           # Split the command to ignore the `1` error `grep` returns when there is no match.
-          results=$(grep -r --include='*.yml' --include='*.yaml' -e 'actions/checkout@\|actions/checkout-go@' .github/actions/* || true)
-          results=$(grep -v 'checkout-go\|generate-builder' <<<"$results" || true)
+          results=$(grep -r --include='*.yml' --include='*.yaml' -e 'actions/checkout@\|actions/checkout-go@\|actions/checkout-node@' .github/actions/* || true)
+          results=$(grep -v 'checkout-go\|checkout-node\|generate-builder' <<<"$results" || true)
           if [[ "$results" != "" ]]; then
               echo "Some Actions are using 'actions/checkout'"
               echo "$results"
