@@ -17,7 +17,7 @@ runs:
             echo "GitHub context:"
             echo "$CONTEXT"
             echo
-            echo "Logs:"
+            echo "Last 20 commits:"
             git log -20
             exit 1
         fi
