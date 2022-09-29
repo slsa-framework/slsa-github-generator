@@ -133,7 +133,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check private repos
-        uses: slsa-framework/slsa-github-generator/.github/actions/privacy-check@a3c7a56c8749c2c423f01bbcfd063315efc07a22
+        uses: slsa-framework/slsa-github-generator/.github/actions/privacy-check@b075c0c61eb38b9f877d7a93179137ce7f7c029c
         with:
           error_message: "Repository is private. The workflow has halted in order to keep the repository name from being exposed in the public transparency log. Set 'private-repository' to override."
           override: ${{ inputs.private-repository }}
@@ -145,7 +145,7 @@ jobs:
     steps:
       - name: Generate random 16-byte value (32-char hex encoded)
         id: rng
-        uses: slsa-framework/slsa-github-generator/.github/actions/rng@e3220805577deb9d193f64e519abcb3b50851df5
+        uses: slsa-framework/slsa-github-generator/.github/actions/rng@b075c0c61eb38b9f877d7a93179137ce7f7c029c
 
   detect-env:
     outputs:
@@ -157,7 +157,7 @@ jobs:
     steps:
       - name: Detect the builder ref
         id: detect
-        uses: slsa-framework/slsa-github-generator/.github/actions/detect-workflow@bdd89e60dc5387d8f819bebc702987956bcd4913 # tag=v1.2.0
+        uses: slsa-framework/slsa-github-generator/.github/actions/detect-workflow@b075c0c61eb38b9f877d7a93179137ce7f7c029c # tag=v1.2.0
 
   ###################################################################
   #                                                                 #
@@ -172,7 +172,7 @@ jobs:
     steps:
       - name: Generate builder
         id: generate
-        uses: slsa-framework/slsa-github-generator/.github/actions/generate-builder@e3220805577deb9d193f64e519abcb3b50851df5
+        uses: slsa-framework/slsa-github-generator/.github/actions/generate-builder@b075c0c61eb38b9f877d7a93179137ce7f7c029c
         with:
           repository: "${{ needs.detect-env.outputs.repository }}"
           ref: "${{ needs.detect-env.outputs.ref }}"
@@ -213,7 +213,7 @@ jobs:
           cache: 'npm'
 
       - name: Download builder
-        uses: slsa-framework/slsa-github-generator/.github/actions/secure-download-artifact@e3220805577deb9d193f64e519abcb3b50851df5
+        uses: slsa-framework/slsa-github-generator/.github/actions/secure-download-artifact@b075c0c61eb38b9f877d7a93179137ce7f7c029c
         with:
           name: "${{ env.BUILDER_BINARY }}-${{ needs.rng.outputs.value }}"
           path: "${{ env.BUILDER_BINARY }}"
@@ -269,7 +269,7 @@ jobs:
 
       - name: Upload generated tarball
         id: upload
-        uses: slsa-framework/slsa-github-generator/.github/actions/secure-upload-artifact@e3220805577deb9d193f64e519abcb3b50851df5
+        uses: slsa-framework/slsa-github-generator/.github/actions/secure-upload-artifact@b075c0c61eb38b9f877d7a93179137ce7f7c029c
         with:
           name: "${{ steps.tarball.outputs.filename }}"
           path: "${{ steps.tarball.outputs.filename }}"
@@ -291,7 +291,7 @@ jobs:
       node-provenance-sha256: ${{ steps.sign-prov.outputs.signed-provenance-sha256 }}
     steps:
       - name: Download builder
-        uses: slsa-framework/slsa-github-generator/.github/actions/secure-download-artifact@e3220805577deb9d193f64e519abcb3b50851df5
+        uses: slsa-framework/slsa-github-generator/.github/actions/secure-download-artifact@b075c0c61eb38b9f877d7a93179137ce7f7c029c
         with:
           name: "${{ env.BUILDER_BINARY }}-${{ needs.rng.outputs.value }}"
           path: "${{ env.BUILDER_BINARY }}"
@@ -350,21 +350,21 @@ jobs:
           registry-url: ${{ inputs.registry-url }}
 
       - name: Download binary
-        uses: slsa-framework/slsa-github-generator/.github/actions/secure-download-artifact@e3220805577deb9d193f64e519abcb3b50851df5
+        uses: slsa-framework/slsa-github-generator/.github/actions/secure-download-artifact@b075c0c61eb38b9f877d7a93179137ce7f7c029c
         with:
           name: "${{ needs.build.outputs.node-tarball-name }}"
           path: "${{ needs.build.outputs.node-tarball-name }}"
           sha256: "${{ needs.build.outputs.node-tarball-sha256 }}"
 
       - name: Download provenance
-        uses: slsa-framework/slsa-github-generator/.github/actions/secure-download-artifact@e3220805577deb9d193f64e519abcb3b50851df5
+        uses: slsa-framework/slsa-github-generator/.github/actions/secure-download-artifact@b075c0c61eb38b9f877d7a93179137ce7f7c029c
         with:
           name: "${{ needs.provenance.outputs.node-provenance-name }}"
           path: "${{ needs.provenance.outputs.node-provenance-name }}"
           sha256: "${{ needs.provenance.outputs.node-provenance-sha256 }}"
 
       - name: Download builder
-        uses: slsa-framework/slsa-github-generator/.github/actions/secure-download-artifact@e3220805577deb9d193f64e519abcb3b50851df5
+        uses: slsa-framework/slsa-github-generator/.github/actions/secure-download-artifact@b075c0c61eb38b9f877d7a93179137ce7f7c029c
         with:
           name: "${{ env.BUILDER_BINARY }}-${{ needs.rng.outputs.value }}"
           path: "${{ env.BUILDER_BINARY }}"

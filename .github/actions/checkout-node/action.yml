@@ -57,7 +57,7 @@ runs:
         token: "${{ inputs.token }}"
 
     - name: Verify checkout
-      uses: slsa-framework/slsa-github-generator/.github/actions/verify-checkout@e3220805577deb9d193f64e519abcb3b50851df5
+      uses: slsa-framework/slsa-github-generator/.github/actions/verify-checkout@b075c0c61eb38b9f877d7a93179137ce7f7c029c
 
     - name: Set up Node environment
       uses: actions/setup-node@2fddd8803e2f5c9604345a0b591c3020ee971a93 # tag=v3.4.1
