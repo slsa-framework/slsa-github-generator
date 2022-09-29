@@ -39,6 +39,7 @@ runs:
         repository: "${{ inputs.repository }}"
         ref: "${{ inputs.ref }}"
         go-version: "${{ inputs.go-version }}"
+        token: "${{ inputs.token }}"
 
     - name: Generate builder
       shell: bash

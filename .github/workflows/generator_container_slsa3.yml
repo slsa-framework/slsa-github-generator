@@ -48,6 +48,11 @@ on:
         required: false
         type: boolean
         default: false
+      token:
+        description: "GitHub token"
+        required: false
+        type: string
+        default: ${{ github.token }}
 
 jobs:
   privacy-check:
@@ -100,6 +105,7 @@ jobs:
           compile-builder: "${{ inputs.compile-generator }}"
           # NOTE: We are using the generic generator.
           directory: "${{ env.BUILDER_DIR }}"
+          token: "${{ inputs.token }}"
 
       - uses: sigstore/cosign-installer@f3c664df7af409cb4873aa5068053ba9d61a57b6 # tag=v2.6.0
       - name: Login
