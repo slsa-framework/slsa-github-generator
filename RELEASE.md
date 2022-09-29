@@ -1,5 +1,5 @@
 # How to cut a release
-
+TEST
 This is a document to describe the release process for the Go builder. Since all builders are in this repository, we will expand this doc to cover other builders in the future.
 
 ---
