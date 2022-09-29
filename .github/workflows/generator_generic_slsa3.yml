@@ -107,6 +107,13 @@ jobs:
       contents: read
       actions: read # Needed to read workflow info.
     steps:
+      - name: Debug
+        shell: bash
+        GITHUB_CONTEXT: "${{ toJSON(github) }}"
+        run: |
+          echo "Context:"
+          echo "$GITHUB_CONTEXT"
+          echo
       - name: Generate builder
         uses: slsa-framework/slsa-github-generator/.github/actions/generate-builder@b075c0c61eb38b9f877d7a93179137ce7f7c029c
         with:

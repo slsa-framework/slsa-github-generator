@@ -33,14 +33,6 @@ outputs:
 runs:
   using: "composite"
   steps:
-    - name: Debug
-      shell: bash
-      GITHUB_CONTEXT: "${{ toJSON(github) }}"
-      run: |
-        echo "Context:"
-        echo "$GITHUB_CONTEXT"
-        echo
-
     - name: Checkout the Go builder repository
       uses: slsa-framework/slsa-github-generator/.github/actions/checkout-go@b075c0c61eb38b9f877d7a93179137ce7f7c029c
       with:
