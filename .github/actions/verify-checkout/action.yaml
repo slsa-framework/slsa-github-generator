@@ -7,13 +7,20 @@ runs:
     - name: Verify commit sha
       shell: bash
       env:
-        CONTEXT: "${{ toJSON(github) }}"
+        GITHUB_CONTEXT: "${{ toJSON(github) }}"
+        PULL_REQUEST_SHA: "${{ github.event.pull_request.head.sha }}"
       run: |
         set -euo pipefail
 
-        git_sha=$(git log -1 --format='%H')
-        if [[ "$git_sha" != "$GITHUB_SHA" ]]; then
-            echo "mismatch git sha \"$git_sha\" != \"$GITHUB_SHA\""
+        git_sha="$(git log -1 --format='%H')"
+        github_sha="$GITHUB_SHA"
+
+        if [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
+          github_sha="$PULL_REQUEST_SHA"
+        fi
+
+        if [[ "$git_sha" != "$github_sha" ]]; then
+            echo "mismatch git sha \"$git_sha\" != \"$github_sha\""
             echo "GitHub context:"
             echo "$CONTEXT"
             echo
