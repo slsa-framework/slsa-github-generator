@@ -175,6 +175,7 @@ Inputs:
 | `digest`            | yes      | The OCI image digest. The image digest of the form '<algorithm>:<digest>' (e.g. 'sha256:abcdef...') |
 | `registry-username` | yes      | Username to log into the container registry.                                                        |
 | `compile-generator` | false    | Whether to build the generator from source. This increases build time by ~2m.                       |
+| `token`             | false    | The Github token that shall be used by e.g. actions/checkout                                        |
 
 Secrets:
 
