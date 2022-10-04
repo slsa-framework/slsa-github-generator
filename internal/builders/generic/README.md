@@ -81,7 +81,7 @@ provenance:
 ```
 
 **Note**: Make sure that you reference the generator with a semantic version of the form `@vX.Y.Z`. 
-More information [here](/README.md#referring-slsa-builders-and-generators).
+More information [here](/README.md#referencing-slsa-builders-and-generators).
 
 Here's an example of what it might look like all together.
 

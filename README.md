@@ -14,7 +14,7 @@ This repository contains the code, examples and technical design for system desc
 
 - [Roadmap](#roadmap)
 - [Generation of provenance](#generation-of-provenance)
-  - [Refering SLSA builders and generators](#referring-slsa-builders-and-generators)
+  - [Referencing SLSA builders and generators](#referencing-slsa-builders-and-generators)
   - [Builders](#builders)
   - [Provenance-only generators](#provenance-only-generators)
 - [Verification of provenance](#verification-of-provenance)
@@ -43,7 +43,7 @@ timeline for completion.
 Below we describe the various builders and generators in this repository. They let you build and / or generate non-forgeable provenance
 using a trusted / isolated re-usable workflow. You can read up on the design in our [technical design document](#technical-design).
 
-### Referring SLSA builders and generators
+### Referencing SLSA builders and generators
 At present, the GitHub Actions provided in this repository as builders and generators **MUST** be referenced 
 by tag in order for the `slsa-verifier` to be able to verify the ref of the trusted builder/generator's 
 reusable workflow. It also needs to be referred as `@vX.Y.Z`, because the build will fail if you reference it via a shorter tag like `@vX.Y` or `@vX`.

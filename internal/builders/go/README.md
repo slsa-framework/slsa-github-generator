@@ -128,7 +128,7 @@ The builder workflow [slsa-framework/slsa-github-generator/.github/workflows/bui
 
 Create a new workflow, e.g., `.github/workflows/slsa-goreleaser.yml`.
 
-**Note**: Make sure that you reference the trusted builder with a semantic version of the form `@vX.Y.Z`. More information [here](/README.md#referring-slsa-builders-and-generators).
+**Note**: Make sure that you reference the trusted builder with a semantic version of the form `@vX.Y.Z`. More information [here](/README.md#referencing-slsa-builders-and-generators).
 
 ```yaml
 name: SLSA go releaser
