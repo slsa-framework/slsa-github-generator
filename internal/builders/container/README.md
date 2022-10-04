@@ -340,8 +340,10 @@ metadata:
   name: image-is-signed-by-github-actions
 spec:
   images:
-    # All images in example repository matched
-    - glob: "**"
+    # Matches all versions of the actions-test image.
+    # NOTE: policy-controller mutates pods to use a digest even if originally
+    # specified by tag.
+    - glob: "ghcr.io/ianlewis/actions-test@*"
   authorities:
     - keyless:
         # Signed by the public Fulcio certificate authority
