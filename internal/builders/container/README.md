@@ -22,6 +22,8 @@ project simply generates provenance as a separate step in an existing workflow.
   - [Workflow Inputs](#workflow-inputs)
   - [Provenance Format](#provenance-format)
   - [Provenance Example](#provenance-example)
+- [Integration With Other Build Systems](#integration-with-other-build-systems)
+  - [Ko](#ko)
 - [Verification](#verification)
   - [Cosign](#cosign)
   - [Sigstore policy-controller](#sigstore-policy-controller)
@@ -260,6 +262,144 @@ generated as an [in-toto](https://in-toto.io/) statement with a SLSA predicate.
     ]
   }
 }
+```
+
+## Integration With Other Build Systems
+
+This section explains how to generate non-forgeable SLSA provenance with existing build systems.
+
+### Ko
+
+[ko](https://github.com/ko-build/ko) is a simple, fast container image builder for Go applications. If you want to use `ko` you can generate SLSA3 provenance by updating your workflow withe following steps:
+
+1. Declare an `outputs` for the build job:
+
+```yaml
+jobs:
+  build:
+    outputs:
+      image: ${{ steps.build.outputs.image }}
+      digest: ${{ steps.build.outputs.digest }}
+```
+
+2. Add an `id: build` field to your ko step. Update the step to output the image
+   and digest.
+
+```yaml
+steps:
+  [...]
+  - name: Run ko
+    id: build
+    env:
+      KO_DOCKER_REPO: "${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAME }}"
+      KO_USER: ${{ github.actor }}
+      KO_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
+      GIT_REF: ${{ github.ref }}
+    run: |
+      # get tag name without tags/refs/ prefix.
+      tag=$(echo ${GIT_REF} | cut -d'/' -f3)
+
+      # Log into regisry
+      echo "${KO_PASSWORD}" | ko login ghcr.io --username "$KO_USER" --password-stdin
+
+      # Build & push the image. Save the image name.
+      image_and_digest=$(ko build --tags="${tag}" .)
+
+      # Output the image name and digest so we can generate provenance.
+      image=$(echo "${image_and_digest}" | cut -d':' -f1)
+      digest=$(echo "${image_and_digest}" | cut -d'@' -f2)
+      echo "::set-output name=image::$image"
+      echo "::set-output name=digest::$digest"
+```
+
+3. Call the generic container workflow to generate provenance by declaring the job below:
+
+```yaml
+provenance:
+  needs: [build]
+  permissions:
+    actions: read
+    id-token: write
+    # contents: read
+    packages: write
+  if: startsWith(github.ref, 'refs/tags/')
+  # TODO: Update after GA
+  # uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v1.2.0
+  uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@9dc6318aedc3d24ede4e946966d30c752769a4f9
+  with:
+    image: ${{ needs.build.outputs.image }}
+    digest: ${{ needs.build.outputs.digest }}
+    registry-username: ${{ github.actor }}
+    compile-generator: true
+  secrets:
+    registry-password: ${{ secrets.GITHUB_TOKEN }}
+```
+
+All together, it will look as the following:
+
+```yaml
+jobs:
+  build:
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      image: ${{ steps.build.outputs.image }}
+      digest: ${{ steps.build.outputs.digest }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # v2.3.4
+
+      - uses: actions/setup-go@v3.3.0
+        with:
+          go-version: 1.19
+
+      - name: Set up ko
+        uses: imjasonh/setup-ko@v0.6
+
+      - name: Run ko
+        id: build
+        working-directory: go
+        env:
+          KO_DOCKER_REPO: "${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAME }}"
+          KO_USER: ${{ github.actor }}
+          KO_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
+          GIT_REF: ${{ github.ref }}
+        run: |
+          # get tag name without tags/refs/ prefix.
+          tag=$(echo ${GIT_REF} | cut -d'/' -f3)
+
+          # Log into regisry
+          echo "${KO_PASSWORD}" | ko login ghcr.io --username "$KO_USER" --password-stdin
+
+          # Build & push the image. Save the image name.
+          image_and_digest=$(ko build --tags="${tag}" .)
+
+          # Output the image name and digest so we can generate provenance.
+          image=$(echo "${image_and_digest}" | cut -d':' -f1)
+          digest=$(echo "${image_and_digest}" | cut -d'@' -f2)
+          echo "::set-output name=image::$image"
+          echo "::set-output name=digest::$digest"
+
+  # This step calls the generic workflow to generate provenance.
+  provenance:
+    needs: [build]
+    permissions:
+      actions: read
+      id-token: write
+      # contents: read
+      packages: write
+    if: startsWith(github.ref, 'refs/tags/')
+    # uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v1.2.0
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@9dc6318aedc3d24ede4e946966d30c752769a4f9
+    with:
+      image: ${{ needs.build.outputs.image }}
+      digest: ${{ needs.build.outputs.digest }}
+      registry-username: ${{ github.actor }}
+      compile-generator: true
+    secrets:
+      registry-password: ${{ secrets.GITHUB_TOKEN }}
 ```
 
 ## Verification
