@@ -360,7 +360,6 @@ jobs:
 
       - name: Run ko
         id: build
-        working-directory: go
         env:
           KO_DOCKER_REPO: "${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAME }}"
           KO_USER: ${{ github.actor }}
