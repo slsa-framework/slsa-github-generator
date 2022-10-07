@@ -5,17 +5,20 @@
 
 set -euo pipefail
 
-# Split the command to ignore the `1` error `grep` returns when there is no match.
+# NOTE: All actions and workflows should not use actions/checkout. The should
+# use an action that uses secure-checkout such as checkout-go, checkout-node
+# etc. or use secure-checkout directly.
+# TODO(github.com/slsa-framework/slsa-github-generator/issues/626): Check workflows as well and not just actions.
+# TODO(github.com/slsa-framework/slsa-github-generator/issues/626): Disallow checkouts for repos other than the repo that triggered the action(i.e. github.repository).
 results=$(
     grep -r \
         --include='*.yml' \
         --include='*.yaml' \
         --exclude-dir='node_modules' \
+        --exclude-dir='secure-checkout' \
         --exclude-dir='checkout-go' \
         --exclude-dir='checkout-node' \
-        --exclude-dir='secure-checkout' \
-        --exclude-dir='generate-builder' \
-        -e 'actions/checkout\|actions/secure-checkout\|actions/checkout-go\|actions/checkout-node' \
+        -e 'uses: *actions/checkout' \
         .github/actions/* || true
 )
 if [[ "$results" != "" ]]; then
