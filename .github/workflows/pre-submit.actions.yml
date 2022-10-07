@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # tag=v3.0.2
-      - run: ./scripts/pre-submit.actions/verify.sh
+      - run: ./scripts/pre-submit.actions/checkout.sh
 
   check-dist-matrix:
     runs-on: ubuntu-latest
