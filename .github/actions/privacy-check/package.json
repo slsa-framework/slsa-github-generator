@@ -1,8 +1,8 @@
 {
-  "name": "typescript-action",
+  "name": "privacy-check",
   "version": "0.0.0",
   "private": true,
-  "description": "TypeScript template action",
+  "description": "GitHub action to protect private repositories.",
   "main": "lib/main.js",
   "scripts": {
     "build": "tsc",
@@ -17,9 +17,6 @@
     "node",
     "setup"
   ],
-  "dependencies": {
-    "@actions/core": "1.9.1"
-  },
   "devDependencies": {
     "@types/node": "16.11.59",
     "@typescript-eslint/eslint-plugin": "5.37.0",
@@ -29,5 +26,9 @@
     "eslint-plugin-github": "4.3.7",
     "prettier": "2.7.1",
     "typescript": "4.8.3"
+  },
+  "dependencies": {
+    "@actions/core": "1.9.1",
+    "@actions/github": "5.0.3"
   }
 }

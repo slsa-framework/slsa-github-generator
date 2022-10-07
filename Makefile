@@ -75,6 +75,7 @@ shellcheck: ## Runs the shellcheck linter.
 .PHONY: eslint
 eslint: ## Runs the eslint linter.
 	make -C .github/actions/compute-sha256 lint
+	make -C .github/actions/privacy-check lint
 
 .PHONY: yamllint
 yamllint: ## Runs the yamllint linter.

@@ -1,5 +1,5 @@
-name: "Checkout a repository for a Go project"
-description: "Checkout and setup the environment for a Go project"
+name: "Checkout a repository for a Node project"
+description: "Checkout and setup the environment for a Node project"
 inputs:
   repository:
     description: "Repository name with owner."
@@ -17,8 +17,8 @@ inputs:
     required: false
     # Same default as https://github.com/actions/checkout/blob/main/action.yml#L24.
     default: ${{ github.token }}
-  go-version:
-    description: "The Go version to use, as expected by https://github.com/actions/setup-go."
+  node-version:
+    description: "The Node version to use, as expected by https://github.com/actions/setup-node."
     required: true
 
 runs:
@@ -59,7 +59,7 @@ runs:
     - name: Verify checkout
       uses: slsa-framework/slsa-github-generator/.github/actions/verify-checkout@e3220805577deb9d193f64e519abcb3b50851df5
 
-    - name: Set up Go environment
-      uses: actions/setup-go@268d8c0ca0432bb2cf416faae41297df9d262d7f # tag=v3.3.0
+    - name: Set up Node environment
+      uses: actions/setup-node@2fddd8803e2f5c9604345a0b591c3020ee971a93 # tag=v3.4.1
       with:
-        go-version: "${{ inputs.go-version }}"
+        node-version: "${{ inputs.node-version }}"

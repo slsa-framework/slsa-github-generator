@@ -22,6 +22,9 @@ project simply generates provenance as a separate step in an existing workflow.
   - [Workflow Inputs](#workflow-inputs)
   - [Provenance Format](#provenance-format)
   - [Provenance Example](#provenance-example)
+- [Verification](#verification)
+  - [Cosign](#cosign)
+  - [Kyverno](#kyverno)
 
 ---
 
@@ -256,4 +259,150 @@ generated as an [in-toto](https://in-toto.io/) statement with a SLSA predicate.
     ]
   }
 }
+```
+
+## Verification
+
+Verification of provenance attestations can be done via several different tools. This section shows examples of several popular tools.
+
+### Cosign
+
+[Cosign](https://docs.sigstore.dev/cosign/overview/) can be used to verify the provenance attestation for the image. A [CUE](https://cuelang.org/) policy can also be used to verify parts of the SLSA attestation.
+
+Here is an example policy stored in `policy.cue`:
+
+```
+// The predicateType field must match this string
+predicateType: "https://slsa.dev/provenance/v0.2"
+
+predicate: {
+  // This condition verifies that the builder is the builder we
+  // expect and trust. The following condition can be used
+  // unmodified. It verifies that the builder is the container
+  // workflow.
+  builder: {
+    // TODO: update after GA
+    // id: =~"^https://github.com/slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@refs/tags/v[0-9]+.[0-9]+.[0-9]+$"
+    id: =~"^https://github.com/ianlewis/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@refs/heads/409-feature-add-generic-container-workflow$"
+  }
+  invocation: {
+    configSource: {
+      // This condition verifies the entrypoint of the workflow.
+      // Replace with the relative path to your workflow in your
+      // repository.
+      entryPoint: ".github/workflows/generic-container.yml"
+
+      // This condition verifies that the image was generated from
+      // the source repository we expect. Replace this with your
+      // repository.
+      uri: =~"^git\\+https://github.com/ianlewis/actions-test@refs/tags/v[0-9]+.[0-9]+.[0-9]+$"
+    }
+  }
+}
+```
+
+We can then use `cosign` to verify the attestation using the policy.
+
+```shell
+$ COSIGN_EXPERIMENTAL=1 cosign verify-attestation \
+  --type slsaprovenance \
+  --policy policy.cue \
+  ghcr.io/ianlewis/actions-test:v0.0.38 > /dev/null
+will be validating against CUE policies: [policy.cue]
+
+Verification for ghcr.io/ianlewis/actions-test:v0.0.38 --
+The following checks were performed on each of these signatures:
+  - The cosign claims were validated
+  - Existence of the claims in the transparency log was verified offline
+  - Any certificates were verified against the Fulcio roots.
+Certificate subject:  https://github.com/ianlewis/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@refs/heads/409-feature-add-generic-container-workflow
+Certificate issuer URL:  https://token.actions.githubusercontent.com
+```
+
+You can read more in the [cosign documentation](https://docs.sigstore.dev/cosign/attestation/).
+
+### Kyverno
+
+[Kyverno](https://kyverno.io/) is a policy management controller that can be
+used to write Kubernetes-native policies for SLSA provenance. The following
+assumes you have [installed Kyverno](https://kyverno.io/docs/installation/) in
+your Kubernetes cluster.
+
+The following Kyverno `ClusterPolicy` can be used to
+[verify container images](https://kyverno.io/docs/writing-policies/verify-images/)
+as part of [Admission Control](https://kubernetes.io/docs/reference/access-authn-authz/extensible-admission-controllers/).
+
+```yaml
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: check-slsa-attestations
+spec:
+  validationFailureAction: enforce
+  webhookTimeoutSeconds: 30
+  rules:
+    - name: check-all-keyless
+      match:
+        any:
+          - resources:
+              kinds:
+                - Pod
+      verifyImages:
+        # imageReferences sets which images the policy will apply to.
+        # Replace with your image. Wildcard values are supported.
+        - imageReferences:
+            - "ghcr.io/ianlewis/actions-test:*"
+          attestors:
+            # This section declares which attestors are accepted. The subject
+            # below corresponds to the OIDC identity of the container workflow.
+            # The issuer corresponds to the GitHub OIDC server that issues the
+            # identity.
+            - entries:
+                - keyless:
+                    subject: "https://github.com/slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@refs/tags/v1.2.0"
+                    issuer: "https://token.actions.githubusercontent.com"
+          # This section declares some policy conditions acting on the provenance itself.
+          attestations:
+            - predicateType: https://slsa.dev/provenance/v0.2
+              conditions:
+                - all:
+                    # This condition verifies that the image was generated from
+                    # the source repository we expect. Replace this with your
+                    # repository.
+                    - key: "{{ invocation.configSource.uri }}"
+                      operator: Equals
+                      value: "git+https://github.com/ianlewis/actions-test@refs/tags/v0.0.11"
+
+                    # This condition verifies the entrypoint of the workflow.
+                    # Replace with the relative path to your workflow in your
+                    #  repository.
+                    - key: "{{ invocation.configSource.entryPoint }}"
+                      operator: Equals
+                      value: ".github/workflows/generic-container.yaml"
+
+                    # This condition verifies that the builder is the builder we
+                    # expect and trust. The following condition can be used
+                    # unmodified. It verifies that the builder is the container
+                    # workflow.
+                    - key: "{{ regex_match('^https://github.com/slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@refs/tags/v[0-9].[0-9].[0-9]$','{{ builder.id}}') }}"
+                      operator: Equals
+                      value: true
+```
+
+When applied the `ClusterPolicy` will be evaluated when a `Pod` is created. If
+the `Pod` fulfills the policy conditions then the `Pod` can be created. If the
+`Pod` does not fulfill one or more of the policy conditions then you will see an
+error like the following. For example, the following error will occur when no
+attestation for the image can be found.
+
+```shell
+$ kubectl apply -f pod.yaml
+Error from server: error when creating "pod.yaml": admission webhook "mutate.kyverno.svc-fail" denied the request:
+
+resource Pod/default/actions-test was blocked due to the following policies
+
+check-slsa-attestations:
+  check-all-keyless: |-
+    failed to verify signature for ghcr.io/ianlewis/actions-test:v0.0.11: .attestors[0].entries[0].keyless: no matching attestations:
+    no certificate found on attestation
 ```

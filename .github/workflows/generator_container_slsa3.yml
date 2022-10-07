@@ -43,8 +43,22 @@ on:
         required: false
         type: boolean
         default: false
+      private-repository:
+        description: "If true, private repositories can post to the public transparency log."
+        required: false
+        type: boolean
+        default: false
 
 jobs:
+  privacy-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check private repos
+        uses: slsa-framework/slsa-github-generator/.github/actions/privacy-check@a3c7a56c8749c2c423f01bbcfd063315efc07a22
+        with:
+          error_message: "Repository is private. The workflow has halted in order to keep the repository name from being exposed in the public transparency log. Set 'private-repository' to override."
+          override: ${{ inputs.private-repository }}
+
   # detect-env detects the reusable workflow's repository and ref for use later
   # in the workflow.
   detect-env:
@@ -57,7 +71,7 @@ jobs:
     steps:
       - name: Detect the generator ref
         id: detect
-        uses: slsa-framework/slsa-github-generator/.github/actions/detect-workflow@f9878d18f3c896502bdb5bbb96187fb787d529bb
+        uses: slsa-framework/slsa-github-generator/.github/actions/detect-workflow@e3220805577deb9d193f64e519abcb3b50851df5
 
   # generator builds the generator binary and runs it to generate SLSA
   # provenance.
@@ -70,18 +84,14 @@ jobs:
   # reference.
   generator:
     runs-on: ubuntu-latest
-    needs: [detect-env]
+    needs: [privacy-check, detect-env]
     permissions:
-      # id-token:write is needed to create an OIDC token for keyless signing.
-      id-token: write
-      # actions permissions are needed to read info on the workflow and
-      # workflow run.
-      actions: read
-      # packages:write permissions are needed to login and upload attestations.
-      packages: write
+      id-token: write # Needed to get OIDC token for keyless signing.
+      actions: read # Needed to read workflow info.
+      packages: write # Needed to login and upload attestations to ghcr.io.
     steps:
       - name: Generate builder
-        uses: slsa-framework/slsa-github-generator/.github/actions/generate-builder@f9878d18f3c896502bdb5bbb96187fb787d529bb
+        uses: slsa-framework/slsa-github-generator/.github/actions/generate-builder@e3220805577deb9d193f64e519abcb3b50851df5
         with:
           repository: "${{ needs.detect-env.outputs.repository }}"
           ref: "${{ needs.detect-env.outputs.ref }}"
@@ -91,7 +101,7 @@ jobs:
           # NOTE: We are using the generic generator.
           directory: "${{ env.BUILDER_DIR }}"
 
-      - uses: sigstore/cosign-installer@b3413d484cc23cf8778c3d2aa361568d4eb54679 # tag=v2.5.1
+      - uses: sigstore/cosign-installer@f3c664df7af409cb4873aa5068053ba9d61a57b6 # tag=v2.6.0
       - name: Login
         env:
           UNTRUSTED_IMAGE: "${{ inputs.image }}"
