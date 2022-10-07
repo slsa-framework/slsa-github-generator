@@ -173,7 +173,7 @@ func testRekorSupport(t *testing.T, certPem []byte, envWithCert []byte) {
 		Spec:       intotoEntry.IntotoObj,
 	}
 	pe := models.ProposedEntry(&e)
-	entry, err := types.NewEntry(pe)
+	entry, err := types.CreateVersionedEntry(pe)
 	if err != nil {
 		t.Fatalf("error creating valid intoto entry")
 	}
