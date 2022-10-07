@@ -21,6 +21,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 )
 
 // CommandRunner runs commands and returns the build steps that were run.
@@ -102,23 +103,12 @@ func (r *CommandRunner) runStep(ctx context.Context, step *CommandStep, dry bool
 	name := step.Command[0]
 	args := step.Command[1:]
 
-	// Copy and merge the environment.
-	env := make([]string, len(r.Env), len(r.Env)+len(step.Env))
-	copy(env, r.Env)
-	env = append(env, step.Env...)
-
-	// Set the POSIX PWD env var.
-	posixEnv := make([]string, len(env), len(env)+1)
-	copy(posixEnv, env)
+	cmd := exec.CommandContext(ctx, name, args...)
 	pwd, err := filepath.Abs(step.WorkingDir)
 	if err != nil {
 		return nil, err
 	}
-	posixEnv = append(posixEnv, "PWD="+pwd)
-
-	cmd := exec.CommandContext(ctx, name, args...)
 	cmd.Dir = pwd
-	cmd.Env = posixEnv
 	cmd.Stdout = os.Stdout
 	if r.Stdout != nil {
 		cmd.Stdout = r.Stdout
@@ -128,10 +118,23 @@ func (r *CommandRunner) runStep(ctx context.Context, step *CommandStep, dry bool
 		cmd.Stderr = r.Stderr
 	}
 
-	// TODO(https://github.com/slsa-framework/slsa-github-generator/issues/782): Update to Go 1.19.
-	// Get the environment that will be used as currently configured. Environ
-	// is needed to capture the actual environment used.
-	// env = cmd.Environ()
+	// We will copy over environment variables from the builder when executing
+	// the command, However, we won't include the builder's environment
+	// variables into the provenance as they are environment specific and
+	// inhibit reproducibility.
+	// See: https://github.com/slsa-framework/slsa-github-generator/issues/822
+
+	var userEnv []string
+	userEnv = append(userEnv, r.Env...)
+	userEnv = append(userEnv, step.Env...)
+	userEnv = dedupEnv(userEnv)
+
+	cmdEnv := os.Environ()
+	cmdEnv = append(cmdEnv, userEnv...)
+
+	// Set the environment for the command. Duplicates that appear later in the
+	// list override earlier entries. This is enforced by the stdlib exec package.
+	cmd.Env = cmdEnv
 
 	if !dry {
 		if err := cmd.Run(); err != nil {
@@ -140,9 +143,21 @@ func (r *CommandRunner) runStep(ctx context.Context, step *CommandStep, dry bool
 	}
 
 	return &CommandStep{
-		Command: append([]string{name}, args...),
-		// NOTE: We don't actually include POSIX env vars as they are redundant.
-		Env:        env,
+		Command:    append([]string{name}, args...),
+		Env:        userEnv,
 		WorkingDir: pwd,
 	}, nil
+}
+
+func dedupEnv(env []string) []string {
+	var deduped []string
+	seen := map[string]bool{}
+	for i := len(env) - 1; i >= 0; i-- {
+		k, _, found := strings.Cut(env[i], "=")
+		if found && !seen[k] {
+			deduped = append(deduped, env[i])
+			seen[k] = true
+		}
+	}
+	return deduped
 }
