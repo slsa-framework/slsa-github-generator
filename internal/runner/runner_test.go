@@ -50,9 +50,8 @@ func TestCommandRunner_StepEnv(t *testing.T) {
 
 	diff := cmp.Diff(steps, []*CommandStep{
 		{
-			Command: []string{"bash", "-c", "echo -n $TEST"},
-			// TODO(https://github.com/slsa-framework/slsa-github-generator/issues/782): de-duplicate env.
-			Env:        []string{"TEST=hoge", "TEST=fuga"},
+			Command:    []string{"bash", "-c", "echo -n $TEST"},
+			Env:        []string{"TEST=fuga"},
 			WorkingDir: pwd,
 		},
 	})

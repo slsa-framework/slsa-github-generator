@@ -128,10 +128,9 @@ func (r *CommandRunner) runStep(ctx context.Context, step *CommandStep, dry bool
 		cmd.Stderr = r.Stderr
 	}
 
-	// TODO(https://github.com/slsa-framework/slsa-github-generator/issues/782): Update to Go 1.19.
 	// Get the environment that will be used as currently configured. Environ
 	// is needed to capture the actual environment used.
-	// env = cmd.Environ()
+	env = cmd.Environ()
 
 	if !dry {
 		if err := cmd.Run(); err != nil {
