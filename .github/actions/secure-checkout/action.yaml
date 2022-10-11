@@ -1,0 +1,66 @@
+name: "secure-checkout"
+description: "Checkout and verify a commit sha for a GitHub repo"
+
+input:
+  repository:
+    description: "The repository to check out."
+    required: false
+    default: ${{ github.repository }} }}
+  sha:
+    description: "The SHA to checkout."
+    required: false
+    # NOTE: different from actions/checkout which takes any git ref.
+    # Users must provide a sha1 digest explicitly if not checking out the
+    # commit that triggered the event.
+    default: ${{ github.sha }} }}
+  token:
+    description: "Token used to fetch the repository."
+    required: false
+    default: ${{ github.token }}
+  persist-credentials:
+    description: "Whether to configure the token or SSH key with the local git config"
+    # NOTE: different from actions/checkout which defaults to true.
+    default: false
+  fetch-depth:
+    description: "Number of commits to fetch. 0 indicates all history for all branches and tags."
+    default: 1
+  strict:
+    description: "Whether to only allow checkouts from repositories that triggered the workflow."
+    default: true
+runs:
+  using: "composite"
+  steps:
+    - name: Verify input sha
+      env:
+        EXPECTED_SHA: "${{ inputs.sha }}"
+      # Verify that the input sha is a git digest (sha1).
+      run: |
+        [[ "${EXPECTED_SHA}" =~ ^[a-fA-F0-9]{40}$ ]]
+
+    - name: Checkout the repository
+      uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # tag=v3.0.2
+      with:
+        fetch-depth: 1
+        ref: ${{ inputs.sha }}
+        persist-credentials: ${{ inputs.persist-credentials }}
+        repository: ${{ inputs.repository }}
+        token: ${{ inputs.token }}
+
+    - name: Verify checkout
+      shell: bash
+      env:
+        CONTEXT: "${{ toJSON(github) }}"
+        EXPECTED_SHA: "${{ inputs.sha }}"
+      run: |
+        set -euo pipefail
+
+        git_sha="$(git log -1 --format='%H')"
+        if [[ "$git_sha" != "$EXPECTED_SHA" ]]; then
+            echo "mismatch git sha \"$git_sha\" != \"$EXPECTED_SHA\""
+            echo "GitHub context:"
+            echo "$CONTEXT"
+            echo
+            echo "Last 20 commits:"
+            git log -20
+            exit 1
+        fi
