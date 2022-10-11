@@ -1,7 +1,7 @@
 name: "secure-checkout"
 description: "Checkout and verify a commit sha for a GitHub repo"
 
-input:
+inputs:
   repository:
     description: "The repository to check out."
     required: false
