@@ -5,14 +5,14 @@ input:
   repository:
     description: "The repository to check out."
     required: false
-    default: ${{ github.repository }} }}
+    default: ${{ github.repository }}
   sha:
     description: "The SHA to checkout."
     required: false
     # NOTE: different from actions/checkout which takes any git ref.
     # Users must provide a sha1 digest explicitly if not checking out the
     # commit that triggered the event.
-    default: ${{ github.sha }} }}
+    default: ${{ github.sha }}
   token:
     description: "Token used to fetch the repository."
     required: false
