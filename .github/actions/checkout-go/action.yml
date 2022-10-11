@@ -6,11 +6,8 @@ inputs:
     required: false
     # Same default as https://github.com/actions/checkout/blob/main/action.yml#L6.
     default: ${{ github.repository }}
-  ref:
-    # Note: the logic is fairly involved https://github.com/actions/checkout/blob/main/src/ref-helper.ts,
-    # so we do not attempt to resolve it ourselves or provide a default value. We let the official `actions/checkout`
-    # do it for us.
-    description: "The branch, tag or SHA to checkout."
+  sha:
+    description: "The SHA to checkout."
     required: false
   token:
     description: "The token to use."
@@ -24,37 +21,11 @@ inputs:
 runs:
   using: "composite"
   steps:
-    # Note: we could use a single block:
-    #  `uses: actions/checkout
-    #     with:
-    #       ref: "${{ inputs.ref }}"`
-    # and it would work, because the ref field does not have a default
-    # value set https://github.com/actions/checkout/blob/main/action.yml#L7-L11.
-    # However, if this were to change in the future, we'd be setting an empty value
-    # when the developer has not defined it; and it would overwrite the default value
-    # set by the `actions/checkout`. Even if it is highly unlikely the `actions/checkout` team
-    # will set a default value in the future, we want to be sure it does not affect us if they do.
-    # This is why we use 2 blocks to call the `actions/checkout`:
-    #   1. if inputs.ref != ''
-    #   2. if inputs.ref == ''
-    - name: Checkout the repository with user ref
-      if: inputs.ref != ''
-      uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # tag=v3.0.2
+    - name: Checkout the repository with user SHA
+      uses: slsa-framework/slsa-github-generator/.github/actions/secure-checkout@7d890e74a8b3cc26e78b0b23428026cc043a8d17
       with:
-        fetch-depth: 1
-        persist-credentials: false
         repository: "${{ inputs.repository }}"
-        ref: "${{ inputs.ref }}"
-        token: "${{ inputs.token }}"
-
-    - name: Checkout the repository with default ref
-      if: inputs.ref == ''
-      # TODO(github.com/slsa-framework/slsa-github-generator/issues/968) use secure-checkout
-      uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # tag=v3.0.2
-      with:
-        fetch-depth: 1
-        persist-credentials: false
-        repository: "${{ inputs.repository }}"
+        sha: "${{ inputs.sha }}"
         token: "${{ inputs.token }}"
 
     - name: Set up Go environment
