@@ -5,7 +5,7 @@
 
 set -euo pipefail
 
-# NOTE: All actions and workflows should not use actions/checkout. The should
+# NOTE: All actions and workflows should not use actions/checkout. They should
 # use an action that uses secure-checkout such as checkout-go, checkout-node
 # etc. or use secure-checkout directly.
 # TODO(github.com/slsa-framework/slsa-github-generator/issues/626): Check workflows as well and not just actions.
