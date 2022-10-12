@@ -1,7 +1,7 @@
 name: "secure-checkout"
 description: "Checkout and verify a commit sha for a GitHub repo"
 
-input:
+inputs:
   repository:
     description: "The repository to check out."
     required: false
@@ -31,6 +31,7 @@ runs:
   using: "composite"
   steps:
     - name: Verify input sha
+      shell: bash
       env:
         EXPECTED_SHA: "${{ inputs.sha }}"
       # Verify that the input sha is a git digest (sha1).
