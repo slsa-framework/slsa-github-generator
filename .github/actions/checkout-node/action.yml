@@ -22,7 +22,7 @@ runs:
   using: "composite"
   steps:
     - name: Checkout the repository with user ref
-      uses: slsa-framework/slsa-github-generator/.github/actions/secure-checkout@7d890e74a8b3cc26e78b0b23428026cc043a8d17
+      uses: slsa-framework/slsa-github-generator/.github/actions/secure-checkout@f348c29e4be53b8413640f1f2eabd3fbde249a15
       with:
         repository: "${{ inputs.repository }}"
         sha: "${{ inputs.sha }}"
