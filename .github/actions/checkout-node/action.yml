@@ -24,6 +24,7 @@ runs:
     - name: Checkout the repository with user ref
       uses: slsa-framework/slsa-github-generator/.github/actions/secure-checkout@f348c29e4be53b8413640f1f2eabd3fbde249a15
       with:
+        # TODO(github.com/slsa-framework/slsa-github-generator/issues/996): Don't quote values to preserve defaults.
         repository: "${{ inputs.repository }}"
         sha: "${{ inputs.sha }}"
         token: "${{ inputs.token }}"
