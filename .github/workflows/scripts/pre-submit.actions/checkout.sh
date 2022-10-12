@@ -16,8 +16,6 @@ results=$(
         --include='*.yaml' \
         --exclude-dir='node_modules' \
         --exclude-dir='secure-checkout' \
-        --exclude-dir='checkout-go' \
-        --exclude-dir='checkout-node' \
         -e 'uses: *actions/checkout' \
         .github/actions/* || true
 )
