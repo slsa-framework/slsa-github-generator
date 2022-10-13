@@ -39,7 +39,7 @@ runs:
         if [[ "${UNTRUSTED_REF}" =~ ^[a-fA-F0-9]{40}$ ]]; then
           # sha
           sha="${UNTRUSTED_REF}"
-        elif [[ "${UNTRUSTED_REF}" == refs/tags/* ]]; then
+        elif [[ "${UNTRUSTED_REF}" == refs/* ]]; then
           # tag
           sha=$(gh api --header 'Accept: application/vnd.github.v3+json' --method GET "/repos/${UNTRUSTED_REPO}/git/${UNTRUSTED_REF}" | jq -r '.object.sha')
         else
