@@ -7,7 +7,7 @@ inputs:
     required: false
     default: ${{ github.repository }}
   ref:
-    description: "The ref or SHA to checkout."
+    description: "A fullly formed ref (refs/...) or SHA to checkout."
     required: false
     # NOTE: different from actions/checkout which defaults to GITHUB_REF, GITHUB_SHA, or default branch.
     default: ${{ github.sha }}
