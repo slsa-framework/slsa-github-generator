@@ -85,7 +85,7 @@ jobs:
     steps:
       - name: Detect the generator ref
         id: detect
-        uses: slsa-framework/slsa-github-generator/.github/actions/detect-workflow@e3220805577deb9d193f64e519abcb3b50851df5
+        uses: slsa-framework/slsa-github-generator/.github/actions/detect-workflow@efb47d340c150ce456bf8bd554a131ac53b10ccd
 
   # generator builds the generator binary and runs it to generate SLSA
   # provenance.
