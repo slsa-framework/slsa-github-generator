@@ -36,10 +36,9 @@ runs:
     - name: Checkout the Go builder repository
       uses: slsa-framework/slsa-github-generator/.github/actions/checkout-go@74c98157d0a85b0a7fee968e0bd247b58923a8b6
       with:
-        # TODO(github.com/slsa-framework/slsa-github-generator/issues/996): Don't quote values to preserve defaults.
-        repository: "${{ inputs.repository }}"
-        sha: "${{ inputs.sha }}"
-        go-version: "${{ inputs.go-version }}"
+        repository: ${{ inputs.repository }}
+        sha: ${{ inputs.sha }}
+        go-version: ${{ inputs.go-version }}
 
     - name: Generate builder
       shell: bash
