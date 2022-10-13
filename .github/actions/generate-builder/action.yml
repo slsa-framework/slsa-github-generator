@@ -1,8 +1,8 @@
 name: "Generate the builder"
 description: "Build or fetch the builder binary"
 inputs:
-  sha:
-    description: "SHA of the builder."
+  ref:
+    description: "A fully formed ref (refs/...) or SHA to checkout."
     required: true
   repository:
     description: "Repository of the builder."
@@ -37,7 +37,7 @@ runs:
       uses: slsa-framework/slsa-github-generator/.github/actions/checkout-go@74c98157d0a85b0a7fee968e0bd247b58923a8b6
       with:
         repository: ${{ inputs.repository }}
-        sha: ${{ inputs.sha }}
+        ref: ${{ inputs.ref }}
         go-version: ${{ inputs.go-version }}
 
     - name: Generate builder
