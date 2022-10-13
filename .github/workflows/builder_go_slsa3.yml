@@ -146,9 +146,7 @@ jobs:
     needs: [privacy-check, builder, rng]
     steps:
       - name: Checkout the Go repository
-        # FIXME
-        # uses: slsa-framework/slsa-github-generator/.github/actions/checkout-go@74c98157d0a85b0a7fee968e0bd247b58923a8b6
-        uses: ianlewis/slsa-github-generator/.github/actions/checkout-go@checkout-ref
+        uses: slsa-framework/slsa-github-generator/.github/actions/checkout-go@f5aa6f995bc416d2315efdcd987fda653f163b88
         with:
           go-version: ${{ inputs.go-version }}
 
@@ -185,9 +183,7 @@ jobs:
     needs: [privacy-check, builder, build-dry, rng]
     steps:
       - name: Checkout the Go repository
-        # FIXME
-        # uses: slsa-framework/slsa-github-generator/.github/actions/checkout-go@74c98157d0a85b0a7fee968e0bd247b58923a8b6
-        uses: ianlewis/slsa-github-generator/.github/actions/checkout-go@checkout-ref
+        uses: slsa-framework/slsa-github-generator/.github/actions/checkout-go@f5aa6f995bc416d2315efdcd987fda653f163b88
         with:
           go-version: ${{ inputs.go-version }}
 
