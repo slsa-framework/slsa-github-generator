@@ -6,9 +6,10 @@ inputs:
     required: false
     # Same default as https://github.com/actions/checkout/blob/main/action.yml#L6.
     default: ${{ github.repository }}
-  sha:
-    description: "The SHA to checkout."
+  ref:
+    description: "A fully formed ref (refs/...) or SHA to checkout."
     required: false
+    default: ${{ github.sha }}
   token:
     description: "The token to use."
     required: false
@@ -22,14 +23,13 @@ runs:
   using: "composite"
   steps:
     - name: Checkout the repository with user ref
-      uses: slsa-framework/slsa-github-generator/.github/actions/secure-checkout@f348c29e4be53b8413640f1f2eabd3fbde249a15
+      uses: slsa-framework/slsa-github-generator/.github/actions/secure-checkout@cd072cfe086700df36a3e7a7cea2c74ec675bdf4
       with:
-        # TODO(github.com/slsa-framework/slsa-github-generator/issues/996): Don't quote values to preserve defaults.
-        repository: "${{ inputs.repository }}"
-        sha: "${{ inputs.sha }}"
-        token: "${{ inputs.token }}"
+        repository: ${{ inputs.repository }}
+        ref: ${{ inputs.ref }}
+        token: ${{ inputs.token }}
 
     - name: Set up Node environment
       uses: actions/setup-node@2fddd8803e2f5c9604345a0b591c3020ee971a93 # tag=v3.4.1
       with:
-        node-version: "${{ inputs.node-version }}"
+        node-version: ${{ inputs.node-version }}
