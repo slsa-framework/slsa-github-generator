@@ -23,9 +23,7 @@ runs:
   using: "composite"
   steps:
     - name: Checkout the repository with user ref
-      # FIXME: update digest when #1005 is merged.
-      # uses: slsa-framework/slsa-github-generator/.github/actions/secure-checkout@f348c29e4be53b8413640f1f2eabd3fbde249a15
-      uses: ianlewis/slsa-github-generator/.github/actions/secure-checkout@secure-checkout-ref
+      uses: slsa-framework/slsa-github-generator/.github/actions/secure-checkout@cd072cfe086700df36a3e7a7cea2c74ec675bdf4
       with:
         repository: ${{ inputs.repository }}
         ref: ${{ inputs.ref }}
