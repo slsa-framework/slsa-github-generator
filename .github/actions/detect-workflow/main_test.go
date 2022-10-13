@@ -149,7 +149,6 @@ func Test_action_getRepoRef(t *testing.T) {
 				env := map[string]string{
 					"GITHUB_REPOSITORY": "githubuser/reponame",
 					"GITHUB_EVENT_NAME": "pull_request",
-					"GITHUB_HEAD_REF":   "refs/heads/mybranch",
 				}
 				return env[k]
 			},
@@ -162,6 +161,7 @@ func Test_action_getRepoRef(t *testing.T) {
 						"repo": map[string]any{
 							"full_name": "otheruser/reponame",
 						},
+						"sha": "123",
 					},
 				},
 			},
@@ -174,7 +174,7 @@ func Test_action_getRepoRef(t *testing.T) {
 		if want, got := "otheruser/reponame", repo; want != got {
 			t.Errorf("unexpected repository, want: %q, got: %q", want, got)
 		}
-		if want, got := "refs/heads/mybranch", ref; want != got {
+		if want, got := "123", ref; want != got {
 			t.Errorf("unexpected ref, want: %q, got: %q", want, got)
 		}
 	})
