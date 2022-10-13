@@ -6,9 +6,10 @@ inputs:
     required: false
     # Same default as https://github.com/actions/checkout/blob/main/action.yml#L6.
     default: ${{ github.repository }}
-  sha:
-    description: "The SHA to checkout."
+  ref:
+    description: "The ref or SHA to checkout."
     required: false
+    default: ${{ github.sha }}
   token:
     description: "The token to use."
     required: false
@@ -22,14 +23,16 @@ runs:
   using: "composite"
   steps:
     - name: Checkout the repository with user ref
-      uses: slsa-framework/slsa-github-generator/.github/actions/secure-checkout@f348c29e4be53b8413640f1f2eabd3fbde249a15
+      # FIXME: update digest when #1005 is merged.
+      # uses: slsa-framework/slsa-github-generator/.github/actions/secure-checkout@f348c29e4be53b8413640f1f2eabd3fbde249a15
+      uses: ianlewis/slsa-github-generator/.github/actions/secure-checkout@secure-checkout-ref
       with:
         # TODO(github.com/slsa-framework/slsa-github-generator/issues/996): Don't quote values to preserve defaults.
-        repository: "${{ inputs.repository }}"
-        sha: "${{ inputs.sha }}"
-        token: "${{ inputs.token }}"
+        repository: ${{ inputs.repository }}
+        sha: ${{ inputs.sha }}
+        token: ${{ inputs.token }}
 
     - name: Set up Node environment
       uses: actions/setup-node@2fddd8803e2f5c9604345a0b591c3020ee971a93 # tag=v3.4.1
       with:
-        node-version: "${{ inputs.node-version }}"
+        node-version: ${{ inputs.node-version }}
