@@ -108,7 +108,7 @@ jobs:
       actions: read # Needed to read workflow info.
     steps:
       - name: Generate builder
-        uses: slsa-framework/slsa-github-generator/.github/actions/generate-builder@e3220805577deb9d193f64e519abcb3b50851df5
+        uses: slsa-framework/slsa-github-generator/.github/actions/generate-builder@a7e265874f9c25b0d16770a71e39f2351eca00af
         with:
           repository: "${{ needs.detect-env.outputs.repository }}"
           ref: "${{ needs.detect-env.outputs.ref }}"
