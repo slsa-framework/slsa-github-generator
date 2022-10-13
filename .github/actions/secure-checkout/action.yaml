@@ -61,7 +61,7 @@ runs:
       shell: bash
       env:
         CONTEXT: "${{ toJSON(github) }}"
-        EXPECTED_SHA: "${{ steps.expected.sha }}"
+        EXPECTED_SHA: "${{ steps.expected.outputs.sha }}"
       run: |
         set -euo pipefail
 
