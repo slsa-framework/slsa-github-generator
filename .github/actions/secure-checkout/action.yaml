@@ -7,7 +7,7 @@ inputs:
     required: false
     default: ${{ github.repository }}
   ref:
-    description: "A fullly formed ref (refs/...) or SHA to checkout."
+    description: "A fully formed ref (refs/...) or SHA to checkout."
     required: false
     # NOTE: different from actions/checkout which defaults to GITHUB_REF, GITHUB_SHA, or default branch.
     default: ${{ github.sha }}
@@ -34,6 +34,7 @@ runs:
       env:
         UNTRUSTED_REPO: "${{ inputs.repository }}"
         UNTRUSTED_REF: "${{ inputs.ref }}"
+        GH_TOKEN: "${{ inputs.token }}"
       run: |
         set -euo pipefail
         if [[ "${UNTRUSTED_REF}" =~ ^[a-fA-F0-9]{40}$ ]]; then
