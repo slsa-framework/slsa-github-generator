@@ -28,6 +28,7 @@ permissions: read-all
 
 jobs:
   analyze:
+    name: Analyze
     runs-on: ubuntu-latest
     steps:
       - run: 'echo "No codeql required" '
