@@ -16,11 +16,13 @@ on:
     branches: [main, "*"]
     paths-ignore:
       - "**/*.yml"
+      - '**/*.md'
   pull_request:
     # The branches below must be a subset of the branches above
     branches: [main]
     paths-ignore:
       - "**/*.yml"
+      - '**/*.md'
   schedule:
     - cron: "21 0 * * 2"
 
