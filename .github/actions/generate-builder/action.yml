@@ -34,7 +34,7 @@ runs:
   using: "composite"
   steps:
     - name: Checkout the Go builder repository
-      uses: slsa-framework/slsa-github-generator/.github/actions/checkout-go@fa78a70b888bc0acd41fd48aa731fb8d610d5b1b
+      uses: slsa-framework/slsa-github-generator/.github/actions/checkout-go@c2e7da4c53f2703d9af77f8d1483078c8fd3477e
       with:
         repository: ${{ inputs.repository }}
         ref: ${{ inputs.ref }}
