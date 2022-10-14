@@ -34,6 +34,7 @@ runs:
       env:
         UNTRUSTED_REPO: "${{ inputs.repository }}"
         UNTRUSTED_REF: "${{ inputs.ref }}"
+        GH_TOKEN: "${{ inputs.token }}"
       run: |
         set -euo pipefail
         if [[ "${UNTRUSTED_REF}" =~ ^[a-fA-F0-9]{40}$ ]]; then
