@@ -14,7 +14,7 @@ require (
 	github.com/sigstore/rekor v0.12.2
 	github.com/sigstore/sigstore v1.4.4
 	github.com/spf13/cobra v1.5.0
-	golang.org/x/oauth2 v0.0.0-20221006150949-b44042a4b9c1
+	golang.org/x/oauth2 v0.0.0-20221014153046-6fdb5e3db783
 	gopkg.in/square/go-jose.v2 v2.6.0
 	gopkg.in/yaml.v3 v3.0.1
 )
