@@ -126,7 +126,7 @@ jobs:
           # NOTE: Set the image as an output because the `env` context is not
           # available to the inputs of a reusable workflow call.
           image_name="${IMAGE_REGISTRY}/${IMAGE_NAME}"
-          echo "::set-output name=image::$image_name"
+          echo "image=$image_name" >> "$GITHUB_OUTPUT"
 
   # This step calls the container workflow to generate provenance and push it to
   # the container registry.
