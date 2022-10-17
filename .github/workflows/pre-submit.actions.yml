@@ -86,9 +86,8 @@ jobs:
           echo "foo" > artifact
       - id: rng
         uses: ./.github/actions/rng
-        with:
-          path: artifact
       - env:
           OUTPUT: ${{steps.rng.outputs.random}}
         run: |
+          echo "Got output: $OUTPUT"
           [[ "$OUTPUT" != "" ]]
