@@ -74,6 +74,6 @@ jobs:
         with:
           path: artifact
       - env:
-          OUTPUT: ${{steps.compute-256.outputs.sha256}}
+          OUTPUT: ${{steps.compute-sha256.outputs.sha256}}
         run: |
           [[ "$OUTPUT" == "b5bb9d8014a0f9b1d61e21e796d78dccdf1352f23cd32812f4850b878ae4944c" ]]
