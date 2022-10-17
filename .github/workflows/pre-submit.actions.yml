@@ -70,7 +70,7 @@ jobs:
       - run: |
           echo "foo" > artifact
       - id: compute-sha256
-        uses: .github/actions/compute-sha256
+        uses: ./.github/actions/compute-sha256
         with:
           path: artifact
       - env:
