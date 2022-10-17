@@ -62,3 +62,18 @@ jobs:
       - run: |
           # exit 0 if checks were successful.
           [ "${CHECK_DIST_RESULT}" == "success" ] && [ "${CHECKOUT_RESULT}" == "success" ]
+
+  compute-sha256:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # tag=v3.0.2
+      - run: |
+          echo "foo" > artifact
+      - id: compute-sha256
+        uses: .github/actions/compute-sha256
+        with:
+          path: artifact
+      - env:
+          OUTPUT: ${{steps.outputs.compute-256}}
+        run: |
+          [[ "$OUTPUT" == "b5bb9d8014a0f9b1d61e21e796d78dccdf1352f23cd32812f4850b878ae4944c" ]]
