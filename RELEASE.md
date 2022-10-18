@@ -54,13 +54,13 @@ There is one integration test we cannot easily test "live", so we need to simula
 1. Ensure your fork of the builder is at the same commit hash as the offical builder's `$BUILDER_TAG` release.
 1. Create a new branch `git checkout -b "$BUILDER_REF"`
 1. Update the file `$BUILDER_REPOSITORY/main/.github/actions/generate-builder/action.yml` by replacing the strings `BUILDER_REPOSITORY` and `VERIFIER_REPOSITORY` with your own username (value of `$GITHUB_USERNAME`). Then push the changes.
-1. For the Go builder, update the file `$BUILDER_REPOSITORY/main/.github/workflows/builder_go_slsa3.yml#L98` to:
+1. For the Go builder, update the file `$BUILDER_REPOSITORY/main/.github/workflows/builder_go_slsa3.yml` to:
 
    ```yaml
    uses: $BUILDER_REPOSITORY/.github/actions/generate-builder@$BUILDER_TAG
    ```
 
-1. For the Generic generator, update the file `$BUILDER_REPOSITORY/main/.github/workflows/generic_generator_slsa3.yml#L98`to:
+1. For the Generic generator, update the file `$BUILDER_REPOSITORY/main/.github/workflows/generator_generic_slsa3.yml`to:
 
    ```yaml
    uses: $BUILDER_REPOSITORY/.github/actions/generate-builder@$BUILDER_TAG
