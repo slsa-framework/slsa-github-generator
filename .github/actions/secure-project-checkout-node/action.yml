@@ -22,7 +22,7 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - name: Checkout the repository with user SHA
+    - name: Checkout the repository with user ref
       uses: ./__BUILDER_CHECKOUT_DIR__/.github/actions/secure-project-checkout
       with:
         repository: ${{ inputs.repository }}
