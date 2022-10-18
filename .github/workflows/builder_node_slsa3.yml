@@ -172,7 +172,7 @@ jobs:
     steps:
       - name: Generate builder
         id: generate
-        uses: slsa-framework/slsa-github-generator/.github/actions/generate-builder@325c27afeab313babb4ab9265fa123957da01ac2
+        uses: slsa-framework/slsa-github-generator/.github/actions/generate-builder@main
         with:
           repository: "${{ needs.detect-env.outputs.repository }}"
           ref: "${{ needs.detect-env.outputs.ref }}"
@@ -202,9 +202,16 @@ jobs:
     runs-on: ubuntu-latest
     needs: [privacy-check, builder, rng]
     steps:
+      - name: Checkout builder repository
+        uses: slsa-framework/slsa-github-generator/.github/actions/secure-builder-checkout@main
+        with:
+          repository: "${{ needs.detect-env.outputs.repository }}"
+          ref: "${{ needs.detect-env.outputs.ref }}"
+          path: __BUILDER_CHECKOUT_DIR__
+
       - name: Checkout the Node repository
         # TODO: set a pin or use at head?
-        uses: slsa-framework/slsa-github-generator/.github/actions/checkout-node@e3220805577deb9d193f64e519abcb3b50851df5
+        uses: ./__BUILDER_CHECKOUT_DIR__/.github/actions/secure-project-checkout-node
         with:
           node-version: ${{ inputs.node-version }}
           scope: ${{ inputs.scope }}
@@ -214,7 +221,7 @@ jobs:
           cache: "npm"
 
       - name: Download builder
-        uses: slsa-framework/slsa-github-generator/.github/actions/secure-download-artifact@e3220805577deb9d193f64e519abcb3b50851df5
+        uses: ./__BUILDER_CHECKOUT_DIR__/.github/actions/secure-download-artifact
         with:
           name: "${{ env.BUILDER_BINARY }}-${{ needs.rng.outputs.value }}"
           path: "${{ env.BUILDER_BINARY }}"
@@ -270,7 +277,7 @@ jobs:
 
       - name: Upload generated tarball
         id: upload
-        uses: slsa-framework/slsa-github-generator/.github/actions/secure-upload-artifact@e3220805577deb9d193f64e519abcb3b50851df5
+        uses: ./__BUILDER_CHECKOUT_DIR__/.github/actions/secure-upload-artifact
         with:
           name: "${{ steps.tarball.outputs.filename }}"
           path: "${{ steps.tarball.outputs.filename }}"
@@ -291,8 +298,15 @@ jobs:
       node-provenance-name: ${{ steps.sign-prov.outputs.signed-provenance-name }}
       node-provenance-sha256: ${{ steps.sign-prov.outputs.signed-provenance-sha256 }}
     steps:
+      - name: Checkout builder repository
+        uses: slsa-framework/slsa-github-generator/.github/actions/secure-builder-checkout@main
+        with:
+          repository: "${{ needs.detect-env.outputs.repository }}"
+          ref: "${{ needs.detect-env.outputs.ref }}"
+          path: __BUILDER_CHECKOUT_DIR__
+
       - name: Download builder
-        uses: slsa-framework/slsa-github-generator/.github/actions/secure-download-artifact@e3220805577deb9d193f64e519abcb3b50851df5
+        uses: ./__BUILDER_CHECKOUT_DIR__/.github/actions/secure-download-artifact
         with:
           name: "${{ env.BUILDER_BINARY }}-${{ needs.rng.outputs.value }}"
           path: "${{ env.BUILDER_BINARY }}"
@@ -341,9 +355,16 @@ jobs:
     runs-on: ubuntu-latest
     needs: [build, provenance]
     steps:
+      - name: Checkout builder repository
+        uses: slsa-framework/slsa-github-generator/.github/actions/secure-builder-checkout@main
+        with:
+          repository: "${{ needs.detect-env.outputs.repository }}"
+          ref: "${{ needs.detect-env.outputs.ref }}"
+          path: __BUILDER_CHECKOUT_DIR__
+
       - name: Checkout the Node repository
         # TODO: set a pin or use at head?
-        uses: slsa-framework/slsa-github-generator/.github/actions/checkout-node@e3220805577deb9d193f64e519abcb3b50851df5
+        uses: ./__BUILDER_CHECKOUT_DIR__/.github/actions/checkout-node
         with:
           node-version: ${{ inputs.node-version }}
           scope: ${{ inputs.scope }}
@@ -352,21 +373,21 @@ jobs:
           registry-url: ${{ inputs.registry-url }}
 
       - name: Download binary
-        uses: slsa-framework/slsa-github-generator/.github/actions/secure-download-artifact@e3220805577deb9d193f64e519abcb3b50851df5
+        uses: ./__BUILDER_CHECKOUT_DIR__/.github/actions/secure-download-artifact
         with:
           name: "${{ needs.build.outputs.node-tarball-name }}"
           path: "${{ needs.build.outputs.node-tarball-name }}"
           sha256: "${{ needs.build.outputs.node-tarball-sha256 }}"
 
       - name: Download provenance
-        uses: slsa-framework/slsa-github-generator/.github/actions/secure-download-artifact@e3220805577deb9d193f64e519abcb3b50851df5
+        uses: ./__BUILDER_CHECKOUT_DIR__/.github/actions/secure-download-artifact
         with:
           name: "${{ needs.provenance.outputs.node-provenance-name }}"
           path: "${{ needs.provenance.outputs.node-provenance-name }}"
           sha256: "${{ needs.provenance.outputs.node-provenance-sha256 }}"
 
       - name: Download builder
-        uses: slsa-framework/slsa-github-generator/.github/actions/secure-download-artifact@e3220805577deb9d193f64e519abcb3b50851df5
+        uses: ./__BUILDER_CHECKOUT_DIR__/.github/actions/secure-download-artifact
         with:
           name: "${{ env.BUILDER_BINARY }}-${{ needs.rng.outputs.value }}"
           path: "${{ env.BUILDER_BINARY }}"
