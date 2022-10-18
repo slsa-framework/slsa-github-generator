@@ -364,7 +364,7 @@ jobs:
 
       - name: Checkout the Node repository
         # TODO: set a pin or use at head?
-        uses: ./__BUILDER_CHECKOUT_DIR__/.github/actions/checkout-node
+        uses: ./__BUILDER_CHECKOUT_DIR__/.github/actions/secure-project-checkout-node
         with:
           node-version: ${{ inputs.node-version }}
           scope: ${{ inputs.scope }}

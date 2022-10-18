@@ -109,7 +109,7 @@ jobs:
       go-builder-sha256: ${{ steps.generate.outputs.sha256 }}
     runs-on: ubuntu-latest
     needs: [privacy-check, detect-env, rng]
-    steps:        
+    steps:
       - name: Generate builder binary
         id: generate
         uses: slsa-framework/slsa-github-generator/.github/actions/generate-builder@main

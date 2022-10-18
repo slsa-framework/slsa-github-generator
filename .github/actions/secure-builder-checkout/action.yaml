@@ -29,7 +29,5 @@ runs:
         ref: ${{ inputs.ref }}
         token: ${{ inputs.token }}
         path: ${{ inputs.path }}
+        persist-credentials: false
         fetch-depth: 1
-
-
-
