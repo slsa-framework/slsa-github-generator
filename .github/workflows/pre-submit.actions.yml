@@ -104,7 +104,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # tag=v3.0.2
-      - uses: ./.github/actions/secure-checkout
+        # Check out to a separate path since secure-checkout will overwrite our workspace.
+        path: secure-checkout/
+      - uses: ./secure-checkout/.github/actions/secure-checkout
         with:
           repository: slsa-framework/slsa
           ref: refs/tags/v0.1
