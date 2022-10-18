@@ -99,15 +99,18 @@ jobs:
       - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # tag=v3.0.2
       - uses: ./.github/actions/secure-checkout
 
+  # TODO(https://github.com/slsa-framework/slsa-github-generator/issues/1073): Support 'path' input in secure-checkout
+  # NOTE: Commented out because secure-checkout overwrites the local workspace and fails action cleanup.
+  #
   # Test secure-checkout of a separate repository.
-  secure-checkout:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # tag=v3.0.2
-        # Check out to a separate path since secure-checkout will overwrite our workspace.
-        with:
-          path: secure-checkout/
-      - uses: ./secure-checkout/.github/actions/secure-checkout
-        with:
-          repository: slsa-framework/slsa
-          ref: refs/tags/v0.1
+  # secure-checkout:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # tag=v3.0.2
+  #       # Check out to a separate path since secure-checkout will overwrite our workspace.
+  #       with:
+  #         path: secure-checkout/
+  #     - uses: ./secure-checkout/.github/actions/secure-checkout
+  #       with:
+  #         repository: slsa-framework/slsa
+  #         ref: refs/tags/v0.1
