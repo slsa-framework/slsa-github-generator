@@ -91,3 +91,20 @@ jobs:
         run: |
           echo "Got output: $OUTPUT"
           [[ "$OUTPUT" != "" ]]
+
+  # Test secure-checkout of the repository that triggered the workflow.
+  secure-checkout-default:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # tag=v3.0.2
+      - uses: ./.github/actions/secure-checkout
+
+  # Test secure-checkout of a separate repository.
+  secure-checkout:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # tag=v3.0.2
+      - uses: ./.github/actions/secure-checkout
+        with:
+          repository: slsa-framework/slsa
+          ref: refs/tags/v0.1
