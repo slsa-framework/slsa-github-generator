@@ -5,9 +5,11 @@
 # or to provide custom queries or build logic.
 #
 # ******** NOTE ********
-# We have attempted to detect the languages in your repository. Please check
-# the `language` matrix defined below to confirm you have the correct set of
-# supported CodeQL languages.
+# This workflow implements the CodeQL / Analyze job as a no-op for docs and
+# coniguration updates (.md and .yml files) in order to satisfy the required
+# CodeQL / Analyze status check.
+# See https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/defining-the-mergeability-of-pull-requests/troubleshooting-required-status-checks#handling-skipped-but-required-checks
+# for a reference on why this works.
 #
 name: "CodeQL"
 
