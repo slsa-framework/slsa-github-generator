@@ -104,6 +104,8 @@ jobs:
           ls
           pwd
           tree
+          cd ./__BUILDER_CHECKOUT_DIR__/
+          ls -al
       - name: Checkout the Go repository
         uses: ./__BUILDER_CHECKOUT_DIR__/.github/actions/secure-project-checkout-go
         with:
