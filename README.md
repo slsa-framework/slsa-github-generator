@@ -51,6 +51,8 @@ reusable workflow. It also needs to be referred as `@vX.Y.Z`, because the build 
 This is contrary to the [GitHub best practice for third-party actions](https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions#using-third-party-actions) which recommends referencing by digest, but intentional due to limits in GitHub Actions.
 The desire to be able to verify reusable workflows pinned by hash, and the reasons for the current status, are tracked as [Issue #12](https://github.com/slsa-framework/slsa-verifier/issues/12) in the slsa-verifier project.
 
+For guidance on how to configure renovate see [RENOVATE.md](RENOVATE.md).
+
 ### Builders
 
 Builders build and generate provenance. They let you meet the [build](https://slsa.dev/spec/v0.1/requirements#build-requirements)
