@@ -24,18 +24,11 @@ runs:
         token: ${{ inputs.token }}
         path: ${{ inputs.path }}
 
-    - name: Test
-      shell: bash
-      run: |
-        set -euo pipefail
-        echo workspace: $GITHUB_WORKSPACE
-        ls
-        pwd
-        tree
     - name: Verify commit sha
       shell: bash
       env:
         CONTEXT: "${{ toJSON(github) }}"
+      working-directory: "${{ inputs.path }}"
       run: |
         set -euo pipefail
 
@@ -44,6 +37,7 @@ runs:
 
         # Note: For pull requests, the `github_sha` corresponds to the
         # merge commit that GitHub automatically creates.
+        # it is consistent with what the checkout Actions pulls.
         # https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows.
 
         if [[ "$git_sha" != "$github_sha" ]]; then

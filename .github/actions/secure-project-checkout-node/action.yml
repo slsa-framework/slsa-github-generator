@@ -1,15 +1,10 @@
 name: "Checkout a repository for a Node project"
 description: "Checkout and setup the environment for a Node project"
 inputs:
-  repository:
-    description: "Repository name with owner."
-    required: false
-    # Same default as https://github.com/actions/checkout/blob/main/action.yml#L6.
-    default: ${{ github.repository }}
-  ref:
-    description: "A fully formed ref (refs/...) or SHA to checkout."
-    required: false
-    default: ${{ github.sha }}
+  path:
+    # Same argument to https://github.com/actions/checkout.
+    description: "Relative path under $GITHUB_WORKSPACE to place the repository."
+    required: true
   token:
     description: "The token to use."
     required: false
@@ -28,9 +23,8 @@ runs:
     - name: Checkout the repository with user ref
       uses: ./__BUILDER_CHECKOUT_DIR__/.github/actions/secure-project-checkout
       with:
-        repository: ${{ inputs.repository }}
-        ref: ${{ inputs.ref }}
         token: ${{ inputs.token }}
+        path: ${{ inputs.path }}
 
     - name: Set up Node environment
       uses: actions/setup-node@2fddd8803e2f5c9604345a0b591c3020ee971a93 # tag=v3.4.1
