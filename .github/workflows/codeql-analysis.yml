@@ -18,13 +18,13 @@ on:
       # If more paths are added here, then they must be added to the paths
       # of codeql-analysis-noop.yml.
       - "**/*.yml"
-      - '**/*.md'
+      - "**/*.md"
   pull_request:
     # The branches below must be a subset of the branches above
     branches: [main]
     paths-ignore:
       - "**/*.yml"
-      - '**/*.md'
+      - "**/*.md"
   schedule:
     - cron: "21 0 * * 2"
 
@@ -42,7 +42,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        language: ["go"]
+        language: ["go", "javascript"]
         # CodeQL supports [ 'cpp', 'csharp', 'go', 'java', 'javascript', 'python', 'ruby' ]
         # Learn more about CodeQL language support at https://aka.ms/codeql-docs/language-support
 
