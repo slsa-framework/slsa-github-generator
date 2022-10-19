@@ -24,6 +24,16 @@ runs:
       run: |
         set -euo pipefail
 
+        # Check that the name of the path does not clash with the
+        # directory where the builder code is stored.
+        echo "$UNTRUSTED_PATH" | grep __BUILDER_CHECKOUT_DIR__
+        exit_status=$?
+        if [ $exit_status -eq 0 ]; then
+            echo "\"$UNTRUSTED_PATH\" contains '__BUILDER_CHECKOUT_DIR__'"
+            exit 1
+        fi
+
+        # Ensure we don't overwrite existing files.
         if [ -e "$UNTRUSTED_PATH" ]; then
             echo "Path $UNTRUSTED_PATH already exists"
             exit 5
@@ -36,7 +46,7 @@ runs:
 
     - name: Compute the hash
       id: compute
-      uses: slsa-framework/slsa-github-generator/.github/actions/compute-sha256@e3220805577deb9d193f64e519abcb3b50851df5
+      uses: ./__BUILDER_CHECKOUT_DIR__/.github/actions/compute-sha256
       with:
         path: "${{ inputs.path }}"
 
