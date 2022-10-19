@@ -2,6 +2,10 @@ name: "secure-project-checkout"
 description: "Checkout a project and verify its commit sha"
 
 inputs:
+  path:
+    # Same argument to https://github.com/actions/checkout.
+    description: "Relative path under $GITHUB_WORKSPACE to place the repository."
+    required: true
   # The token is not available to actions by defaults, so we need to
   # share it explicitly. The token is needed to checkout private repositories.
   token:
@@ -18,6 +22,7 @@ runs:
         # Different from default actions/checkout which defaults to `true`.
         persist-credentials: false
         token: ${{ inputs.token }}
+        path: ${{ inputs.path }}
 
     - name: Verify commit sha
       shell: bash

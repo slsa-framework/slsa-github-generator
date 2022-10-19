@@ -1,6 +1,10 @@
 name: "Checkout a project for a Go project"
 description: "Checkout and setup the environment for a Go project"
 inputs:
+  path:
+    # Same argument to https://github.com/actions/checkout.
+    description: "Relative path under $GITHUB_WORKSPACE to place the repository."
+    required: true
   token:
     description: "The token to use."
     required: false
@@ -20,6 +24,7 @@ runs:
       uses: ./__BUILDER_CHECKOUT_DIR__/.github/actions/secure-project-checkout
       with:
         token: ${{ inputs.token }}
+        path: ${{ inputs.path }}
 
     - name: Set up Go environment
       uses: actions/setup-go@268d8c0ca0432bb2cf416faae41297df9d262d7f # tag=v3.3.0
