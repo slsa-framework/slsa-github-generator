@@ -402,6 +402,11 @@ ghcr.io/ianlewis/actions-test@sha256:7c01e1c050f6b7a9b38a53da1be0835288da538d506
 none of the expected identities matched what was in the certificate
 ```
 
+This behavior can be configured to `allow`, `deny`, or `warn` depending on your
+use case. See the [sigstore
+docs](https://docs.sigstore.dev/policy-controller/overview/#admission-of-images)
+for more info.
+
 ### Kyverno
 
 [Kyverno](https://kyverno.io/) is a policy management controller that can be
