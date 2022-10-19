@@ -6,7 +6,7 @@ inputs:
     description: "The repository to check out."
     required: true
   ref:
-    description: "A fully formed ref (refs/...) or SHA to checkout."
+    description: "The ref to checkout."
     required: true
   path:
     # Same argument to https://github.com/actions/checkout.

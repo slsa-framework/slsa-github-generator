@@ -2,8 +2,8 @@ name: "secure-project-checkout"
 description: "Checkout a project and verify its commit sha"
 
 inputs:
-  # the token is not available to actions by defaulrts, so we need to
-  # share it explicitely. The token is needed to checkout private repositories.
+  # the token is not available to actions by defaults, so we need to
+  # share it explicitly. The token is needed to checkout private repositories.
   token:
     description: "Token used to fetch the repository."
     required: false

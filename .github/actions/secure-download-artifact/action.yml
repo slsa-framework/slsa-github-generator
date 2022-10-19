@@ -50,6 +50,9 @@ runs:
       with:
         path: "${{ inputs.path }}"
 
+    # Note: this assumes to top-level re-usable workflow
+    # has checkout'ed the builder repository using
+    # `.github/actions/secure-builder-checkout`.
     - name: Verify the SHA256
       env:
         UNTRUSTED_EXPECTED_HASH: "${{ inputs.sha256 }}"
