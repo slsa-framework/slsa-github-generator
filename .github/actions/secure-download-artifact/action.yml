@@ -26,10 +26,14 @@ runs:
 
         # Check that the name of the path does not clash with the
         # directory where the builder code is stored.
-        echo "$UNTRUSTED_PATH" | grep __BUILDER_CHECKOUT_DIR__
-        exit_status=$?
-        if [ $exit_status -eq 0 ]; then
+        # Check that the name of the path does not clash with the
+        # directory where the builder code is stored.
+        results=$(
+            echo "$UNTRUSTED_PATH" | grep __BUILDER_CHECKOUT_DIR__ || true
+        )
+        if [[ "$results" != "" ]]; then
             echo "\"$UNTRUSTED_PATH\" contains '__BUILDER_CHECKOUT_DIR__'"
+            echo "$results"
             exit 1
         fi
 
