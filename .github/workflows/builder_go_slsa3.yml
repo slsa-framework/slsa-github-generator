@@ -144,6 +144,39 @@ jobs:
     runs-on: ubuntu-latest
     needs: [privacy-check, builder, rng]
     steps:
+      steps:
+        - name: Checkout the repository
+          uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # tag=v3.0.2
+          with:
+            fetch-depth: 1
+            # Different from default actions/checkout which defaults to `true`.
+            persist-credentials: false
+            token: ${{ inputs.token }}
+
+        - name: Verify commit sha
+          shell: bash
+          env:
+            CONTEXT: "${{ toJSON(github) }}"
+          run: |
+            set -euo pipefail
+
+            git_sha="$(git log -1 --format='%H')"
+            github_sha="$GITHUB_SHA"
+
+            # Note: For pull requests, the `github_sha` corresponds to the
+            # merge commit that GitHub automatically creates.
+            # https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows.
+
+            if [[ "$git_sha" != "$github_sha" ]]; then
+                echo "mismatch git sha \"$git_sha\" != \"$github_sha\""
+                echo "GitHub context:"
+                echo "$CONTEXT"
+                echo
+                echo "Last 20 commits:"
+                git log -20
+                exit 1
+            fi
+
       - name: Checkout builder repository
         uses: slsa-framework/slsa-github-generator/.github/actions/secure-builder-checkout@d4dfd59f2bae3c72eb8a499f13a12ee75d8df14e
         with:

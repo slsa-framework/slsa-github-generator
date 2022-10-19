@@ -1,15 +1,6 @@
-name: "Checkout a repository for a Go project"
+name: "Checkout a project for a Go project"
 description: "Checkout and setup the environment for a Go project"
 inputs:
-  repository:
-    description: "Repository name with owner."
-    required: false
-    # Same default as https://github.com/actions/checkout/blob/main/action.yml#L6.
-    default: ${{ github.repository }}
-  ref:
-    description: "The ref or SHA to checkout."
-    required: false
-    default: ${{ github.sha }}
   token:
     description: "The token to use."
     required: false
@@ -28,8 +19,6 @@ runs:
     - name: Checkout the repository with user ref
       uses: ./__BUILDER_CHECKOUT_DIR__/.github/actions/secure-project-checkout
       with:
-        repository: ${{ inputs.repository }}
-        ref: ${{ inputs.ref }}
         token: ${{ inputs.token }}
 
     - name: Set up Go environment
