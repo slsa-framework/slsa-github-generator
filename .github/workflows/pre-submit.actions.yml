@@ -98,7 +98,12 @@ jobs:
       - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # tag=v3.0.2
         with:
           path: __BUILDER_CHECKOUT_DIR__
-
+      - name: test
+        run: |
+          echo workspace: $GITHUB_WORKSPACE
+          ls
+          pwd
+          tree
       - name: Checkout the Go repository
         uses: ./__BUILDER_CHECKOUT_DIR__/.github/actions/secure-project-checkout-go
         with:
