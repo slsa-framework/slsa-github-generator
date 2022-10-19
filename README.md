@@ -90,9 +90,8 @@ This repository hosts the following generators:
    This generator generates provenance for arbitrary artifacts of your choice. To use it,
    follow the [Generic generator's README.md](internal/builders/generic/README.md).
 1. [Container generator SLSA Level 3](internal/builders/container/README.md). **Status**: [WIP, expected release Oct 2022](https://github.com/slsa-framework/slsa-github-generator/milestone/3).
-   Tracked by [milestone](https://github.com/slsa-framework/slsa-github-generator/milestone/3). This generator will generate provenance for
-   container images. The generated provenance will be compatible with [cosign](https://github.com/sigstore/cosign)'s attestation
-   format.
+   This generator will generate provenance for container images. The generated provenance will be compatible with
+   [cosign](https://github.com/sigstore/cosign)'s attestation format.
 
 ## Verification of provenance
 
