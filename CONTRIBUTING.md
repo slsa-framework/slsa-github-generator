@@ -6,15 +6,13 @@
     - [Sign the CLA](#sign-the-cla)
     - [Code of Conduct](#code-of-conduct)
     - [Setting up your development environment](#setting-up-your-development-environment)
-    - [Community Expectations and Roles](#community-expectations-and-roles)
-  - [Kubernetes Contributor Playground](#kubernetes-contributor-playground)
-    - [Contributor Workshops](#contributor-workshops)
+  - [Development](#development)
+  - [Testing](#testing)
+    - [Pre-submits and Unit Tests](#pre-submits-and-unit-tests)
+    - [End to End (e2e) Tests](#end-to-end-e2e-tests)
+    - [Linters](#linters)
   - [Community](#community)
     - [Communication](#communication)
-    - [Events](#events)
-    - [Meetups](#meetups)
-    - [Mentorship](#mentorship)
-  - [Advanced Topics](#advanced-topics)
 
 ## Contributor Guide
 
@@ -138,12 +136,17 @@ make lint
 These linters will also run as GitHub checks for pull requests via
 [pre-submit.lint.yml](.github/workflows/pre-submit.lint.yml) file.
 
-###
-
-## Community and Communication
+## Community
 
 This project is part of the [SLSA Community](https://slsa.dev/community) working
-with the SLSA Tooling SIG. The `#slsa-tooling` channel in the [OpenSSF
-Slack](https://slack.openssf.org/) is used for communication and sharing ideas.
+with the SLSA Tooling SIG.
+
+### Communication
+
+The `#slsa-tooling` channel in the [OpenSSF Slack](https://slack.openssf.org/)
+is used for communication and sharing ideas.
+
+Communication is also done over
+[GitHub issues](https://github.com/slsa-framework/slsa-github-generator/issues).
 
 [open issues]: https://github.com/slsa-framework/slsa-github-generator/issues?q=is%3Aissue+is%3Aopen+label%3Atype%2Fdocumentation
