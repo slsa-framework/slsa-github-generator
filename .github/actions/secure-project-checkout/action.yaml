@@ -24,6 +24,14 @@ runs:
         token: ${{ inputs.token }}
         path: ${{ inputs.path }}
 
+    - name: Test
+      shell: bash
+      run: |
+        set -euo pipefail
+        echo workspace: $GITHUB_WORKSPACE
+        ls
+        pwd
+        tree
     - name: Verify commit sha
       shell: bash
       env:
