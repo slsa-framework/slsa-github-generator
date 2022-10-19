@@ -98,7 +98,7 @@ jobs:
     steps:
       - name: Detect the builder ref
         id: detect
-        uses: slsa-framework/slsa-github-generator/.github/actions/detect-workflow@bdd89e60dc5387d8f819bebc702987956bcd4913 # tag=v1.2.0
+        uses: slsa-framework/slsa-github-generator/.github/actions/detect-workflow@efb47d340c150ce456bf8bd554a131ac53b10ccd # tag=v1.2.0
 
   ###################################################################
   #                                                                 #
@@ -113,7 +113,7 @@ jobs:
     steps:
       - name: Generate builder
         id: generate
-        uses: slsa-framework/slsa-github-generator/.github/actions/generate-builder@e3220805577deb9d193f64e519abcb3b50851df5
+        uses: slsa-framework/slsa-github-generator/.github/actions/generate-builder@325c27afeab313babb4ab9265fa123957da01ac2
         with:
           repository: "${{ needs.detect-env.outputs.repository }}"
           ref: "${{ needs.detect-env.outputs.ref }}"
@@ -146,7 +146,7 @@ jobs:
     needs: [privacy-check, builder, rng]
     steps:
       - name: Checkout the Go repository
-        uses: slsa-framework/slsa-github-generator/.github/actions/checkout-go@e3220805577deb9d193f64e519abcb3b50851df5
+        uses: slsa-framework/slsa-github-generator/.github/actions/checkout-go@c2e7da4c53f2703d9af77f8d1483078c8fd3477e
         with:
           go-version: ${{ inputs.go-version }}
 
@@ -183,7 +183,7 @@ jobs:
     needs: [privacy-check, builder, build-dry, rng]
     steps:
       - name: Checkout the Go repository
-        uses: slsa-framework/slsa-github-generator/.github/actions/checkout-go@e3220805577deb9d193f64e519abcb3b50851df5
+        uses: slsa-framework/slsa-github-generator/.github/actions/checkout-go@c2e7da4c53f2703d9af77f8d1483078c8fd3477e
         with:
           go-version: ${{ inputs.go-version }}
 

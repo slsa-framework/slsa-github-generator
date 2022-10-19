@@ -13,21 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # tag=v3.0.2
-      - run: |
-
-          set -euo pipefail
-
-          # Verify that no internal Actions are using `actions/checkout`
-          # See reasoning in ./github/actions/README.md
-
-          # Split the command to ignore the `1` error `grep` returns when there is no match.
-          results=$(grep -r --include='*.yml' --include='*.yaml' -e 'actions/checkout@\|actions/checkout-go@\|actions/checkout-node@' .github/actions/* || true)
-          results=$(grep -v 'checkout-go\|checkout-node\|generate-builder' <<<"$results" || true)
-          if [[ "$results" != "" ]]; then
-              echo "Some Actions are using 'actions/checkout'"
-              echo "$results"
-              exit -1
-          fi
+      - run: ./.github/workflows/scripts/pre-submit.actions/checkout.sh
 
   check-dist-matrix:
     runs-on: ubuntu-latest
@@ -76,3 +62,32 @@ jobs:
       - run: |
           # exit 0 if checks were successful.
           [ "${CHECK_DIST_RESULT}" == "success" ] && [ "${CHECKOUT_RESULT}" == "success" ]
+
+  compute-sha256:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # tag=v3.0.2
+      - run: |
+          echo "foo" > artifact
+      - id: compute-sha256
+        uses: ./.github/actions/compute-sha256
+        with:
+          path: artifact
+      - env:
+          OUTPUT: ${{steps.compute-sha256.outputs.sha256}}
+        run: |
+          [[ "$OUTPUT" == "b5bb9d8014a0f9b1d61e21e796d78dccdf1352f23cd32812f4850b878ae4944c" ]]
+
+  rng:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # tag=v3.0.2
+      - run: |
+          echo "foo" > artifact
+      - id: rng
+        uses: ./.github/actions/rng
+      - env:
+          OUTPUT: ${{steps.rng.outputs.random}}
+        run: |
+          echo "Got output: $OUTPUT"
+          [[ "$OUTPUT" != "" ]]

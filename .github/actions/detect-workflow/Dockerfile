@@ -22,7 +22,7 @@ RUN go get -d -v
 # Statically compile our app for use in a distroless container
 RUN CGO_ENABLED=0 go build -ldflags="-w -s" -v -o app .
 
-FROM gcr.io/distroless/static@sha256:f4787e810dbc39dd59fcee319cf88e8a01181e1758dbd07c32ed4e14a9ba8904
+FROM gcr.io/distroless/static@sha256:cb0f70353c21d1e472a9ed2055c8a62fd842de52dd2db9dfb31c6e019648bf51
 
 COPY --from=builder /app/app /app
 
