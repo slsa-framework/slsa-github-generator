@@ -111,3 +111,10 @@ jobs:
         with:
           path: __PROJECT_CHECKOUT_DIR__
           go-version: ${{ inputs.go-version }}
+      - name: test2
+        run: |
+          echo workspace: $GITHUB_WORKSPACE
+          ls
+          pwd
+          tree
+          
