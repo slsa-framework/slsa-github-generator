@@ -1,4 +1,4 @@
-name: "Checkout a project for a Go project"
+name: "Checkout a repository for a Go project"
 description: "Checkout and setup the environment for a Go project"
 inputs:
   path:
