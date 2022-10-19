@@ -44,8 +44,9 @@ Below we describe the various builders and generators in this repository. They l
 using a trusted / isolated re-usable workflow. You can read up on the design in our [technical design document](#technical-design).
 
 ### Referencing SLSA builders and generators
-At present, the GitHub Actions provided in this repository as builders and generators **MUST** be referenced 
-by tag in order for the `slsa-verifier` to be able to verify the ref of the trusted builder/generator's 
+
+At present, the GitHub Actions provided in this repository as builders and generators **MUST** be referenced
+by tag in order for the `slsa-verifier` to be able to verify the ref of the trusted builder/generator's
 reusable workflow. It also needs to be referred as `@vX.Y.Z`, because the build will fail if you reference it via a shorter tag like `@vX.Y` or `@vX`.
 
 This is contrary to the [GitHub best practice for third-party actions](https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions#using-third-party-actions) which recommends referencing by digest, but intentional due to limits in GitHub Actions.
@@ -124,42 +125,4 @@ The format of the provenance is available in [PROVENANCE_FORMAT.md](./PROVENANCE
 
 ## Development
 
-Since this project includes reusable workflows for use on GitHub Actions local
-development is limited to building and testing the binaries used by the reusable
-workflows. The workflows themselves must be tested in your own fork.
-
-Local commands that can be used for development are defined in the
-[Makefile](./Makefile). You can list the available targets by running `make`.
-
-```
-make
-```
-
-### Unit Tests
-
-You can run unit tests locally using `make`. This requires that the Go runtime
-be installed.
-
-```
-make unit-test
-```
-
-### Linters
-
-This project uses several linters in order to maintain code quality. If you wish
-to run these linters locally, follow the instructions for each of these to
-install them on your development machine.
-
-- [yamllint](https://yamllint.readthedocs.io/)
-- [golangci-lint](https://golangci-lint.run/)
-- [shellcheck](https://www.shellcheck.net/)
-- [eslint](https://eslint.org/) (NOTE: eslint is installed automatically so you
-  don't need to install it)
-
-Once each of these are installed you can run the linters using `make`.
-
-```
-make lint
-```
-
-These linters will also run as GitHub checks for pull requests.
+Please see the [Contributor Guide](CONTRIBUTING.md) for more info.
