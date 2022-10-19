@@ -109,4 +109,5 @@ jobs:
       - name: Checkout the Go repository
         uses: ./__BUILDER_CHECKOUT_DIR__/.github/actions/secure-project-checkout-go
         with:
+          path: __PROJECT_CHECKOUT_DIR__
           go-version: ${{ inputs.go-version }}
