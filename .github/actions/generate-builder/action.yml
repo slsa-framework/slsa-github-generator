@@ -2,7 +2,7 @@ name: "Generate the builder"
 description: "Build or fetch the builder binary"
 inputs:
   ref:
-    description: "Ref of the builder."
+    description: "A fully formed ref (refs/...) or SHA to checkout."
     required: true
   repository:
     description: "Repository of the builder."
@@ -33,12 +33,17 @@ outputs:
 runs:
   using: "composite"
   steps:
-    - name: Checkout the Go builder repository
-      uses: slsa-framework/slsa-github-generator/.github/actions/checkout-go@e3220805577deb9d193f64e519abcb3b50851df5
+    - name: Checkout builder repository
+      uses: slsa-framework/slsa-github-generator/.github/actions/secure-builder-checkout@main
       with:
-        repository: "${{ inputs.repository }}"
-        ref: "${{ inputs.ref }}"
-        go-version: "${{ inputs.go-version }}"
+        repository: ${{ inputs.repository }}
+        ref: ${{ inputs.ref }}
+        path: __BUILDER_CHECKOUT_DIR__
+
+    - name: Set up Go environment
+      uses: actions/setup-go@268d8c0ca0432bb2cf416faae41297df9d262d7f # tag=v3.3.0
+      with:
+        go-version: ${{ inputs.go-version }}
 
     - name: Generate builder
       shell: bash
@@ -51,18 +56,18 @@ runs:
         # release binaries when the compile-builder input is false.
         VERIFIER_REPOSITORY: slsa-framework/slsa-verifier # The repository to download the pre-built verifier binary from.
         VERIFIER_RELEASE_BINARY: slsa-verifier-linux-amd64 # The name of the verifier binary in the release assets.
-        VERIFIER_RELEASE_BINARY_SHA256: 1326430d044e8a9522c51e5f721e237b5f75acb6b4e518d129f669403cf7a79a # The expected hash of the verifier binary.
-        VERIFIER_RELEASE: v1.3.0 # The version of the verifier to download.
+        VERIFIER_RELEASE_BINARY_SHA256: 065714d01ba36c81fb11aa7031597a77b08491eb341bac8efc3e452f5d5ed4bd # The expected hash of the verifier binary.
+        VERIFIER_RELEASE: v1.3.1 # The version of the verifier to download.
 
         COMPILE_BUILDER: "${{ inputs.compile-builder }}"
         BUILDER_REF: "${{ inputs.ref }}"
         BUILDER_DIR: "${{ inputs.directory }}"
         # Needed for the gh CLI used in builder-fetch.sh.
         GH_TOKEN: "${{ inputs.token }}"
-      run: ./.github/actions/generate-builder/generate-builder.sh
+      run: ./__BUILDER_CHECKOUT_DIR__/.github/actions/generate-builder/generate-builder.sh
 
     - name: Compute sha256 of builder
-      uses: slsa-framework/slsa-github-generator/.github/actions/compute-sha256@e3220805577deb9d193f64e519abcb3b50851df5
+      uses: ./__BUILDER_CHECKOUT_DIR__/.github/actions/compute-sha256
       id: compute
       with:
         path: "${{ inputs.binary }}"

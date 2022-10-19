@@ -80,8 +80,8 @@ provenance:
     base64-subjects: "${{ needs.build.outputs.hashes }}"
 ```
 
-**Note**: Make sure that you reference the generator with a semantic version of the form `@vX.Y.Z`. The build will fail
-if you reference it via a shorter tag like `@vX.Y` or `@vX`.
+**Note**: Make sure that you reference the generator with a semantic version of the form `@vX.Y.Z`. 
+More information [here](/README.md#referencing-slsa-builders-and-generators).
 
 Here's an example of what it might look like all together.
 
@@ -107,7 +107,7 @@ jobs:
           # sha256sum generates sha256 hash for all artifacts.
           # base64 -w0 encodes to base64 and outputs on a single line.
           # sha256sum artifact1 artifact2 ... | base64 -w0
-          echo "::set-output name=hashes::$(sha256sum artifact1 artifact2 | base64 -w0)"
+          echo "hashes=$(sha256sum artifact1 artifact2 | base64 -w0)" >> "$GITHUB_OUTPUT"
 
       - name: Upload artifact1
         uses: actions/upload-artifact@3cea5372237819ed00197afe530f5a7ea3e805c8 # tag=v3.1.0
@@ -316,7 +316,7 @@ jobs:
     set -euo pipefail
 
     checksum_file=$(echo "$ARTIFACTS" | jq -r '.[] | select (.type=="Checksum") | .path')
-    echo "::set-output name=hashes::$(cat $checksum_file | base64 -w0)"
+    echo "hashes=$(cat $checksum_file | base64 -w0)" >> "$GITHUB_OUTPUT"
 ```
 
 4. Call the generic workflow to generate provenance by declaring the job below:
@@ -358,7 +358,7 @@ jobs:
           set -euo pipefail
 
           checksum_file=$(echo "$ARTIFACTS" | jq -r '.[] | select (.type=="Checksum") | .path')
-          echo "::set-output name=hashes::$(cat $checksum_file | base64 -w0)"
+          echo "hashes=$(cat $checksum_file | base64 -w0)" >> "$GITHUB_OUTPUT"
 
   provenance:
     needs: [goreleaser]
@@ -411,7 +411,7 @@ jobs:
 
     sha256sum target_binary binary > checksums
 
-    echo "::set-output name=hashes::$(cat checksums | base64 -w0)"
+    echo "hashes=$(cat checksums | base64 -w0)" >> "$GITHUB_OUTPUT"
 ```
 
 4. Call the generic workflow to generate provenance by declaring the job below:
@@ -457,7 +457,7 @@ jobs:
 
           sha256sum target_binary binary > checksums
 
-          echo "::set-output name=hashes::$(cat checksums | base64 -w0)"
+          echo "hashes=$(cat checksums | base64 -w0)" >> "$GITHUB_OUTPUT"
 
   provenance:
     needs: [build]
@@ -502,7 +502,7 @@ jobs:
 
           # Save the location of the maven output files for easier reference
           ARTIFACT_PATTERN=./target/$(mvn help:evaluate -Dexpression=project.artifactId -q -DforceStdout)-$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)*.jar
-          echo "::set-output name=artifact_pattern::$ARTIFACT_PATTERN"
+          echo "artifact_pattern=$ARTIFACT_PATTERN" >> "$GITHUB_OUTPUT"
 
 ```
 
@@ -512,7 +512,7 @@ jobs:
 - name: Generate subject
   id: hash
   run: |
-    echo "::set-output name=hashes::$(sha256sum ${{ steps.build.outputs.artifact_pattern }} | base64 -w0)"
+    echo "hashes=$(sha256sum ${{ steps.build.outputs.artifact_pattern }} | base64 -w0)" >> "$GITHUB_OUTPUT"
 ```
 
 4. Call the generic workflow to generate provenance by declaring the job below:
@@ -551,12 +551,12 @@ jobs:
 
           # Save the location of the maven output files for easier reference
           ARTIFACT_PATTERN=./target/$(mvn help:evaluate -Dexpression=project.artifactId -q -DforceStdout)-$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)*.jar
-          echo "::set-output name=artifact_pattern::$ARTIFACT_PATTERN"
+          echo "artifact_pattern=$ARTIFACT_PATTERN" >> "$GITHUB_OUTPUT"
 
       - name: Generate subject
         id: hash
         run: |
-          echo "::set-output name=hashes::$(sha256sum ${{ steps.build.outputs.artifact_pattern }} | base64 -w0)"
+          echo "hashes=$(sha256sum ${{ steps.build.outputs.artifact_pattern }} | base64 -w0)" >> "$GITHUB_OUTPUT"
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@3cea5372237819ed00197afe530f5a7ea3e805c8 # tag=v3
@@ -606,7 +606,7 @@ jobs:
 - name: Generate subject
   id: hash
   run: |
-    echo "::set-output name=hashes::$(sha256sum ./build/libs/* | base64 -w0)"
+    echo "hashes=$(sha256sum ./build/libs/* | base64 -w0)" >> "$GITHUB_OUTPUT"
 ```
 
 4. Call the generic workflow to generate provenance by declaring the job below:
@@ -645,7 +645,7 @@ jobs:
       - name: Generate subject
         id: hash
         run: |
-          echo "::set-output name=hashes::$(sha256sum ./build/libs/* | base64 -w0)"
+          echo "hashes=$(sha256sum ./build/libs/* | base64 -w0)" >> "$GITHUB_OUTPUT"
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@3cea5372237819ed00197afe530f5a7ea3e805c8 # tag=v3
@@ -699,7 +699,7 @@ jobs:
         run: |
           set -euo pipefail
 
-          echo "::set-output name=hashes::$(sha256sum target_binary | base64 -w0)"
+          echo "hashes=$(sha256sum target_binary | base64 -w0)" >> "$GITHUB_OUTPUT"
 
 ```
 
@@ -743,7 +743,7 @@ jobs:
         run: |
           set -euo pipefail
 
-          echo "::set-output name=hashes::$(sha256sum target_binary | base64 -w0)"
+          echo "hashes=$(sha256sum target_binary | base64 -w0)" >> "$GITHUB_OUTPUT"
 
   provenance:
     needs: [build]
@@ -796,7 +796,7 @@ jobs:
         run: |
           set -euo pipefail
 
-          echo "::set-output name=hashes::$(sha256sum target_binary | base64 -w0)"
+          echo "hashes=$(sha256sum target_binary | base64 -w0)" >> "$GITHUB_OUTPUT"
 
 ```
 
@@ -846,7 +846,7 @@ jobs:
         run: |
           set -euo pipefail
 
-          echo "::set-output name=hashes::$(sha256sum target_binary | base64 -w0)"
+          echo "hashes=$(sha256sum target_binary | base64 -w0)" >> "$GITHUB_OUTPUT"
 
   provenance:
     needs: [build]
