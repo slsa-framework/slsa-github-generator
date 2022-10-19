@@ -98,23 +98,24 @@ jobs:
       - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # tag=v3.0.2
         with:
           path: __BUILDER_CHECKOUT_DIR__
-      - name: test
-        run: |
-          echo workspace: $GITHUB_WORKSPACE
-          ls
-          pwd
-          tree
-          cd ./__BUILDER_CHECKOUT_DIR__/
-          ls -al
+
       - name: Checkout the Go repository
         uses: ./__BUILDER_CHECKOUT_DIR__/.github/actions/secure-project-checkout-go
         with:
           path: __PROJECT_CHECKOUT_DIR__
-          go-version: ${{ inputs.go-version }}
-      - name: test2
-        run: |
-          echo workspace: $GITHUB_WORKSPACE
-          ls
-          pwd
-          tree
+          go-version: 1.18
+
+  secure-project-checkout-node:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # tag=v3.0.2
+        with:
+          path: __BUILDER_CHECKOUT_DIR__
+
+      - name: Checkout the Go repository
+        uses: ./__BUILDER_CHECKOUT_DIR__/.github/actions/secure-project-checkout-node
+        with:
+          path: __PROJECT_CHECKOUT_DIR__
+          go-version: 16
+
           
