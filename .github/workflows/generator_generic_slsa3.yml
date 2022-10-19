@@ -108,7 +108,7 @@ jobs:
       actions: read # Needed to read workflow info.
     steps:
       - name: Generate builder
-        uses: slsa-framework/slsa-github-generator/.github/actions/generate-builder@325c27afeab313babb4ab9265fa123957da01ac2
+        uses: slsa-framework/slsa-github-generator/.github/actions/generate-builder@d29544e816cae6ed9f1f5ac9672b81951c9a9b70
         with:
           repository: "${{ needs.detect-env.outputs.repository }}"
           ref: "${{ needs.detect-env.outputs.ref }}"
@@ -168,8 +168,15 @@ jobs:
       contents: write # Needed to write artifacts to a release.
     if: startsWith(github.ref, 'refs/tags/') && inputs.upload-assets == true
     steps:
+      - name: Checkout builder repository
+        uses: slsa-framework/slsa-github-generator/.github/actions/secure-builder-checkout@d29544e816cae6ed9f1f5ac9672b81951c9a9b70
+        with:
+          repository: "${{ needs.detect-env.outputs.repository }}"
+          ref: "${{ needs.detect-env.outputs.ref }}"
+          path: __BUILDER_CHECKOUT_DIR__
+
       - name: Download the provenance
-        uses: slsa-framework/slsa-github-generator/.github/actions/secure-download-artifact@e3220805577deb9d193f64e519abcb3b50851df5
+        uses: ./__BUILDER_CHECKOUT_DIR__/.github/actions/secure-download-artifact
         with:
           name: "${{ needs.generator.outputs.provenance-name }}"
           path: "${{ needs.generator.outputs.provenance-name }}"
