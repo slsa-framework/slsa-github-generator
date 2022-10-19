@@ -172,7 +172,7 @@ jobs:
     steps:
       - name: Generate builder
         id: generate
-        uses: slsa-framework/slsa-github-generator/.github/actions/generate-builder@325c27afeab313babb4ab9265fa123957da01ac2
+        uses: slsa-framework/slsa-github-generator/.github/actions/generate-builder@d4dfd59f2bae3c72eb8a499f13a12ee75d8df14e
         with:
           repository: "${{ needs.detect-env.outputs.repository }}"
           ref: "${{ needs.detect-env.outputs.ref }}"
@@ -203,7 +203,7 @@ jobs:
     needs: [privacy-check, builder, rng]
     steps:
       - name: Checkout builder repository
-        uses: slsa-framework/slsa-github-generator/.github/actions/secure-builder-checkout@325c27afeab313babb4ab9265fa123957da01ac2
+        uses: slsa-framework/slsa-github-generator/.github/actions/secure-builder-checkout@d4dfd59f2bae3c72eb8a499f13a12ee75d8df14e
         with:
           repository: "${{ needs.detect-env.outputs.repository }}"
           ref: "${{ needs.detect-env.outputs.ref }}"
@@ -299,7 +299,7 @@ jobs:
       node-provenance-sha256: ${{ steps.sign-prov.outputs.signed-provenance-sha256 }}
     steps:
       - name: Checkout builder repository
-        uses: slsa-framework/slsa-github-generator/.github/actions/secure-builder-checkout@325c27afeab313babb4ab9265fa123957da01ac2
+        uses: slsa-framework/slsa-github-generator/.github/actions/secure-builder-checkout@d4dfd59f2bae3c72eb8a499f13a12ee75d8df14e
         with:
           repository: "${{ needs.detect-env.outputs.repository }}"
           ref: "${{ needs.detect-env.outputs.ref }}"
@@ -356,7 +356,7 @@ jobs:
     needs: [build, provenance]
     steps:
       - name: Checkout builder repository
-        uses: slsa-framework/slsa-github-generator/.github/actions/secure-builder-checkout@325c27afeab313babb4ab9265fa123957da01ac2
+        uses: slsa-framework/slsa-github-generator/.github/actions/secure-builder-checkout@d4dfd59f2bae3c72eb8a499f13a12ee75d8df14e
         with:
           repository: "${{ needs.detect-env.outputs.repository }}"
           ref: "${{ needs.detect-env.outputs.ref }}"

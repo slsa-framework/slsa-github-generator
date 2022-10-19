@@ -37,7 +37,7 @@ runs:
 
         # Note: For pull requests, the `github_sha` corresponds to the
         # merge commit that GitHub automatically creates.
-        # it is consistent with what the checkout Actions pulls.
+        # It is consistent with what the checkout Actions pulls.
         # https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows.
 
         if [[ "$git_sha" != "$github_sha" ]]; then

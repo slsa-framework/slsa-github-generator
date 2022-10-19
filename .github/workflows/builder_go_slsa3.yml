@@ -112,7 +112,7 @@ jobs:
     steps:
       - name: Generate builder binary
         id: generate
-        uses: slsa-framework/slsa-github-generator/.github/actions/generate-builder@325c27afeab313babb4ab9265fa123957da01ac2
+        uses: slsa-framework/slsa-github-generator/.github/actions/generate-builder@d4dfd59f2bae3c72eb8a499f13a12ee75d8df14e
         with:
           repository: "${{ needs.detect-env.outputs.repository }}"
           ref: "${{ needs.detect-env.outputs.ref }}"
@@ -145,7 +145,7 @@ jobs:
     needs: [privacy-check, builder, rng]
     steps:
       - name: Checkout builder repository
-        uses: slsa-framework/slsa-github-generator/.github/actions/secure-builder-checkout@325c27afeab313babb4ab9265fa123957da01ac2
+        uses: slsa-framework/slsa-github-generator/.github/actions/secure-builder-checkout@d4dfd59f2bae3c72eb8a499f13a12ee75d8df14e
         with:
           repository: "${{ needs.detect-env.outputs.repository }}"
           ref: "${{ needs.detect-env.outputs.ref }}"
@@ -167,16 +167,17 @@ jobs:
 
       - name: Build dry project
         id: build-dry
+        working-directory: __PROJECT_CHECKOUT_DIR__
         env:
-          CONFIG_FILE: ./__PROJECT_CHECKOUT_DIR__/"${{ inputs.config-file }}"
+          CONFIG_FILE: "${{ inputs.config-file }}"
           UNTRUSTED_ENVS: "${{ inputs.evaluated-envs }}"
         run: |
           set -euo pipefail
 
           # Note: this outputs information about resolved arguments, etc.
           # the values are trusted because the compiler is not invoked.
-          echo ./"$BUILDER_BINARY" build --dry "$CONFIG_FILE" "$UNTRUSTED_ENVS"
-          ./"$BUILDER_BINARY" build --dry "$CONFIG_FILE" "$UNTRUSTED_ENVS"
+          echo "../$BUILDER_BINARY" build --dry "$CONFIG_FILE" "$UNTRUSTED_ENVS"
+          "../$BUILDER_BINARY" build --dry "$CONFIG_FILE" "$UNTRUSTED_ENVS"
 
   ###################################################################
   #                                                                 #
@@ -190,7 +191,7 @@ jobs:
     needs: [privacy-check, builder, build-dry, rng]
     steps:
       - name: Checkout builder repository
-        uses: slsa-framework/slsa-github-generator/.github/actions/secure-builder-checkout@325c27afeab313babb4ab9265fa123957da01ac2
+        uses: slsa-framework/slsa-github-generator/.github/actions/secure-builder-checkout@d4dfd59f2bae3c72eb8a499f13a12ee75d8df14e
         with:
           repository: "${{ needs.detect-env.outputs.repository }}"
           ref: "${{ needs.detect-env.outputs.ref }}"
@@ -240,10 +241,10 @@ jobs:
           # Disable set-output command.
           echo "::stop-commands::`echo -n ${{ github.token }} | sha256sum | head -c 64`"
 
-          echo "../__BUILDER_CHECKOUT_DIR__/$BUILDER_BINARY" build "$CONFIG_FILE" "$UNTRUSTED_ENVS"
+          echo "../$BUILDER_BINARY" build "$CONFIG_FILE" "$UNTRUSTED_ENVS"
           # Note: We need to provide the asbolute path to the output binary.
           export OUTPUT_BINARY="$PWD/${{ env.GENERATED_BINARY_NAME }}"
-          ../__BUILDER_CHECKOUT_DIR__/"$BUILDER_BINARY" build "$CONFIG_FILE" "$UNTRUSTED_ENVS"
+          ../"$BUILDER_BINARY" build "$CONFIG_FILE" "$UNTRUSTED_ENVS"
 
           mv "${{ env.GENERATED_BINARY_NAME }}" "../$UNTRUSTED_BINARY_NAME"
 
@@ -271,7 +272,7 @@ jobs:
       go-provenance-sha256: ${{ steps.sign-prov.outputs.signed-provenance-sha256 }}
     steps:
       - name: Checkout builder repository
-        uses: slsa-framework/slsa-github-generator/.github/actions/secure-builder-checkout@325c27afeab313babb4ab9265fa123957da01ac2
+        uses: slsa-framework/slsa-github-generator/.github/actions/secure-builder-checkout@d4dfd59f2bae3c72eb8a499f13a12ee75d8df14e
         with:
           repository: "${{ needs.detect-env.outputs.repository }}"
           ref: "${{ needs.detect-env.outputs.ref }}"
@@ -329,7 +330,7 @@ jobs:
     if: startsWith(github.ref, 'refs/tags/') && inputs.upload-assets == true
     steps:
       - name: Checkout builder repository
-        uses: slsa-framework/slsa-github-generator/.github/actions/secure-builder-checkout@325c27afeab313babb4ab9265fa123957da01ac2
+        uses: slsa-framework/slsa-github-generator/.github/actions/secure-builder-checkout@d4dfd59f2bae3c72eb8a499f13a12ee75d8df14e
         with:
           repository: "${{ needs.detect-env.outputs.repository }}"
           ref: "${{ needs.detect-env.outputs.ref }}"
