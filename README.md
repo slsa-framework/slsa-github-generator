@@ -44,8 +44,9 @@ Below we describe the various builders and generators in this repository. They l
 using a trusted / isolated re-usable workflow. You can read up on the design in our [technical design document](#technical-design).
 
 ### Referencing SLSA builders and generators
-At present, the GitHub Actions provided in this repository as builders and generators **MUST** be referenced 
-by tag in order for the `slsa-verifier` to be able to verify the ref of the trusted builder/generator's 
+
+At present, the GitHub Actions provided in this repository as builders and generators **MUST** be referenced
+by tag in order for the `slsa-verifier` to be able to verify the ref of the trusted builder/generator's
 reusable workflow. It also needs to be referred as `@vX.Y.Z`, because the build will fail if you reference it via a shorter tag like `@vX.Y` or `@vX`.
 
 This is contrary to the [GitHub best practice for third-party actions](https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions#using-third-party-actions) which recommends referencing by digest, but intentional due to limits in GitHub Actions.
@@ -62,14 +63,14 @@ Builders are able to report the commands used to generate your artifact in the p
 
 This repository hosts the following builders:
 
-1. [Go Builder SLSA Level 3](internal/builders/go/README.md). **Status**: available since v1.0.0.
+1. [Go Builder SLSA Level 3](internal/builders/go/README.md). **Status**: [available since v1.0.0](https://github.com/slsa-framework/slsa-github-generator/milestone/1).
    This builder builds and generates provenance for your [Go](https://go.dev/) projects. To use it,
    follow the [Go builder's README.md](internal/builders/go/README.md).
-1. [Container Builder SLSA Level 3](TODO). **Status**: WIP, expected release in Sept 2022.
+1. _Container Builder SLSA Level 3_. **Status**: [WIP, expected release in Nov 2022](https://github.com/slsa-framework/slsa-github-generator/milestone/5).
    This builder will build your container image and generate provenance. The generated provenance will be compatible with
    [cosign](https://github.com/sigstore/cosign)'s attestation format.
-1. [Dockerfile-based Builder SLSA Level 3](TODO). **Status**: WIP, see [#23](https://github.com/slsa-framework/slsa-github-generator/issues/23).
-   This builder will build arbitrary artifacts using building steps defined in a Dockerfile.
+1. _Dockerfile-based Builder SLSA Level 3_. **Status**: [WIP](https://github.com/slsa-framework/slsa-github-generator/milestone/4). This builder will build arbitrary
+   artifacts using building steps defined in a Dockerfile.
 
 If you would rather build your project yourself, use the generators instead as explained in the next section.
 
@@ -85,10 +86,10 @@ Generators are _not_ able to report the commands used to generate your artifact 
 
 This repository hosts the following generators:
 
-1. [Generic generator SLSA Level 3](internal/builders/generic/README.md). **Status**: available since v1.2.0.
+1. [Generic generator SLSA Level 3](internal/builders/generic/README.md). **Status**: [available since v1.2.0](https://github.com/slsa-framework/slsa-github-generator/milestone/2).
    This generator generates provenance for arbitrary artifacts of your choice. To use it,
    follow the [Generic generator's README.md](internal/builders/generic/README.md).
-1. [Container generator SLSA Level 3](TODO). **Status**: WIP, expected release Aug-Sept 2022, see [#409](https://github.com/slsa-framework/slsa-github-generator/issues/409).
+1. [Container generator SLSA Level 3](internal/builders/container/README.md). **Status**: [WIP, expected release Oct 2022](https://github.com/slsa-framework/slsa-github-generator/milestone/3).
    This generator will generate provenance for container images. The generated provenance will be compatible with
    [cosign](https://github.com/sigstore/cosign)'s attestation format.
 

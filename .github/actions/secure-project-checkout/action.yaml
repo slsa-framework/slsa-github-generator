@@ -1,0 +1,46 @@
+name: "secure-project-checkout"
+description: "Checkout a project and verify its commit sha"
+
+inputs:
+  # the token is not available to actions by defaults, so we need to
+  # share it explicitly. The token is needed to checkout private repositories.
+  token:
+    description: "Token used to fetch the repository."
+    required: false
+    default: ${{ github.token }}
+runs:
+  using: "composite"
+  steps:
+    - name: Checkout the repository
+      uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # tag=v3.0.2
+      with:
+        fetch-depth: 1
+        # Different from default actions/checkout which defaults to `true`.
+        persist-credentials: false
+        token: ${{ inputs.token }}
+
+    - name: Verify commit sha
+      shell: bash
+      env:
+        CONTEXT: "${{ toJSON(github) }}"
+        # Exception for pull requests: https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows
+        PULL_REQUEST_SHA: "${{ github.event.pull_request.head.sha }}"
+      run: |
+        set -euo pipefail
+
+        git_sha="$(git log -1 --format='%H')"
+        github_sha="$GITHUB_SHA"
+
+        if [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
+          github_sha="$PULL_REQUEST_SHA"
+        fi
+
+        if [[ "$git_sha" != "$github_sha" ]]; then
+            echo "mismatch git sha \"$git_sha\" != \"$github_sha\""
+            echo "GitHub context:"
+            echo "$CONTEXT"
+            echo
+            echo "Last 20 commits:"
+            git log -20
+            exit 1
+        fi
