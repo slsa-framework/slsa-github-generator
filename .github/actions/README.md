@@ -1,29 +1,37 @@
 # Internal Action Development
 
-## Internal Actions
-Although the Actions are hosted on the same repository, we consider them "external": they are not called via:
+## External Actions
+The following Actions:
+- detect-workflow
+- privacy-check
+- rng
+- secure-builder-checkout
+- generate-builder
+
+are considered "external" even though they are hosted on the same repository: they are not called via:
 
 ```././github/actions/name```
 
 but instead via their "fully-qualified" name:
 
-```slsa-framework/slsa-github-generator/.github/actions/name@hash```. 
+```slsa-framework/slsa-github-generator/.github/actions/name@vX.Y.Z```. 
 
 We do this because the Actions are part of the builder, whereas the workflow runs in the "context" of the calling repository.
 
-## Checkout Rules
-Actions that are called with a copy of the calling repository on disk (`actions/checkout` for the calling repository)
-should *NEVER* "checkout" the builder's repository, because it creates interference with the calling repository
-and is difficult to get right.
-    
-In particular, *composite actions* need should not invoke script files stored in the git repository. Only inline scripts are permitted under these rules.
+These Action *MUST* be pinned with the release tag for consistency.
 
-In general, Actions that need to "checkout" their code should use [Dockerfile](https://docs.github.com/en/actions/creating-actions/creating-a-docker-container-action) or [nodejs](https://docs.github.com/en/actions/creating-actions/creating-a-javascript-action)-type projects "compiled" with [ncc](https://docs.github.com/en/actions/creating-actions/creating-a-javascript-action#commit-tag-and-push-your-action-to-github). An example of such an Action
-is the `./github/actions/detect-workflow` Action.
+## Internal Actions
 
-There is one exception today: the `./github/actions/generate-builder` Action. It "checkouts" its own code and is allowed to do it
-because it does so in a job that never "checkouts" the calling repository. (Note: the code will be migrated to 
-a Dockerfile or nodejs-type projects in the future).
+Other Actions are called via:
+
+```././github/actions/name```
+
+and always require a checkout of the builder repository before being called.
+The `secure-builder-checkout` is always used to checkout the builder repository
+at `__BUILDER_CHECKOUT_DIR__` location. The `secure-project-checkout-*` checkout
+the project to build at the location `__PROJECT_CHECKOUT_DIR__`.
+
+These Actions are *composite actions*. They invoke scripts and also call other Actions.
 
 ## Development
 
