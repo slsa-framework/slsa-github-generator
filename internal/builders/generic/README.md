@@ -18,6 +18,7 @@ project simply generates provenance as a separate step in an existing workflow.
 - [Benefits of Provenance](#benefits-of-provenance)
 - [Generating Provenance](#generating-provenance)
   - [Getting Started](#getting-started)
+  - [Referencing the SLSA generator](#referencing-the-slsa-generator)
   - [Supported Triggers](#supported-triggers)
   - [Workflow Inputs](#workflow-inputs)
   - [Workflow Outputs](#workflow-outputs)
@@ -161,6 +162,13 @@ jobs:
             artifact1
             artifact2
 ```
+
+### Referencing the SLSA generator
+
+At present, the generator **MUST** be referenced
+by tag of the form `@vX.Y.Z`, because the build will fail if you reference it via a shorter tag like `@vX.Y` or `@vX` or if you reference it by a hash.
+
+For more information about the design decision and how to configure renovatebot,see the main repository [README.md](README.md).
 
 ### Supported Triggers
 

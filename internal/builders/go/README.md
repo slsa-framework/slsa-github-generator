@@ -6,6 +6,7 @@ This document explains how to use the builder for [Go](https://go.dev/) projects
 
 [Generation of provenance](#generation)
 
+- [Referencing the SLSA builder](#referencing-the-slsa-builder)
 - [Supported Triggers](#supported-triggers)
 - [Configuration File](#configuration-file)
 - [Migration from GoReleaser](#migration-from-GoReleaser)
@@ -20,6 +21,13 @@ This document explains how to use the builder for [Go](https://go.dev/) projects
 
 The Go builder workflow uses a GitHub Actions reusable workflow to generate the
 provenance.
+
+### Referencing the SLSA builder
+
+At present, the trusted builder **MUST** be referenced
+by tag of the form `@vX.Y.Z`, because the build will fail if you reference it via a shorter tag like `@vX.Y` or `@vX` or if you reference it by a hash.
+
+For more information about the design decision and how to configure renovatebot,see the main repository [README.md](README.md).
 
 ### Supported Triggers
 
