@@ -112,7 +112,7 @@ jobs:
     steps:
       - name: Generate builder binary
         id: generate
-        uses: slsa-framework/slsa-github-generator/.github/actions/generate-builder@d4dfd59f2bae3c72eb8a499f13a12ee75d8df14e
+        uses: slsa-framework/slsa-github-generator/.github/actions/generate-builder@923a5a249d2ea820614a80486c9ef0857ced5321
         with:
           repository: "${{ needs.detect-env.outputs.repository }}"
           ref: "${{ needs.detect-env.outputs.ref }}"
@@ -145,7 +145,7 @@ jobs:
     needs: [privacy-check, builder, rng]
     steps:
       - name: Checkout builder repository
-        uses: slsa-framework/slsa-github-generator/.github/actions/secure-builder-checkout@d4dfd59f2bae3c72eb8a499f13a12ee75d8df14e
+        uses: slsa-framework/slsa-github-generator/.github/actions/secure-builder-checkout@923a5a249d2ea820614a80486c9ef0857ced5321
         with:
           repository: "${{ needs.detect-env.outputs.repository }}"
           ref: "${{ needs.detect-env.outputs.ref }}"
@@ -176,8 +176,8 @@ jobs:
 
           # Note: this outputs information about resolved arguments, etc.
           # the values are trusted because the compiler is not invoked.
-          echo "../$BUILDER_BINARY" build --dry "$CONFIG_FILE" "$UNTRUSTED_ENVS"
-          "../$BUILDER_BINARY" build --dry "$CONFIG_FILE" "$UNTRUSTED_ENVS"
+          echo "$GITHUB_WORKSPACE/$BUILDER_BINARY" build --dry "$CONFIG_FILE" "$UNTRUSTED_ENVS"
+          "$GITHUB_WORKSPACE/$BUILDER_BINARY" build --dry "$CONFIG_FILE" "$UNTRUSTED_ENVS"
 
   ###################################################################
   #                                                                 #
@@ -191,7 +191,7 @@ jobs:
     needs: [privacy-check, builder, build-dry, rng]
     steps:
       - name: Checkout builder repository
-        uses: slsa-framework/slsa-github-generator/.github/actions/secure-builder-checkout@d4dfd59f2bae3c72eb8a499f13a12ee75d8df14e
+        uses: slsa-framework/slsa-github-generator/.github/actions/secure-builder-checkout@923a5a249d2ea820614a80486c9ef0857ced5321
         with:
           repository: "${{ needs.detect-env.outputs.repository }}"
           ref: "${{ needs.detect-env.outputs.ref }}"
@@ -241,12 +241,12 @@ jobs:
           # Disable set-output command.
           echo "::stop-commands::`echo -n ${{ github.token }} | sha256sum | head -c 64`"
 
-          echo "../$BUILDER_BINARY" build "$CONFIG_FILE" "$UNTRUSTED_ENVS"
+          echo "$GITHUB_WORKSPACE/$BUILDER_BINARY" build "$CONFIG_FILE" "$UNTRUSTED_ENVS"
           # Note: We need to provide the asbolute path to the output binary.
           export OUTPUT_BINARY="$PWD/${{ env.GENERATED_BINARY_NAME }}"
-          ../"$BUILDER_BINARY" build "$CONFIG_FILE" "$UNTRUSTED_ENVS"
+          "$GITHUB_WORKSPACE/$BUILDER_BINARY" build "$CONFIG_FILE" "$UNTRUSTED_ENVS"
 
-          mv "${{ env.GENERATED_BINARY_NAME }}" "../$UNTRUSTED_BINARY_NAME"
+          mv "${{ env.GENERATED_BINARY_NAME }}" "$GITHUB_WORKSPACE/$UNTRUSTED_BINARY_NAME"
 
       - name: Upload generated binary
         id: upload
@@ -272,7 +272,7 @@ jobs:
       go-provenance-sha256: ${{ steps.sign-prov.outputs.signed-provenance-sha256 }}
     steps:
       - name: Checkout builder repository
-        uses: slsa-framework/slsa-github-generator/.github/actions/secure-builder-checkout@d4dfd59f2bae3c72eb8a499f13a12ee75d8df14e
+        uses: slsa-framework/slsa-github-generator/.github/actions/secure-builder-checkout@923a5a249d2ea820614a80486c9ef0857ced5321
         with:
           repository: "${{ needs.detect-env.outputs.repository }}"
           ref: "${{ needs.detect-env.outputs.ref }}"
@@ -330,7 +330,7 @@ jobs:
     if: startsWith(github.ref, 'refs/tags/') && inputs.upload-assets == true
     steps:
       - name: Checkout builder repository
-        uses: slsa-framework/slsa-github-generator/.github/actions/secure-builder-checkout@d4dfd59f2bae3c72eb8a499f13a12ee75d8df14e
+        uses: slsa-framework/slsa-github-generator/.github/actions/secure-builder-checkout@923a5a249d2ea820614a80486c9ef0857ced5321
         with:
           repository: "${{ needs.detect-env.outputs.repository }}"
           ref: "${{ needs.detect-env.outputs.ref }}"
