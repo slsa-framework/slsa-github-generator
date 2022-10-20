@@ -152,7 +152,7 @@ jobs:
 ### Referencing the SLSA generator
 
 At present, the generator **MUST** be referenced
-by tag of the form `@vX.Y.Z`, because the build will fail if you reference it via a shorter tag like `@vX.Y` or `@vX` or if you reference it by a hash.
+by a tag of the form `@vX.Y.Z`, because the build will fail if you reference it via a shorter tag like `@vX.Y` or `@vX` or if you reference it by a hash.
 
 For more information about the design decision and how to configure renovatebot,see the main repository [README.md](README.md).
 
