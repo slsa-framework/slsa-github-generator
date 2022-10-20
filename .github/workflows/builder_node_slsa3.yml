@@ -172,7 +172,7 @@ jobs:
     steps:
       - name: Generate builder
         id: generate
-        uses: slsa-framework/slsa-github-generator/.github/actions/generate-builder@d4dfd59f2bae3c72eb8a499f13a12ee75d8df14e
+        uses: slsa-framework/slsa-github-generator/.github/actions/generate-builder@923a5a249d2ea820614a80486c9ef0857ced5321
         with:
           repository: "${{ needs.detect-env.outputs.repository }}"
           ref: "${{ needs.detect-env.outputs.ref }}"
@@ -203,7 +203,7 @@ jobs:
     needs: [privacy-check, builder, rng]
     steps:
       - name: Checkout builder repository
-        uses: slsa-framework/slsa-github-generator/.github/actions/secure-builder-checkout@d4dfd59f2bae3c72eb8a499f13a12ee75d8df14e
+        uses: slsa-framework/slsa-github-generator/.github/actions/secure-builder-checkout@923a5a249d2ea820614a80486c9ef0857ced5321
         with:
           repository: "${{ needs.detect-env.outputs.repository }}"
           ref: "${{ needs.detect-env.outputs.ref }}"
@@ -229,6 +229,7 @@ jobs:
           set-executable: true
 
       - name: Download dependencies
+        working-directory: __PROJECT_CHECKOUT_DIR__
         env:
           UNTRUSTED_CI_ARGUMENTS: "${{ inputs.ci-arguments }}"
           UNTRUSTED_DIR: ${{ inputs.directory }}"
@@ -236,13 +237,14 @@ jobs:
           set -euo pipefail
 
           # npm ci <args>
-          ./"$BUILDER_BINARY" ci \
+          "$GITHUB_WORKSPACE/$BUILDER_BINARY" ci \
             --ci-arguments "$UNTRUSTED_CI_ARGUMENTS" \
             --directory "$UNTRUSTED_DIR"
 
       # TODO(hermeticity) Enable OS-level hermeticity.
 
       - name: Build project
+        working-directory: __PROJECT_CHECKOUT_DIR__
         env:
           UNTRUSTED_RUN_SCRIPTS: "${{ inputs.run-scripts }}"
           UNTRUSTED_DIR: ${{ inputs.directory }}"
@@ -250,12 +252,13 @@ jobs:
           set -euo pipefail
 
           # npm run <args>
-          ./"$BUILDER_BINARY" run \
+          "$GITHUB_WORKSPACE/$BUILDER_BINARY" run \
             --run-scripts "$UNTRUSTED_RUN_SCRIPTS" \
             --directory "$UNTRUSTED_DIR"
 
       - name: Create tarball
         id: tarball
+        working-directory: __PROJECT_CHECKOUT_DIR__
         env:
           UNTRUSTED_DIR: ${{ inputs.directory }}"
         run: |
@@ -268,7 +271,7 @@ jobs:
           # files and their hashes, so that we can identify the new file without the need to parse
           # the manifest.json.
           # echo "npm pack --pack-destination="./out"
-          ./"$BUILDER_BINARY" pack \
+          "$GITHUB_WORKSPACE/$BUILDER_BINARY" pack \
             --directory "$UNTRUSTED_DIR"
 
           # cp output into upper folder to make the tarball accessible to
@@ -299,7 +302,7 @@ jobs:
       node-provenance-sha256: ${{ steps.sign-prov.outputs.signed-provenance-sha256 }}
     steps:
       - name: Checkout builder repository
-        uses: slsa-framework/slsa-github-generator/.github/actions/secure-builder-checkout@d4dfd59f2bae3c72eb8a499f13a12ee75d8df14e
+        uses: slsa-framework/slsa-github-generator/.github/actions/secure-builder-checkout@923a5a249d2ea820614a80486c9ef0857ced5321
         with:
           repository: "${{ needs.detect-env.outputs.repository }}"
           ref: "${{ needs.detect-env.outputs.ref }}"
@@ -356,7 +359,7 @@ jobs:
     needs: [build, provenance]
     steps:
       - name: Checkout builder repository
-        uses: slsa-framework/slsa-github-generator/.github/actions/secure-builder-checkout@d4dfd59f2bae3c72eb8a499f13a12ee75d8df14e
+        uses: slsa-framework/slsa-github-generator/.github/actions/secure-builder-checkout@923a5a249d2ea820614a80486c9ef0857ced5321
         with:
           repository: "${{ needs.detect-env.outputs.repository }}"
           ref: "${{ needs.detect-env.outputs.ref }}"
@@ -371,6 +374,7 @@ jobs:
           token: ${{ inputs.token }}
           always-auth: ${{ inputs.always-auth }}
           registry-url: ${{ inputs.registry-url }}
+          path: __PROJECT_CHECKOUT_DIR__
 
       - name: Download binary
         uses: ./__BUILDER_CHECKOUT_DIR__/.github/actions/secure-download-artifact
@@ -395,12 +399,13 @@ jobs:
           set-executable: true
 
       - name: Publish
+        working-directory: __PROJECT_CHECKOUT_DIR__
         env:
           UNTRUSTED_PUBLISH_ARGUMENTS: "${{ inputs.publish-arguments }}"
         run: |
           set -euo pipefail
 
           # echo "npm publish ${{ inputs.publish-arguments }}"
-          ./"$BUILDER_BINARY" publish \
+          "$GITHUB_WORKSPACE/$BUILDER_BINARY" publish \
             --publish-arguments "$UNTRUSTED_PUBLISH_ARGUMENTS" \
             --directory "$UNTRUSTED_DIR"
