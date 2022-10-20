@@ -237,7 +237,7 @@ jobs:
           set -euo pipefail
 
           # npm ci <args>
-          ../"$BUILDER_BINARY" ci \
+          "$GITHUB_WORKSPACE/$BUILDER_BINARY" ci \
             --ci-arguments "$UNTRUSTED_CI_ARGUMENTS" \
             --directory "$UNTRUSTED_DIR"
 
@@ -252,7 +252,7 @@ jobs:
           set -euo pipefail
 
           # npm run <args>
-          ../"$BUILDER_BINARY" run \
+          "$GITHUB_WORKSPACE/$BUILDER_BINARY" run \
             --run-scripts "$UNTRUSTED_RUN_SCRIPTS" \
             --directory "$UNTRUSTED_DIR"
 
