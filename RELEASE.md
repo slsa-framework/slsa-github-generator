@@ -209,7 +209,7 @@ End-to-end tests run daily in [github.com/slsa-framework/example-package/.github
 
 The next step is to update the verifier's GitHub Actions e2e tests. There are GitHub actions Go and generic actions.
 
-<!-- TODO: Describe GHA generic container e2e tests. -->
+<!-- TODO(https://github.com/slsa-framework/slsa-github-generator/issues/1110): Describe GHA generic container e2e tests. -->
 
 For each of the GHA builders, you will need to:
 
