@@ -172,7 +172,7 @@ jobs:
     steps:
       - name: Generate builder
         id: generate
-        uses: slsa-framework/slsa-github-generator/.github/actions/generate-builder@3a3bee691c20c5c0ccc6bbd28df5e14bb7c63d53
+        uses: slsa-framework/slsa-github-generator/.github/actions/generate-builder@ae7b9550bb87beb718163df78e66ee8267b803ac
         with:
           repository: "${{ needs.detect-env.outputs.repository }}"
           ref: "${{ needs.detect-env.outputs.ref }}"
@@ -203,7 +203,7 @@ jobs:
     needs: [privacy-check, builder, rng]
     steps:
       - name: Checkout builder repository
-        uses: slsa-framework/slsa-github-generator/.github/actions/secure-builder-checkout@3a3bee691c20c5c0ccc6bbd28df5e14bb7c63d53
+        uses: slsa-framework/slsa-github-generator/.github/actions/secure-builder-checkout@ae7b9550bb87beb718163df78e66ee8267b803ac
         with:
           repository: "${{ needs.detect-env.outputs.repository }}"
           ref: "${{ needs.detect-env.outputs.ref }}"
@@ -271,7 +271,7 @@ jobs:
           # files and their hashes, so that we can identify the new file without the need to parse
           # the manifest.json.
           # echo "npm pack --pack-destination="./out"
-          ../"$BUILDER_BINARY" pack \
+          "$GITHUB_WORKSPACE/$BUILDER_BINARY" pack \
             --directory "$UNTRUSTED_DIR"
 
           # cp output into upper folder to make the tarball accessible to
@@ -302,7 +302,7 @@ jobs:
       node-provenance-sha256: ${{ steps.sign-prov.outputs.signed-provenance-sha256 }}
     steps:
       - name: Checkout builder repository
-        uses: slsa-framework/slsa-github-generator/.github/actions/secure-builder-checkout@3a3bee691c20c5c0ccc6bbd28df5e14bb7c63d53
+        uses: slsa-framework/slsa-github-generator/.github/actions/secure-builder-checkout@ae7b9550bb87beb718163df78e66ee8267b803ac
         with:
           repository: "${{ needs.detect-env.outputs.repository }}"
           ref: "${{ needs.detect-env.outputs.ref }}"
@@ -359,7 +359,7 @@ jobs:
     needs: [build, provenance]
     steps:
       - name: Checkout builder repository
-        uses: slsa-framework/slsa-github-generator/.github/actions/secure-builder-checkout@3a3bee691c20c5c0ccc6bbd28df5e14bb7c63d53
+        uses: slsa-framework/slsa-github-generator/.github/actions/secure-builder-checkout@ae7b9550bb87beb718163df78e66ee8267b803ac
         with:
           repository: "${{ needs.detect-env.outputs.repository }}"
           ref: "${{ needs.detect-env.outputs.ref }}"
@@ -406,6 +406,6 @@ jobs:
           set -euo pipefail
 
           # echo "npm publish ${{ inputs.publish-arguments }}"
-          ../"$BUILDER_BINARY" publish \
+          "$GITHUB_WORKSPACE/$BUILDER_BINARY" publish \
             --publish-arguments "$UNTRUSTED_PUBLISH_ARGUMENTS" \
             --directory "$UNTRUSTED_DIR"
