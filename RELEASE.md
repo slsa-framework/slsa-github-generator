@@ -207,15 +207,24 @@ End-to-end tests run daily in [github.com/slsa-framework/example-package/.github
 
 ## Update verifier
 
-The next step is to update the verifier's e2e tests. For this, you need to:
+The next step is to update the verifier's GitHub Actions e2e tests. There are GitHub actions Go and generic actions.
 
-1. Generate binaries and provenance for a project, using the [example-package](https://github.com/slsa-framework/example-package) builder. You will need to create provenance via a `workflow_dispatch` from this [workflow](https://github.com/slsa-framework/example-package/blob/main/.github/workflows/e2e.go.workflow_dispatch.main.config-noldflags.slsa3.yml) of the e2e test repository, and push a tag of the form vX and vX.Y to trigger this [workflow](https://github.com/slsa-framework/example-package/blob/main/.github/workflows/e2e.go.tag.main.config-ldflags-assets.major.slsa3.yml).
+<!-- TODO(https://github.com/slsa-framework/slsa-github-generator/issues/1110): Describe GHA generic container e2e tests. -->
 
-1. Place the files in a new directory `slsa-framework/slsa-verifier/tree/main/testdata/$BUILDER_TAG`.
+For each of the GHA builders, you will need to:
 
-1. Add the new release to the list defined in [slsa-framework/slsa-verifier/blob/main/main_test.go](https://github.com/slsa-framework/slsa-verifier/blob/main/main_test.go).
+1. Generate binaries and provenance in [example-package](https://github.com/slsa-framework/example-package) using the GHA action builder. These require using the updated builders, so validate that the workflows you use below are pinned at `$BUILDER_TAG`.
 
-   Send a pull request to merge the changes into the verifier's repository. The pre-submits will validate that the verifier is able to verify provenance from the `$BUILDER_TAG` builder.
+You will need the following trigger types:
+* A workflow dispatch event.
+* A tag of the form `vX.Y.Z`.
+* Tags of the form `vX` and `vX.Y`.
+
+To do this, trigger the [Go workflow dispatch](https://github.com/slsa-framework/example-package/blob/main/.github/workflows/verifier-e2e.go.workflow_dispatch.main.all.slsa3.yml) and [Generic workflow dispatch](https://github.com/slsa-framework/example-package/blob/main/.github/workflows/verifier-e2e.generic.workflow_dispatch.main.all.slsa3.yml). These will dispatch the workflow and create provenance for the workflow dispatch event, and then trigger subsequent runs on fixed tags.
+
+Download the uploaded artifacts of each of these, labelling the workflow dispatch artifacts by `binary-linux-amd64-workflow_dispatch(.intoto.jsonl)` and the tags by `binary-linux-amd64-push-v$TAG(.intoto.jsonl)`. 
+
+2. Move these files to `./cli/slsa-verifier/testdata/gha_$BUILDER_TYPE/$BUILDER_TAG/`. Send a pull request to merge the changes into the verifier's repository. The pre-submits will validate that the verifier is able to verify provenance from the `$BUILDER_TAG` builder.
 
 ## Finalize release
 
