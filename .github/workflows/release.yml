@@ -3,6 +3,11 @@ name: Builders realeaser
 on:
   # For manual tests.
   workflow_dispatch:
+    inputs:
+      release-tag:
+        description: 'Release tag to test'
+        required: true 
+        type: string
   push:
     tags:
       - "*" # triggers only if push new tag version, like `0.8.4` or else
@@ -10,8 +15,27 @@ on:
 permissions: read-all
 
 jobs:
+  # Pre-release reference verification.
+  pre-release-refs:
+    name: pre release refs verification
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # tag=v3.0.2
+      - name: manual release ref
+        env:
+          RELEASE_TAG: "${{ inputs.release-tag }}"
+        if: github.ref_type != 'tag'
+        run: ./.github/workflows/scripts/pre-release/references.sh
+
+      - name: new tag release ref
+        env:
+          RELEASE_TAG: "${{ github.ref_name }}"
+        if: github.ref_type == 'tag'
+        run: ./.github/workflows/scripts/pre-release/references.sh
+
   # Generic generator.
   generic-generator:
+    needs: [pre-release-refs]
     permissions:
       id-token: write # For signing.
       contents: write # For asset uploads.
@@ -24,8 +48,7 @@ jobs:
 
   # Go builder.
   go-builder:
-    # Force the builds to rin sequentially, to avoid
-    # the builder binaries being overwritten by each run.
+    needs: [pre-release-refs]
     permissions:
       id-token: write # For signing.
       contents: write # For asset uploads.
