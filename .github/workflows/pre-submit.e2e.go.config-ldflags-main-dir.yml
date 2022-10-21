@@ -22,9 +22,9 @@ jobs:
         run: |
           set -euo pipefail
 
-          echo "::set-output name=version::-X main.gitVersion=v1.2.3"
-          echo "::set-output name=commit::-X main.gitCommit=abcdef"
-          echo "::set-output name=branch::-X main.gitBranch=main"
+          echo "version=-X main.gitVersion=v1.2.3" >> "$GITHUB_OUTPUT"
+          echo "commit=-X main.gitCommit=abcdef" >> "$GITHUB_OUTPUT"
+          echo "branch=-X main.gitBranch=main" >> "$GITHUB_OUTPUT"
 
   build:
     needs: [args]
