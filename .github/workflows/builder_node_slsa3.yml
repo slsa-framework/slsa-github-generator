@@ -133,7 +133,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check private repos
-        uses: slsa-framework/slsa-github-generator/.github/actions/privacy-check@a3c7a56c8749c2c423f01bbcfd063315efc07a22
+        uses: slsa-framework/slsa-github-generator/.github/actions/privacy-check@main
         with:
           error_message: "Repository is private. The workflow has halted in order to keep the repository name from being exposed in the public transparency log. Set 'private-repository' to override."
           override: ${{ inputs.private-repository }}
@@ -145,7 +145,7 @@ jobs:
     steps:
       - name: Generate random 16-byte value (32-char hex encoded)
         id: rng
-        uses: slsa-framework/slsa-github-generator/.github/actions/rng@e3220805577deb9d193f64e519abcb3b50851df5
+        uses: slsa-framework/slsa-github-generator/.github/actions/rng@main
 
   detect-env:
     outputs:
@@ -157,7 +157,7 @@ jobs:
     steps:
       - name: Detect the builder ref
         id: detect
-        uses: slsa-framework/slsa-github-generator/.github/actions/detect-workflow@efb47d340c150ce456bf8bd554a131ac53b10ccd # tag=v1.2.0
+        uses: slsa-framework/slsa-github-generator/.github/actions/detect-workflow@main # tag=v1.2.0
 
   ###################################################################
   #                                                                 #
@@ -172,7 +172,7 @@ jobs:
     steps:
       - name: Generate builder
         id: generate
-        uses: slsa-framework/slsa-github-generator/.github/actions/generate-builder@923a5a249d2ea820614a80486c9ef0857ced5321
+        uses: slsa-framework/slsa-github-generator/.github/actions/generate-builder@main
         with:
           repository: "${{ needs.detect-env.outputs.repository }}"
           ref: "${{ needs.detect-env.outputs.ref }}"
@@ -203,7 +203,7 @@ jobs:
     needs: [privacy-check, builder, rng]
     steps:
       - name: Checkout builder repository
-        uses: slsa-framework/slsa-github-generator/.github/actions/secure-builder-checkout@923a5a249d2ea820614a80486c9ef0857ced5321
+        uses: slsa-framework/slsa-github-generator/.github/actions/secure-builder-checkout@main
         with:
           repository: "${{ needs.detect-env.outputs.repository }}"
           ref: "${{ needs.detect-env.outputs.ref }}"
@@ -302,7 +302,7 @@ jobs:
       node-provenance-sha256: ${{ steps.sign-prov.outputs.signed-provenance-sha256 }}
     steps:
       - name: Checkout builder repository
-        uses: slsa-framework/slsa-github-generator/.github/actions/secure-builder-checkout@923a5a249d2ea820614a80486c9ef0857ced5321
+        uses: slsa-framework/slsa-github-generator/.github/actions/secure-builder-checkout@main
         with:
           repository: "${{ needs.detect-env.outputs.repository }}"
           ref: "${{ needs.detect-env.outputs.ref }}"
@@ -359,7 +359,7 @@ jobs:
     needs: [build, provenance]
     steps:
       - name: Checkout builder repository
-        uses: slsa-framework/slsa-github-generator/.github/actions/secure-builder-checkout@923a5a249d2ea820614a80486c9ef0857ced5321
+        uses: slsa-framework/slsa-github-generator/.github/actions/secure-builder-checkout@main
         with:
           repository: "${{ needs.detect-env.outputs.repository }}"
           ref: "${{ needs.detect-env.outputs.ref }}"
