@@ -6,7 +6,7 @@ on:
     inputs:
       release-tag:
         description: 'Release tag to test'
-        required: true 
+        required: true
         type: string
   push:
     tags:

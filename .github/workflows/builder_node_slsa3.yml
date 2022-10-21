@@ -200,7 +200,7 @@ jobs:
       node-tarball-sha256: ${{ steps.upload.outputs.sha256 }}
       node-tarball-name: ${{ steps.tarball.outputs.filename }}
     runs-on: ubuntu-latest
-    needs: [privacy-check, builder, rng]
+    needs: [privacy-check, builder, rng, detect-env]
     steps:
       - name: Checkout builder repository
         uses: slsa-framework/slsa-github-generator/.github/actions/secure-builder-checkout@main
@@ -356,7 +356,7 @@ jobs:
   ###################################################################
   publish:
     runs-on: ubuntu-latest
-    needs: [build, provenance]
+    needs: [build, provenance, detect-env]
     steps:
       - name: Checkout builder repository
         uses: slsa-framework/slsa-github-generator/.github/actions/secure-builder-checkout@main
