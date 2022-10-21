@@ -23,7 +23,6 @@ env:
   # Builder.
   BUILDER_BINARY: slsa-builder-go-linux-amd64 # Name of the binary in the release assets.
   BUILDER_DIR: internal/builders/go # Source directory if we compile the builder.
-
 defaults:
   run:
     shell: bash
@@ -111,9 +110,9 @@ jobs:
     runs-on: ubuntu-latest
     needs: [privacy-check, detect-env, rng]
     steps:
-      - name: Generate builder
+      - name: Generate builder binary
         id: generate
-        uses: slsa-framework/slsa-github-generator/.github/actions/generate-builder@325c27afeab313babb4ab9265fa123957da01ac2
+        uses: slsa-framework/slsa-github-generator/.github/actions/generate-builder@923a5a249d2ea820614a80486c9ef0857ced5321
         with:
           repository: "${{ needs.detect-env.outputs.repository }}"
           ref: "${{ needs.detect-env.outputs.ref }}"
@@ -145,13 +144,21 @@ jobs:
     runs-on: ubuntu-latest
     needs: [privacy-check, builder, rng]
     steps:
-      - name: Checkout the Go repository
-        uses: slsa-framework/slsa-github-generator/.github/actions/checkout-go@c2e7da4c53f2703d9af77f8d1483078c8fd3477e
+      - name: Checkout builder repository
+        uses: slsa-framework/slsa-github-generator/.github/actions/secure-builder-checkout@923a5a249d2ea820614a80486c9ef0857ced5321
         with:
+          repository: "${{ needs.detect-env.outputs.repository }}"
+          ref: "${{ needs.detect-env.outputs.ref }}"
+          path: __BUILDER_CHECKOUT_DIR__
+
+      - name: Checkout the Go repository
+        uses: ./__BUILDER_CHECKOUT_DIR__/.github/actions/secure-project-checkout-go
+        with:
+          path: __PROJECT_CHECKOUT_DIR__
           go-version: ${{ inputs.go-version }}
 
       - name: Download builder
-        uses: slsa-framework/slsa-github-generator/.github/actions/secure-download-artifact@e3220805577deb9d193f64e519abcb3b50851df5
+        uses: ./__BUILDER_CHECKOUT_DIR__/.github/actions/secure-download-artifact
         with:
           name: "${{ env.BUILDER_BINARY }}-${{ needs.rng.outputs.value }}"
           path: "${{ env.BUILDER_BINARY }}"
@@ -160,6 +167,7 @@ jobs:
 
       - name: Build dry project
         id: build-dry
+        working-directory: __PROJECT_CHECKOUT_DIR__
         env:
           CONFIG_FILE: "${{ inputs.config-file }}"
           UNTRUSTED_ENVS: "${{ inputs.evaluated-envs }}"
@@ -168,8 +176,8 @@ jobs:
 
           # Note: this outputs information about resolved arguments, etc.
           # the values are trusted because the compiler is not invoked.
-          echo ./"$BUILDER_BINARY" build --dry "$CONFIG_FILE" "$UNTRUSTED_ENVS"
-          ./"$BUILDER_BINARY" build --dry "$CONFIG_FILE" "$UNTRUSTED_ENVS"
+          echo "$GITHUB_WORKSPACE/$BUILDER_BINARY" build --dry "$CONFIG_FILE" "$UNTRUSTED_ENVS"
+          "$GITHUB_WORKSPACE/$BUILDER_BINARY" build --dry "$CONFIG_FILE" "$UNTRUSTED_ENVS"
 
   ###################################################################
   #                                                                 #
@@ -182,13 +190,21 @@ jobs:
     runs-on: ubuntu-latest
     needs: [privacy-check, builder, build-dry, rng]
     steps:
-      - name: Checkout the Go repository
-        uses: slsa-framework/slsa-github-generator/.github/actions/checkout-go@c2e7da4c53f2703d9af77f8d1483078c8fd3477e
+      - name: Checkout builder repository
+        uses: slsa-framework/slsa-github-generator/.github/actions/secure-builder-checkout@923a5a249d2ea820614a80486c9ef0857ced5321
         with:
+          repository: "${{ needs.detect-env.outputs.repository }}"
+          ref: "${{ needs.detect-env.outputs.ref }}"
+          path: __BUILDER_CHECKOUT_DIR__
+
+      - name: Checkout the Go repository
+        uses: ./__BUILDER_CHECKOUT_DIR__/.github/actions/secure-project-checkout-go
+        with:
+          path: __PROJECT_CHECKOUT_DIR__
           go-version: ${{ inputs.go-version }}
 
       - name: Download builder
-        uses: slsa-framework/slsa-github-generator/.github/actions/secure-download-artifact@e3220805577deb9d193f64e519abcb3b50851df5
+        uses: ./__BUILDER_CHECKOUT_DIR__/.github/actions/secure-download-artifact
         with:
           name: "${{ env.BUILDER_BINARY }}-${{ needs.rng.outputs.value }}"
           path: "${{ env.BUILDER_BINARY }}"
@@ -196,6 +212,7 @@ jobs:
           set-executable: true
 
       - name: Download dependencies
+        working-directory: __PROJECT_CHECKOUT_DIR__
         env:
           UNTRUSTED_WORKING_DIR: "${{ needs.build-dry.outputs.go-working-dir }}"
         run: |
@@ -213,6 +230,7 @@ jobs:
 
       - name: Build project
         id: build-gen
+        working-directory: __PROJECT_CHECKOUT_DIR__
         env:
           CONFIG_FILE: "${{ inputs.config-file }}"
           UNTRUSTED_ENVS: "${{ inputs.evaluated-envs }}"
@@ -223,16 +241,16 @@ jobs:
           # Disable set-output command.
           echo "::stop-commands::`echo -n ${{ github.token }} | sha256sum | head -c 64`"
 
-          echo "./$BUILDER_BINARY" build "$PWD/$CONFIG_FILE" "$UNTRUSTED_ENVS"
+          echo "$GITHUB_WORKSPACE/$BUILDER_BINARY" build "$CONFIG_FILE" "$UNTRUSTED_ENVS"
           # Note: We need to provide the asbolute path to the output binary.
           export OUTPUT_BINARY="$PWD/${{ env.GENERATED_BINARY_NAME }}"
-          ./"$BUILDER_BINARY" build "$CONFIG_FILE" "$UNTRUSTED_ENVS"
+          "$GITHUB_WORKSPACE/$BUILDER_BINARY" build "$CONFIG_FILE" "$UNTRUSTED_ENVS"
 
-          mv "${{ env.GENERATED_BINARY_NAME }}" "$UNTRUSTED_BINARY_NAME"
+          mv "${{ env.GENERATED_BINARY_NAME }}" "$GITHUB_WORKSPACE/$UNTRUSTED_BINARY_NAME"
 
       - name: Upload generated binary
         id: upload
-        uses: slsa-framework/slsa-github-generator/.github/actions/secure-upload-artifact@e3220805577deb9d193f64e519abcb3b50851df5
+        uses: ./__BUILDER_CHECKOUT_DIR__/.github/actions/secure-upload-artifact
         with:
           name: "${{ needs.build-dry.outputs.go-binary-name }}"
           path: "${{ needs.build-dry.outputs.go-binary-name }}"
@@ -253,8 +271,15 @@ jobs:
       go-provenance-name: ${{ steps.sign-prov.outputs.signed-provenance-name }}
       go-provenance-sha256: ${{ steps.sign-prov.outputs.signed-provenance-sha256 }}
     steps:
+      - name: Checkout builder repository
+        uses: slsa-framework/slsa-github-generator/.github/actions/secure-builder-checkout@923a5a249d2ea820614a80486c9ef0857ced5321
+        with:
+          repository: "${{ needs.detect-env.outputs.repository }}"
+          ref: "${{ needs.detect-env.outputs.ref }}"
+          path: __BUILDER_CHECKOUT_DIR__
+
       - name: Download builder
-        uses: slsa-framework/slsa-github-generator/.github/actions/secure-download-artifact@e3220805577deb9d193f64e519abcb3b50851df5
+        uses: ./__BUILDER_CHECKOUT_DIR__/.github/actions/secure-download-artifact
         with:
           name: "${{ env.BUILDER_BINARY }}-${{ needs.rng.outputs.value }}"
           path: "${{ env.BUILDER_BINARY }}"
@@ -304,15 +329,22 @@ jobs:
     needs: [build-dry, build, provenance]
     if: startsWith(github.ref, 'refs/tags/') && inputs.upload-assets == true
     steps:
+      - name: Checkout builder repository
+        uses: slsa-framework/slsa-github-generator/.github/actions/secure-builder-checkout@923a5a249d2ea820614a80486c9ef0857ced5321
+        with:
+          repository: "${{ needs.detect-env.outputs.repository }}"
+          ref: "${{ needs.detect-env.outputs.ref }}"
+          path: __BUILDER_CHECKOUT_DIR__
+
       - name: Download binary
-        uses: slsa-framework/slsa-github-generator/.github/actions/secure-download-artifact@e3220805577deb9d193f64e519abcb3b50851df5
+        uses: ./__BUILDER_CHECKOUT_DIR__/.github/actions/secure-download-artifact
         with:
           name: "${{ needs.build-dry.outputs.go-binary-name }}"
           path: "${{ needs.build-dry.outputs.go-binary-name }}"
           sha256: "${{ needs.build.outputs.go-binary-sha256 }}"
 
       - name: Download provenance
-        uses: slsa-framework/slsa-github-generator/.github/actions/secure-download-artifact@e3220805577deb9d193f64e519abcb3b50851df5
+        uses: ./__BUILDER_CHECKOUT_DIR__/.github/actions/secure-download-artifact
         with:
           name: "${{ needs.provenance.outputs.go-provenance-name }}"
           path: "${{ needs.provenance.outputs.go-provenance-name }}"

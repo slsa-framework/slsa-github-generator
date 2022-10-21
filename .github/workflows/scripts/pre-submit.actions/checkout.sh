@@ -15,7 +15,8 @@ results=$(
         --include='*.yml' \
         --include='*.yaml' \
         --exclude-dir='node_modules' \
-        --exclude-dir='secure-checkout' \
+        --exclude-dir='secure-project-checkout' \
+        --exclude-dir='secure-builder-checkout' \
         -e 'uses: *actions/checkout' \
         .github/actions/* || true
 )

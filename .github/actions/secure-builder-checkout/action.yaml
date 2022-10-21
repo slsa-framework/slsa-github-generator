@@ -1,0 +1,33 @@
+name: "secure-builder-checkout"
+description: "Checkout the builder repository"
+
+inputs:
+  repository:
+    description: "The repository to check out."
+    required: true
+  ref:
+    description: "The ref to checkout."
+    required: true
+  path:
+    # Same argument to https://github.com/actions/checkout.
+    description: "Relative path under $GITHUB_WORKSPACE to place the repository."
+    required: true
+  token:
+    description: "Token used to fetch the repository."
+    required: false
+    default: ${{ github.token }}
+runs:
+  using: "composite"
+  steps:
+    # TODO(968): verify the hash is on the main branch
+    # and has an associated release. This will require exceptions
+    # for e2e tests.
+    - name: Checkout the repository
+      uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # tag=v3.0.2
+      with:
+        repository: ${{ inputs.repository }}
+        ref: ${{ inputs.ref }}
+        token: ${{ inputs.token }}
+        path: ${{ inputs.path }}
+        persist-credentials: false
+        fetch-depth: 1
