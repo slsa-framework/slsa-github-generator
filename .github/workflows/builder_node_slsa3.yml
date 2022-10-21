@@ -292,7 +292,7 @@ jobs:
   ###################################################################
   provenance:
     runs-on: ubuntu-latest
-    needs: [builder, build, rng]
+    needs: [builder, build, rng, detect-env]
     permissions:
       id-token: write # Needed to create an OIDC token for keyless signing.
       contents: read
