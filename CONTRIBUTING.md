@@ -152,5 +152,3 @@ is used for communication and sharing ideas.
 
 Communication is also done over
 [GitHub issues](https://github.com/slsa-framework/slsa-github-generator/issues).
-
-[open issues]: https://github.com/slsa-framework/slsa-github-generator/issues?q=is%3Aissue+is%3Aopen+label%3Atype%2Fdocumentation
