@@ -39,7 +39,7 @@ Before you get started, you will need to [signup](http://github.com/signup) for 
 
 > TODO: is this needed?
 
-Before you can contribute to Kubernetes, you will need to sign the
+Before you can contribute to the SLSA Framework organization, you will need to sign the
 [Contributor License Agreement].
 
 #### Code of Conduct
