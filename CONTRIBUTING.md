@@ -136,6 +136,10 @@ make lint
 These linters will also run as GitHub checks for pull requests via
 [pre-submit.lint.yml](.github/workflows/pre-submit.lint.yml) file.
 
+### Releasing
+
+Please see [RELEASE.md](RELEASE.md).
+
 ## Community
 
 This project is part of the [SLSA Community](https://slsa.dev/community) working
