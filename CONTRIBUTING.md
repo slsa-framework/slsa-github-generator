@@ -44,10 +44,7 @@ Before you can contribute to the SLSA Framework organization, you will need to s
 
 #### Code of Conduct
 
-> TODO: Is there a CoC for the OpenSSF that we can point to?
-
-Please make sure to read and observe the [Code of Conduct] and
-[Community Values]
+Please make sure to read and observe the [Code of Conduct].
 
 #### Setting up your development environment
 
@@ -152,3 +149,5 @@ is used for communication and sharing ideas.
 
 Communication is also done over
 [GitHub issues](https://github.com/slsa-framework/slsa-github-generator/issues).
+
+[code of conduct]: https://github.com/slsa-framework/slsa/blob/main/code-of-conduct.md
