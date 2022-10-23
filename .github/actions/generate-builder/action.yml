@@ -33,11 +33,16 @@ outputs:
 runs:
   using: "composite"
   steps:
-    - name: Checkout the Go builder repository
-      uses: slsa-framework/slsa-github-generator/.github/actions/checkout-go@c2e7da4c53f2703d9af77f8d1483078c8fd3477e
+    - name: Checkout builder repository
+      uses: slsa-framework/slsa-github-generator/.github/actions/secure-builder-checkout@main
       with:
         repository: ${{ inputs.repository }}
         ref: ${{ inputs.ref }}
+        path: __BUILDER_CHECKOUT_DIR__
+
+    - name: Set up Go environment
+      uses: actions/setup-go@268d8c0ca0432bb2cf416faae41297df9d262d7f # tag=v3.3.0
+      with:
         go-version: ${{ inputs.go-version }}
 
     - name: Generate builder
@@ -56,13 +61,13 @@ runs:
 
         COMPILE_BUILDER: "${{ inputs.compile-builder }}"
         BUILDER_REF: "${{ inputs.ref }}"
-        BUILDER_DIR: "${{ inputs.directory }}"
+        BUILDER_DIR: "./__BUILDER_CHECKOUT_DIR__/${{ inputs.directory }}"
         # Needed for the gh CLI used in builder-fetch.sh.
         GH_TOKEN: "${{ inputs.token }}"
-      run: ./.github/actions/generate-builder/generate-builder.sh
+      run: ./__BUILDER_CHECKOUT_DIR__/.github/actions/generate-builder/generate-builder.sh
 
     - name: Compute sha256 of builder
-      uses: slsa-framework/slsa-github-generator/.github/actions/compute-sha256@e3220805577deb9d193f64e519abcb3b50851df5
+      uses: ./__BUILDER_CHECKOUT_DIR__/.github/actions/compute-sha256
       id: compute
       with:
         path: "${{ inputs.binary }}"

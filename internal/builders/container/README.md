@@ -18,12 +18,14 @@ project simply generates provenance as a separate step in an existing workflow.
 - [Benefits of Provenance](#benefits-of-provenance)
 - [Generating Provenance](#generating-provenance)
   - [Getting Started](#getting-started)
+  - [Referencing the SLSA generator](#referencing-the-slsa-generator)
   - [Supported Triggers](#supported-triggers)
   - [Workflow Inputs](#workflow-inputs)
   - [Provenance Format](#provenance-format)
   - [Provenance Example](#provenance-example)
 - [Verification](#verification)
   - [Cosign](#cosign)
+  - [Sigstore policy-controller](#sigstore-policy-controller)
   - [Kyverno](#kyverno)
 
 ---
@@ -147,6 +149,12 @@ jobs:
     secrets:
       registry-password: ${{ secrets.GITHUB_TOKEN }}
 ```
+### Referencing the SLSA generator
+
+At present, the generator **MUST** be referenced
+by a tag of the form `@vX.Y.Z`, because the build will fail if you reference it via a shorter tag like `@vX.Y` or `@vX` or if you reference it by a hash.
+
+For more information about this design decision and how to configure renovatebot,see the main repository [README.md](../../../README.md).
 
 ### Supported Triggers
 
@@ -320,6 +328,91 @@ Certificate issuer URL:  https://token.actions.githubusercontent.com
 ```
 
 You can read more in the [cosign documentation](https://docs.sigstore.dev/cosign/attestation/).
+
+### Sigstore policy-controller
+
+Sigstore [policy-controller](https://docs.sigstore.dev/policy-controller/overview)
+is a policy management controller that can be used to write Kubernetes-native
+policies for SLSA provenance. The following assumes you have
+[installed policy-controller](https://docs.sigstore.dev/policy-controller/installation)
+in your Kubernetes cluster.
+
+The following `ClusterImagePolicy` can be used to verify container images
+as part of [Admission Control](https://kubernetes.io/docs/reference/access-authn-authz/extensible-admission-controllers/).
+
+```yaml
+apiVersion: policy.sigstore.dev/v1alpha1
+kind: ClusterImagePolicy
+metadata:
+  name: image-is-signed-by-github-actions
+spec:
+  images:
+    # Matches all versions of the actions-test image.
+    # NOTE: policy-controller mutates pods to use a digest even if originally
+    # specified by tag.
+    - glob: "ghcr.io/ianlewis/actions-test@*"
+  authorities:
+    - keyless:
+        # Signed by the public Fulcio certificate authority
+        url: https://fulcio.sigstore.dev
+        identities:
+          # Matches the Github Actions OIDC issuer
+          - issuer: https://token.actions.githubusercontent.com
+            # Matches the reusable workflow's signing identity.
+            # TODO: update after GA
+            subjectRegExp: "^https://github.com/ianlewis/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@refs/heads/409-feature-add-generic-container-workflow$"
+      attestations:
+        - name: must-have-slsa
+          predicateType: slsaprovenance
+          policy:
+            type: cue
+            data: |
+              // The predicateType field must match this string
+              predicateType: "https://slsa.dev/provenance/v0.2"
+
+              predicate: {
+                // This condition verifies that the builder is the builder we
+                // expect and trust. The following condition can be used
+                // unmodified. It verifies that the builder is the container
+                // workflow.
+                builder: {
+                  // TODO: update after GA
+                  // id: =~"^https://github.com/slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@refs/tags/v[0-9]+.[0-9]+.[0-9]+$"
+                  id: =~"^https://github.com/ianlewis/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@refs/heads/409-feature-add-generic-container-workflow$"
+                }
+                invocation: {
+                  configSource: {
+                    // This condition verifies the entrypoint of the workflow.
+                    // Replace with the relative path to your workflow in your
+                    // repository.
+                    entryPoint: ".github/workflows/generic-container.yml"
+
+                    // This condition verifies that the image was generated from
+                    // the source repository we expect. Replace this with your
+                    // repository.
+                    uri: =~"^git\\+https://github.com/ianlewis/actions-test@refs/tags/v[0-9]+.[0-9]+.[0-9]+$"
+                  }
+                }
+              }
+```
+
+When applied the `ClusterImagePolicy` will be evaluated when a `Pod` is
+created. If the `Pod` fulfills the policy conditions then the `Pod` can be
+created. If the `Pod` does not fulfill one or more of the policy conditions
+then you will see an error like the following. For example, the following error
+will occur when issuer does not match.
+
+```shell
+$ kubectl run actions-test --image=ghcr.io/ianlewis/actions-test:v0.0.38 --port=8080
+Error from server (BadRequest): admission webhook "policy.sigstore.dev" denied the request: validation failed: failed policy: image-is-signed-by-github-actions: spec.containers[0].image
+ghcr.io/ianlewis/actions-test@sha256:7c01e1c050f6b7a9b38a53da1be0835288da538d506de571f654417ae89aea4e attestation keyless validation failed for authority authority-0 for ghcr.io/ianlewis/actions-test@sha256:7c01e1c050f6b7a9b38a53da1be0835288da538d506de571f654417ae89aea4e: no matching attestations:
+none of the expected identities matched what was in the certificate
+```
+
+This behavior can be configured to `allow`, `deny`, or `warn` depending on your
+use case. See the [sigstore
+docs](https://docs.sigstore.dev/policy-controller/overview/#admission-of-images)
+for more info.
 
 ### Kyverno
 

@@ -6,6 +6,7 @@ This document explains how to use the builder for [Go](https://go.dev/) projects
 
 [Generation of provenance](#generation)
 
+- [Referencing the SLSA builder](#referencing-the-slsa-builder)
 - [Supported Triggers](#supported-triggers)
 - [Configuration File](#configuration-file)
 - [Migration from GoReleaser](#migration-from-GoReleaser)
@@ -20,6 +21,13 @@ This document explains how to use the builder for [Go](https://go.dev/) projects
 
 The Go builder workflow uses a GitHub Actions reusable workflow to generate the
 provenance.
+
+### Referencing the SLSA builder
+
+At present, the trusted builder **MUST** be referenced
+by a tag of the form `@vX.Y.Z`, because the build will fail if you reference it via a shorter tag like `@vX.Y` or `@vX` or if you reference it by a hash.
+
+For more information about this design decision and how to configure renovatebot,see the main repository [README.md](../../../README.md).
 
 ### Supported Triggers
 
@@ -157,10 +165,10 @@ jobs:
           fetch-depth: 0
       - id: ldflags
         run: |
-          echo "::set-output name=commit-date::$(git log --date=iso8601-strict -1 --pretty=%ct)"
-          echo "::set-output name=commit::$GITHUB_SHA"
-          echo "::set-output name=version::$(git describe --tags --always --dirty | cut -c2-)"
-          echo "::set-output name=tree-state::$(if git diff --quiet; then echo "clean"; else echo "dirty"; fi)"
+          echo "commit-date=$(git log --date=iso8601-strict -1 --pretty=%ct)" >> "$GITHUB_OUTPUT"
+          echo "commit=$GITHUB_SHA" >> "$GITHUB_OUTPUT"
+          echo "version=$(git describe --tags --always --dirty | cut -c2-)" >> "$GITHUB_OUTPUT"
+          echo "tree-state=$(if git diff --quiet; then echo "clean"; else echo "dirty"; fi)" >> "$GITHUB_OUTPUT"
 
   # Trusted builder.
   build:
