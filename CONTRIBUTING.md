@@ -3,7 +3,6 @@
 - [Contributor Guide](#contributor-guide)
   - [Prerequisites](#prerequisites)
     - [Create a GitHub account](#create-a-github-account)
-    - [Sign the CLA](#sign-the-cla)
     - [Code of Conduct](#code-of-conduct)
     - [Setting up your development environment](#setting-up-your-development-environment)
   - [Development](#development)
@@ -11,6 +10,7 @@
     - [Pre-submits and Unit Tests](#pre-submits-and-unit-tests)
     - [End to End (e2e) Tests](#end-to-end-e2e-tests)
     - [Linters](#linters)
+    - [Releasing](#releasing)
   - [Community](#community)
     - [Communication](#communication)
 
@@ -34,13 +34,6 @@ prerequisites.
 #### Create a GitHub account
 
 Before you get started, you will need to [signup](http://github.com/signup) for a GitHub user account.
-
-#### Sign the CLA
-
-> TODO: is this needed?
-
-Before you can contribute to the SLSA Framework organization, you will need to sign the
-[Contributor License Agreement].
 
 #### Code of Conduct
 
