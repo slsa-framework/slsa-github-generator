@@ -20,7 +20,8 @@ import (
 	"regexp"
 
 	intoto "github.com/in-toto/in-toto-golang/in_toto"
-	slsa "github.com/in-toto/in-toto-golang/in_toto/slsa_provenance/v0.2"
+	slsacommon "github.com/in-toto/in-toto-golang/in_toto/slsa_provenance/common"
+	slsa02 "github.com/in-toto/in-toto-golang/in_toto/slsa_provenance/v0.2"
 )
 
 const (
@@ -101,12 +102,12 @@ func (g *HostedActionsGenerator) Generate(ctx context.Context) (*intoto.Provenan
 	return &intoto.ProvenanceStatement{
 		StatementHeader: intoto.StatementHeader{
 			Type:          intoto.StatementInTotoV01,
-			PredicateType: slsa.PredicateSLSAProvenance,
+			PredicateType: slsa02.PredicateSLSAProvenance,
 			Subject:       subject,
 		},
-		Predicate: slsa.ProvenancePredicate{
+		Predicate: slsa02.ProvenancePredicate{
 			BuildType: g.buildType.URI(),
-			Builder: slsa.ProvenanceBuilder{
+			Builder: slsacommon.ProvenanceBuilder{
 				ID: builderID,
 			},
 			Invocation:  invocation,

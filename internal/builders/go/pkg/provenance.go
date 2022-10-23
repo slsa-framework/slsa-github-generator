@@ -23,7 +23,7 @@ import (
 	"github.com/slsa-framework/slsa-github-generator/signing"
 
 	intoto "github.com/in-toto/in-toto-golang/in_toto"
-	slsa02 "github.com/in-toto/in-toto-golang/in_toto/slsa_provenance/v0.2"
+	slsacommon "github.com/in-toto/in-toto-golang/in_toto/slsa_provenance/common"
 	"github.com/slsa-framework/slsa-github-generator/github"
 	"github.com/slsa-framework/slsa-github-generator/internal/utils"
 	"github.com/slsa-framework/slsa-github-generator/slsa"
@@ -93,7 +93,7 @@ func GenerateProvenance(name, digest, command, envs, workingDir string, s signin
 		GithubActionsBuild: slsa.NewGithubActionsBuild([]intoto.Subject{
 			{
 				Name: name,
-				Digest: slsa02.DigestSet{
+				Digest: slsacommon.DigestSet{
 					"sha256": digest,
 				},
 			},
@@ -157,7 +157,7 @@ func GenerateProvenance(name, digest, command, envs, workingDir string, s signin
 	invEnv["os"] = os.Getenv("ImageOS")
 
 	// Add details about the runner's OS to the materials
-	runnerMaterials := slsa02.ProvenanceMaterial{
+	runnerMaterials := slsacommon.ProvenanceMaterial{
 		// TODO: capture the digest here too
 		URI: fmt.Sprintf("https://github.com/actions/virtual-environments/releases/tag/%s/%s", os.Getenv("ImageOS"), os.Getenv("ImageVersion")),
 	}

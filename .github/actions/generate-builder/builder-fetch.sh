@@ -53,7 +53,7 @@ fi
 
 if [[ "$BUILDER_TAG" != "$(echo -n "$BUILDER_TAG" | grep -P '^v\d*(\.([\d]{1,})){0,2}$')" ]]; then
     echo "Invalid builder version: $BUILDER_TAG. Expected version of the form vX.Y.Z"
-    echo "For details see https://github.com/slsa-framework/slsa-github-generator#verification-of-provenance"
+    echo "For details see https://github.com/slsa-framework/slsa-github-generator/blob/main/README.md#referencing-slsa-builders-and-generators"
     exit 7
 fi
 
