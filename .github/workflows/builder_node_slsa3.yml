@@ -334,7 +334,7 @@ jobs:
           # This sets signed-provenance-name to the name of the signed DSSE envelope.
           # Note: this command outputs the sha256 of the signed provenance, so the upload
           # in the next step need not be secure-artifact-upload.
-          ./"$BUILDER_BINARY" provenance \
+          "$GITHUB_WORKSPACE/$BUILDER_BINARY" provenance \
             --tarball-name "$UNTRUSTED_TARBALL_NAME" \
             --digest "$UNTRUSTED_TARBALL_HASH" \
             --ci-arguments "$UNTRUSTED_CI_ARGUMENTS" \

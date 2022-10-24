@@ -302,7 +302,7 @@ jobs:
 
           # Create and sign provenance
           # This sets signed-provenance-name to the name of the signed DSSE envelope.
-          ./"$BUILDER_BINARY" provenance \
+          "$GITHUB_WORKSPACE/$BUILDER_BINARY" provenance \
             --binary-name "$UNTRUSTED_BINARY_NAME" \
             --digest "$UNTRUSTED_BINARY_HASH" \
             --command "$UNTRUSTED_COMMAND" \
