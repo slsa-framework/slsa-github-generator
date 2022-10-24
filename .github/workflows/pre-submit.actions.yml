@@ -220,20 +220,3 @@ jobs:
           name: artifact4
           path: artifact4
           sha256: 5b3513f580c8397212ff2c8f459c199efc0c90e4354a5f3533adf0a3fff3a530
-
-  secure-download-artifacts:
-    runs-on: ubuntu-latest
-    needs: [secure-download-artifact, secure-download-artifact-builder-repo-name, secure-download-artifact-builder-repo-folder, secure-download-artifact-builder-repo-file]
-    if: ${{ always() }}
-    env:
-      BUILDER_NAME_RESULT: ${{ needs.secure-download-artifact-builder-name.result }}
-      BUILDER_FOLDER_RESULT: ${{ needs.secure-download-artifact-builder-repo-folder.result }}
-      BUILDER_FILE_RESULT: ${{ needs.secure-download-artifact-builder-repo-file.result }}
-      DOWNLOAD_RESULT: ${{ needs.secure-download.result }}
-    steps:
-      - run: |
-          # exit 0 if checks were successful.
-          [ "${BUILDER_NAME_RESULT}" != "success" ] && \
-          [ "${BUILDER_FOLDER_RESULT}" != "success" ] && \
-          [ "${BUILDER_FOLDER_RESULT}" != "success" ] && \
-          [ "${DOWNLOAD_RESULT}" == "success" ]
