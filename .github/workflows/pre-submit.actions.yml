@@ -148,7 +148,7 @@ jobs:
           path: artifact
           sha256: 5b3513f580c8397212ff2c8f459c199efc0c90e4354a5f3533adf0a3fff3a530
 
-  secure-download-artifact-same-name:
+  secure-download-artifact-builder-name:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # tag=v3.0.2
@@ -226,14 +226,14 @@ jobs:
     needs: [secure-download-artifact, secure-download-artifact-builder-repo-name, secure-download-artifact-builder-repo-folder, secure-download-artifact-builder-repo-file]
     if: ${{ always() }}
     env:
-      SAME_NAME_RESULT: ${{ needs.secure-download-artifact-same-name.result }}
+      BUILDER_NAME_RESULT: ${{ needs.secure-download-artifact-builder-name.result }}
       BUILDER_FOLDER_RESULT: ${{ needs.secure-download-artifact-builder-repo-folder.result }}
       BUILDER_FILE_RESULT: ${{ needs.secure-download-artifact-builder-repo-file.result }}
       DOWNLOAD_RESULT: ${{ needs.secure-download.result }}
     steps:
       - run: |
           # exit 0 if checks were successful.
-          [ "${SAME_NAME_RESULT}" != "success" ] && \
+          [ "${BUILDER_NAME_RESULT}" != "success" ] && \
           [ "${BUILDER_FOLDER_RESULT}" != "success" ] && \
           [ "${BUILDER_FOLDER_RESULT}" != "success" ] && \
           [ "${DOWNLOAD_RESULT}" == "success" ]
