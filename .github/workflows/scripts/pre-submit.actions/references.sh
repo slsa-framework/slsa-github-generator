@@ -10,7 +10,7 @@ cd __THIS_REPO__
 
 results=$(
     find .github/workflows/ -name '*.yaml' -o -name '*.yml' \
-    | xargs grep -P "slsa-framework/slsa-github-generator/.github/actions/.*@main" \
+    | xargs grep -P "slsa-framework/slsa-github-generator/.github/actions/.*@(?!main)" \
     || true
 )
 if [[ "$results" != "" ]]; then
