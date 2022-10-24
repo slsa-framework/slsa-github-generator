@@ -133,19 +133,19 @@ jobs:
 
       - name: Create artifact
         run: |
-          echo artifact > artifact
+          echo artifact > artifact1
 
       - name: Upload generated binary
         uses: ./__BUILDER_CHECKOUT_DIR__/.github/actions/secure-upload-artifact
         with:
-          name: artifact
-          path: artifact
+          name: artifact1
+          path: artifact1
 
       - name: Download artifact
         uses: ./__BUILDER_CHECKOUT_DIR__/.github/actions/secure-download-artifact
         with:
-          name: artifact
-          path: artifact
+          name: artifact1
+          path: artifact1
           sha256: 5b3513f580c8397212ff2c8f459c199efc0c90e4354a5f3533adf0a3fff3a530
 
   secure-download-artifact-builder-name:
@@ -157,19 +157,19 @@ jobs:
 
       - name: Create artifact
         run: |
-          echo artifact > artifact
+          echo artifact > artifact2
 
       - name: Upload generated binary
         uses: ./__BUILDER_CHECKOUT_DIR__/.github/actions/secure-upload-artifact
         with:
-          name: artifact
-          path: artifact
+          name: artifact2
+          path: artifact2
 
       - name: Download artifact
         uses: ./__BUILDER_CHECKOUT_DIR__/.github/actions/secure-download-artifact
         with:
-          name: artifact
-          path: path/to/__BUILDER_CHECKOUT_DIR__/artifact
+          name: artifact2
+          path: path/to/__BUILDER_CHECKOUT_DIR__/artifact2
           sha256: 5b3513f580c8397212ff2c8f459c199efc0c90e4354a5f3533adf0a3fff3a530
 
   secure-download-artifact-builder-repo-folder:
@@ -182,18 +182,18 @@ jobs:
       - name: Create artifact and folder
         run: |
           mkdir some-folder
-          echo artifact > artifact
+          echo artifact > artifact3
 
       - name: Upload generated binary
         uses: ./__BUILDER_CHECKOUT_DIR__/.github/actions/secure-upload-artifact
         with:
-          name: artifact
-          path: artifact
+          name: artifact3
+          path: artifact3
 
       - name: Download artifact
         uses: ./__BUILDER_CHECKOUT_DIR__/.github/actions/secure-download-artifact
         with:
-          name: artifact
+          name: artifact3
           path: some-folder
           sha256: 5b3513f580c8397212ff2c8f459c199efc0c90e4354a5f3533adf0a3fff3a530
 
@@ -206,19 +206,19 @@ jobs:
 
       - name: Create artifact
         run: |
-          echo artifact > artifact
+          echo artifact > artifact4
 
       - name: Upload generated binary
         uses: ./__BUILDER_CHECKOUT_DIR__/.github/actions/secure-upload-artifact
         with:
-          name: artifact
-          path: artifact
+          name: artifact4
+          path: artifact4
 
       - name: Download artifact
         uses: ./__BUILDER_CHECKOUT_DIR__/.github/actions/secure-download-artifact
         with:
-          name: artifact
-          path: artifact
+          name: artifact4
+          path: artifact4
           sha256: 5b3513f580c8397212ff2c8f459c199efc0c90e4354a5f3533adf0a3fff3a530
 
   secure-download-artifacts:
