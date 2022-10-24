@@ -246,7 +246,11 @@ $ find . -name "*.md" -exec sed -i "s/v1.0.0/v1.1.1/g" {} +
 
 ## Send a PR to reference Actions at main
 
-Send a PR to reference the internal Actions at `@main`.
+Send a PR to reference the internal Actions at `@main`. You can use:
+
+```shell
+find .github/ -name '*.yaml' -o -name '*.yml' | xargs sed -i 's/uses: slsa-framework\/slsa-github-generator\/\.github\/actions\/\(.*\)@_YOUR_RELEASE_TAG_*/uses: slsa-framework\/slsa-github-generator\/.github\/actions\/\1@main/'
+```
 
 ## Update the starter workflows
 
