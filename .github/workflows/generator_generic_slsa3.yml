@@ -64,15 +64,6 @@ on:
         value: ${{ jobs.generator.outputs.provenance-name }}
 
 jobs:
-  privacy-check:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check private repos
-        uses: slsa-framework/slsa-github-generator/.github/actions/privacy-check@main
-        with:
-          error_message: "Repository is private. The workflow has halted in order to keep the repository name from being exposed in the public transparency log. Set 'private-repository' to override."
-          override: ${{ inputs.private-repository }}
-
   # detect-env detects the reusable workflow's repository and ref for use later
   # in the workflow.
   detect-env:
@@ -101,7 +92,7 @@ jobs:
       provenance-sha256: ${{ steps.sign-prov.outputs.provenance-sha256 }}
       provenance-name: ${{ steps.sign-prov.outputs.provenance-name }}
     runs-on: ubuntu-latest
-    needs: [privacy-check, detect-env]
+    needs: [detect-env]
     permissions:
       id-token: write # Needed to create an OIDC token for keyless signing.
       contents: read
@@ -116,6 +107,7 @@ jobs:
           binary: "${{ env.BUILDER_BINARY }}"
           compile-builder: "${{ inputs.compile-generator }}"
           directory: "${{ env.BUILDER_DIR }}"
+          allow-private-repository: ${{ inputs.private-repository }}
 
       - name: Create and sign provenance
         id: sign-prov

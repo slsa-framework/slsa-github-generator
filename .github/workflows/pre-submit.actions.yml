@@ -60,6 +60,7 @@ jobs:
       CHECK_DIST_RESULT: ${{ needs.check-dist-matrix.result }}
     steps:
       - run: |
+          set -euo pipefail
           # exit 0 if checks were successful.
           [ "${CHECK_DIST_RESULT}" == "success" ] && [ "${CHECKOUT_RESULT}" == "success" ]
 
@@ -94,10 +95,21 @@ jobs:
 
   references:
     runs-on: ubuntu-latest
-    if: ${{ !contains(github.event.head_commit.message, '#label:release') }}
     steps:
       - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # tag=v3.0.2
-      - run: ./.github/workflows/scripts/pre-submit.actions/references.sh
+        with:
+          path: __THIS_REPO__
+      - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # tag=v3.0.2
+        with:
+          repository: slsa-framework/example-package
+          ref: main
+          path: __EXAMPLE_PACKAGE__
+      - name: Verify main references
+        if: ${{ !contains(github.event.head_commit.message, '#label:release') }}
+        run: ./__THIS_REPO__/.github/workflows/scripts/pre-submit.actions/references.sh
+      - name: Verify version references
+        if: ${{ contains(github.event.head_commit.message, '#label:release') }}
+        run: ./__THIS_REPO__/.github/workflows/scripts/pre-release/references.sh
 
   secure-project-checkout-go:
     runs-on: ubuntu-latest
@@ -232,7 +244,8 @@ jobs:
       BUILDER_FILE_RESULT: ${{ needs.secure-download-artifact-builder-repo-file.result }}
     steps:
       - run: |
+          set -euo pipefail
           # exit 0 if checks were successful.
-          [ "${BUILDER_NAME_RESULT}" != "success" ] && \
-          [ "${BUILDER_FOLDER_RESULT}" != "success" ] && \
-          [ "${BUILDER_FOLDER_RESULT}" != "success" ]
+          [ "${BUILDER_NAME_RESULT}" != "success" ] || exit 2
+          [ "${BUILDER_FOLDER_RESULT}" != "success" ] || exit 3
+          [ "${BUILDER_FOLDER_RESULT}" != "success" ] || exit 4

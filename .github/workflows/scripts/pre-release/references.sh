@@ -6,6 +6,21 @@
 
 set -euo pipefail
 
+# Verify the tag has semver format.
+cd __EXAMPLE_PACKAGE__
+# shellcheck source=/dev/null
+source "./.github/workflows/scripts/e2e-utils.sh"
+major=$(version_major "$RELEASE_TAG")
+minor=$(version_minor "$RELEASE_TAG")
+patch=$(version_patch "$RELEASE_TAG")
+echo "\"$RELEASE_TAG\" follows semver:"
+echo "major: $major"
+echo "minor: $minor"
+echo "patch: $patch"
+cd -
+
+# Verify internal Actions are referenced by the release tag.
+cd __THIS_REPO__
 results=$(
     find .github/workflows/ -name '*.yaml' -o -name '*.yml' \
     | xargs grep -P "slsa-framework/slsa-github-generator/.github/actions/.*@(?!$RELEASE_TAG)" \
