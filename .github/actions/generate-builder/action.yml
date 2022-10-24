@@ -45,11 +45,11 @@ runs:
         ref: ${{ inputs.ref }}
         path: __BUILDER_CHECKOUT_DIR__
 
-  - name: Check private repos
-    uses: ./__BUILDER_CHECKOUT_DIR__/.github/actions/privacy-check@main
-    with:
-      error_message: "Repository is private. The workflow has halted in order to keep the repository name from being exposed in the public transparency log. Set 'private-repository' to override."
-      override: ${{ inputs.allow-private-repository }}
+    - name: Check private repos
+      uses: ./__BUILDER_CHECKOUT_DIR__/.github/actions/privacy-check@main
+      with:
+        error_message: "Repository is private. The workflow has halted in order to keep the repository name from being exposed in the public transparency log. Set 'private-repository' to override."
+        override: ${{ inputs.allow-private-repository }}
 
     - name: Set up Go environment
       uses: actions/setup-go@268d8c0ca0432bb2cf416faae41297df9d262d7f # tag=v3.3.0
