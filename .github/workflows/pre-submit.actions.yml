@@ -92,6 +92,12 @@ jobs:
           echo "Got output: $OUTPUT"
           [[ "$OUTPUT" != "" ]]
 
+  references:
+    if: ${{ !contains(github.event.head_commit.message, '#label:release') }}
+    steps:
+      - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # tag=v3.0.2
+      - run: ./.github/workflows/scripts/pre-submit.actions/references.sh
+
   secure-project-checkout-go:
     runs-on: ubuntu-latest
     steps:

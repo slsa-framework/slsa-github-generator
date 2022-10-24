@@ -33,7 +33,11 @@ $ export GH=/path/to/gh
 
 ## Pre-release tests
 
-Verify the references to the internal Actions by manually running the [release workflow](https://github.com/slsa-framework/slsa-github-generator/actions/workflows/release.yml). Ensure this workflow succeeds.
+Verify the references to the internal Actions by manually running the [release workflow](https://github.com/slsa-framework/slsa-github-generator/actions/workflows/release.yml). Ensure this workflow succeeds. If the references are still `@main`m update them with:
+
+```shell
+find .github/workflows/ -name '*.yaml' -o -name '*.yml' | xargs sed -i 's/uses: slsa-framework\/slsa-github-generator\/\.github\/actions\/\(.*\)@main*/uses: slsa-framework\/slsa-github-generator\/.github\/actions\/\1@_YOUR_RELEASE_TAG_/'
+```
 
 Code freeze the repository for 1-2 days.
 
@@ -239,6 +243,10 @@ Update the documentation to recommend using the new version:
 ```shell
 $ find . -name "*.md" -exec sed -i "s/v1.0.0/v1.1.1/g" {} +
 ```
+
+## Send a PR to reference Actions at main
+
+Send a PR to reference the internal Actions at `@main`.
 
 ## Update the starter workflows
 
