@@ -35,7 +35,7 @@ These Actions are *composite actions*. They invoke scripts and also call other A
 
 ## Development
 
-To create or update an internal Action, reference them at `@main`. For a releasem reference them at the release tag.
+To create or update an internal Action, reference them at `@main`. For a release, reference them at the release tag.
 
 1. Create / modify the Action under `./github/actions/<your-action>` and get the changes merged. Let's call the resulting
 commit hash after merge `CH`. (Note: This won't affect any workflow's behavior since
