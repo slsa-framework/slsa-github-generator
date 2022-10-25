@@ -21,17 +21,23 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # tag=v3.0.2
+        with:
+          path: __THIS_REPO__
+      - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # tag=v3.0.2
+        with:
+          repository: slsa-framework/example-package
+          ref: main
+          path: __EXAMPLE_PACKAGE__
       - name: manual release ref
         env:
           RELEASE_TAG: "${{ inputs.release-tag }}"
         if: github.ref_type != 'tag'
-        run: ./.github/workflows/scripts/pre-release/references.sh
-
+        run: ./__THIS_REPO__/.github/workflows/scripts/pre-release/references.sh
       - name: new tag release ref
         env:
           RELEASE_TAG: "${{ github.ref_name }}"
         if: github.ref_type == 'tag'
-        run: ./.github/workflows/scripts/pre-release/references.sh
+        run: ./__THIS_REPO__/.github/workflows/scripts/pre-release/references.sh
 
   # Generic generator.
   generic-generator:
