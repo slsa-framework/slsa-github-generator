@@ -193,10 +193,10 @@ jobs:
       - name: fail check
         if: always()
         env:
-          RESULT: ${{ steps.download-artifact.result }}
+          OUTCOME: ${{ steps.download-artifact.outcome }}
         run: |
           set -euo pipefail
-          [ "${RESULT}" != "success" ]
+          [ "${OUTCOME}" == "failure" ]
 
   secure-download-artifact-builder-repo-folder:
     runs-on: ubuntu-latest
@@ -228,10 +228,10 @@ jobs:
       - name: fail check
         if: always()
         env:
-          RESULT: ${{ steps.download-artifact.result }}
+          OUTCOME: ${{ steps.download-artifact.outcome }}
         run: |
           set -euo pipefail
-          [ "${RESULT}" != "success" ]
+          [ "${OUTCOME}" == "failure" ]
 
   secure-download-artifact-builder-repo-file:
     runs-on: ubuntu-latest
@@ -262,10 +262,10 @@ jobs:
       - name: fail check
         if: always()
         env:
-          RESULT: ${{ steps.download-artifact.result }}
+          OUTCOME: ${{ steps.download-artifact.outcome }}
         run: |
           set -euo pipefail
-          [ "${RESULT}" != "success" ]
+          [ "${OUTCOME}" == "failure" ]
 
   # Tests that generate-builder works with compile-builder=true.
   generate-builder-generic-compile:
