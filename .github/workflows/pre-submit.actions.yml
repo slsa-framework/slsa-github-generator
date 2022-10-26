@@ -184,6 +184,7 @@ jobs:
       - name: Download artifact
         id: download-artifact
         uses: ./__BUILDER_CHECKOUT_DIR__/.github/actions/secure-download-artifact
+        continue-on-error: true
         with:
           name: artifact2
           path: path/to/__BUILDER_CHECKOUT_DIR__/artifact2
@@ -218,6 +219,7 @@ jobs:
       - name: Download artifact
         id: download-artifact
         uses: ./__BUILDER_CHECKOUT_DIR__/.github/actions/secure-download-artifact
+        continue-on-error: true
         with:
           name: artifact3
           path: some-folder
@@ -251,6 +253,7 @@ jobs:
       - name: Download artifact
         id: download-artifact
         uses: ./__BUILDER_CHECKOUT_DIR__/.github/actions/secure-download-artifact
+        continue-on-error: true
         with:
           name: artifact4
           path: artifact4
