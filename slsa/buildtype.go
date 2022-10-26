@@ -22,7 +22,9 @@ import (
 	"strings"
 
 	intoto "github.com/in-toto/in-toto-golang/in_toto"
+	slsacommon "github.com/in-toto/in-toto-golang/in_toto/slsa_provenance/common"
 	slsa "github.com/in-toto/in-toto-golang/in_toto/slsa_provenance/v0.2"
+	slsa02 "github.com/in-toto/in-toto-golang/in_toto/slsa_provenance/v0.2"
 
 	"github.com/slsa-framework/slsa-github-generator/github"
 )
@@ -40,13 +42,13 @@ type BuildType interface {
 	BuildConfig(context.Context) (interface{}, error)
 
 	// Invocation returns an invocation for this build type.
-	Invocation(context.Context) (slsa.ProvenanceInvocation, error)
+	Invocation(context.Context) (slsa02.ProvenanceInvocation, error)
 
 	// Materials returns materials as defined by this build type.
-	Materials(context.Context) ([]slsa.ProvenanceMaterial, error)
+	Materials(context.Context) ([]slsacommon.ProvenanceMaterial, error)
 
 	// Metadata returns a metadata about the build.
-	Metadata(context.Context) (*slsa.ProvenanceMetadata, error)
+	Metadata(context.Context) (*slsa02.ProvenanceMetadata, error)
 }
 
 // GithubActionsBuild is a basic build type for builders running in GitHub Actions.
@@ -216,7 +218,7 @@ func (b *GithubActionsBuild) Invocation(ctx context.Context) (slsa.ProvenanceInv
 	i.ConfigSource.EntryPoint = entryPoint
 	i.ConfigSource.URI = b.Context.RepositoryURI()
 	if b.Context.SHA != "" {
-		i.ConfigSource.Digest = slsa.DigestSet{
+		i.ConfigSource.Digest = slsacommon.DigestSet{
 			"sha1": b.Context.SHA,
 		}
 	}
@@ -233,12 +235,12 @@ func (b *GithubActionsBuild) Invocation(ctx context.Context) (slsa.ProvenanceInv
 
 // Materials implements BuildType.Materials. It returns a list of materials
 // that includes the repository that triggered the GitHub Actions workflow.
-func (b *GithubActionsBuild) Materials(context.Context) ([]slsa.ProvenanceMaterial, error) {
-	var material []slsa.ProvenanceMaterial
+func (b *GithubActionsBuild) Materials(context.Context) ([]slsacommon.ProvenanceMaterial, error) {
+	var material []slsacommon.ProvenanceMaterial
 	if b.Context.RepositoryURI() != "" {
-		material = append(material, slsa.ProvenanceMaterial{
+		material = append(material, slsacommon.ProvenanceMaterial{
 			URI: b.Context.RepositoryURI(),
-			Digest: slsa.DigestSet{
+			Digest: slsacommon.DigestSet{
 				"sha1": b.Context.SHA,
 			},
 		})

@@ -69,15 +69,6 @@ on:
         value: ${{ jobs.build-dry.outputs.go-binary-name }}
 
 jobs:
-  privacy-check:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check private repos
-        uses: slsa-framework/slsa-github-generator/.github/actions/privacy-check@main
-        with:
-          error_message: "Repository is private. The workflow has halted in order to keep the repository name from being exposed in the public transparency log. Set 'private-repository' to override."
-          override: ${{ inputs.private-repository }}
-
   rng:
     outputs:
       value: ${{ steps.rng.outputs.random }}
@@ -97,7 +88,7 @@ jobs:
     steps:
       - name: Detect the builder ref
         id: detect
-        uses: slsa-framework/slsa-github-generator/.github/actions/detect-workflow@main # tag=v1.2.0
+        uses: slsa-framework/slsa-github-generator/.github/actions/detect-workflow@main
 
   ###################################################################
   #                                                                 #
@@ -108,7 +99,7 @@ jobs:
     outputs:
       go-builder-sha256: ${{ steps.generate.outputs.sha256 }}
     runs-on: ubuntu-latest
-    needs: [privacy-check, detect-env, rng]
+    needs: [detect-env, rng]
     steps:
       - name: Generate builder binary
         id: generate
@@ -121,6 +112,7 @@ jobs:
           binary: "${{ env.BUILDER_BINARY }}"
           compile-builder: "${{ inputs.compile-builder }}"
           directory: "${{ env.BUILDER_DIR }}"
+          allow-private-repository: ${{ inputs.private-repository }}
 
       - name: Upload builder
         uses: actions/upload-artifact@3cea5372237819ed00197afe530f5a7ea3e805c8 # tag=v3.1.0
@@ -142,7 +134,7 @@ jobs:
       go-env: ${{ steps.build-dry.outputs.go-env }}
       go-working-dir: ${{ steps.build-dry.outputs.go-working-dir }}
     runs-on: ubuntu-latest
-    needs: [privacy-check, builder, rng, detect-env]
+    needs: [builder, rng, detect-env]
     steps:
       - name: Checkout builder repository
         uses: slsa-framework/slsa-github-generator/.github/actions/secure-builder-checkout@main
@@ -188,7 +180,7 @@ jobs:
     outputs:
       go-binary-sha256: ${{ steps.upload.outputs.sha256 }}
     runs-on: ubuntu-latest
-    needs: [privacy-check, builder, build-dry, rng, detect-env]
+    needs: [builder, build-dry, rng, detect-env]
     steps:
       - name: Checkout builder repository
         uses: slsa-framework/slsa-github-generator/.github/actions/secure-builder-checkout@main
@@ -302,7 +294,7 @@ jobs:
 
           # Create and sign provenance
           # This sets signed-provenance-name to the name of the signed DSSE envelope.
-          ./"$BUILDER_BINARY" provenance \
+          "$GITHUB_WORKSPACE/$BUILDER_BINARY" provenance \
             --binary-name "$UNTRUSTED_BINARY_NAME" \
             --digest "$UNTRUSTED_BINARY_HASH" \
             --command "$UNTRUSTED_COMMAND" \
