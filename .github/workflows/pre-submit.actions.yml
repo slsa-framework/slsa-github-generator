@@ -193,7 +193,7 @@ jobs:
         if: always()
         env:
           RESULT: ${{ steps.download-artifact.result }}
-      - run: |
+        run: |
           set -euo pipefail
           [ "${RESULT}" != "success" ]
 
@@ -227,7 +227,7 @@ jobs:
         if: always()
         env:
           RESULT: ${{ steps.download-artifact.result }}
-      - run: |
+        run: |
           set -euo pipefail
           [ "${RESULT}" != "success" ]
 
@@ -260,7 +260,7 @@ jobs:
         if: always()
         env:
           RESULT: ${{ steps.download-artifact.result }}
-      - run: |
+        run: |
           set -euo pipefail
           [ "${RESULT}" != "success" ]
 
