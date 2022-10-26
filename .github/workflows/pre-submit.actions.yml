@@ -258,7 +258,7 @@ jobs:
           [ "${BUILDER_FOLDER_RESULT}" != "success" ] || exit 3
           [ "${BUILDER_FOLDER_RESULT}" != "success" ] || exit 4
 
-  # Tests that generate-builder works.
+  # Tests that generate-builder works with compile-builder=true.
   generate-builder-generic-compile:
     runs-on: ubuntu-latest
     steps:
@@ -272,7 +272,7 @@ jobs:
           binary: "slsa-generator-generic-linux-amd64"
           directory: "internal/builders/generic"
 
-  # Tests that generate-builder works.
+  # Tests that generate-builder works with compile-builder=false.
   generate-builder-generic-no-compile:
     runs-on: ubuntu-latest
     steps:
