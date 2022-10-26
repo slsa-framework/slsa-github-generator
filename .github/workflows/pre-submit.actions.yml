@@ -191,7 +191,6 @@ jobs:
           sha256: 5b3513f580c8397212ff2c8f459c199efc0c90e4354a5f3533adf0a3fff3a530
 
       - name: fail check
-        if: always()
         env:
           OUTCOME: ${{ steps.download-artifact.outcome }}
         run: |
@@ -226,7 +225,6 @@ jobs:
           sha256: 5b3513f580c8397212ff2c8f459c199efc0c90e4354a5f3533adf0a3fff3a530
 
       - name: fail check
-        if: always()
         env:
           OUTCOME: ${{ steps.download-artifact.outcome }}
         run: |
@@ -260,7 +258,6 @@ jobs:
           sha256: 5b3513f580c8397212ff2c8f459c199efc0c90e4354a5f3533adf0a3fff3a530
 
       - name: fail check
-        if: always()
         env:
           OUTCOME: ${{ steps.download-artifact.outcome }}
         run: |
