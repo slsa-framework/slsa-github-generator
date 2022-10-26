@@ -11,7 +11,7 @@ require (
 	github.com/in-toto/in-toto-golang v0.4.0
 	github.com/secure-systems-lab/go-securesystemslib v0.4.0
 	github.com/sigstore/cosign v1.12.1
-	github.com/sigstore/rekor v0.12.2
+	github.com/sigstore/rekor v1.0.0
 	github.com/sigstore/sigstore v1.4.4
 	github.com/spf13/cobra v1.5.0
 	golang.org/x/oauth2 v0.0.0-20221006150949-b44042a4b9c1
@@ -225,7 +225,7 @@ require (
 	golang.org/x/tools v0.1.12 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/genproto v0.0.0-20220929141241-1ce7b20da813 // indirect
-	google.golang.org/grpc v1.49.0 // indirect
+	google.golang.org/grpc v1.50.0 // indirect
 	google.golang.org/protobuf v1.28.1 // indirect
 	gopkg.in/cheggaaa/pb.v1 v1.0.28 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
