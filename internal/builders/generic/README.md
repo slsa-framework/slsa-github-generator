@@ -174,7 +174,8 @@ For more information about this design decision and how to configure renovatebot
 ### Private Repositories
 
 Private repositories are supported with some caveats. Currently all builds
-generate and post a new entry in the public Rekor API server instance at
+generate and post a new entry in the public
+[Rekor](https://github.com/sigstore/rekor) API server instance at
 rekor.sigstore.dev. This entry includes the repository name. This will cause the
 private repository name to leak and be discoverable via the public Rekor API
 server.
@@ -191,7 +192,7 @@ If you do not set this flag then private repositories will generate an error in
 order to prevent leaking repository name information.
 
 Support for private transparency log instances that would not leak repository
-name information is tracked on issue #372.
+name information is tracked on [issue #372](https://github.com/slsa-framework/slsa-github-generator/issues/372).
 
 ### Supported Triggers
 
