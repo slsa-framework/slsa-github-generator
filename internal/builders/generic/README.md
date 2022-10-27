@@ -871,6 +871,8 @@ jobs:
 
 ## Known Issues
 
+### v1.2.x: tuf: invalid key
+
 Workflows are currently failing with the error:
 
 ```

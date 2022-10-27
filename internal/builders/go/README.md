@@ -323,6 +323,8 @@ The `BuildConfig` contains the following fields:
 
 ## Known Issues
 
+### v1.2.x: tuf: invalid key
+
 Workflows are currently failing with the error:
 
 ```
