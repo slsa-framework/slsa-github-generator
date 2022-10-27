@@ -4,16 +4,16 @@ This document explains how to use the builder for [Go](https://go.dev/) projects
 
 ---
 
-[Generation of provenance](#generation)
-
-- [Referencing the SLSA builder](#referencing-the-slsa-builder)
-- [Supported Triggers](#supported-triggers)
-- [Configuration File](#configuration-file)
-- [Migration from GoReleaser](#migration-from-GoReleaser)
-- [Workflow Inputs](#workflow-inputs)
-- [Workflow Example](#workflow-example)
-- [Provenance Example](#provenance-example)
-- [BuildConfig Format](#buildconfig-format)
+- [Generation of provenance](#generation)
+  - [Referencing the SLSA builder](#referencing-the-slsa-builder)
+  - [Private Repositories](#private-repositories)
+  - [Supported Triggers](#supported-triggers)
+  - [Configuration File](#configuration-file)
+  - [Migration from GoReleaser](#migration-from-GoReleaser)
+  - [Workflow Inputs](#workflow-inputs)
+  - [Workflow Example](#workflow-example)
+  - [Provenance Example](#provenance-example)
+  - [BuildConfig Format](#buildconfig-format)
 
 ---
 
@@ -28,6 +28,25 @@ At present, the trusted builder **MUST** be referenced
 by a tag of the form `@vX.Y.Z`, because the build will fail if you reference it via a shorter tag like `@vX.Y` or `@vX` or if you reference it by a hash.
 
 For more information about this design decision and how to configure renovatebot,see the main repository [README.md](../../../README.md).
+
+### Private Repositories
+
+Private repositories are supported with some caveats. Currently all builds
+generate and post a new entry in the public Rekor API server instance at
+rekor.sigstore.dev. This entry includes the repository name. This will cause the
+private repository name to leak and be discoverable via the public Rekor API
+server.
+
+If this is ok with you, you can set the `private-repository` flag in order to
+opt in to publishing to the public Rekor instance from a private repository.
+
+```yaml
+with:
+  private-repository: true
+```
+
+Support for private transparency log instances that would not leak repository
+name information is tracked on issue #372.
 
 ### Supported Triggers
 
