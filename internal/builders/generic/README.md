@@ -30,6 +30,7 @@ project simply generates provenance as a separate step in an existing workflow.
   - [Provenance for Java](#provenance-for-java)
   - [Provenance for Rust](#provenance-for-rust)
   - [Provenance for Haskell](#provenance-for-haskell)
+- [Known Issues](#known-issues)
 
 ---
 
@@ -76,12 +77,12 @@ provenance:
     actions: read # Needed for detection of GitHub Actions environment.
     id-token: write # Needed for provenance signing and ID
     contents: write # Needed for release uploads
-  uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.2.0
+  uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.2.1
   with:
     base64-subjects: "${{ needs.build.outputs.hashes }}"
 ```
 
-**Note**: Make sure that you reference the generator with a semantic version of the form `@vX.Y.Z`. 
+**Note**: Make sure that you reference the generator with a semantic version of the form `@vX.Y.Z`.
 More information [here](/README.md#referencing-slsa-builders-and-generators).
 
 Here's an example of what it might look like all together.
@@ -133,7 +134,7 @@ jobs:
       actions: read
       id-token: write
       contents: write
-    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.2.0
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.2.1
     with:
       base64-subjects: "${{ needs.build.outputs.hashes }}"
       # Upload provenance to a new release
@@ -866,4 +867,29 @@ jobs:
     with:
       base64-subjects: "${{ needs.build.outputs.hashes }}"
       upload-assets: true # Optional: Upload to a new release
+```
+
+## Known Issues
+
+Workflows are currently failing with the error:
+
+```
+validating log entry: unable to fetch Rekor public keys from TUF repository, and not trusting the Rekor API for fetching public keys: updating local metadata and targets: error updating to TUF remote mirror: tuf: invalid key
+```
+
+This issue is currently tracked by [issue #1163](https://github.com/slsa-framework/slsa-github-generator/issues/1163)
+
+You can work around this error by setting `compile-generator` input flag.
+
+```yaml
+with:
+  compile-generator: true
+```
+
+This will compile the generator binary used by the workflow instead of
+downloading the latest release. Make sure you continue to reference the workflow
+using a release tag in order to allow verification by `slsa-verifier`.
+
+```yaml
+uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.2.1
 ```

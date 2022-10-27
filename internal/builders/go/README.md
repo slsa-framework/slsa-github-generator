@@ -14,6 +14,7 @@ This document explains how to use the builder for [Go](https://go.dev/) projects
 - [Workflow Example](#workflow-example)
 - [Provenance Example](#provenance-example)
 - [BuildConfig Format](#buildconfig-format)
+- [Known Issues](#known-issues)
 
 ---
 
@@ -91,19 +92,19 @@ In the meantime, you can use both GoReleaser and this builder in the same reposi
 
 ```yaml
 builds:
-...
-  goos:
-    - windows
-    - linux
-    - darwin
-  goarch:
-    - amd64
-    - arm64
-    - s390x
-  # This instructs GoReleaser to not build for linux amd64.
-  ignore:
-    - goos: linux
-      goarch: amd64
+---
+goos:
+  - windows
+  - linux
+  - darwin
+goarch:
+  - amd64
+  - arm64
+  - s390x
+# This instructs GoReleaser to not build for linux amd64.
+ignore:
+  - goos: linux
+    goarch: amd64
 ```
 
 The configuration file accepts many of the common fields GoReleaser uses, as you can see in the [example](#configuration-file). The configuration file also supports two variables: `{{ .Os }}` and `{{ .Arch }}`. Other variables can be set manually as shown in the table below, in combination with the builder's `evaluated-envs`:
@@ -177,7 +178,7 @@ jobs:
       contents: write # To upload assets to release.
       actions: read # To read the workflow path.
     needs: args
-    uses: slsa-framework/slsa-github-generator/.github/workflows/builder_go_slsa3.yml@v1.1.1
+    uses: slsa-framework/slsa-github-generator/.github/workflows/builder_go_slsa3.yml@v1.2.1
     with:
       go-version: 1.17
       # Optional: only needed if using ldflags.
@@ -318,4 +319,29 @@ The `BuildConfig` contains the following fields:
 
 ```json
   "workingDir": "/home/runner/work/ianlewis/actions-test"
+```
+
+## Known Issues
+
+Workflows are currently failing with the error:
+
+```
+validating log entry: unable to fetch Rekor public keys from TUF repository, and not trusting the Rekor API for fetching public keys: updating local metadata and targets: error updating to TUF remote mirror: tuf: invalid key
+```
+
+This issue is currently tracked by [issue #1163](https://github.com/slsa-framework/slsa-github-generator/issues/1163)
+
+You can work around this error by setting `compile-builder` input flag.
+
+```yaml
+with:
+  compile-builder: true
+```
+
+This will compile the builder binary used by the workflow instead of downloading
+the latest release. Make sure you continue to reference the workflow using a
+release tag in order to allow verification by `slsa-verifier`.
+
+```yaml
+uses: slsa-framework/slsa-github-generator/.github/workflows/builder_go_slsa3.yml@v1.2.1
 ```
