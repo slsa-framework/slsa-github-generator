@@ -11,57 +11,51 @@ env:
   GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 jobs:
-  # args:
-  #   runs-on: ubuntu-latest
-  #   outputs:
-  #     version: ${{ steps.ldflags.outputs.version }}
-  #     commit: ${{ steps.ldflags.outputs.commit }}
-  #     branch: ${{ steps.ldflags.outputs.branch }}
-  #   steps:
-  #     - id: ldflags
-  #       run: |
-  #         set -euo pipefail
+  args:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.ldflags.outputs.version }}
+      commit: ${{ steps.ldflags.outputs.commit }}
+      branch: ${{ steps.ldflags.outputs.branch }}
+    steps:
+      - id: ldflags
+        run: |
+          set -euo pipefail
 
-  #         echo "version=-X main.gitVersion=v1.2.3" >> "$GITHUB_OUTPUT"
-  #         echo "commit=-X main.gitCommit=abcdef" >> "$GITHUB_OUTPUT"
-  #         echo "branch=-X main.gitBranch=main" >> "$GITHUB_OUTPUT"
+          echo "version=-X main.gitVersion=v1.2.3" >> "$GITHUB_OUTPUT"
+          echo "commit=-X main.gitCommit=abcdef" >> "$GITHUB_OUTPUT"
+          echo "branch=-X main.gitBranch=main" >> "$GITHUB_OUTPUT"
 
-  # build:
-  #   needs: [args]
-  #   permissions:
-  #     id-token: write # For signing.
-  #     contents: write # For asset uploads.
-  #     actions: read # For the entry point.
-  #   uses: ./.github/workflows/builder_go_slsa3.yml
-  #   with:
-  #     go-version: 1.18
-  #     config-file: .github/workflows/configs-go/config-ldflags-main-dir.yml
-  #     evaluated-envs: "VERSION:${{needs.args.outputs.version}},COMMIT:${{needs.args.outputs.commit}},BRANCH:${{needs.args.outputs.branch}}"
-  #     compile-builder: true
-
-  # verify:
-  #   # NOTE: this name is used as the status check name and by protected
-  #   # branches for required status checks. It should have a unique name among
-  #   # other pre-submits.
-  #   name: verify go provenance
-  #   runs-on: ubuntu-latest
-  #   needs: [build]
-  #   if: ${{ always() }}
-  #   steps:
-  #     - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # tag=v3.0.2
-  #     - uses: actions/download-artifact@fb598a63ae348fa914e94cd0ff38f362e927b741 # tag=v3.0.0
-  #       with:
-  #         name: ${{ needs.build.outputs.go-binary-name }}
-  #     - uses: actions/download-artifact@fb598a63ae348fa914e94cd0ff38f362e927b741 # tag=v3.0.0
-  #       with:
-  #         name: ${{ needs.build.outputs.go-binary-name }}.intoto.jsonl
-  #     - env:
-  #         BINARY: ${{ needs.build.outputs.go-binary-name }}
-  #         PROVENANCE: ${{ needs.build.outputs.go-binary-name }}.intoto.jsonl
-  #       run: ./.github/workflows/scripts/pre-submit.e2e.go.default.sh
+  build:
+    needs: [args]
+    permissions:
+      id-token: write # For signing.
+      contents: write # For asset uploads.
+      actions: read # For the entry point.
+    uses: ./.github/workflows/builder_go_slsa3.yml
+    with:
+      go-version: 1.18
+      config-file: .github/workflows/configs-go/config-ldflags-main-dir.yml
+      evaluated-envs: "VERSION:${{needs.args.outputs.version}},COMMIT:${{needs.args.outputs.commit}},BRANCH:${{needs.args.outputs.branch}}"
+      compile-builder: true
 
   verify:
+    # NOTE: this name is used as the status check name and by protected
+    # branches for required status checks. It should have a unique name among
+    # other pre-submits.
     name: verify go provenance
     runs-on: ubuntu-latest
+    needs: [build]
+    if: ${{ always() }}
     steps:
-      - run: 'echo "temporarily a no-op"'
+      - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # tag=v3.0.2
+      - uses: actions/download-artifact@fb598a63ae348fa914e94cd0ff38f362e927b741 # tag=v3.0.0
+        with:
+          name: ${{ needs.build.outputs.go-binary-name }}
+      - uses: actions/download-artifact@fb598a63ae348fa914e94cd0ff38f362e927b741 # tag=v3.0.0
+        with:
+          name: ${{ needs.build.outputs.go-binary-name }}.intoto.jsonl
+      - env:
+          BINARY: ${{ needs.build.outputs.go-binary-name }}
+          PROVENANCE: ${{ needs.build.outputs.go-binary-name }}.intoto.jsonl
+        run: ./.github/workflows/scripts/pre-submit.e2e.go.default.sh
