@@ -115,7 +115,7 @@ In the meantime, you can use both GoReleaser and this builder in the same reposi
 
 ```yaml
 builds:
----
+# ...
 goos:
   - windows
   - linux
