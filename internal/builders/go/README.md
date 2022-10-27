@@ -4,17 +4,17 @@ This document explains how to use the builder for [Go](https://go.dev/) projects
 
 ---
 
-[Generation of provenance](#generation)
-
-- [Referencing the SLSA builder](#referencing-the-slsa-builder)
-- [Supported Triggers](#supported-triggers)
-- [Configuration File](#configuration-file)
-- [Migration from GoReleaser](#migration-from-GoReleaser)
-- [Workflow Inputs](#workflow-inputs)
-- [Workflow Example](#workflow-example)
-- [Provenance Example](#provenance-example)
-- [BuildConfig Format](#buildconfig-format)
-- [Known Issues](#known-issues)
+- [Generation of provenance](#generation)
+  - [Referencing the SLSA builder](#referencing-the-slsa-builder)
+  - [Private Repositories](#private-repositories)
+  - [Supported Triggers](#supported-triggers)
+  - [Configuration File](#configuration-file)
+  - [Migration from GoReleaser](#migration-from-GoReleaser)
+  - [Workflow Inputs](#workflow-inputs)
+  - [Workflow Example](#workflow-example)
+  - [Provenance Example](#provenance-example)
+  - [BuildConfig Format](#buildconfig-format)
+  - [Known Issues](#known-issues)
 
 ---
 
@@ -29,6 +29,29 @@ At present, the trusted builder **MUST** be referenced
 by a tag of the form `@vX.Y.Z`, because the build will fail if you reference it via a shorter tag like `@vX.Y` or `@vX` or if you reference it by a hash.
 
 For more information about this design decision and how to configure renovatebot,see the main repository [README.md](../../../README.md).
+
+### Private Repositories
+
+Private repositories are supported with some caveats. Currently all builds
+generate and post a new entry in the public
+[Rekor](https://github.com/sigstore/rekor) API server instance at
+rekor.sigstore.dev. This entry includes the repository name. This will cause the
+private repository name to leak and be discoverable via the public Rekor API
+server.
+
+If this is ok with you, you can set the `private-repository` flag in order to
+opt in to publishing to the public Rekor instance from a private repository.
+
+```yaml
+with:
+  private-repository: true
+```
+
+If you do not set this flag then private repositories will generate an error in
+order to prevent leaking repository name information.
+
+Support for private transparency log instances that would not leak repository
+name information is tracked on [issue #372](https://github.com/slsa-framework/slsa-github-generator/issues/372).
 
 ### Supported Triggers
 
@@ -126,12 +149,13 @@ If you think you need suppport for other variables, please [open an issue](https
 
 The builder workflow [slsa-framework/slsa-github-generator/.github/workflows/builder_go_slsa3.yml](https://github.com/slsa-framework/slsa-github-generator/blob/main/.github/workflows/builder_go_slsa3.yml) accepts the following inputs:
 
-| Name             | Required | Description                                                                                                                                                             | Default                                                                                                                                                                                                                                                   |
-| ---------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `config-file`    | no       | `.github/workflows/slsa-goreleaser.yml`                                                                                                                                 | The configuration file for the builder. A path within the calling repository.                                                                                                                                                                             |
-| `evaluated-envs` | no       | empty value                                                                                                                                                             | A list of environment variables, seperated by `,`: `VAR1: value, VAR2: value`. This is typically used to pass dynamically-generated values, such as `ldflags`. Note that only environment variables with names starting with `CGO_` or `GO` are accepted. |
-| `go-version`     | yes      | The go version for your project. This value is passed, unchanged, to the [actions/setup-go](https://github.com/actions/setup-go) action when setting up the environment |
-| `upload-assets`  | no       | true on new tags                                                                                                                                                        | Whether to upload assets to a GitHub release or not.                                                                                                                                                                                                      |
+| Name                 | Required | Default                                 | Description                                                                                                                                                                                                                                               |
+| -------------------- | -------- | --------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `config-file`        | no       | `.github/workflows/slsa-goreleaser.yml` | The configuration file for the builder. A path within the calling repository.                                                                                                                                                                             |
+| `evaluated-envs`     | no       | empty value                             | A list of environment variables, seperated by `,`: `VAR1: value, VAR2: value`. This is typically used to pass dynamically-generated values, such as `ldflags`. Note that only environment variables with names starting with `CGO_` or `GO` are accepted. |
+| `go-version`         | yes      |                                         | The go version for your project. This value is passed, unchanged, to the [actions/setup-go](https://github.com/actions/setup-go) action when setting up the environment                                                                                   |
+| `upload-assets`      | no       | true on new tags                        | Whether to upload assets to a GitHub release or not.                                                                                                                                                                                                      |
+| `private-repository` | no       | false                                   | Set to true to opt-in to posting to the public transparency log. Will generate an error if false for private repositories. This input has no effect for public repositories. See [Private Repositories](#private-repositories).                           |
 
 ### Workflow Example
 

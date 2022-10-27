@@ -282,12 +282,14 @@ jobs:
   generate-builder-generic-no-compile:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # tag=v3.0.2
-      - uses: ./.github/actions/generate-builder
-        with:
-          repository: "slsa-framework/slsa-github-generator"
-          ref: "refs/tags/v1.2.1"
-          compile-builder: false
-          go-version: 1.18
-          binary: "slsa-generator-generic-linux-amd64"
-          directory: "internal/builders/generic"
+      # TODO(github.com/slsa-framework/slsa-github-generator/issues/1163): temporarily disabled
+      # - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # tag=v3.0.2
+      # - uses: ./.github/actions/generate-builder
+      #   with:
+      #     repository: "slsa-framework/slsa-github-generator"
+      #     ref: "refs/tags/v1.2.1"
+      #     compile-builder: false
+      #     go-version: 1.18
+      #     binary: "slsa-generator-generic-linux-amd64"
+      #     directory: "internal/builders/generic"
+      - run: 'echo "Temporarily disabled. See: https://github.com/slsa-framework/slsa-github-generator/issues/1163" '
