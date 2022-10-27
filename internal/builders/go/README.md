@@ -91,19 +91,19 @@ In the meantime, you can use both GoReleaser and this builder in the same reposi
 
 ```yaml
 builds:
-...
-  goos:
-    - windows
-    - linux
-    - darwin
-  goarch:
-    - amd64
-    - arm64
-    - s390x
-  # This instructs GoReleaser to not build for linux amd64.
-  ignore:
-    - goos: linux
-      goarch: amd64
+---
+goos:
+  - windows
+  - linux
+  - darwin
+goarch:
+  - amd64
+  - arm64
+  - s390x
+# This instructs GoReleaser to not build for linux amd64.
+ignore:
+  - goos: linux
+    goarch: amd64
 ```
 
 The configuration file accepts many of the common fields GoReleaser uses, as you can see in the [example](#configuration-file). The configuration file also supports two variables: `{{ .Os }}` and `{{ .Arch }}`. Other variables can be set manually as shown in the table below, in combination with the builder's `evaluated-envs`:
@@ -125,12 +125,13 @@ If you think you need suppport for other variables, please [open an issue](https
 
 The builder workflow [slsa-framework/slsa-github-generator/.github/workflows/builder_go_slsa3.yml](https://github.com/slsa-framework/slsa-github-generator/blob/main/.github/workflows/builder_go_slsa3.yml) accepts the following inputs:
 
-| Name             | Required | Description                                                                                                                                                             | Default                                                                                                                                                                                                                                                   |
-| ---------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `config-file`    | no       | `.github/workflows/slsa-goreleaser.yml`                                                                                                                                 | The configuration file for the builder. A path within the calling repository.                                                                                                                                                                             |
-| `evaluated-envs` | no       | empty value                                                                                                                                                             | A list of environment variables, seperated by `,`: `VAR1: value, VAR2: value`. This is typically used to pass dynamically-generated values, such as `ldflags`. Note that only environment variables with names starting with `CGO_` or `GO` are accepted. |
-| `go-version`     | yes      | The go version for your project. This value is passed, unchanged, to the [actions/setup-go](https://github.com/actions/setup-go) action when setting up the environment |
-| `upload-assets`  | no       | true on new tags                                                                                                                                                        | Whether to upload assets to a GitHub release or not.                                                                                                                                                                                                      |
+| Name                 | Required | Default                                 | Description                                                                                                                                                                                                                                                                                                                                                                                             |
+| -------------------- | -------- | --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `config-file`        | no       | `.github/workflows/slsa-goreleaser.yml` | The configuration file for the builder. A path within the calling repository.                                                                                                                                                                                                                                                                                                                           |
+| `evaluated-envs`     | no       | empty value                             | A list of environment variables, seperated by `,`: `VAR1: value, VAR2: value`. This is typically used to pass dynamically-generated values, such as `ldflags`. Note that only environment variables with names starting with `CGO_` or `GO` are accepted.                                                                                                                                               |
+| `go-version`         | yes      |                                         | The go version for your project. This value is passed, unchanged, to the [actions/setup-go](https://github.com/actions/setup-go) action when setting up the environment                                                                                                                                                                                                                                 |
+| `upload-assets`      | no       | true on new tags                        | Whether to upload assets to a GitHub release or not.                                                                                                                                                                                                                                                                                                                                                    |
+| `private-repository` | no       | false                                   | The workflow publishes an entry in the public Rekor transparency log which includes the repository name. This can cause private repository names to be discoverable via the public Rekor API server. Set this to true to opt-in to posting to the public transparency log. If this is false then an error will be generated for private repositories. This input has no effect for public repositories. |
 
 ### Workflow Example
 

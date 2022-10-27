@@ -149,6 +149,7 @@ jobs:
     secrets:
       registry-password: ${{ secrets.GITHUB_TOKEN }}
 ```
+
 ### Referencing the SLSA generator
 
 At present, the generator **MUST** be referenced
@@ -177,12 +178,13 @@ The [container workflow](https://github.com/slsa-framework/slsa-github-generator
 
 Inputs:
 
-| Name                | Required | Description                                                                                         |
-| ------------------- | -------- | --------------------------------------------------------------------------------------------------- |
-| `image`             | yes      | The OCI image name. This must not include a tag or digest.                                          |
-| `digest`            | yes      | The OCI image digest. The image digest of the form '<algorithm>:<digest>' (e.g. 'sha256:abcdef...') |
-| `registry-username` | yes      | Username to log into the container registry.                                                        |
-| `compile-generator` | false    | Whether to build the generator from source. This increases build time by ~2m.                       |
+| Name                 | Required | Description                                                                                         |
+| -------------------- | -------- | --------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `image`              | yes      | The OCI image name. This must not include a tag or digest.                                          |
+| `digest`             | yes      | The OCI image digest. The image digest of the form '<algorithm>:<digest>' (e.g. 'sha256:abcdef...') |
+| `registry-username`  | yes      | Username to log into the container registry.                                                        |
+| `compile-generator`  | false    | Whether to build the generator from source. This increases build time by ~2m.                       |
+| `private-repository` | no       | false                                                                                               | The workflow publishes an entry in the public Rekor transparency log which includes the repository name. This can cause private repository names to be discoverable via the public Rekor API server. Set this to true to opt-in to posting to the public transparency log. If this is false then an error will be generated for private repositories. This input has no effect for public repositories. |
 
 Secrets:
 
