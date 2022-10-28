@@ -7,7 +7,8 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	intoto "github.com/in-toto/in-toto-golang/in_toto"
-	slsa "github.com/in-toto/in-toto-golang/in_toto/slsa_provenance/v0.2"
+	slsacommon "github.com/in-toto/in-toto-golang/in_toto/slsa_provenance/common"
+	slsa02 "github.com/in-toto/in-toto-golang/in_toto/slsa_provenance/v0.2"
 	"github.com/slsa-framework/slsa-github-generator/github"
 )
 
@@ -49,15 +50,15 @@ func TestHostedActionsProvenance(t *testing.T) {
 			expected: &intoto.ProvenanceStatement{
 				StatementHeader: intoto.StatementHeader{
 					Type:          intoto.StatementInTotoV01,
-					PredicateType: slsa.PredicateSLSAProvenance,
+					PredicateType: slsa02.PredicateSLSAProvenance,
 				},
-				Predicate: slsa.ProvenancePredicate{
-					Builder: slsa.ProvenanceBuilder{
+				Predicate: slsa02.ProvenancePredicate{
+					Builder: slsacommon.ProvenanceBuilder{
 						ID: GithubHostedActionsBuilderID,
 					},
 					BuildType:   testBuildType,
 					BuildConfig: testBuildConfig,
-					Invocation: slsa.ProvenanceInvocation{
+					Invocation: slsa02.ProvenanceInvocation{
 						Environment: map[string]interface{}{
 							"github_run_id":           "",
 							"github_run_attempt":      "",
@@ -72,7 +73,7 @@ func TestHostedActionsProvenance(t *testing.T) {
 							"github_sha1":             "",
 						},
 					},
-					Metadata: &slsa.ProvenanceMetadata{},
+					Metadata: &slsa02.ProvenanceMetadata{},
 				},
 			},
 		},
@@ -99,15 +100,15 @@ func TestHostedActionsProvenance(t *testing.T) {
 			expected: &intoto.ProvenanceStatement{
 				StatementHeader: intoto.StatementHeader{
 					Type:          intoto.StatementInTotoV01,
-					PredicateType: slsa.PredicateSLSAProvenance,
+					PredicateType: slsa02.PredicateSLSAProvenance,
 				},
-				Predicate: slsa.ProvenancePredicate{
-					Builder: slsa.ProvenanceBuilder{
+				Predicate: slsa02.ProvenancePredicate{
+					Builder: slsacommon.ProvenanceBuilder{
 						ID: GithubHostedActionsBuilderID,
 					},
 					BuildType:   testBuildType,
 					BuildConfig: testBuildConfig,
-					Invocation: slsa.ProvenanceInvocation{
+					Invocation: slsa02.ProvenanceInvocation{
 						Environment: map[string]interface{}{
 							"github_run_id":           "12345",
 							"github_run_attempt":      "1",
@@ -121,13 +122,13 @@ func TestHostedActionsProvenance(t *testing.T) {
 							"github_run_number":       "102937",
 							"github_sha1":             "abcde",
 						},
-						ConfigSource: slsa.ConfigSource{
-							Digest: slsa.DigestSet{
+						ConfigSource: slsa02.ConfigSource{
+							Digest: slsacommon.DigestSet{
 								"sha1": "abcde",
 							},
 						},
 					},
-					Metadata: &slsa.ProvenanceMetadata{
+					Metadata: &slsa02.ProvenanceMetadata{
 						BuildInvocationID: "12345-1",
 					},
 				},
