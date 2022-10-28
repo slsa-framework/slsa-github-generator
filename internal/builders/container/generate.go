@@ -15,10 +15,15 @@
 package main
 
 import (
+	"context"
+	"encoding/json"
+	"os"
+
 	"github.com/spf13/cobra"
 
 	"github.com/slsa-framework/slsa-github-generator/github"
 	"github.com/slsa-framework/slsa-github-generator/internal/builders/common"
+	"github.com/slsa-framework/slsa-github-generator/internal/utils"
 	"github.com/slsa-framework/slsa-github-generator/slsa"
 )
 
@@ -36,12 +41,44 @@ that it is being run in the context of a Github Actions workflow.`,
 			ghContext, err := github.GetWorkflowContext()
 			check(err)
 
+			ctx := context.Background()
+
 			b := common.GenericBuild{
 				// NOTE: Subjects are nil because we are only writing the predicate.
 				GithubActionsBuild: slsa.NewGithubActionsBuild(nil, ghContext),
 				BuildTypeURI:       containerBuildType,
 			}
-			check(common.Generate(provider, &b, predicatePath))
+
+			if provider != nil {
+				b.WithClients(provider)
+			} else {
+				// TODO(github.com/slsa-framework/slsa-github-generator/issues/124): Remove
+				if utils.IsPresubmitTests() {
+					b.WithClients(&slsa.NilClientProvider{})
+				}
+			}
+
+			g := slsa.NewHostedActionsGenerator(&b)
+			if provider != nil {
+				g.WithClients(provider)
+			} else {
+				// TODO(github.com/slsa-framework/slsa-github-generator/issues/124): Remove
+				if utils.IsPresubmitTests() {
+					g.WithClients(&slsa.NilClientProvider{})
+				}
+			}
+
+			p, err := g.Generate(ctx)
+			check(err)
+
+			pb, err := json.Marshal(p.Predicate)
+			check(err)
+
+			pf, err := utils.CreateNewFileUnderCurrentDirectory(predicatePath, os.O_WRONLY)
+			check(err)
+
+			_, err = pf.Write(pb)
+			check(err)
 		},
 	}
 
