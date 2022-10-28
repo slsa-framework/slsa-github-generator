@@ -25,10 +25,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var (
-	// containerBuildType is the URI for generic container SLSA generation.
-	containerBuildType = "https://github.com/slsa-framework/slsa-github-generator/container@v1"
-)
+// containerBuildType is the URI for generic container SLSA generation.
+var containerBuildType = "https://github.com/slsa-framework/slsa-github-generator/container@v1"
 
 func checkExit(err error) {
 	if err != nil {
