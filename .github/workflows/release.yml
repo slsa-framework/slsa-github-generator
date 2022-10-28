@@ -5,7 +5,7 @@ on:
   workflow_dispatch:
     inputs:
       release-tag:
-        description: 'Release tag to test'
+        description: "Release tag to test"
         required: true
         type: string
   push:
@@ -38,6 +38,19 @@ jobs:
           RELEASE_TAG: "${{ github.ref_name }}"
         if: github.ref_type == 'tag'
         run: ./__THIS_REPO__/.github/workflows/scripts/pre-release/references.sh
+
+  # Generic generator.
+  container-generator:
+    needs: [pre-release-refs]
+    permissions:
+      id-token: write # For signing.
+      contents: write # For asset uploads.
+      actions: read # For the entrypoint.
+    uses: slsa-framework/slsa-github-generator/.github/workflows/builder_go_slsa3.yml@main
+    with:
+      go-version: 1.18
+      config-file: .github/workflows/configs-container/config-release.yml
+      compile-builder: true
 
   # Generic generator.
   generic-generator:
