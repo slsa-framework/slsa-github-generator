@@ -39,7 +39,7 @@ that it is being run in the context of a Github Actions workflow.`,
 			b := common.GenericBuild{
 				// NOTE: Subjects are nil because we are only writing the predicate.
 				GithubActionsBuild: slsa.NewGithubActionsBuild(nil, ghContext),
-				BuildTypeURI:       provenanceOnlyBuildType,
+				BuildTypeURI:       containerBuildType,
 			}
 			check(common.Generate(provider, &b, predicatePath))
 		},

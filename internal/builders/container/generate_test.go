@@ -25,6 +25,14 @@ import (
 	"github.com/slsa-framework/slsa-github-generator/slsa"
 )
 
+func checkTest(t *testing.T) func(err error) {
+	return func(err error) {
+		if err != nil {
+			t.Fatalf("%v", err)
+		}
+	}
+}
+
 func Test_generateCmd_default_predicate(t *testing.T) {
 	t.Setenv("GITHUB_CONTEXT", "{}")
 
@@ -121,6 +129,11 @@ func Test_generateCmd_invalid_path(t *testing.T) {
 	c.SetArgs([]string{"--predicate", "/custom.json"})
 	if err := c.Execute(); err != nil {
 		t.Errorf("unexpected failure: %v", err)
+	}
+
+	// check that the expected file exists.
+	if _, err := os.Stat(filepath.Join(dir, "custom.json")); err != nil {
+		t.Errorf("error checking file: %v", err)
 	}
 
 	// If no error occurs we catch it here. SkipNow will exit the test process so this code should be unreachable.
