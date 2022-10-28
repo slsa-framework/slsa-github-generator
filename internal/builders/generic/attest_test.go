@@ -10,7 +10,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	intoto "github.com/in-toto/in-toto-golang/in_toto"
-	slsav02 "github.com/in-toto/in-toto-golang/in_toto/slsa_provenance/v0.2"
+	slsacommon "github.com/in-toto/in-toto-golang/in_toto/slsa_provenance/common"
 
 	"github.com/slsa-framework/slsa-github-generator/internal/errors"
 	"github.com/slsa-framework/slsa-github-generator/internal/testutil"
@@ -33,7 +33,7 @@ func TestParseSubjects(t *testing.T) {
 			expected: []intoto.Subject{
 				{
 					Name: "hoge",
-					Digest: slsav02.DigestSet{
+					Digest: slsacommon.DigestSet{
 						"sha256": "2e0390eb024a52963db7b95e84a9c2b12c004054a7bad9a97ec0c7c89d4681d2",
 					},
 				},
@@ -46,7 +46,7 @@ func TestParseSubjects(t *testing.T) {
 			expected: []intoto.Subject{
 				{
 					Name: "hoge fuga",
-					Digest: slsav02.DigestSet{
+					Digest: slsacommon.DigestSet{
 						"sha256": "2e0390eb024a52963db7b95e84a9c2b12c004054a7bad9a97ec0c7c89d4681d2",
 					},
 				},
@@ -59,7 +59,7 @@ func TestParseSubjects(t *testing.T) {
 			expected: []intoto.Subject{
 				{
 					Name: "hoge fuga",
-					Digest: slsav02.DigestSet{
+					Digest: slsacommon.DigestSet{
 						"sha256": "2e0390eb024a52963db7b95e84a9c2b12c004054a7bad9a97ec0c7c89d4681d2",
 					},
 				},
@@ -73,13 +73,13 @@ func TestParseSubjects(t *testing.T) {
 			expected: []intoto.Subject{
 				{
 					Name: "hoge",
-					Digest: slsav02.DigestSet{
+					Digest: slsacommon.DigestSet{
 						"sha256": "2e0390eb024a52963db7b95e84a9c2b12c004054a7bad9a97ec0c7c89d4681d2",
 					},
 				},
 				{
 					Name: "fuga",
-					Digest: slsav02.DigestSet{
+					Digest: slsacommon.DigestSet{
 						"sha256": "e712aff3705ac314b9a890e0ec208faa20054eee514d86ab913d768f94e01279",
 					},
 				},
@@ -97,13 +97,13 @@ func TestParseSubjects(t *testing.T) {
 			expected: []intoto.Subject{
 				{
 					Name: "hoge",
-					Digest: slsav02.DigestSet{
+					Digest: slsacommon.DigestSet{
 						"sha256": "2e0390eb024a52963db7b95e84a9c2b12c004054a7bad9a97ec0c7c89d4681d2",
 					},
 				},
 				{
 					Name: "fuga",
-					Digest: slsav02.DigestSet{
+					Digest: slsacommon.DigestSet{
 						"sha256": "e712aff3705ac314b9a890e0ec208faa20054eee514d86ab913d768f94e01279",
 					},
 				},
