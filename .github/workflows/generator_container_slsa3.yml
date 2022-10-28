@@ -16,8 +16,8 @@ name: SLSA container image provenance
 
 env:
   # Generator
-  BUILDER_BINARY: slsa-generator-generic-linux-amd64 # Name of the binary in the release assets.
-  BUILDER_DIR: internal/builders/generic # Source directory if we compile the builder.
+  BUILDER_BINARY: slsa-generator-container-linux-amd64 # Name of the binary in the release assets.
+  BUILDER_DIR: internal/builders/container # Source directory if we compile the builder.
 
 on:
   workflow_call:
