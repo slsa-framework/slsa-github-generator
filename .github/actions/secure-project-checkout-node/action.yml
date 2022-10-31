@@ -27,6 +27,6 @@ runs:
         path: ${{ inputs.path }}
 
     - name: Set up Node environment
-      uses: actions/setup-node@2fddd8803e2f5c9604345a0b591c3020ee971a93 # tag=v3.4.1
+      uses: actions/setup-node@8c91899e586c5b171469028077307d293428b516 # tag=v3.5.1
       with:
         node-version: ${{ inputs.node-version }}
