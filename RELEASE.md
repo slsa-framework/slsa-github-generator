@@ -55,6 +55,12 @@ Update version references with the following command:
 find .github/workflows/ -name '*.yaml' -o -name '*.yml' | xargs sed -i "s/uses: slsa-framework\/slsa-github-generator\/\.github\/actions\/\(.*\)@\(main\|v[0-9]\+\.[0-9]\+\.[0-9]\+\)/uses: slsa-framework\/slsa-github-generator\/.github\/actions\/\1@$BUILDER_TAG/"
 ```
 
+Likewise, update documentation with the following command:
+
+```shell
+find . -name "*.md" -exec sed -i "s/@v[0-9]\+\.[0-9]\+\.[0-9]\+/@$BUILDER_TAG/g" {} +
+```
+
 Send a PR with this update and add `#label:release ${BUILDER_TAG}` in the PR description.
 
 Once the PR is merged, update the tag to point to HEAD.
@@ -256,12 +262,6 @@ Download the uploaded artifacts of each of these, labelling the workflow dispatc
 ## Finalize release
 
 Untick the `This is a pre-release` option.
-
-Update the documentation to recommend using the new version:
-
-```shell
-find . -name '*.md' | xargs sed -i "s/slsa-framework\/slsa-github-generator\/\.github\/\(.*\)@v[0-9]\+\.[0-9]\+\.[0-9]\+/slsa-framework\/slsa-github-generator\/.github\/\1@${BUILDER_TAG}/"
-```
 
 ## Send a PR to reference Actions at main
 
