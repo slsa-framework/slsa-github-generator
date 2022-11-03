@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"bytes"
 	"errors"
-	"fmt"
 	"io"
 	"os"
 	"os/exec"
@@ -372,7 +371,6 @@ func extract(lines string) ([]string, []string, string, string, error) {
 
 	scanner := bufio.NewScanner(bytes.NewReader([]byte(lines)))
 	for scanner.Scan() {
-		fmt.Println(scanner.Text())
 		n := rsubject.FindStringSubmatch(scanner.Text())
 		if len(n) > 1 {
 			subject = n[1]
