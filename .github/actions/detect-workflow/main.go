@@ -158,5 +158,5 @@ func main() {
 
 	// Output of the Action.
 	github.SetOutput("repository", repository)
-	github.SetOputput("ref", ref)
+	github.SetOutput("ref", ref)
 }
