@@ -230,7 +230,6 @@ jobs:
         run: |
           set -euo pipefail
 
-          # Disable set-output command.
           echo "::stop-commands::`echo -n ${{ github.token }} | sha256sum | head -c 64`"
 
           echo "$GITHUB_WORKSPACE/$BUILDER_BINARY" build "$CONFIG_FILE" "$UNTRUSTED_ENVS"

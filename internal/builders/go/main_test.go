@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"errors"
+	"fmt"
 	"io"
 	"os"
 	"os/exec"
@@ -360,10 +361,10 @@ func (r *run) end() string {
 }
 
 func extract(lines string) ([]string, []string, string, string, error) {
-	rsubject := regexp.MustCompile("^::set-output name=go-binary-name::(.*)$")
-	rcmd := regexp.MustCompile("^::set-output name=go-command::(.*)$")
-	renv := regexp.MustCompile("^::set-output name=go-env::(.*)$")
-	rwd := regexp.MustCompile("^::set-output name=go-working-dir::(.*)$")
+	rsubject := regexp.MustCompile("^go-binary-name=(.*) >> \\$GITHUB_OUTPUT$")
+	rcmd := regexp.MustCompile("^go-command=(.*) >> \\$GITHUB_OUTPUT$")
+	renv := regexp.MustCompile("^go-env=(.*) >> \\$GITHUB_OUTPUT$")
+	rwd := regexp.MustCompile("^go-working-dir=(.*) >> \\$GITHUB_OUTPUT$")
 	var subject string
 	var scmd string
 	var senv string
@@ -371,6 +372,7 @@ func extract(lines string) ([]string, []string, string, string, error) {
 
 	scanner := bufio.NewScanner(bytes.NewReader([]byte(lines)))
 	for scanner.Scan() {
+		fmt.Println(scanner.Text())
 		n := rsubject.FindStringSubmatch(scanner.Text())
 		if len(n) > 1 {
 			subject = n[1]

@@ -152,16 +152,16 @@ func (b *GoBuild) Run(dry bool) error {
 		}
 
 		// Share the resolved name of the binary.
-		fmt.Printf("::set-output name=go-binary-name::%s\n", filename)
+		fmt.Printf("go-binary-name=%s >> $GITHUB_OUTPUT\n", filename)
 
 		// Share the command used.
-		fmt.Printf("::set-output name=go-command::%s\n", command)
+		fmt.Printf("go-command=%s >> $GITHUB_OUTPUT\n", command)
 
 		// Share the env variables used.
-		fmt.Printf("::set-output name=go-env::%s\n", menv)
+		fmt.Printf("go-env=%s >> $GITHUB_OUTPUT\n", menv)
 
 		// Share working directory necessary for issuing the vendoring command.
-		fmt.Printf("::set-output name=go-working-dir::%s\n", dir)
+		fmt.Printf("go-working-dir=%s >> $GITHUB_OUTPUT\n", dir)
 		return nil
 	}
 

@@ -93,14 +93,14 @@ func runProvenanceGeneration(subject, digest, commands, envs, workingDir, rekor 
 		return err
 	}
 
-	fmt.Printf("::set-output name=signed-provenance-name::%s\n", filename)
+	fmt.Printf("signed-provenance-name=%s >> $GITHUB_OUTPUT\n", filename)
 
 	h, err := computeSHA256(filename)
 	if err != nil {
 		return err
 	}
 
-	fmt.Printf("::set-output name=signed-provenance-sha256::%s\n", h)
+	fmt.Printf("signed-provenance-sha256=%s >> $GITHUB_OUTPUT\n", h)
 
 	return nil
 }
