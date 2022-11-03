@@ -34,3 +34,17 @@ if [[ "$results" != "" ]]; then
     echo "$results"
     exit 1
 fi
+
+# Verify documentation refers to the most recent release tag
+results=$(
+    find . -name "*.md" -print0 \
+    | xargs -0 grep -Pn "uses: slsa-framework/slsa-github-generator/.*@(?!<|main|$RELEASE_TAG)" \
+    | sed 's/\(.*:\) *uses:.*\(\/.*\)/\1 [...]\2/' \
+    || true
+)
+
+if [[ "$results" != "" ]]; then
+    echo "Some documentation refers to an incorrect release tag \"$RELEASE_TAG\""
+    echo "$results"
+    exit 1
+fi
