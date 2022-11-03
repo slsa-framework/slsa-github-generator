@@ -121,8 +121,8 @@ run in the context of a Github Actions workflow.`,
 			check(err)
 
 			// Print the provenance name and sha256 so it can be used by the workflow.
-			fmt.Println(fmt.Sprintf(`"provenance-name=%s >> $GITHUB_OUTPUT`, attPath))
-			fmt.Println(fmt.Sprintf(`provenance-sha256=%s >> $GITHUB_OUTPUT`, sha256.Sum256(attBytes)))
+			utils.SetOutput("provenance-name", attPath)
+			utils.SetOutput("provenance-sha256", fmt.Sprintf("%s", sha256.Sum256(attBytes)))
 		},
 	}
 

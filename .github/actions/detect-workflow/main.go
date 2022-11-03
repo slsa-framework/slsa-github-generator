@@ -25,6 +25,7 @@ import (
 	"strings"
 
 	"github.com/slsa-framework/slsa-github-generator/github"
+	"github.com/slsa-framework/slsa-github-generator/internal/utils"
 )
 
 type action struct {
@@ -157,6 +158,6 @@ func main() {
 	fmt.Printf("ref:%s\n", ref)
 
 	// Output of the Action.
-	fmt.Println(fmt.Sprintf(`repository=%s >> $GITHUB_OUTPUT`, repository))
-	fmt.Println(fmt.Sprintf(`ref=%s >> $GITHUB_OUTPUT`, ref))
+	utils.SetOutput("repository", repository)
+	utils.SetOputput("ref", ref)
 }

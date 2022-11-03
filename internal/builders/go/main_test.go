@@ -2,9 +2,7 @@ package main
 
 import (
 	"bufio"
-	"bytes"
 	"errors"
-	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -274,17 +272,20 @@ func Test_runBuild(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt // Re-initializing variable so it is not changed while executing the closure below
 		t.Run(tt.name, func(t *testing.T) {
-			// *** WARNING: do not enable t.Parallel(), because we're redirecting stdout ***.
+			// *** WARNING: do not enable t.Parallel(), because we're writing to  ***.
 
+			file, err := os.CreateTemp("", "")
+			if err != nil {
+				t.Fatalf("unable to create a temp env file: %s", err)
+			}
+			defer os.Remove(file.Name())
 			// http://craigwickesser.com/2015/01/capture-stdout-in-go/
-			r := runNew()
-			r.start()
 
-			err := runBuild(true,
+			t.Setenv("GITHUB_OUTPUT", file.Name())
+
+			err = runBuild(true,
 				tt.config,
 				tt.evalEnvs)
-
-			s := r.end()
 
 			if !errCmp(err, tt.err) {
 				t.Errorf(cmp.Diff(err, tt.err, cmpopts.EquateErrors()))
@@ -294,7 +295,8 @@ func Test_runBuild(t *testing.T) {
 				return
 			}
 
-			cmd, env, subject, wd, err := extract(s)
+			file.Seek(0, 0)
+			cmd, env, subject, wd, err := extract(file)
 			if err != nil {
 				t.Errorf("extract: %v", err)
 			}
@@ -323,53 +325,17 @@ func Test_runBuild(t *testing.T) {
 	}
 }
 
-type run struct {
-	oldStdout *os.File
-	wPipe     *os.File
-	rPipe     *os.File
-}
-
-func runNew() *run {
-	return &run{}
-}
-
-func (r *run) start() {
-	old := os.Stdout
-	rp, wp, _ := os.Pipe()
-	os.Stdout = wp
-
-	r.oldStdout = old
-	r.wPipe = wp
-	r.rPipe = rp
-}
-
-func (r *run) end() string {
-	r.wPipe.Close()
-	os.Stdout = r.oldStdout
-
-	var buf bytes.Buffer
-	if _, err := io.Copy(&buf, r.rPipe); err != nil {
-		panic(err)
-	}
-	s := buf.String()
-
-	r.oldStdout = nil
-	r.wPipe = nil
-	r.rPipe = nil
-	return s
-}
-
-func extract(lines string) ([]string, []string, string, string, error) {
-	rsubject := regexp.MustCompile(`^go-binary-name=(.*) >> \$GITHUB_OUTPUT$`)
-	rcmd := regexp.MustCompile(`^go-command=(.*) >> \$GITHUB_OUTPUT$`)
-	renv := regexp.MustCompile(`^go-env=(.*) >> \$GITHUB_OUTPUT$`)
-	rwd := regexp.MustCompile(`^go-working-dir=(.*) >> \$GITHUB_OUTPUT$`)
+func extract(file *os.File) ([]string, []string, string, string, error) {
+	rsubject := regexp.MustCompile(`^go-binary-name=(.*)$`)
+	rcmd := regexp.MustCompile(`^go-command=(.*)$`)
+	renv := regexp.MustCompile(`^go-env=(.*)$`)
+	rwd := regexp.MustCompile(`^go-working-dir=(.*)$`)
 	var subject string
 	var scmd string
 	var senv string
 	var wd string
 
-	scanner := bufio.NewScanner(bytes.NewReader([]byte(lines)))
+	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
 		n := rsubject.FindStringSubmatch(scanner.Text())
 		if len(n) > 1 {
