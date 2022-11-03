@@ -360,10 +360,10 @@ func (r *run) end() string {
 }
 
 func extract(lines string) ([]string, []string, string, string, error) {
-	rsubject := regexp.MustCompile("^go-binary-name=(.*) >> \\$GITHUB_OUTPUT$")
-	rcmd := regexp.MustCompile("^go-command=(.*) >> \\$GITHUB_OUTPUT$")
-	renv := regexp.MustCompile("^go-env=(.*) >> \\$GITHUB_OUTPUT$")
-	rwd := regexp.MustCompile("^go-working-dir=(.*) >> \\$GITHUB_OUTPUT$")
+	rsubject := regexp.MustCompile(`^go-binary-name=(.*) >> \$GITHUB_OUTPUT$`)
+	rcmd := regexp.MustCompile(`^go-command=(.*) >> \$GITHUB_OUTPUT$`)
+	renv := regexp.MustCompile(`^go-env=(.*) >> \$GITHUB_OUTPUT$`)
+	rwd := regexp.MustCompile(`^go-working-dir=(.*) >> \$GITHUB_OUTPUT$`)
 	var subject string
 	var scmd string
 	var senv string
