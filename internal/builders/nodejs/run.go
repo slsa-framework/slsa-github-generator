@@ -28,7 +28,7 @@ func runCmd(check func(error)) *cobra.Command {
 	c := &cobra.Command{
 		Use:   "run",
 		Short: "Run scripts",
-		Long:  `Run scripts.`,
+		Long:  `Run scripts. Example: ./binary run --scripts="script1, script2"`,
 
 		Run: func(cmd *cobra.Command, args []string) {
 			fmt.Println(runScripts)

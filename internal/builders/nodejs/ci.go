@@ -28,7 +28,7 @@ func ciCmd(check func(error)) *cobra.Command {
 	c := &cobra.Command{
 		Use:   "ci",
 		Short: "Run ci command",
-		Long:  `Run ci command to install dependencies of a node project.`,
+		Long:  `Run ci command to install dependencies of a node project. Example: ./binary ci --arguments="--ignore-scripts, --other-flag"`,
 
 		Run: func(cmd *cobra.Command, args []string) {
 			fmt.Println(ciArguments)
