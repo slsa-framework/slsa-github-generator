@@ -24,6 +24,7 @@ import (
 	"os/exec"
 	"path/filepath"
 
+	"github.com/slsa-framework/slsa-github-generator/github"
 	"github.com/slsa-framework/slsa-github-generator/signing/sigstore"
 
 	// Enable the GitHub OIDC auth provider.
@@ -93,14 +94,14 @@ func runProvenanceGeneration(subject, digest, commands, envs, workingDir, rekor 
 		return err
 	}
 
-	utils.SetOutput("signed-provenance-name", filename)
+	github.SetOutput("signed-provenance-name", filename)
 
 	h, err := computeSHA256(filename)
 	if err != nil {
 		return err
 	}
 
-	utils.SetOutput("signed-provenance-sha256", h)
+	github.SetOutput("signed-provenance-sha256", h)
 
 	return nil
 }

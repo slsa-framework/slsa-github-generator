@@ -23,6 +23,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/slsa-framework/slsa-github-generator/github"
 	"github.com/slsa-framework/slsa-github-generator/internal/runner"
 	"github.com/slsa-framework/slsa-github-generator/internal/utils"
 )
@@ -152,16 +153,16 @@ func (b *GoBuild) Run(dry bool) error {
 		}
 
 		// Share the resolved name of the binary.
-		utils.SetOutput("go-binary-name", filename)
+		github.SetOutput("go-binary-name", filename)
 
 		// Share the command used.
-		utils.SetOutput("go-command", command)
+		github.SetOutput("go-command", command)
 
 		// Share the env variables used.
-		utils.SetOutput("go-env", menv)
+		github.SetOutput("go-env", menv)
 
 		// Share working directory necessary for issuing the vendoring command.
-		utils.SetOutput("go-working-dir", dir)
+		github.SetOutput("go-working-dir", dir)
 		return nil
 	}
 
