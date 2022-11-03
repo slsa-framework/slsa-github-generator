@@ -46,7 +46,8 @@ results=$(
 )
 
 if [[ "$results" != "" ]]; then
-    echo "Some documentation refers to an incorrect release tag \"$RELEASE_TAG\""
+    echo "Some documentation refers to an incorrect release tag"
+    echo "Allowed tags are <pseudo_tags> or \"$RELEASE_TAG\""
     echo "$results"
     exit 1
 fi
