@@ -10,5 +10,5 @@ flags:
 
 goos: linux
 goarch: amd64
-dir: internal/builders/generic/
-binary: slsa-generator-generic-{{ .Os }}-{{ .Arch }}
+dir: internal/builders/container/
+binary: slsa-generator-container-{{ .Os }}-{{ .Arch }}
