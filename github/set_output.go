@@ -33,7 +33,7 @@ func SetOutput(name, value string) error {
 		}
 	} else {
 		// TODO(asraa): When set-output is EOL, remove this fallback.
-		fmt.Println("::set-output name=" + name + "::" + value)
+		fmt.Printf("::set-output name=%s=%s\n", name, value)
 	}
 	return nil
 }
