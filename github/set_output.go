@@ -26,10 +26,11 @@ func SetOutput(name, value string) error {
 		if err != nil {
 			return err
 		}
+		defer f.Close()
+
 		if _, err := f.WriteString(name + "=" + value + "\n"); err != nil {
 			return err
 		}
-		return f.Close()
 	} else {
 		// TODO(asraa): When set-output is EOL, remove this fallback.
 		fmt.Println("::set-output name=" + name + "::" + value)
