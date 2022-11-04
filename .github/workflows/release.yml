@@ -5,7 +5,7 @@ on:
   workflow_dispatch:
     inputs:
       release-tag:
-        description: 'Release tag to test'
+        description: "Release tag to test"
         required: true
         type: string
   push:
@@ -20,18 +20,37 @@ jobs:
     name: pre release refs verification
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # tag=v3.0.2
+      - uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # tag=v3.1.0
+        with:
+          path: __THIS_REPO__
+      - uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # tag=v3.1.0
+        with:
+          repository: slsa-framework/example-package
+          ref: main
+          path: __EXAMPLE_PACKAGE__
       - name: manual release ref
         env:
           RELEASE_TAG: "${{ inputs.release-tag }}"
         if: github.ref_type != 'tag'
-        run: ./.github/workflows/scripts/pre-release/references.sh
-
+        run: ./__THIS_REPO__/.github/workflows/scripts/pre-release/references.sh
       - name: new tag release ref
         env:
           RELEASE_TAG: "${{ github.ref_name }}"
         if: github.ref_type == 'tag'
-        run: ./.github/workflows/scripts/pre-release/references.sh
+        run: ./__THIS_REPO__/.github/workflows/scripts/pre-release/references.sh
+
+  # Generic generator.
+  container-generator:
+    needs: [pre-release-refs]
+    permissions:
+      id-token: write # For signing.
+      contents: write # For asset uploads.
+      actions: read # For the entrypoint.
+    uses: slsa-framework/slsa-github-generator/.github/workflows/builder_go_slsa3.yml@main
+    with:
+      go-version: 1.18
+      config-file: .github/workflows/configs-container/config-release.yml
+      compile-builder: true
 
   # Generic generator.
   generic-generator:

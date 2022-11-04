@@ -16,8 +16,8 @@ name: SLSA container image provenance
 
 env:
   # Generator
-  BUILDER_BINARY: slsa-generator-generic-linux-amd64 # Name of the binary in the release assets.
-  BUILDER_DIR: internal/builders/generic # Source directory if we compile the builder.
+  BUILDER_BINARY: slsa-generator-container-linux-amd64 # Name of the binary in the release assets.
+  BUILDER_DIR: internal/builders/container # Source directory if we compile the builder.
 
 on:
   workflow_call:
@@ -50,15 +50,6 @@ on:
         default: false
 
 jobs:
-  privacy-check:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check private repos
-        uses: slsa-framework/slsa-github-generator/.github/actions/privacy-check@main
-        with:
-          error_message: "Repository is private. The workflow has halted in order to keep the repository name from being exposed in the public transparency log. Set 'private-repository' to override."
-          override: ${{ inputs.private-repository }}
-
   # detect-env detects the reusable workflow's repository and ref for use later
   # in the workflow.
   detect-env:
@@ -84,7 +75,7 @@ jobs:
   # reference.
   generator:
     runs-on: ubuntu-latest
-    needs: [privacy-check, detect-env]
+    needs: [detect-env]
     permissions:
       id-token: write # Needed to get OIDC token for keyless signing.
       actions: read # Needed to read workflow info.
@@ -100,8 +91,9 @@ jobs:
           compile-builder: "${{ inputs.compile-generator }}"
           # NOTE: We are using the generic generator.
           directory: "${{ env.BUILDER_DIR }}"
+          allow-private-repository: ${{ inputs.private-repository }}
 
-      - uses: sigstore/cosign-installer@f3c664df7af409cb4873aa5068053ba9d61a57b6 # tag=v2.6.0
+      - uses: sigstore/cosign-installer@9becc617647dfa20ae7b1151972e9b3a2c338a2b # tag=v2.8.1
       - name: Login
         env:
           UNTRUSTED_IMAGE: "${{ inputs.image }}"
@@ -136,7 +128,7 @@ jobs:
 
           # Generate a predicate only.
           predicate_name="predicate.json"
-          ./"$BUILDER_BINARY" generate --predicate="$predicate_name"
+          "$GITHUB_WORKSPACE/$BUILDER_BINARY" generate --predicate="$predicate_name"
 
           COSIGN_EXPERIMENTAL=1 cosign attest --predicate="$predicate_name" \
             --type slsaprovenance \

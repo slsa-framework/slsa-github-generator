@@ -19,6 +19,7 @@ project simply generates provenance as a separate step in an existing workflow.
 - [Generating Provenance](#generating-provenance)
   - [Getting Started](#getting-started)
   - [Referencing the SLSA generator](#referencing-the-slsa-generator)
+  - [Private Repositories](#private-repositories)
   - [Supported Triggers](#supported-triggers)
   - [Workflow Inputs](#workflow-inputs)
   - [Provenance Format](#provenance-format)
@@ -149,12 +150,36 @@ jobs:
     secrets:
       registry-password: ${{ secrets.GITHUB_TOKEN }}
 ```
+
 ### Referencing the SLSA generator
 
 At present, the generator **MUST** be referenced
 by a tag of the form `@vX.Y.Z`, because the build will fail if you reference it via a shorter tag like `@vX.Y` or `@vX` or if you reference it by a hash.
 
 For more information about this design decision and how to configure renovatebot,see the main repository [README.md](../../../README.md).
+
+### Private Repositories
+
+Private repositories are supported with some caveats. Currently all builds
+generate and post a new entry in the public
+[Rekor](https://github.com/sigstore/rekor) API server instance at
+rekor.sigstore.dev. This entry includes the repository name. This will cause the
+private repository name to leak and be discoverable via the public Rekor API
+server.
+
+If this is ok with you, you can set the `private-repository` flag in order to
+opt in to publishing to the public Rekor instance from a private repository.
+
+```yaml
+with:
+  private-repository: true
+```
+
+If you do not set this flag then private repositories will generate an error in
+order to prevent leaking repository name information.
+
+Support for private transparency log instances that would not leak repository
+name information is tracked on [issue #372](https://github.com/slsa-framework/slsa-github-generator/issues/372).
 
 ### Supported Triggers
 
@@ -177,12 +202,13 @@ The [container workflow](https://github.com/slsa-framework/slsa-github-generator
 
 Inputs:
 
-| Name                | Required | Description                                                                                         |
-| ------------------- | -------- | --------------------------------------------------------------------------------------------------- |
-| `image`             | yes      | The OCI image name. This must not include a tag or digest.                                          |
-| `digest`            | yes      | The OCI image digest. The image digest of the form '<algorithm>:<digest>' (e.g. 'sha256:abcdef...') |
-| `registry-username` | yes      | Username to log into the container registry.                                                        |
-| `compile-generator` | false    | Whether to build the generator from source. This increases build time by ~2m.                       |
+| Name                 | Required | Default | Description                                                                                                                                                                                                                     |
+| -------------------- | -------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `image`              | yes      |         | The OCI image name. This must not include a tag or digest.                                                                                                                                                                      |
+| `digest`             | yes      |         | The OCI image digest. The image digest of the form '<algorithm>:<digest>' (e.g. 'sha256:abcdef...')                                                                                                                             |
+| `registry-username`  | yes      |         | Username to log into the container registry.                                                                                                                                                                                    |
+| `compile-generator`  | false    | false   | Whether to build the generator from source. This increases build time by ~2m.                                                                                                                                                   |
+| `private-repository` | no       | false   | Set to true to opt-in to posting to the public transparency log. Will generate an error if false for private repositories. This input has no effect for public repositories. See [Private Repositories](#private-repositories). |
 
 Secrets:
 
@@ -194,10 +220,10 @@ Secrets:
 
 The project generates SLSA provenance with the following values.
 
-| Name                         | Value                                                                  | Description                                                                                                                                                                                                            |
-| ---------------------------- | ---------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `buildType`                  | `"https://github.com/slsa-framework/slsa-github-generator/generic@v1"` | Identifies a generic GitHub Actions build.                                                                                                                                                                             |
-| `metadata.buildInvocationID` | `"[run_id]-[run_attempt]"`                                             | The GitHub Actions [`run_id`](https://docs.github.com/en/actions/learn-github-actions/contexts#github-context) does not update when a workflow is re-run. Run attempt is added to make the build invocation ID unique. |
+| Name                         | Value                                                                    | Description                                                                                                                                                                                                            |
+| ---------------------------- | ------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `buildType`                  | `"https://github.com/slsa-framework/slsa-github-generator/container@v1"` | Identifies a the GitHub Actions build.                                                                                                                                                                                 |
+| `metadata.buildInvocationID` | `"[run_id]-[run_attempt]"`                                               | The GitHub Actions [`run_id`](https://docs.github.com/en/actions/learn-github-actions/contexts#github-context) does not update when a workflow is re-run. Run attempt is added to make the build invocation ID unique. |
 
 ### Provenance Example
 
@@ -220,7 +246,7 @@ generated as an [in-toto](https://in-toto.io/) statement with a SLSA predicate.
     "builder": {
       "id": "https://github.com/slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@refs/tags/v1.1.1"
     },
-    "buildType": "https://github.com/slsa-framework/slsa-github-generator/generic@v1",
+    "buildType": "https://github.com/slsa-framework/slsa-github-generator/container@v1",
     "invocation": {
       "configSource": {
         "uri": "git+https://github.com/ianlewis/actions-test@refs/heads/main.git",

@@ -129,15 +129,6 @@ on:
         default: false
 
 jobs:
-  privacy-check:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check private repos
-        uses: slsa-framework/slsa-github-generator/.github/actions/privacy-check@main
-        with:
-          error_message: "Repository is private. The workflow has halted in order to keep the repository name from being exposed in the public transparency log. Set 'private-repository' to override."
-          override: ${{ inputs.private-repository }}
-
   rng:
     outputs:
       value: ${{ steps.rng.outputs.random }}
@@ -157,7 +148,7 @@ jobs:
     steps:
       - name: Detect the builder ref
         id: detect
-        uses: slsa-framework/slsa-github-generator/.github/actions/detect-workflow@main # tag=v1.2.0
+        uses: slsa-framework/slsa-github-generator/.github/actions/detect-workflow@main
 
   ###################################################################
   #                                                                 #
@@ -168,7 +159,7 @@ jobs:
     outputs:
       node-builder-sha256: ${{ steps.generate.outputs.sha256 }}
     runs-on: ubuntu-latest
-    needs: [privacy-check, detect-env, rng]
+    needs: [detect-env, rng]
     steps:
       - name: Generate builder
         id: generate
@@ -181,9 +172,10 @@ jobs:
           binary: "${{ env.BUILDER_BINARY }}"
           compile-builder: "${{ inputs.compile-builder }}"
           directory: "${{ env.BUILDER_DIR }}"
+          allow-private-repository: ${{ inputs.private-repository }}
 
       - name: Upload builder
-        uses: actions/upload-artifact@3cea5372237819ed00197afe530f5a7ea3e805c8 # tag=v3.1.0
+        uses: actions/upload-artifact@83fd05a356d7e2593de66fc9913b3002723633cb # tag=v3.1.1
         with:
           name: "${{ env.BUILDER_BINARY }}-${{ needs.rng.outputs.value }}"
           path: "${{ env.BUILDER_BINARY }}"
@@ -200,7 +192,7 @@ jobs:
       node-tarball-sha256: ${{ steps.upload.outputs.sha256 }}
       node-tarball-name: ${{ steps.tarball.outputs.filename }}
     runs-on: ubuntu-latest
-    needs: [privacy-check, builder, rng, detect-env]
+    needs: [builder, rng, detect-env]
     steps:
       - name: Checkout builder repository
         uses: slsa-framework/slsa-github-generator/.github/actions/secure-builder-checkout@main
@@ -334,7 +326,7 @@ jobs:
           # This sets signed-provenance-name to the name of the signed DSSE envelope.
           # Note: this command outputs the sha256 of the signed provenance, so the upload
           # in the next step need not be secure-artifact-upload.
-          ./"$BUILDER_BINARY" provenance \
+          "$GITHUB_WORKSPACE/$BUILDER_BINARY" provenance \
             --tarball-name "$UNTRUSTED_TARBALL_NAME" \
             --digest "$UNTRUSTED_TARBALL_HASH" \
             --ci-arguments "$UNTRUSTED_CI_ARGUMENTS" \
@@ -342,7 +334,7 @@ jobs:
             --directory "$UNTRUSTED_DIR"
 
       - name: Upload the signed provenance
-        uses: actions/upload-artifact@3cea5372237819ed00197afe530f5a7ea3e805c8 # tag=v3.1.0
+        uses: actions/upload-artifact@83fd05a356d7e2593de66fc9913b3002723633cb # tag=v3.1.1
         with:
           name: "${{ steps.sign-prov.outputs.signed-provenance-name }}"
           path: "${{ steps.sign-prov.outputs.signed-provenance-name }}"
