@@ -268,7 +268,7 @@ jobs:
 
           # cp output into upper folder to make the tarball accessible to
           # next step.
-          echo '::set-output name=filename::$TARBALL'
+          echo "filename=$TARBALL" >> "$GITHUB_OUTPUT"
 
       - name: Upload generated tarball
         id: upload
