@@ -16,8 +16,9 @@ package main
 
 import (
 	"errors"
+	"fmt"
+	"os"
 
-	// TODO: Allow use of other OIDC providers?
 	// Enable the github OIDC auth provider.
 	_ "github.com/sigstore/cosign/pkg/providers/github"
 	"github.com/slsa-framework/slsa-github-generator/signing/sigstore"
@@ -25,9 +26,16 @@ import (
 	"github.com/spf13/cobra"
 )
 
+func checkExit(err error) {
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
+}
+
 func rootCmd() *cobra.Command {
 	c := &cobra.Command{
-		Use:   "slsa-generator-generic",
+		Use:   "slsa-github-generator",
 		Short: "Generate SLSA provenance for Github Actions",
 		Long: `Generate SLSA provenance for Github Actions.
 For more information on SLSA, visit https://slsa.dev`,
@@ -36,7 +44,11 @@ For more information on SLSA, visit https://slsa.dev`,
 		},
 	}
 	c.AddCommand(versionCmd())
-	c.AddCommand(attestCmd(nil, checkExit, sigstore.NewDefaultFulcio(), sigstore.NewDefaultRekor()))
+	c.AddCommand(provenanceCmd(nil, checkExit, sigstore.NewDefaultFulcio(), sigstore.NewDefaultRekor()))
+	c.AddCommand(ciCmd(checkExit))
+	c.AddCommand(packCmd(checkExit))
+	c.AddCommand(publishCmd(checkExit))
+	c.AddCommand(runCmd(checkExit))
 	return c
 }
 

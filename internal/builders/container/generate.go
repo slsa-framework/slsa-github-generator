@@ -22,6 +22,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/slsa-framework/slsa-github-generator/github"
+	"github.com/slsa-framework/slsa-github-generator/internal/builders/common"
 	"github.com/slsa-framework/slsa-github-generator/internal/utils"
 	"github.com/slsa-framework/slsa-github-generator/slsa"
 )
@@ -42,10 +43,12 @@ that it is being run in the context of a Github Actions workflow.`,
 
 			ctx := context.Background()
 
-			b := provenanceOnlyBuild{
+			b := common.GenericBuild{
 				// NOTE: Subjects are nil because we are only writing the predicate.
 				GithubActionsBuild: slsa.NewGithubActionsBuild(nil, ghContext),
+				BuildTypeURI:       containerBuildType,
 			}
+
 			if provider != nil {
 				b.WithClients(provider)
 			} else {
