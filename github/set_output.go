@@ -15,14 +15,14 @@
 package github
 
 import (
-	"errors"
+	"fmt"
 	"os"
 )
 
 // SetOutput writes a name value pair to a file located at GITHUB_OUTPUT.
 func SetOutput(name, value string) error {
 	if filename := os.Getenv("GITHUB_OUTPUT"); filename != "" {
-		f, err := os.OpenFile(filename, os.O_APPEND|os.O_WRONLY, 0o755)
+		f, err := os.OpenFile(filename, os.O_APPEND|os.O_WRONLY, 0o666)
 		if err != nil {
 			return err
 		}
@@ -30,6 +30,9 @@ func SetOutput(name, value string) error {
 			return err
 		}
 		return f.Close()
+	} else {
+		// TODO(asraa): When set-output is EOL, remove this fallback.
+		fmt.Println("::set-output name=" + name + "::" + value)
 	}
-	return errors.New("file GITHUB_OUTPUT not found")
+	return nil
 }
