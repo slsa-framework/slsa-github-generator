@@ -27,14 +27,15 @@ func buildCmd(check func(error)) *cobra.Command {
 		Short: "build a project",
 		Long:  `build a project. Example: ./binary build --dry-run"`,
 
-		build: func(cmd *cobra.Command, args []string) {
+		Run: func(cmd *cobra.Command, args []string) {
 			if err := build(dryRun); err != nil {
 				panic(err)
 			}
 		},
 	}
 
-	c.Flags().BoolP(&dryRun, "dry-run", false, "Perform a dry run only. Do not build. Output provenance metadata (steps and provenance filenames)")
+	c.Flags().BoolVarP(&dryRun, "dry-run", "d", false,
+		"Perform a dry run only. Do not build. Output provenance metadata (steps and provenance filenames)")
 	return c
 }
 
