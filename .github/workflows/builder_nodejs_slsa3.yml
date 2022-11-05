@@ -182,15 +182,9 @@ jobs:
           if-no-files-found: error
           retention-days: 5
 
-  ###################################################################
-  #                                                                 #
-  #                       Build the project                         #
-  #                                                                 #
-  ###################################################################
-  build:
+  build-dry:
     outputs:
-      node-tarball-sha256: ${{ steps.upload.outputs.sha256 }}
-      node-tarball-name: ${{ steps.tarball.outputs.filename }}
+      provenance-metadata: ${{ steps.build-dry.outputs.provenance-metadata }}
     runs-on: ubuntu-latest
     needs: [builder, rng, detect-env]
     steps:
@@ -202,7 +196,6 @@ jobs:
           path: __BUILDER_CHECKOUT_DIR__
 
       - name: Checkout the Node repository
-        # TODO: set a pin or use at head?
         uses: ./__BUILDER_CHECKOUT_DIR__/.github/actions/secure-project-checkout-node
         with:
           node-version: ${{ inputs.node-version }}
@@ -220,62 +213,68 @@ jobs:
           sha256: "${{ needs.builder.outputs.node-builder-sha256 }}"
           set-executable: true
 
-      - name: Download dependencies
+      - name: Build dry project
+        id: build-dry
         working-directory: __PROJECT_CHECKOUT_DIR__
         env:
-          UNTRUSTED_CI_ARGUMENTS: "${{ inputs.ci-arguments }}"
-          UNTRUSTED_DIR: ${{ inputs.directory }}"
+          SLSA_WORKFLOW_INPUTS: "${{ inputs }}"
         run: |
           set -euo pipefail
 
-          # npm ci <args>
-          "$GITHUB_WORKSPACE/$BUILDER_BINARY" ci \
-            --ci-arguments "$UNTRUSTED_CI_ARGUMENTS" \
-            --directory "$UNTRUSTED_DIR"
+          "$GITHUB_WORKSPACE/$BUILDER_BINARY" build --dry-run
 
-      # TODO(hermeticity) Enable OS-level hermeticity.
+  ###################################################################
+  #                                                                 #
+  #                       Build the project                         #
+  #                                                                 #
+  ###################################################################
+  build:
+    outputs:
+      artifacts: ${{ steps.upload.outputs.artifacts }}
+    runs-on: ubuntu-latest
+    needs: [builder, rng, detect-env]
+    steps:
+      - name: Checkout builder repository
+        uses: slsa-framework/slsa-github-generator/.github/actions/secure-builder-checkout@main
+        with:
+          repository: "${{ needs.detect-env.outputs.repository }}"
+          ref: "${{ needs.detect-env.outputs.ref }}"
+          path: __BUILDER_CHECKOUT_DIR__
 
+      - name: Checkout the Node repository
+        uses: ./__BUILDER_CHECKOUT_DIR__/.github/actions/secure-project-checkout-node
+        with:
+          node-version: ${{ inputs.node-version }}
+          scope: ${{ inputs.scope }}
+          token: ${{ inputs.token }}
+          always-auth: ${{ inputs.always-auth }}
+          registry-url: ${{ inputs.registry-url }}
+          cache: "npm"
+
+      - name: Download builder
+        uses: ./__BUILDER_CHECKOUT_DIR__/.github/actions/secure-download-artifact
+        with:
+          name: "${{ env.BUILDER_BINARY }}-${{ needs.rng.outputs.value }}"
+          path: "${{ env.BUILDER_BINARY }}"
+          sha256: "${{ needs.builder.outputs.node-builder-sha256 }}"
+          set-executable: true
+
+      # TODO(hermeticity)
       - name: Build project
         working-directory: __PROJECT_CHECKOUT_DIR__
         env:
-          UNTRUSTED_RUN_SCRIPTS: "${{ inputs.run-scripts }}"
-          UNTRUSTED_DIR: ${{ inputs.directory }}"
+          SLSA_WORKFLOW_INPUTS: "${{ inputs }}"
         run: |
           set -euo pipefail
 
-          # npm run <args>
-          "$GITHUB_WORKSPACE/$BUILDER_BINARY" run \
-            --run-scripts "$UNTRUSTED_RUN_SCRIPTS" \
-            --directory "$UNTRUSTED_DIR"
-
-      - name: Create tarball
-        id: tarball
-        working-directory: __PROJECT_CHECKOUT_DIR__
-        env:
-          UNTRUSTED_DIR: ${{ inputs.directory }}"
-        run: |
-          set -euo pipefail
-
-          # TODO: only run if non-empty.
-          # Note: pack-destination only supported version 7.x above.
-          # https://docs.npmjs.com/cli/v7/commands/npm-pack.
-          # This outputs a .tgz. Before running this command, let's record the .tgz
-          # files and their hashes, so that we can identify the new file without the need to parse
-          # the manifest.json.
-          # echo "npm pack --pack-destination="./out"
-          "$GITHUB_WORKSPACE/$BUILDER_BINARY" pack \
-            --directory "$UNTRUSTED_DIR"
-
-          # cp output into upper folder to make the tarball accessible to
-          # next step.
-          echo "filename=$TARBALL" >> "$GITHUB_OUTPUT"
+          "$GITHUB_WORKSPACE/$BUILDER_BINARY" build
 
       - name: Upload generated tarball
         id: upload
         uses: ./__BUILDER_CHECKOUT_DIR__/.github/actions/secure-upload-artifact
         with:
-          name: "${{ steps.tarball.outputs.filename }}"
-          path: "${{ steps.tarball.outputs.filename }}"
+          name: "<TODO>"
+          path: "<TODO>"
 
   ###################################################################
   #                                                                 #
@@ -284,14 +283,13 @@ jobs:
   ###################################################################
   provenance:
     runs-on: ubuntu-latest
-    needs: [builder, build, rng, detect-env]
+    needs: [builder, build, build-dry, rng, detect-env]
     permissions:
       id-token: write # Needed to create an OIDC token for keyless signing.
       contents: read
       actions: read # Needed to read workflow info.
     outputs:
-      node-provenance-name: ${{ steps.sign-prov.outputs.signed-provenance-name }}
-      node-provenance-sha256: ${{ steps.sign-prov.outputs.signed-provenance-sha256 }}
+      provenances: ${{ steps.sign-prov.outputs.provenances }}
     steps:
       - name: Checkout builder repository
         uses: slsa-framework/slsa-github-generator/.github/actions/secure-builder-checkout@main
@@ -311,11 +309,9 @@ jobs:
       - name: Create and sign provenance
         id: sign-prov
         env:
-          UNTRUSTED_TARBALL_NAME: "${{ needs.build.outputs.node-tarball-name }}"
-          UNTRUSTED_TARBALL_HASH: "${{ needs.build.outputs.node-tarball-sha256 }}"
-          UNTRUSTED_CI_ARGUMENTS: "${{ inputs.ci-arguments }}"
-          UNTRUSTED_RUN_SCRIPTS: "${{ inputs.run-scripts }}"
-          UNTRUSTED_DIR: ${{ inputs.directory }}"
+          UNTRUSTED_PROVENANCE_METADATA: "${{ needs.build-dry.outputs.provenance-metadata }}"
+          UNTRUSTED_ARTIFACTS: "${{ needs.build.outputs.artifacts }}"
+          UNTRUSTED_WORKFLOW_INPUTS: "${{ inputs }}"
           GITHUB_CONTEXT: "${{ toJSON(github) }}"
         run: |
           set -euo pipefail
@@ -323,21 +319,13 @@ jobs:
           echo "provenance generator is $BUILDER_BINARY"
 
           # Create and sign provenance
-          # This sets signed-provenance-name to the name of the signed DSSE envelope.
-          # Note: this command outputs the sha256 of the signed provenance, so the upload
-          # in the next step need not be secure-artifact-upload.
-          "$GITHUB_WORKSPACE/$BUILDER_BINARY" provenance \
-            --tarball-name "$UNTRUSTED_TARBALL_NAME" \
-            --digest "$UNTRUSTED_TARBALL_HASH" \
-            --ci-arguments "$UNTRUSTED_CI_ARGUMENTS" \
-            --run-scripts "$UNTRUSTED_RUN_SCRIPTS" \
-            --directory "$UNTRUSTED_DIR"
+           "$GITHUB_WORKSPACE/$BUILDER_BINARY" provenance
 
       - name: Upload the signed provenance
         uses: actions/upload-artifact@83fd05a356d7e2593de66fc9913b3002723633cb # tag=v3.1.1
         with:
-          name: "${{ steps.sign-prov.outputs.signed-provenance-name }}"
-          path: "${{ steps.sign-prov.outputs.signed-provenance-name }}"
+          name: "<TODO>"
+          path: "<TODO>"
           if-no-files-found: error
           retention-days: 5
 
@@ -375,12 +363,12 @@ jobs:
           path: "${{ needs.build.outputs.node-tarball-name }}"
           sha256: "${{ needs.build.outputs.node-tarball-sha256 }}"
 
-      - name: Download provenance
+      - name: Download provenances
         uses: ./__BUILDER_CHECKOUT_DIR__/.github/actions/secure-download-artifact
         with:
-          name: "${{ needs.provenance.outputs.node-provenance-name }}"
-          path: "${{ needs.provenance.outputs.node-provenance-name }}"
-          sha256: "${{ needs.provenance.outputs.node-provenance-sha256 }}"
+          name: "<TODO>"
+          path: "<TODO>"
+          sha256: "<TODO>"
 
       - name: Download builder
         uses: ./__BUILDER_CHECKOUT_DIR__/.github/actions/secure-download-artifact
@@ -393,11 +381,8 @@ jobs:
       - name: Publish
         working-directory: __PROJECT_CHECKOUT_DIR__
         env:
-          UNTRUSTED_PUBLISH_ARGUMENTS: "${{ inputs.publish-arguments }}"
+          UNTRUSTED_WORKFLOW_INPUTS: "${{ inputs }}"
         run: |
           set -euo pipefail
 
-          # echo "npm publish ${{ inputs.publish-arguments }}"
-          "$GITHUB_WORKSPACE/$BUILDER_BINARY" publish \
-            --publish-arguments "$UNTRUSTED_PUBLISH_ARGUMENTS" \
-            --directory "$UNTRUSTED_DIR"
+          "$GITHUB_WORKSPACE/$BUILDER_BINARY" publish

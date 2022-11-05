@@ -21,20 +21,32 @@ import (
 	"github.com/slsa-framework/slsa-github-generator/slsa"
 )
 
-// provenanceCmd runs the 'provenance' command.
-func provenanceCmd(provider slsa.ClientProvider, check func(error), signer signing.Signer, tlog signing.TransparencyLog) *cobra.Command {
-	var provenanceDirectory string
-
+// attestCmd runs the 'attest' command.
+func attestCmd(provider slsa.ClientProvider, check func(error), signer signing.Signer, tlog signing.TransparencyLog) *cobra.Command {
 	c := &cobra.Command{
-		Use:   "provenance",
-		Short: "Run provenance command",
-		Long:  `Run provenance command to generate and sign provenance file.`,
+		Use:   "attest",
+		Short: "Run attest command",
+		Long:  `Run attest command to generate and sign attest file.`,
 
 		Run: func(cmd *cobra.Command, args []string) {
+			if err := attest(); err != nil {
+				panic(err)
+			}
 		},
 	}
 
-	c.Flags().StringVarP(&provenanceDirectory, "directory", "d", "", "Working directory to issue commands.")
-
 	return c
+}
+
+func attest() error {
+	// 1. Retrieve the provenance metadata from env variable UNTRUSTED_PROVENANCE_METADATA.
+
+	// 2. Retrieve the list of artifacts from env variable UNTRUSTED_ARTIFACTS.
+
+	// 3. Verifiy that list of artifacts in UNTRUSTED_ARTIFACTS and UNTRUSTED_PROVENANCE_METADATA match.
+
+	// 4. Create / sign a provenance file as per UNTRUSTED_PROVENANCE_METADATA.
+
+	// 5. Output the list of provenance files generated in a format TBD (sha256sum?).
+	return nil
 }

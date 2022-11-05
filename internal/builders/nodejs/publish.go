@@ -20,8 +20,6 @@ import (
 
 // publishCmd runs the 'publish' command.
 func publishCmd(check func(error)) *cobra.Command {
-	var publishDirectory string
-
 	c := &cobra.Command{
 		Use:   "publish",
 		Short: "Run publish command",
@@ -30,8 +28,6 @@ func publishCmd(check func(error)) *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 		},
 	}
-
-	c.Flags().StringVarP(&publishDirectory, "directory", "d", "", "Working directory to issue commands.")
 
 	return c
 }
