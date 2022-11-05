@@ -346,7 +346,6 @@ jobs:
           path: __BUILDER_CHECKOUT_DIR__
 
       - name: Checkout the Node repository
-        # TODO: set a pin or use at head?
         uses: ./__BUILDER_CHECKOUT_DIR__/.github/actions/secure-project-checkout-node
         with:
           node-version: ${{ inputs.node-version }}
@@ -381,7 +380,7 @@ jobs:
       - name: Publish
         working-directory: __PROJECT_CHECKOUT_DIR__
         env:
-          UNTRUSTED_WORKFLOW_INPUTS: "${{ inputs }}"
+          SLSA_WORKFLOW_INPUTS: "${{ inputs }}"
         run: |
           set -euo pipefail
 
