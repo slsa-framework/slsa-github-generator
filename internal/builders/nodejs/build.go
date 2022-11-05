@@ -18,7 +18,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// buildCmd builds the 'build' command.
+// buildCmd runs the 'build' command.
 func buildCmd(check func(error)) *cobra.Command {
 	var dryRun bool
 
@@ -34,7 +34,7 @@ func buildCmd(check func(error)) *cobra.Command {
 		},
 	}
 
-	c.Flags().BoolP(&dryRun, "dry-run", false, "Perform a dry run only. Do not build. Output the steps used to build")
+	c.Flags().BoolP(&dryRun, "dry-run", false, "Perform a dry run only. Do not build. Output provenance metadata (steps and provenance filenames)")
 	return c
 }
 
