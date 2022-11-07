@@ -271,7 +271,7 @@ jobs:
         working-directory: __PROJECT_CHECKOUT_DIR__
         env:
           SLSA_WORKFLOW_INPUTS: "${{ inputs }}"
-          SLSA_ARTIFACTS_INPUTS: "${{ needs.build.outputs.artifacts }}"
+          SLSA_BUILD_ARTIFACTS: "${{ needs.build.outputs.artifacts }}"
         run: |
           set -euo pipefail
 

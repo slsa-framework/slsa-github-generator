@@ -60,7 +60,7 @@ func build(dryRun bool) error {
 	// The tarball name into a step output: echo "filename=$TARBALL" >> "$GITHUB_OUTPUT"
 
 	if dryRun {
-		// 1. Retrieve artifacts and their hases from env variable SLSA_ARTIFACTS_INPUTS.
+		// 1. Retrieve artifacts and their hases from env variable SLSA_BUILD_ARTIFACTS.
 
 		// 2. Output the proveance metadata in a format:
 		/* METADATA={
