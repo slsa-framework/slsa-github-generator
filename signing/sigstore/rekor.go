@@ -4,14 +4,15 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/sigstore/cosign/cmd/cosign/cli/rekor"
 	"github.com/sigstore/cosign/pkg/cosign"
+	"github.com/sigstore/rekor/pkg/client"
 	"github.com/sigstore/rekor/pkg/generated/client/entries"
 	"github.com/sigstore/rekor/pkg/generated/models"
 	"github.com/slsa-framework/slsa-github-generator/signing"
 )
 
 const (
+	// DefaultRekorAddr is the default rekor base URL.
 	DefaultRekorAddr = "https://rekor.sigstore.dev"
 )
 
@@ -60,7 +61,7 @@ func NewRekor(rekorAddr string) *Rekor {
 
 // Upload uploads the signed attestation to the rekor transparency log.
 func (r *Rekor) Upload(ctx context.Context, att signing.Attestation) (signing.LogEntry, error) {
-	rekorClient, err := rekor.NewClient(r.rekorAddr)
+	rekorClient, err := client.GetRekorClient(r.rekorAddr)
 	if err != nil {
 		return nil, fmt.Errorf("creating rekor client: %w", err)
 	}

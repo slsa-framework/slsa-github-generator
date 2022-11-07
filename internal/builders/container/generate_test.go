@@ -25,6 +25,14 @@ import (
 	"github.com/slsa-framework/slsa-github-generator/slsa"
 )
 
+func checkTest(t *testing.T) func(err error) {
+	return func(err error) {
+		if err != nil {
+			t.Fatalf("%v", err)
+		}
+	}
+}
+
 func Test_generateCmd_default_predicate(t *testing.T) {
 	t.Setenv("GITHUB_CONTEXT", "{}")
 

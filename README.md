@@ -14,6 +14,7 @@ This repository contains the code, examples and technical design for system desc
 
 - [Roadmap](#roadmap)
 - [Generation of provenance](#generation-of-provenance)
+  - [Referencing SLSA builders and generators](#referencing-slsa-builders-and-generators)
   - [Builders](#builders)
   - [Provenance-only generators](#provenance-only-generators)
 - [Verification of provenance](#verification-of-provenance)
@@ -42,9 +43,16 @@ timeline for completion.
 Below we describe the various builders and generators in this repository. They let you build and / or generate non-forgeable provenance
 using a trusted / isolated re-usable workflow. You can read up on the design in our [technical design document](#technical-design).
 
-**Note**: At present the GitHub Actions provided in this repository as builders and generators **MUST** be referenced by
-a tag that correpsonds to a semantic version of the form `@vX.Y.Z`. The build will fail
-if you reference it via a shorter tag like `@vX.Y` or `@vX` or if you reference it by a tag of a different form (e.g., `@main`).
+### Referencing SLSA builders and generators
+
+At present, the GitHub Actions provided in this repository as builders and generators **MUST** be referenced
+by tag in order for the `slsa-verifier` to be able to verify the ref of the trusted builder/generator's
+reusable workflow. It also needs to be referred as `@vX.Y.Z`, because the build will fail if you reference it via a shorter tag like `@vX.Y` or `@vX`.
+
+This is contrary to the [GitHub best practice for third-party actions](https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions#using-third-party-actions) which recommends referencing by digest, but intentional due to limits in GitHub Actions.
+The desire to be able to verify reusable workflows pinned by hash, and the reasons for the current status, are tracked as [Issue #12](https://github.com/slsa-framework/slsa-verifier/issues/12) in the slsa-verifier project.
+
+For guidance on how to configure renovate see [RENOVATE.md](RENOVATE.md).
 
 ### Builders
 
@@ -55,14 +63,14 @@ Builders are able to report the commands used to generate your artifact in the p
 
 This repository hosts the following builders:
 
-1. [Go Builder SLSA Level 3](internal/builders/go/README.md). **Status**: available since v1.0.0.
+1. [Go Builder SLSA Level 3](internal/builders/go/README.md). **Status**: [available since v1.0.0](https://github.com/slsa-framework/slsa-github-generator/milestone/1).
    This builder builds and generates provenance for your [Go](https://go.dev/) projects. To use it,
    follow the [Go builder's README.md](internal/builders/go/README.md).
-1. [Container Builder SLSA Level 3](TODO). **Status**: WIP, expected release in Sept 2022.
+1. _Container Builder SLSA Level 3_. **Status**: [WIP, expected release in Nov 2022](https://github.com/slsa-framework/slsa-github-generator/milestone/5).
    This builder will build your container image and generate provenance. The generated provenance will be compatible with
    [cosign](https://github.com/sigstore/cosign)'s attestation format.
-1. [Dockerfile-based Builder SLSA Level 3](TODO). **Status**: WIP, see [#23](https://github.com/slsa-framework/slsa-github-generator/issues/23).
-   This builder will build arbitrary artifacts using building steps defined in a Dockerfile.
+1. _Dockerfile-based Builder SLSA Level 3_. **Status**: [WIP](https://github.com/slsa-framework/slsa-github-generator/milestone/4). This builder will build arbitrary
+   artifacts using building steps defined in a Dockerfile.
 
 If you would rather build your project yourself, use the generators instead as explained in the next section.
 
@@ -78,21 +86,16 @@ Generators are _not_ able to report the commands used to generate your artifact 
 
 This repository hosts the following generators:
 
-1. [Generic generator SLSA Level 3](internal/builders/generic/README.md). **Status**: available since v1.2.0.
+1. [Generic generator SLSA Level 3](internal/builders/generic/README.md). **Status**: [available since v1.2.0](https://github.com/slsa-framework/slsa-github-generator/milestone/2).
    This generator generates provenance for arbitrary artifacts of your choice. To use it,
    follow the [Generic generator's README.md](internal/builders/generic/README.md).
-1. [Container generator SLSA Level 3](TODO). **Status**: WIP, expected release Aug-Sept 2022, see [#409](https://github.com/slsa-framework/slsa-github-generator/issues/409).
+1. [Container generator SLSA Level 3](internal/builders/container/README.md). **Status**: [WIP, expected release Oct 2022](https://github.com/slsa-framework/slsa-github-generator/milestone/3).
    This generator will generate provenance for container images. The generated provenance will be compatible with
    [cosign](https://github.com/sigstore/cosign)'s attestation format.
 
 ## Verification of provenance
 
 To verify the provenance, use the [github.com/slsa-framework/slsa-verifier](https://github.com/slsa-framework/slsa-verifier) project.
-
-**Note**: At present the GitHub Actions provided in this repository as builders and generators **MUST** be referenced by tag in order for the `slsa-verifier` to be able to verify the ref of the trusted builder/generator's reusable workflow.
-
-This is contrary to the [best practice](https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions#using-third-party-actions) which recommends referencing by digest, but intentional due to limits in GitHub Actions.
-The desire to be able to verify reusable workflows pinned by hash, and the reasons for the current status, are tracked as [Issue #12](https://github.com/slsa-framework/slsa-verifier/issues/12) in the slsa-verifier project.
 
 ### Installation
 
@@ -122,42 +125,4 @@ The format of the provenance is available in [PROVENANCE_FORMAT.md](./PROVENANCE
 
 ## Development
 
-Since this project includes reusable workflows for use on GitHub Actions local
-development is limited to building and testing the binaries used by the reusable
-workflows. The workflows themselves must be tested in your own fork.
-
-Local commands that can be used for development are defined in the
-[Makefile](./Makefile). You can list the available targets by running `make`.
-
-```
-make
-```
-
-### Unit Tests
-
-You can run unit tests locally using `make`. This requires that the Go runtime
-be installed.
-
-```
-make unit-test
-```
-
-### Linters
-
-This project uses several linters in order to maintain code quality. If you wish
-to run these linters locally, follow the instructions for each of these to
-install them on your development machine.
-
-- [yamllint](https://yamllint.readthedocs.io/)
-- [golangci-lint](https://golangci-lint.run/)
-- [shellcheck](https://www.shellcheck.net/)
-- [eslint](https://eslint.org/) (NOTE: eslint is installed automatically so you
-  don't need to install it)
-
-Once each of these are installed you can run the linters using `make`.
-
-```
-make lint
-```
-
-These linters will also run as GitHub checks for pull requests.
+Please see the [Contributor Guide](CONTRIBUTING.md) for more info.

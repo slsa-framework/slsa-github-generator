@@ -1,0 +1,32 @@
+name: "Checkout a repository for a Go project"
+description: "Checkout and setup the environment for a Go project"
+inputs:
+  path:
+    # Same argument to https://github.com/actions/checkout.
+    description: "Relative path under $GITHUB_WORKSPACE to place the repository."
+    required: true
+  token:
+    description: "The token to use."
+    required: false
+    # Same default as https://github.com/actions/checkout/blob/main/action.yml#L24.
+    default: ${{ github.token }}
+  go-version:
+    description: "The Go version to use, as expected by https://github.com/actions/setup-go."
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    # Note: this assumes to top-level re-usable workflow
+    # has checkout'ed the builder repository using
+    # `.github/actions/secure-builder-checkout`.
+    - name: Checkout the repository with user ref
+      uses: ./__BUILDER_CHECKOUT_DIR__/.github/actions/secure-project-checkout
+      with:
+        token: ${{ inputs.token }}
+        path: ${{ inputs.path }}
+
+    - name: Set up Go environment
+      uses: actions/setup-go@c4a742cab115ed795e34d4513e2cf7d472deb55f # tag=v3.3.1
+      with:
+        go-version: ${{ inputs.go-version }}

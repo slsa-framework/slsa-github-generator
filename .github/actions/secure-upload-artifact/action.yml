@@ -16,14 +16,17 @@ outputs:
 runs:
   using: "composite"
   steps:
+    # Note: this assumes to top-level re-usable workflow
+    # has checkout'ed the builder repository using
+    # `.github/actions/secure-builder-checkout`.
     - name: Compute binary hash
       id: compute-digest
-      uses: slsa-framework/slsa-github-generator/.github/actions/compute-sha256@e3220805577deb9d193f64e519abcb3b50851df5
+      uses: ./__BUILDER_CHECKOUT_DIR__/.github/actions/compute-sha256
       with:
         path: "${{ inputs.path }}"
 
     - name: Upload the artifact
-      uses: actions/upload-artifact@3cea5372237819ed00197afe530f5a7ea3e805c8 # tag=v3.1.0
+      uses: actions/upload-artifact@83fd05a356d7e2593de66fc9913b3002723633cb # tag=v3.1.1
       with:
         name: "${{ inputs.name }}"
         path: "${{ inputs.path }}"

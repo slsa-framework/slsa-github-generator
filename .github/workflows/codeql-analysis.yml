@@ -14,17 +14,25 @@ name: "CodeQL"
 on:
   push:
     branches: [main, "*"]
+    paths-ignore:
+      # If more paths are added here, then they must be added to the paths
+      # of codeql-analysis-noop.yml.
+      - "**/*.yml"
+      - "**/*.md"
   pull_request:
     # The branches below must be a subset of the branches above
     branches: [main]
+    paths-ignore:
+      - "**/*.yml"
+      - "**/*.md"
   schedule:
     - cron: "21 0 * * 2"
 
 permissions: read-all
 
 jobs:
-  analyze:
-    name: Analyze
+  analyze-matrix:
+    name: Analyze Matrix
     runs-on: ubuntu-latest
     permissions:
       actions: read
@@ -34,17 +42,17 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        language: ["go"]
+        language: ["go", "javascript"]
         # CodeQL supports [ 'cpp', 'csharp', 'go', 'java', 'javascript', 'python', 'ruby' ]
         # Learn more about CodeQL language support at https://aka.ms/codeql-docs/language-support
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # tag=v3.0.2
+        uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # tag=v3.1.0
 
       # Initializes the CodeQL tools for scanning.
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@b398f525a5587552e573b247ac661067fafa920b # tag=v2.1.22
+        uses: github/codeql-action/init@c3b6fce4ee2ca25bc1066aa3bf73962fda0e8898 # v2.1.31
         with:
           languages: ${{ matrix.language }}
           # If you wish to specify custom queries, you can do so here or in a config file.
@@ -57,7 +65,7 @@ jobs:
       # Autobuild attempts to build any compiled languages  (C/C++, C#, or Java).
       # If this step fails, then you should remove it and run the build manually (see below)
       - name: Autobuild
-        uses: github/codeql-action/autobuild@b398f525a5587552e573b247ac661067fafa920b # tag=v2.1.22
+        uses: github/codeql-action/autobuild@c3b6fce4ee2ca25bc1066aa3bf73962fda0e8898 # v2.1.31
 
       # Command-line programs to run using the OS shell.
       # 📚 See https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idstepsrun
@@ -70,4 +78,20 @@ jobs:
       #   ./location_of_script_within_repo/buildscript.sh
 
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@b398f525a5587552e573b247ac661067fafa920b # tag=v2.1.22
+        uses: github/codeql-action/analyze@c3b6fce4ee2ca25bc1066aa3bf73962fda0e8898 # v2.1.31
+
+  # NOTE: Checks that the matrix job above completes successfully.
+  # This is necessary because the matrix strategy generates new jobs with
+  # different names and throws off the required checks on protected
+  # branches which are set by job name.
+  analyze:
+    name: Analyze
+    runs-on: ubuntu-latest
+    needs: [analyze-matrix]
+    if: ${{ always() }}
+    env:
+      ANALYZE_RESULT: ${{ needs.analyze-matrix.result }}
+    steps:
+      - run: |
+          # exit 0 if checks were successful.
+          [ "${ANALYZE_RESULT}" == "success" ]

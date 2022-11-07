@@ -25,9 +25,8 @@ import (
 	"testing"
 
 	intoto "github.com/in-toto/in-toto-golang/in_toto"
-	slsav02 "github.com/in-toto/in-toto-golang/in_toto/slsa_provenance/v0.2"
+	slsacommon "github.com/in-toto/in-toto-golang/in_toto/slsa_provenance/common"
 	"github.com/slsa-framework/slsa-github-generator/internal/errors"
-	"github.com/slsa-framework/slsa-github-generator/slsa"
 )
 
 func checkExit(err error) {
@@ -121,7 +120,7 @@ func parseSubjects(b64str string) ([]intoto.Subject, error) {
 
 		parsed = append(parsed, intoto.Subject{
 			Name: name,
-			Digest: slsav02.DigestSet{
+			Digest: slsacommon.DigestSet{
 				"sha256": shaDigest,
 			},
 		})
@@ -131,13 +130,4 @@ func parseSubjects(b64str string) ([]intoto.Subject, error) {
 	}
 
 	return parsed, nil
-}
-
-type provenanceOnlyBuild struct {
-	*slsa.GithubActionsBuild
-}
-
-// URI implements BuildType.URI.
-func (b *provenanceOnlyBuild) URI() string {
-	return provenanceOnlyBuildType
 }

@@ -1,4 +1,4 @@
-# Used for pre-submit tests.
+# Used for binary releases.
 version: 1
 env:
   - GO111MODULE=on
