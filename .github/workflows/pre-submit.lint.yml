@@ -15,8 +15,8 @@ jobs:
         with:
           go-version: 1.19
       - env:
-          GOLANGCI_LINT_VERSION: "1.46.2"
-          GOLANGCI_LINT_CHECKSUM: "242cd4f2d6ac0556e315192e8555784d13da5d1874e51304711570769c4f2b9b"
+          GOLANGCI_LINT_VERSION: "1.50.1"
+          GOLANGCI_LINT_CHECKSUM: "4ba1dc9dbdf05b7bdc6f0e04bdfe6f63aa70576f51817be1b2540bbce017b69a"
         run: |
           set -euo pipefail
 
@@ -24,7 +24,7 @@ jobs:
           curl -sSLo golangci-lint.tar.gz "https://github.com/golangci/golangci-lint/releases/download/v${GOLANGCI_LINT_VERSION}/golangci-lint-${GOLANGCI_LINT_VERSION}-linux-amd64.tar.gz"
           echo "golangci-lint checksum is $(sha256sum golangci-lint.tar.gz | awk '{ print $1 }')"
           echo "expected checksum is $GOLANGCI_LINT_CHECKSUM"
-          echo "$GOLANGCI_LINT_CHECKSUM golangci-lint.tar.gz" | sha256sum --strict --check --status || exit -2
+          echo "$GOLANGCI_LINT_CHECKSUM  golangci-lint.tar.gz" | sha256sum --strict --check --status || exit -2
           tar xf golangci-lint.tar.gz
           mv golangci-lint-${GOLANGCI_LINT_VERSION}-linux-amd64/golangci-lint /usr/local/bin
 
@@ -37,11 +37,17 @@ jobs:
       - uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # tag=v3.1.0
       - env:
           SHELLCHECK_VERSION: "0.8.0"
+          SHELLCHECK_CHECKSUM: "ab6ee1b178f014d1b86d1e24da20d1139656c8b0ed34d2867fbb834dad02bf0a"
         run: |
           set -euo pipefail
 
           # Install shellcheck
-          wget -qO- "https://github.com/koalaman/shellcheck/releases/download/v${SHELLCHECK_VERSION}/shellcheck-v${SHELLCHECK_VERSION}.linux.x86_64.tar.xz" | tar -xJf -
+          wget -sSLo shellcheck.tar.gz "https://github.com/koalaman/shellcheck/releases/download/v${SHELLCHECK_VERSION}/shellcheck-v${SHELLCHECK_VERSION}.linux.x86_64.tar.xz"
+          echo "shellcheck checksum is $(sha256sum shellcheck.tar.gz | awk '{ print $1 }')"
+          echo "expected checksum is $SHELLCHECK_CHECKSUM"
+          echo "$SHELLCHECK_CHECKSUM  shellcheck.tar.gz" | sha256sum --strict --check --status || exit -2
+
+          tar xf shellcheck.tar.gz
           mv "shellcheck-v$SHELLCHECK_VERSION/shellcheck" /usr/local/bin
 
           # Run shellcheck and output github actions commands.
