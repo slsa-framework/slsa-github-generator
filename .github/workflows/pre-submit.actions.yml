@@ -112,7 +112,7 @@ jobs:
         env:
           BODY: "${{ github.event.pull_request.body }}"
         run: |
-          RELEASE_TAG=$(echo "$BODY" | tr '\n' ' ' | head -n 1 | awk '{print $2}')
+          RELEASE_TAG=$(echo "$BODY" | grep -o -e 'v[0-9].[0-9].[0-9]')
           RELEASE_TAG=${RELEASE_TAG} ./__THIS_REPO__/.github/workflows/scripts/pre-release/references.sh
 
   secure-project-checkout-go:
