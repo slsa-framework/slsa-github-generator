@@ -5,8 +5,8 @@ This is a document to describe the release process for the Go builder. Since all
 ---
 
 - [Pre-release](#pre-release-tests)
-- [Verify version references & code freeze](#verify-version-references--code-freeze)
 - [Tagging](#tagging)
+- [Verify version references & code freeze](#verify-version-references--code-freeze)
 - [Post-release tests](#post-release-tests)
 - [Update Verifier](#update-verifier)
 - [Finalize release](#finalize-release)
