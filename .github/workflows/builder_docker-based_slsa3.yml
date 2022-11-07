@@ -1,0 +1,191 @@
+# Copyright The GOSST team.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+name: SLSA Docker-based builder
+
+# TODO: permissions
+
+# TODO: env
+
+defaults:
+  run:
+    shell: bash
+
+###################################################################
+#                                                                 #
+#            Input and output argument definitions                #
+#                                                                 #
+###################################################################
+on:
+  workflow_call:
+    inputs:
+      builder-image:
+        description: >
+          The OCI image name of the builder image responsible for 
+          creating the artifact. This must not include a tag or digest.
+        required: true 
+        type: string
+      builder-digest:
+        description: >
+          The OCI image digest of the builder-image. 
+          This must be specified in order to fully specify the builder 
+          image. The image digest is of the form '<alg>:<digest>'
+        required: true 
+        type: string
+      config:
+        description: >
+          Path to a configuration file containing a command that the builder
+          image should be invoked with and optionally, docker options
+          and environment variables.
+        required: true 
+        type: string
+      output:
+        description: >
+          Path to the output artifact(s) relative to the root of the Git
+          repository.
+          Users may specify a single artifact or use a shell-style wildcard
+          pattern to match multiple artifacts.
+        required: true 
+        type: string
+      source-repository:
+        description: >
+          Source repository to checkout for the build. For example, octocat/hello-world.
+          The builder will mount the root of this source repository to the workspace.
+
+          By default, uses the source repository of the caller workflow.
+        required: false 
+        type: string
+      source-digest:
+        description: >
+          The SHA of the source repository to checkout. 
+
+          By default, uses the source repository of the caller workflow.
+        required: false
+        type: string
+      # TODO: Options for requesting and verifying provenance of builder image
+      # This will use slsa-verifier and slsa-verifier option.
+      #      * request-builder-verification
+
+      # TODO: Authentication options for the builder-image.
+      #      * registry-username
+      #      * registry-password
+
+jobs:
+  ###################################################################
+  #                                                                 #
+  #           Optional: Verify builder-image provenance             #
+  #                                                                 #
+  ###################################################################
+  verify-builder:
+    # This is a no-op right now.
+    outputs:
+      verified: ${{ steps.verify.outputs.verified }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: run no-op slsa-verifier
+        id: verify
+        env: 
+          BUILDER_IMAGE: ${{ inputs.bulder-image }}
+          BUILDER_DIGEST: ${{ inputs.builder-digest }}
+          SOURCE_URI: octocat/hello-world
+        run: |
+          echo "verified=false" >> $GITHUB_OUTPUT
+
+  ###################################################################
+  #                                                                 #
+  #        Construct SLSA recipe from user configuration            #
+  #                                                                 #
+  ###################################################################
+  generate-recipe:
+    outputs:
+      recipe: ${{ steps.generate.outputs.recipe }}
+      recipe-digest: ${{ steps.generate.outputs.sha256 }}
+    runs-on: ubuntu-latest
+    needs: verify-builder
+    steps:
+      - name: Generate or run configuration parser
+        if: generate
+        # These are the inputs, it may be with: for an action or
+        # specified with these env vars.
+        env:
+          BUILDER_IMAGE: ${{ inputs.bulder-image }}
+          BUILDER_DIGEST: ${{ inputs.builder-digest }}
+          BUILDER_VERIFIED: ${{ needs.verify-builder.outputs.verified }}
+          CONFIG: ${{ inputs.config }}
+          OUTPUT: ${{ inputs.output }}
+          # Either the provided source repository or the caller's GITHUB_REPOSITORY
+          SOURCE_REPOSITORY: ${{ inputs.source-repository || github.repository }}
+          # Either the provided digest, or the caller's GITHUB_REF
+          SOURCE_DIGEST: ${{ inputs.source-digest || github.ref }}
+        run: |
+          # We could either:
+          #   1. Run a simple script to generate the SLSA recipe
+          #   2. Create a simple action to generate the SLSA recipe
+          #   3. Publish a binary on GH actions to generate the SLSA
+          #      recipe.
+          echo "running fake slsa recipe generator"
+          echo "recipe=path/to/recipe" >> $GITHUB_OUTPUT
+  
+  ###################################################################
+  #                                                                 #
+  #                   Generate builder binary                       #
+  #                                                                 #
+  ###################################################################
+  generate-builder:
+    # TODO: Should this step update the SLSA predicate with the
+    # builder dependency?
+    outputs:
+      go-builder-sha256: ${{ steps.generate.outputs.sha256 }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Generate the builder binary
+        run: |
+          echo "fetches the builder binary and uploads it"
+
+  ###################################################################
+  #                                                                 #
+  #                     Build the project                           #
+  #                                                                 #
+  ###################################################################
+  build:
+    outputs:
+    needs: [generate-builder, generate-recipe]
+    steps:
+      - name: Run builder on SLSA recipe
+        id: build
+        runs: |
+          echo "runs builder on SLSA recipe"
+
+  ###################################################################
+  #                                                                 #
+  #              Generate the signed attestation                    #
+  #                                                                 #
+  ###################################################################
+  attest:
+    runs-on: ubuntu-latest
+    needs: [build]
+    outputs:
+      attestation-name: ${{ steps.sign.outputs.attestation-name }}
+      attestation-sha256: ${{ steps.sign.outputs.attestation-sha256 }}
+    steps:
+      - name: Create and sign attestation
+        id: sign
+        run: |
+          echo "running attestation signer"
+      - name: Upload
+        id: upload
+        run: |
+          echo "use upload-artifact to upload signed attestation"
+
+
