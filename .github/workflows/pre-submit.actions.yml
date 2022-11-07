@@ -105,10 +105,10 @@ jobs:
           ref: main
           path: __EXAMPLE_PACKAGE__
       - name: Verify main references
-        if: ${{ !contains(github.event.head_commit.message, '#label:release') }}
+        if: ${{ !contains(github.event.pull_request.body, '#label:release') }}
         run: ./__THIS_REPO__/.github/workflows/scripts/pre-submit.actions/references.sh
       - name: Verify version references
-        if: ${{ contains(github.event.head_commit.message, '#label:release') }}
+        if: ${{ contains(github.event.pull_request.body, '#label:release') }}
         run: ./__THIS_REPO__/.github/workflows/scripts/pre-release/references.sh
 
   secure-project-checkout-go:
