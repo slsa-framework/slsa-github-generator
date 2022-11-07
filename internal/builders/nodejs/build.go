@@ -60,10 +60,15 @@ func build(dryRun bool) error {
 	// The tarball name into a step output: echo "filename=$TARBALL" >> "$GITHUB_OUTPUT"
 
 	if dryRun {
-		// Output the proveance metadata in a format:
+		// 1. Retrieve artifacts and their hases from env variable SLSA_ARTIFACTS_INPUTS.
+
+		// 2. Output the proveance metadata in a format:
 		/* METADATA={
 			"provenance1.intoto.jsonl":{
 				"artifact-1":{
+					"digest": {
+						"sha256": "abcdef"
+					},
 					"buildSteps":[]Steps{
 						"workingDir": string,
 						"env": map[string]string,
@@ -71,6 +76,9 @@ func build(dryRun bool) error {
 					}
 				},
 				"artifact-2":{
+					"digest": {
+						"sha256": "abcdef"
+					},
 					"buildSteps":[]Steps{
 						"workingDir": string,
 						"env": map[string]string,
@@ -80,6 +88,9 @@ func build(dryRun bool) error {
 			},
 			"provenance2.intoto.jsonl":{
 				"artifact-3":{
+					"digest": {
+						"sha256": "abcdef"
+					},
 					"buildSteps":[]Steps{
 						"workingDir": string,
 						"env": map[string]string,
@@ -91,6 +102,7 @@ func build(dryRun bool) error {
 		*/
 		return nil
 	}
+
 	// 4. Output the list of artifacts in a format TBD (sha256sum?).
 
 	return nil

@@ -182,47 +182,6 @@ jobs:
           if-no-files-found: error
           retention-days: 5
 
-  build-dry:
-    outputs:
-      provenance-metadata: ${{ steps.build-dry.outputs.provenance-metadata }}
-    runs-on: ubuntu-latest
-    needs: [builder, rng, detect-env]
-    steps:
-      - name: Checkout builder repository
-        uses: slsa-framework/slsa-github-generator/.github/actions/secure-builder-checkout@main
-        with:
-          repository: "${{ needs.detect-env.outputs.repository }}"
-          ref: "${{ needs.detect-env.outputs.ref }}"
-          path: __BUILDER_CHECKOUT_DIR__
-
-      - name: Checkout the Node repository
-        uses: ./__BUILDER_CHECKOUT_DIR__/.github/actions/secure-project-checkout-node
-        with:
-          node-version: ${{ inputs.node-version }}
-          scope: ${{ inputs.scope }}
-          token: ${{ inputs.token }}
-          always-auth: ${{ inputs.always-auth }}
-          registry-url: ${{ inputs.registry-url }}
-          cache: "npm"
-
-      - name: Download builder
-        uses: ./__BUILDER_CHECKOUT_DIR__/.github/actions/secure-download-artifact
-        with:
-          name: "${{ env.BUILDER_BINARY }}-${{ needs.rng.outputs.value }}"
-          path: "${{ env.BUILDER_BINARY }}"
-          sha256: "${{ needs.builder.outputs.node-builder-sha256 }}"
-          set-executable: true
-
-      - name: Build dry project
-        id: build-dry
-        working-directory: __PROJECT_CHECKOUT_DIR__
-        env:
-          SLSA_WORKFLOW_INPUTS: "${{ inputs }}"
-        run: |
-          set -euo pipefail
-
-          "$GITHUB_WORKSPACE/$BUILDER_BINARY" build --dry-run
-
   ###################################################################
   #                                                                 #
   #                       Build the project                         #
@@ -275,6 +234,48 @@ jobs:
         with:
           name: "<TODO>"
           path: "<TODO>"
+
+  build-dry:
+    outputs:
+      provenance-metadata: ${{ steps.build-dry.outputs.provenance-metadata }}
+    runs-on: ubuntu-latest
+    needs: [builder, build, rng, detect-env]
+    steps:
+      - name: Checkout builder repository
+        uses: slsa-framework/slsa-github-generator/.github/actions/secure-builder-checkout@main
+        with:
+          repository: "${{ needs.detect-env.outputs.repository }}"
+          ref: "${{ needs.detect-env.outputs.ref }}"
+          path: __BUILDER_CHECKOUT_DIR__
+
+      - name: Checkout the Node repository
+        uses: ./__BUILDER_CHECKOUT_DIR__/.github/actions/secure-project-checkout-node
+        with:
+          node-version: ${{ inputs.node-version }}
+          scope: ${{ inputs.scope }}
+          token: ${{ inputs.token }}
+          always-auth: ${{ inputs.always-auth }}
+          registry-url: ${{ inputs.registry-url }}
+          cache: "npm"
+
+      - name: Download builder
+        uses: ./__BUILDER_CHECKOUT_DIR__/.github/actions/secure-download-artifact
+        with:
+          name: "${{ env.BUILDER_BINARY }}-${{ needs.rng.outputs.value }}"
+          path: "${{ env.BUILDER_BINARY }}"
+          sha256: "${{ needs.builder.outputs.node-builder-sha256 }}"
+          set-executable: true
+
+      - name: Build dry project
+        id: build-dry
+        working-directory: __PROJECT_CHECKOUT_DIR__
+        env:
+          SLSA_WORKFLOW_INPUTS: "${{ inputs }}"
+          SLSA_ARTIFACTS_INPUTS: "${{ needs.build.outputs.artifacts }}"
+        run: |
+          set -euo pipefail
+
+          "$GITHUB_WORKSPACE/$BUILDER_BINARY" build --dry-run
 
   ###################################################################
   #                                                                 #

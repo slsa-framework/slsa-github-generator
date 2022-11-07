@@ -41,10 +41,6 @@ func attestCmd(provider slsa.ClientProvider, check func(error), signer signing.S
 func attest() error {
 	// 1. Retrieve the provenance metadata from env variable UNTRUSTED_PROVENANCE_METADATA.
 
-	// 2. Retrieve the list of artifacts from env variable UNTRUSTED_ARTIFACTS.
-
-	// 3. Verifiy that list of artifacts in UNTRUSTED_ARTIFACTS and UNTRUSTED_PROVENANCE_METADATA match.
-
 	// 4. Create / sign a provenance file as per UNTRUSTED_PROVENANCE_METADATA.
 
 	// 5. Output the list of provenance files generated in a format TBD (sha256sum?).
