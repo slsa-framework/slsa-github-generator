@@ -109,8 +109,10 @@ jobs:
         run: ./__THIS_REPO__/.github/workflows/scripts/pre-submit.actions/references.sh
       - name: Verify version references
         if: ${{ contains(github.event.pull_request.body, '#label:release') }}
+        env:
+          BODY: "${{ github.event.pull_request.body }}"
         run: |
-          echo ${{ github.event.pull_request.body }} | awk '{print $2}'
+          RELEASE_TAG=$(echo "$BODY" | head -n 1 | awk '{print $2}')
           RELEASE_TAG=${RELEASE_TAG} ./__THIS_REPO__/.github/workflows/scripts/pre-release/references.sh
 
   secure-project-checkout-go:
