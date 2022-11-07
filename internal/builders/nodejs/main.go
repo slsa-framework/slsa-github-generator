@@ -44,11 +44,10 @@ For more information on SLSA, visit https://slsa.dev`,
 		},
 	}
 	c.AddCommand(versionCmd())
-	c.AddCommand(provenanceCmd(nil, checkExit, sigstore.NewDefaultFulcio(), sigstore.NewDefaultRekor()))
-	c.AddCommand(ciCmd(checkExit))
-	c.AddCommand(packCmd(checkExit))
+	c.AddCommand(attestCmd(nil, checkExit, sigstore.NewDefaultFulcio(), sigstore.NewDefaultRekor()))
+	c.AddCommand(buildCmd(checkExit))
 	c.AddCommand(publishCmd(checkExit))
-	c.AddCommand(runCmd(checkExit))
+
 	return c
 }
 
