@@ -42,7 +42,7 @@ jobs:
           set -euo pipefail
 
           # Install shellcheck
-          wget -sSLo shellcheck.tar.gz "https://github.com/koalaman/shellcheck/releases/download/v${SHELLCHECK_VERSION}/shellcheck-v${SHELLCHECK_VERSION}.linux.x86_64.tar.xz"
+          curl -sSLo shellcheck.tar.gz "https://github.com/koalaman/shellcheck/releases/download/v${SHELLCHECK_VERSION}/shellcheck-v${SHELLCHECK_VERSION}.linux.x86_64.tar.xz"
           echo "shellcheck checksum is $(sha256sum shellcheck.tar.gz | awk '{ print $1 }')"
           echo "expected checksum is $SHELLCHECK_CHECKSUM"
           echo "$SHELLCHECK_CHECKSUM  shellcheck.tar.gz" | sha256sum --strict --check --status || exit -2
