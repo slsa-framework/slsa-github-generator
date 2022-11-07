@@ -39,7 +39,7 @@ Verify the references to the internal Actions by manually running the [release w
 find .github/workflows/ -name '*.yaml' -o -name '*.yml' | xargs sed -i 's/uses: slsa-framework\/slsa-github-generator\/\.github\/actions\/\(.*\)@main*/uses: slsa-framework\/slsa-github-generator\/.github\/actions\/\1@_YOUR_RELEASE_TAG_/'
 ```
 
-Send a PR with this update and add `#label:release` in the PR description.
+Send a PR with this update and add `#label:release ${BUILDER_TAG}` in the PR description.
 
 Code freeze the repository for 1-2 days.
 
