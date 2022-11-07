@@ -51,7 +51,7 @@ Update version references with the following command:
 find .github/workflows/ -name '*.yaml' -o -name '*.yml' | xargs sed -i "s/uses: slsa-framework\/slsa-github-generator\/\.github\/actions\/\(.*\)@\(main\|v[0-9]\+\.[0-9]\+\.[0-9]\+\)/uses: slsa-framework\/slsa-github-generator\/.github\/actions\/\1@$BUILDER_TAG/"
 ```
 
-Send a PR with this update and add `#label:release` in the PR description.
+Send a PR with this update and add `#label:release ${BUILDER_TAG}` in the PR description.
 
 Once the PR is merged, update the tag to point to HEAD.
 

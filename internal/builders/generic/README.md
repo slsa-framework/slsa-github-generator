@@ -31,6 +31,7 @@ project simply generates provenance as a separate step in an existing workflow.
   - [Provenance for Java](#provenance-for-java)
   - [Provenance for Rust](#provenance-for-rust)
   - [Provenance for Haskell](#provenance-for-haskell)
+  - [Provenance for Python](#provenance-for-python)
 - [Known Issues](#known-issues)
 
 ---
