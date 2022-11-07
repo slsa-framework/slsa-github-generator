@@ -5,6 +5,7 @@ This is a document to describe the release process for the Go builder. Since all
 ---
 
 - [Pre-release](#pre-release-tests)
+- [Verify version references & code freeze](#verify-version-references-code-freeze)
 - [Tagging](#tagging)
 - [Post-release tests](#post-release-tests)
 - [Update Verifier](#update-verifier)
@@ -31,19 +32,36 @@ $ export BUILDER_REPOSITORY="$GITHUB_USERNAME/slsa-github-generator"
 $ export GH=/path/to/gh
 ```
 
-## Pre-release tests
+## Tagging
 
-Verify the references to the internal Actions by manually running the [release workflow](https://github.com/slsa-framework/slsa-github-generator/actions/workflows/release.yml). Ensure this workflow succeeds. If the references are still `@main`, update them with the following command:
+Create a new tag for the official generator via [slsa-framework/slsa-github-generator/releases/new](https://github.com/slsa-framework/slsa-github-generator/releases/new).
+The tag _MUST_ be a "canonical" semantic version without metadata (`$BUILDER_TAG`). Shorter versions are not accepted by the builder's and verifier's code.
+
+Set the title to `$BUILDER_TAG`.
+
+Tick the `This is a pre-release` option.
+
+Click `Publish release`.
+
+## Verify version references & code freeze
+
+Update version references with the following command:
 
 ```shell
-find .github/workflows/ -name '*.yaml' -o -name '*.yml' | xargs sed -i 's/uses: slsa-framework\/slsa-github-generator\/\.github\/actions\/\(.*\)@main*/uses: slsa-framework\/slsa-github-generator\/.github\/actions\/\1@_YOUR_RELEASE_TAG_/'
+find .github/workflows/ -name '*.yaml' -o -name '*.yml' | xargs sed -i "s/uses: slsa-framework\/slsa-github-generator\/\.github\/actions\/\(.*\)@main*/uses: slsa-framework\/slsa-github-generator\/.github\/actions\/\1@$BUILDER_TAG/"
 ```
 
 Send a PR with this update and add `#label:release` in the PR description.
 
+Once the PR is merged, update the tag to point to HEAD.
+
 Code freeze the repository for 1-2 days.
 
 Verify all the e2e tests in [github.com/slsa-framework/example-package/.github/workflows/](github.com/slsa-framework/example-package/.github/workflows/) are passing. (They run daily).
+
+## Pre-release tests
+
+Verify the references to the internal Actions by manually running the [release workflow](https://github.com/slsa-framework/slsa-github-generator/actions/workflows/release.yml). Ensure this workflow succeeds.
 
 There is one integration test we cannot easily test "live", so we need to simulate it by changing the code: malicious verifier binary in assets. We want to be sure the builder fails if the verifier's binary is tampered with. For this:
 
@@ -115,23 +133,6 @@ There is one integration test we cannot easily test "live", so we need to simula
    verifier hash computed is 5891b5b522d5df086d0ff0b110fbd9d21bb4fc7163af34d08286a2e846f6be03
    Error: Process completed with exit code 4.
    ```
-
-## Tagging
-
-Create a new tag for the official generator via [slsa-framework/slsa-github-generator/releases/new](https://github.com/slsa-framework/slsa-github-generator/releases/new).
-The tag _MUST_ be a "canonical" semantic version without metadata (`$BUILDER_TAG`). Shorter versions are not accepted by the builder's and verifier's code.
-
-Set the title to `$BUILDER_TAG`.
-
-Tick the `This is a pre-release` option.
-
-Click `Publish release`.
-
-Download the generated binary `slsa-builder-go-linux-amd64` locally on your machine:
-
-```
-$ "$GH" release -R slsa-framework/slsa-github-generator download "$BUILDER_TAG" -p "slsa-builder-go-linux-amd64"
-```
 
 ## Post-release tests
 
@@ -226,13 +227,14 @@ For each of the GHA builders, you will need to:
 1. Generate binaries and provenance in [example-package](https://github.com/slsa-framework/example-package) using the GHA action builder. These require using the updated builders, so validate that the workflows you use below are pinned at `$BUILDER_TAG`.
 
 You will need the following trigger types:
-* A workflow dispatch event.
-* A tag of the form `vX.Y.Z`.
-* Tags of the form `vX` and `vX.Y`.
+
+- A workflow dispatch event.
+- A tag of the form `vX.Y.Z`.
+- Tags of the form `vX` and `vX.Y`.
 
 To do this, trigger the [Go workflow dispatch](https://github.com/slsa-framework/example-package/blob/main/.github/workflows/verifier-e2e.go.workflow_dispatch.main.all.slsa3.yml) and [Generic workflow dispatch](https://github.com/slsa-framework/example-package/blob/main/.github/workflows/verifier-e2e.generic.workflow_dispatch.main.all.slsa3.yml). These will dispatch the workflow and create provenance for the workflow dispatch event, and then trigger subsequent runs on fixed tags.
 
-Download the uploaded artifacts of each of these, labelling the workflow dispatch artifacts by `binary-linux-amd64-workflow_dispatch(.intoto.jsonl)` and the tags by `binary-linux-amd64-push-v$TAG(.intoto.jsonl)`. 
+Download the uploaded artifacts of each of these, labelling the workflow dispatch artifacts by `binary-linux-amd64-workflow_dispatch(.intoto.jsonl)` and the tags by `binary-linux-amd64-push-v$TAG(.intoto.jsonl)`.
 
 2. Move these files to `./cli/slsa-verifier/testdata/gha_$BUILDER_TYPE/$BUILDER_TAG/`. Send a pull request to merge the changes into the verifier's repository. The pre-submits will validate that the verifier is able to verify provenance from the `$BUILDER_TAG` builder.
 
