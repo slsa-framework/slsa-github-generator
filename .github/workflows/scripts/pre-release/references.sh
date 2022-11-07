@@ -36,13 +36,13 @@ if [[ "$results" != "" ]]; then
 fi
 
 # Verify documentation refers to the most recent release tag
-# TODO(https://github.com/slsa-framework/slsa-github-generator/milestone/3):
-#   Remove `@main` from allowed tags
+# TODO(https://github.com/slsa-framework/slsa-github-generator/issues/409):
+#   Include "./internal/builders/container/*" in this check
 results=$(
-    find . -name "*.md" -print0 \
-    | xargs -0 grep -Pn "uses: slsa-framework/slsa-github-generator/.*@(?!<|main|$RELEASE_TAG)" \
-    | sed "s/\(.*:\) *uses:.*\(\/.*\)/\1 [...]\2/" \
-    || true
+    find . -name "*.md" -not -path ./internal/builders/container/* -print0 |
+        xargs -0 grep -Pn "uses: slsa-framework/slsa-github-generator/.*@(?!<|$RELEASE_TAG)" |
+        sed "s/\(.*:\) *uses:.*\(\/.*\)/\1 [...]\2/" ||
+        true
 )
 
 if [[ "$results" != "" ]]; then
