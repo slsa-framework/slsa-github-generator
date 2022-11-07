@@ -41,13 +41,13 @@ fi
 results=$(
     find . -name "*.md" -print0 \
     | xargs -0 grep -Pn "uses: slsa-framework/slsa-github-generator/.*@(?!<|main|$RELEASE_TAG)" \
-    | sed 's/\(.*:\) *uses:.*\(\/.*\)/\1 [...]\2/' \
+    | sed "s/\(.*:\) *uses:.*\(\/.*\)/\1 [...]\2/" \
     || true
 )
 
 if [[ "$results" != "" ]]; then
     echo "Some documentation refers to an incorrect release tag"
-    echo "Allowed tags are <pseudo_tags> or \"$RELEASE_TAG\""
+    echo "Allowed tags are \"<pseudo_tags>\" or \"$RELEASE_TAG\""
     echo "$results"
     exit 1
 fi
