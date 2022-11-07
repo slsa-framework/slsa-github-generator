@@ -18,6 +18,8 @@ project simply generates provenance as a separate step in an existing workflow.
 - [Benefits of Provenance](#benefits-of-provenance)
 - [Generating Provenance](#generating-provenance)
   - [Getting Started](#getting-started)
+  - [Referencing the SLSA generator](#referencing-the-slsa-generator)
+  - [Private Repositories](#private-repositories)
   - [Supported Triggers](#supported-triggers)
   - [Workflow Inputs](#workflow-inputs)
   - [Workflow Outputs](#workflow-outputs)
@@ -29,6 +31,8 @@ project simply generates provenance as a separate step in an existing workflow.
   - [Provenance for Java](#provenance-for-java)
   - [Provenance for Rust](#provenance-for-rust)
   - [Provenance for Haskell](#provenance-for-haskell)
+  - [Provenance for Python](#provenance-for-python)
+- [Known Issues](#known-issues)
 
 ---
 
@@ -75,12 +79,12 @@ provenance:
     actions: read # Needed for detection of GitHub Actions environment.
     id-token: write # Needed for provenance signing and ID
     contents: write # Needed for release uploads
-  uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.2.0
+  uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.2.1
   with:
     base64-subjects: "${{ needs.build.outputs.hashes }}"
 ```
 
-**Note**: Make sure that you reference the generator with a semantic version of the form `@vX.Y.Z`. 
+**Note**: Make sure that you reference the generator with a semantic version of the form `@vX.Y.Z`.
 More information [here](/README.md#referencing-slsa-builders-and-generators).
 
 Here's an example of what it might look like all together.
@@ -107,7 +111,7 @@ jobs:
           # sha256sum generates sha256 hash for all artifacts.
           # base64 -w0 encodes to base64 and outputs on a single line.
           # sha256sum artifact1 artifact2 ... | base64 -w0
-          echo "::set-output name=hashes::$(sha256sum artifact1 artifact2 | base64 -w0)"
+          echo "hashes=$(sha256sum artifact1 artifact2 | base64 -w0)" >> "$GITHUB_OUTPUT"
 
       - name: Upload artifact1
         uses: actions/upload-artifact@3cea5372237819ed00197afe530f5a7ea3e805c8 # tag=v3.1.0
@@ -132,7 +136,7 @@ jobs:
       actions: read
       id-token: write
       contents: write
-    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.2.0
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.2.1
     with:
       base64-subjects: "${{ needs.build.outputs.hashes }}"
       # Upload provenance to a new release
@@ -162,6 +166,36 @@ jobs:
             artifact2
 ```
 
+### Referencing the SLSA generator
+
+At present, the generator **MUST** be referenced
+by a tag of the form `@vX.Y.Z`, because the build will fail if you reference it via a shorter tag like `@vX.Y` or `@vX` or if you reference it by a hash.
+
+For more information about this design decision and how to configure renovatebot,see the main repository [README.md](../../../README.md).
+
+### Private Repositories
+
+Private repositories are supported with some caveats. Currently all builds
+generate and post a new entry in the public
+[Rekor](https://github.com/sigstore/rekor) API server instance at
+rekor.sigstore.dev. This entry includes the repository name. This will cause the
+private repository name to leak and be discoverable via the public Rekor API
+server.
+
+If this is ok with you, you can set the `private-repository` flag in order to
+opt in to publishing to the public Rekor instance from a private repository.
+
+```yaml
+with:
+  private-repository: true
+```
+
+If you do not set this flag then private repositories will generate an error in
+order to prevent leaking repository name information.
+
+Support for private transparency log instances that would not leak repository
+name information is tracked on [issue #372](https://github.com/slsa-framework/slsa-github-generator/issues/372).
+
 ### Supported Triggers
 
 The following [GitHub trigger events](https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows) are fully supported and tested:
@@ -181,12 +215,13 @@ issue](https://github.com/slsa-framework/slsa-github-generator/issues/new/choose
 
 The [generic workflow](https://github.com/slsa-framework/slsa-github-generator/blob/main/.github/workflows/generator_generic_slsa3.yml) accepts the following inputs:
 
-| Name               | Required | Default                                                                                         | Description                                                                                                                                                                                                                                                      |
-| ------------------ | -------- | ----------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `base64-subjects`  | yes      |                                                                                                 | Artifact(s) for which to generate provenance, formatted the same as the output of sha256sum (SHA256 NAME\n[...]) and base64 encoded. The encoded value should decode to, for example: `90f3f7d6c862883ab9d856563a81ea6466eb1123b55bff11198b4ed0030cac86 foo.zip` |
-| `upload-assets`    | no       | false                                                                                           | If true provenance is uploaded to a GitHub release for new tags.                                                                                                                                                                                                 |
-| `provenance-name`  | no       | "(subject name).intoto.jsonl" if a single subject. "multiple.intoto.json" if multiple subjects. | The artifact name of the signed provenance. The file must have the `intoto.jsonl` extension.                                                                                                                                                                     |
-| `attestation-name` | no       | "(subject name).intoto.jsonl" if a single subject. "multiple.intoto.json" if multiple subjects. | The artifact name of the signed provenance. The file must have the `intoto.jsonl` extension. DEPRECATED: use `provenance-name` instead.                                                                                                                          |
+| Name                 | Required | Default                                                                                         | Description                                                                                                                                                                                                                                                      |
+| -------------------- | -------- | ----------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `base64-subjects`    | yes      |                                                                                                 | Artifact(s) for which to generate provenance, formatted the same as the output of sha256sum (SHA256 NAME\n[...]) and base64 encoded. The encoded value should decode to, for example: `90f3f7d6c862883ab9d856563a81ea6466eb1123b55bff11198b4ed0030cac86 foo.zip` |
+| `upload-assets`      | no       | false                                                                                           | If true provenance is uploaded to a GitHub release for new tags.                                                                                                                                                                                                 |
+| `provenance-name`    | no       | "(subject name).intoto.jsonl" if a single subject. "multiple.intoto.json" if multiple subjects. | The artifact name of the signed provenance. The file must have the `intoto.jsonl` extension.                                                                                                                                                                     |
+| `attestation-name`   | no       | "(subject name).intoto.jsonl" if a single subject. "multiple.intoto.json" if multiple subjects. | The artifact name of the signed provenance. The file must have the `intoto.jsonl` extension. DEPRECATED: use `provenance-name` instead.                                                                                                                          |
+| `private-repository` | no       | false                                                                                           | Set to true to opt-in to posting to the public transparency log. Will generate an error if false for private repositories. This input has no effect for public repositories. See [Private Repositories](#private-repositories).                                  |
 
 ### Workflow Outputs
 
@@ -316,7 +351,7 @@ jobs:
     set -euo pipefail
 
     checksum_file=$(echo "$ARTIFACTS" | jq -r '.[] | select (.type=="Checksum") | .path')
-    echo "::set-output name=hashes::$(cat $checksum_file | base64 -w0)"
+    echo "hashes=$(cat $checksum_file | base64 -w0)" >> "$GITHUB_OUTPUT"
 ```
 
 4. Call the generic workflow to generate provenance by declaring the job below:
@@ -328,7 +363,7 @@ provenance:
     actions: read # To read the workflow path.
     id-token: write # To sign the provenance.
     contents: write # To add assets to a release.
-  uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.2.0
+  uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.2.1
   with:
     base64-subjects: "${{ needs.goreleaser.outputs.hashes }}"
     upload-assets: true # upload to a new release
@@ -358,7 +393,7 @@ jobs:
           set -euo pipefail
 
           checksum_file=$(echo "$ARTIFACTS" | jq -r '.[] | select (.type=="Checksum") | .path')
-          echo "::set-output name=hashes::$(cat $checksum_file | base64 -w0)"
+          echo "hashes=$(cat $checksum_file | base64 -w0)" >> "$GITHUB_OUTPUT"
 
   provenance:
     needs: [goreleaser]
@@ -366,7 +401,7 @@ jobs:
       actions: read # To read the workflow path.
       id-token: write # To sign the provenance.
       contents: write # To add assets to a release.
-    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.2.0
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.2.1
     with:
       base64-subjects: "${{ needs.goreleaser.outputs.hashes }}"
       upload-assets: true # upload to a new release
@@ -411,7 +446,7 @@ jobs:
 
     sha256sum target_binary binary > checksums
 
-    echo "::set-output name=hashes::$(cat checksums | base64 -w0)"
+    echo "hashes=$(cat checksums | base64 -w0)" >> "$GITHUB_OUTPUT"
 ```
 
 4. Call the generic workflow to generate provenance by declaring the job below:
@@ -423,7 +458,7 @@ provenance:
     actions: read # To read the workflow path.
     id-token: write # To sign the provenance.
     contents: write # To add assets to a release.
-  uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.2.0
+  uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.2.1
   with:
     base64-subjects: "${{ needs.build.outputs.hashes }}"
     upload-assets: true # Optional: Upload to a new release
@@ -457,7 +492,7 @@ jobs:
 
           sha256sum target_binary binary > checksums
 
-          echo "::set-output name=hashes::$(cat checksums | base64 -w0)"
+          echo "hashes=$(cat checksums | base64 -w0)" >> "$GITHUB_OUTPUT"
 
   provenance:
     needs: [build]
@@ -465,7 +500,7 @@ jobs:
       actions: read # To read the workflow path.
       id-token: write # To sign the provenance.
       contents: write # To add assets to a release.
-    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.2.0
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.2.1
     with:
       base64-subjects: "${{ needs.build.outputs.hashes }}"
       upload-assets: true # Optional: Upload to a new release
@@ -502,7 +537,7 @@ jobs:
 
           # Save the location of the maven output files for easier reference
           ARTIFACT_PATTERN=./target/$(mvn help:evaluate -Dexpression=project.artifactId -q -DforceStdout)-$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)*.jar
-          echo "::set-output name=artifact_pattern::$ARTIFACT_PATTERN"
+          echo "artifact_pattern=$ARTIFACT_PATTERN" >> "$GITHUB_OUTPUT"
 
 ```
 
@@ -512,7 +547,7 @@ jobs:
 - name: Generate subject
   id: hash
   run: |
-    echo "::set-output name=hashes::$(sha256sum ${{ steps.build.outputs.artifact_pattern }} | base64 -w0)"
+    echo "hashes=$(sha256sum ${{ steps.build.outputs.artifact_pattern }} | base64 -w0)" >> "$GITHUB_OUTPUT"
 ```
 
 4. Call the generic workflow to generate provenance by declaring the job below:
@@ -524,7 +559,7 @@ provenance:
     actions: read # To read the workflow path.
     id-token: write # To sign the provenance.
     contents: write # To add assets to a release.
-  uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.2.0
+  uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.2.1
   with:
     base64-subjects: "${{ needs.build.outputs.hashes }}"
     upload-assets: true # Optional: Upload to a new release
@@ -551,12 +586,12 @@ jobs:
 
           # Save the location of the maven output files for easier reference
           ARTIFACT_PATTERN=./target/$(mvn help:evaluate -Dexpression=project.artifactId -q -DforceStdout)-$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)*.jar
-          echo "::set-output name=artifact_pattern::$ARTIFACT_PATTERN"
+          echo "artifact_pattern=$ARTIFACT_PATTERN" >> "$GITHUB_OUTPUT"
 
       - name: Generate subject
         id: hash
         run: |
-          echo "::set-output name=hashes::$(sha256sum ${{ steps.build.outputs.artifact_pattern }} | base64 -w0)"
+          echo "hashes=$(sha256sum ${{ steps.build.outputs.artifact_pattern }} | base64 -w0)" >> "$GITHUB_OUTPUT"
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@3cea5372237819ed00197afe530f5a7ea3e805c8 # tag=v3
@@ -571,7 +606,7 @@ jobs:
       actions: read # To read the workflow path.
       id-token: write # To sign the provenance.
       contents: write # To add assets to a release.
-    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.2.0
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.2.1
     with:
       base64-subjects: "${{ needs.build.outputs.hashes }}"
       upload-assets: true # Optional: Upload to a new release
@@ -606,7 +641,7 @@ jobs:
 - name: Generate subject
   id: hash
   run: |
-    echo "::set-output name=hashes::$(sha256sum ./build/libs/* | base64 -w0)"
+    echo "hashes=$(sha256sum ./build/libs/* | base64 -w0)" >> "$GITHUB_OUTPUT"
 ```
 
 4. Call the generic workflow to generate provenance by declaring the job below:
@@ -618,7 +653,7 @@ provenance:
     actions: read
     id-token: write
     contents: read
-  uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.2.0
+  uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.2.1
   with:
     base64-subjects: "${{ needs.build.outputs.hashes }}"
     upload-assets: true # Optional: Upload to a new release
@@ -645,7 +680,7 @@ jobs:
       - name: Generate subject
         id: hash
         run: |
-          echo "::set-output name=hashes::$(sha256sum ./build/libs/* | base64 -w0)"
+          echo "hashes=$(sha256sum ./build/libs/* | base64 -w0)" >> "$GITHUB_OUTPUT"
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@3cea5372237819ed00197afe530f5a7ea3e805c8 # tag=v3
@@ -660,7 +695,7 @@ jobs:
       actions: read
       id-token: write
       contents: read
-    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.2.0
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.2.1
     with:
       base64-subjects: "${{ needs.build.outputs.hashes }}"
       upload-assets: true # Optional: Upload to a new release
@@ -699,7 +734,7 @@ jobs:
         run: |
           set -euo pipefail
 
-          echo "::set-output name=hashes::$(sha256sum target_binary | base64 -w0)"
+          echo "hashes=$(sha256sum target_binary | base64 -w0)" >> "$GITHUB_OUTPUT"
 
 ```
 
@@ -712,7 +747,7 @@ provenance:
     actions: read # To read the workflow path.
     id-token: write # To sign the provenance.
     contents: write # To add assets to a release.
-  uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.2.0
+  uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.2.1
   with:
     base64-subjects: "${{ needs.build.outputs.hashes }}"
     upload-assets: true # Optional: Upload to a new release
@@ -743,7 +778,7 @@ jobs:
         run: |
           set -euo pipefail
 
-          echo "::set-output name=hashes::$(sha256sum target_binary | base64 -w0)"
+          echo "hashes=$(sha256sum target_binary | base64 -w0)" >> "$GITHUB_OUTPUT"
 
   provenance:
     needs: [build]
@@ -751,7 +786,7 @@ jobs:
       actions: read # To read the workflow path.
       id-token: write # To sign the provenance.
       contents: write # To add assets to a release.
-    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.2.0
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.2.1
     with:
       base64-subjects: "${{ needs.build.outputs.hashes }}"
       upload-assets: true # Optional: Upload to a new release
@@ -796,7 +831,7 @@ jobs:
         run: |
           set -euo pipefail
 
-          echo "::set-output name=hashes::$(sha256sum target_binary | base64 -w0)"
+          echo "hashes=$(sha256sum target_binary | base64 -w0)" >> "$GITHUB_OUTPUT"
 
 ```
 
@@ -809,7 +844,7 @@ provenance:
     actions: read # To read the workflow path.
     id-token: write # To sign the provenance.
     contents: write # To add assets to a release.
-  uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.2.0
+  uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.2.1
   with:
     base64-subjects: "${{ needs.build.outputs.hashes }}"
     upload-assets: true # Optional: Upload to a new release
@@ -846,7 +881,7 @@ jobs:
         run: |
           set -euo pipefail
 
-          echo "::set-output name=hashes::$(sha256sum target_binary | base64 -w0)"
+          echo "hashes=$(sha256sum target_binary | base64 -w0)" >> "$GITHUB_OUTPUT"
 
   provenance:
     needs: [build]
@@ -854,8 +889,140 @@ jobs:
       actions: read # To read the workflow path.
       id-token: write # To sign the provenance.
       contents: write # To add assets to a release.
-    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.2.0
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.2.1
     with:
       base64-subjects: "${{ needs.build.outputs.hashes }}"
       upload-assets: true # Optional: Upload to a new release
+```
+
+### Provenance for Python
+If you develop with Python you can
+easily generate SLSA3 provenance by updating your existing workflow with the
+steps indicated in the workflow below:
+
+1. Declare an outputs for the artifacts generated by the build and their hashes:
+```yaml
+jobs:
+  build:
+    name: "Build dists"    
+    runs-on: "ubuntu-latest"    
+    environment:      
+      name: "publish"
+      outputs:
+      hashes: ${{ steps.hash.outputs.hashes }}
+```
+
+2. Add an id: build field to your python build step
+
+```yaml
+steps:
+  - name: "Checkout repository"        
+    uses: "actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b" # tag=v3
+
+  - name: "Setup Python"        
+    uses: "actions/setup-python@13ae5bb136fac2878aff31522b9efb785519f984" # tag=v4
+    with:  
+      python-version: "3.x"
+
+  - name: "Install dependencies"        
+    run: python -m pip install build
+
+  - name: Build using python
+    id: build
+    run: python -m build
+```
+
+3. Add a step to generate the provenance subjects as shown below. Update the sha256 sum arguments to include all binaries that you generate provenance for:
+
+```yaml
+- name: Generate subject
+  id: hash
+  run: |
+    cd dist && echo "::set-output name=hashes::$(sha256sum * | base64 -w0)"
+```
+
+4. Call the generic workflow to generate provenance by declaring the job below:
+```yaml
+provenance:
+  needs: [build]
+  permissions:
+    actions: read # To read the workflow path.
+    id-token: write # To sign the provenance.
+    contents: write # To add assets to a release.
+  uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.2.1
+  with:
+    base64-subjects: "${{ needs.build.outputs.hashes }}"
+    upload-assets: true # Optional: Upload to a new release
+```
+All in all, it will look as the following:
+```yaml
+jobs:
+  build:
+    name: "Build dists"    
+    runs-on: "ubuntu-latest"    
+    environment:      
+      name: "publish"
+    outputs:
+      hashes: ${{ steps.hash.outputs.hashes }}
+  steps:
+    - name: "Checkout repository"        
+      uses: "actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b" # tag=v3
+
+    - name: "Setup Python"        
+      uses: "actions/setup-python@13ae5bb136fac2878aff31522b9efb785519f984" # tag=v4       
+      with:  
+        python-version: "3.x"
+
+    - name: "Install dependencies"        
+      run: python -m pip install build
+
+    - name: Build using Python
+      id: build
+      run: |
+        python -m build
+
+    - name: Generate subject
+    id: hash
+    run: |
+      cd dist && echo "::set-output name=hashes::$(sha256sum * | base64 -w0)"
+
+  provenance:
+    needs: [build]
+    permissions:
+      actions: read # To read the workflow path.
+      id-token: write # To sign the provenance.
+      contents: write # To add assets to a release.
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.2.1
+    with:
+      base64-subjects: "${{ needs.build.outputs.hashes }}"
+      upload-assets: true # Optional: Upload to a new release
+```
+
+## Known Issues
+
+### error updating to TUF remote mirror: tuf: invalid key
+
+**Affected versions:** v1.2.x
+
+Workflows are currently failing with the error:
+
+```
+validating log entry: unable to fetch Rekor public keys from TUF repository, and not trusting the Rekor API for fetching public keys: updating local metadata and targets: error updating to TUF remote mirror: tuf: invalid key
+```
+
+This issue is currently tracked by [issue #1163](https://github.com/slsa-framework/slsa-github-generator/issues/1163)
+
+You can work around this error by setting `compile-generator` input flag.
+
+```yaml
+with:
+  compile-generator: true
+```
+
+This will compile the generator binary used by the workflow instead of
+downloading the latest release. Make sure you continue to reference the workflow
+using a release tag in order to allow verification by `slsa-verifier`.
+
+```yaml
+uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.2.1
 ```

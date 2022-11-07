@@ -18,12 +18,15 @@ project simply generates provenance as a separate step in an existing workflow.
 - [Benefits of Provenance](#benefits-of-provenance)
 - [Generating Provenance](#generating-provenance)
   - [Getting Started](#getting-started)
+  - [Referencing the SLSA generator](#referencing-the-slsa-generator)
+  - [Private Repositories](#private-repositories)
   - [Supported Triggers](#supported-triggers)
   - [Workflow Inputs](#workflow-inputs)
   - [Provenance Format](#provenance-format)
   - [Provenance Example](#provenance-example)
 - [Verification](#verification)
   - [Cosign](#cosign)
+  - [Sigstore policy-controller](#sigstore-policy-controller)
   - [Kyverno](#kyverno)
 
 ---
@@ -126,7 +129,7 @@ jobs:
           # NOTE: Set the image as an output because the `env` context is not
           # available to the inputs of a reusable workflow call.
           image_name="${IMAGE_REGISTRY}/${IMAGE_NAME}"
-          echo "::set-output name=image::$image_name"
+          echo "image=$image_name" >> "$GITHUB_OUTPUT"
 
   # This step calls the container workflow to generate provenance and push it to
   # the container registry.
@@ -147,6 +150,36 @@ jobs:
     secrets:
       registry-password: ${{ secrets.GITHUB_TOKEN }}
 ```
+
+### Referencing the SLSA generator
+
+At present, the generator **MUST** be referenced
+by a tag of the form `@vX.Y.Z`, because the build will fail if you reference it via a shorter tag like `@vX.Y` or `@vX` or if you reference it by a hash.
+
+For more information about this design decision and how to configure renovatebot,see the main repository [README.md](../../../README.md).
+
+### Private Repositories
+
+Private repositories are supported with some caveats. Currently all builds
+generate and post a new entry in the public
+[Rekor](https://github.com/sigstore/rekor) API server instance at
+rekor.sigstore.dev. This entry includes the repository name. This will cause the
+private repository name to leak and be discoverable via the public Rekor API
+server.
+
+If this is ok with you, you can set the `private-repository` flag in order to
+opt in to publishing to the public Rekor instance from a private repository.
+
+```yaml
+with:
+  private-repository: true
+```
+
+If you do not set this flag then private repositories will generate an error in
+order to prevent leaking repository name information.
+
+Support for private transparency log instances that would not leak repository
+name information is tracked on [issue #372](https://github.com/slsa-framework/slsa-github-generator/issues/372).
 
 ### Supported Triggers
 
@@ -169,12 +202,13 @@ The [container workflow](https://github.com/slsa-framework/slsa-github-generator
 
 Inputs:
 
-| Name                | Required | Description                                                                                         |
-| ------------------- | -------- | --------------------------------------------------------------------------------------------------- |
-| `image`             | yes      | The OCI image name. This must not include a tag or digest.                                          |
-| `digest`            | yes      | The OCI image digest. The image digest of the form '<algorithm>:<digest>' (e.g. 'sha256:abcdef...') |
-| `registry-username` | yes      | Username to log into the container registry.                                                        |
-| `compile-generator` | false    | Whether to build the generator from source. This increases build time by ~2m.                       |
+| Name                 | Required | Default | Description                                                                                                                                                                                                                     |
+| -------------------- | -------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `image`              | yes      |         | The OCI image name. This must not include a tag or digest.                                                                                                                                                                      |
+| `digest`             | yes      |         | The OCI image digest. The image digest of the form '<algorithm>:<digest>' (e.g. 'sha256:abcdef...')                                                                                                                             |
+| `registry-username`  | yes      |         | Username to log into the container registry.                                                                                                                                                                                    |
+| `compile-generator`  | false    | false   | Whether to build the generator from source. This increases build time by ~2m.                                                                                                                                                   |
+| `private-repository` | no       | false   | Set to true to opt-in to posting to the public transparency log. Will generate an error if false for private repositories. This input has no effect for public repositories. See [Private Repositories](#private-repositories). |
 
 Secrets:
 
@@ -186,10 +220,10 @@ Secrets:
 
 The project generates SLSA provenance with the following values.
 
-| Name                         | Value                                                                  | Description                                                                                                                                                                                                            |
-| ---------------------------- | ---------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `buildType`                  | `"https://github.com/slsa-framework/slsa-github-generator/generic@v1"` | Identifies a generic GitHub Actions build.                                                                                                                                                                             |
-| `metadata.buildInvocationID` | `"[run_id]-[run_attempt]"`                                             | The GitHub Actions [`run_id`](https://docs.github.com/en/actions/learn-github-actions/contexts#github-context) does not update when a workflow is re-run. Run attempt is added to make the build invocation ID unique. |
+| Name                         | Value                                                                    | Description                                                                                                                                                                                                            |
+| ---------------------------- | ------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `buildType`                  | `"https://github.com/slsa-framework/slsa-github-generator/container@v1"` | Identifies a the GitHub Actions build.                                                                                                                                                                                 |
+| `metadata.buildInvocationID` | `"[run_id]-[run_attempt]"`                                               | The GitHub Actions [`run_id`](https://docs.github.com/en/actions/learn-github-actions/contexts#github-context) does not update when a workflow is re-run. Run attempt is added to make the build invocation ID unique. |
 
 ### Provenance Example
 
@@ -212,7 +246,7 @@ generated as an [in-toto](https://in-toto.io/) statement with a SLSA predicate.
     "builder": {
       "id": "https://github.com/slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@refs/tags/v1.1.1"
     },
-    "buildType": "https://github.com/slsa-framework/slsa-github-generator/generic@v1",
+    "buildType": "https://github.com/slsa-framework/slsa-github-generator/container@v1",
     "invocation": {
       "configSource": {
         "uri": "git+https://github.com/ianlewis/actions-test@refs/heads/main.git",
@@ -320,6 +354,91 @@ Certificate issuer URL:  https://token.actions.githubusercontent.com
 ```
 
 You can read more in the [cosign documentation](https://docs.sigstore.dev/cosign/attestation/).
+
+### Sigstore policy-controller
+
+Sigstore [policy-controller](https://docs.sigstore.dev/policy-controller/overview)
+is a policy management controller that can be used to write Kubernetes-native
+policies for SLSA provenance. The following assumes you have
+[installed policy-controller](https://docs.sigstore.dev/policy-controller/installation)
+in your Kubernetes cluster.
+
+The following `ClusterImagePolicy` can be used to verify container images
+as part of [Admission Control](https://kubernetes.io/docs/reference/access-authn-authz/extensible-admission-controllers/).
+
+```yaml
+apiVersion: policy.sigstore.dev/v1alpha1
+kind: ClusterImagePolicy
+metadata:
+  name: image-is-signed-by-github-actions
+spec:
+  images:
+    # Matches all versions of the actions-test image.
+    # NOTE: policy-controller mutates pods to use a digest even if originally
+    # specified by tag.
+    - glob: "ghcr.io/ianlewis/actions-test@*"
+  authorities:
+    - keyless:
+        # Signed by the public Fulcio certificate authority
+        url: https://fulcio.sigstore.dev
+        identities:
+          # Matches the Github Actions OIDC issuer
+          - issuer: https://token.actions.githubusercontent.com
+            # Matches the reusable workflow's signing identity.
+            # TODO: update after GA
+            subjectRegExp: "^https://github.com/ianlewis/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@refs/heads/409-feature-add-generic-container-workflow$"
+      attestations:
+        - name: must-have-slsa
+          predicateType: slsaprovenance
+          policy:
+            type: cue
+            data: |
+              // The predicateType field must match this string
+              predicateType: "https://slsa.dev/provenance/v0.2"
+
+              predicate: {
+                // This condition verifies that the builder is the builder we
+                // expect and trust. The following condition can be used
+                // unmodified. It verifies that the builder is the container
+                // workflow.
+                builder: {
+                  // TODO: update after GA
+                  // id: =~"^https://github.com/slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@refs/tags/v[0-9]+.[0-9]+.[0-9]+$"
+                  id: =~"^https://github.com/ianlewis/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@refs/heads/409-feature-add-generic-container-workflow$"
+                }
+                invocation: {
+                  configSource: {
+                    // This condition verifies the entrypoint of the workflow.
+                    // Replace with the relative path to your workflow in your
+                    // repository.
+                    entryPoint: ".github/workflows/generic-container.yml"
+
+                    // This condition verifies that the image was generated from
+                    // the source repository we expect. Replace this with your
+                    // repository.
+                    uri: =~"^git\\+https://github.com/ianlewis/actions-test@refs/tags/v[0-9]+.[0-9]+.[0-9]+$"
+                  }
+                }
+              }
+```
+
+When applied the `ClusterImagePolicy` will be evaluated when a `Pod` is
+created. If the `Pod` fulfills the policy conditions then the `Pod` can be
+created. If the `Pod` does not fulfill one or more of the policy conditions
+then you will see an error like the following. For example, the following error
+will occur when issuer does not match.
+
+```shell
+$ kubectl run actions-test --image=ghcr.io/ianlewis/actions-test:v0.0.38 --port=8080
+Error from server (BadRequest): admission webhook "policy.sigstore.dev" denied the request: validation failed: failed policy: image-is-signed-by-github-actions: spec.containers[0].image
+ghcr.io/ianlewis/actions-test@sha256:7c01e1c050f6b7a9b38a53da1be0835288da538d506de571f654417ae89aea4e attestation keyless validation failed for authority authority-0 for ghcr.io/ianlewis/actions-test@sha256:7c01e1c050f6b7a9b38a53da1be0835288da538d506de571f654417ae89aea4e: no matching attestations:
+none of the expected identities matched what was in the certificate
+```
+
+This behavior can be configured to `allow`, `deny`, or `warn` depending on your
+use case. See the [sigstore
+docs](https://docs.sigstore.dev/policy-controller/overview/#admission-of-images)
+for more info.
 
 ### Kyverno
 

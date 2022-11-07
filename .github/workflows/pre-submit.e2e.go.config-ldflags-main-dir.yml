@@ -22,9 +22,9 @@ jobs:
         run: |
           set -euo pipefail
 
-          echo "::set-output name=version::-X main.gitVersion=v1.2.3"
-          echo "::set-output name=commit::-X main.gitCommit=abcdef"
-          echo "::set-output name=branch::-X main.gitBranch=main"
+          echo "version=-X main.gitVersion=v1.2.3" >> "$GITHUB_OUTPUT"
+          echo "commit=-X main.gitCommit=abcdef" >> "$GITHUB_OUTPUT"
+          echo "branch=-X main.gitBranch=main" >> "$GITHUB_OUTPUT"
 
   build:
     needs: [args]
@@ -48,11 +48,11 @@ jobs:
     needs: [build]
     if: ${{ always() }}
     steps:
-      - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # tag=v3.0.2
-      - uses: actions/download-artifact@fb598a63ae348fa914e94cd0ff38f362e927b741 # tag=v3.0.0
+      - uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # tag=v3.1.0
+      - uses: actions/download-artifact@9782bd6a9848b53b110e712e20e42d89988822b7 # tag=v3.0.1
         with:
           name: ${{ needs.build.outputs.go-binary-name }}
-      - uses: actions/download-artifact@fb598a63ae348fa914e94cd0ff38f362e927b741 # tag=v3.0.0
+      - uses: actions/download-artifact@9782bd6a9848b53b110e712e20e42d89988822b7 # tag=v3.0.1
         with:
           name: ${{ needs.build.outputs.go-binary-name }}.intoto.jsonl
       - env:

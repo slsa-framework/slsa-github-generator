@@ -27,7 +27,7 @@ import (
 
 func rootCmd() *cobra.Command {
 	c := &cobra.Command{
-		Use:   "slsa-github-generator",
+		Use:   "slsa-generator-generic",
 		Short: "Generate SLSA provenance for Github Actions",
 		Long: `Generate SLSA provenance for Github Actions.
 For more information on SLSA, visit https://slsa.dev`,
@@ -37,7 +37,6 @@ For more information on SLSA, visit https://slsa.dev`,
 	}
 	c.AddCommand(versionCmd())
 	c.AddCommand(attestCmd(nil, checkExit, sigstore.NewDefaultFulcio(), sigstore.NewDefaultRekor()))
-	c.AddCommand(generateCmd(nil, checkExit))
 	return c
 }
 

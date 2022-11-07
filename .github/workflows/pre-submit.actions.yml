@@ -12,22 +12,8 @@ jobs:
     name: verify no checkout in Actions
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # tag=v3.0.2
-      - run: |
-
-          set -euo pipefail
-
-          # Verify that no internal Actions are using `actions/checkout`
-          # See reasoning in ./github/actions/README.md
-
-          # Split the command to ignore the `1` error `grep` returns when there is no match.
-          results=$(grep -r --include='*.yml' --include='*.yaml' -e 'actions/checkout@\|actions/checkout-go@\|actions/checkout-node@' .github/actions/* || true)
-          results=$(grep -v 'checkout-go\|checkout-node\|generate-builder' <<<"$results" || true)
-          if [[ "$results" != "" ]]; then
-              echo "Some Actions are using 'actions/checkout'"
-              echo "$results"
-              exit -1
-          fi
+      - uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # tag=v3.1.0
+      - run: ./.github/workflows/scripts/pre-submit.actions/checkout.sh
 
   check-dist-matrix:
     runs-on: ubuntu-latest
@@ -35,10 +21,10 @@ jobs:
       matrix:
         action: [compute-sha256, privacy-check]
     steps:
-      - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # tag=v3.0.2
+      - uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # tag=v3.1.0
 
       - name: Set Node.js 16
-        uses: actions/setup-node@2fddd8803e2f5c9604345a0b591c3020ee971a93 # tag=v3.4.1
+        uses: actions/setup-node@8c91899e586c5b171469028077307d293428b516 # tag=v3.5.1
         with:
           node-version: 16
 
@@ -58,7 +44,7 @@ jobs:
           fi
 
       # If index.js was different from expected, upload the expected version as an artifact
-      - uses: actions/upload-artifact@3cea5372237819ed00197afe530f5a7ea3e805c8
+      - uses: actions/upload-artifact@83fd05a356d7e2593de66fc9913b3002723633cb
         if: ${{ failure() && steps.diff.conclusion == 'failure' }}
         with:
           name: dist
@@ -74,5 +60,240 @@ jobs:
       CHECK_DIST_RESULT: ${{ needs.check-dist-matrix.result }}
     steps:
       - run: |
+          set -euo pipefail
           # exit 0 if checks were successful.
           [ "${CHECK_DIST_RESULT}" == "success" ] && [ "${CHECKOUT_RESULT}" == "success" ]
+
+  compute-sha256:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # tag=v3.1.0
+      - run: |
+          echo "foo" > artifact
+      - id: compute-sha256
+        uses: ./.github/actions/compute-sha256
+        with:
+          path: artifact
+      - env:
+          OUTPUT: ${{steps.compute-sha256.outputs.sha256}}
+        run: |
+          [[ "$OUTPUT" == "b5bb9d8014a0f9b1d61e21e796d78dccdf1352f23cd32812f4850b878ae4944c" ]]
+
+  rng:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # tag=v3.1.0
+      - run: |
+          echo "foo" > artifact
+      - id: rng
+        uses: ./.github/actions/rng
+      - env:
+          OUTPUT: ${{steps.rng.outputs.random}}
+        run: |
+          echo "Got output: $OUTPUT"
+          [[ "$OUTPUT" != "" ]]
+
+  references:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # tag=v3.1.0
+        with:
+          path: __THIS_REPO__
+      - uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # tag=v3.1.0
+        with:
+          repository: slsa-framework/example-package
+          ref: main
+          path: __EXAMPLE_PACKAGE__
+      - name: Verify main references
+        if: ${{ !contains(github.event.pull_request.body, '#label:release') }}
+        run: ./__THIS_REPO__/.github/workflows/scripts/pre-submit.actions/references.sh
+      - name: Verify version references
+        if: ${{ contains(github.event.pull_request.body, '#label:release') }}
+        env:
+          BODY: "${{ github.event.pull_request.body }}"
+        run: |
+          RELEASE_TAG=$(echo "$BODY" | grep -o -e 'v[0-9].[0-9].[0-9]')
+          RELEASE_TAG=${RELEASE_TAG} ./__THIS_REPO__/.github/workflows/scripts/pre-release/references.sh
+
+  secure-project-checkout-go:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # tag=v3.1.0
+        with:
+          path: __BUILDER_CHECKOUT_DIR__
+
+      - name: Checkout the Go repository
+        uses: ./__BUILDER_CHECKOUT_DIR__/.github/actions/secure-project-checkout-go
+        with:
+          path: __PROJECT_CHECKOUT_DIR__
+          go-version: 1.18
+
+  secure-project-checkout-node:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # tag=v3.1.0
+        with:
+          path: __BUILDER_CHECKOUT_DIR__
+
+      - name: Checkout the Go repository
+        uses: ./__BUILDER_CHECKOUT_DIR__/.github/actions/secure-project-checkout-node
+        with:
+          path: __PROJECT_CHECKOUT_DIR__
+          go-version: 16
+
+  secure-download-artifact:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # tag=v3.1.0
+        with:
+          path: __BUILDER_CHECKOUT_DIR__
+
+      - name: Create artifact
+        run: |
+          echo artifact > artifact1
+
+      - name: Upload generated binary
+        uses: ./__BUILDER_CHECKOUT_DIR__/.github/actions/secure-upload-artifact
+        with:
+          name: artifact1
+          path: artifact1
+
+      - name: Create artifact
+        run: rm artifact1
+
+      - name: Download artifact
+        uses: ./__BUILDER_CHECKOUT_DIR__/.github/actions/secure-download-artifact
+        with:
+          name: artifact1
+          path: artifact1
+          sha256: 5b3513f580c8397212ff2c8f459c199efc0c90e4354a5f3533adf0a3fff3a530
+
+  secure-download-artifact-builder-name:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # tag=v3.1.0
+        with:
+          path: __BUILDER_CHECKOUT_DIR__
+
+      - name: Create artifact
+        run: |
+          echo artifact > artifact2
+
+      - name: Upload generated binary
+        uses: ./__BUILDER_CHECKOUT_DIR__/.github/actions/secure-upload-artifact
+        with:
+          name: artifact2
+          path: artifact2
+
+      - name: Download artifact
+        id: download-artifact
+        uses: ./__BUILDER_CHECKOUT_DIR__/.github/actions/secure-download-artifact
+        continue-on-error: true
+        with:
+          name: artifact2
+          path: path/to/__BUILDER_CHECKOUT_DIR__/artifact2
+          sha256: 5b3513f580c8397212ff2c8f459c199efc0c90e4354a5f3533adf0a3fff3a530
+
+      - name: fail check
+        env:
+          OUTCOME: ${{ steps.download-artifact.outcome }}
+        run: |
+          set -euo pipefail
+          [ "${OUTCOME}" == "failure" ]
+
+  secure-download-artifact-builder-repo-folder:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # tag=v3.1.0
+        with:
+          path: __BUILDER_CHECKOUT_DIR__
+
+      - name: Create artifact and folder
+        run: |
+          mkdir some-folder
+          echo artifact > artifact3
+
+      - name: Upload generated binary
+        uses: ./__BUILDER_CHECKOUT_DIR__/.github/actions/secure-upload-artifact
+        with:
+          name: artifact3
+          path: artifact3
+
+      - name: Download artifact
+        id: download-artifact
+        uses: ./__BUILDER_CHECKOUT_DIR__/.github/actions/secure-download-artifact
+        continue-on-error: true
+        with:
+          name: artifact3
+          path: some-folder
+          sha256: 5b3513f580c8397212ff2c8f459c199efc0c90e4354a5f3533adf0a3fff3a530
+
+      - name: fail check
+        env:
+          OUTCOME: ${{ steps.download-artifact.outcome }}
+        run: |
+          set -euo pipefail
+          [ "${OUTCOME}" == "failure" ]
+
+  secure-download-artifact-builder-repo-file:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # tag=v3.1.0
+        with:
+          path: __BUILDER_CHECKOUT_DIR__
+
+      - name: Create artifact
+        run: |
+          echo artifact > artifact4
+
+      - name: Upload generated binary
+        uses: ./__BUILDER_CHECKOUT_DIR__/.github/actions/secure-upload-artifact
+        with:
+          name: artifact4
+          path: artifact4
+
+      - name: Download artifact
+        id: download-artifact
+        uses: ./__BUILDER_CHECKOUT_DIR__/.github/actions/secure-download-artifact
+        continue-on-error: true
+        with:
+          name: artifact4
+          path: artifact4
+          sha256: 5b3513f580c8397212ff2c8f459c199efc0c90e4354a5f3533adf0a3fff3a530
+
+      - name: fail check
+        env:
+          OUTCOME: ${{ steps.download-artifact.outcome }}
+        run: |
+          set -euo pipefail
+          [ "${OUTCOME}" == "failure" ]
+
+  # Tests that generate-builder works with compile-builder=true.
+  generate-builder-generic-compile:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # tag=v3.1.0
+      - uses: ./.github/actions/generate-builder
+        with:
+          repository: "slsa-framework/slsa-github-generator"
+          ref: "main"
+          compile-builder: true
+          go-version: 1.18
+          binary: "slsa-generator-generic-linux-amd64"
+          directory: "internal/builders/generic"
+
+  # Tests that generate-builder works with compile-builder=false.
+  generate-builder-generic-no-compile:
+    runs-on: ubuntu-latest
+    steps:
+      # TODO(github.com/slsa-framework/slsa-github-generator/issues/1163): temporarily disabled
+      # - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # tag=v3.0.2
+      # - uses: ./.github/actions/generate-builder
+      #   with:
+      #     repository: "slsa-framework/slsa-github-generator"
+      #     ref: "refs/tags/v1.2.1"
+      #     compile-builder: false
+      #     go-version: 1.18
+      #     binary: "slsa-generator-generic-linux-amd64"
+      #     directory: "internal/builders/generic"
+      - run: 'echo "Temporarily disabled. See: https://github.com/slsa-framework/slsa-github-generator/issues/1163" '

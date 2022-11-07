@@ -28,4 +28,4 @@ runs:
         # -l: the number of bytes
         # -c: the number of bytes displayed per column
         value=$(xxd -p -l "$LENGTH" -c "$LENGTH" /dev/urandom)
-        echo "::set-output name=result::$value"
+        echo "result=$value" >> "$GITHUB_OUTPUT"

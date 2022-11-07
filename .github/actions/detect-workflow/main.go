@@ -99,7 +99,8 @@ func (a *action) getRepoRef(ctx context.Context) (string, string, error) {
 	if eventName == "pull_request" {
 		// If a pull request get the repo from the pull request.
 		repository = a.getEventValue("pull_request.head.repo.full_name")
-		ref = a.getenv("GITHUB_HEAD_REF")
+		// We use the SHA of the head branch of the pull request.
+		ref = a.getEventValue("pull_request.head.sha")
 	} else {
 		audience := a.getenv("GITHUB_REPOSITORY")
 		if audience == "" {
@@ -126,6 +127,7 @@ func (a *action) getRepoRef(ctx context.Context) (string, string, error) {
 		if len(refParts) < 2 {
 			return "", "", errors.New("missing reference in job workflow ref")
 		}
+		// This is a fully formed ref, in the form refs/*.
 		ref = refParts[1]
 	}
 

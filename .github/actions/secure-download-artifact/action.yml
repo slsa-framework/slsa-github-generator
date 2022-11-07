@@ -24,22 +24,39 @@ runs:
       run: |
         set -euo pipefail
 
+        # Check that the name of the path does not clash with the
+        # directory where the builder code is stored.
+        # Check that the name of the path does not clash with the
+        # directory where the builder code is stored.
+        results=$(
+            echo "$UNTRUSTED_PATH" | grep __BUILDER_CHECKOUT_DIR__ || true
+        )
+        if [[ "$results" != "" ]]; then
+            echo "\"$UNTRUSTED_PATH\" contains '__BUILDER_CHECKOUT_DIR__'"
+            echo "$results"
+            exit 1
+        fi
+
+        # Ensure we don't overwrite existing files.
         if [ -e "$UNTRUSTED_PATH" ]; then
             echo "Path $UNTRUSTED_PATH already exists"
             exit 5
         fi
 
     - name: Download the artifact
-      uses: actions/download-artifact@fb598a63ae348fa914e94cd0ff38f362e927b741 # tag=v3.0.0
+      uses: actions/download-artifact@9782bd6a9848b53b110e712e20e42d89988822b7 # tag=v3.0.1
       with:
         name: "${{ inputs.name }}"
 
     - name: Compute the hash
       id: compute
-      uses: slsa-framework/slsa-github-generator/.github/actions/compute-sha256@e3220805577deb9d193f64e519abcb3b50851df5
+      uses: ./__BUILDER_CHECKOUT_DIR__/.github/actions/compute-sha256
       with:
         path: "${{ inputs.path }}"
 
+    # Note: this assumes to top-level re-usable workflow
+    # has checkout'ed the builder repository using
+    # `.github/actions/secure-builder-checkout`.
     - name: Verify the SHA256
       env:
         UNTRUSTED_EXPECTED_HASH: "${{ inputs.sha256 }}"
