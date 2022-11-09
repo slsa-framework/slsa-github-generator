@@ -38,12 +38,13 @@ type metadata struct {
 }
 
 type SLSAInputs struct {
-	Version        uint              `json:"version"`
-	BuilderPath    string            `json:"builderPath"`
-	WorkflowInputs map[string]string `json:"workflowInputs"`
-	Base64Extras   string            `json:"base64Extras"`
-	DryRun         bool              `json:"dryRun"`
-	Artifacts      []SLSAArtifact    `json:"artifacts"`
+	Version         uint              `json:"version"`
+	BuilderPath     string            `json:"builderPath"`
+	WorkflowInputs  map[string]string `json:"workflowInputs"`
+	WorkflowSecrets map[string]string `json:"workflowSecrets"`
+	Base64Extras    string            `json:"base64Extras"`
+	DryRun          bool              `json:"dryRun"`
+	Artifacts       []SLSAArtifact    `json:"artifacts"`
 }
 
 type SLSAArtifact struct {

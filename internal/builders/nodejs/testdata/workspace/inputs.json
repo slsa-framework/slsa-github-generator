@@ -7,7 +7,7 @@
       "run-scripts": "compile, build"
     },
     "base64Extras": "whatever",
-    "dryRun": true,
+    "dryRun": false,
     "artifacts": [
         {
           "path": "/usr/local/google/home/laurentsimon/slsa/slsa-github-generator/internal/builders/nodejs/testdata/hello/hello-1.0.0.tgz",
