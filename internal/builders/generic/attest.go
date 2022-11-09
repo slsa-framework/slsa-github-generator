@@ -20,6 +20,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"path"
 
 	intoto "github.com/in-toto/in-toto-golang/in_toto"
 	"github.com/spf13/cobra"
@@ -59,7 +60,8 @@ run in the context of a Github Actions workflow.`,
 			// validated. This is done by CreateNewFileUnderCurrentDirectory.
 			if attPath == "" {
 				if len(parsedSubjects) == 1 {
-					attPath = fmt.Sprintf("%s.intoto.jsonl", parsedSubjects[0].Name)
+					filename := path.Base(parsedSubjects[0].Name)
+					attPath = fmt.Sprintf("%s.intoto.jsonl", filename)
 				} else {
 					// len(parsedSubjects) > 1
 					attPath = "multiple.intoto.jsonl"
