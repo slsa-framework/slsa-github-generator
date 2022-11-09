@@ -109,6 +109,8 @@ jobs:
         run: ./__THIS_REPO__/.github/workflows/scripts/pre-submit.actions/references.sh
       - name: Verify version references
         if: ${{ contains(github.event.pull_request.body, '#label:release') }}
+        env:
+          BODY: "${{ github.event.pull_request.body }}"
         run: |
           RELEASE_TAG=$(echo "$BODY" | grep -o -e 'v[0-9].[0-9].[0-9]')
           RELEASE_TAG=${RELEASE_TAG} ./__THIS_REPO__/.github/workflows/scripts/pre-release/references.sh
