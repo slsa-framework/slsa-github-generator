@@ -1,4 +1,4 @@
-// Copyright 2022 SLSA Authors
+// Copyright 2022 slsa Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -46,7 +46,7 @@ func buildCmd(check func(error)) *cobra.Command {
 }
 
 func build() error {
-	integration, err := SLSAIntegrationNew()
+	integration, err := slsaIntegrationNew()
 	if err != nil {
 		return err
 	}
@@ -75,7 +75,7 @@ func build() error {
 	return run(integration, r)
 }
 
-func runDry(integration *SLSAIntegration,
+func runDry(integration *slsaIntegration,
 	r runner.CommandRunner,
 ) error {
 	// This builder supports a single provenance file generation.
@@ -91,8 +91,8 @@ func runDry(integration *SLSAIntegration,
 	// Generate the provenance metadata.
 	artifact := integration.Inputs.Artifacts[0]
 	name := strings.TrimSuffix(filepath.Base(artifact.Path), ".tgz")
-	metadata := SLSADryRunOutput{
-		name + ".intoto.jsonl": []metadata{
+	metadata := slsaDryRunOutput{
+		name + ".intoto.jsonl": []slsaDryMetadata{
 			{
 				Name:    name,
 				Digests: artifact.Digests,
@@ -105,7 +105,7 @@ func runDry(integration *SLSAIntegration,
 	return writeOutput(integration.OutputPath, metadata)
 }
 
-func validateArtifacts(artifacts []SLSAArtifact) error {
+func validateArtifacts(artifacts []slsaArtifact) error {
 	if len(artifacts) != 1 {
 		return fmt.Errorf("%w: only 1 artifact is supported", errorInvalidField)
 	}
@@ -134,7 +134,7 @@ func writeOutput(path string, i interface{}) error {
 	return nil
 }
 
-func run(integration *SLSAIntegration,
+func run(integration *slsaIntegration,
 	r runner.CommandRunner,
 ) error {
 	_, err := r.Run(context.Background())
@@ -157,9 +157,9 @@ func run(integration *SLSAIntegration,
 	h := sha256.New()
 	h.Write(data)
 	bs := h.Sum(nil)
-	artifacts := SLSAArtifact{
+	artifacts := slsaArtifact{
 		Path: path,
-		Digests: SLSADigests{
+		Digests: slsaDigests{
 			"sha256": hex.EncodeToString(bs),
 		},
 	}
@@ -167,7 +167,7 @@ func run(integration *SLSAIntegration,
 	return writeOutput(integration.OutputPath, artifacts)
 }
 
-func createPackCommands(r *runner.CommandRunner, inputs *SLSAInputs) error {
+func createPackCommands(r *runner.CommandRunner, inputs *slsaInputs) error {
 	// We currently do not
 	// support arguments to pack, e.g. `--pack-destination`.
 	// Note: pack-destination only supported version 7.x above.
@@ -189,7 +189,7 @@ func createPackCommands(r *runner.CommandRunner, inputs *SLSAInputs) error {
 	return nil
 }
 
-func createRunCommands(r *runner.CommandRunner, inputs *SLSAInputs) error {
+func createRunCommands(r *runner.CommandRunner, inputs *slsaInputs) error {
 	script, present := inputs.WorkflowInputs["run-scripts"]
 	if !present {
 		return fmt.Errorf("%w: 'run-scripts' not present", errorInvalidField)
@@ -215,7 +215,7 @@ func createRunCommands(r *runner.CommandRunner, inputs *SLSAInputs) error {
 	return nil
 }
 
-func createCiCommands(r *runner.CommandRunner, inputs *SLSAInputs) error {
+func createCiCommands(r *runner.CommandRunner, inputs *slsaInputs) error {
 	args, present := inputs.WorkflowInputs["ci-arguments"]
 	if !present {
 		return fmt.Errorf("%w: 'ci-arguments' not present", errorInvalidField)

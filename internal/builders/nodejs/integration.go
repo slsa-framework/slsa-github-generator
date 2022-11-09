@@ -1,4 +1,4 @@
-// Copyright 2022 SLSA Authors
+// Copyright 2022 slsa Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,38 +23,38 @@ import (
 	"github.com/slsa-framework/slsa-github-generator/internal/runner"
 )
 
-type SLSAIntegration struct {
+type slsaIntegration struct {
 	Workspace  string
-	Inputs     *SLSAInputs
+	Inputs     *slsaInputs
 	OutputPath string
 }
 
-type SLSADryRunOutput map[string][]metadata
+type slsaDryRunOutput map[string][]slsaDryMetadata
 
-type metadata struct {
+type slsaDryMetadata struct {
 	Name    string                `json:"name"`
-	Digests SLSADigests           `json:"digests"`
+	Digests slsaDigests           `json:"digests"`
 	Steps   []*runner.CommandStep `json:"steps"`
 }
 
-type SLSAInputs struct {
+type slsaInputs struct {
 	Version         uint              `json:"version"`
 	BuilderPath     string            `json:"builderPath"`
 	WorkflowInputs  map[string]string `json:"workflowInputs"`
 	WorkflowSecrets map[string]string `json:"workflowSecrets"`
 	Base64Extras    string            `json:"base64Extras"`
 	DryRun          bool              `json:"dryRun"`
-	Artifacts       []SLSAArtifact    `json:"artifacts"`
+	Artifacts       []slsaArtifact    `json:"artifacts"`
 }
 
-type SLSAArtifact struct {
+type slsaArtifact struct {
 	Path    string      `json:"path"`
-	Digests SLSADigests `json:"digests"`
+	Digests slsaDigests `json:"digests"`
 }
 
-type SLSADigests map[string]string
+type slsaDigests map[string]string
 
-func SLSAIntegrationNew() (*SLSAIntegration, error) {
+func slsaIntegrationNew() (*slsaIntegration, error) {
 	workspace, err := readEnvPath("SLSA_WORKSPACE", true)
 	if err != nil {
 		return nil, err
@@ -70,19 +70,19 @@ func SLSAIntegrationNew() (*SLSAIntegration, error) {
 		return nil, err
 	}
 
-	return &SLSAIntegration{
+	return &slsaIntegration{
 		Workspace:  workspace,
 		Inputs:     inputs,
 		OutputPath: outputsPath,
 	}, nil
 }
 
-func getInputs() (*SLSAInputs, error) {
+func getInputs() (*slsaInputs, error) {
 	content, err := readFileContent("SLSA_INPUTS_PATH")
 	if err != nil {
 		return nil, fmt.Errorf("%w: os.ReadFile", err)
 	}
-	var inputs SLSAInputs
+	var inputs slsaInputs
 	reader := bytes.NewReader(content)
 	if err := json.NewDecoder(reader).Decode(&inputs); err != nil {
 		return nil, fmt.Errorf("%w: json.NewDecoder", err)
