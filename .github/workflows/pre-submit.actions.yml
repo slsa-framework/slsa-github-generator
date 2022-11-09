@@ -110,7 +110,7 @@ jobs:
       - name: Verify version references
         if: ${{ contains(github.event.pull_request.body, '#label:release') }}
         run: |
-          echo ${{ github.event.pull_request.body }} | awk '{print $2}'
+          RELEASE_TAG=$(echo "$BODY" | grep -o -e 'v[0-9].[0-9].[0-9]')
           RELEASE_TAG=${RELEASE_TAG} ./__THIS_REPO__/.github/workflows/scripts/pre-release/references.sh
 
   secure-project-checkout-go:
