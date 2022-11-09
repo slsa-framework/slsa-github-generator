@@ -19,12 +19,22 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+
+	"github.com/slsa-framework/slsa-github-generator/internal/runner"
 )
 
 type SLSAIntegration struct {
 	Workspace  string
 	Inputs     *SLSAInputs
 	OutputPath string
+}
+
+type SLSADryRunOutput map[string][]metadata
+
+type metadata struct {
+	Name    string                `json:"name"`
+	Digests SLSADigests           `json:"digests"`
+	Steps   []*runner.CommandStep `json:"steps"`
 }
 
 type SLSAInputs struct {

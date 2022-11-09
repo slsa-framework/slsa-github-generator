@@ -45,41 +45,28 @@ func buildCmd(check func(error)) *cobra.Command {
 	return c
 }
 
-type dryRunOutputMetadata map[string][]metadata
-
-type metadata struct {
-	Name    string                `json:"name"`
-	Digests SLSADigests           `json:"digests"`
-	Steps   []*runner.CommandStep `json:"steps"`
-}
-
 func build() error {
 	integration, err := SLSAIntegrationNew()
 	if err != nil {
 		return err
 	}
-	// DEBUG
-	// encoder := json.NewEncoder(os.Stdout)
-	// if err := encoder.Encode(*integration); err != nil {
-	// 	return err
-	// }
 
 	r := runner.CommandRunner{}
 
 	// Ci command.
-	c, err := createCiCommands(integration.Inputs)
-	r.Steps = append(r.Steps, c...)
+	if err := createCiCommands(&r, integration.Inputs); err != nil {
+		return nil
+	}
 
 	// Run command.
-	c, err = createRunCommands(integration.Inputs)
-	r.Steps = append(r.Steps, c...)
+	if err := createRunCommands(&r, integration.Inputs); err != nil {
+		return err
+	}
 
-	// Pack command. Note: we currently do not
-	// support arguments to pack, e.g. `--pack-destination`.
-	// Note: pack-destination only supported version 7.x above.
-	// https://docs.npmjs.com/cli/v7/commands/npm-pack.
-	c, err = createPackCommands(integration.Inputs)
-	r.Steps = append(r.Steps, c...)
+	// Pack command.
+	if err := createPackCommands(&r, integration.Inputs); err != nil {
+		return err
+	}
 
 	if integration.Inputs.DryRun {
 		return runDry(integration, r)
@@ -92,8 +79,8 @@ func runDry(integration *SLSAIntegration,
 	r runner.CommandRunner,
 ) error {
 	// This builder supports a single provenance file generation.
-	if len(integration.Inputs.Artifacts) != 1 {
-		return fmt.Errorf("%w: only 1 artifact is supported", errorInvalidField)
+	if err := validateArtifacts(integration.Inputs.Artifacts); err != nil {
+		return nil
 	}
 	// Run dry.
 	steps, err := r.Dry()
@@ -104,7 +91,7 @@ func runDry(integration *SLSAIntegration,
 	// Generate the provenance metadata.
 	artifact := integration.Inputs.Artifacts[0]
 	name := strings.TrimSuffix(filepath.Base(artifact.Path), ".tgz")
-	metadata := dryRunOutputMetadata{
+	metadata := SLSADryRunOutput{
 		name + ".intoto.jsonl": []metadata{
 			{
 				Name:    name,
@@ -116,6 +103,22 @@ func runDry(integration *SLSAIntegration,
 
 	// Write the metadata to the output file.
 	return writeOutput(integration.OutputPath, metadata)
+}
+
+func validateArtifacts(artifacts []SLSAArtifact) error {
+	if len(artifacts) != 1 {
+		return fmt.Errorf("%w: only 1 artifact is supported", errorInvalidField)
+	}
+
+	if artifacts[0].Path == "" {
+		return fmt.Errorf("%w: artifact path empty", errorInvalidField)
+	}
+
+	if len(artifacts[0].Digests) == 0 {
+		return fmt.Errorf("%w: artifact digest empty", errorInvalidField)
+	}
+
+	return nil
 }
 
 func writeOutput(path string, i interface{}) error {
@@ -164,51 +167,58 @@ func run(integration *SLSAIntegration,
 	return writeOutput(integration.OutputPath, artifacts)
 }
 
-func createPackCommands(inputs *SLSAInputs) ([]*runner.CommandStep, error) {
+func createPackCommands(r *runner.CommandRunner, inputs *SLSAInputs) error {
+	// We currently do not
+	// support arguments to pack, e.g. `--pack-destination`.
+	// Note: pack-destination only supported version 7.x above.
+	// https://docs.npmjs.com/cli/v7/commands/npm-pack.
 	cmd := []string{"npm", "pack", "--json"}
 
 	workingDir, present := inputs.WorkflowInputs["working-directory"]
 	if !present {
-		return nil, fmt.Errorf("%w: 'working-directory' not present", errorInvalidField)
+		return fmt.Errorf("%w: 'working-directory' not present", errorInvalidField)
 	}
-	return []*runner.CommandStep{
-		{
+
+	r.Steps = append(r.Steps,
+		&runner.CommandStep{
 			Command:    cmd,
 			Env:        nil,
 			WorkingDir: workingDir,
 		},
-	}, nil
+	)
+	return nil
 }
 
-func createRunCommands(inputs *SLSAInputs) ([]*runner.CommandStep, error) {
+func createRunCommands(r *runner.CommandRunner, inputs *SLSAInputs) error {
 	script, present := inputs.WorkflowInputs["run-scripts"]
 	if !present {
-		return nil, fmt.Errorf("%w: 'run-scripts' not present", errorInvalidField)
+		return fmt.Errorf("%w: 'run-scripts' not present", errorInvalidField)
 	}
 	cmd := []string{"npm", "run"}
 
 	workingDir, present := inputs.WorkflowInputs["working-directory"]
 	if !present {
-		return nil, fmt.Errorf("%w: 'working-directory' not present", errorInvalidField)
+		return fmt.Errorf("%w: 'working-directory' not present", errorInvalidField)
 	}
-	steps := []*runner.CommandStep{}
+
 	scripts := strings.Split(script, ",")
 	for i := range scripts {
 		s := strings.TrimSpace(string(scripts[i]))
-		steps = append(steps,
+		r.Steps = append(r.Steps,
 			&runner.CommandStep{
 				Command:    append(cmd, s),
 				WorkingDir: workingDir,
 			},
 		)
 	}
-	return steps, nil
+
+	return nil
 }
 
-func createCiCommands(inputs *SLSAInputs) ([]*runner.CommandStep, error) {
+func createCiCommands(r *runner.CommandRunner, inputs *SLSAInputs) error {
 	args, present := inputs.WorkflowInputs["ci-arguments"]
 	if !present {
-		return nil, fmt.Errorf("%w: 'ci-arguments' not present", errorInvalidField)
+		return fmt.Errorf("%w: 'ci-arguments' not present", errorInvalidField)
 	}
 	cmd := []string{"npm", "ci"}
 	if args != "" {
@@ -217,13 +227,14 @@ func createCiCommands(inputs *SLSAInputs) ([]*runner.CommandStep, error) {
 
 	workingDir, present := inputs.WorkflowInputs["working-directory"]
 	if !present {
-		return nil, fmt.Errorf("%w: 'working-directory' not present", errorInvalidField)
+		return fmt.Errorf("%w: 'working-directory' not present", errorInvalidField)
 	}
-	return []*runner.CommandStep{
-		{
-			Command:    cmd,
-			Env:        nil,
-			WorkingDir: workingDir,
-		},
-	}, nil
+
+	r.Steps = append(r.Steps, &runner.CommandStep{
+		Command:    cmd,
+		Env:        nil,
+		WorkingDir: workingDir,
+	})
+
+	return nil
 }
