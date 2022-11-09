@@ -72,10 +72,11 @@ runs:
 
         COMPILE_BUILDER: "${{ inputs.compile-builder }}"
         BUILDER_REF: "${{ inputs.ref }}"
-        BUILDER_DIR: "./__BUILDER_CHECKOUT_DIR__/${{ inputs.directory }}"
+        BUILDER_DIR: "${{ inputs.directory }}"
         # Needed for the gh CLI used in builder-fetch.sh.
         GH_TOKEN: "${{ inputs.token }}"
-      run: ./__BUILDER_CHECKOUT_DIR__/.github/actions/generate-builder/generate-builder.sh
+      working-directory: ./__BUILDER_CHECKOUT_DIR__
+      run: ./.github/actions/generate-builder/generate-builder.sh
 
     - name: Compute sha256 of builder
       uses: ./__BUILDER_CHECKOUT_DIR__/.github/actions/compute-sha256
