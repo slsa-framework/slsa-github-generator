@@ -15,95 +15,215 @@
 package main
 
 import (
+	"context"
+	"crypto/sha256"
+	"encoding/hex"
+	"encoding/json"
+	"fmt"
+	"os"
+	"path/filepath"
+	"strings"
+
+	"github.com/slsa-framework/slsa-github-generator/internal/runner"
+
 	"github.com/spf13/cobra"
 )
 
 // buildCmd runs the 'build' command.
 func buildCmd(check func(error)) *cobra.Command {
-	var dryRun bool
-
 	c := &cobra.Command{
 		Use:   "build",
 		Short: "build a project",
 		Long:  `build a project. Example: ./binary build --dry-run"`,
 
 		Run: func(cmd *cobra.Command, args []string) {
-			if err := build(dryRun); err != nil {
+			if err := build(); err != nil {
 				panic(err)
 			}
 		},
 	}
-
-	c.Flags().BoolVarP(&dryRun, "dry-run", "d", false,
-		"Perform a dry run only. Do not build. Output provenance metadata (steps and provenance filenames)")
 	return c
 }
 
-func build(dryRun bool) error {
-	// 1. Retrieve the workflow inputs from env variable SLSA_WORKFLOW_INPUTS.
+type dryRunOutputMetadata map[string][]metadata
 
-	// 2. Install dependencies via `npm ci <inputs.ci-arguments>`
+type metadata struct {
+	Name    string                `json:"name"`
+	Digests SLSADigests           `json:"digests"`
+	Steps   []*runner.CommandStep `json:"steps"`
+}
 
-	// 3. Build via `npm run <inputs.run-scripts>`
+func build() error {
+	integration, err := SLSAIntegrationNew()
+	if err != nil {
+		return err
+	}
+	// DEBUG
+	// encoder := json.NewEncoder(os.Stdout)
+	// if err := encoder.Encode(*integration); err != nil {
+	// 	return err
+	// }
 
-	// 4. Create the final package tarball.
-	/* TODO: only run if non-empty.
-	   Note: pack-destination only supported version 7.x above.
-	   https://docs.npmjs.com/cli/v7/commands/npm-pack.
-	   This outputs a .tgz. Before running this command, let's record the .tgz
-	   files and their hashes, so that we can identify the new file without the need to parse
-	   the manifest.json.
-	   echo "npm pack --pack-destination="./out"
-	   copy tarball to upper folder to make the tarball accessible to next step.
-	*/
-	// TODO: output the list of artifacts and their corresponding build steps.
-	// The tarball name into a step output: echo "filename=$TARBALL" >> "$GITHUB_OUTPUT"
+	r := runner.CommandRunner{}
 
-	if dryRun {
-		// 1. Retrieve artifacts and their hases from env variable SLSA_BUILD_ARTIFACTS.
+	// Ci command.
+	c, err := createCiCommands(integration.Inputs)
+	r.Steps = append(r.Steps, c...)
 
-		// 2. Output the proveance metadata in a format:
-		/* METADATA={
-			"provenance1.intoto.jsonl":{
-				"artifact-1":{
-					"digest": {
-						"sha256": "abcdef"
-					},
-					"buildSteps":[]Steps{
-						"workingDir": string,
-						"env": map[string]string,
-						"command": []string
-					}
-				},
-				"artifact-2":{
-					"digest": {
-						"sha256": "abcdef"
-					},
-					"buildSteps":[]Steps{
-						"workingDir": string,
-						"env": map[string]string,
-						"command": []string
-					}
-				}
-			},
-			"provenance2.intoto.jsonl":{
-				"artifact-3":{
-					"digest": {
-						"sha256": "abcdef"
-					},
-					"buildSteps":[]Steps{
-						"workingDir": string,
-						"env": map[string]string,
-						"command": []string
-					}
-				},
-			}
-		}
-		*/
-		return nil
+	// Run command.
+	c, err = createRunCommands(integration.Inputs)
+	r.Steps = append(r.Steps, c...)
+
+	// Pack command. Note: we currently do not
+	// support arguments to pack, e.g. `--pack-destination`.
+	// Note: pack-destination only supported version 7.x above.
+	// https://docs.npmjs.com/cli/v7/commands/npm-pack.
+	c, err = createPackCommands(integration.Inputs)
+	r.Steps = append(r.Steps, c...)
+
+	if integration.Inputs.DryRun {
+		return runDry(integration, r)
 	}
 
-	// 4. Output the list of artifacts in a format TBD (sha256sum?).
+	return run(integration, r)
+}
+
+func runDry(integration *SLSAIntegration,
+	r runner.CommandRunner,
+) error {
+	// This builder supports a single provenance file generation.
+	if len(integration.Inputs.Artifacts) != 1 {
+		return fmt.Errorf("%w: only 1 artifact is supported", errorInvalidField)
+	}
+	// Run dry.
+	steps, err := r.Dry()
+	if err != nil {
+		return err
+	}
+
+	// Generate the provenance metadata.
+	artifact := integration.Inputs.Artifacts[0]
+	name := strings.TrimSuffix(filepath.Base(artifact.Path), ".tgz")
+	metadata := dryRunOutputMetadata{
+		name + ".intoto.jsonl": []metadata{
+			{
+				Name:    name,
+				Digests: artifact.Digests,
+				Steps:   steps,
+			},
+		},
+	}
+
+	// Write the metadata to the output file.
+	return writeOutput(integration.OutputPath, metadata)
+}
+
+func writeOutput(path string, i interface{}) error {
+	f, err := os.Create(path)
+	if err != nil {
+		return err
+	}
+	encoder := json.NewEncoder(f)
+	if err := encoder.Encode(i); err != nil {
+		return err
+	}
 
 	return nil
+}
+
+func run(integration *SLSAIntegration,
+	r runner.CommandRunner,
+) error {
+	_, err := r.Run(context.Background())
+	if err != nil {
+		return err
+	}
+
+	workingDir, present := integration.Inputs.WorkflowInputs["working-directory"]
+	if !present {
+		return fmt.Errorf("%w: 'working-directory' not present", errorInvalidField)
+	}
+	// TODO: extract the name of the project from manifest
+	// by parsing the ouput of `pack --json`.
+	path := filepath.Join(workingDir, "hello-1.0.0.tgz")
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return err
+	}
+
+	h := sha256.New()
+	h.Write(data)
+	bs := h.Sum(nil)
+	artifacts := SLSAArtifact{
+		Path: path,
+		Digests: SLSADigests{
+			"sha256": hex.EncodeToString(bs),
+		},
+	}
+
+	return writeOutput(integration.OutputPath, artifacts)
+}
+
+func createPackCommands(inputs *SLSAInputs) ([]*runner.CommandStep, error) {
+	cmd := []string{"npm", "pack", "--json"}
+
+	workingDir, present := inputs.WorkflowInputs["working-directory"]
+	if !present {
+		return nil, fmt.Errorf("%w: 'working-directory' not present", errorInvalidField)
+	}
+	return []*runner.CommandStep{
+		{
+			Command:    cmd,
+			Env:        nil,
+			WorkingDir: workingDir,
+		},
+	}, nil
+}
+
+func createRunCommands(inputs *SLSAInputs) ([]*runner.CommandStep, error) {
+	script, present := inputs.WorkflowInputs["run-scripts"]
+	if !present {
+		return nil, fmt.Errorf("%w: 'run-scripts' not present", errorInvalidField)
+	}
+	cmd := []string{"npm", "run"}
+
+	workingDir, present := inputs.WorkflowInputs["working-directory"]
+	if !present {
+		return nil, fmt.Errorf("%w: 'working-directory' not present", errorInvalidField)
+	}
+	steps := []*runner.CommandStep{}
+	scripts := strings.Split(script, ",")
+	for i := range scripts {
+		s := strings.TrimSpace(string(scripts[i]))
+		steps = append(steps,
+			&runner.CommandStep{
+				Command:    append(cmd, s),
+				WorkingDir: workingDir,
+			},
+		)
+	}
+	return steps, nil
+}
+
+func createCiCommands(inputs *SLSAInputs) ([]*runner.CommandStep, error) {
+	args, present := inputs.WorkflowInputs["ci-arguments"]
+	if !present {
+		return nil, fmt.Errorf("%w: 'ci-arguments' not present", errorInvalidField)
+	}
+	cmd := []string{"npm", "ci"}
+	if args != "" {
+		cmd = append(cmd, strings.Split(args, ",")...)
+	}
+
+	workingDir, present := inputs.WorkflowInputs["working-directory"]
+	if !present {
+		return nil, fmt.Errorf("%w: 'working-directory' not present", errorInvalidField)
+	}
+	return []*runner.CommandStep{
+		{
+			Command:    cmd,
+			Env:        nil,
+			WorkingDir: workingDir,
+		},
+	}, nil
 }

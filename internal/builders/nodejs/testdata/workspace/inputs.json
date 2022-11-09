@@ -1,0 +1,20 @@
+{
+    "version": 1,
+    "builderPath": "some/path/exe",
+    "workflowInputs":{
+      "working-directory": "/usr/local/google/home/laurentsimon/slsa/slsa-github-generator/internal/builders/nodejs/testdata/hello",
+      "ci-arguments": "",
+      "run-scripts": "compile, build"
+    },
+    "base64Extras": "whatever",
+    "dryRun": true,
+    "artifacts": [
+        {
+          "path": "/usr/local/google/home/laurentsimon/slsa/slsa-github-generator/internal/builders/nodejs/testdata/hello/hello-1.0.0.tgz",
+          "digests": {
+            "sha256": "1a432330b1d38ec5b65d696730ec0b9a4d7cce2c88d4b3891a87996c8fcdb12e",
+            "sha1": "hsfer"
+          }
+        }
+    ]
+}

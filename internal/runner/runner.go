@@ -114,11 +114,11 @@ func (r *CommandRunner) runStep(ctx context.Context, step *CommandStep, dry bool
 	if err != nil {
 		return nil, err
 	}
-	posixEnv = append(posixEnv, "PWD="+pwd)
+	// posixEnv = append(posixEnv, "PWD="+pwd)
 
 	cmd := exec.CommandContext(ctx, name, args...)
 	cmd.Dir = pwd
-	cmd.Env = posixEnv
+	// cmd.Env = posixEnv
 	cmd.Stdout = os.Stdout
 	if r.Stdout != nil {
 		cmd.Stdout = r.Stdout

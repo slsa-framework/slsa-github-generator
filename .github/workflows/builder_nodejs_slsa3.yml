@@ -54,7 +54,7 @@ on:
         required: true
         type: string
       # TODO(https://github.com/slsa-framework/slsa-github-generator/issues/888): support uploading assets to GitHub release.
-      directory:
+      working-directory:
         description: "The directory to change to before running commands."
         required: false
         type: string
