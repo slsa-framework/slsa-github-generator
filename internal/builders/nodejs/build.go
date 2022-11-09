@@ -18,7 +18,6 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
-	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -102,7 +101,7 @@ func runDry(integration *slsaIntegration,
 	}
 
 	// Write the metadata to the output file.
-	return writeOutput(integration.OutputPath, metadata)
+	return integration.WriteOutput(metadata)
 }
 
 func validateArtifacts(artifacts []slsaArtifact) error {
@@ -116,19 +115,6 @@ func validateArtifacts(artifacts []slsaArtifact) error {
 
 	if len(artifacts[0].Digests) == 0 {
 		return fmt.Errorf("%w: artifact digest empty", errorInvalidField)
-	}
-
-	return nil
-}
-
-func writeOutput(path string, i interface{}) error {
-	f, err := os.Create(path)
-	if err != nil {
-		return err
-	}
-	encoder := json.NewEncoder(f)
-	if err := encoder.Encode(i); err != nil {
-		return err
 	}
 
 	return nil
@@ -164,7 +150,7 @@ func run(integration *slsaIntegration,
 		},
 	}
 
-	return writeOutput(integration.OutputPath, artifacts)
+	return integration.WriteOutput(artifacts)
 }
 
 func createPackCommands(r *runner.CommandRunner, inputs *slsaInputs) error {

@@ -24,9 +24,9 @@ import (
 )
 
 type slsaIntegration struct {
-	Workspace  string
-	Inputs     *slsaInputs
-	OutputPath string
+	workspace string
+	outputs   *slsaOutputs
+	Inputs    *slsaInputs
 }
 
 type slsaDryRunOutput map[string][]slsaDryMetadata
@@ -52,6 +52,10 @@ type slsaArtifact struct {
 	Digests slsaDigests `json:"digests"`
 }
 
+type slsaOutputs struct {
+	Path string
+}
+
 type slsaDigests map[string]string
 
 func slsaIntegrationNew() (*slsaIntegration, error) {
@@ -60,7 +64,7 @@ func slsaIntegrationNew() (*slsaIntegration, error) {
 		return nil, err
 	}
 
-	outputsPath, err := readEnvPath("SLSA_OUTPUTS_PATH", false)
+	outputs, err := getOutputs()
 	if err != nil {
 		return nil, err
 	}
@@ -71,9 +75,32 @@ func slsaIntegrationNew() (*slsaIntegration, error) {
 	}
 
 	return &slsaIntegration{
-		Workspace:  workspace,
-		Inputs:     inputs,
-		OutputPath: outputsPath,
+		workspace: workspace,
+		outputs:   outputs,
+		Inputs:    inputs,
+	}, nil
+}
+
+func (self *slsaIntegration) WriteOutput(i interface{}) error {
+	f, err := os.Create(self.outputs.Path)
+	if err != nil {
+		return err
+	}
+	encoder := json.NewEncoder(f)
+	if err := encoder.Encode(i); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func getOutputs() (*slsaOutputs, error) {
+	outputPath, err := readEnvPath("SLSA_OUTPUTS_PATH", false)
+	if err != nil {
+		return nil, err
+	}
+	return &slsaOutputs{
+		Path: outputPath,
 	}, nil
 }
 
