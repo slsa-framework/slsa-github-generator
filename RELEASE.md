@@ -4,10 +4,12 @@ This is a document to describe the release process for the Go builder. Since all
 
 ---
 
-- [Pre-release](#pre-release-tests)
+- [Prerequisites](#prerequisites)
 - [Tagging](#tagging)
-- [Verify version references & code freeze](#verify-version-references--code-freeze)
+- [Verify version references](#verify-version-references)
+- [Pre-release Tests](#pre-release-tests)
 - [Post-release tests](#post-release-tests)
+- [Code Freeze](#code-freeze)
 - [Update Verifier](#update-verifier)
 - [Finalize release](#finalize-release)
 - [Announce](#announce)
@@ -43,7 +45,7 @@ Tick the `This is a pre-release` option.
 
 Click `Publish release`.
 
-## Verify version references & code freeze
+## Verify version references
 
 Update version references with the following command:
 
@@ -54,10 +56,6 @@ find .github/workflows/ -name '*.yaml' -o -name '*.yml' | xargs sed -i "s/uses: 
 Send a PR with this update and add `#label:release ${BUILDER_TAG}` in the PR description.
 
 Once the PR is merged, update the tag to point to HEAD.
-
-Code freeze the repository for 1-2 days.
-
-Verify all the e2e tests in [github.com/slsa-framework/example-package/.github/workflows/](github.com/slsa-framework/example-package/.github/workflows/) are passing. (They run daily).
 
 ## Pre-release tests
 
@@ -215,6 +213,12 @@ End-to-end tests run daily in [github.com/slsa-framework/example-package/.github
 1. Re-run the workflow above and verify that it succeeds. (TODO: https://github.com/slsa-framework/slsa-github-generator/issues/116).
 
    If it does not, delete the release, fix the bug and re-start the release process at the top of this page.
+
+## Code Freeze
+
+Code freeze the repository for 1-2 days.
+
+After the code freeze, verify all the e2e tests in [github.com/slsa-framework/example-package/.github/workflows/](github.com/slsa-framework/example-package/.github/workflows/) are passing. (They run daily).
 
 ## Update verifier
 
