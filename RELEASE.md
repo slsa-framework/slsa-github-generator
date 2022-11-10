@@ -45,6 +45,8 @@ Tick the `This is a pre-release` option.
 
 Click `Publish release`.
 
+This will trigger the [release workflow](https://github.com/slsa-framework/slsa-github-generator/actions/workflows/release.yml). Cancel this in the [UI](https://github.com/slsa-framework/slsa-github-generator/actions/workflows/release.yml).
+
 ## Verify version references
 
 Update version references with the following command:
@@ -57,9 +59,14 @@ Send a PR with this update and add `#label:release ${BUILDER_TAG}` in the PR des
 
 Once the PR is merged, update the tag to point to HEAD.
 
-## Pre-release tests
+```shell
+git tag v1.2.2 -f
+git push v1.2.2 -f
+```
 
-Verify the references to the internal Actions by manually running the [release workflow](https://github.com/slsa-framework/slsa-github-generator/actions/workflows/release.yml). Ensure this workflow succeeds.
+This will trigger the [release workflow](https://github.com/slsa-framework/slsa-github-generator/actions/workflows/release.yml). Ensure this workflow succeeds and that the release assets are updated.
+
+## Pre-release tests
 
 There is one integration test we cannot easily test "live", so we need to simulate it by changing the code: malicious verifier binary in assets. We want to be sure the builder fails if the verifier's binary is tampered with. For this:
 
