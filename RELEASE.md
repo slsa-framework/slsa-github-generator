@@ -260,7 +260,7 @@ Untick the `This is a pre-release` option.
 Update the documentation to recommend using the new version:
 
 ```shell
-find . -name "*.md" -exec sed -i "s/v1.0.0/v1.1.1/g" {} +
+find . -name '*.md' | xargs sed -i "s/slsa-framework\/slsa-github-generator\/\.github\/\(.*\)@v[0-9]\+\.[0-9]\+\.[0-9]\+/slsa-framework\/slsa-github-generator\/.github\/\1@${BUILDER_TAG}/"
 ```
 
 ## Send a PR to reference Actions at main
@@ -268,7 +268,7 @@ find . -name "*.md" -exec sed -i "s/v1.0.0/v1.1.1/g" {} +
 Send a PR to reference the internal Actions at `@main`. You can use:
 
 ```shell
-find .github/ -name '*.yaml' -o -name '*.yml' | xargs sed -i 's/uses: slsa-framework\/slsa-github-generator\/\.github\/actions\/\(.*\)@_YOUR_RELEASE_TAG_*/uses: slsa-framework\/slsa-github-generator\/.github\/actions\/\1@main/'
+find .github/workflows/ -name '*.yaml' -o -name '*.yml' | xargs sed -i "s/uses: slsa-framework\/slsa-github-generator\/\.github\/actions\/\(.*\)@${BUILDER_TAG}/uses: slsa-framework\/slsa-github-generator\/.github\/actions\/\1@main/"
 ```
 
 ## Update the starter workflows
