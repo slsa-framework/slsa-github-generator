@@ -244,7 +244,10 @@ You will need the following trigger types:
 - A tag of the form `vX.Y.Z`.
 - Tags of the form `vX` and `vX.Y`.
 
-To do this, trigger the [Go workflow dispatch](https://github.com/slsa-framework/example-package/blob/main/.github/workflows/verifier-e2e.go.workflow_dispatch.main.all.slsa3.yml) and [Generic workflow dispatch](https://github.com/slsa-framework/example-package/blob/main/.github/workflows/verifier-e2e.generic.workflow_dispatch.main.all.slsa3.yml). These will dispatch the workflow and create provenance for the workflow dispatch event, and then trigger subsequent runs on fixed tags.
+To do this, trigger the following workflows, waiting for each to finish before starting the next. These will dispatch the workflow and create provenance for the workflow dispatch event, and then trigger subsequent runs on fixed tags.
+
+- [Go workflow dispatch](https://github.com/slsa-framework/example-package/blob/main/.github/workflows/verifier-e2e.go.workflow_dispatch.main.all.slsa3.yml)
+- [Generic workflow dispatch](https://github.com/slsa-framework/example-package/blob/main/.github/workflows/verifier-e2e.generic.workflow_dispatch.main.all.slsa3.yml).
 
 Download the uploaded artifacts of each of these, labelling the workflow dispatch artifacts by `binary-linux-amd64-workflow_dispatch(.intoto.jsonl)` and the tags by `binary-linux-amd64-push-v$TAG(.intoto.jsonl)`.
 
