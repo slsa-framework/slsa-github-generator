@@ -27,7 +27,7 @@ export GITHUB_USERNAME="laurentsimon"
 export VERIFIER_TAG="v1.3.2"
 export VERIFIER_REPOSITORY="$GITHUB_USERNAME/slsa-verifier"
 # Release tag of the builder we want to release
-export BUILDER_TAG="v1.2.0"
+export BUILDER_TAG="v1.2.2"
 # Branch name for our test
 export BUILDER_REF="release/bad-verifier-$BUILDER_TAG"
 export BUILDER_REPOSITORY="$GITHUB_USERNAME/slsa-github-generator"

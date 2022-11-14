@@ -180,6 +180,15 @@ func Test_CreateNewFileUnderCurrentDirectory(t *testing.T) {
 			existingPath: true,
 			expected:     &ErrInvalidPath{},
 		},
+		{
+			name: "new file",
+			path: "new_file",
+		},
+		{
+			name:     "new file in sub-directory",
+			path:     "dir/new_file",
+			expected: &ErrInvalidPath{},
+		},
 	}
 	for _, tt := range tests {
 		tt := tt // Re-initializing variable so it is not changed while executing the closure below
