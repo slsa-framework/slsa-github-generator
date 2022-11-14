@@ -343,3 +343,38 @@ func Test_attestCmd_invalid_path(t *testing.T) {
 	// If no error occurs we catch it here. SkipNow will exit the test process so this code should be unreachable.
 	t.Errorf("expected an error to occur.")
 }
+
+// Test_attestCmd_subdirectory_artifact tests the attest command when provided
+// subjects in subdirectories.
+func Test_attestCmd_subdirectory_artifact(t *testing.T) {
+	t.Setenv("GITHUB_CONTEXT", "{}")
+
+	// Change to temporary dir
+	currentDir, err := os.Getwd()
+	if err != nil {
+		t.Errorf("unexpected failure: %v", err)
+	}
+	dir, err := os.MkdirTemp("", "")
+	if err != nil {
+		t.Errorf("unexpected failure: %v", err)
+	}
+	defer os.RemoveAll(dir)
+	if err := os.Chdir(dir); err != nil {
+		t.Errorf("unexpected failure: %v", err)
+	}
+	defer os.Chdir(currentDir)
+
+	c := attestCmd(&slsa.NilClientProvider{}, checkTest(t), &testutil.TestSigner{}, &testutil.TestTransparencyLog{})
+	c.SetOut(new(bytes.Buffer))
+	c.SetArgs([]string{
+		"--subjects", base64.StdEncoding.EncodeToString([]byte("b5bb9d8014a0f9b1d61e21e796d78dccdf1352f23cd32812f4850b878ae4944c  test/artifact1")),
+	})
+	if err := c.Execute(); err != nil {
+		t.Errorf("unexpected failure: %v", err)
+	}
+
+	// check that the expected file exists.
+	if _, err := os.Stat(filepath.Join(dir, "artifact1.intoto.jsonl")); err != nil {
+		t.Errorf("error checking file: %v", err)
+	}
+}
