@@ -167,11 +167,11 @@ func validateVersion(cf *goReleaserConfigFile) error {
 func (r *GoReleaserConfig) setEnvs(cf *goReleaserConfigFile) error {
 	m := make(map[string]string)
 	for _, e := range cf.Env {
-		es := strings.Split(e, "=")
-		if len(es) != 2 {
+		name, value, present := strings.Cut(e, "=")
+		if !present {
 			return fmt.Errorf("%w: %s", ErrorInvalidEnvironmentVariable, e)
 		}
-		m[es[0]] = es[1]
+		m[name] = value
 	}
 
 	if len(m) > 0 {
