@@ -21,6 +21,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 )
 
 // CommandRunner runs commands and returns the build steps that were run.
@@ -102,23 +103,12 @@ func (r *CommandRunner) runStep(ctx context.Context, step *CommandStep, dry bool
 	name := step.Command[0]
 	args := step.Command[1:]
 
-	// Copy and merge the environment.
-	env := make([]string, len(r.Env), len(r.Env)+len(step.Env))
-	copy(env, r.Env)
-	env = append(env, step.Env...)
-
-	// Set the POSIX PWD env var.
-	posixEnv := make([]string, len(env), len(env)+1)
-	copy(posixEnv, env)
+	cmd := exec.CommandContext(ctx, name, args...)
 	pwd, err := filepath.Abs(step.WorkingDir)
 	if err != nil {
 		return nil, err
 	}
-	posixEnv = append(posixEnv, "PWD="+pwd)
-
-	cmd := exec.CommandContext(ctx, name, args...)
 	cmd.Dir = pwd
-	cmd.Env = posixEnv
 	cmd.Stdout = os.Stdout
 	if r.Stdout != nil {
 		cmd.Stdout = r.Stdout
@@ -129,8 +119,38 @@ func (r *CommandRunner) runStep(ctx context.Context, step *CommandStep, dry bool
 	}
 
 	// Get the environment that will be used as currently configured. Environ
-	// is needed to capture the actual environment used.
-	env = cmd.Environ()
+	// is needed to capture the actual environment used. However, we will not
+	// include posix environment variables in the captured environment variables as
+	// they are environment specific and inhibit reproducibility.
+	// See: https://github.com/slsa-framework/slsa-github-generator/issues/822
+
+	// First set the default environment variables.
+	env := []string{
+		"PWD=" + pwd,
+		"PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+	}
+	env = append(env)
+	env = append(env, r.Env...)
+	env = append(env, step.Env...)
+	cmd.Env = env
+
+	// Strip common POSIX env vars from provenance.
+	posixVars := []string{"PATH", "PWD", "HOME", "USER", "TERM", "SHELL", "EDITOR"}
+	finalEnv := []string{}
+	// cmd.Environ will dedup and get final environment variables.
+	for _, s := range cmd.Environ() {
+		k, _, _ := strings.Cut(s, "=")
+		isPosix := false
+		for _, pVar := range posixVars {
+			if k == pVar {
+				isPosix = true
+				break
+			}
+		}
+		if !isPosix {
+			finalEnv = append(finalEnv, s)
+		}
+	}
 
 	if !dry {
 		if err := cmd.Run(); err != nil {
@@ -139,9 +159,8 @@ func (r *CommandRunner) runStep(ctx context.Context, step *CommandStep, dry bool
 	}
 
 	return &CommandStep{
-		Command: append([]string{name}, args...),
-		// NOTE: We don't actually include POSIX env vars as they are redundant.
-		Env:        env,
+		Command:    append([]string{name}, args...),
+		Env:        finalEnv,
 		WorkingDir: pwd,
 	}, nil
 }
