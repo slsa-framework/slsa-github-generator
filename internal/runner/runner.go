@@ -129,7 +129,6 @@ func (r *CommandRunner) runStep(ctx context.Context, step *CommandStep, dry bool
 		"PWD=" + pwd,
 		"PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
 	}
-	env = append(env)
 	env = append(env, r.Env...)
 	env = append(env, step.Env...)
 	cmd.Env = env
