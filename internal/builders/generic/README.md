@@ -625,7 +625,7 @@ jobs:
       hashes: ${{ steps.hash.outputs.hashes }}
 ```
 
-2. Add an `id: build` field to your gradle build ste:
+2. Add an `id: build` field to your gradle build step:
 
 ```yaml
     steps:
