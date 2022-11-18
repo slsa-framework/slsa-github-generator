@@ -70,6 +70,11 @@ func GenerateProvenance(name, digest, command, envs, workingDir string, s signin
 		return nil, err
 	}
 
+	// If the environment does not have access to an OIDC provider, use a nil one.
+	if provider == nil && !github.HasOIDCClient() {
+		provider = &slsa.NilClientProvider{}
+	}
+
 	if _, err := hex.DecodeString(digest); err != nil || len(digest) != 64 {
 		return nil, fmt.Errorf("sha256 digest is not valid: %s", digest)
 	}
@@ -123,11 +128,6 @@ func GenerateProvenance(name, digest, command, envs, workingDir string, s signin
 	// Pre-submit tests don't have access to write OIDC token.
 	if provider != nil {
 		b.WithClients(provider)
-	} else {
-		// TODO(github.com/slsa-framework/slsa-github-generator/issues/124): Remove
-		if utils.IsPresubmitTests() {
-			b.GithubActionsBuild.WithClients(&slsa.NilClientProvider{})
-		}
 	}
 
 	ctx := context.Background()
@@ -135,11 +135,6 @@ func GenerateProvenance(name, digest, command, envs, workingDir string, s signin
 	// Pre-submit tests don't have access to write OIDC token.
 	if provider != nil {
 		g.WithClients(provider)
-	} else {
-		// TODO(github.com/slsa-framework/slsa-github-generator/issues/124): Remove
-		if utils.IsPresubmitTests() {
-			g.WithClients(&slsa.NilClientProvider{})
-		}
 	}
 	p, err := g.Generate(ctx)
 	if err != nil {
@@ -163,8 +158,8 @@ func GenerateProvenance(name, digest, command, envs, workingDir string, s signin
 	}
 	p.Predicate.Materials = append(p.Predicate.Materials, runnerMaterials)
 
-	if utils.IsPresubmitTests() {
-		fmt.Println("Pre-submit tests detected. Skipping signing.")
+	if !github.HasOIDCClient() {
+		fmt.Println("Detected environment without access to OIDC tokens. Skipping signing.")
 		return utils.MarshalToBytes(*p)
 	}
 

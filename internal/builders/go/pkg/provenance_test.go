@@ -26,6 +26,7 @@ func TestGenerateProvenance_withErr(t *testing.T) {
 	// TODO(github.com/slsa-framework/slsa-github-generator/issues/124): Remove
 	t.Setenv("GITHUB_EVENT_NAME", "non_event")
 	t.Setenv("GITHUB_CONTEXT", "{}")
+	t.Setenv("ACTIONS_ID_TOKEN_REQUEST_URL", "something")
 	sha256 := "2e0390eb024a52963db7b95e84a9c2b12c004054a7bad9a97ec0c7c89d4681d2"
 	_, err := GenerateProvenance("foo", sha256, "", "", "/home/foo", &testutil.TestSigner{}, &testutil.TransparencyLogWithErr{}, &slsa.NilClientProvider{})
 	if want, got := testutil.ErrTransparencyLog, err; want != got {

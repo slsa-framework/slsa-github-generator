@@ -234,7 +234,7 @@ func TestToken(t *testing.T) {
 			token, err := c.Token(context.Background(), tc.audience)
 			if err != nil {
 				if tc.err != nil {
-					if !errors.As(err, &tc.err) {
+					if !errors.As(err, tc.err) {
 						t.Fatalf("unexpected error: %v", cmp.Diff(err, tc.err, cmpopts.EquateErrors()))
 					}
 				} else {

@@ -26,6 +26,7 @@ import (
 
 	"github.com/slsa-framework/slsa-github-generator/github"
 	"github.com/slsa-framework/slsa-github-generator/signing/sigstore"
+	"github.com/slsa-framework/slsa-github-generator/slsa"
 
 	// Enable the GitHub OIDC auth provider.
 	_ "github.com/sigstore/cosign/pkg/providers/github"
@@ -78,8 +79,15 @@ func runBuild(dry bool, configFile, evalEnvs string) error {
 func runProvenanceGeneration(subject, digest, commands, envs, workingDir, rekor string) error {
 	r := sigstore.NewRekor(rekor)
 	s := sigstore.NewDefaultFulcio()
+
+	var provider slsa.ClientProvider
+	// If the environment does not have access to an OIDC provider, use a nil one.
+	if !github.HasOIDCClient() {
+		provider = &slsa.NilClientProvider{}
+	}
+
 	attBytes, err := pkg.GenerateProvenance(subject, digest,
-		commands, envs, workingDir, s, r, nil)
+		commands, envs, workingDir, s, r, provider)
 	if err != nil {
 		return err
 	}

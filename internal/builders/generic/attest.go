@@ -56,6 +56,11 @@ run in the context of a Github Actions workflow.`,
 				check(errors.New("expected at least one subject"))
 			}
 
+			// If the environment does not have access to an OIDC provider, use a nil one.
+			if provider == nil && !github.HasOIDCClient() {
+				provider = &slsa.NilClientProvider{}
+			}
+
 			// NOTE: The provenance file path is untrusted and should be
 			// validated. This is done by CreateNewFileUnderCurrentDirectory.
 			if attPath == "" {
@@ -80,21 +85,11 @@ run in the context of a Github Actions workflow.`,
 			}
 			if provider != nil {
 				b.WithClients(provider)
-			} else {
-				// TODO(github.com/slsa-framework/slsa-github-generator/issues/124): Remove
-				if utils.IsPresubmitTests() {
-					b.WithClients(&slsa.NilClientProvider{})
-				}
 			}
 
 			g := slsa.NewHostedActionsGenerator(&b)
 			if provider != nil {
 				g.WithClients(provider)
-			} else {
-				// TODO(github.com/slsa-framework/slsa-github-generator/issues/124): Remove
-				if utils.IsPresubmitTests() {
-					g.WithClients(&slsa.NilClientProvider{})
-				}
 			}
 
 			p, err := g.Generate(ctx)
@@ -102,7 +97,7 @@ run in the context of a Github Actions workflow.`,
 
 			// Note: the path is validated within CreateNewFileUnderCurrentDirectory().
 			var attBytes []byte
-			if utils.IsPresubmitTests() {
+			if !github.HasOIDCClient() {
 				attBytes, err = json.Marshal(p)
 				check(err)
 			} else {
