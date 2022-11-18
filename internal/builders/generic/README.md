@@ -669,6 +669,7 @@ jobs:
     outputs:
       hashes: ${{ steps.hash.outputs.hashes }}
 
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # tag=v3
@@ -696,7 +697,7 @@ jobs:
     permissions:
       actions: read
       id-token: write
-      contents: read
+      contents: write
     uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.2.2
     with:
       base64-subjects: "${{ needs.build.outputs.hashes }}"
