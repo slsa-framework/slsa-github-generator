@@ -56,6 +56,10 @@ on:
         required: false
         type: boolean
         default: false
+      continue-on-error:
+        description: "Prevents a workflow run from failing when a job fails. Set to 'true; to allow a workflow run to pass when this job fails."
+        type: boolean
+        default: false
     outputs:
       release-id:
         description: "The name of the release where provenance was uploaded."
@@ -66,9 +70,6 @@ on:
       provenance-name:
         description: "The artifact name of the signed provenance. (A file with the intoto.jsonl extension)."
         value: ${{ jobs.generator.outputs.provenance-name }}
-      outcome:
-        description: "The outcome status of the run ('success' or 'failure')."
-        value: ${{ jobs.final.outputs.outcome }}
 
 jobs:
   # detect-env detects the reusable workflow's repository and ref for use later
@@ -232,4 +233,5 @@ jobs:
         id: final
         env:
           SUCCESS: ${{ needs.detect-env.outputs.outcome != 'failure' && steps.generator.outputs.outcome != 'failure' && steps.create-release.outputs.outcome != 'failure' }}
-        run: echo "outcome=$([ "$SUCCESS" == "true" ] && echo "success" || echo "failure")" >> $GITHUB_OUTPUT
+          CONTINUE: ${{ inputs.continue-on-error }}
+        run: [ "$CONTINUE" == "true" ] || [ "$SUCCESS" == "true" ] || exit 27
