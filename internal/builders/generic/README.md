@@ -241,6 +241,8 @@ The project generates SLSA provenance with the following values.
 | `buildType`                  | `"https://github.com/slsa-framework/slsa-github-generator/generic@v1"` | Identifies a generic GitHub Actions build.                                                                                                                                                                             |
 | `metadata.buildInvocationID` | `"[run_id]-[run_attempt]"`                                             | The GitHub Actions [`run_id`](https://docs.github.com/en/actions/learn-github-actions/contexts#github-context) does not update when a workflow is re-run. Run attempt is added to make the build invocation ID unique. |
 
+**Note**: The generated provenance will probably be wrapped in a [DSSE](https://github.com/secure-systems-lab/dsse) envelope and encoded in base64. Check the human-readable result running `cat encoded-artifact.intoto.jsonl | jq -r '.payload' | base64 -d | jq`.
+
 ### Provenance Example
 
 The following is an example of the generated provenance. Provenance is
