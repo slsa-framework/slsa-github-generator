@@ -171,15 +171,12 @@ jobs:
   # final fails or suceeds based on the value of `inputs.continue-on-error`
   # and the outcome of previous jobs.
   final:
-    outputs:
-      outcome: ${{ steps.final.outputs.outcome }}
     runs-on: ubuntu-latest
     needs: [detect-env, generator]
     # Note: always run even if nedded jobs are skipped.
     if: always()
     steps:
       - name: Final outcome
-        id: final
         env:
           SUCCESS: ${{ needs.detect-env.outputs.outcome != 'failure' && steps.generator.outputs.outcome != 'failure' }}
           CONTINUE: ${{ inputs.continue-on-error }}
