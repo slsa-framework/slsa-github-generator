@@ -126,6 +126,13 @@ func NewOIDCClient() (*OIDCClient, error) {
 	return &c, nil
 }
 
+// HasOIDCClient detects whether the environment has access to request an
+// OIDC token.
+func HasOIDCClient() bool {
+	_, ok := os.LookupEnv(requestURLEnvKey)
+	return ok
+}
+
 func (c *OIDCClient) newRequestURL(audience []string) string {
 	requestURL := *c.requestURL
 	q := requestURL.Query()
