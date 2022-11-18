@@ -57,7 +57,7 @@ on:
         type: boolean
         default: false
       continue-on-error:
-        description: "Prevents a workflow run from failing when a job fails. Set to 'true; to allow a workflow run to pass when this job fails."
+        description: "Prevents a workflow run from failing when a job fails. Set to 'true' to allow a workflow run to pass when this job fails."
         type: boolean
         default: false
     outputs:
