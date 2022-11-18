@@ -167,7 +167,7 @@ jobs:
         env:
           SUCCESS: ${{ steps.generate-builder.outcome != 'failure' && steps.cosign-install.outcome != 'failure' && steps.login.outcome != 'failure' && steps.sign-prov.outcome != 'failure' }}
         run: echo "outcome=$([ "$SUCCESS" == "true" ] && echo "success" || echo "failure")" >> $GITHUB_OUTPUT
-  
+
   # final outputs the return status of the reusable workflow run.
   final:
     outputs:

@@ -219,7 +219,7 @@ jobs:
           SUCCESS: ${{ steps.checkout-builder.outcome != 'failure' && steps.download-prov.outcome != 'failure' && steps.release.outcome != 'failure' }}
         run: echo "outcome=$([ "$SUCCESS" == "true" ] && echo "success" || echo "failure")" >> $GITHUB_OUTPUT
 
-# final outputs the return status of the reusable workflow run.
+  # final outputs the return status of the reusable workflow run.
   final:
     outputs:
       outcome: ${{ steps.final.outputs.outcome }}
