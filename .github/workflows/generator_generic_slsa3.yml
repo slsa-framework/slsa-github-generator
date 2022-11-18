@@ -88,9 +88,9 @@ jobs:
         uses: slsa-framework/slsa-github-generator/.github/actions/detect-workflow@main
 
       - name: Final outcome
+        id: final
         env:
           SUCCESS: ${{ steps.detect.outcome != 'failure' }}
-        id: final
         run: echo "outcome=$([ "$SUCCESS" == "true" ] && echo "success" || echo "failure")" >> $GITHUB_OUTPUT
 
   # generator builds the generator binary and runs it to generate SLSA
@@ -170,9 +170,9 @@ jobs:
           retention-days: 5
 
       - name: Final outcome
+        id: final
         env:
           SUCCESS: ${{ steps.generate-builder.outcome != 'failure' && steps.sign-prov.outcome != 'failure' && steps.upload-prov.outcome != 'failure' }}
-        id: final
         run: echo "outcome=$([ "$SUCCESS" == "true" ] && echo "success" || echo "failure")" >> $GITHUB_OUTPUT
 
   # create-release creates a release and uploads provenance to the release if
@@ -214,9 +214,9 @@ jobs:
             ${{ needs.generator.outputs.provenance-name }}
 
       - name: Final outcome
+        id: final
         env:
           SUCCESS: ${{ steps.checkout-builder.outcome != 'failure' && steps.download-prov.outcome != 'failure' && steps.release.outcome != 'failure' }}
-        id: final
         run: echo "outcome=$([ "$SUCCESS" == "true" ] && echo "success" || echo "failure")" >> $GITHUB_OUTPUT
 
 # final outputs the return status of the reusable workflow run.
@@ -225,10 +225,11 @@ jobs:
       outcome: ${{ steps.final.outputs.outcome }}
     runs-on: ubuntu-latest
     needs: [detect-env, generator, create-release]
+    # Note: always run even if nedded jobs are skipped.
     if: always()
     steps:
       - name: Final outcome
+        id: final
         env:
           SUCCESS: ${{ needs.detect-env.outputs.outcome != 'failure' && steps.generator.outputs.outcome != 'failure' && steps.create-release.outputs.outcome != 'failure' }}
-        id: final
         run: echo "outcome=$([ "$SUCCESS" == "true" ] && echo "success" || echo "failure")" >> $GITHUB_OUTPUT
