@@ -221,7 +221,7 @@ jobs:
           SUCCESS: ${{ steps.checkout-builder.outcome != 'failure' && steps.download-prov.outcome != 'failure' && steps.release.outcome != 'failure' }}
         run: echo "outcome=$([ "$SUCCESS" == "true" ] && echo "success" || echo "failure")" >> $GITHUB_OUTPUT
 
-  # final fails or suceeds based on the value of `inputs.continue-on-error`
+  # final fails or succeeds based on the value of `inputs.continue-on-error`
   # and the outcome of previous jobs.
   final:
     runs-on: ubuntu-latest
