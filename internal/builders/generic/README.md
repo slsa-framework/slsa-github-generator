@@ -654,7 +654,7 @@ provenance:
   permissions:
     actions: read
     id-token: write
-    contents: read
+    contents: write
   uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.2.2
   with:
     base64-subjects: "${{ needs.build.outputs.hashes }}"
