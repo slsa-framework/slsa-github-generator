@@ -62,12 +62,16 @@ on:
       provenance-name:
         description: "The artifact name of the signed provenance. (A file with the intoto.jsonl extension)."
         value: ${{ jobs.generator.outputs.provenance-name }}
+      outcome:
+        description: "The outcome status of the run ('success' or 'failure')."
+        value: ${{ jobs.final.outputs.outcome }}
 
 jobs:
   # detect-env detects the reusable workflow's repository and ref for use later
   # in the workflow.
   detect-env:
     outputs:
+      outcome: ${{ steps.final.outputs.outcome }}
       repository: ${{ steps.detect.outputs.repository }}
       ref: ${{ steps.detect.outputs.ref }}
     runs-on: ubuntu-latest
@@ -76,7 +80,14 @@ jobs:
     steps:
       - name: Detect the generator ref
         id: detect
+        continue-on-error: true
         uses: slsa-framework/slsa-github-generator/.github/actions/detect-workflow@main
+
+      - name: Final outcome
+        env:
+          SUCCESS: ${{ steps.detect.outcome != 'failure' }}
+        id: final
+        run: echo "outcome=$([ "$SUCCESS" == "true" ] && echo "success" || echo "failure")" >> $GITHUB_OUTPUT
 
   # generator builds the generator binary and runs it to generate SLSA
   # provenance.
@@ -89,6 +100,7 @@ jobs:
   # reference.
   generator:
     outputs:
+      outcome: ${{ steps.final.outputs.outcome }}
       provenance-sha256: ${{ steps.sign-prov.outputs.provenance-sha256 }}
       provenance-name: ${{ steps.sign-prov.outputs.provenance-name }}
     runs-on: ubuntu-latest
@@ -99,6 +111,8 @@ jobs:
       actions: read # Needed to read workflow info.
     steps:
       - name: Generate builder
+        id: generate-builder
+        continue-on-error: true
         uses: slsa-framework/slsa-github-generator/.github/actions/generate-builder@main
         with:
           repository: "${{ needs.detect-env.outputs.repository }}"
@@ -111,6 +125,7 @@ jobs:
 
       - name: Create and sign provenance
         id: sign-prov
+        continue-on-error: true
         shell: bash
         # NOTE: Inputs and `github` context are set to environment variables in
         # order to avoid script injection.
@@ -142,6 +157,8 @@ jobs:
           "$GITHUB_WORKSPACE/$BUILDER_BINARY" attest --subjects "${UNTRUSTED_SUBJECTS}" -g "$untrusted_provenance_name"
 
       - name: Upload the signed provenance
+        id: upload-prov
+        continue-on-error: true
         uses: actions/upload-artifact@83fd05a356d7e2593de66fc9913b3002723633cb # tag=v3.1.1
         with:
           name: "${{ steps.sign-prov.outputs.provenance-name }}"
@@ -149,10 +166,17 @@ jobs:
           if-no-files-found: error
           retention-days: 5
 
+      - name: Final outcome
+        env:
+          SUCCESS: ${{ steps.generate-builder.outcome != 'failure' && steps.sign-prov.outcome != 'failure' && steps.upload-prov.outcome != 'failure' }}
+        id: final
+        run: echo "outcome=$([ "$SUCCESS" == "true" ] && echo "success" || echo "failure")" >> $GITHUB_OUTPUT
+
   # create-release creates a release and uploads provenance to the release if
   # `upload-assets` is true.
   create-release:
     outputs:
+      outcome: ${{ steps.final.outputs.outcome }}
       release-id: ${{ steps.release.outputs.id }}
     runs-on: ubuntu-latest
     needs: [generator, detect-env]
@@ -161,6 +185,8 @@ jobs:
     if: startsWith(github.ref, 'refs/tags/') && inputs.upload-assets == true
     steps:
       - name: Checkout builder repository
+        id: checkout-builder
+        continue-on-error: true
         uses: slsa-framework/slsa-github-generator/.github/actions/secure-builder-checkout@main
         with:
           repository: "${{ needs.detect-env.outputs.repository }}"
@@ -168,6 +194,8 @@ jobs:
           path: __BUILDER_CHECKOUT_DIR__
 
       - name: Download the provenance
+        id: download-prov
+        continue-on-error: true
         uses: ./__BUILDER_CHECKOUT_DIR__/.github/actions/secure-download-artifact
         with:
           name: "${{ needs.generator.outputs.provenance-name }}"
@@ -175,8 +203,29 @@ jobs:
           sha256: "${{ needs.generator.outputs.provenance-sha256 }}"
 
       - name: Release
-        uses: softprops/action-gh-release@de2c0eb89ae2a093876385947365aca7b0e5f844 # v0.1.15
         id: release
+        continue-on-error: true
+        uses: softprops/action-gh-release@de2c0eb89ae2a093876385947365aca7b0e5f844 # v0.1.15
         with:
           files: |
             ${{ needs.generator.outputs.provenance-name }}
+
+      - name: Final outcome
+        env:
+          SUCCESS: ${{ steps.checkout-builder.outcome != 'failure' && steps.download-prov.outcome != 'failure' && steps.release.outcome != 'failure' }}
+        id: final
+        run: echo "outcome=$([ "$SUCCESS" == "true" ] && echo "success" || echo "failure")" >> $GITHUB_OUTPUT
+
+# final outputs the return status of the reusable workflow run.
+  final:
+    outputs:
+      outcome: ${{ steps.final.outputs.outcome }}
+    runs-on: ubuntu-latest
+    needs: [detect-env, generator, create-release]
+    if: always()
+    steps:
+      - name: Final outcome
+        env:
+          SUCCESS: ${{ needs.detect-env.outputs.outcome != 'failure' && steps.generator.outputs.outcome != 'failure' && steps.create-release.outputs.outcome != 'failure' }}
+        id: final
+        run: echo "outcome=$([ "$SUCCESS" == "true" ] && echo "success" || echo "failure")" >> $GITHUB_OUTPUT
