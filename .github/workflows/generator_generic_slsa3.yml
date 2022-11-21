@@ -233,4 +233,5 @@ jobs:
         env:
           SUCCESS: ${{ needs.detect-env.outputs.outcome != 'failure' && steps.generator.outputs.outcome != 'failure' && steps.create-release.outputs.outcome != 'failure' }}
           CONTINUE: ${{ inputs.continue-on-error }}
-        run: [ "$CONTINUE" == "true" ] || [ "$SUCCESS" == "true" ] || exit 27
+        run: |
+          [ "$CONTINUE" == "true" ] || [ "$SUCCESS" == "true" ] || exit 27
