@@ -174,7 +174,7 @@ jobs:
   final:
     runs-on: ubuntu-latest
     needs: [detect-env, generator]
-    # Note: always run even if nedded jobs are skipped.
+    # Note: always run even if needed jobs are skipped.
     if: always()
     steps:
       - name: Final outcome
