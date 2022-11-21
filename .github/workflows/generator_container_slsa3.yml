@@ -169,7 +169,7 @@ jobs:
           SUCCESS: ${{ steps.generate-builder.outcome != 'failure' && steps.cosign-install.outcome != 'failure' && steps.login.outcome != 'failure' && steps.sign-prov.outcome != 'failure' }}
         run: echo "outcome=$([ "$SUCCESS" == "true" ] && echo "success" || echo "failure")" >> $GITHUB_OUTPUT
 
-  # final fails or suceeds based on the value of `inputs.continue-on-error`
+  # final fails or succeeds based on the value of `inputs.continue-on-error`
   # and the outcome of previous jobs.
   final:
     runs-on: ubuntu-latest
