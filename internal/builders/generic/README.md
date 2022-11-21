@@ -331,7 +331,7 @@ jobs:
       hashes: ${{ steps.hash.outputs.hashes }}
 ```
 
-2. Add an `id: run-goreleaser` field to your goreleaser step:
+2. Add an `id: run-goreleaser` field to your goreleaser step. Use goreleaser version >= v1.13.0 to enable provenance generation for dockers.
 
 ```yaml
     steps:
@@ -352,6 +352,10 @@ jobs:
   run: |
     set -euo pipefail
     hashes=$(echo $ARTIFACTS | jq --raw-output '.[] | {name, "digest": (.extra.Digest // .extra.Checksum)} | select(.digest) | {digest} + {name} | join("  ") | sub("^sha256:";"")' | base64 -w0)
+    if test "$hashes" = ""; then # goreleaser < v1.13.0
+      checksum_file=$(echo "$ARTIFACTS" | jq -r '.[] | select (.type=="Checksum") | .path')
+      hashes=$(cat $checksum_file | base64 -w0)
+    fi
     echo "hashes=$hashes" >> $GITHUB_OUTPUT
 ```
 
