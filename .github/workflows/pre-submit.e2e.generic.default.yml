@@ -100,7 +100,7 @@ jobs:
           BINARY: "binary-name"
           PROVENANCE: ${{ needs.build-continue-invalid-subjects.outputs.provenance-name }}
           RESULT: ${{ needs.build-continue-invalid-subjects.result }}
-          NEEDS: ${{ needs }}
+          NEEDS: ${{ toJson(needs) }}
         run: |
           echo "result: $RESULT"
           echo "needs: $NEEDS"
