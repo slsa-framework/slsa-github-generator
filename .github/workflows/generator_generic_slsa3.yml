@@ -71,6 +71,11 @@ on:
       provenance-name:
         description: "The artifact name of the signed provenance. (A file with the intoto.jsonl extension)."
         value: ${{ jobs.generator.outputs.provenance-name }}
+      # Note: we use this output because there is no buildt-in `outcome` and `result` is always `success`
+      # if `continue-on-error` is set to `true`.
+      outcome:
+        description: "The outcome status of the run ('success' or 'failure')."
+        value: ${{ jobs.final.outputs.outcome }}
 
 jobs:
   # detect-env detects the reusable workflow's repository and ref for use later

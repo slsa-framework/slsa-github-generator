@@ -206,7 +206,7 @@ Inputs:
 | `registry-username`  | yes      |         | Username to log into the container registry.                                                                                                                                                                                    |
 | `compile-generator`  | false    | false   | Whether to build the generator from source. This increases build time by ~2m.                                                                                                                                                   |
 | `private-repository` | no       | false   | Set to true to opt-in to posting to the public transparency log. Will generate an error if false for private repositories. This input has no effect for public repositories. See [Private Repositories](#private-repositories). |
-
+| `continue-on-error` | no       | false                                                                                           | Set to true to ignore errors. You can check the `result` of the call to identify failures. This option is useful if you won't want a failure to fail your entire workflow.
 Secrets:
 
 | Name                | Required | Description                                |
