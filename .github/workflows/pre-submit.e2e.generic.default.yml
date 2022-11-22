@@ -56,7 +56,7 @@ jobs:
     # NOTE: this name is used as the status check name and by protected
     # branches for required status checks. It should have a unique name among
     # other pre-submits.
-    name: verify generic provenance
+    name: verify generic provenance (continue-on-error)
     runs-on: ubuntu-latest
     needs: [build-continue-error]
     if: ${{ always() }}
