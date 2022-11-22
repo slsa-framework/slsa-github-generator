@@ -68,11 +68,9 @@ jobs:
       - env:
           BINARY: "binary-name"
           PROVENANCE: ${{ needs.build-continue-no-error.outputs.provenance-name }}
-          OUTCOME: ${{ needs.build-continue-no-error.outcome }}
-          NEEDS: ${{ toJson(needs) }}
+          RESULT: ${{ needs.build-continue-no-error.result }}
         run: |
-          echo "needs: $NEEDS"
-          [ "$OUTCOME" == "success" ] && ./.github/workflows/scripts/pre-submit.e2e.generic.default.sh
+          [ "$RESULT" == "success" ] && ./.github/workflows/scripts/pre-submit.e2e.generic.default.sh
 
   build-continue-invalid-subjects:
     permissions:
@@ -101,6 +99,9 @@ jobs:
       - env:
           BINARY: "binary-name"
           PROVENANCE: ${{ needs.build-continue-invalid-subjects.outputs.provenance-name }}
-          OUTCOME: ${{ needs.build-continue-invalid-subjects.outcome }}
+          RESULT: ${{ needs.build-continue-invalid-subjects.result }}
+          NEEDS: ${{ needs }}
         run: |
+          echo "result: $RESULT"
+          echo "needs: $NEEDS"
           [ "$OUTCOME" == "success" ] && ./.github/workflows/scripts/pre-submit.e2e.generic.default.sh
