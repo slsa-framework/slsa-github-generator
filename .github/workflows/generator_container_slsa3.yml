@@ -190,7 +190,7 @@ jobs:
       - name: Final outcome
         id: final
         env:
-          SUCCESS: ${{ needs.detect-env.outputs.outcome != 'failure' && steps.generator.outputs.outcome != 'failure' }}
+          SUCCESS: ${{ needs.detect-env.outputs.outcome != 'failure' && needs.generator.outputs.outcome != 'failure' }}
           CONTINUE: ${{ inputs.continue-on-error }}
         run: |
           echo "outcome=$([ "$SUCCESS" == "true" ] && echo "success" || echo "failure")" >> $GITHUB_OUTPUT
