@@ -221,7 +221,7 @@ The [container workflow](https://github.com/slsa-framework/slsa-github-generator
 
 | Name               | Description                                                                            |
 | ------------------ | -------------------------------------------------------------------------------------- |
-| `outcome`          | The outcome of the run (`success` or `failure`). This may be used in combination with the `continue-on-error`. |
+| `outcome`          | If `continue-on-error` is `true`, will contain the outcome of the run (`success` or `failure`). |
 
 ### Provenance Format
 

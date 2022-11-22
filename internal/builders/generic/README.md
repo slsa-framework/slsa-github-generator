@@ -232,7 +232,7 @@ The [generic workflow](https://github.com/slsa-framework/slsa-github-generator/b
 | ------------------ | -------------------------------------------------------------------------------------- |
 | `provenance-name`  | The artifact name of the signed provenance.                                            |
 | `attestation-name` | The artifact name of the signed provenance. DEPRECATED: use `provenance-name` instead. |
-| `outcome`          | The outcome of the run (`success` or `failure`). This may be used in combination with the `continue-on-error`. |
+| `outcome`          | If `continue-on-error` is `true`, will contain the outcome of the run (`success` or `failure`). |
 
 ### Provenance Format
 
