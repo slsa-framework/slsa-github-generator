@@ -97,9 +97,8 @@ jobs:
       - env:
           BINARY: "binary-name"
           PROVENANCE: ${{ needs.build-continue-invalid-subjects.outputs.provenance-name }}
-          OUTCOME: ${{ needs.build-continue-invalid-subjects.outputs.outcome }}
-          NEEDS: ${{ toJson(needs) }}
         run: |
-          echo "outcome: $OUTCOME"
-          echo "needs: $NEEDS"
-          [ "$OUTCOME" == "failure" ] && ./.github/workflows/scripts/pre-submit.e2e.generic.default.sh
+           [ "$OUTCOME" == "failure" ]
+
+           # Note: we don't call ./.github/workflows/scripts/pre-submit.e2e.generic.default.sh
+           # because the provenance generation failed, so there is no provenance generated.
