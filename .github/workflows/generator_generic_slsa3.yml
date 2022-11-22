@@ -93,7 +93,8 @@ jobs:
         id: final
         env:
           SUCCESS: ${{ steps.detect.outcome != 'failure' }}
-        run: echo "outcome=$([ "$SUCCESS" == "true" ] && echo "success" || echo "failure")" >> $GITHUB_OUTPUT
+        run: |
+          echo "outcome=$([ "$SUCCESS" == "true" ] && echo "success" || echo "failure")" >> $GITHUB_OUTPUT
 
   # generator builds the generator binary and runs it to generate SLSA
   # provenance.
