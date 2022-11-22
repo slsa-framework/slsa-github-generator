@@ -40,7 +40,7 @@ jobs:
           PROVENANCE: ${{ needs.build.outputs.provenance-name }}
         run: ./.github/workflows/scripts/pre-submit.e2e.generic.default.sh
 
-  build-continue-error:
+  build-continue-no-error:
     permissions:
       id-token: write # For signing.
       contents: write # For asset uploads.
@@ -52,13 +52,44 @@ jobs:
       compile-generator: true
       continue-on-error: true
 
-  verify-continue-error:
+  verify-continue-no-error:
     # NOTE: this name is used as the status check name and by protected
     # branches for required status checks. It should have a unique name among
     # other pre-submits.
     name: verify generic provenance (continue-on-error)
     runs-on: ubuntu-latest
-    needs: [build-continue-error]
+    needs: [build-continue-no-error]
+    if: ${{ always() }}
+    steps:
+      - uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # tag=v3.1.0
+      - uses: actions/download-artifact@9782bd6a9848b53b110e712e20e42d89988822b7 # tag=v3.0.1
+        with:
+          name: ${{ needs.build-continue-no-error.outputs.provenance-name }}
+      - env:
+          BINARY: "binary-name"
+          PROVENANCE: ${{ needs.build-continue-no-error.outputs.provenance-name }}
+          OUTCOME: ${{ needs.build-continue-no-error.outcome }}
+        run: |
+          [ "$OUTCOME" == "success" ] && ./.github/workflows/scripts/pre-submit.e2e.generic.default.sh
+
+  build-continue-invalid-subjects:
+    permissions:
+      id-token: write # For signing.
+      contents: write # For asset uploads.
+      actions: read # For reading workflow info.
+    uses: ./.github/workflows/generator_generic_slsa3.yml
+    with:
+      base64-subjects: "invalid base64 subjects"
+      compile-generator: true
+      continue-on-error: true
+
+  verify-continue-invalid-subjects:
+    # NOTE: this name is used as the status check name and by protected
+    # branches for required status checks. It should have a unique name among
+    # other pre-submits.
+    name: verify generic provenance (continue-on-error invalid subjects)
+    runs-on: ubuntu-latest
+    needs: [build-continue-invalid-subjects]
     if: ${{ always() }}
     steps:
       - uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # tag=v3.1.0
@@ -67,5 +98,7 @@ jobs:
           name: ${{ needs.build.outputs.provenance-name }}
       - env:
           BINARY: "binary-name"
-          PROVENANCE: ${{ needs.build.outputs.provenance-name }}
-        run: ./.github/workflows/scripts/pre-submit.e2e.generic.default.sh
+          PROVENANCE: ${{ needs.build-continue-invalid-subjects.outputs.provenance-name }}
+          OUTCOME: ${{ needs.build-continue-invalid-subjects.outcome }}
+        run: |
+          [ "$OUTCOME" == "success" ] && ./.github/workflows/scripts/pre-submit.e2e.generic.default.sh
