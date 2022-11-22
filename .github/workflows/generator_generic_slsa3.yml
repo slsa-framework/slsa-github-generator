@@ -182,6 +182,10 @@ jobs:
         env:
           SUCCESS: ${{ steps.generate-builder.outcome != 'failure' && steps.sign-prov.outcome != 'failure' && steps.upload-prov.outcome != 'failure' }}
         run: |
+          echo "builder: ${{ steps.generate-builder.outcome }}"
+          echo "sign-prov: ${{ steps.sign-prov.outcome }}"
+          echo "upload-prov: ${{ steps.upload-prov.outcome }}"
+          echo "outcome=$([ "$SUCCESS" == "true" ] && echo "success" || echo "failure")"
           echo "outcome=$([ "$SUCCESS" == "true" ] && echo "success" || echo "failure")" >> $GITHUB_OUTPUT
 
   # create-release creates a release and uploads provenance to the release if
@@ -245,5 +249,9 @@ jobs:
           SUCCESS: ${{ needs.detect-env.outputs.outcome != 'failure' && steps.generator.outputs.outcome != 'failure' && steps.create-release.outputs.outcome != 'failure' }}
           CONTINUE: ${{ inputs.continue-on-error }}
         run: |
+          echo "detect-env: ${{ steps.detect-env.outcome }}"
+          echo "generator: ${{ steps.generator.outcome }}"
+          echo "create-release: ${{ steps.create-release.outcome }}"
+          echo "outcome=$([ "$SUCCESS" == "true" ] && echo "success" || echo "failure")"
           echo "outcome=$([ "$SUCCESS" == "true" ] && echo "success" || echo "failure")" >> $GITHUB_OUTPUT
           [ "$CONTINUE" == "true" ] || [ "$SUCCESS" == "true" ] || exit 27
