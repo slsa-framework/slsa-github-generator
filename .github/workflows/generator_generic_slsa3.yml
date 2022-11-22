@@ -176,7 +176,8 @@ jobs:
         id: final
         env:
           SUCCESS: ${{ steps.generate-builder.outcome != 'failure' && steps.sign-prov.outcome != 'failure' && steps.upload-prov.outcome != 'failure' }}
-        run: echo "outcome=$([ "$SUCCESS" == "true" ] && echo "success" || echo "failure")" >> $GITHUB_OUTPUT
+        run: |
+          echo "outcome=$([ "$SUCCESS" == "true" ] && echo "success" || echo "failure")" >> $GITHUB_OUTPUT
 
   # create-release creates a release and uploads provenance to the release if
   # `upload-assets` is true.
