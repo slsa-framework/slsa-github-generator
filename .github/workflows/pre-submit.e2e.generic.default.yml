@@ -69,7 +69,9 @@ jobs:
           BINARY: "binary-name"
           PROVENANCE: ${{ needs.build-continue-no-error.outputs.provenance-name }}
           OUTCOME: ${{ needs.build-continue-no-error.outcome }}
+          NEEDS: ${{ toJson(needs) }}
         run: |
+          echo "needs: $NEEDS"
           [ "$OUTCOME" == "success" ] && ./.github/workflows/scripts/pre-submit.e2e.generic.default.sh
 
   build-continue-invalid-subjects:
