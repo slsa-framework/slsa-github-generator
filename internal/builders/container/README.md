@@ -22,6 +22,7 @@ project simply generates provenance as a separate step in an existing workflow.
   - [Private Repositories](#private-repositories)
   - [Supported Triggers](#supported-triggers)
   - [Workflow Inputs](#workflow-inputs)
+  - [Workflow Outputs](#workflow-outputs)
   - [Provenance Format](#provenance-format)
   - [Provenance Example](#provenance-example)
 - [Integration With Other Build Systems](#integration-with-other-build-systems)
@@ -206,12 +207,20 @@ Inputs:
 | `registry-username`  | yes      |         | Username to log into the container registry.                                                                                                                                                                                    |
 | `compile-generator`  | false    | false   | Whether to build the generator from source. This increases build time by ~2m.                                                                                                                                                   |
 | `private-repository` | no       | false   | Set to true to opt-in to posting to the public transparency log. Will generate an error if false for private repositories. This input has no effect for public repositories. See [Private Repositories](#private-repositories). |
-| `continue-on-error` | no       | false                                                                                           | Set to true to ignore errors. You can check the `result` of the call to identify failures. This option is useful if you won't want a failure to fail your entire workflow.
+| `continue-on-error` | no       | false                                                                                           | Set to true to ignore errors. This option is useful if you won't want a failure to fail your entire workflow.
 Secrets:
 
 | Name                | Required | Description                                |
 | ------------------- | -------- | ------------------------------------------ |
 | `registry-password` | yes      | Password to log in the container registry. |
+
+### Workflow Outputs
+
+The [container workflow](https://github.com/slsa-framework/slsa-github-generator/blob/main/.github/workflows/generator_container_slsa3.yml) accepts the following outputs:
+
+| Name               | Description                                                                            |
+| ------------------ | -------------------------------------------------------------------------------------- |
+| `outcome`          | The outcome of the run (`success` or `failure`). This may be used in combination with the `continue-on-error`. |
 
 ### Provenance Format
 

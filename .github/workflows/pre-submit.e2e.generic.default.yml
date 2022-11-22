@@ -97,6 +97,7 @@ jobs:
       - env:
           BINARY: "binary-name"
           PROVENANCE: ${{ needs.build-continue-invalid-subjects.outputs.provenance-name }}
+          OUTCOME: ${{ needs.build-continue-invalid-subjects.outputs.outcome }}
         run: |
            [ "$OUTCOME" == "failure" ]
 
