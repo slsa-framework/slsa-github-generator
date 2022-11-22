@@ -322,6 +322,11 @@ This section explains how to generate non-forgeable SLSA provenance with existin
 If you use [GoReleaser](https://github.com/goreleaser/goreleaser-action) to generate your build, you can easily
 generate SLSA3 provenance by updating your existing workflow with the steps indicated in the workflow below:
 
+**Notes**:
+- Make sure you did not disable checksum generation in the goreleaser yml.
+- Make sure you specified sha256 as the algorithm for the checksum or left it empty (sha256 is the default).
+- To enable provenance generation for dockers (as well as artifacts), use goreleaser version >= v1.13.0.
+
 1. Declare an `outputs` for the GoReleaser job:
 
 ```yaml
@@ -331,7 +336,7 @@ jobs:
       hashes: ${{ steps.hash.outputs.hashes }}
 ```
 
-2. Add an `id: run-goreleaser` field to your goreleaser step. Use goreleaser version >= v1.13.0 to enable provenance generation for dockers.
+2. Add an `id: run-goreleaser` field to your goreleaser step:
 
 ```yaml
     steps:
