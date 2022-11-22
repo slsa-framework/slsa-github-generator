@@ -325,7 +325,7 @@ generate SLSA3 provenance by updating your existing workflow with the steps indi
 **Notes**:
 - Make sure you did not disable checksum generation in the goreleaser yml.
 - Make sure you specified sha256 as the algorithm for the checksum or left it empty (sha256 is the default).
-- To enable provenance generation for dockers (as well as artifacts), use goreleaser version >= v1.13.0.
+- To enable provenance generation for dockers (as well as artifacts), use [goreleaser version >= v1.13.0](https://github.com/goreleaser/goreleaser/releases/tag/v1.13.0).
 
 1. Declare an `outputs` for the GoReleaser job:
 
