@@ -238,6 +238,45 @@ End-to-end tests run daily in [github.com/slsa-framework/example-package/.github
 
    If it does not, delete the release, fix the bug and re-start the release process at the top of this page.
 
+### Container generator
+
+1. Make sure you have downloaded the `$BUILDER_TAG` builder's binary locally `slsa-generator-container-linux-amd64`, either via the web UI or via:
+
+   ```shell
+   "$GH" release -R slsa-framework/slsa-github-generator download "$BUILDER_TAG" -p "slsa-generator-container-linux-amd64"
+   mv slsa-generator-container-linux-amd64 slsa-generator-container-linux-amd64-"$BUILDER_TAG".original
+   ```
+
+1. Upload a different binary to the assets:
+
+   ```shell
+   echo hello > slsa-generator-container-linux-amd64
+   "$GH" release -R slsa-framework/slsa-github-generator upload "$BUILDER_TAG" slsa-generator-container-linux-amd64  --clobber
+   ```
+
+1. Update the version of the workflow [slsa-framework/example-package/.github/workflows/e2e.container.workflow_dispatch.main.adversarial-builder-binary.slsa3.yml#L35](https://github.com/slsa-framework/example-package/blob/main/.github/workflows/e2e.container.workflow_dispatch.main.adversarial-builder-binary.slsa3.yml#L35) with the `$BUILDER_TAG` to test.
+
+1. Trigger the test in [slsa-framework/example-package/actions/workflows/e2e.container.workflow_dispatch.main.adversarial-builder-binary.slsa3.yml](https://github.com/slsa-framework/example-package/actions/workflows/e2e.container.workflow_dispatch.main.adversarial-builder-binary.slsa3.yml) by cliking `Run workflow`. Verify that it fails, with a message:
+
+   ```shell
+   verifier hash computed is 60c91c9d5b9a059e37ac46da316f20c81da335b5d00e1f74d03dd50f819694bd
+   verifier hash verification has passed
+   ...
+   FAILED: SLSA verification failed: expected hash '5891b5b522d5df086d0ff0b110fbd9d21bb4fc7163af34d08286a2e846f6be03', got 'e8af48495ca3c5a7737b4a34322afc7e95a85cf1457a37473fb81cff9b4f0d05': binary artifact hash does not match provenance subject
+   Error: Process completed with exit code 6.
+   ```
+
+1. If the test above failed with the expected message, re-upload the original binary back to the assets, e.g. via:
+
+   ```shell
+   mv slsa-generator-container-linux-amd64-"$BUILDER_TAG".original slsa-generator-container-linux-amd64
+   "$GH" release -R slsa-framework/slsa-github-generator upload "$BUILDER_TAG" slsa-generator-container-linux-amd64  --clobber
+   ```
+
+1. Re-run the workflow above and verify that it succeeds. (TODO: https://github.com/slsa-framework/slsa-github-generator/issues/116).
+
+   If it does not, delete the release, fix the bug and re-start the release process at the top of this page.
+
 ## Code Freeze
 
 Code freeze the repository for 1-2 days.
