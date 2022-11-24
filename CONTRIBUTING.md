@@ -6,6 +6,7 @@
     - [Code of Conduct](#code-of-conduct)
     - [Setting up your development environment](#setting-up-your-development-environment)
   - [Development](#development)
+    - [Preferred Languages](#preferred-languages)
   - [Testing](#testing)
     - [Pre-submits and Unit Tests](#pre-submits-and-unit-tests)
     - [End to End (e2e) Tests](#end-to-end-e2e-tests)
@@ -84,6 +85,24 @@ Some example test repos:
 
 - [actions-test](https://github.com/ianlewis/actions-test/tree/main/.github/workflows)
 - [slsa-on-github-test](https://github.com/laurentsimon/slsa-on-github-test/tree/main/.github/workflows)
+
+#### Preferred Languages
+
+We prefer the use of the following programming languages:
+
+- [Go](https://go.dev/) - For builders/generators.
+- [TypeScript](https://www.typescriptlang.org/) - For GitHub actions.
+- [Bash](https://www.gnu.org/software/bash/) - For scripts in GitHub actions and workflows.
+
+We do not have a strict rule that proscribes the use of specific language use.
+However, any PRs that intruduce a new language should include justification for
+adding the new language as well as a plan for adding tooling that introduces the
+necessary tooling and testing infrastructure.
+
+We will generally reject PRs that introduce the use of memory-unsafe
+languages or use of existing languages in memory-unsafe ways (e.g. the Go
+[unsafe](https://pkg.go.dev/unsafe) package). See the
+[Security Policy](./SECURITY.md) for more info.
 
 ### Testing
 

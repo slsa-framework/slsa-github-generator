@@ -1,5 +1,8 @@
 # Security Policy
 
+This document includes information about the vulnerability reporting, patch,
+release, and disclosure processes, as well as general security posture.
+
 ## Supported Versions
 
 The following versions are currently supported and receive security updates.
@@ -107,6 +110,32 @@ versions](#supported-versions).
 
 The [Security Team](#security-team) evaluates vulnerability severity on a
 case-by-case basis, guided by [CVSS 3.1](https://www.first.org/cvss/v3.1/specification-document).
+
+## Security Posture
+
+We aim to reduce the number of security issues through several general
+security-concious development practices including the use of unit-tests,
+end-to-end (e2e) tests, static and dynamic analysis tools, and use of
+memory-safe languages.
+
+We aim to fix issues discovered by analysis tools as quickly as possible. We
+prefer to add these tools to "pre-submit" checks on PRs so that issues are
+never added to the code in the first place.
+
+In general, we follow the following security-concious practices during
+development (This is not an exhaustive list).
+
+- All PRs are reviewed by at least one [CODEOWNER](./CODEOWNERS).
+- All unit and linter pre-submit tests must pass before a PRs is merged. See
+  the [Pre-submits and Unit Tests](./CONTRIBUTING.md#pre-submits-and-unit-tests)
+  section of the Contributor Guide for more information.
+- All releases include no known e2e test failures. See
+  [RELEASE.md](./RELEASE.md) for info on the release process. See the
+  [End to End (e2e) Tests](./CONTRIBUTING.md#end-to-end-e2e-tests) section of
+  the Contributor Guide for more information on e2e tests.
+- We refrain from using memory-unsafe languages (e.g. C, C++) or memory-unsafe
+  use of languages that are memory-safe by default (e.g. the Go
+  [unsafe](https://pkg.go.dev/unsafe) package).
 
 ## Security Team
 
