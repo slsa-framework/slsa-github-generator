@@ -113,6 +113,8 @@ actions and build provenance.
 You can view current team membership here:
 [slsa-framework/slsa-github-generator-security](https://github.com/orgs/slsa-framework/teams/slsa-github-generator-security)
 
+Security Team membership is currently considered on a case-by-case basis.
+
 ## Severity
 
 The [Security Team](#security-team) evaluates vulnerability severity on a
