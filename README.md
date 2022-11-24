@@ -69,16 +69,12 @@ Specifically, this repository contains tools for generating non-forgeable
 and [provenance](https://slsa.dev/spec/v0.1/requirements#provenance-requirements)
 requirements for [SLSA level 3 and above](https://slsa.dev/spec/v0.1/levels).
 
-Use of the provided
+While slsa-github-generator can help you achieve SLSA level 3, use of theprovided
 [GitHub Actions reusable workflows](https://docs.github.com/en/actions/using-workflows/reusing-workflows)
 only is not sufficient to meet all of the requirements at SLSA level 3.
 Specifically, the [source requirements](https://slsa.dev/spec/v0.1/requirements#source-requirements)
 are not covered by these workflows and must be handled explicitly to meet all
 requirements at SLSA level 3+.
-
-This repository contains the code, examples and technical design for system
-described in the blog post on
-[Non forgeable SLSA provenance using GitHub workflows](https://security.googleblog.com/2022/04/improving-software-supply-chain.html).
 
 ## Roadmap
 
@@ -160,9 +156,8 @@ A command line example is provided in [slsa-framework/slsa-verifier#example](htt
 
 ## Technical design
 
-### Blog post
-
-Find our blog post series [here](https://security.googleblog.com/2022/04/improving-software-supply-chain.html).
+The initial technical design was described in the blog post
+[Improving software supply chain security with tamper-proof builds](https://security.googleblog.com/2022/04/improving-software-supply-chain.html).
 
 ### Specifications
 
