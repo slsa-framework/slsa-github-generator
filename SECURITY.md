@@ -3,6 +3,25 @@
 This document includes information about the vulnerability reporting, patch,
 release, and disclosure processes, as well as general security posture.
 
+<!-- markdown-toc --bullets="-" -i SECURITY.md -->
+<!-- toc -->
+
+- [Supported Versions](#supported-versions)
+- [Reporting a Vulnerability](#reporting-a-vulnerability)
+  - [When Should I Report a Vulnerability?](#when-should-i-report-a-vulnerability)
+  - [When Should I NOT Report a Vulnerability?](#when-should-i-not-report-a-vulnerability)
+  - [Vulnerability Response](#vulnerability-response)
+- [Security Release & Disclosure Process](#security-release--disclosure-process)
+  - [Private Disclosure](#private-disclosure)
+  - [Public Disclosure](#public-disclosure)
+  - [Security Releases](#security-releases)
+  - [Severity](#severity)
+- [Security Posture](#security-posture)
+- [Security Team](#security-team)
+- [Security Policy Updates](#security-policy-updates)
+
+<!-- tocstop -->
+
 ## Supported Versions
 
 The following versions are currently supported and receive security updates.
