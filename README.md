@@ -157,7 +157,7 @@ A command line example is provided in [slsa-framework/slsa-verifier#example](htt
 ## Technical design
 
 The initial technical design was described in the blog post
-[Improving software supply chain security with tamper-proof builds](https://security.googleblog.com/2022/04/improving-software-supply-chain.html).
+"[Improving software supply chain security with tamper-proof builds](https://security.googleblog.com/2022/04/improving-software-supply-chain.html)".
 
 ### Specifications
 
