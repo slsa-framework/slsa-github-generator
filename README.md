@@ -12,24 +12,24 @@
 
 <!-- toc -->
 
-- [Overview](#overview)
-  - [What is SLSA?](#what-is-slsa)
-  - [What is provenance?](#what-is-provenance)
-  - [What is slsa-github-generator?](#what-is-slsa-github-generator)
-- [Roadmap](#roadmap)
-- [Generation of provenance](#generation-of-provenance)
-  - [Referencing SLSA builders and generators](#referencing-slsa-builders-and-generators)
-  - [Builders](#builders)
-  - [Provenance-only generators](#provenance-only-generators)
-- [Verification of provenance](#verification-of-provenance)
-  - [Installation](#installation)
-  - [Inputs](#inputs)
-  - [Command line examples](#command-line-examples)
-- [Technical design](#technical-design)
-  - [Blog post](#blog-post)
-  - [Specifications](#specifications)
-  - [Provenance format](#provenance-format)
-- [Contributing](#contributing)
+-   [Overview](#overview)
+    -   [What is SLSA?](#what-is-slsa)
+    -   [What is provenance?](#what-is-provenance)
+    -   [What is slsa-github-generator?](#what-is-slsa-github-generator)
+-   [Roadmap](#roadmap)
+-   [Generation of provenance](#generation-of-provenance)
+    -   [Referencing SLSA builders and generators](#referencing-slsa-builders-and-generators)
+    -   [Builders](#builders)
+    -   [Provenance-only generators](#provenance-only-generators)
+-   [Verification of provenance](#verification-of-provenance)
+    -   [Installation](#installation)
+    -   [Inputs](#inputs)
+    -   [Command line examples](#command-line-examples)
+-   [Technical design](#technical-design)
+    -   [Blog post](#blog-post)
+    -   [Specifications](#specifications)
+    -   [Provenance format](#provenance-format)
+-   [Contributing](#contributing)
 
 <!-- tocstop -->
 
@@ -75,8 +75,6 @@ requirements at SLSA level 3+.
 This repository contains the code, examples and technical design for system
 described in the blog post on
 [Non forgeable SLSA provenance using GitHub workflows](https://security.googleblog.com/2022/04/improving-software-supply-chain.html).
-
----
 
 ## Roadmap
 
