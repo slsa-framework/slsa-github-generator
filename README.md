@@ -52,6 +52,8 @@ parts really are.
 Provenance is information, or metadata, about how a software artifact was
 created. This could include information about what source code, build system,
 and build steps were used, as well as who and why the build was initiated.
+Provenance can be used to determine the authenticity and trustworthiness of
+software artifacts that you use.
 
 As part of the framework, SLSA defines a
 [provenance format](https://slsa.dev/provenance/) which can be used hold this
