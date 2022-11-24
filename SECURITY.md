@@ -68,7 +68,7 @@ private repositories if deemed necessary.
 
 ### Public Disclosure
 
-Vulnerabilities are disclosed as GitHub
+Vulnerabilities are disclosed publicly as GitHub
 [Security Advisories](https://github.com/slsa-framework/slsa-github-generator/security/advisories).
 
 A public disclosure date is negotiated by the [Security Team](#security-team)
