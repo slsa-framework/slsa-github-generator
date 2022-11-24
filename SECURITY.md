@@ -76,7 +76,8 @@ damaging.
 ### Fix Disclosure Process
 
 Disclosure of vulnerabilities and their fixes will be made public when the fix
-is released.
+is released. Vulnerabilities are disclosed as GitHub [Security
+Advisories](https://github.com/slsa-framework/slsa-github-generator/security/advisories).
 
 ## Security Team
 
