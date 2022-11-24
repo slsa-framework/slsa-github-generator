@@ -117,7 +117,7 @@ damaging.
 ### Security Releases
 
 Once a fix is available it will be released and announced via the project on
-GitHub. Security releases will announced and clearly marked as a security
+GitHub. Security releases will be clearly marked as a security
 release and include information on which vulnerabilities were fixed. As much as
 possible this announcement should be actionable, and include any mitigating
 steps users can take prior to upgrading to a fixed version.
