@@ -17,7 +17,7 @@ vulnerabilities to us. All reports are thoroughly investigated by the project
 [security team](#security-team).
 
 Vulnerabilities are reported privately via GitHub's
-[Security Avisories](https://docs.github.com/en/code-security/security-advisories)
+[Security Advisories](https://docs.github.com/en/code-security/security-advisories)
 feature. Please use the following link to submit your vulnerability:
 [Report a vulnerability](https://github.com/slsa-framework/slsa-github-generator/security/advisories/new)
 
