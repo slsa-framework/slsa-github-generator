@@ -33,8 +33,6 @@
 
 <!-- tocstop -->
 
----
-
 ## Overview
 
 ### What is SLSA?
