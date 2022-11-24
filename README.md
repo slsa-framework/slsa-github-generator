@@ -14,6 +14,10 @@ This repository contains the code, examples and technical design for system desc
 
 ---
 
+<!-- markdown-toc --bullets="-" -i README.md -->
+
+<!-- toc -->
+
 - [Roadmap](#roadmap)
 - [Generation of provenance](#generation-of-provenance)
   - [Referencing SLSA builders and generators](#referencing-slsa-builders-and-generators)
@@ -27,9 +31,9 @@ This repository contains the code, examples and technical design for system desc
   - [Blog post](#blog-post)
   - [Specifications](#specifications)
   - [Provenance format](#provenance-format)
-- [Development](#development)
-  - [Unit Tests](#unit-tests)
-  - [Linters](#linters)
+- [Contributing](#contributing)
+
+<!-- tocstop -->
 
 ---
 
@@ -125,6 +129,6 @@ For a more in-depth technical dive, read the [SPECIFICATIONS.md](./SPECIFICATION
 
 The format of the provenance is available in [PROVENANCE_FORMAT.md](./PROVENANCE_FORMAT.md).
 
-## Development
+## Contributing
 
 Please see the [Contributor Guide](CONTRIBUTING.md) for more info.
