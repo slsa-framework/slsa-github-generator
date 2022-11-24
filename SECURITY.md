@@ -41,7 +41,7 @@ for more information on how to submit a vulnerability using GitHub's interface.
 ### Vulnerability Response
 
 Each report is acknowledged and analyzed by the [Security Team](#security-team)
-within 3 working days. This will set off the
+within 14 days. This will set off the
 [Security Release Process](#security-release--disclosure-process).
 
 Any vulnerability information shared with the Security Team stays within
@@ -76,9 +76,9 @@ and the bug submitter. We prefer to fully disclose the bug as soon as possible
 once a user mitigation is available. It is reasonable to delay disclosure when
 the bug or the fix is not yet fully understood, the solution is not
 well-tested, or for vendor coordination. The timeframe for disclosure is from
-immediate (especially if it's already publicly known) to a few weeks. For a
+immediate (especially if it's already publicly known) to several weeks. For a
 vulnerability with a straightforward mitigation, we expect report date to
-disclosure date to be on the order of 7 days.
+disclosure date to be on the order of 14 days.
 
 If you know of a publicly disclosed security vulnerability please IMMEDIATELY
 [report the vulnerability](#reporting-a-vulnerability) to inform the
