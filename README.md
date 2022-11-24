@@ -1,4 +1,4 @@
-# Generation of SLSA3+ provenance for native GitHub projects
+# SLSA GitHub Generator
 
 [![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/slsa-framework/slsa-github-generator/badge)](https://api.securityscorecards.dev/projects/github.com/slsa-framework/slsa-github-generator)
 [![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/6503/badge)](https://bestpractices.coreinfrastructure.org/projects/6503)
@@ -6,18 +6,16 @@
 [![Slack](https://slack.babeljs.io/badge.svg)](https://slack.com/app_redirect?team=T019QHUBYQ3&channel=slsa-tooling)
 [![SLSA 3](https://slsa.dev/images/gh-badge-level3.svg)](https://slsa.dev)
 
-This repository contains tools for generating non-forgeable [SLSA provenance](https://slsa.dev/) on GitHub that meets the [build](https://slsa.dev/spec/v0.1/requirements#build-requirements) and [provenance](https://slsa.dev/spec/v0.1/requirements#provenance-requirements) requirements for [SLSA level 3 and above](https://slsa.dev/spec/v0.1/levels).
-
-Use of the provided [GitHub Actions reusable workflow](https://docs.github.com/en/actions/using-workflows/reusing-workflows)s only is not sufficient to meet all of the requirements at SLSA level 3. Specifically, the [source requirements](https://slsa.dev/spec/v0.1/requirements#source-requirements) are not covered by these workflows and must be handled explicitly to meet all requirements at SLSA level 3+.
-
-This repository contains the code, examples and technical design for system described in the blog post on [Non forgeable SLSA provenance using GitHub workflows](https://security.googleblog.com/2022/04/improving-software-supply-chain.html).
-
----
+<img align="right" src="https://slsa.dev/images/logo-mono.svg" width="140" height="140">
 
 <!-- markdown-toc --bullets="-" -i README.md -->
 
 <!-- toc -->
 
+- [Overview](#overview)
+  - [What is SLSA?](#what-is-slsa)
+  - [What is provenance?](#what-is-provenance)
+  - [What is slsa-github-generator?](#what-is-slsa-github-generator)
 - [Roadmap](#roadmap)
 - [Generation of provenance](#generation-of-provenance)
   - [Referencing SLSA builders and generators](#referencing-slsa-builders-and-generators)
@@ -34,6 +32,51 @@ This repository contains the code, examples and technical design for system desc
 - [Contributing](#contributing)
 
 <!-- tocstop -->
+
+---
+
+## Overview
+
+### What is SLSA?
+
+[Supply chain Levels for Software Artifacts](https://slsa.dev), or SLSA (salsa),
+is a security framework, a check-list of standards and controls to prevent
+tampering, improve integrity, and secure packages and infrastructure in your
+projects, businesses or enterprises. It’s how you get from safe enough to being
+as resilient as possible, at any link in the chain.
+
+### What is provenance?
+
+Provenance is information, or metadata, about how a software artifact was
+created. This could include information about what source code, build system,
+and build steps were used, as well as who and why the build was initiated.
+
+As part of the framework, SLSA defines a
+[provenance format](https://slsa.dev/provenance/) which can be used hold this
+metadata.
+
+### What is slsa-github-generator?
+
+slsa-github-generator is a set of tools for generation of SLSA3+ provenance for
+native GitHub projects. It allows projects to generate SLSA provenance safely
+and accurately using [GitHub Actions](https://github.com/features/actions).
+
+Specifically, this repository contains tools for generating non-forgeable
+[SLSA provenance](https://slsa.dev/) on GitHub that meets the
+[build](https://slsa.dev/spec/v0.1/requirements#build-requirements)
+and [provenance](https://slsa.dev/spec/v0.1/requirements#provenance-requirements)
+requirements for [SLSA level 3 and above](https://slsa.dev/spec/v0.1/levels).
+
+Use of the provided
+[GitHub Actions reusable workflows](https://docs.github.com/en/actions/using-workflows/reusing-workflows)
+only is not sufficient to meet all of the requirements at SLSA level 3.
+Specifically, the [source requirements](https://slsa.dev/spec/v0.1/requirements#source-requirements)
+are not covered by these workflows and must be handled explicitly to meet all
+requirements at SLSA level 3+.
+
+This repository contains the code, examples and technical design for system
+described in the blog post on
+[Non forgeable SLSA provenance using GitHub workflows](https://security.googleblog.com/2022/04/improving-software-supply-chain.html).
 
 ---
 
