@@ -42,7 +42,7 @@ for more information on how to submit a vulnerability using GitHub's interface.
 
 Each report is acknowledged and analyzed by the [Security Team](#security-team)
 within 3 working days. This will set off the
-[Security Release Process](#security-release-and-disclosure-process).
+[Security Release Process](#security-release--disclosure-process).
 
 Any vulnerability information shared with the Security Team stays within
 slsa-github-generator project and will not be disseminated to other projects
