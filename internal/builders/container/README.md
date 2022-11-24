@@ -163,7 +163,6 @@ For more information about this design decision and how to configure renovatebot
 In order to use the GitHub Container Registry (ghcr.io) you will need to
 authenticate using a
 [personal access token](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token)
-
 (PAT). The PAT must have at least `packages:write` permissions if using a
 classic PAT.
 
