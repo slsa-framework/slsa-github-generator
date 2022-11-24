@@ -92,7 +92,7 @@ release process. In extreme cases you can ask GitHub to delete the issue but
 this generally isn't necessary and is unlikely to make a public disclosure less
 damaging.
 
-## Security Releases
+### Security Releases
 
 Once a fix is available it will be released and announced via the project on
 GitHub. Security releases will announced and clearly marked as a security
@@ -102,6 +102,11 @@ steps users can take prior to upgrading to a fixed version.
 
 Fixes will be applied in patch releases to all [supported
 versions](#supported-versions).
+
+### Severity
+
+The [Security Team](#security-team) evaluates vulnerability severity on a
+case-by-case basis, guided by [CVSS 3.1](https://www.first.org/cvss/v3.1/specification-document).
 
 ## Security Team
 
@@ -115,7 +120,7 @@ You can view current team membership here:
 
 Security Team membership is currently considered on a case-by-case basis.
 
-## Severity
+## Security Policy Updates
 
-The [Security Team](#security-team) evaluates vulnerability severity on a
-case-by-case basis, guided by [CVSS 3.1](https://www.first.org/cvss/v3.1/specification-document).
+Changes to this Security Policy are reviewed and approved by the
+[Security Team](#security-team).
