@@ -62,11 +62,12 @@ metadata.
 ### What is slsa-github-generator?
 
 slsa-github-generator is a set of tools for generation of SLSA3+ provenance for
-native GitHub projects. It allows projects to generate SLSA provenance safely
-and accurately using [GitHub Actions](https://github.com/features/actions).
+native GitHub projects. It allows projects to generate
+[SLSA provenance](https://slsa.dev/provenance/) safely and accurately using
+[GitHub Actions](https://github.com/features/actions).
 
 Specifically, this repository contains tools for generating non-forgeable
-[SLSA provenance](https://slsa.dev/) on GitHub that meets the
+SLSA provenance on GitHub that meets the
 [build](https://slsa.dev/spec/v0.1/requirements#build-requirements)
 and [provenance](https://slsa.dev/spec/v0.1/requirements#provenance-requirements)
 requirements for [SLSA level 3 and above](https://slsa.dev/spec/v0.1/levels).
