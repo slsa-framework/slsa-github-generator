@@ -72,7 +72,7 @@ SLSA provenance on GitHub that meets the
 and [provenance](https://slsa.dev/spec/v0.1/requirements#provenance-requirements)
 requirements for [SLSA level 3 and above](https://slsa.dev/spec/v0.1/levels).
 
-While slsa-github-generator can help you achieve SLSA level 3, use of theprovided
+While slsa-github-generator can help you achieve SLSA level 3, use of the provided
 [GitHub Actions reusable workflows](https://docs.github.com/en/actions/using-workflows/reusing-workflows)
 only is not sufficient to meet all of the requirements at SLSA level 3.
 Specifically, the [source requirements](https://slsa.dev/spec/v0.1/requirements#source-requirements)
