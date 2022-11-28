@@ -322,6 +322,11 @@ This section explains how to generate non-forgeable SLSA provenance with existin
 If you use [GoReleaser](https://github.com/goreleaser/goreleaser-action) to generate your build, you can easily
 generate SLSA3 provenance by updating your existing workflow with the steps indicated in the workflow below:
 
+**Notes**:
+- Make sure you did not disable checksum generation in the goreleaser yml.
+- Make sure you specified sha256 as the algorithm for the checksum or left it empty (sha256 is the default).
+- To enable provenance generation for dockers (as well as artifacts), use [goreleaser version >= v1.13.0](https://github.com/goreleaser/goreleaser/releases/tag/v1.13.0).
+
 1. Declare an `outputs` for the GoReleaser job:
 
 ```yaml
@@ -338,7 +343,7 @@ jobs:
       [...]
       - name: Run GoReleaser
         id: run-goreleaser
-        uses: goreleaser/goreleaser-action@b953231f81b8dfd023c58e0854a721e35037f28b # tag=v3
+        uses: goreleaser/goreleaser-action@b508e2e3ef3b19d4e4146d4f8fb3ba9db644a757 # tag=v3.2.0
 
 ```
 
@@ -351,9 +356,12 @@ jobs:
     ARTIFACTS: "${{ steps.run-goreleaser.outputs.artifacts }}"
   run: |
     set -euo pipefail
-
-    checksum_file=$(echo "$ARTIFACTS" | jq -r '.[] | select (.type=="Checksum") | .path')
-    echo "hashes=$(cat $checksum_file | base64 -w0)" >> "$GITHUB_OUTPUT"
+    hashes=$(echo $ARTIFACTS | jq --raw-output '.[] | {name, "digest": (.extra.Digest // .extra.Checksum)} | select(.digest) | {digest} + {name} | join("  ") | sub("^sha256:";"")' | base64 -w0)
+    if test "$hashes" = ""; then # goreleaser < v1.13.0
+      checksum_file=$(echo "$ARTIFACTS" | jq -r '.[] | select (.type=="Checksum") | .path')
+      hashes=$(cat $checksum_file | base64 -w0)
+    fi
+    echo "hashes=$hashes" >> $GITHUB_OUTPUT
 ```
 
 4. Call the generic workflow to generate provenance by declaring the job below:
@@ -394,8 +402,12 @@ jobs:
         run: |
           set -euo pipefail
 
-          checksum_file=$(echo "$ARTIFACTS" | jq -r '.[] | select (.type=="Checksum") | .path')
-          echo "hashes=$(cat $checksum_file | base64 -w0)" >> "$GITHUB_OUTPUT"
+          hashes=$(echo $ARTIFACTS | jq --raw-output '.[] | {name, "digest": (.extra.Digest // .extra.Checksum)} | select(.digest) | {digest} + {name} | join("  ") | sub("^sha256:";"")' | base64 -w0)
+          if test "$hashes" = ""; then # goreleaser < v1.13.0
+            checksum_file=$(echo "$ARTIFACTS" | jq -r '.[] | select (.type=="Checksum") | .path')
+            hashes=$(cat $checksum_file | base64 -w0)
+          fi
+          echo "hashes=$hashes" >> $GITHUB_OUTPUT
 
   provenance:
     needs: [goreleaser]
