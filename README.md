@@ -1,17 +1,21 @@
-# Generation of SLSA3+ provenance for native GitHub projects
+# SLSA GitHub Generator
 
 [![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/slsa-framework/slsa-github-generator/badge)](https://api.securityscorecards.dev/projects/github.com/slsa-framework/slsa-github-generator)
-[![CII Best
-Practices](https://bestpractices.coreinfrastructure.org/projects/6503/badge)](https://bestpractices.coreinfrastructure.org/projects/6503)
+[![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/6503/badge)](https://bestpractices.coreinfrastructure.org/projects/6503)
+[![Go Report Card](https://goreportcard.com/badge/github.com/slsa-framework/slsa-github-generator)](https://goreportcard.com/report/github.com/slsa-framework/slsa-github-generator)
+[![Slack](https://slack.babeljs.io/badge.svg)](https://slack.com/app_redirect?team=T019QHUBYQ3&channel=slsa-tooling)
+[![SLSA 3](https://slsa.dev/images/gh-badge-level3.svg)](https://slsa.dev)
 
-This repository contains tools for generating non-forgeable [SLSA provenance](https://slsa.dev/) on GitHub that meets the [build](https://slsa.dev/spec/v0.1/requirements#build-requirements) and [provenance](https://slsa.dev/spec/v0.1/requirements#provenance-requirements) requirements for [SLSA level 3 and above](https://slsa.dev/spec/v0.1/levels).
+<img align="right" src="https://slsa.dev/images/logo-mono.svg" width="140" height="140">
 
-Use of the provided [GitHub Actions reusable workflow](https://docs.github.com/en/actions/using-workflows/reusing-workflows)s only is not sufficient to meet all of the requirements at SLSA level 3. Specifically, the [source requirements](https://slsa.dev/spec/v0.1/requirements#source-requirements) are not covered by these workflows and must be handled explicitly to meet all requirements at SLSA level 3+.
+<!-- markdown-toc --bullets="-" -i README.md -->
 
-This repository contains the code, examples and technical design for system described in the blog post on [Non forgeable SLSA provenance using GitHub workflows](https://security.googleblog.com/2022/04/improving-software-supply-chain.html).
+<!-- toc -->
 
----
-
+- [Overview](#overview)
+  - [What is SLSA?](#what-is-slsa)
+  - [What is provenance?](#what-is-provenance)
+  - [What is slsa-github-generator?](#what-is-slsa-github-generator)
 - [Roadmap](#roadmap)
 - [Generation of provenance](#generation-of-provenance)
   - [Referencing SLSA builders and generators](#referencing-slsa-builders-and-generators)
@@ -25,11 +29,55 @@ This repository contains the code, examples and technical design for system desc
   - [Blog post](#blog-post)
   - [Specifications](#specifications)
   - [Provenance format](#provenance-format)
-- [Development](#development)
-  - [Unit Tests](#unit-tests)
-  - [Linters](#linters)
+- [Contributing](#contributing)
 
----
+<!-- tocstop -->
+
+## Overview
+
+### What is SLSA?
+
+[Supply chain Levels for Software Artifacts](https://slsa.dev), or SLSA (salsa),
+is a security framework, a check-list of standards and controls to prevent
+tampering, improve integrity, and secure packages and infrastructure in your
+projects, businesses or enterprises.
+
+SLSA defines an incrementially adoptable set of levels which are defined in
+terms of increasing compliance and assurance. SLSA levels are like a common
+language to talk about how secure software, supply chains and their component
+parts really are.
+
+### What is provenance?
+
+Provenance is information, or metadata, about how a software artifact was
+created. This could include information about what source code, build system,
+and build steps were used, as well as who and why the build was initiated.
+Provenance can be used to determine the authenticity and trustworthiness of
+software artifacts that you use.
+
+As part of the framework, SLSA defines a
+[provenance format](https://slsa.dev/provenance/) which can be used hold this
+metadata.
+
+### What is slsa-github-generator?
+
+slsa-github-generator is a set of tools for generation of SLSA3+ provenance for
+native GitHub projects. It allows projects to generate
+[SLSA provenance](https://slsa.dev/provenance/) safely and accurately using
+[GitHub Actions](https://github.com/features/actions).
+
+Specifically, this repository contains tools for generating non-forgeable
+SLSA provenance on GitHub that meets the
+[build](https://slsa.dev/spec/v0.1/requirements#build-requirements)
+and [provenance](https://slsa.dev/spec/v0.1/requirements#provenance-requirements)
+requirements for [SLSA level 3 and above](https://slsa.dev/spec/v0.1/levels).
+
+While slsa-github-generator can help you achieve SLSA level 3, use of the provided
+[GitHub Actions reusable workflows](https://docs.github.com/en/actions/using-workflows/reusing-workflows)
+only is not sufficient to meet all of the requirements at SLSA level 3.
+Specifically, the [source requirements](https://slsa.dev/spec/v0.1/requirements#source-requirements)
+are not covered by these workflows and must be handled explicitly to meet all
+requirements at SLSA level 3+.
 
 ## Roadmap
 
@@ -111,9 +159,8 @@ A command line example is provided in [slsa-framework/slsa-verifier#example](htt
 
 ## Technical design
 
-### Blog post
-
-Find our blog post series [here](https://security.googleblog.com/2022/04/improving-software-supply-chain.html).
+The initial technical design was described in the blog post
+"[Improving software supply chain security with tamper-proof builds](https://security.googleblog.com/2022/04/improving-software-supply-chain.html)".
 
 ### Specifications
 
@@ -123,6 +170,6 @@ For a more in-depth technical dive, read the [SPECIFICATIONS.md](./SPECIFICATION
 
 The format of the provenance is available in [PROVENANCE_FORMAT.md](./PROVENANCE_FORMAT.md).
 
-## Development
+## Contributing
 
 Please see the [Contributor Guide](CONTRIBUTING.md) for more info.
