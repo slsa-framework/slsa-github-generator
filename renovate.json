@@ -9,6 +9,7 @@
     },
     {
       "matchManagers": ["gomod"],
+      "excludePackageNames": ["go"],
       "matchUpdateTypes": ["minor", "patch"],
       "groupName": "go"
     },
