@@ -112,7 +112,8 @@ jobs:
         env:
           BODY: "${{ github.event.pull_request.body }}"
         run: |
-          RELEASE_TAG=$(echo "$BODY" | grep -o -e 'v[0-9]\+\.[0-9]\+\.[0-9]\+')
+          # match the first instance of a line with 'label:release vX.Y.Z' with only leading or trailing whitespace.
+          RELEASE_TAG=$(echo "$BODY" | sed -n '0,/^#label:release/ s/^#label:release\s*//p' | grep -oe '^v[0-9]\+\.[0-9]\+\.[0-9]\+[[:space:]]*$')
           RELEASE_TAG=${RELEASE_TAG} ./__THIS_REPO__/.github/workflows/scripts/pre-release/references.sh
 
   secure-project-checkout-go:
