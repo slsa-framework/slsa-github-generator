@@ -19,13 +19,13 @@
   ],
   "devDependencies": {
     "@types/node": "18.11.9",
-    "@typescript-eslint/eslint-plugin": "5.43.0",
-    "@typescript-eslint/parser": "5.43.0",
+    "@typescript-eslint/eslint-plugin": "5.44.0",
+    "@typescript-eslint/parser": "5.44.0",
     "@vercel/ncc": "0.34.0",
-    "eslint": "8.27.0",
+    "eslint": "8.28.0",
     "eslint-plugin-github": "4.4.1",
-    "prettier": "2.7.1",
-    "typescript": "4.8.4"
+    "prettier": "2.8.0",
+    "typescript": "4.9.3"
   },
   "dependencies": {
     "@actions/core": "1.10.0",
