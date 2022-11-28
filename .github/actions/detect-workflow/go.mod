@@ -2,7 +2,7 @@ module github.com/slsa-framework/slsa-github-generator/.github/actions/detect-wo
 
 go 1.18
 
-require github.com/slsa-framework/slsa-github-generator v1.3.0
+require github.com/slsa-framework/slsa-github-generator v1.2.2
 
 require (
 	github.com/coreos/go-oidc v2.2.1+incompatible // indirect
