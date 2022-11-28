@@ -14,6 +14,8 @@
 
 name: SLSA container image provenance
 
+permissions: {}
+
 env:
   # Generator
   BUILDER_BINARY: slsa-generator-container-linux-amd64 # Name of the binary in the release assets.
@@ -79,7 +81,6 @@ jobs:
     permissions:
       id-token: write # Needed to get OIDC token for keyless signing.
       actions: read # Needed to read workflow info.
-      packages: write # Needed to login and upload attestations to ghcr.io.
     steps:
       - name: Generate builder
         uses: slsa-framework/slsa-github-generator/.github/actions/generate-builder@main
