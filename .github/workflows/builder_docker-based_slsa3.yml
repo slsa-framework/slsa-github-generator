@@ -32,23 +32,23 @@ on:
     inputs:
       builder-image:
         description: >
-          The OCI image name of the builder image responsible for 
+          The OCI image name of the builder image responsible for
           creating the artifact. This must not include a tag or digest.
-        required: true 
+        required: true
         type: string
       builder-digest:
         description: >
-          The OCI image digest of the builder-image. 
-          This must be specified in order to fully specify the builder 
+          The OCI image digest of the builder-image.
+          This must be specified in order to fully specify the builder
           image. The image digest is of the form '<alg>:<digest>'
-        required: true 
+        required: true
         type: string
       config-path:
         description: >
           Path to a configuration file relative to the root of the repository
-          containing a command that the builder image should be invoked with and 
+          containing a command that the builder image should be invoked with and
           optionally, docker options and environment variables.
-        required: true 
+        required: true
         type: string
       builder-output-path:
         description: >
@@ -57,7 +57,7 @@ on:
           Users may specify a single artifact or use a shell-style wildcard
           pattern to match multiple artifacts.
           Defaults to the sub-folder output/.
-        required: false 
+        required: false
         type: string
         default: 'output/**'
       source-repository:
@@ -66,7 +66,7 @@ on:
           The builder will mount the root of this source repository to the workspace.
 
           By default, uses the source repository of the caller workflow.
-        required: false 
+        required: false
         type: string
       source-digest:
         description: >
@@ -81,13 +81,13 @@ on:
         required: false
         type: boolean
         default: false
-      # TODO: Options for requesting and verifying provenance of builder image
-      # This will use slsa-verifier and slsa-verifier option.
-      #      * request-builder-verification
+        # TODO: Options for requesting and verifying provenance of builder image
+        # This will use slsa-verifier and slsa-verifier option.
+        #      * request-builder-verification
 
-      # TODO: Secrets and Authentication options for the builder-image.
-      #      * registry-username
-      #      * registry-password
+        # TODO: Secrets and Authentication options for the builder-image.
+        #      * registry-username
+        #      * registry-password
 
 jobs:
   ###################################################################
@@ -103,7 +103,7 @@ jobs:
     steps:
       - name: run no-op slsa-verifier
         id: verify
-        env: 
+        env:
           BUILDER_IMAGE: ${{ inputs.bulder-image }}
           BUILDER_DIGEST: ${{ inputs.builder-digest }}
           SOURCE_URI: octocat/hello-world
@@ -144,7 +144,7 @@ jobs:
           #      recipe.
           echo "running fake slsa recipe generator"
           echo "recipe=path/to/recipe" >> $GITHUB_OUTPUT
-  
+
   ###################################################################
   #                                                                 #
   #                   Generate builder binary                       #
@@ -196,5 +196,3 @@ jobs:
         id: upload
         run: |
           echo "use upload-artifact to upload signed attestation"
-
-
