@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-if [[ "$COMPILE_BUILDER" = true ]]; then
+if [[ "$COMPILE_BUILDER" == true ]]; then
     echo "Building the builder"
 
     cd "$BUILDER_DIR"
@@ -19,8 +19,7 @@ if [[ "$COMPILE_BUILDER" = true ]]; then
 else
     echo "Fetching the builder with ref: $BUILDER_REF"
 
-    .github/actions/generate-builder/builder-fetch.sh
-
+    ./__BUILDER_CHECKOUT_DIR__/.github/actions/generate-builder/builder-fetch.sh
 fi
 
 chmod u+x "$BUILDER_RELEASE_BINARY"

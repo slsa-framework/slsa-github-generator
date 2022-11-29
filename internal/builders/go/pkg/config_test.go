@@ -75,6 +75,32 @@ func Test_ConfigFromFile(t *testing.T) {
 			},
 		},
 		{
+			name: "valid env var with no value",
+			path: "./testdata/releaser-valid-envs-no-value.yml",
+			config: GoReleaserConfig{
+				Goos: "linux", Goarch: "amd64",
+				Flags:   []string{"-trimpath", "-tags=netgo"},
+				Ldflags: []string{"{{ .Env.VERSION_LDFLAGS }}"},
+				Binary:  "binary-{{ .OS }}-{{ .Arch }}",
+				Env: map[string]string{
+					"GO111MODULE": "on", "CGO_ENABLED": "0", "CGO_CFLAGS": "",
+				},
+			},
+		},
+		{
+			name: "valid env var with multiple = signs",
+			path: "./testdata/releaser-valid-envs-multiple-equal-signs.yml",
+			config: GoReleaserConfig{
+				Goos: "linux", Goarch: "amd64",
+				Flags:   []string{"-trimpath", "-tags=netgo"},
+				Ldflags: []string{"{{ .Env.VERSION_LDFLAGS }}"},
+				Binary:  "binary-{{ .OS }}-{{ .Arch }}",
+				Env: map[string]string{
+					"GO111MODULE": "on", "CGO_ENABLED": "0", "CGO_CFLAGS": "a=b=c",
+				},
+			},
+		},
+		{
 			name: "missing version",
 			path: "./testdata/releaser-noversion.yml",
 			err:  ErrorUnsupportedVersion,

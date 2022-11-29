@@ -109,8 +109,11 @@ jobs:
         run: ./__THIS_REPO__/.github/workflows/scripts/pre-submit.actions/references.sh
       - name: Verify version references
         if: ${{ contains(github.event.pull_request.body, '#label:release') }}
+        env:
+          BODY: "${{ github.event.pull_request.body }}"
         run: |
-          echo ${{ github.event.pull_request.body }} | awk '{print $2}'
+          # match the first instance of a line with 'label:release vX.Y.Z' with only leading or trailing whitespace.
+          RELEASE_TAG=$(echo "$BODY" | grep -oe '^[[:space:]]*#label:release[[:space:]]*v[0-9]\+\.[0-9]\+\.[0-9]\+\(-rc\.[0-9]\+\)\?[[:space:]]*$' | head -n1 | sed -n 's/^#label:release\s*//p')
           RELEASE_TAG=${RELEASE_TAG} ./__THIS_REPO__/.github/workflows/scripts/pre-release/references.sh
 
   secure-project-checkout-go:
@@ -284,14 +287,13 @@ jobs:
   generate-builder-generic-no-compile:
     runs-on: ubuntu-latest
     steps:
-      # TODO(github.com/slsa-framework/slsa-github-generator/issues/1163): temporarily disabled
-      # - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # tag=v3.0.2
-      # - uses: ./.github/actions/generate-builder
-      #   with:
-      #     repository: "slsa-framework/slsa-github-generator"
-      #     ref: "refs/tags/v1.2.1"
-      #     compile-builder: false
-      #     go-version: 1.18
-      #     binary: "slsa-generator-generic-linux-amd64"
-      #     directory: "internal/builders/generic"
-      - run: 'echo "Temporarily disabled. See: https://github.com/slsa-framework/slsa-github-generator/issues/1163" '
+      - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # tag=v3.0.2
+      - uses: ./.github/actions/generate-builder
+        with:
+          repository: "slsa-framework/slsa-github-generator"
+          ref: "refs/tags/v1.2.2"
+          go-version: 1.18
+          binary: "slsa-generator-generic-linux-amd64"
+          directory: "internal/builders/generic"
+          # NOTE: compile-builder explicitly set to false.
+          compile-builder: false
