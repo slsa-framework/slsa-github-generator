@@ -19,7 +19,6 @@ project simply generates provenance as a separate step in an existing workflow.
 - [Generating Provenance](#generating-provenance)
   - [Getting Started](#getting-started)
   - [Referencing the SLSA generator](#referencing-the-slsa-generator)
-  - [GitHub Container Registry](#github-container-registry)
   - [Private Repositories](#private-repositories)
   - [Supported Triggers](#supported-triggers)
   - [Workflow Inputs](#workflow-inputs)
@@ -67,6 +66,7 @@ provenance:
   permissions:
     actions: read # for detecting the Github Actions environment.
     id-token: write # for creating OIDC tokens for signing.
+    packages: write # for uploading attestations.
   if: startsWith(github.ref, 'refs/tags/')
   # TODO(https://github.com/slsa-framework/slsa-github-generator/issues/492): Use a tagged release once we have one.
   uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@main
@@ -77,7 +77,7 @@ provenance:
     # TODO(https://github.com/slsa-framework/slsa-github-generator/issues/492): Remove after GA release.
     compile-generator: true
   secrets:
-    registry-password: ${{ secrets.PAT_TOKEN }}
+    registry-password: ${{ secrets.GITHUB_TOKEN }}
 ```
 
 Here's an example of what it might look like all together.
@@ -92,6 +92,7 @@ jobs:
   build:
     permissions:
       contents: read
+      packages: write
     outputs:
       image: ${{ steps.image.outputs.image }}
       digest: ${{ steps.build.outputs.digest }}
@@ -108,7 +109,7 @@ jobs:
         with:
           registry: ${{ env.IMAGE_REGISTRY }}
           username: ${{ github.actor }}
-          password: ${{ secrets.PAT_TOKEN }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Extract metadata (tags, labels) for Docker
         id: meta
@@ -139,6 +140,7 @@ jobs:
     permissions:
       actions: read # for detecting the Github Actions environment.
       id-token: write # for creating OIDC tokens for signing.
+      packages: write # for uploading attestations.
     if: startsWith(github.ref, 'refs/tags/')
     uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@main
     with:
@@ -148,7 +150,7 @@ jobs:
       # TODO(https://github.com/slsa-framework/slsa-github-generator/issues/492): Remove after GA release.
       compile-generator: true
     secrets:
-      registry-password: ${{ secrets.PAT_TOKEN }}
+      registry-password: ${{ secrets.GITHUB_TOKEN }}
 ```
 
 ### Referencing the SLSA generator
@@ -157,14 +159,6 @@ At present, the generator **MUST** be referenced
 by a tag of the form `@vX.Y.Z`, because the build will fail if you reference it via a shorter tag like `@vX.Y` or `@vX` or if you reference it by a hash.
 
 For more information about this design decision and how to configure renovatebot,see the main repository [README.md](../../../README.md).
-
-### GitHub Container Registry
-
-In order to use the GitHub Container Registry (ghcr.io) you will need to
-authenticate using a
-[personal access token](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token)
-(PAT). The PAT must have at least `packages:write` permissions if using a
-classic PAT.
 
 ### Private Repositories
 
@@ -326,13 +320,13 @@ jobs:
 
 ```yaml
 steps:
-  # [...]
+  [...]
   - name: Run ko
     id: build
     env:
       KO_DOCKER_REPO: "${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAME }}"
       KO_USER: ${{ github.actor }}
-      KO_PASSWORD: ${{ secrets.PAT_TOKEN }}
+      KO_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
       GIT_REF: ${{ github.ref }}
     run: |
       # get tag name without tags/refs/ prefix.
@@ -359,6 +353,8 @@ provenance:
   permissions:
     actions: read
     id-token: write
+    # contents: read
+    packages: write
   if: startsWith(github.ref, 'refs/tags/')
   # TODO: Update after GA
   # uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v1.2.0
@@ -369,7 +365,7 @@ provenance:
     registry-username: ${{ github.actor }}
     compile-generator: true
   secrets:
-    registry-password: ${{ secrets.PAT_TOKEN }}
+    registry-password: ${{ secrets.GITHUB_TOKEN }}
 ```
 
 All together, it will look as the following:
@@ -379,6 +375,7 @@ jobs:
   build:
     permissions:
       contents: read
+      packages: write
     outputs:
       image: ${{ steps.build.outputs.image }}
       digest: ${{ steps.build.outputs.digest }}
@@ -399,7 +396,7 @@ jobs:
         env:
           KO_DOCKER_REPO: "${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAME }}"
           KO_USER: ${{ github.actor }}
-          KO_PASSWORD: ${{ secrets.PAT_TOKEN }}
+          KO_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
           GIT_REF: ${{ github.ref }}
         run: |
           # get tag name without tags/refs/ prefix.
@@ -423,6 +420,8 @@ jobs:
     permissions:
       actions: read
       id-token: write
+      # contents: read
+      packages: write
     if: startsWith(github.ref, 'refs/tags/')
     # uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v1.2.0
     uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@9dc6318aedc3d24ede4e946966d30c752769a4f9
@@ -432,7 +431,7 @@ jobs:
       registry-username: ${{ github.actor }}
       compile-generator: true
     secrets:
-      registry-password: ${{ secrets.PAT_TOKEN }}
+      registry-password: ${{ secrets.GITHUB_TOKEN }}
 ```
 
 ## Verification
