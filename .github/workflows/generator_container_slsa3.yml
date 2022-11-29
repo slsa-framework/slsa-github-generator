@@ -14,6 +14,8 @@
 
 name: SLSA container image provenance
 
+permissions: {}
+
 env:
   # Generator
   BUILDER_BINARY: slsa-generator-container-linux-amd64 # Name of the binary in the release assets.
