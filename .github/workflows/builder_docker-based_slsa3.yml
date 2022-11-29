@@ -43,21 +43,23 @@ on:
           image. The image digest is of the form '<alg>:<digest>'
         required: true 
         type: string
-      config:
+      config-path:
         description: >
-          Path to a configuration file containing a command that the builder
-          image should be invoked with and optionally, docker options
-          and environment variables.
+          Path to a configuration file relative to the root of the repository
+          containing a command that the builder image should be invoked with and 
+          optionally, docker options and environment variables.
         required: true 
         type: string
-      output:
+      builder-output-path:
         description: >
-          Path to the output artifact(s) relative to the root of the Git
+          Path to the builder's output artifact(s) relative to the root of the Git
           repository.
           Users may specify a single artifact or use a shell-style wildcard
           pattern to match multiple artifacts.
-        required: true 
+          Defaults to the sub-folder output/.
+        required: false 
         type: string
+        default: 'output/**'
       source-repository:
         description: >
           Source repository to checkout for the build. For example, octocat/hello-world.
@@ -68,16 +70,22 @@ on:
         type: string
       source-digest:
         description: >
-          The SHA of the source repository to checkout. 
+          The SHA of the source repository to checkout. The digest is of the form
+          '<alg>:<digest>'.
 
           By default, uses the source repository of the caller workflow.
         required: false
         type: string
+      private-repository:
+        description: "If true, private repositories can post to the public transparency log."
+        required: false
+        type: boolean
+        default: false
       # TODO: Options for requesting and verifying provenance of builder image
       # This will use slsa-verifier and slsa-verifier option.
       #      * request-builder-verification
 
-      # TODO: Authentication options for the builder-image.
+      # TODO: Secrets and Authentication options for the builder-image.
       #      * registry-username
       #      * registry-password
 
@@ -87,7 +95,7 @@ jobs:
   #           Optional: Verify builder-image provenance             #
   #                                                                 #
   ###################################################################
-  verify-builder:
+  verify-builder-image:
     # This is a no-op right now.
     outputs:
       verified: ${{ steps.verify.outputs.verified }}
@@ -159,6 +167,7 @@ jobs:
   #                                                                 #
   ###################################################################
   build:
+    # TODO: This may require authentication for the container image.
     outputs:
     needs: [generate-builder, generate-recipe]
     steps:
