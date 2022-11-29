@@ -4,22 +4,17 @@ This is a document to describe the release process for the Go builder. Since all
 
 ---
 
-- [How to cut a release](#how-to-cut-a-release)
-  - [Prerequisites](#prerequisites)
-  - [Tagging](#tagging)
-  - [Verify version references](#verify-version-references)
-  - [Pre-release tests](#pre-release-tests)
-    - [Go builder](#go-builder)
-    - [Generic generator](#generic-generator)
-  - [Post-release tests](#post-release-tests)
-    - [Go builder](#go-builder-1)
-    - [Generic generator](#generic-generator-1)
-  - [Code Freeze](#code-freeze)
-  - [Update verifier](#update-verifier)
-  - [Finalize release](#finalize-release)
-  - [Send a PR to reference Actions at main](#send-a-pr-to-reference-actions-at-main)
-  - [Update the starter workflows](#update-the-starter-workflows)
-  - [Announce](#announce)
+- [Prerequisites](#prerequisites)
+- [Tagging](#tagging)
+- [Verify version references](#verify-version-references)
+- [Pre-release tests](#pre-release-tests)
+- [Post-release tests](#post-release-tests)
+- [Code Freeze](#code-freeze)
+- [Update Verifier](#update-verifier)
+- [Finalize release](#finalize-release)
+- [Send a PR to reference Actions at main](#send-a-pr-to-reference-actions-at-main)
+- [Update the starter workflows](#update-the-starter-workflows)
+- [Announce](#announce)
 
 ---
 
