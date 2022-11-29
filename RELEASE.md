@@ -4,15 +4,22 @@ This is a document to describe the release process for the Go builder. Since all
 
 ---
 
-- [Prerequisites](#prerequisites)
-- [Tagging](#tagging)
-- [Verify version references](#verify-version-references)
-- [Pre-release Tests](#pre-release-tests)
-- [Post-release tests](#post-release-tests)
-- [Code Freeze](#code-freeze)
-- [Update Verifier](#update-verifier)
-- [Finalize release](#finalize-release)
-- [Announce](#announce)
+- [How to cut a release](#how-to-cut-a-release)
+  - [Prerequisites](#prerequisites)
+  - [Tagging](#tagging)
+  - [Verify version references](#verify-version-references)
+  - [Pre-release tests](#pre-release-tests)
+    - [Go builder](#go-builder)
+    - [Generic generator](#generic-generator)
+  - [Post-release tests](#post-release-tests)
+    - [Go builder](#go-builder-1)
+    - [Generic generator](#generic-generator-1)
+  - [Code Freeze](#code-freeze)
+  - [Update verifier](#update-verifier)
+  - [Finalize release](#finalize-release)
+  - [Send a PR to reference Actions at main](#send-a-pr-to-reference-actions-at-main)
+  - [Update the starter workflows](#update-the-starter-workflows)
+  - [Announce](#announce)
 
 ---
 
@@ -52,7 +59,7 @@ This will trigger the [release workflow](https://github.com/slsa-framework/slsa-
 Update version references with the following command:
 
 ```shell
-find .github/workflows/ -name '*.yaml' -o -name '*.yml' | xargs sed -i "s/uses: slsa-framework\/slsa-github-generator\/\.github\/actions\/\(.*\)@\(main\|v[0-9]\+\.[0-9]\+\.[0-9]\+\)/uses: slsa-framework\/slsa-github-generator\/.github\/actions\/\1@$BUILDER_TAG/"
+find .github/workflows/ -name '*.yaml' -o -name '*.yml' | xargs sed -i "s~\(uses: slsa-framework/slsa-github-generator/\.github/actions/.*\)@\(main\|v[0-9]\+\.[0-9]\+\.[0-9]\+\)~\1@$BUILDER_TAG~"
 ```
 
 Likewise, update documentation with the following command:
