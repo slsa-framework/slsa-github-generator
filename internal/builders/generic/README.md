@@ -36,7 +36,7 @@ project simply generates provenance as a separate step in an existing workflow.
   - [Provenance for Python](#provenance-for-python)
 - [Provenance for matrix strategy builds](#provenance-for-matrix-strategy-builds)
   - [A single provenance attestation for all artifacts](#a-single-provenance-attestation-for-all-artifacts)
-  - [A different attestation for each permutation](#a-different-attestation-for-each-permutation)
+  - [A different attestation for each iteration](#a-different-attestation-for-each-iteration)
 - [Known Issues](#known-issues)
   - [error updating to TUF remote mirror: tuf: invalid key](#error-updating-to-tuf-remote-mirror-tuf-invalid-key)
 
@@ -1021,12 +1021,11 @@ jobs:
 
 ## Provenance for matrix strategy builds
 
-If you're building with a matrix strategy, there's a bit of necessary
-boilerplate.
-
 There are a few ways to handle provenance for matrix builds. You can create a
 single provenance file describing all the artifacts from the different
 iterations or a different file for each iteration's artifact(s).
+
+Regardless of your choice, there's unfortunately a bit of necessary boilerplate.
 
 ### A single provenance attestation for all artifacts
 
@@ -1034,7 +1033,7 @@ iterations or a different file for each iteration's artifact(s).
 with its outputs and now its matrix strategy.  
   
 GitHub currently doesn't support different outputs for matrix builds. We must
-therefore declare a different hash output for each permutation. A follow-up job
+therefore declare a different hash output for each iteration. A follow-up job
 will collate all the hashes into a single string.
 
 ```yml
@@ -1067,7 +1066,7 @@ jobs:
 
 3. As with the other examples, you'll then have to generate the hashes that
 represent your build. This step is effectively identical to all the examples
-above, except each permutation must store its hash in a different output
+above, except each iteration must store its hash in a different output
 variable.
 
 ```yml
@@ -1096,7 +1095,7 @@ variable.
 ```
 
 5. The provenance job is also effectively identical to the examples above,
-except that it `needs: [combine_hashes]` instead of the `build` job.
+except that relies on `combine_hashes` instead of the `build` job.
 
 ```yml
   provenance:
@@ -1178,7 +1177,7 @@ values. Assuming your hashes are stored in
 ... | jq -r 'with_entries(select(.key | match("hash-.*-.*")))[] | @base64d' | ...
 ```
 
-### A different attestation for each permutation
+### A different attestation for each iteration
 
 This case is simpler. We can copy the single-attestation version's steps 1-3 and
 ignore step 4's `combine_hashes` job entirely. The changes are entirely within
