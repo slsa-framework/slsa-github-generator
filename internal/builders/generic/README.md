@@ -15,30 +15,31 @@ project simply generates provenance as a separate step in an existing workflow.
 
 ---
 
-- [Benefits of Provenance](#benefits-of-provenance)
-- [Generating Provenance](#generating-provenance)
-  - [Getting Started](#getting-started)
-  - [Referencing the SLSA generator](#referencing-the-slsa-generator)
-  - [Private Repositories](#private-repositories)
-  - [Supported Triggers](#supported-triggers)
-  - [Workflow Inputs](#workflow-inputs)
-  - [Workflow Outputs](#workflow-outputs)
-  - [Provenance Format](#provenance-format)
-  - [Provenance Example](#provenance-example)
-- [Integration With Other Build Systems](#integration-with-other-build-systems)
-  - [Provenance for GoReleaser](#provenance-for-goreleaser)
-  - [Provenance for Bazel](#provenance-for-bazel)
-  - [Provenance for Java](#provenance-for-java)
-    - [Maven](#maven)
-    - [Gradle](#gradle)
-  - [Provenance for Rust](#provenance-for-rust)
-  - [Provenance for Haskell](#provenance-for-haskell)
-  - [Provenance for Python](#provenance-for-python)
-- [Provenance for matrix strategy builds](#provenance-for-matrix-strategy-builds)
-  - [A single provenance attestation for all artifacts](#a-single-provenance-attestation-for-all-artifacts)
-  - [A different attestation for each iteration](#a-different-attestation-for-each-iteration)
-- [Known Issues](#known-issues)
-  - [error updating to TUF remote mirror: tuf: invalid key](#error-updating-to-tuf-remote-mirror-tuf-invalid-key)
+- [Generation of SLSA3+ provenance for arbitrary projects](#generation-of-slsa3-provenance-for-arbitrary-projects)
+  - [Benefits of Provenance](#benefits-of-provenance)
+  - [Generating Provenance](#generating-provenance)
+    - [Getting Started](#getting-started)
+    - [Referencing the SLSA generator](#referencing-the-slsa-generator)
+    - [Private Repositories](#private-repositories)
+    - [Supported Triggers](#supported-triggers)
+    - [Workflow Inputs](#workflow-inputs)
+    - [Workflow Outputs](#workflow-outputs)
+    - [Provenance Format](#provenance-format)
+    - [Provenance Example](#provenance-example)
+  - [Integration With Other Build Systems](#integration-with-other-build-systems)
+    - [Provenance for GoReleaser](#provenance-for-goreleaser)
+    - [Provenance for Bazel](#provenance-for-bazel)
+    - [Provenance for Java](#provenance-for-java)
+      - [Maven](#maven)
+      - [Gradle](#gradle)
+    - [Provenance for Rust](#provenance-for-rust)
+    - [Provenance for Haskell](#provenance-for-haskell)
+    - [Provenance for Python](#provenance-for-python)
+  - [Provenance for matrix strategy builds](#provenance-for-matrix-strategy-builds)
+    - [A single provenance attestation for all artifacts](#a-single-provenance-attestation-for-all-artifacts)
+    - [A different attestation for each iteration](#a-different-attestation-for-each-iteration)
+  - [Known Issues](#known-issues)
+    - [error updating to TUF remote mirror: tuf: invalid key](#error-updating-to-tuf-remote-mirror-tuf-invalid-key)
 
 ---
 
@@ -1095,7 +1096,7 @@ variable.
 ```
 
 5. The provenance job is also effectively identical to the examples above,
-except that relies on `combine_hashes` instead of the `build` job.
+except that it relies on `combine_hashes` instead of the `build` job.
 
 ```yml
   provenance:
