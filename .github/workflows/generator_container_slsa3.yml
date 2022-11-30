@@ -64,7 +64,7 @@ jobs:
     steps:
       - name: Detect the generator ref
         id: detect
-        uses: slsa-framework/slsa-github-generator/.github/actions/detect-workflow@main
+        uses: slsa-framework/slsa-github-generator/.github/actions/detect-workflow@v1.4.0-rc.1
 
   # generator builds the generator binary and runs it to generate SLSA
   # provenance.
@@ -84,7 +84,7 @@ jobs:
       packages: write # Needed to login and upload attestations to ghcr.io.
     steps:
       - name: Generate builder
-        uses: slsa-framework/slsa-github-generator/.github/actions/generate-builder@main
+        uses: slsa-framework/slsa-github-generator/.github/actions/generate-builder@v1.4.0-rc.1
         with:
           repository: "${{ needs.detect-env.outputs.repository }}"
           ref: "${{ needs.detect-env.outputs.ref }}"
