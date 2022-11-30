@@ -113,29 +113,9 @@ jobs:
           BODY: "${{ github.event.pull_request.body }}"
         run: |
           # match the first instance of a line with 'label:release vX.Y.Z' with only leading or trailing whitespace.
-          set -euo pipefail
-
-          set -x
-          grep --version
-          sed --version
-          echo '--'
-          echo "$BODY"
-          echo '--'
-          echo "$BODY" | grep -oe '#label:release'
-          echo '--'
-          echo "$BODY" | grep -oe '^[[:blank:]]*#label:release[[:blank:]]*'
-          echo '--'
-          echo "$BODY" | grep -oe '^[[:blank:]]*#label:release[[:blank:]]*v[0-9]\+\.[0-9]\+\.[0-9]\+'
-          echo '--'
-          echo "$BODY" | grep -oe '^[[:blank:]]*#label:release[[:blank:]]*v[0-9]\+\.[0-9]\+\.[0-9]\+\(-rc\.[0-9]\+\)\?'
-          echo '--'
-          echo "$BODY" | grep -oe '^[[:blank:]]*#label:release[[:blank:]]*v[0-9]\+\.[0-9]\+\.[0-9]\+\(-rc\.[0-9]\+\)\?[[:blank:]]*'
-          echo '--'
-          echo "$BODY" | grep -e '^[[:blank:]]*#label:release[[:blank:]]*v[0-9]\+\.[0-9]\+\.[0-9]\+\(-rc\.[0-9]\+\)\?[[:blank:]]*$'
-          echo '--'
-          RELEASE_TAG=$(echo "$BODY" | grep -e '^[[:blank:]]*#label:release[[:blank:]]*v[0-9]\+\.[0-9]\+\.[0-9]\+\(-rc\.[0-9]\+\)\?[[:blank:]]*$' | head -n1 | sed -n 's/^[[:blank:]]*#label:release[[:blank:]]*\([^[:blank:]]*\)[[:blank:]]*/\1/p')
-          echo "$RELEASE_TAG"
-
+          set -euo pipefaia
+          # NOTE: grep is not matching if there is a trailing '$' in the pattern for some reason...
+          RELEASE_TAG=$(echo "$BODY" | grep -oe '^[[:blank:]]*#label:release[[:blank:]]*v[0-9]\+\.[0-9]\+\.[0-9]\+\(-rc\.[0-9]\+\)\?[[:blank:]]*' | head -n1 | sed -n 's/^[[:blank:]]*#label:release[[:blank:]]*\([^[:blank:]]*\)[[:blank:]]*/\1/p')
           RELEASE_TAG=${RELEASE_TAG} ./__THIS_REPO__/.github/workflows/scripts/pre-release/references.sh
 
   secure-project-checkout-go:
