@@ -7,7 +7,8 @@
 set -euo pipefail
 
 # Verify the tag has semver format.
-cd __EXAMPLE_PACKAGE__
+# cd __EXAMPLE_PACKAGE__
+cd /usr/local/google/home/ianlewis/src/example-package
 # shellcheck source=/dev/null
 source "./.github/workflows/scripts/e2e-utils.sh"
 major=$(version_major "$RELEASE_TAG")
@@ -21,8 +22,14 @@ echo "patch: $patch"
 echo "rc: $rc"
 cd -
 
+if [ "$RELEASE_TAG" == "" ]; then
+    echo "Release tag is empty: \"$RELEASE_TAG\""
+    exit 1
+fi
+
 # Verify internal Actions are referenced by the release tag.
-cd __THIS_REPO__
+# cd __THIS_REPO__
+cd /usr/local/google/home/ianlewis/src/slsa-github-generator
 results=$(
     find .github/workflows/ -maxdepth 1 -type f -print0 -name '*.yaml' -o -name '*.yml' |
         xargs -0 grep -P "slsa-framework/slsa-github-generator/.github/actions/.*@(?!$RELEASE_TAG)" ||
