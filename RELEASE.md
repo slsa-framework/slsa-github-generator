@@ -100,6 +100,12 @@ There is one integration test we cannot easily test "live", so we need to simula
    uses: $BUILDER_REPOSITORY/.github/actions/generate-builder@$BUILDER_TAG
    ```
 
+1. For the Container generator, update the file `$BUILDER_REPOSITORY/main/.github/workflows/generator_container_slsa3.yml`to:
+
+   ```yaml
+   uses: $BUILDER_REPOSITORY/.github/actions/generate-builder@$BUILDER_TAG
+   ```
+
 1. Create a release for the builders for this branch:
 
    ```shell
@@ -176,7 +182,7 @@ End-to-end tests run daily in [github.com/slsa-framework/example-package/.github
    "$GH" release -R slsa-framework/slsa-github-generator upload "$BUILDER_TAG" slsa-builder-go-linux-amd64  --clobber
    ```
 
-1. Update the version of the workflow [slsa-framework/example-package/.github/workflows/e2e.go.workflow_dispatch.main.adversarial-builder-binary.slsa3.yml#L14](https://github.com/slsa-framework/example-package/blob/main/.github/workflows/e2e.go.workflow_dispatch.main.adversarial-builder-binary.slsa3.yml#L14) with the `$BUILDER_TAG` to test.
+1. Update the version of the workflow [slsa-framework/example-package/.github/workflows/e2e.go.workflow_dispatch.main.adversarial-builder-binary.slsa3.yml](https://github.com/slsa-framework/example-package/blob/main/.github/workflows/e2e.go.workflow_dispatch.main.adversarial-builder-binary.slsa3.yml) with the `$BUILDER_TAG` to test.
 
 1. Trigger the test in [slsa-framework/example-package/actions/workflows/e2e.go.workflow_dispatch.main.adversarial-builder-binary.slsa3.yml](https://github.com/slsa-framework/example-package/actions/workflows/e2e.go.workflow_dispatch.main.adversarial-builder-binary.slsa3.yml) by cliking `Run workflow`. Verify that it fails, with a message:
 
@@ -215,7 +221,7 @@ End-to-end tests run daily in [github.com/slsa-framework/example-package/.github
    "$GH" release -R slsa-framework/slsa-github-generator upload "$BUILDER_TAG" slsa-generator-generic-linux-amd64  --clobber
    ```
 
-1. Update the version of the workflow [slsa-framework/example-package/.github/workflows/e2e.generic.workflow_dispatch.main.adversarial-builder-binary.slsa3.yml#L35](https://github.com/slsa-framework/example-package/blob/main/.github/workflows/e2e.generic.workflow_dispatch.main.adversarial-builder-binary.slsa3.yml#L35) with the `$BUILDER_TAG` to test.
+1. Update the version of the workflow [slsa-framework/example-package/.github/workflows/e2e.generic.workflow_dispatch.main.adversarial-builder-binary.slsa3.yml#](https://github.com/slsa-framework/example-package/blob/main/.github/workflows/e2e.generic.workflow_dispatch.main.adversarial-builder-binary.slsa3.yml#) with the `$BUILDER_TAG` to test.
 
 1. Trigger the test in [slsa-framework/example-package/actions/workflows/e2e.generic.workflow_dispatch.main.adversarial-builder-binary.slsa3.yml](https://github.com/slsa-framework/example-package/actions/workflows/e2e.generic.workflow_dispatch.main.adversarial-builder-binary.slsa3.yml) by cliking `Run workflow`. Verify that it fails, with a message:
 
@@ -254,7 +260,7 @@ End-to-end tests run daily in [github.com/slsa-framework/example-package/.github
    "$GH" release -R slsa-framework/slsa-github-generator upload "$BUILDER_TAG" slsa-generator-container-linux-amd64  --clobber
    ```
 
-1. Update the version of the workflow [slsa-framework/example-package/.github/workflows/e2e.container.workflow_dispatch.main.adversarial-builder-binary.slsa3.yml#L35](https://github.com/slsa-framework/example-package/blob/main/.github/workflows/e2e.container.workflow_dispatch.main.adversarial-builder-binary.slsa3.yml#L35) with the `$BUILDER_TAG` to test.
+1. Update the version of the workflow [slsa-framework/example-package/.github/workflows/e2e.container.workflow_dispatch.main.adversarial-builder-binary.slsa3.yml#](https://github.com/slsa-framework/example-package/blob/main/.github/workflows/e2e.container.workflow_dispatch.main.adversarial-builder-binary.slsa3.yml) with the `$BUILDER_TAG` to test.
 
 1. Trigger the test in [slsa-framework/example-package/actions/workflows/e2e.container.workflow_dispatch.main.adversarial-builder-binary.slsa3.yml](https://github.com/slsa-framework/example-package/actions/workflows/e2e.container.workflow_dispatch.main.adversarial-builder-binary.slsa3.yml) by cliking `Run workflow`. Verify that it fails, with a message:
 
