@@ -60,8 +60,8 @@ Send a PR with this update and add `#label:release ${BUILDER_TAG}` in the PR des
 Once the PR is merged, update the tag to point to HEAD.
 
 ```shell
-git tag v1.2.2 -f
-git push v1.2.2 -f
+git tag $BUILDER_TAG -f
+git push origin $BUILDER_TAG -f
 ```
 
 This will trigger the [release workflow](https://github.com/slsa-framework/slsa-github-generator/actions/workflows/release.yml). Ensure this workflow succeeds and that the release assets are updated.
