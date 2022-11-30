@@ -131,9 +131,9 @@ jobs:
           echo '--'
           echo "$BODY" | grep -oe '^[[:blank:]]*#label:release[[:blank:]]*v[0-9]\+\.[0-9]\+\.[0-9]\+\(-rc\.[0-9]\+\)\?[[:blank:]]*'
           echo '--'
-          echo "$BODY" | grep -oe '^[[:blank:]]*#label:release[[:blank:]]*v[0-9]\+\.[0-9]\+\.[0-9]\+\(-rc\.[0-9]\+\)\?[[:blank:]]*\$'
+          echo "$BODY" | grep -e '^[[:blank:]]*#label:release[[:blank:]]*v[0-9]\+\.[0-9]\+\.[0-9]\+\(-rc\.[0-9]\+\)\?[[:blank:]]*$'
           echo '--'
-          RELEASE_TAG=$(echo "$BODY" | grep -oe '^[[:blank:]]*#label:release[[:blank:]]*v[0-9]\+\.[0-9]\+\.[0-9]\+\(-rc\.[0-9]\+\)\?[[:blank:]]*\$' | head -n1 | sed -n 's/^[[:blank:]]*#label:release[[:blank:]]*\([^[:blank:]]*\)[[:blank:]]*/\1/p')
+          RELEASE_TAG=$(echo "$BODY" | grep -e '^[[:blank:]]*#label:release[[:blank:]]*v[0-9]\+\.[0-9]\+\.[0-9]\+\(-rc\.[0-9]\+\)\?[[:blank:]]*$' | head -n1 | sed -n 's/^[[:blank:]]*#label:release[[:blank:]]*\([^[:blank:]]*\)[[:blank:]]*/\1/p')
           echo "$RELEASE_TAG"
 
           RELEASE_TAG=${RELEASE_TAG} ./__THIS_REPO__/.github/workflows/scripts/pre-release/references.sh
