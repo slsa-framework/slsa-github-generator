@@ -40,10 +40,21 @@ on:
         required: true
         type: string
       upload-assets:
-        description: "If true provenance is uploaded to a GitHub release for new tags."
+        description: >
+          If true, provenance is uploaded to a GitHub release for new tags.
+          When the workflow does not run on a new tag, such as on a workflow_dispatch,
+          the `upload-tag-name` argument must be provided as well.
         required: false
         type: boolean
         default: true
+      upload-tag-name:
+        description: >
+          If non-empty and `upload-assets` is set to true, the provenance is uploaded to the GitHub
+          release identified by the tag name. If a workflow is run on a new tag and `upload-tag-name`
+          is non-empty, the new tag is ignored and the value of `upload-tag-name` is used instead to upload
+          the assets.
+        type: string
+        default: ""
       config-file:
         description: "The configuration file for the builder. A path within the calling repository."
         required: false
@@ -318,7 +329,7 @@ jobs:
       contents: write # Needed to write artifacts to a release.
     runs-on: ubuntu-latest
     needs: [build-dry, build, provenance, detect-env]
-    if: startsWith(github.ref, 'refs/tags/') && inputs.upload-assets == true
+    if: inputs.upload-assets == true
     steps:
       - name: Checkout builder repository
         uses: slsa-framework/slsa-github-generator/.github/actions/secure-builder-checkout@main
@@ -341,9 +352,20 @@ jobs:
           path: "${{ needs.provenance.outputs.go-provenance-name }}"
           sha256: "${{ needs.provenance.outputs.go-provenance-sha256 }}"
 
-      - name: Release
-        uses: softprops/action-gh-release@de2c0eb89ae2a093876385947365aca7b0e5f844 # v0.1.15
+      - name: Upload provenance new tag
+        uses: softprops/action-gh-release@1e07f4398721186383de40550babbdf2b84acfc5 # tag=v0.1.14
+        if: startsWith(github.ref, 'refs/tags/') && inputs.upload-tag-name == ''
+        id: release-new-tags
         with:
+          files: |
+            ${{ needs.build-dry.outputs.go-binary-name }}
+            ${{ needs.provenance.outputs.go-provenance-name }}
+
+      - name: Upload provenance tag name
+        uses: softprops/action-gh-release@1e07f4398721186383de40550babbdf2b84acfc5 # tag=v0.1.14
+        if: inputs.upload-tag-name != ''
+        with:
+          tag_name: "${{ inputs.upload-tag-name }}"
           files: |
             ${{ needs.build-dry.outputs.go-binary-name }}
             ${{ needs.provenance.outputs.go-provenance-name }}

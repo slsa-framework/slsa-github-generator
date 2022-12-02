@@ -34,10 +34,21 @@ on:
         required: true
         type: string
       upload-assets:
-        description: "If true provenance is uploaded to a GitHub release for new tags."
+        description: >
+          If true, provenance is uploaded to a GitHub release for new tags.
+          When the workflow does not run on a new tag, such as on a workflow_dispatch,
+          the `upload-tag-name` argument must be provided as well.
         required: false
         type: boolean
         default: false
+      upload-tag-name:
+        description: >
+          If non-empty and `upload-assets` is set to true, the provenance is uploaded to the GitHub
+          release identified by the tag name. If a workflow is run on a new tag and `upload-tag-name`
+          is non-empty, the new tag is ignored and the value of `upload-tag-name` is used instead to upload
+          the assets.
+        type: string
+        default: ""
       attestation-name:
         description: "The artifact name of the signed provenance. The file must have the intoto.jsonl extension. Defaults to <filename>.intoto.jsonl for single artifact or multiple.intoto.jsonl for multiple artifacts. DEPRECATED: Use provenance-name instead."
         required: false
@@ -63,8 +74,12 @@ on:
         default: false
     outputs:
       release-id:
-        description: "The name of the release where provenance was uploaded."
-        value: ${{ jobs.create-release.outputs.release-id }}
+        description: >
+          The name of the release where provenance was uploaded.
+
+          Note: This value is non-empty only when a release asset is uploaded, according to
+          the values of `upload-assets` and `upload-tag-name`.
+        value: ${{ jobs.upload-assets.outputs.release-id }}
       attestation-name:
         description: "DEPRECATED: use the provenance-name output instead."
         value: ${{ jobs.generator.outputs.provenance-name }}
@@ -187,17 +202,17 @@ jobs:
         run: |
           echo "outcome=$([ "$SUCCESS" == "true" ] && echo "success" || echo "failure")" >> $GITHUB_OUTPUT
 
-  # create-release creates a release and uploads provenance to the release if
-  # `upload-assets` is true.
-  create-release:
+  # upload-assets uploads provenance to the release
+  # if `upload-assets` is true.
+  upload-assets:
     outputs:
       outcome: ${{ steps.final.outputs.outcome }}
       release-id: ${{ steps.release.outputs.id }}
     runs-on: ubuntu-latest
-    needs: [generator, detect-env]
+    needs: [generator]
     permissions:
       contents: write # Needed to write artifacts to a release.
-    if: startsWith(github.ref, 'refs/tags/') && inputs.upload-assets == true
+    if: inputs.upload-assets == true
     steps:
       - name: Checkout builder repository
         id: checkout-builder
@@ -217,18 +232,46 @@ jobs:
           path: "${{ needs.generator.outputs.provenance-name }}"
           sha256: "${{ needs.generator.outputs.provenance-sha256 }}"
 
-      - name: Release
-        id: release
-        continue-on-error: true
-        uses: softprops/action-gh-release@de2c0eb89ae2a093876385947365aca7b0e5f844 # v0.1.15
+      - name: Upload provenance new tag
+        uses: softprops/action-gh-release@1e07f4398721186383de40550babbdf2b84acfc5 # tag=v0.1.14
+        if: startsWith(github.ref, 'refs/tags/') && inputs.upload-tag-name == ''
+        id: release-new-tags
         with:
           files: |
             ${{ needs.generator.outputs.provenance-name }}
 
+      - name: Upload provenance tag name
+        uses: softprops/action-gh-release@1e07f4398721186383de40550babbdf2b84acfc5 # tag=v0.1.14
+        if: inputs.upload-tag-name != ''
+        id: release-tag-name
+        with:
+          tag_name: "${{ inputs.upload-tag-name }}"
+          files: |
+            ${{ needs.generator.outputs.provenance-name }}
+
+      - name: Output release ID
+        shell: bash
+        id: release
+        env:
+          RELEASE_ID_NEW_TAGS: "${{ steps.release-new-tags.outputs.id }}"
+          RELEASE_ID_TAG_NAME: "${{ steps.release-tag-name.outputs.id }}"
+        run: |
+          set -euo pipefail
+          id=""
+          if [[ -n "$RELEASE_ID_NEW_TAGS"]]; then
+            id="$RELEASE_ID_NEW_TAGS"
+          elif [[ -n "$RELEASE_ID_TAG_NAME"]]; then
+            id="$RELEASE_ID_TAG_NAME"
+          else
+            echo "internal error"
+            exit 1
+          fi
+          echo "::set-output name=id::$id"
+
       - name: Final outcome
         id: final
         env:
-          SUCCESS: ${{ steps.checkout-builder.outcome != 'failure' && steps.download-prov.outcome != 'failure' && steps.release.outcome != 'failure' }}
+          SUCCESS: ${{ steps.checkout-builder.outcome != 'failure' && steps.download-prov.outcome != 'failure' && steps.release.outcome != 'failure' && steps.release-new-tags.outcome != 'failure' && steps.release-tag-name.outcome != 'failure' }}
         run: |
           echo "outcome=$([ "$SUCCESS" == "true" ] && echo "success" || echo "failure")" >> $GITHUB_OUTPUT
 
@@ -238,14 +281,14 @@ jobs:
     outputs:
       outcome: ${{ steps.final.outputs.outcome }}
     runs-on: ubuntu-latest
-    needs: [detect-env, generator, create-release]
+    needs: [detect-env, generator, upload-assets]
     # Note: always run even if needed jobs are skipped.
     if: always()
     steps:
       - name: Final outcome
         id: final
         env:
-          SUCCESS: ${{ needs.detect-env.outputs.outcome != 'failure' && needs.generator.outputs.outcome != 'failure' && needs.create-release.outputs.outcome != 'failure' }}
+          SUCCESS: ${{ needs.detect-env.outputs.outcome != 'failure' && needs.generator.outputs.outcome != 'failure' && needs.upload-assets.outputs.outcome != 'failure' }}
           CONTINUE: ${{ inputs.continue-on-error }}
         run: |
           echo "outcome=$([ "$SUCCESS" == "true" ] && echo "success" || echo "failure")" >> $GITHUB_OUTPUT
