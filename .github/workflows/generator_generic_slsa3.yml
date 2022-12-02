@@ -74,7 +74,10 @@ on:
       # Note: we use this output because there is no buildt-in `outcome` and `result` is always `success`
       # if `continue-on-error` is set to `true`.
       outcome:
-        description: "The outcome status of the run ('success' or 'failure')."
+        description: >
+          The outcome status of the run ('success' or 'failure').
+
+          Note: this is only set when `continue-on-error` is `true`.
         value: ${{ jobs.final.outputs.outcome }}
 
 jobs:
