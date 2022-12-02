@@ -653,3 +653,13 @@ check-slsa-attestations:
     failed to verify signature for ghcr.io/ianlewis/actions-test:v0.0.11: .attestors[0].entries[0].keyless: no matching attestations:
     no certificate found on attestation
 ```
+
+## Known Issues
+
+### `packages: write` permission required even if not using ghcr.io
+
+Due to limitations in how GitHub actions manages permessions on ephemeral tokens
+in reusable workflows, and how cosign uses available credentials, the container
+workflow always requires `packages: write`.
+
+Please see #1257 for details.
