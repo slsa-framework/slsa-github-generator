@@ -163,8 +163,14 @@ project and for reviewing reported vulnerabilities. Each member is familiar
 with designing secure software, security issues related to CI/CD, GitHub
 actions and build provenance.
 
-You can view current team membership here:
-[slsa-framework/slsa-github-generator-security](https://github.com/orgs/slsa-framework/teams/slsa-github-generator-security/members)
+<!-- NOTE: Team membership should be synced with CODEOWNERS for SECURITY.md -->
+
+Security Team:
+
+- Asraa Ali (@asraa)
+- Ian Lewis (@ianlewis)
+- Joshua Locke (@joshuagl)
+- Laurent Simon (@laurentsimon)
 
 Security Team membership is currently considered on a case-by-case basis.
 
