@@ -328,7 +328,7 @@ jobs:
     permissions:
       contents: write # Needed to write artifacts to a release.
     runs-on: ubuntu-latest
-    needs: [build-dry, build, provenance]
+    needs: [build-dry, build, provenance, detect-env]
     if: inputs.upload-assets == true
     steps:
       - name: Checkout builder repository
