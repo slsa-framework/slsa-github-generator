@@ -85,7 +85,7 @@ jobs:
         id: detect
         continue-on-error: true
         uses: slsa-framework/slsa-github-generator/.github/actions/detect-workflow@main
-      
+
       - name: Final outcome
         id: final
         env:
