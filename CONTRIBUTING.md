@@ -144,4 +144,4 @@ communication and sharing ideas.
 Communication about bugs, usage, and new feature development is also done on
 [GitHub issues](https://github.com/slsa-framework/slsa-github-generator/issues).
 
-[code of conduct]: https://github.com/slsa-framework/slsa/blob/main/code-of-conduct.md
+[code of conduct]: https://github.com/slsa-framework/governance/blob/main/8._Code_of_Conduct.md
