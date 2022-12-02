@@ -79,7 +79,7 @@ provenance:
     actions: read # Needed for detection of GitHub Actions environment.
     id-token: write # Needed for provenance signing and ID
     contents: write # Needed for release uploads
-  uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.2.2
+  uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.4.0
   with:
     base64-subjects: "${{ needs.build.outputs.hashes }}"
 ```
@@ -136,7 +136,7 @@ jobs:
       actions: read
       id-token: write
       contents: write
-    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.2.2
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.4.0
     with:
       base64-subjects: "${{ needs.build.outputs.hashes }}"
       # Upload provenance to a new release
@@ -373,7 +373,7 @@ provenance:
     actions: read # To read the workflow path.
     id-token: write # To sign the provenance.
     contents: write # To add assets to a release.
-  uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.2.2
+  uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.4.0
   with:
     base64-subjects: "${{ needs.goreleaser.outputs.hashes }}"
     upload-assets: true # upload to a new release
@@ -415,7 +415,7 @@ jobs:
       actions: read # To read the workflow path.
       id-token: write # To sign the provenance.
       contents: write # To add assets to a release.
-    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.2.2
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.4.0
     with:
       base64-subjects: "${{ needs.goreleaser.outputs.hashes }}"
       upload-assets: true # upload to a new release
@@ -472,7 +472,7 @@ provenance:
     actions: read # To read the workflow path.
     id-token: write # To sign the provenance.
     contents: write # To add assets to a release.
-  uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.2.2
+  uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.4.0
   with:
     base64-subjects: "${{ needs.build.outputs.hashes }}"
     upload-assets: true # Optional: Upload to a new release
@@ -514,7 +514,7 @@ jobs:
       actions: read # To read the workflow path.
       id-token: write # To sign the provenance.
       contents: write # To add assets to a release.
-    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.2.2
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.4.0
     with:
       base64-subjects: "${{ needs.build.outputs.hashes }}"
       upload-assets: true # Optional: Upload to a new release
@@ -573,7 +573,7 @@ provenance:
     actions: read # To read the workflow path.
     id-token: write # To sign the provenance.
     contents: write # To add assets to a release.
-  uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.2.2
+  uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.4.0
   with:
     base64-subjects: "${{ needs.build.outputs.hashes }}"
     upload-assets: true # Optional: Upload to a new release
@@ -620,7 +620,7 @@ jobs:
       actions: read # To read the workflow path.
       id-token: write # To sign the provenance.
       contents: write # To add assets to a release.
-    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.2.2
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.4.0
     with:
       base64-subjects: "${{ needs.build.outputs.hashes }}"
       upload-assets: true # Optional: Upload to a new release
@@ -667,7 +667,7 @@ provenance:
     actions: read
     id-token: write
     contents: write
-  uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.2.2
+  uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.4.0
   with:
     base64-subjects: "${{ needs.build.outputs.hashes }}"
     upload-assets: true # Optional: Upload to a new release
@@ -710,7 +710,7 @@ jobs:
       actions: read
       id-token: write
       contents: write
-    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.2.2
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.4.0
     with:
       base64-subjects: "${{ needs.build.outputs.hashes }}"
       upload-assets: true # Optional: Upload to a new release
@@ -762,7 +762,7 @@ provenance:
     actions: read # To read the workflow path.
     id-token: write # To sign the provenance.
     contents: write # To add assets to a release.
-  uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.2.2
+  uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.4.0
   with:
     base64-subjects: "${{ needs.build.outputs.hashes }}"
     upload-assets: true # Optional: Upload to a new release
@@ -801,7 +801,7 @@ jobs:
       actions: read # To read the workflow path.
       id-token: write # To sign the provenance.
       contents: write # To add assets to a release.
-    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.2.2
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.4.0
     with:
       base64-subjects: "${{ needs.build.outputs.hashes }}"
       upload-assets: true # Optional: Upload to a new release
@@ -859,7 +859,7 @@ provenance:
     actions: read # To read the workflow path.
     id-token: write # To sign the provenance.
     contents: write # To add assets to a release.
-  uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.2.2
+  uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.4.0
   with:
     base64-subjects: "${{ needs.build.outputs.hashes }}"
     upload-assets: true # Optional: Upload to a new release
@@ -904,7 +904,7 @@ jobs:
       actions: read # To read the workflow path.
       id-token: write # To sign the provenance.
       contents: write # To add assets to a release.
-    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.2.2
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.4.0
     with:
       base64-subjects: "${{ needs.build.outputs.hashes }}"
       upload-assets: true # Optional: Upload to a new release
@@ -964,7 +964,7 @@ provenance:
     actions: read # To read the workflow path.
     id-token: write # To sign the provenance.
     contents: write # To add assets to a release.
-  uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.2.2
+  uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.4.0
   with:
     base64-subjects: "${{ needs.build.outputs.hashes }}"
     upload-assets: true # Optional: Upload to a new release
@@ -1007,7 +1007,7 @@ jobs:
       actions: read # To read the workflow path.
       id-token: write # To sign the provenance.
       contents: write # To add assets to a release.
-    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.2.2
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.4.0
     with:
       base64-subjects: "${{ needs.build.outputs.hashes }}"
       upload-assets: true # Optional: Upload to a new release
@@ -1039,5 +1039,5 @@ downloading the latest release. Make sure you continue to reference the workflow
 using a release tag in order to allow verification by `slsa-verifier`.
 
 ```yaml
-uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.2.2
+uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.4.0
 ```

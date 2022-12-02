@@ -21,6 +21,11 @@ echo "patch: $patch"
 echo "rc: $rc"
 cd -
 
+if [ "$RELEASE_TAG" == "" ]; then
+    echo "Release tag is empty: \"$RELEASE_TAG\""
+    exit 1
+fi
+
 # Verify internal Actions are referenced by the release tag.
 cd __THIS_REPO__
 results=$(

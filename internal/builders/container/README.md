@@ -68,14 +68,11 @@ provenance:
     id-token: write # for creating OIDC tokens for signing.
     packages: write # for uploading attestations.
   if: startsWith(github.ref, 'refs/tags/')
-  # TODO(https://github.com/slsa-framework/slsa-github-generator/issues/492): Use a tagged release once we have one.
-  uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@main
+  uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v1.4.0
   with:
     image: ${{ needs.build.outputs.tag }}
     digest: ${{ needs.build.outputs.digest }}
     registry-username: ${{ github.actor }}
-    # TODO(https://github.com/slsa-framework/slsa-github-generator/issues/492): Remove after GA release.
-    compile-generator: true
   secrets:
     registry-password: ${{ secrets.GITHUB_TOKEN }}
 ```
@@ -142,13 +139,11 @@ jobs:
       id-token: write # for creating OIDC tokens for signing.
       packages: write # for uploading attestations.
     if: startsWith(github.ref, 'refs/tags/')
-    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@main
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v1.4.0
     with:
       image: ${{ needs.build.outputs.image }}
       digest: ${{ needs.build.outputs.digest }}
       registry-username: ${{ github.actor }}
-      # TODO(https://github.com/slsa-framework/slsa-github-generator/issues/492): Remove after GA release.
-      compile-generator: true
     secrets:
       registry-password: ${{ secrets.GITHUB_TOKEN }}
 ```
@@ -246,7 +241,7 @@ generated as an [in-toto](https://in-toto.io/) statement with a SLSA predicate.
   ],
   "predicate": {
     "builder": {
-      "id": "https://github.com/slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@refs/tags/v1.1.1"
+      "id": "https://github.com/slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@refs/tags/v1.4.0"
     },
     "buildType": "https://github.com/slsa-framework/slsa-github-generator/container@v1",
     "invocation": {
@@ -356,9 +351,7 @@ provenance:
     # contents: read
     packages: write
   if: startsWith(github.ref, 'refs/tags/')
-  # TODO: Update after GA
-  # uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v1.2.0
-  uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@9dc6318aedc3d24ede4e946966d30c752769a4f9
+  uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v1.4.0
   with:
     image: ${{ needs.build.outputs.image }}
     digest: ${{ needs.build.outputs.digest }}
@@ -423,8 +416,7 @@ jobs:
       # contents: read
       packages: write
     if: startsWith(github.ref, 'refs/tags/')
-    # uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v1.2.0
-    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@9dc6318aedc3d24ede4e946966d30c752769a4f9
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v1.4.0
     with:
       image: ${{ needs.build.outputs.image }}
       digest: ${{ needs.build.outputs.digest }}
@@ -454,9 +446,7 @@ predicate: {
   // unmodified. It verifies that the builder is the container
   // workflow.
   builder: {
-    // TODO: update after GA
-    // id: =~"^https://github.com/slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@refs/tags/v[0-9]+.[0-9]+.[0-9]+$"
-    id: =~"^https://github.com/ianlewis/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@refs/heads/409-feature-add-generic-container-workflow$"
+    id: =~"^https://github.com/slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@refs/tags/v[0-9]+.[0-9]+.[0-9]+$"
   }
   invocation: {
     configSource: {
@@ -475,6 +465,8 @@ predicate: {
 ```
 
 We can then use `cosign` to verify the attestation using the policy.
+
+<!-- TODO(github.com/slsa-framework/slsa-github-generator/issues/492): update example -->
 
 ```shell
 $ COSIGN_EXPERIMENTAL=1 cosign verify-attestation \
@@ -524,8 +516,7 @@ spec:
           # Matches the Github Actions OIDC issuer
           - issuer: https://token.actions.githubusercontent.com
             # Matches the reusable workflow's signing identity.
-            # TODO: update after GA
-            subjectRegExp: "^https://github.com/ianlewis/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@refs/heads/409-feature-add-generic-container-workflow$"
+            subjectRegExp: "^https://github.com/ianlewis/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@refs/tags/v[0-9]+.[0-9]+.[0-9]+$"
       attestations:
         - name: must-have-slsa
           predicateType: slsaprovenance
@@ -541,9 +532,7 @@ spec:
                 // unmodified. It verifies that the builder is the container
                 // workflow.
                 builder: {
-                  // TODO: update after GA
-                  // id: =~"^https://github.com/slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@refs/tags/v[0-9]+.[0-9]+.[0-9]+$"
-                  id: =~"^https://github.com/ianlewis/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@refs/heads/409-feature-add-generic-container-workflow$"
+                  id: =~"^https://github.com/slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@refs/tags/v[0-9]+.[0-9]+.[0-9]+$"
                 }
                 invocation: {
                   configSource: {
@@ -617,7 +606,7 @@ spec:
             # identity.
             - entries:
                 - keyless:
-                    subject: "https://github.com/slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@refs/tags/v1.2.0"
+                    subject: "https://github.com/slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@refs/tags/v1.4.0"
                     issuer: "https://token.actions.githubusercontent.com"
           # This section declares some policy conditions acting on the provenance itself.
           attestations:
