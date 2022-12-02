@@ -357,7 +357,7 @@ provenance:
     packages: write
   if: startsWith(github.ref, 'refs/tags/')
   # TODO: Update after GA
-  # uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v1.2.0
+  # uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v1.4.0
   uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@9dc6318aedc3d24ede4e946966d30c752769a4f9
   with:
     image: ${{ needs.build.outputs.image }}
@@ -423,7 +423,7 @@ jobs:
       # contents: read
       packages: write
     if: startsWith(github.ref, 'refs/tags/')
-    # uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v1.2.0
+    # uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v1.4.0
     uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@9dc6318aedc3d24ede4e946966d30c752769a4f9
     with:
       image: ${{ needs.build.outputs.image }}
