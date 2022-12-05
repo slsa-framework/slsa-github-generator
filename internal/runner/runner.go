@@ -134,19 +134,21 @@ func (r *CommandRunner) runStep(ctx context.Context, step *CommandStep, dry bool
 	cmd.Env = env
 
 	// Strip common POSIX env vars from provenance.
-	posixVars := []string{"PATH", "PWD", "HOME", "USER", "TERM", "SHELL", "EDITOR"}
+	posixVars := map[string]bool{
+		"PATH":   true,
+		"PWD":    true,
+		"HOME":   true,
+		"USER":   true,
+		"TERM":   true,
+		"SHELL":  true,
+		"EDITOR": true,
+	}
 	finalEnv := []string{}
 	// cmd.Environ will dedup and get final environment variables.
 	for _, s := range cmd.Environ() {
 		k, _, _ := strings.Cut(s, "=")
-		isPosix := false
-		for _, pVar := range posixVars {
-			if k == pVar {
-				isPosix = true
-				break
-			}
-		}
-		if !isPosix {
+		// Do not include POSIX environment variables.
+		if !posixVars[k] {
 			finalEnv = append(finalEnv, s)
 		}
 	}
