@@ -137,10 +137,11 @@ with the SLSA Tooling SIG.
 
 ### Communication
 
-The `#slsa-tooling` channel in the [OpenSSF Slack](https://slack.openssf.org/)
-is used for communication and sharing ideas.
+The [`#slsa-tooling`](https://slack.com/app_redirect?team=T019QHUBYQ3&channel=slsa-tooling)
+channel in the [OpenSSF Slack](https://slack.openssf.org/) is used for
+communication and sharing ideas.
 
-Communication is also done over
+Communication about bugs, usage, and new feature development is also done on
 [GitHub issues](https://github.com/slsa-framework/slsa-github-generator/issues).
 
-[code of conduct]: https://github.com/slsa-framework/slsa/blob/main/code-of-conduct.md
+[code of conduct]: https://github.com/slsa-framework/governance/blob/main/8._Code_of_Conduct.md

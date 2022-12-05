@@ -112,7 +112,10 @@ jobs:
         env:
           BODY: "${{ github.event.pull_request.body }}"
         run: |
-          RELEASE_TAG=$(echo "$BODY" | grep -o -e 'v[0-9].[0-9].[0-9]')
+          # match the first instance of a line with 'label:release vX.Y.Z' with only leading or trailing whitespace.
+          set -euo pipefail
+          # NOTE: grep is not matching if there is a trailing '$' in the pattern for some reason...
+          RELEASE_TAG=$(echo "$BODY" | grep -oe '^[[:blank:]]*#label:release[[:blank:]]*v[0-9]\+\.[0-9]\+\.[0-9]\+\(-rc\.[0-9]\+\)\?[[:blank:]]*' | head -n1 | sed -n 's/^[[:blank:]]*#label:release[[:blank:]]*\([^[:blank:]]*\)[[:blank:]]*/\1/p')
           RELEASE_TAG=${RELEASE_TAG} ./__THIS_REPO__/.github/workflows/scripts/pre-release/references.sh
 
   secure-project-checkout-go:
@@ -286,14 +289,13 @@ jobs:
   generate-builder-generic-no-compile:
     runs-on: ubuntu-latest
     steps:
-      # TODO(github.com/slsa-framework/slsa-github-generator/issues/1163): temporarily disabled
-      # - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # tag=v3.0.2
-      # - uses: ./.github/actions/generate-builder
-      #   with:
-      #     repository: "slsa-framework/slsa-github-generator"
-      #     ref: "refs/tags/v1.2.1"
-      #     compile-builder: false
-      #     go-version: 1.18
-      #     binary: "slsa-generator-generic-linux-amd64"
-      #     directory: "internal/builders/generic"
-      - run: 'echo "Temporarily disabled. See: https://github.com/slsa-framework/slsa-github-generator/issues/1163" '
+      - uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # v3.1.0
+      - uses: ./.github/actions/generate-builder
+        with:
+          repository: "slsa-framework/slsa-github-generator"
+          ref: "refs/tags/v1.2.2"
+          go-version: 1.18
+          binary: "slsa-generator-generic-linux-amd64"
+          directory: "internal/builders/generic"
+          # NOTE: compile-builder explicitly set to false.
+          compile-builder: false

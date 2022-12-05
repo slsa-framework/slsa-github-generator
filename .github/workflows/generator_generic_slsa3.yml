@@ -22,6 +22,10 @@ env:
   BUILDER_BINARY: slsa-generator-generic-linux-amd64 # Name of the binary in the release assets.
   BUILDER_DIR: internal/builders/generic # Source directory if we compile the builder.
 
+defaults:
+  run:
+    shell: bash
+
 on:
   workflow_call:
     inputs:
@@ -30,10 +34,21 @@ on:
         required: true
         type: string
       upload-assets:
-        description: "If true provenance is uploaded to a GitHub release for new tags."
+        description: >
+          If true, provenance is uploaded to a GitHub release for new tags.
+          When the workflow does not run on a new tag, such as on a workflow_dispatch,
+          the `upload-tag-name` argument must be provided as well.
         required: false
         type: boolean
         default: false
+      upload-tag-name:
+        description: >
+          If non-empty and `upload-assets` is set to true, the provenance is uploaded to the GitHub
+          release identified by the tag name. If a workflow is run on a new tag and `upload-tag-name`
+          is non-empty, the new tag is ignored and the value of `upload-tag-name` is used instead to upload
+          the assets.
+        type: string
+        default: ""
       attestation-name:
         description: "The artifact name of the signed provenance. The file must have the intoto.jsonl extension. Defaults to <filename>.intoto.jsonl for single artifact or multiple.intoto.jsonl for multiple artifacts. DEPRECATED: Use provenance-name instead."
         required: false
@@ -52,22 +67,40 @@ on:
         required: false
         type: boolean
         default: false
+      continue-on-error:
+        description: "Prevents a workflow run from failing when a job fails. Set to 'true' to allow a workflow run to pass when a job fails."
+        required: false
+        type: boolean
+        default: false
     outputs:
       release-id:
-        description: "The name of the release where provenance was uploaded."
-        value: ${{ jobs.create-release.outputs.release-id }}
+        description: >
+          The name of the release where provenance was uploaded.
+
+          Note: This value is non-empty only when a release asset is uploaded, according to
+          the values of `upload-assets` and `upload-tag-name`.
+        value: ${{ jobs.upload-assets.outputs.release-id }}
       attestation-name:
         description: "DEPRECATED: use the provenance-name output instead."
         value: ${{ jobs.generator.outputs.provenance-name }}
       provenance-name:
         description: "The artifact name of the signed provenance. (A file with the intoto.jsonl extension)."
         value: ${{ jobs.generator.outputs.provenance-name }}
+      # Note: we use this output because there is no buildt-in `outcome` and `result` is always `success`
+      # if `continue-on-error` is set to `true`.
+      outcome:
+        description: >
+          The outcome status of the run ('success' or 'failure').
+
+          Note: this is only set when `continue-on-error` is `true`.
+        value: ${{ jobs.final.outputs.outcome }}
 
 jobs:
   # detect-env detects the reusable workflow's repository and ref for use later
   # in the workflow.
   detect-env:
     outputs:
+      outcome: ${{ steps.final.outputs.outcome }}
       repository: ${{ steps.detect.outputs.repository }}
       ref: ${{ steps.detect.outputs.ref }}
     runs-on: ubuntu-latest
@@ -76,7 +109,15 @@ jobs:
     steps:
       - name: Detect the generator ref
         id: detect
+        continue-on-error: true
         uses: slsa-framework/slsa-github-generator/.github/actions/detect-workflow@main
+
+      - name: Final outcome
+        id: final
+        env:
+          SUCCESS: ${{ steps.detect.outcome != 'failure' }}
+        run: |
+          echo "outcome=$([ "$SUCCESS" == "true" ] && echo "success" || echo "failure")" >> $GITHUB_OUTPUT
 
   # generator builds the generator binary and runs it to generate SLSA
   # provenance.
@@ -89,6 +130,7 @@ jobs:
   # reference.
   generator:
     outputs:
+      outcome: ${{ steps.final.outputs.outcome }}
       provenance-sha256: ${{ steps.sign-prov.outputs.provenance-sha256 }}
       provenance-name: ${{ steps.sign-prov.outputs.provenance-name }}
     runs-on: ubuntu-latest
@@ -99,6 +141,8 @@ jobs:
       actions: read # Needed to read workflow info.
     steps:
       - name: Generate builder
+        id: generate-builder
+        continue-on-error: true
         uses: slsa-framework/slsa-github-generator/.github/actions/generate-builder@main
         with:
           repository: "${{ needs.detect-env.outputs.repository }}"
@@ -111,7 +155,7 @@ jobs:
 
       - name: Create and sign provenance
         id: sign-prov
-        shell: bash
+        continue-on-error: true
         # NOTE: Inputs and `github` context are set to environment variables in
         # order to avoid script injection.
         # See: https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions#understanding-the-risk-of-script-injections
@@ -142,6 +186,8 @@ jobs:
           "$GITHUB_WORKSPACE/$BUILDER_BINARY" attest --subjects "${UNTRUSTED_SUBJECTS}" -g "$untrusted_provenance_name"
 
       - name: Upload the signed provenance
+        id: upload-prov
+        continue-on-error: true
         uses: actions/upload-artifact@83fd05a356d7e2593de66fc9913b3002723633cb # tag=v3.1.1
         with:
           name: "${{ steps.sign-prov.outputs.provenance-name }}"
@@ -149,18 +195,28 @@ jobs:
           if-no-files-found: error
           retention-days: 5
 
-  # create-release creates a release and uploads provenance to the release if
-  # `upload-assets` is true.
-  create-release:
+      - name: Final outcome
+        id: final
+        env:
+          SUCCESS: ${{ steps.generate-builder.outcome != 'failure' && steps.sign-prov.outcome != 'failure' && steps.upload-prov.outcome != 'failure' }}
+        run: |
+          echo "outcome=$([ "$SUCCESS" == "true" ] && echo "success" || echo "failure")" >> $GITHUB_OUTPUT
+
+  # upload-assets uploads provenance to the release
+  # if `upload-assets` is true.
+  upload-assets:
     outputs:
+      outcome: ${{ steps.final.outputs.outcome }}
       release-id: ${{ steps.release.outputs.id }}
     runs-on: ubuntu-latest
-    needs: [generator, detect-env]
+    needs: [generator]
     permissions:
       contents: write # Needed to write artifacts to a release.
-    if: startsWith(github.ref, 'refs/tags/') && inputs.upload-assets == true
+    if: inputs.upload-assets == true
     steps:
       - name: Checkout builder repository
+        id: checkout-builder
+        continue-on-error: true
         uses: slsa-framework/slsa-github-generator/.github/actions/secure-builder-checkout@main
         with:
           repository: "${{ needs.detect-env.outputs.repository }}"
@@ -168,15 +224,72 @@ jobs:
           path: __BUILDER_CHECKOUT_DIR__
 
       - name: Download the provenance
+        id: download-prov
+        continue-on-error: true
         uses: ./__BUILDER_CHECKOUT_DIR__/.github/actions/secure-download-artifact
         with:
           name: "${{ needs.generator.outputs.provenance-name }}"
           path: "${{ needs.generator.outputs.provenance-name }}"
           sha256: "${{ needs.generator.outputs.provenance-sha256 }}"
 
-      - name: Release
-        uses: softprops/action-gh-release@1e07f4398721186383de40550babbdf2b84acfc5 # tag=v0.1.14
-        id: release
+      - name: Upload provenance new tag
+        uses: softprops/action-gh-release@de2c0eb89ae2a093876385947365aca7b0e5f844 # v0.1.15
+        if: startsWith(github.ref, 'refs/tags/') && inputs.upload-tag-name == ''
+        id: release-new-tags
         with:
           files: |
             ${{ needs.generator.outputs.provenance-name }}
+
+      - name: Upload provenance tag name
+        uses: softprops/action-gh-release@de2c0eb89ae2a093876385947365aca7b0e5f844 # v0.1.15
+        if: inputs.upload-tag-name != ''
+        id: release-tag-name
+        with:
+          tag_name: "${{ inputs.upload-tag-name }}"
+          files: |
+            ${{ needs.generator.outputs.provenance-name }}
+
+      - name: Output release ID
+        shell: bash
+        id: release
+        env:
+          RELEASE_ID_NEW_TAGS: "${{ steps.release-new-tags.outputs.id }}"
+          RELEASE_ID_TAG_NAME: "${{ steps.release-tag-name.outputs.id }}"
+        run: |
+          set -euo pipefail
+          id=""
+          if [[ -n "$RELEASE_ID_NEW_TAGS"]]; then
+            id="$RELEASE_ID_NEW_TAGS"
+          elif [[ -n "$RELEASE_ID_TAG_NAME"]]; then
+            id="$RELEASE_ID_TAG_NAME"
+          else
+            echo "internal error"
+            exit 1
+          fi
+          echo "::set-output name=id::$id"
+
+      - name: Final outcome
+        id: final
+        env:
+          SUCCESS: ${{ steps.checkout-builder.outcome != 'failure' && steps.download-prov.outcome != 'failure' && steps.release.outcome != 'failure' && steps.release-new-tags.outcome != 'failure' && steps.release-tag-name.outcome != 'failure' }}
+        run: |
+          echo "outcome=$([ "$SUCCESS" == "true" ] && echo "success" || echo "failure")" >> $GITHUB_OUTPUT
+
+  # final fails or succeeds based on the value of `inputs.continue-on-error`
+  # and the outcome of previous jobs.
+  final:
+    outputs:
+      outcome: ${{ steps.final.outputs.outcome }}
+    runs-on: ubuntu-latest
+    needs: [detect-env, generator, upload-assets]
+    # Note: always run even if needed jobs are skipped.
+    if: always()
+    steps:
+      - name: Final outcome
+        id: final
+        env:
+          SUCCESS: ${{ needs.detect-env.outputs.outcome != 'failure' && needs.generator.outputs.outcome != 'failure' && needs.upload-assets.outputs.outcome != 'failure' }}
+          CONTINUE: ${{ inputs.continue-on-error }}
+        run: |
+          echo "outcome=$([ "$SUCCESS" == "true" ] && echo "success" || echo "failure")" >> $GITHUB_OUTPUT
+          [ "$CONTINUE" == "true" ] || [ "$SUCCESS" == "true" ] || exit 27
