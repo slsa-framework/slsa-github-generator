@@ -21,6 +21,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 )
 
 // clearEnv clears everything and sets a basic path.
@@ -48,6 +49,14 @@ func clearEnv() func() {
 func TestCommandRunner_StepEnv(t *testing.T) {
 	t.Cleanup(clearEnv())
 
+	// The steps shoud contain the current Environ.
+	t.Setenv("TESTVAR", "VALUE")
+
+	// Set GitHub env var. These shouldn't be output in the provenance.
+	t.Setenv("GITHUB_FOO", "BAR")
+	t.Setenv("RUNNER_HOGE", "FUGA")
+	t.Setenv("CI", "true")
+
 	out := &strings.Builder{}
 	r := CommandRunner{
 		Env: []string{"TEST=hoge"},
@@ -72,15 +81,21 @@ func TestCommandRunner_StepEnv(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	diff := cmp.Diff(steps, []*CommandStep{
-		{
-			Command:    []string{"bash", "-c", "echo -n $TEST"},
-			Env:        []string{"TEST=fuga"},
-			WorkingDir: pwd,
-		},
-	})
-	if diff != "" {
-		t.Fatalf("unexpected result: %v", diff)
+	if len(steps) != 1 {
+		t.Fatalf("unexpected number of steps: %v", len(steps))
+	}
+
+	if diff := cmp.Diff(steps[0].Command, []string{"bash", "-c", "echo -n $TEST"}); diff != "" {
+		t.Fatalf("unexpected command: %v", diff)
+	}
+
+	sorted := cmpopts.SortSlices(func(a, b string) bool { return a < b })
+	if diff := cmp.Diff(steps[0].Env, []string{"TEST=fuga", "TESTVAR=VALUE"}, sorted); diff != "" {
+		t.Fatalf("unexpected env: %v", diff)
+	}
+
+	if diff := cmp.Diff(steps[0].WorkingDir, pwd); diff != "" {
+		t.Fatalf("unexpected working dir: %v", diff)
 	}
 
 	if want, got := "fuga", out.String(); want != got {
@@ -90,6 +105,9 @@ func TestCommandRunner_StepEnv(t *testing.T) {
 
 func TestCommandRunner_RunnerEnv(t *testing.T) {
 	t.Cleanup(clearEnv())
+
+	// The steps shoud contain the current Environ.
+	t.Setenv("TESTVAR", "VALUE")
 
 	// Set GitHub env var. These shouldn't be output in the provenance.
 	t.Setenv("GITHUB_FOO", "BAR")
@@ -120,15 +138,21 @@ func TestCommandRunner_RunnerEnv(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	diff := cmp.Diff(steps, []*CommandStep{
-		{
-			Command:    []string{"bash", "-c", "echo -n $STEP"},
-			Env:        []string{"RUNNER=hoge", "STEP=fuga"},
-			WorkingDir: pwd,
-		},
-	})
-	if diff != "" {
-		t.Fatalf("unexpected result: %v", diff)
+	if len(steps) != 1 {
+		t.Fatalf("unexpected number of steps: %v", len(steps))
+	}
+
+	if diff := cmp.Diff(steps[0].Command, []string{"bash", "-c", "echo -n $STEP"}); diff != "" {
+		t.Fatalf("unexpected command: %v", diff)
+	}
+
+	sorted := cmpopts.SortSlices(func(a, b string) bool { return a < b })
+	if diff := cmp.Diff(steps[0].Env, []string{"RUNNER=hoge", "STEP=fuga", "TESTVAR=VALUE"}, sorted); diff != "" {
+		t.Fatalf("unexpected env: %v", diff)
+	}
+
+	if diff := cmp.Diff(steps[0].WorkingDir, pwd); diff != "" {
+		t.Fatalf("unexpected working dir: %v", diff)
 	}
 
 	if want, got := "fuga", out.String(); want != got {
