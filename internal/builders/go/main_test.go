@@ -7,6 +7,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"regexp"
+	"strings"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -37,6 +38,30 @@ func checkWorkingDir(t *testing.T, wd, expected string) {
 
 	if expectedWd != wd {
 		t.Errorf(cmp.Diff(wd, expectedWd))
+	}
+}
+
+// clearEnv clears everything and sets a basic path.
+func clearEnv() func() {
+	oldEnv := map[string]string{}
+	for _, e := range os.Environ() {
+		k, v, found := strings.Cut(e, "=")
+		if found {
+			_ = os.Unsetenv(k)
+			oldEnv[k] = v
+		}
+	}
+	// Retain the PATH so that the go compiler can be found.
+	os.Setenv("PATH", oldEnv["PATH"])
+	// PWD is required for Go's implementation of os.Getwd
+	os.Setenv("PWD", oldEnv["PWD"])
+
+	return func() {
+		// Make sure PATH is cleared if it wasn't set.
+		os.Unsetenv("PATH")
+		for k, v := range oldEnv {
+			_ = os.Setenv(k, v)
+		}
 	}
 }
 
@@ -273,6 +298,7 @@ func Test_runBuild(t *testing.T) {
 		tt := tt // Re-initializing variable so it is not changed while executing the closure below
 		t.Run(tt.name, func(t *testing.T) {
 			// *** WARNING: do not enable t.Parallel(), because we're writing to  ***.
+			t.Cleanup(clearEnv())
 
 			file, err := os.CreateTemp("", "")
 			if err != nil {

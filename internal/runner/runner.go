@@ -124,16 +124,18 @@ func (r *CommandRunner) runStep(ctx context.Context, step *CommandStep, dry bool
 	// they are environment specific and inhibit reproducibility.
 	// See: https://github.com/slsa-framework/slsa-github-generator/issues/822
 
-	// First set the default environment variables.
-	env := []string{
-		"PWD=" + pwd,
-		"PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
-	}
+	// First set the default environment variables from the builder's environment.
+	env := os.Environ()
+	// Then add common environment variables set on the CommandRunner.
 	env = append(env, r.Env...)
+	// Finally add the build step's environment variables.
 	env = append(env, step.Env...)
+
+	// Set the environment for the command. Duplicates that appear later in the
+	// list override earlier entries. This is enforced by the stdlib exec package.
 	cmd.Env = env
 
-	// Strip common POSIX env vars from provenance.
+	// Common POSIX env vars that should not be included in the provenance.
 	posixVars := map[string]bool{
 		"PATH":   true,
 		"PWD":    true,
@@ -147,10 +149,12 @@ func (r *CommandRunner) runStep(ctx context.Context, step *CommandStep, dry bool
 	// cmd.Environ will dedup and get final environment variables.
 	for _, s := range cmd.Environ() {
 		k, _, _ := strings.Cut(s, "=")
-		// Do not include POSIX environment variables.
-		if !posixVars[k] {
-			finalEnv = append(finalEnv, s)
+		// Do not include POSIX environment variables or default GitHub
+		// environment variables.
+		if posixVars[k] || strings.HasPrefix(k, "GITHUB_") || strings.HasPrefix(k, "RUNNER_") || k == "CI" {
+			continue
 		}
+		finalEnv = append(finalEnv, s)
 	}
 
 	if !dry {

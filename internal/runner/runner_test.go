@@ -23,7 +23,31 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
+// clearEnv clears everything and sets a basic path.
+func clearEnv() func() {
+	oldEnv := map[string]string{}
+	for _, e := range os.Environ() {
+		k, v, found := strings.Cut(e, "=")
+		if found {
+			_ = os.Unsetenv(k)
+			oldEnv[k] = v
+		}
+	}
+	// Set a basic PATH
+	os.Setenv("PATH", "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin")
+	// PWD is required for Go's implementation of os.Getwd
+	os.Setenv("PWD", oldEnv["PWD"])
+
+	return func() {
+		for k, v := range oldEnv {
+			_ = os.Setenv(k, v)
+		}
+	}
+}
+
 func TestCommandRunner_StepEnv(t *testing.T) {
+	t.Cleanup(clearEnv())
+
 	out := &strings.Builder{}
 	r := CommandRunner{
 		Env: []string{"TEST=hoge"},
@@ -65,6 +89,13 @@ func TestCommandRunner_StepEnv(t *testing.T) {
 }
 
 func TestCommandRunner_RunnerEnv(t *testing.T) {
+	t.Cleanup(clearEnv())
+
+	// Set GitHub env var. These shouldn't be output in the provenance.
+	t.Setenv("GITHUB_FOO", "BAR")
+	t.Setenv("RUNNER_HOGE", "FUGA")
+	t.Setenv("CI", "true")
+
 	out := &strings.Builder{}
 	r := CommandRunner{
 		Env: []string{"RUNNER=hoge"},
@@ -106,6 +137,8 @@ func TestCommandRunner_RunnerEnv(t *testing.T) {
 }
 
 func TestCommandRunner_RunnerMulti(t *testing.T) {
+	t.Cleanup(clearEnv())
+
 	out := &strings.Builder{}
 	r := CommandRunner{
 		Steps: []*CommandStep{
