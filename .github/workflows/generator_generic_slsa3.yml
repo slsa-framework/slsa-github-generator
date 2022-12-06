@@ -266,7 +266,7 @@ jobs:
             echo "internal error"
             exit 1
           fi
-          echo "::set-output name=id::$id"
+          echo "id=$id" >> "$GITHUB_OUTPUT"
 
       - name: Final outcome
         id: final
