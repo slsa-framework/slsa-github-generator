@@ -14,6 +14,10 @@ project simply generates provenance as a separate step in an existing workflow.
 
 ---
 
+<!-- markdown-toc --bullets="-" -i README.md -->
+
+<!-- toc -->
+
 - [Benefits of Provenance](#benefits-of-provenance)
 - [Generating Provenance](#generating-provenance)
   - [Getting Started](#getting-started)
@@ -30,6 +34,10 @@ project simply generates provenance as a separate step in an existing workflow.
   - [Cosign](#cosign)
   - [Sigstore policy-controller](#sigstore-policy-controller)
   - [Kyverno](#kyverno)
+- [Known Issues](#known-issues)
+  - [`packages: write` permission required even if not using ghcr.io](#packages-write-permission-required-even-if-not-using-ghcrio)
+
+<!-- tocstop -->
 
 ---
 
@@ -656,3 +664,13 @@ check-slsa-attestations:
     failed to verify signature for ghcr.io/ianlewis/actions-test:v0.0.11: .attestors[0].entries[0].keyless: no matching attestations:
     no certificate found on attestation
 ```
+
+## Known Issues
+
+### `packages: write` permission required even if not using ghcr.io
+
+Due to limitations in how GitHub actions manages permessions on ephemeral tokens
+in reusable workflows, and how cosign uses available credentials, the container
+workflow always requires `packages: write`.
+
+Please see #1257 for details.
