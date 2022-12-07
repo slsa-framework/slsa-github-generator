@@ -263,19 +263,6 @@ func (b *GoBuild) generateCommandEnvVariables() ([]string, error) {
 	return env, nil
 }
 
-// func (b *GoBuild) generateEnvVariables() ([]string, error) {
-// 	env := os.Environ()
-
-// 	cenv, err := b.generateCommandEnvVariables()
-// 	if err != nil {
-// 		return cenv, err
-// 	}
-
-// 	env = append(env, cenv...)
-
-// 	return env, nil
-// }
-
 // SetArgEnvVariables sets static environment variables.
 func (b *GoBuild) SetArgEnvVariables(envs string) error {
 	// Notes:
