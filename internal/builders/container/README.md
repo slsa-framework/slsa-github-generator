@@ -477,22 +477,31 @@ predicate: {
 
 We can then use `cosign` to verify the attestation using the policy.
 
-<!-- TODO(github.com/slsa-framework/slsa-github-generator/issues/492): update example -->
-
 ```shell
-$ COSIGN_EXPERIMENTAL=1 cosign verify-attestation \
+COSIGN_EXPERIMENTAL=1 cosign verify-attestation \
   --type slsaprovenance \
   --policy policy.cue \
-  ghcr.io/ianlewis/actions-test:v0.0.38 > /dev/null
+  ghcr.io/ianlewis/actions-test:v0.0.79
+```
+
+This should result in output like the following:
+
+```
 will be validating against CUE policies: [policy.cue]
 
-Verification for ghcr.io/ianlewis/actions-test:v0.0.38 --
+Verification for ghcr.io/ianlewis/actions-test:v0.0.79 --
 The following checks were performed on each of these signatures:
   - The cosign claims were validated
   - Existence of the claims in the transparency log was verified offline
   - Any certificates were verified against the Fulcio roots.
-Certificate subject:  https://github.com/ianlewis/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@refs/heads/409-feature-add-generic-container-workflow
+Certificate subject:  https://github.com/slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@refs/tags/v1.4.0
 Certificate issuer URL:  https://token.actions.githubusercontent.com
+GitHub Workflow Trigger: push
+GitHub Workflow SHA: 3f938aae461d2a8bc7897ff975e77a876e3d9123
+GitHub Workflow Name: Generic container
+GitHub Workflow Trigger ianlewis/actions-test
+GitHub Workflow Ref: refs/tags/v0.0.79
+{"payloadType":"application/vnd.in-toto+json","payload":"...","signatures":[{"keyid":"","sig":"..."}]}
 ```
 
 You can read more in the [cosign documentation](https://docs.sigstore.dev/cosign/attestation/).
