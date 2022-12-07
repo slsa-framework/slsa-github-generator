@@ -30,6 +30,7 @@ project simply generates provenance as a separate step in an existing workflow.
   - [Provenance Example](#provenance-example)
 - [Integration With Other Build Systems](#integration-with-other-build-systems)
   - [Ko](#ko)
+- [Provenance for matrix strategy builds](#provenance-for-matrix-strategy-builds)
 - [Verification](#verification)
   - [Cosign](#cosign)
   - [Sigstore policy-controller](#sigstore-policy-controller)
@@ -436,6 +437,12 @@ jobs:
     secrets:
       registry-password: ${{ secrets.GITHUB_TOKEN }}
 ```
+
+## Provenance for matrix strategy builds
+
+See the
+[equivalent section](../generic/README.md#provenance-for-matrix-strategy-builds)
+for the generic generator.
 
 ## Verification
 
