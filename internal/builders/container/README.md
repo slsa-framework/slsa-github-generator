@@ -73,7 +73,7 @@ provenance:
   if: startsWith(github.ref, 'refs/tags/')
   uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v1.4.0
   with:
-    image: ${{ needs.build.outputs.tag }}
+    image: ${{ needs.build.outputs.image }}
     digest: ${{ needs.build.outputs.digest }}
     registry-username: ${{ github.actor }}
   secrets:
