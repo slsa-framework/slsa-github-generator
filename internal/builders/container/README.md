@@ -346,8 +346,8 @@ steps:
       # Output the image name and digest so we can generate provenance.
       image=$(echo "${image_and_digest}" | cut -d':' -f1)
       digest=$(echo "${image_and_digest}" | cut -d'@' -f2)
-      echo "::set-output name=image::$image"
-      echo "::set-output name=digest::$digest"
+      echo "image=$image" >> "$GITHUB_OUTPUT"
+      echo "digest=$digest" >> "$GITHUB_OUTPUT"
 ```
 
 3. Call the generic container workflow to generate provenance by declaring the job below:
@@ -414,8 +414,8 @@ jobs:
           # Output the image name and digest so we can generate provenance.
           image=$(echo "${image_and_digest}" | cut -d':' -f1)
           digest=$(echo "${image_and_digest}" | cut -d'@' -f2)
-          echo "::set-output name=image::$image"
-          echo "::set-output name=digest::$digest"
+          echo "image=$image" >> "$GITHUB_OUTPUT"
+          echo "digest=$digest" >> "$GITHUB_OUTPUT"
 
   # This step calls the generic workflow to generate provenance.
   provenance:

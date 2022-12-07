@@ -258,15 +258,15 @@ jobs:
         run: |
           set -euo pipefail
           id=""
-          if [[ -n "$RELEASE_ID_NEW_TAGS"]]; then
+          if [[ -n "$RELEASE_ID_NEW_TAGS" ]]; then
             id="$RELEASE_ID_NEW_TAGS"
-          elif [[ -n "$RELEASE_ID_TAG_NAME"]]; then
+          elif [[ -n "$RELEASE_ID_TAG_NAME" ]]; then
             id="$RELEASE_ID_TAG_NAME"
           else
             echo "internal error"
             exit 1
           fi
-          echo "::set-output name=id::$id"
+          echo "id=$id" >> "$GITHUB_OUTPUT"
 
       - name: Final outcome
         id: final
