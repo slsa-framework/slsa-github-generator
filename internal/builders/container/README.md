@@ -14,7 +14,10 @@ project simply generates provenance as a separate step in an existing workflow.
 
 ---
 
-- [Project Status](#project-status)
+<!-- markdown-toc --bullets="-" -i README.md -->
+
+<!-- toc -->
+
 - [Benefits of Provenance](#benefits-of-provenance)
 - [Generating Provenance](#generating-provenance)
   - [Getting Started](#getting-started)
@@ -22,6 +25,7 @@ project simply generates provenance as a separate step in an existing workflow.
   - [Private Repositories](#private-repositories)
   - [Supported Triggers](#supported-triggers)
   - [Workflow Inputs](#workflow-inputs)
+  - [Workflow Outputs](#workflow-outputs)
   - [Provenance Format](#provenance-format)
   - [Provenance Example](#provenance-example)
 - [Integration With Other Build Systems](#integration-with-other-build-systems)
@@ -31,14 +35,12 @@ project simply generates provenance as a separate step in an existing workflow.
   - [Cosign](#cosign)
   - [Sigstore policy-controller](#sigstore-policy-controller)
   - [Kyverno](#kyverno)
+- [Known Issues](#known-issues)
+  - [`packages: write` permission required even if not using ghcr.io](#packages-write-permission-required-even-if-not-using-ghcrio)
+
+<!-- tocstop -->
 
 ---
-
-## Project Status
-
-This workflow is currently under active development. The API could change while
-approaching an initial release. You can track progress towards General
-Availability via [this milestone](https://github.com/slsa-framework/slsa-github-generator/milestone/3).
 
 ## Benefits of Provenance
 
@@ -207,12 +209,21 @@ Inputs:
 | `registry-username`  | yes      |         | Username to log into the container registry.                                                                                                                                                                                    |
 | `compile-generator`  | false    | false   | Whether to build the generator from source. This increases build time by ~2m.                                                                                                                                                   |
 | `private-repository` | no       | false   | Set to true to opt-in to posting to the public transparency log. Will generate an error if false for private repositories. This input has no effect for public repositories. See [Private Repositories](#private-repositories). |
+| `continue-on-error`  | no       | false   | Set to true to ignore errors. This option is useful if you won't want a failure to fail your entire workflow.                                                                                                                   |
 
 Secrets:
 
 | Name                | Required | Description                                |
 | ------------------- | -------- | ------------------------------------------ |
 | `registry-password` | yes      | Password to log in the container registry. |
+
+### Workflow Outputs
+
+The [container workflow](https://github.com/slsa-framework/slsa-github-generator/blob/main/.github/workflows/generator_container_slsa3.yml) accepts the following outputs:
+
+| Name      | Description                                                                                     |
+| --------- | ----------------------------------------------------------------------------------------------- |
+| `outcome` | If `continue-on-error` is `true`, will contain the outcome of the run (`success` or `failure`). |
 
 ### Provenance Format
 
@@ -337,8 +348,8 @@ steps:
       # Output the image name and digest so we can generate provenance.
       image=$(echo "${image_and_digest}" | cut -d':' -f1)
       digest=$(echo "${image_and_digest}" | cut -d'@' -f2)
-      echo "::set-output name=image::$image"
-      echo "::set-output name=digest::$digest"
+      echo "image=$image" >> "$GITHUB_OUTPUT"
+      echo "digest=$digest" >> "$GITHUB_OUTPUT"
 ```
 
 3. Call the generic container workflow to generate provenance by declaring the job below:
@@ -405,8 +416,8 @@ jobs:
           # Output the image name and digest so we can generate provenance.
           image=$(echo "${image_and_digest}" | cut -d':' -f1)
           digest=$(echo "${image_and_digest}" | cut -d'@' -f2)
-          echo "::set-output name=image::$image"
-          echo "::set-output name=digest::$digest"
+          echo "image=$image" >> "$GITHUB_OUTPUT"
+          echo "digest=$digest" >> "$GITHUB_OUTPUT"
 
   # This step calls the generic workflow to generate provenance.
   provenance:
@@ -473,22 +484,31 @@ predicate: {
 
 We can then use `cosign` to verify the attestation using the policy.
 
-<!-- TODO(github.com/slsa-framework/slsa-github-generator/issues/492): update example -->
-
 ```shell
-$ COSIGN_EXPERIMENTAL=1 cosign verify-attestation \
+COSIGN_EXPERIMENTAL=1 cosign verify-attestation \
   --type slsaprovenance \
   --policy policy.cue \
-  ghcr.io/ianlewis/actions-test:v0.0.38 > /dev/null
+  ghcr.io/ianlewis/actions-test:v0.0.79
+```
+
+This should result in output like the following:
+
+```
 will be validating against CUE policies: [policy.cue]
 
-Verification for ghcr.io/ianlewis/actions-test:v0.0.38 --
+Verification for ghcr.io/ianlewis/actions-test:v0.0.79 --
 The following checks were performed on each of these signatures:
   - The cosign claims were validated
   - Existence of the claims in the transparency log was verified offline
   - Any certificates were verified against the Fulcio roots.
-Certificate subject:  https://github.com/ianlewis/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@refs/heads/409-feature-add-generic-container-workflow
+Certificate subject:  https://github.com/slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@refs/tags/v1.4.0
 Certificate issuer URL:  https://token.actions.githubusercontent.com
+GitHub Workflow Trigger: push
+GitHub Workflow SHA: 3f938aae461d2a8bc7897ff975e77a876e3d9123
+GitHub Workflow Name: Generic container
+GitHub Workflow Trigger ianlewis/actions-test
+GitHub Workflow Ref: refs/tags/v0.0.79
+{"payloadType":"application/vnd.in-toto+json","payload":"...","signatures":[{"keyid":"","sig":"..."}]}
 ```
 
 You can read more in the [cosign documentation](https://docs.sigstore.dev/cosign/attestation/).
@@ -660,3 +680,13 @@ check-slsa-attestations:
     failed to verify signature for ghcr.io/ianlewis/actions-test:v0.0.11: .attestors[0].entries[0].keyless: no matching attestations:
     no certificate found on attestation
 ```
+
+## Known Issues
+
+### `packages: write` permission required even if not using ghcr.io
+
+Due to limitations in how GitHub actions manages permessions on ephemeral tokens
+in reusable workflows, and how cosign uses available credentials, the container
+workflow always requires `packages: write`.
+
+Please see #1257 for details.

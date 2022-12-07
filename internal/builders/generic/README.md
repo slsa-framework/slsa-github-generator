@@ -229,6 +229,7 @@ The [generic workflow](https://github.com/slsa-framework/slsa-github-generator/b
 | `provenance-name`    | no       | "(subject name).intoto.jsonl" if a single subject. "multiple.intoto.json" if multiple subjects. | The artifact name of the signed provenance. The file must have the `intoto.jsonl` extension.                                                                                                                                                                     |
 | `attestation-name`   | no       | "(subject name).intoto.jsonl" if a single subject. "multiple.intoto.json" if multiple subjects. | The artifact name of the signed provenance. The file must have the `intoto.jsonl` extension. DEPRECATED: use `provenance-name` instead.                                                                                                                          |
 | `private-repository` | no       | false                                                                                           | Set to true to opt-in to posting to the public transparency log. Will generate an error if false for private repositories. This input has no effect for public repositories. See [Private Repositories](#private-repositories).                                  |
+| `continue-on-error` | no       | false                                                                                           | Set to true to ignore errors. This option is useful if you won't want a failure to fail your entire workflow.|
 
 ### Workflow Outputs
 
@@ -238,6 +239,7 @@ The [generic workflow](https://github.com/slsa-framework/slsa-github-generator/b
 | ------------------ | -------------------------------------------------------------------------------------- |
 | `provenance-name`  | The artifact name of the signed provenance.                                            |
 | `attestation-name` | The artifact name of the signed provenance. DEPRECATED: use `provenance-name` instead. |
+| `outcome`          | If `continue-on-error` is `true`, will contain the outcome of the run (`success` or `failure`). |
 
 ### Provenance Format
 
@@ -926,9 +928,9 @@ steps indicated in the workflow below:
 ```yaml
 jobs:
   build:
-    name: "Build dists"    
-    runs-on: "ubuntu-latest"    
-    environment:      
+    name: "Build dists"
+    runs-on: "ubuntu-latest"
+    environment:
       name: "publish"
     outputs:
       hashes: ${{ steps.hash.outputs.hashes }}
@@ -938,15 +940,15 @@ jobs:
 
 ```yaml
 steps:
-  - name: "Checkout repository"        
+  - name: "Checkout repository"
     uses: "actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b" # tag=v3
 
-  - name: "Setup Python"        
+  - name: "Setup Python"
     uses: "actions/setup-python@13ae5bb136fac2878aff31522b9efb785519f984" # tag=v4
-    with:  
+    with:
       python-version: "3.x"
 
-  - name: "Install dependencies"        
+  - name: "Install dependencies"
     run: python -m pip install build
 
   - name: Build using python
@@ -960,7 +962,9 @@ steps:
 - name: Generate subject
   id: hash
   run: |
-    cd dist && echo "::set-output name=hashes::$(sha256sum * | base64 -w0)"
+    cd dist
+    HASHES=$(sha256sum * | base64 -w0)
+    echo "hashes=$HASHES" >> "$GITHUB_OUTPUT"
 ```
 
 4. Call the generic workflow to generate provenance by declaring the job below:
@@ -980,22 +984,22 @@ All in all, it will look as the following:
 ```yaml
 jobs:
   build:
-    name: "Build dists"    
-    runs-on: "ubuntu-latest"    
-    environment:      
+    name: "Build dists"
+    runs-on: "ubuntu-latest"
+    environment:
       name: "publish"
     outputs:
       hashes: ${{ steps.hash.outputs.hashes }}
   steps:
-    - name: "Checkout repository"        
+    - name: "Checkout repository"
       uses: "actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b" # tag=v3
 
-    - name: "Setup Python"        
-      uses: "actions/setup-python@13ae5bb136fac2878aff31522b9efb785519f984" # tag=v4       
-      with:  
+    - name: "Setup Python"
+      uses: "actions/setup-python@13ae5bb136fac2878aff31522b9efb785519f984" # tag=v4
+      with:
         python-version: "3.x"
 
-    - name: "Install dependencies"        
+    - name: "Install dependencies"
       run: python -m pip install build
 
     - name: Build using Python
@@ -1006,7 +1010,9 @@ jobs:
     - name: Generate subject
     id: hash
     run: |
-      cd dist && echo "::set-output name=hashes::$(sha256sum * | base64 -w0)"
+      cd dist
+      HASHES=$(sha256sum * | base64 -w0)
+      echo "hashes=$HASHES" >> "$GITHUB_OUTPUT"
 
   provenance:
     needs: [build]
