@@ -14,7 +14,6 @@ project simply generates provenance as a separate step in an existing workflow.
 
 ---
 
-- [Project Status](#project-status)
 - [Benefits of Provenance](#benefits-of-provenance)
 - [Generating Provenance](#generating-provenance)
   - [Getting Started](#getting-started)
@@ -33,12 +32,6 @@ project simply generates provenance as a separate step in an existing workflow.
   - [Kyverno](#kyverno)
 
 ---
-
-## Project Status
-
-This workflow is currently under active development. The API could change while
-approaching an initial release. You can track progress towards General
-Availability via [this milestone](https://github.com/slsa-framework/slsa-github-generator/milestone/3).
 
 ## Benefits of Provenance
 
@@ -207,7 +200,7 @@ Inputs:
 | `registry-username`  | yes      |         | Username to log into the container registry.                                                                                                                                                                                    |
 | `compile-generator`  | false    | false   | Whether to build the generator from source. This increases build time by ~2m.                                                                                                                                                   |
 | `private-repository` | no       | false   | Set to true to opt-in to posting to the public transparency log. Will generate an error if false for private repositories. This input has no effect for public repositories. See [Private Repositories](#private-repositories). |
-| `continue-on-error` | no       | false                                                                                           | Set to true to ignore errors. This option is useful if you won't want a failure to fail your entire workflow. |
+| `continue-on-error`  | no       | false   | Set to true to ignore errors. This option is useful if you won't want a failure to fail your entire workflow.                                                                                                                   |
 
 Secrets:
 
@@ -219,9 +212,9 @@ Secrets:
 
 The [container workflow](https://github.com/slsa-framework/slsa-github-generator/blob/main/.github/workflows/generator_container_slsa3.yml) accepts the following outputs:
 
-| Name               | Description                                                                            |
-| ------------------ | -------------------------------------------------------------------------------------- |
-| `outcome`          | If `continue-on-error` is `true`, will contain the outcome of the run (`success` or `failure`). |
+| Name      | Description                                                                                     |
+| --------- | ----------------------------------------------------------------------------------------------- |
+| `outcome` | If `continue-on-error` is `true`, will contain the outcome of the run (`success` or `failure`). |
 
 ### Provenance Format
 
