@@ -18,7 +18,6 @@ project simply generates provenance as a separate step in an existing workflow.
 
 <!-- toc -->
 
-- [Project Status](#project-status)
 - [Benefits of Provenance](#benefits-of-provenance)
 - [Generating Provenance](#generating-provenance)
   - [Getting Started](#getting-started)
@@ -41,12 +40,6 @@ project simply generates provenance as a separate step in an existing workflow.
 <!-- tocstop -->
 
 ---
-
-## Project Status
-
-This workflow is currently under active development. The API could change while
-approaching an initial release. You can track progress towards General
-Availability via [this milestone](https://github.com/slsa-framework/slsa-github-generator/milestone/3).
 
 ## Benefits of Provenance
 
