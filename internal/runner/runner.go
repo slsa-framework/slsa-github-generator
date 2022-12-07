@@ -118,44 +118,23 @@ func (r *CommandRunner) runStep(ctx context.Context, step *CommandStep, dry bool
 		cmd.Stderr = r.Stderr
 	}
 
-	// Get the environment that will be used as currently configured. Environ
-	// is needed to capture the actual environment used. However, we will not
-	// include posix environment variables in the captured environment variables as
-	// they are environment specific and inhibit reproducibility.
+	// We will copy over environment variables from the builder when executing
+	// the command, However, we won't include the builder's environment
+	// variables into the provenance as they are environment specific and
+	// inhibit reproducibility.
 	// See: https://github.com/slsa-framework/slsa-github-generator/issues/822
 
-	// First set the default environment variables from the builder's environment.
-	env := os.Environ()
-	// Then add common environment variables set on the CommandRunner.
-	env = append(env, r.Env...)
-	// Finally add the build step's environment variables.
-	env = append(env, step.Env...)
+	var userEnv []string
+	userEnv = append(userEnv, r.Env...)
+	userEnv = append(userEnv, step.Env...)
+	userEnv = dedupEnv(userEnv)
+
+	cmdEnv := os.Environ()
+	cmdEnv = append(cmdEnv, userEnv...)
 
 	// Set the environment for the command. Duplicates that appear later in the
 	// list override earlier entries. This is enforced by the stdlib exec package.
-	cmd.Env = env
-
-	// Common POSIX env vars that should not be included in the provenance.
-	posixVars := map[string]bool{
-		"PATH":   true,
-		"PWD":    true,
-		"HOME":   true,
-		"USER":   true,
-		"TERM":   true,
-		"SHELL":  true,
-		"EDITOR": true,
-	}
-	finalEnv := []string{}
-	// cmd.Environ will dedup and get final environment variables.
-	for _, s := range cmd.Environ() {
-		k, _, _ := strings.Cut(s, "=")
-		// Do not include POSIX environment variables or default GitHub
-		// environment variables.
-		if posixVars[k] || strings.HasPrefix(k, "GITHUB_") || strings.HasPrefix(k, "RUNNER_") || k == "CI" {
-			continue
-		}
-		finalEnv = append(finalEnv, s)
-	}
+	cmd.Env = cmdEnv
 
 	if !dry {
 		if err := cmd.Run(); err != nil {
@@ -165,7 +144,20 @@ func (r *CommandRunner) runStep(ctx context.Context, step *CommandStep, dry bool
 
 	return &CommandStep{
 		Command:    append([]string{name}, args...),
-		Env:        finalEnv,
+		Env:        userEnv,
 		WorkingDir: pwd,
 	}, nil
+}
+
+func dedupEnv(env []string) []string {
+	var deduped []string
+	seen := map[string]bool{}
+	for i := len(env) - 1; i >= 0; i-- {
+		k, _, found := strings.Cut(env[i], "=")
+		if found && !seen[k] {
+			deduped = append(deduped, env[i])
+			seen[k] = true
+		}
+	}
+	return deduped
 }
