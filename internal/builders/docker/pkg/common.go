@@ -17,6 +17,7 @@ package pkg
 // This file contains structs for the slsa provenance V1.0, and will be
 // replaced once the format is finalized.
 
+// DockerBasedBuildType is type for container based builds.
 // TODO(#1191): Update to the final BuildType URI.
 const DockerBasedBuildType = "https://slsa.dev/container-based-build/v0.1?draft"
 
