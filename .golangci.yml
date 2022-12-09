@@ -24,7 +24,6 @@ linters:
     # Some linters have been removed because of the go 1.18 issues.
     # https://github.com/golangci/golangci-lint/issues/2649
     - asciicheck
-    - deadcode
     - depguard
     - dogsled
     # TODO(github.com/slsa-framework/slsa-github-generator/issues/450): enable errcheck
@@ -79,7 +78,6 @@ linters:
     - typecheck
     - unconvert
     - unused
-    - varcheck
     - whitespace
     # TODO(github.com/slsa-framework/slsa-github-generator/issues/450): enable thelper
     # - wrapcheck
