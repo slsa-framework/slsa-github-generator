@@ -3,13 +3,14 @@ package github
 import (
 	"context"
 	"encoding/base64"
-	"errors"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"testing"
 	"time"
+
+	"github.com/slsa-framework/slsa-github-generator/internal/errors"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
@@ -70,11 +71,11 @@ func TestToken(t *testing.T) {
 
 	testCases := []struct {
 		name     string
-		audience []string
-		token    *OIDCToken
-		status   int
 		raw      string
 		err      error
+		token    *OIDCToken
+		audience []string
+		status   int
 	}{
 		{
 			name:     "basic token",

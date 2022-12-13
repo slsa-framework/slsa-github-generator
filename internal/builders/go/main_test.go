@@ -48,10 +48,10 @@ func Test_runBuild(t *testing.T) {
 		name       string
 		config     string
 		evalEnvs   string
+		workingDir string
 		err        error
 		commands   []string
 		envs       []string
-		workingDir string
 	}{
 		{
 			name:     "two ldflags",

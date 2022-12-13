@@ -23,8 +23,8 @@ func TestParseSubjects(t *testing.T) {
 	testCases := []struct {
 		name     string
 		str      string
-		expected []intoto.Subject
 		err      error
+		expected []intoto.Subject
 	}{
 		{
 			name: "single",

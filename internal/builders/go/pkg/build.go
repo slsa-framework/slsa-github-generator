@@ -59,9 +59,9 @@ var allowedEnvVariablePrefix = map[string]bool{
 // GoBuild implements building a Go application.
 type GoBuild struct {
 	cfg *GoReleaserConfig
-	goc string
 	// Note: static env variables are contained in cfg.Env.
 	argEnv map[string]string
+	goc    string
 }
 
 // GoBuildNew returns a new GoBuild.
