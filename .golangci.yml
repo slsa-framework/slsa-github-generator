@@ -30,8 +30,7 @@ linters:
     # TODO(github.com/slsa-framework/slsa-github-generator/issues/450): enable errorlint
     # - errorlint
     - exhaustive
-    # TODO(github.com/slsa-framework/slsa-github-generator/issues/450): enable exportloopref
-    # - exportloopref
+    - exportloopref
     # TODO(github.com/slsa-framework/slsa-github-generator/issues/450): enable gci
     # - gci
     - gochecknoinits

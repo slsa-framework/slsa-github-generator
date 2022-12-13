@@ -78,7 +78,8 @@ func (r *Rekor) Upload(ctx context.Context, att signing.Attestation) (signing.Lo
 		return nil, fmt.Errorf("retrieving log uuid by index: %w", err)
 	}
 	var uuid string
-	for ix, entry := range resp.Payload {
+	for ix := range resp.Payload {
+		entry := resp.Payload[ix]
 		if err := cosign.VerifyTLogEntry(ctx, rekorClient, &entry); err != nil {
 			return nil, fmt.Errorf("validating log entry: %w", err)
 		}
