@@ -138,7 +138,7 @@ func Test_VerifyAttestationPath(t *testing.T) {
 	}
 }
 
-func tempWD() (func(), error) {
+func tempWD() (func() error, error) {
 	// Set up a temporary working directory for the test.
 	cwd, err := os.Getwd()
 	if err != nil {
@@ -151,9 +151,11 @@ func tempWD() (func(), error) {
 	if err := os.Chdir(tempwd); err != nil {
 		return nil, err
 	}
-	return func() {
-		os.RemoveAll(tempwd)
-		os.Chdir(cwd)
+	return func() error {
+		if err := os.RemoveAll(tempwd); err != nil {
+			return err
+		}
+		return os.Chdir(cwd)
 	}, nil
 }
 
@@ -197,7 +199,11 @@ func Test_CreateNewFileUnderCurrentDirectory(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			defer cleanup()
+			defer func() {
+				if err := cleanup(); err != nil {
+					t.Fatalf("unexpected error: %v", err)
+				}
+			}()
 
 			if tt.existingPath {
 				if _, err := CreateNewFileUnderCurrentDirectory(tt.path, os.O_WRONLY); err != nil {
