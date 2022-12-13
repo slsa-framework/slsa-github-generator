@@ -1003,7 +1003,8 @@ func Test_generateCommand(t *testing.T) {
 				},
 			}
 
-			for _, cfg := range cfgs {
+			for i := range cfgs {
+				cfg := cfgs[i]
 				c, err := fromConfig(&cfg)
 				if err != nil {
 					t.Errorf("fromConfig: %v", err)
