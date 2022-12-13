@@ -295,7 +295,10 @@ func Test_runBuild(t *testing.T) {
 				return
 			}
 
-			file.Seek(0, 0)
+			ret, err := file.Seek(0, 0)
+			if ret != 0 || err != nil {
+				t.Errorf("seek to zero")
+			}
 			cmd, env, subject, wd, err := extract(file)
 			if err != nil {
 				t.Errorf("extract: %v", err)

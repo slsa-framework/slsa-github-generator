@@ -170,7 +170,12 @@ func Test_attestCmd_default_single_artifact(t *testing.T) {
 	if err := os.Chdir(dir); err != nil {
 		t.Errorf("unexpected failure: %v", err)
 	}
-	defer os.Chdir(currentDir)
+	defer func() {
+		err := os.Chdir(currentDir)
+		if err != nil {
+			t.Errorf("unexpected failure: %v", err)
+		}
+	}()
 
 	c := attestCmd(&slsa.NilClientProvider{}, checkTest(t), &testutil.TestSigner{}, &testutil.TestTransparencyLog{})
 	c.SetOut(new(bytes.Buffer))
@@ -203,7 +208,12 @@ func Test_attestCmd_default_multi_artifact(t *testing.T) {
 	if err := os.Chdir(dir); err != nil {
 		t.Errorf("unexpected failure: %v", err)
 	}
-	defer os.Chdir(currentDir)
+	defer func() {
+		err := os.Chdir(currentDir)
+		if err != nil {
+			t.Errorf("unexpected failure: %v", err)
+		}
+	}()
 
 	c := attestCmd(&slsa.NilClientProvider{}, checkTest(t), &testutil.TestSigner{}, &testutil.TestTransparencyLog{})
 	c.SetOut(new(bytes.Buffer))
@@ -238,7 +248,12 @@ func Test_attestCmd_custom_provenance_name(t *testing.T) {
 	if err := os.Chdir(dir); err != nil {
 		t.Errorf("unexpected failure: %v", err)
 	}
-	defer os.Chdir(currentDir)
+	defer func() {
+		err := os.Chdir(currentDir)
+		if err != nil {
+			t.Errorf("unexpected failure: %v", err)
+		}
+	}()
 
 	c := attestCmd(&slsa.NilClientProvider{}, checkTest(t), &testutil.TestSigner{}, &testutil.TestTransparencyLog{})
 	c.SetOut(new(bytes.Buffer))
@@ -272,7 +287,12 @@ func Test_attestCmd_invalid_extension(t *testing.T) {
 	if err := os.Chdir(dir); err != nil {
 		t.Errorf("unexpected failure: %v", err)
 	}
-	defer os.Chdir(currentDir)
+	defer func() {
+		err := os.Chdir(currentDir)
+		if err != nil {
+			t.Errorf("unexpected failure: %v", err)
+		}
+	}()
 
 	// A custom check function that checks the error type is the expected error type.
 	check := func(err error) {
@@ -316,7 +336,9 @@ func Test_attestCmd_invalid_path(t *testing.T) {
 	if err := os.Chdir(dir); err != nil {
 		t.Errorf("unexpected failure: %v", err)
 	}
-	defer os.Chdir(currentDir)
+	defer func() {
+		err = os.Chdir(currentDir)
+	}()
 
 	// A custom check function that checks the error type is the expected error type.
 	check := func(err error) {
@@ -362,7 +384,12 @@ func Test_attestCmd_subdirectory_artifact(t *testing.T) {
 	if err := os.Chdir(dir); err != nil {
 		t.Errorf("unexpected failure: %v", err)
 	}
-	defer os.Chdir(currentDir)
+	defer func() {
+		err := os.Chdir(currentDir)
+		if err != nil {
+			t.Errorf("unexpected failure: %v", err)
+		}
+	}()
 
 	c := attestCmd(&slsa.NilClientProvider{}, checkTest(t), &testutil.TestSigner{}, &testutil.TestTransparencyLog{})
 	c.SetOut(new(bytes.Buffer))

@@ -153,17 +153,25 @@ func (b *GoBuild) Run(dry bool) error {
 		}
 
 		// Share the resolved name of the binary.
-		github.SetOutput("go-binary-name", filename)
+		err = github.SetOutput("go-binary-name", filename)
+		if err != nil {
+			return err
+		}
 
 		// Share the command used.
-		github.SetOutput("go-command", command)
+		err = github.SetOutput("go-command", command)
+		if err != nil {
+			return err
+		}
 
 		// Share the env variables used.
-		github.SetOutput("go-env", menv)
+		err = github.SetOutput("go-env", menv)
+		if err != nil {
+			return err
+		}
 
 		// Share working directory necessary for issuing the vendoring command.
-		github.SetOutput("go-working-dir", dir)
-		return nil
+		return github.SetOutput("go-working-dir", dir)
 	}
 
 	binary, err := getOutputBinaryPath(os.Getenv("OUTPUT_BINARY"))
