@@ -70,9 +70,9 @@ func Test_getOutputBinaryPath(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
+		expected error
 		name     string
 		path     string
-		expected error
 	}{
 		{
 			name:     "empty output",
@@ -465,52 +465,52 @@ func Test_SetArgEnvVariables(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
-		name     string
-		argEnv   string
 		expected struct {
-			err error
 			env map[string]string
+			err error
 		}
+		name   string
+		argEnv string
 	}{
 		{
 			name:   "valid arg envs",
 			argEnv: "VAR1:value1, VAR2:value2",
 			expected: struct {
-				err error
 				env map[string]string
+				err error
 			}{
-				err: nil,
 				env: map[string]string{"VAR1": "value1", "VAR2": "value2"},
+				err: nil,
 			},
 		},
 		{
 			name:   "empty arg envs",
 			argEnv: "",
 			expected: struct {
-				err error
 				env map[string]string
+				err error
 			}{
-				err: nil,
 				env: map[string]string{},
+				err: nil,
 			},
 		},
 		{
 			name:   "valid arg envs not space",
 			argEnv: "VAR1:value1,VAR2:value2",
 			expected: struct {
-				err error
 				env map[string]string
+				err error
 			}{
-				err: nil,
 				env: map[string]string{"VAR1": "value1", "VAR2": "value2"},
+				err: nil,
 			},
 		},
 		{
 			name:   "invalid arg empty 2 values",
 			argEnv: "VAR1:value1,",
 			expected: struct {
-				err error
 				env map[string]string
+				err error
 			}{
 				err: errorInvalidEnvArgument,
 			},
@@ -519,8 +519,8 @@ func Test_SetArgEnvVariables(t *testing.T) {
 			name:   "invalid arg empty 3 values",
 			argEnv: "VAR1:value1,, VAR3:value3",
 			expected: struct {
-				err error
 				env map[string]string
+				err error
 			}{
 				err: errorInvalidEnvArgument,
 			},
@@ -529,8 +529,8 @@ func Test_SetArgEnvVariables(t *testing.T) {
 			name:   "invalid arg uses equal",
 			argEnv: "VAR1=value1",
 			expected: struct {
-				err error
 				env map[string]string
+				err error
 			}{
 				err: errorInvalidEnvArgument,
 			},
@@ -539,19 +539,19 @@ func Test_SetArgEnvVariables(t *testing.T) {
 			name:   "valid single arg",
 			argEnv: "VAR1:value1",
 			expected: struct {
-				err error
 				env map[string]string
+				err error
 			}{
-				err: nil,
 				env: map[string]string{"VAR1": "value1"},
+				err: nil,
 			},
 		},
 		{
 			name:   "invalid valid single arg with empty",
 			argEnv: "VAR1:value1:",
 			expected: struct {
-				err error
 				env map[string]string
+				err error
 			}{
 				err: errorInvalidEnvArgument,
 			},
@@ -707,12 +707,12 @@ func Test_generateLdflags(t *testing.T) {
 	// t.Parallel()
 
 	tests := []struct {
+		githubEnv  map[string]string
 		name       string
 		argEnv     string
-		inldflags  []string
-		githubEnv  map[string]string
-		err        error
 		outldflags string
+		err        error
+		inldflags  []string
 	}{
 		{
 			name:       "version ldflags",
@@ -879,8 +879,8 @@ func Test_generateFlags(t *testing.T) {
 
 	tests := []struct {
 		name     string
-		flags    []string
 		expected error
+		flags    []string
 	}{
 		{
 			name:     "valid flags",
@@ -1034,18 +1034,18 @@ func asPointer(s string) *string {
 func TestGoBuild_Run(t *testing.T) {
 	type fields struct {
 		cfg    *GoReleaserConfig
-		goc    string
 		argEnv map[string]string
+		goc    string
 	}
 	type args struct {
 		dry bool
 	}
 	tests := []struct {
 		name    string
+		err     error
 		fields  fields
 		args    args
 		wantErr bool
-		err     error
 	}{
 		{
 			name: "dry run valid flags",

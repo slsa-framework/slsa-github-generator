@@ -25,8 +25,8 @@ func Test_MarshalToString(t *testing.T) {
 
 	tests := []struct {
 		name      string
-		variables []string
 		expected  string
+		variables []string
 	}{
 		{
 			name:      "single arg",

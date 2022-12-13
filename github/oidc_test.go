@@ -70,12 +70,12 @@ func TestToken(t *testing.T) {
 	now := time.Date(2022, 4, 14, 12, 24, 0, 0, time.UTC)
 
 	testCases := []struct {
-		name     string
-		audience []string
-		token    *OIDCToken
-		status   int
-		raw      string
-		err      error
+		name     string     // 16
+		raw      string     // 16
+		err      error      // 16
+		token    *OIDCToken // 8
+		audience []string   // 24
+		status   int        // 8
 	}{
 		{
 			name:     "basic token",
