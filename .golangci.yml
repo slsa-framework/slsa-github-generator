@@ -39,8 +39,7 @@ linters:
     - gochecknoinits
     - gocognit
     - goconst
-    # TODO(github.com/slsa-framework/slsa-github-generator/issues/450): enable gocritic
-    # - gocritic
+    - gocritic
     - gocyclo
     - godot
     # TODO(github.com/slsa-framework/slsa-github-generator/issues/450): enable godox
