@@ -15,7 +15,6 @@
 package pkg
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -23,16 +22,8 @@ import (
 
 	"gopkg.in/yaml.v3"
 
+	"github.com/slsa-framework/slsa-github-generator/internal/errors"
 	"github.com/slsa-framework/slsa-github-generator/internal/utils"
-)
-
-var (
-	// ErrorInvalidEnvironmentVariable is an invalid environment variable.
-	ErrorInvalidEnvironmentVariable = errors.New("invalid environment variable")
-	// ErrorUnsupportedVersion is non-supported version.
-	ErrorUnsupportedVersion = errors.New("version not supported")
-	// ErrorInvalidDirectory is an invalid directory.
-	ErrorInvalidDirectory = errors.New("invalid directory")
 )
 
 var supportedVersions = map[int]bool{
@@ -60,6 +51,22 @@ type GoReleaserConfig struct {
 	Flags   []string
 	Ldflags []string
 	Binary  string
+}
+
+// ErrUnsupportedVersion indicates an unsupported GoReleaser version.
+// TODO: Is it fine to have these exported? Or should I refactor ../main_test.go to do a generic error check?
+type ErrUnsupportedVersion struct {
+	errors.WrappableError
+}
+
+// ErrInvalidDirectory indicates an invalid directory.
+type ErrInvalidDirectory struct {
+	errors.WrappableError
+}
+
+// ErrInvalidEnvironmentVariable indicates  an invalid environment variable.
+type ErrInvalidEnvironmentVariable struct {
+	errors.WrappableError
 }
 
 func configFromString(b []byte) (*GoReleaserConfig, error) {
@@ -142,13 +149,12 @@ func validateMain(cf *goReleaserConfigFile) error {
 }
 
 func convertPathError(e error, msg string) error {
-	// TODO(https://github.com/slsa-framework/slsa-github-generator/issues/599): use same error types.
 	if e != nil {
 		var errInternal *utils.ErrInternal
 		var errPath *utils.ErrInvalidPath
 		if errors.As(e, &errInternal) ||
 			errors.As(e, &errPath) {
-			return ErrorInvalidDirectory
+			return &ErrInvalidDirectory{}
 		}
 		return fmt.Errorf("%s: %w", msg, e)
 	}
@@ -158,7 +164,7 @@ func convertPathError(e error, msg string) error {
 func validateVersion(cf *goReleaserConfigFile) error {
 	_, exists := supportedVersions[cf.Version]
 	if !exists {
-		return fmt.Errorf("%w:%d", ErrorUnsupportedVersion, cf.Version)
+		return errors.Errorf(&ErrUnsupportedVersion{}, "version '%d' not supported", cf.Version)
 	}
 
 	return nil
@@ -169,7 +175,7 @@ func (r *GoReleaserConfig) setEnvs(cf *goReleaserConfigFile) error {
 	for _, e := range cf.Env {
 		name, value, present := strings.Cut(e, "=")
 		if !present {
-			return fmt.Errorf("%w: %s", ErrorInvalidEnvironmentVariable, e)
+			return errors.Errorf(&ErrInvalidEnvironmentVariable{}, "'%s' contains no '='", e)
 		}
 		m[name] = value
 	}

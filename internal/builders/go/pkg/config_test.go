@@ -103,32 +103,32 @@ func Test_ConfigFromFile(t *testing.T) {
 		{
 			name: "missing version",
 			path: "./testdata/releaser-noversion.yml",
-			err:  ErrorUnsupportedVersion,
+			err:  &ErrUnsupportedVersion{},
 		},
 		{
 			name: "invalid version",
 			path: "./testdata/releaser-invalid-version.yml",
-			err:  ErrorUnsupportedVersion,
+			err:  &ErrUnsupportedVersion{},
 		},
 		{
 			name: "invalid envs",
 			path: "./testdata/releaser-invalid-envs.yml",
-			err:  ErrorInvalidEnvironmentVariable,
+			err:  &ErrInvalidEnvironmentVariable{},
 		},
 		{
 			name: "invalid main",
 			path: "./testdata/releaser-invalid-main.yml",
-			err:  ErrorInvalidDirectory,
+			err:  &ErrInvalidDirectory{},
 		},
 		{
 			name: "invalid main path",
 			path: "../testdata/releaser-invalid-main.yml",
-			err:  ErrorInvalidDirectory,
+			err:  &ErrInvalidDirectory{},
 		},
 		{
 			name: "invalid dir path",
 			path: "../testdata/releaser-invalid-dir.yml",
-			err:  ErrorInvalidDirectory,
+			err:  &ErrInvalidDirectory{},
 		},
 		{
 			name: "valid dir path",
@@ -163,7 +163,7 @@ func Test_ConfigFromFile(t *testing.T) {
 			name: "invalid config path with dots",
 			// Resolves to "../releaser-valid-dir.yml".
 			path: "./testdata/../testdata/./foo/../../../releaser-valid-dir.yml",
-			err:  ErrorInvalidDirectory,
+			err:  &ErrInvalidDirectory{},
 		},
 	}
 	for _, tt := range tests {

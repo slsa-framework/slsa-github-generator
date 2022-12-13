@@ -237,35 +237,36 @@ func Test_runBuild(t *testing.T) {
 			workingDir: "./valid/path/",
 		},
 		// Below are the same tests we do in pkg/config_test.go
+		// TODO: Do they provide additional value then? Can we remove them instead of exporting errors?
 		{
 			name:   "invalid main",
 			config: "./pkg/testdata/releaser-invalid-main.yml",
-			err:    pkg.ErrorInvalidDirectory,
+			err:    &pkg.ErrInvalidDirectory{},
 		},
 		{
 			name:   "missing version",
 			config: "./pkg/testdata/releaser-noversion.yml",
-			err:    pkg.ErrorUnsupportedVersion,
+			err:    &pkg.ErrUnsupportedVersion{},
 		},
 		{
 			name:   "invalid version",
 			config: "./pkg/testdata/releaser-invalid-version.yml",
-			err:    pkg.ErrorUnsupportedVersion,
+			err:    &pkg.ErrUnsupportedVersion{},
 		},
 		{
 			name:   "invalid envs",
 			config: "./pkg/testdata/releaser-invalid-envs.yml",
-			err:    pkg.ErrorInvalidEnvironmentVariable,
+			err:    &pkg.ErrInvalidEnvironmentVariable{},
 		},
 		{
 			name:   "invalid path",
 			config: "../pkg/testdata/releaser-invalid-main.yml",
-			err:    pkg.ErrorInvalidDirectory,
+			err:    &pkg.ErrInvalidDirectory{},
 		},
 		{
 			name:   "invalid dir path",
 			config: "../pkg/testdata/releaser-invalid-dir.yml",
-			err:    pkg.ErrorInvalidDirectory,
+			err:    &pkg.ErrInvalidDirectory{},
 		},
 	}
 
