@@ -34,7 +34,9 @@ import (
 )
 
 // attestCmd returns the 'attest' command.
-func attestCmd(provider slsa.ClientProvider, check func(error), signer signing.Signer, tlog signing.TransparencyLog) *cobra.Command {
+func attestCmd(provider slsa.ClientProvider, check func(error),
+	signer signing.Signer, tlog signing.TransparencyLog,
+) *cobra.Command {
 	var attPath string
 	var subjects string
 
@@ -128,8 +130,14 @@ run in the context of a Github Actions workflow.`,
 		},
 	}
 
-	c.Flags().StringVarP(&attPath, "signature", "g", "", "Path to write the signed provenance.")
-	c.Flags().StringVarP(&subjects, "subjects", "s", "", "Formatted list of subjects in the same format as sha256sum (base64 encoded).")
+	c.Flags().StringVarP(
+		&attPath, "signature", "g", "",
+		"Path to write the signed provenance.",
+	)
+	c.Flags().StringVarP(
+		&subjects, "subjects", "s", "",
+		"Formatted list of subjects in the same format as sha256sum (base64 encoded).",
+	)
 
 	return c
 }
