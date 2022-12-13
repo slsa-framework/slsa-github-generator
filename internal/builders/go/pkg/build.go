@@ -237,7 +237,8 @@ func (b *GoBuild) getDir() (string, error) {
 }
 
 func (b *GoBuild) generateCommand(flags []string, binary string) []string {
-	command := append(flags, []string{"-o", binary}...)
+	command := flags
+	command = append(command, "-o", binary)
 
 	// Add the entry point.
 	if b.cfg.Main != nil {
