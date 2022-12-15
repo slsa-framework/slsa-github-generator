@@ -37,12 +37,12 @@ type BuildDefinition struct {
 	// MAY be necessary for reproducing the build.
 	//
 	// OPTIONAL.
-	SystemParameters ParameterCollection `json:"systemParameters"`
+	SystemParameters ParameterCollection `json:"systemParameters,omitempty"`
 
 	// Resolved dependencies needed at build time.
 	//
 	// OPTIONAL.
-	ResolvedDependencies []ArtifactReference `json:"resolvedDependencies"`
+	ResolvedDependencies []ArtifactReference `json:"resolvedDependencies,omitempty"`
 }
 
 // ParameterCollection is a collection of parameters that appear in a build definition.
@@ -52,11 +52,11 @@ type ParameterCollection struct {
 	//
 	// The key is a name whose interpretation depends on `buildType`. If there is
 	// only one input, it SHOULD be named "source".
-	Artifacts map[string]ArtifactReference `json:"artifacts"`
+	Artifacts map[string]ArtifactReference `json:"artifacts,omitempty"`
 
 	// Other parameters that are not artifact references. Like `artifacts`, the
 	// key is a name whose interpretation depends on `buildType`.
-	Values map[string]string `json:"values"`
+	Values map[string]string `json:"values,omitempty"`
 }
 
 // ArtifactReference contains details about an artifact.
@@ -81,7 +81,7 @@ type ArtifactReference struct {
 	// Example: `PyYAML-6.0.tar.gz`
 	//
 	// OPTIONAL.
-	LocalName string `json:"localName"`
+	LocalName string `json:"localName,omitempty"`
 
 	// [URI] identifying the location that this artifact was downloaded from, if
 	// different and not derivable from `uri`.
@@ -89,10 +89,10 @@ type ArtifactReference struct {
 	// Example: `https://files.pythonhosted.org/packages/36/2b/61d51a2c4f25ef062ae3f74576b01638bebad5e045f747ff12643df63844/PyYAML-6.0.tar.gz`
 	//
 	// OPTIONAL.
-	DownloadLocation string `json:"downloadLocation"`
+	DownloadLocation string `json:"downloadLocation,omitempty"`
 
 	// [Media Type] (aka MIME type) of this artifact.
 	//
 	// OPTIONAL.
-	MediaType string `json:"mediaType"`
+	MediaType string `json:"mediaType,omitempty"`
 }
