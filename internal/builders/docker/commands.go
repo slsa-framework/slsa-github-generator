@@ -27,7 +27,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// DryRunCmd validates the input flags, generates a BuildDefinition from them.
+// DryRunCmd validates the input flags, and generates a BuildDefinition from,
+// them, or terminates with an error.
 func DryRunCmd(check func(error)) *cobra.Command {
 	io := &pkg.InputOptions{}
 	var buildDefinitionPath string
@@ -38,10 +39,8 @@ func DryRunCmd(check func(error)) *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			config, err := pkg.NewDockerBuildConfig(io)
 			check(err)
-			log.Printf("The config is: %v\n", config)
 
-			// TODO(#1191): Create an instance of BuildDefinition from config.
-			bd := &pkg.BuildDefinition{}
+			bd := pkg.CreateBuildDefinition(config)
 			check(writeBuildDefinitionToFile(*bd, buildDefinitionPath))
 		},
 	}
@@ -76,12 +75,18 @@ func BuildCmd(check func(error)) *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			config, err := pkg.NewDockerBuildConfig(io)
 			check(err)
-			log.Printf("The config is: %v\n", config)
 
-			// TODO(#1191): Set up build state using config, and build the artifact.
-			artifacts := "To be implemented"
+			db, err := pkg.SetUpBuildState(config)
+			check(err)
+			artifacts, err := db.BuildArtifact()
+			check(err)
 			log.Printf("Generated artifacts are: %v\n", artifacts)
-			// TODO(#1191): Write subjects to file.
+			if db.RepoInfo.RepoRoot != "" {
+				// If the repo was checked out by the tool into a temporary
+				// directory, remove the files and the directory.
+				db.RepoInfo.Cleanup()
+			}
+			// TODO(#1191): Write subjects to a file.
 		},
 	}
 
