@@ -52,7 +52,7 @@ func Test_BuildDefinition(t *testing.T) {
 		},
 	}
 
-	if !cmp.Equal(got, want) {
-		t.Errorf(cmp.Diff(got, want))
+	if diff := cmp.Diff(got, want); diff != "" {
+		t.Errorf(diff)
 	}
 }
