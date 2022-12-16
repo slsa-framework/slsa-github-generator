@@ -25,12 +25,14 @@ const DockerBasedBuildType = "https://slsa.dev/container-based-build/v0.1?draft"
 type BuildDefinition struct {
 	// BuildType indicates how to unambiguously interpret this BuildDefinition.
 	BuildType string `json:"buildType"`
+
 	// The set of top-level external inputs to the build. This SHOULD contain all
 	// the information necessary and sufficient to initialize the build and begin
 	// execution. "Top-level" means that it is not derived from another input.
 	//
 	// REQUIRED for SLSA Build L1.
 	ExternalParameters ParameterCollection `json:"externalParameters"`
+	
 	// Parameters of the build environment that were provided by the `builder` and
 	// not under external control. The primary intention of this field is for
 	// debugging, incident response, and vulnerability management. The values here
