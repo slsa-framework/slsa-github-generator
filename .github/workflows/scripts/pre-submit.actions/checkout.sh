@@ -18,7 +18,7 @@ results=$(
         --exclude-dir='secure-project-checkout' \
         --exclude-dir='secure-builder-checkout' \
         -e 'uses: *actions/checkout' \
-        .github/actions/* || true
+        .github/actions/* actions/* || true
 )
 if [[ "$results" != "" ]]; then
     echo "Some Actions are using 'actions/checkout'"
