@@ -111,7 +111,7 @@ jobs:
         run: |
           set -euo pipefail
 
-          echo "Got output: $RAW_SLSA_TOKEN"
+          echo "RAW_SLSA_TOKEN: $RAW_SLSA_TOKEN"
           [[ "$RAW_SLSA_TOKEN" != "" ]]
           decoded_token=$(echo $RAW_SLSA_TOKEN | base64 -d)
           echo "$decoded_token"
