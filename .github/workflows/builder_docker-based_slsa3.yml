@@ -345,7 +345,7 @@ jobs:
           mkdir attestations
           echo "{}" > attestations/attestation1.json
           echo "{}" > attestations/attestation2.json
-          echo "output-folder=attestations/" >> $GITHUB_OUTPUT
+          echo "output-folder=attestations" >> $GITHUB_OUTPUT
 
       - name: Upload unsigned intoto attestations file for pull request
         if: ${{ github.event_name == 'pull_request' }}
