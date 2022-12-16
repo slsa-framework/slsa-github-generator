@@ -186,7 +186,7 @@ jobs:
           {
             "buildType": "https://slsa.dev/container-based-build/v0.1?draft",
             "externalParameters": {
-                "artifacts": { 
+                "artifacts": {
                   "source": {
                     "uri": "git+https://github.com/${SOURCE_REPOSITORY}@${SOURCE_DIGEST}",
                     "digest": { "$SOURCE_ALG": "$SOURCE_DIGEST" }
