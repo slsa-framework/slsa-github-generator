@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        action: [compute-sha256, privacy-check]
+        action: [compute-sha256, privacy-check, setup-token]
     steps:
       - uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b # v3.2.0
 
@@ -92,6 +92,26 @@ jobs:
         run: |
           echo "Got output: $OUTPUT"
           [[ "$OUTPUT" != "" ]]
+
+  setup-token:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # tag=v3.1.0
+      - id: setup
+        uses: ./actions/setup-token
+        with:
+          slsa-workflow-recipient: "delegated_generic_slsa3.yml"
+          slsa-private-repository: true
+          slsa-build-artifacts-action-path: ""./actions/build-artifacts-composite"
+          slsa-runner-label: "ubuntu-latest"
+          # NOTE: the `slsa-workflow-inputs` is stringified by GitHub automatically when the caller uses ${{ inputs }},
+          # so we replicate this behavior in the test.
+          slsa-workflow-inputs: "{\n  \"name1\": \"value1\",\n  \"name2\": \"value2\",\n  \"private-repository\": true\n}"
+      - env:
+          SLSA_TOKEN: ${{ steps.setup.outputs.slsa-token }}
+        run: |
+          echo "Got output: $SLSA_TOKEN"
+          [[ "$SLSA_TOKEN" != "eyJ2ZXJzaW9uIjoxLCJjb250ZXh0IjoiU0xTQSBpbnRlZ3JhdGlvbiBmcmFtZXdvcmsiLCJidWlsZGVyIjp7InByaXZhdGUtcmVwb3NpdG9yeSI6dHJ1ZSwicnVubmVyLWxhYmVsIjoidWJ1bnR1LWxhdGVzdCIsImF1ZGllbmNlIjoiZGVsZWdhdGVkX2dlbmVyaWNfc2xzYTMueW1sIn0sImdpdGh1YiI6eyJjb250ZXh0Ijp7InBheWxvYWQiOnt9LCJydW5OdW1iZXIiOm51bGwsInJ1bklkIjpudWxsLCJhcGlVcmwiOiJodHRwczovL2FwaS5naXRodWIuY29tIiwic2VydmVyVXJsIjoiaHR0cHM6Ly9naXRodWIuY29tIiwiZ3JhcGhxbFVybCI6Imh0dHBzOi8vYXBpLmdpdGh1Yi5jb20vZ3JhcGhxbCJ9fSwidG9vbCI6eyJhY3Rpb25zIjp7ImJ1aWxkLWFydGlmYWN0cyI6eyJwYXRoIjoiLi9hY3Rpb25zL2J1aWxkLWFydGlmYWN0cy1jb21wb3NpdGUifX0sImlucHV0cyI6eyJuYW1lMSI6InZhbHVlMSIsIm5hbWUyIjoidmFsdWUyIiwicHJpdmF0ZS1yZXBvc2l0b3J5Ijp0cnVlfX19" ]]
 
   references:
     runs-on: ubuntu-latest

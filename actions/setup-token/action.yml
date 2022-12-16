@@ -1,0 +1,96 @@
+name: setup token
+
+description: 'setup token'
+
+inputs:
+  slsa-workflow-recipient:
+    description: > 
+      The workflow filename that this token is intended for.
+
+      Example: delegator_generic_slsa3.yml
+    type: string
+    required: true
+
+  slsa-private-repository:
+    description: "If true, private repositories can post to the public transparency log."
+    required: false
+    type: boolean
+    default: false
+
+  slsa-build-artifacts-action-path:
+    description: >
+      The action path to invoke, from the root of the repository.
+      
+      Example: ./actions/build-artifacts'
+    type: string
+    required: true
+
+  slsa-runner-label:
+    description: >
+      The runner label to run the callback Action (`slsa-build-artifacts-action-path`) on.
+    type: choice
+    options: 
+        - ubuntu-latest
+    required: true
+
+  slsa-workflow-inputs:
+    description: >
+      The inputs to the Tool Reusable Workflow (TRW). The inputs
+      will be recorded in the provenance as the builder's inputs.
+
+      Note: The TRW is the reusable workflow calling this Action.
+    type: string
+    required: true
+
+outputs:
+  slsa-token:
+    description: 'SLSA token'
+    value: ${{ steps.sign.outputs.slsa-signed-token }}
+
+runs:
+  using: 'composite'
+  steps:
+      - name: Checkout the builder
+        uses: slsa-framework/slsa-github-generator/.github/actions/secure-builder-checkout@main
+        with:
+          # NOTE: These are always the same as the pin above.
+          repository: ${{ github.action_repository }}
+          ref: ${{ github.action_ref }}
+
+      - uses: actions/setup-node@8c91899e586c5b171469028077307d293428b516 # tag=v3.5.1
+        with:
+          node-version: 16
+
+      - name: Debug
+        shell: bash
+        env:
+          INPUTS: ${{ toJson(inputs) }}
+          WORKFLOW_INPUTS: ${{ toJson(fromJson(inputs.slsa-workflow-inputs)) }}
+        run: |
+          echo "inputs=$INPUTS"
+          echo "workflow-inputs=$WORKFLOW_INPUTS"
+
+      - name: Generate unsigned token
+        id: generate
+        shell: bash
+        working-directory: ./__BUILDER_CHECKOUT_DIR__/actions/setup-token
+        env:
+          ACTION_INPUTS: ${{ toJson(inputs) }}
+        run: ./bin/setup-token.js
+      
+      - name: Debug
+        shell: bash
+        env:
+          REPO: ${{ github.action_repository }}
+          REF: ${{ github.action_ref }}
+        run: |
+          echo "repo: $REPO"
+          echo "ref: $REF"
+          echo "token: ${{ steps.generate.outputs.base64-slsa-token }}"
+          echo "recipient: ${{ inputs.slsa-workflow-recipient }}"
+
+      - name: Sign the token
+        id: sign
+        uses: ./__BUILDER_CHECKOUT_DIR__/.github/actions/sign-token
+        with:
+          slsa-raw-token: ${{ steps.generate.outputs.base64-slsa-token }}
