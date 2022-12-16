@@ -97,25 +97,23 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # tag=v3.1.0
+      - id: generate-inputs
+        run: |
+          action_inputs="$(cat ./actions/setup-token/ACTION_INPUTS.txt | jq -c)"
+          echo "action_inputs=$action_inputs" >> "$GITHUB_OUTPUT"
       - id: setup
-        uses: ./actions/setup-token
-        with:
-          slsa-workflow-recipient: "delegated_generic_slsa3.yml"
-          slsa-private-repository: true
-          slsa-build-artifacts-action-path: "./actions/build-artifacts-composite"
-          slsa-runner-label: "ubuntu-latest"
-          # NOTE: the `slsa-workflow-inputs` is stringified by GitHub automatically when the caller uses ${{ inputs }},
-          # so we replicate this behavior in the test.
-          slsa-workflow-inputs: "{\n  \"name1\": \"value1\",\n  \"name2\": \"value2\",\n  \"private-repository\": true\n}"
+        env:
+          ACTION_INPUTS: ${{ toJson(steps.generate-inputs.outputs.action_inputs) }}
+        run: ./actions/setup-token/bin/setup-token.js
       - env:
-          SLSA_TOKEN: ${{ steps.setup.outputs.slsa-token }}
+          RAW_SLSA_TOKEN: ${{ steps.setup.outputs.slsa-token }}
           CONTEXT: ${{ github.context }}
         run: |
           set -euo pipefail
 
-          echo "Got output: $SLSA_TOKEN"
-          [[ "$SLSA_TOKEN" != "" ]]
-          decoded_token=$(echo $SLSA_TOKEN | base64 -d)
+          echo "Got output: $RAW_SLSA_TOKEN"
+          [[ "$RAW_SLSA_TOKEN" != "" ]]
+          decoded_token=$(echo $RAW_SLSA_TOKEN | base64 -d)
           echo "$decoded_token"
 
           audience=$(echo $decoded_token | jq -r '.builder.audience')
@@ -131,7 +129,6 @@ jobs:
           [[ "$action_path" == "./actions/build-artifacts-composite" ]] && \
           [[ "$inputs" == "{\"name1\":\"value1\",\"name2\":\"value2\",\"private-repository\":true}\" ]] && \
           [[ "$gh_context" == "$CONTEXT" ]]
-          
 
   references:
     runs-on: ubuntu-latest

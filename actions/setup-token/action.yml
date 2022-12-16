@@ -92,9 +92,7 @@ runs:
       - name: Sign the token
         id: sign
         bash: shell
-        run: |
-          echo "base64-slsa-token=abcdefg" >> "$GITHUB_OUTPUT"
-        # TODO: enable when the sign-token Action is merged.
-        # uses: ./__BUILDER_CHECKOUT_DIR__/.github/actions/sign-token
-        #with:
-        #  slsa-raw-token: ${{ steps.generate.outputs.base64-slsa-token }}
+        TODO: enable when the sign-token Action is merged.
+        uses: ./__BUILDER_CHECKOUT_DIR__/.github/actions/sign-token
+        with:
+         slsa-raw-token: ${{ steps.generate.outputs.base64-slsa-token }}
