@@ -32,7 +32,7 @@ type BuildDefinition struct {
 	//
 	// REQUIRED for SLSA Build L1.
 	ExternalParameters ParameterCollection `json:"externalParameters"`
-	
+
 	// Parameters of the build environment that were provided by the `builder` and
 	// not under external control. The primary intention of this field is for
 	// debugging, incident response, and vulnerability management. The values here
