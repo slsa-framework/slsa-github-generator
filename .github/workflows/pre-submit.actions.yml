@@ -102,18 +102,36 @@ jobs:
         with:
           slsa-workflow-recipient: "delegated_generic_slsa3.yml"
           slsa-private-repository: true
-          slsa-build-artifacts-action-path: ""./actions/build-artifacts-composite"
+          slsa-build-artifacts-action-path: "./actions/build-artifacts-composite"
           slsa-runner-label: "ubuntu-latest"
           # NOTE: the `slsa-workflow-inputs` is stringified by GitHub automatically when the caller uses ${{ inputs }},
           # so we replicate this behavior in the test.
           slsa-workflow-inputs: "{\n  \"name1\": \"value1\",\n  \"name2\": \"value2\",\n  \"private-repository\": true\n}"
       - env:
           SLSA_TOKEN: ${{ steps.setup.outputs.slsa-token }}
+          CONTEXT: ${{ github.context }}
         run: |
+          set -euo pipefail
+
           echo "Got output: $SLSA_TOKEN"
           [[ "$SLSA_TOKEN" != "" ]]
-          decoded_token=$(echo $SLSA_TOKEN | base64 -d | jq -c)
+          decoded_token=$(echo $SLSA_TOKEN | base64 -d)
           echo "$decoded_token"
+
+          audience=$(echo $decoded_token | jq -r '.builder.audience')
+          runner_label=$(echo $decoded_token | jq -r '.builder."runner-label"')
+          private_repository=$(echo $decoded_token | jq -r '.builder."private-repository"')
+          action_path=$(echo $decoded_token | jq -r '.tool.actions."build-artifacts".path')
+          inputs=$(echo $decoded_token | jq -r '.tool.inputs' -c)
+          gh_context=$(echo $decoded_token | jq -r '.github.context')
+
+          [[ "$audience" == "delegated_generic_slsa3.yml" ]] && \
+          [[ "$runner_label" == "ubuntu-latest" ]] && \
+          [[ "$private_repository" == "true" ]] && \
+          [[ "$action_path" == "./actions/build-artifacts-composite" ]] && \
+          [[ "$inputs" == "{\"name1\":\"value1\",\"name2\":\"value2\",\"private-repository\":true}\" ]] && \
+          [[ "$gh_context" == "$CONTEXT" ]]
+          
 
   references:
     runs-on: ubuntu-latest
