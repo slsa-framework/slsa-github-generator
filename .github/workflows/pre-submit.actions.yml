@@ -12,7 +12,7 @@ jobs:
     name: verify no checkout in Actions
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # tag=v3.1.0
+      - uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b # v3.2.0
       - run: ./.github/workflows/scripts/pre-submit.actions/checkout.sh
 
   check-dist-matrix:
@@ -21,7 +21,7 @@ jobs:
       matrix:
         action: [compute-sha256, privacy-check]
     steps:
-      - uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # tag=v3.1.0
+      - uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b # v3.2.0
 
       - name: Set Node.js 16
         uses: actions/setup-node@8c91899e586c5b171469028077307d293428b516 # tag=v3.5.1
@@ -67,7 +67,7 @@ jobs:
   compute-sha256:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # tag=v3.1.0
+      - uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b # v3.2.0
       - run: |
           echo "foo" > artifact
       - id: compute-sha256
@@ -82,7 +82,7 @@ jobs:
   rng:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # tag=v3.1.0
+      - uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b # v3.2.0
       - run: |
           echo "foo" > artifact
       - id: rng
@@ -96,10 +96,10 @@ jobs:
   references:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # tag=v3.1.0
+      - uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b # v3.2.0
         with:
           path: __THIS_REPO__
-      - uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # tag=v3.1.0
+      - uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b # v3.2.0
         with:
           repository: slsa-framework/example-package
           ref: main
@@ -121,7 +121,7 @@ jobs:
   secure-project-checkout-go:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # tag=v3.1.0
+      - uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b # v3.2.0
         with:
           path: __BUILDER_CHECKOUT_DIR__
 
@@ -134,7 +134,7 @@ jobs:
   secure-project-checkout-node:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # tag=v3.1.0
+      - uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b # v3.2.0
         with:
           path: __BUILDER_CHECKOUT_DIR__
 
@@ -147,7 +147,7 @@ jobs:
   secure-download-artifact:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # tag=v3.1.0
+      - uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b # v3.2.0
         with:
           path: __BUILDER_CHECKOUT_DIR__
 
@@ -174,7 +174,7 @@ jobs:
   secure-download-artifact-builder-name:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # tag=v3.1.0
+      - uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b # v3.2.0
         with:
           path: __BUILDER_CHECKOUT_DIR__
 
@@ -207,7 +207,7 @@ jobs:
   secure-download-artifact-builder-repo-folder:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # tag=v3.1.0
+      - uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b # v3.2.0
         with:
           path: __BUILDER_CHECKOUT_DIR__
 
@@ -241,7 +241,7 @@ jobs:
   secure-download-artifact-builder-repo-file:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # tag=v3.1.0
+      - uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b # v3.2.0
         with:
           path: __BUILDER_CHECKOUT_DIR__
 
@@ -275,7 +275,7 @@ jobs:
   generate-builder-generic-compile:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # tag=v3.1.0
+      - uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b # v3.2.0
       - uses: ./.github/actions/generate-builder
         with:
           repository: "slsa-framework/slsa-github-generator"
@@ -289,7 +289,7 @@ jobs:
   generate-builder-generic-no-compile:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # v3.1.0
+      - uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b # v3.2.0
       - uses: ./.github/actions/generate-builder
         with:
           repository: "slsa-framework/slsa-github-generator"
