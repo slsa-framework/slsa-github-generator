@@ -53,7 +53,7 @@ runs:
       - name: Checkout the builder
         uses: slsa-framework/slsa-github-generator/.github/actions/secure-builder-checkout@main
         with:
-          # NOTE: These are always the same as the pin above.
+          # NOTE: These are always the same as the `@ref` above.
           repository: ${{ github.action_repository }}
           ref: ${{ github.action_ref }}
 
@@ -91,6 +91,10 @@ runs:
 
       - name: Sign the token
         id: sign
-        uses: ./__BUILDER_CHECKOUT_DIR__/.github/actions/sign-token
-        with:
-          slsa-raw-token: ${{ steps.generate.outputs.base64-slsa-token }}
+        bash: shell
+        run: |
+          echo "base64-slsa-token=abcdefg" >> "$GITHUB_OUTPUT"
+        # TODO: enable when the sign-token Action is merged.
+        # uses: ./__BUILDER_CHECKOUT_DIR__/.github/actions/sign-token
+        #with:
+        #  slsa-raw-token: ${{ steps.generate.outputs.base64-slsa-token }}

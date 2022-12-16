@@ -111,7 +111,9 @@ jobs:
           SLSA_TOKEN: ${{ steps.setup.outputs.slsa-token }}
         run: |
           echo "Got output: $SLSA_TOKEN"
-          [[ "$SLSA_TOKEN" != "eyJ2ZXJzaW9uIjoxLCJjb250ZXh0IjoiU0xTQSBpbnRlZ3JhdGlvbiBmcmFtZXdvcmsiLCJidWlsZGVyIjp7InByaXZhdGUtcmVwb3NpdG9yeSI6dHJ1ZSwicnVubmVyLWxhYmVsIjoidWJ1bnR1LWxhdGVzdCIsImF1ZGllbmNlIjoiZGVsZWdhdGVkX2dlbmVyaWNfc2xzYTMueW1sIn0sImdpdGh1YiI6eyJjb250ZXh0Ijp7InBheWxvYWQiOnt9LCJydW5OdW1iZXIiOm51bGwsInJ1bklkIjpudWxsLCJhcGlVcmwiOiJodHRwczovL2FwaS5naXRodWIuY29tIiwic2VydmVyVXJsIjoiaHR0cHM6Ly9naXRodWIuY29tIiwiZ3JhcGhxbFVybCI6Imh0dHBzOi8vYXBpLmdpdGh1Yi5jb20vZ3JhcGhxbCJ9fSwidG9vbCI6eyJhY3Rpb25zIjp7ImJ1aWxkLWFydGlmYWN0cyI6eyJwYXRoIjoiLi9hY3Rpb25zL2J1aWxkLWFydGlmYWN0cy1jb21wb3NpdGUifX0sImlucHV0cyI6eyJuYW1lMSI6InZhbHVlMSIsIm5hbWUyIjoidmFsdWUyIiwicHJpdmF0ZS1yZXBvc2l0b3J5Ijp0cnVlfX19" ]]
+          [[ "$SLSA_TOKEN" != "" ]]
+          decoded_token=$(echo $SLSA_TOKEN | base64 -d | jq -c)
+          echo "$decoded_token"
 
   references:
     runs-on: ubuntu-latest
