@@ -186,24 +186,20 @@ jobs:
           {
             "buildType": "https://slsa.dev/container-based-build/v0.1?draft",
             "externalParameters": {
-                "source": {
-                    "artifact": {
-                        "uri": "git+https://github.com/${SOURCE_REPOSITORY}@${SOURCE_DIGEST}",
-                        "digest": { "$SOURCE_ALG": "$SOURCE_DIGEST" }
-                    }
+                "artifacts": { 
+                  "source": {
+                    "uri": "git+https://github.com/${SOURCE_REPOSITORY}@${SOURCE_DIGEST}",
+                    "digest": { "$SOURCE_ALG": "$SOURCE_DIGEST" }
+                  },
+                  "builderImage": {
+                    "uri": "${BUILDER_IMAGE}",
+                    "digest": { "$IMAGE_ALG": "$IMAGE_DIGEST" }
+                  }
                 },
-                "buildImage": {
-                    "artifact": {
-                        "uri": "${BUILDER_IMAGE}",
-                        "digest": { "$IMAGE_ALG": "$IMAGE_DIGEST" }
-                    }
-                },
-                "configFile": {
-                    "value": "${CONFIG_PATH}"
+                "values": {
+                  "configFile": "${CONFIG_PATH}"
                 }
             },
-            "systemParameters": null,
-            "resolvedDependencies": null
           }
           EOF
 
