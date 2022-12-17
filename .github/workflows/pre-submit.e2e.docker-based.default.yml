@@ -1,0 +1,25 @@
+name: pre-submit e2e docker-based default
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions: read-all
+
+env:
+  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+jobs:
+  build:
+    permissions:
+      id-token: write # For signing.
+      contents: write # For asset uploads.
+      actions: read # For reading workflow info.
+    uses: ./.github/workflows/builder_docker-based_slsa3.yml
+    with:
+      source-repository: "bcoe/slsa-on-github-test"
+      source-digest: "sha1:167d361e9831e9b13f1283e2014d0cb0c6fa65f6817790597df7ee488883fb03"
+      builder-image: "pkg:oci/builder-image?repository_url=gcr.io"
+      builder-digest: "sha256:7d8e3642927faefa5e907ab011001dbc1fca9a3e28c99d7bd97ff6c50ff6c42b"
+      config-path: "path/to/config.toml"
