@@ -19,7 +19,10 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        action: [compute-sha256, privacy-check]
+        action: 
+          - .github/actions/compute-sha256
+          - .github/actions/privacy-check
+          - ./actions/setup-token
     steps:
       - uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b # v3.2.0
 
@@ -29,11 +32,11 @@ jobs:
           node-version: 16
 
       - name: Rebuild the dist/ directory
-        working-directory: .github/actions/${{ matrix.action }}
+        working-directory: ${{ matrix.action }}
         run: make package
 
       - name: Compare the expected and actual dist/ directories
-        working-directory: .github/actions/${{ matrix.action }}
+        working-directory: ${{ matrix.action }}
         id: diff
         run: |
           set -euo pipefail
@@ -58,55 +61,6 @@ jobs:
     env:
       CHECKOUT_RESULT: ${{ needs.checkout.result }}
       CHECK_DIST_RESULT: ${{ needs.check-dist-matrix.result }}
-    steps:
-      - run: |
-          set -euo pipefail
-          # exit 0 if checks were successful.
-          [ "${CHECK_DIST_RESULT}" == "success" ] && [ "${CHECKOUT_RESULT}" == "success" ]
-
-  check-dist-matrix-external:
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        action: [setup-token]
-    steps:
-      - uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # tag=v3.1.0
-
-      - name: Set Node.js 16
-        uses: actions/setup-node@8c91899e586c5b171469028077307d293428b516 # tag=v3.5.1
-        with:
-          node-version: 16
-
-      - name: Rebuild the dist/ directory
-        working-directory: ./actions/${{ matrix.action }}
-        run: make package
-
-      - name: Compare the expected and actual dist/ directories
-        working-directory: ./actions/${{ matrix.action }}
-        id: diff
-        run: |
-          set -euo pipefail
-          if [ "$(git diff --ignore-space-at-eol dist/ | wc -l)" -gt "0" ]; then
-            echo "Detected uncommitted changes after build.  See status below:"
-            git diff
-            exit 1
-          fi
-
-      # If index.js was different from expected, upload the expected version as an artifact
-      - uses: actions/upload-artifact@83fd05a356d7e2593de66fc9913b3002723633cb
-        if: ${{ failure() && steps.diff.conclusion == 'failure' }}
-        with:
-          name: dist
-          path: dist/
-
-  # NOTE: needed for protected branch checks.
-  check-dist-external:
-    runs-on: ubuntu-latest
-    needs: [check-dist-matrix-external]
-    if: ${{ always() }}
-    env:
-      CHECKOUT_RESULT: ${{ needs.checkout.result }}
-      CHECK_DIST_RESULT: ${{ needs.check-dist-matrix-external.result }}
     steps:
       - run: |
           set -euo pipefail
@@ -146,24 +100,32 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # tag=v3.1.0
-      - id: generate-inputs
-        run: |
-          action_inputs="$(cat ./actions/setup-token/ACTION_INPUTS.txt | jq -c)"
-          echo "action_inputs=$action_inputs" >> "$GITHUB_OUTPUT"
       - id: setup
-        env:
-          ACTION_INPUTS: ${{ toJson(steps.generate-inputs.outputs.action_inputs) }}
-        run: ./actions/setup-token/bin/setup-token.js
+        uses: ./actions/setup-token
+        with:
+          slsa-workflow-recipient: "delegator_generic_slsa3.yml"
+          slsa-private-repository: true
+          slsa-runner-label: "ubuntu-latest"
+          slsa-build-action-path: "./actions/build-artifacts-composite"
+          slsa-workflow-inputs: "{\"name1\":\"value1\",\"name2\":\"value2\",\"private-repository\":true}"
+
       - env:
-          RAW_SLSA_TOKEN: ${{ steps.setup.outputs.slsa-token }}
+          SLSA_TOKEN: ${{ steps.setup.outputs.slsa-token }}
           CONTEXT: ${{ github.context }}
         run: |
           set -euo pipefail
 
-          echo "RAW_SLSA_TOKEN: $RAW_SLSA_TOKEN"
-          [[ "$RAW_SLSA_TOKEN" != "" ]]
-          decoded_token="$(echo $RAW_SLSA_TOKEN | base64 -d)"
-          echo "$decoded_token"
+          # NOTE: this is a pre-submit, so the signature is not generated and there is
+          # just a place holder for it.
+          echo "SLSA_TOKEN: $SLSA_TOKEN"
+          [[ "$SLSA_TOKEN" != "" ]]
+
+          echo -n $SLSA_TOKEN | cut -d '.' -f2 > raw_token.txt
+          echo "raw token:"
+          cat raw_token.txt
+          
+          decoded_token="$(echo $SLSA_TOKEN | base64 -d)"
+          echo "decoded_token: $decoded_token"
 
           audience=$(echo "$decoded_token" | jq -r '.builder.audience')
           runner_label=$(echo "$decoded_token" | jq -r '.builder."runner-label"')

@@ -9,7 +9,7 @@ set -euo pipefail
 cd __THIS_REPO__
 
 results=$(
-    find .github/workflows/ actions/ -maxdepth 1 -type f -print0 -name '*.yaml' -o -name '*.yml' \
+    find .github/workflows/ -maxdepth 1 -type f -print0 -name '*.yaml' -o -name '*.yml' \
     | xargs -0 grep -P "slsa-framework/slsa-github-generator/.github/actions/.*@(?!main)" \
     || true
 )

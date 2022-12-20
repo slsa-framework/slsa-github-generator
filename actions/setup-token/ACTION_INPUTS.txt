@@ -1,7 +1,0 @@
-{
-  "slsa-workflow-recipient": "delegated_generic_slsa3.yml",
-  "slsa-private-repository": "true",
-  "slsa-runner-label": "ubuntu-latest",
-  "slsa-build-artifacts-action-path": "./actions/build-artifacts-composite",
-  "slsa-workflow-inputs": "{\n  \"name1\": \"value1\",\n  \"name2\": \"value2\",\n  \"private-repository\": true\n}"
-}

@@ -8,7 +8,7 @@
     "build": "tsc",
     "format": "prettier --write '**/*.ts'",
     "format-check": "prettier --check '**/*.ts'",
-    "package": "ncc build --source-map",
+    "package": "ncc build --source-map --no-source-map-register",
     "lint": "eslint src/**/*.ts",
     "all": "npm ci && npm run format && npm run lint && npm run build && npm run package",
     "test": "echo \"Error: no test specified\" && exit 1"
