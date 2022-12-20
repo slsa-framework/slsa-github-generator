@@ -829,7 +829,7 @@ func Test_generateLdflags(t *testing.T) {
 				"{{ .Env.VAR3 }}-name-{{ .Env.VAR1 }}-{{ .Tag }}-{{ .Tag }}",
 				"{{ .Env.VAR3 }}-name-{{ .Env.VAR2 }}-{{ .Tag }}-end",
 			},
-			outldflags: "start-value1-name-value2-v1.2.3-end value1-name-value3" +
+			outldflags: "start-value1-name-value2-v1.2.3-end value1-name-value3 " +
 				"value3-name-value1-v1.2.3-v1.2.3 value3-name-value2-v1.2.3-end",
 		},
 		{
