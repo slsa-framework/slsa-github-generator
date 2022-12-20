@@ -312,30 +312,30 @@ jobs:
               {
               "name": "artifact11",
               "digest": "abcde"
-              },
+              }
             ],
             "attestation2.intoto":[
               {
               "name": "artifact21",
               "digest": "abcde"
-              },
+              }
             ]
           }
           EOF
           cat DATA > slsa-outputs.json
 
-          cat <<EOD >PREDICATE
+          cat <<EOF >PREDICATE
           {
             "buildType": "https://github.com/slsa-framework/slsa-github-generator/go@v1",
             "builder": {
-              "id": "https://github.com/slsa-framework/slsa-github-generator/.github/workflows/builder_go_slsa3.yml@refs/tags/v0.0.1",
+              "id": "https://github.com/slsa-framework/slsa-github-generator/.github/workflows/builder_go_slsa3.yml@refs/tags/v0.0.1"
             }
           }
           EOF
           cat PREDICATE > predicate.json
       - name: Test generate attestations
         id: generate
-        uses: slsa-framework/slsa-github-generator/.github/actions/generate-attestations@main
+        uses: asraa/slsa-github-generator/.github/actions/generate-attestations@attestation-action
         with:
           slsa-outputs-file: slsa-outputs.json
           predicate-type: "https://slsa.dev/provenance/v0.2"
