@@ -299,3 +299,52 @@ jobs:
           directory: "internal/builders/generic"
           # NOTE: compile-builder explicitly set to false.
           compile-builder: false
+
+  generate-attestations:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create test inputs
+        run: |
+          cat <<EOF >DATA
+          {
+            "version": 1,
+            "attestation1.intoto":[
+              {
+              "name": "artifact11",
+              "digest": "abcde"
+              },
+            ],
+            "attestation2.intoto":[
+              {
+              "name": "artifact21",
+              "digest": "abcde"
+              },
+            ]
+          }
+          EOF
+          cat DATA > slsa-outputs.json
+
+          cat <<EOD >PREDICATE
+          {
+            "buildType": "https://github.com/slsa-framework/slsa-github-generator/go@v1",
+            "builder": {
+              "id": "https://github.com/slsa-framework/slsa-github-generator/.github/workflows/builder_go_slsa3.yml@refs/tags/v0.0.1",
+            }
+          }
+          EOF
+          cat PREDICATE > predicate.json
+      - name: Test generate attestations
+        id: generate
+        uses: slsa-framework/slsa-github-generator/.github/actions/generate-attestations@main
+        with:
+          slsa-outputs-file: slsa-outputs.json
+          predicate-type: "https://slsa.dev/provenance/v0.2"
+          predicate-file: predicate.json
+      - name: Get outputs
+        env:
+          OUTPUT_FOLDER: ${{ steps.generate.outputs.output-folder }}
+        run: |
+          set -euo pipefail
+          ls $OUTPUT_FOLDER
+          cat $OUTPUT_FOLDER/attestation1.intoto | jq -r
+          cat $OUTPUT_FOLDER/attestation2.intoto | jq -r
