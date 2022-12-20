@@ -19,7 +19,7 @@ inputs:
 
   slsa-build-artifacts-action-path:
     description: >
-      The action path to invoke, from the root of the repository.
+      The action path to invoke, from the root of the repository where this action is invoked
       
       Example: ./actions/build-artifacts'
     type: string
