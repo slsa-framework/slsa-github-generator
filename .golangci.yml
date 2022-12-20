@@ -59,8 +59,7 @@ linters:
     # TODO(github.com/slsa-framework/slsa-github-generator/issues/450): enable govet
     # - govet
     - ineffassign
-    # TODO(github.com/slsa-framework/slsa-github-generator/issues/450): enable lll
-    # - lll
+    - lll
     - makezero
     - misspell
     - nakedret
