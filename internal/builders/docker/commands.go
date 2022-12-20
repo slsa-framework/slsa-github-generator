@@ -37,7 +37,8 @@ type InputOptions struct {
 
 // AddFlags adds input flags to the given command.
 func (o *InputOptions) AddFlags(cmd *cobra.Command) {
-	cmd.Flags().StringVarP(&o.BuildConfigPath, "build-config-path", "c", "", "Required - Path to a toml file containing the build configs.")
+	cmd.Flags().StringVarP(&o.BuildConfigPath, "build-config-path", "c", "",
+		"Required - Path to a toml file containing the build configs.")
 
 	cmd.Flags().StringVarP(&o.SourceRepo, "source-repo", "s", "",
 		"Required - URL of the source repo.")
