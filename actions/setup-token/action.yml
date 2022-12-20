@@ -4,7 +4,7 @@ description: 'setup token'
 
 inputs:
   slsa-workflow-recipient:
-    description: > 
+    description: >
       The workflow filename that this token is intended for.
 
       Example: delegator_generic_slsa3.yml
