@@ -21,7 +21,7 @@ import (
 )
 
 func Test_LoadBuildConfigFromFile(t *testing.T) {
-	got, err := LoadBuildConfigFromFile("../testdata/config.toml")
+	got, err := loadBuildConfigFromFile("../testdata/config.toml")
 	if err != nil {
 		t.Fatalf("couldn't load config file: %v", err)
 	}

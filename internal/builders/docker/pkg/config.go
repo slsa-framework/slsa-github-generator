@@ -153,8 +153,17 @@ func (d *Digest) ToMap() map[string]string {
 	return map[string]string{d.Alg: d.Value}
 }
 
-// LoadBuildConfigFromFile loads build configuration from a toml file in the given path and returns an instance of BuildConfig.
-func LoadBuildConfigFromFile(path string) (*BuildConfig, error) {
+// LoadBuildConfigFromFile loads build configuration from a toml file specified
+// by the BuildConfigPath of this DockerBuildConfig. An instance of BuildConfig
+// is returned on success.
+func (dbc *DockerBuildConfig) LoadBuildConfigFromFile() (*BuildConfig, error) {
+	return loadBuildConfigFromFile(dbc.BuildConfigPath)
+}
+
+// loadBuildConfigFromFile does not validate the input path, and is therefore
+// not exposed. The corresponding method LoadBuildConfigFromFile must be called
+// on an instance of DockerBuildConfig which has a validated BuildConfigPath.
+func loadBuildConfigFromFile(path string) (*BuildConfig, error) {
 	tomlTree, err := toml.LoadFile(path)
 	if err != nil {
 		return nil, fmt.Errorf("couldn't load toml file: %v", err)
