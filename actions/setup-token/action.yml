@@ -29,7 +29,7 @@ inputs:
     description: >
       The runner label to run the callback Action (`slsa-build-artifacts-action-path`) on.
     type: choice
-    options: 
+    options:
         - ubuntu-latest
     required: true
 
