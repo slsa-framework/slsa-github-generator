@@ -100,7 +100,7 @@ async function run(): Promise<void> {
     };
 
     const token = JSON.stringify(rawSlsaToken, undefined);
-    const b64Token = btoa(token);
+    const b64Token = Buffer.from(token).toString('base64');
     // Log for troublehooting.
     core.info(`Base64 raw SLSA token: ${b64Token}`);
     core.info(`Raw SLSA token: ${token}`);
