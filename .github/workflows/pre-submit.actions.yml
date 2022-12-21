@@ -107,7 +107,7 @@ jobs:
           slsa-private-repository: true
           slsa-runner-label: "ubuntu-latest"
           slsa-build-action-path: "./actions/build-artifacts-composite"
-          slsa-workflow-inputs: "{\"name1\":\"value1\",\"name2\":\"value2\",\"private-repository\":true}"
+          slsa-workflow-inputs: '{"name1":"value1","name2":"value2","private-repository":true}'
       - env:
           SLSA_TOKEN: ${{ steps.setup.outputs.slsa-token }}
         run: |
