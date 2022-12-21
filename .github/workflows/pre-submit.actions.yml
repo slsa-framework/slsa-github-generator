@@ -120,12 +120,13 @@ jobs:
           echo "SLSA_TOKEN: $SLSA_TOKEN"
           [[ "$SLSA_TOKEN" != "" ]]
 
-          echo -n $SLSA_TOKEN | cut -d '.' -f2 > raw_token.txt
-          echo "raw token:"
-          cat raw_token.txt
+          b64_token="$(echo -n $SLSA_TOKEN" | cut -d '.' -f2)"
+          echo "b64_token:"
+          echo "$b64_token"
           
-          decoded_token="$(echo $SLSA_TOKEN | base64 -d)"
-          echo "decoded_token: $decoded_token"
+          decoded_token="$(echo $b64_token | base64 -d)"
+          echo "decoded_token:"
+          echo "$decoded_token"
 
           audience=$(echo "$decoded_token" | jq -r '.builder.audience')
           runner_label=$(echo "$decoded_token" | jq -r '.builder."runner-label"')
@@ -134,11 +135,11 @@ jobs:
           inputs=$(echo "$decoded_token" | jq -r '.tool.inputs' -c)
           gh_context=$(echo "$decoded_token" | jq -r '.github.context')
 
-          [[ "$audience" == "delegated_generic_slsa3.yml" ]] && \
-          [[ "$runner_label" == "ubuntu-latest" ]] && \
-          [[ "$private_repository" == "true" ]] && \
-          [[ "$action_path" == "./actions/build-artifacts-composite" ]] && \
-          [[ "$inputs" == "{\"name1\":\"value1\",\"name2\":\"value2\",\"private-repository\":true}\" ]] && \
+          [[ "$audience" == "delegated_generic_slsa3.yml" ]]
+          [[ "$runner_label" == "ubuntu-latest" ]]
+          [[ "$private_repository" == "true" ]]
+          [[ "$action_path" == "./actions/build-artifacts-composite" ]]
+          [[ "$inputs" == "{\"name1\":\"value1\",\"name2\":\"value2\",\"private-repository\":true}" ]]
           [[ "$gh_context" == "$CONTEXT" ]]
 
   references:
