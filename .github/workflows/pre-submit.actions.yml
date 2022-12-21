@@ -133,15 +133,12 @@ jobs:
           private_repository=$(echo "$decoded_token" | jq -r '.builder."private-repository"')
           action_path=$(echo "$decoded_token" | jq -r '.tool.actions."build-artifacts".path')
           inputs=$(echo "$decoded_token" | jq -r '.tool.inputs' -c)
-          gh_context=$(echo "$decoded_token" | jq -rc '.github.context')
-          context="$(echo $CONTEXT | jq -rc)"
-
+          
           [[ "$audience" == "delegated_generic_slsa3.yml" ]]
           [[ "$runner_label" == "ubuntu-latest" ]]
           [[ "$private_repository" == "true" ]]
           [[ "$action_path" == "./actions/build-artifacts-composite" ]]
           [[ "$inputs" == "{\"name1\":\"value1\",\"name2\":\"value2\",\"private-repository\":true}" ]]
-          [[ "$gh_context" == "$context" ]]
 
   references:
     runs-on: ubuntu-latest
