@@ -6,6 +6,18 @@
 
 "use strict";
 
+/*
+Copyright 2022 SLSA Authors
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+    https://www.apache.org/licenses/LICENSE-2.0
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WIHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     var desc = Object.getOwnPropertyDescriptor(m, k);
@@ -42,8 +54,6 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 const github = __importStar(__nccwpck_require__(5438));
 const core = __importStar(__nccwpck_require__(2186));
 const sigstore = __importStar(__nccwpck_require__(9149));
-// import * as path from "path";
-// import * as process from "process";
 const signOptions = {
     oidcClientID: "sigstore",
     oidcIssuer: "https://oauth2.sigstore.dev/auth",
@@ -67,21 +77,21 @@ function run() {
             // The workflow inputs are represented as a JSON object theselves.
             const workflowsInputsText = core.getInput("slsa-workflow-inputs");
             // Log the inputs for troubleshooting.
-            core.info(`workflowsInputsText: ${workflowsInputsText}`);
-            core.info(`workfowInputs: `);
+            core.debug(`workflowsInputsText: ${workflowsInputsText}`);
+            core.debug(`workfowInputs: `);
             const workflowInputs = JSON.parse(workflowsInputsText);
             const workflowInputsMap = new Map(Object.entries(workflowInputs));
-            workflowInputsMap.forEach((value, key) => {
+            for (const [key, value] of workflowInputsMap) {
                 core.info(` ${key}: ${value}`);
-            });
-            // const payload = JSON.stringify(github.context.payload, undefined, 2);
-            // core.info(`The event payload: ${payload}`);
+            }
+            const payload = JSON.stringify(github.context.payload, undefined, 2);
+            core.debug(`The event payload: ${payload}`);
             // Construct an unsigned SLSA token.
             const unsignedSlsaToken = {
                 version: 1,
                 context: "SLSA delegator framework",
                 builder: {
-                    "private-repository": true,
+                    "private-repository": privateRepository,
                     "runner-label": runnerLabel,
                     audience: workflowRecipient,
                 },
@@ -106,8 +116,15 @@ function run() {
             core.info(`unsignedToken: ${unsignedToken}`);
             core.info(`unsignedB64Token: ${unsignedB64Token}`);
             // Sign and prepare the base64 bundle.
-            const bundle = yield sigstore.sigstore.sign(Buffer.from(unsignedB64Token), signOptions);
-            const bundleStr = JSON.stringify(bundle);
+            const eventName = process.env["GITHUB_EVENT_NAME"] || "";
+            let bundleStr = "";
+            if (eventName === "pull_request") {
+                bundleStr = "PLACEHOLDER_SIGNATURE";
+            }
+            else {
+                const bundle = yield sigstore.sigstore.sign(Buffer.from(unsignedB64Token), signOptions);
+                bundleStr = JSON.stringify(bundle);
+            }
             const bundleB64 = Buffer.from(bundleStr).toString("base64");
             core.info(`bundleStr: ${bundleStr}`);
             core.info(`bundleB64: ${bundleB64}`);
