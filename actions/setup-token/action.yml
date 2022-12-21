@@ -46,7 +46,7 @@ inputs:
 
 outputs:
   slsa-token:
-    description: "slsa token"
+    description: "SLSA token"
 
 runs:
   using: 'node16'

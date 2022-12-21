@@ -49,10 +49,10 @@ This will trigger the [release workflow](https://github.com/slsa-framework/slsa-
 
 ## Verify version references
 
-Update version references with the following commands:
+Update version references with the following command:
 
 ```shell
-find .github/workflows/ actions/ -name '*.yaml' -o -name '*.yml' | xargs sed -i "s/uses: slsa-framework\/slsa-github-generator\/\.github\/actions\/\(.*\)@\(main\|v[0-9]\+\.[0-9]\+\.[0-9]\+\(-rc\.[0-9]\+\)\?\)/uses: slsa-framework\/slsa-github-generator\/.github\/actions\/\1@$BUILDER_TAG/"
+find .github/workflows/ -name '*.yaml' -o -name '*.yml' | xargs sed -i "s/uses: slsa-framework\/slsa-github-generator\/\.github\/actions\/\(.*\)@\(main\|v[0-9]\+\.[0-9]\+\.[0-9]\+\(-rc\.[0-9]\+\)\?\)/uses: slsa-framework\/slsa-github-generator\/.github\/actions\/\1@$BUILDER_TAG/"
 ```
 
 Send a PR with this update and add `#label:release ${BUILDER_TAG}` in the PR description.
@@ -329,7 +329,7 @@ find . -name '*.md' | xargs sed -i "s/slsa-framework\/slsa-github-generator\/\.g
 Send a PR to reference the internal Actions at `@main`. You can use:
 
 ```shell
-find .github/workflows/ actions/ -name '*.yaml' -o -name '*.yml' | xargs sed -i "s/uses: slsa-framework\/slsa-github-generator\/\.github\/actions\/\(.*\)@${BUILDER_TAG}/uses: slsa-framework\/slsa-github-generator\/.github\/actions\/\1@main/"
+find .github/workflows/ -name '*.yaml' -o -name '*.yml' | xargs sed -i "s/uses: slsa-framework\/slsa-github-generator\/\.github\/actions\/\(.*\)@${BUILDER_TAG}/uses: slsa-framework\/slsa-github-generator\/.github\/actions\/\1@main/"
 ```
 
 ## Update the starter workflows
