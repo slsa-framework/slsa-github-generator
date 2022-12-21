@@ -120,7 +120,7 @@ jobs:
           echo "SLSA_TOKEN: $SLSA_TOKEN"
           [[ "$SLSA_TOKEN" != "" ]]
 
-          b64_token="$(echo -n $SLSA_TOKEN" | cut -d '.' -f2)"
+          b64_token="$(echo -n $SLSA_TOKEN | cut -d '.' -f2)"
           echo "b64_token:"
           echo "$b64_token"
 
