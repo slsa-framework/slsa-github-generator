@@ -132,7 +132,7 @@ jobs:
           private_repository=$(echo "$decoded_token" | jq -r '.builder."private-repository"')
           action_path=$(echo "$decoded_token" | jq -r '.tool.actions."build-artifacts".path')
           inputs=$(echo "$decoded_token" | jq -rc '.tool.inputs')
-          
+
           # GitHub's information.
           run_attempt=$(echo "$decoded_token" | jq -r '.github.run_attempt')
           run_id=$(echo "$decoded_token" | jq -r '.github.run_id')
@@ -161,7 +161,7 @@ jobs:
           echo "repository_owner: $repository_owner - $GITHUB_REPOSITORY_OWNER"
           echo "ref: $ref - $GITHUB_REF"
           echo "ref_type: $ref_type - $GITHUB_REF_TYPE"
-          
+
           [[ "$audience" == "delegator_generic_slsa3.yml" ]]
           [[ "$run_attempt" == "$GITHUB_RUN_ATTEMPT" ]]
           [[ "$run_number" == "$GITHUB_RUN_NUMBER" ]]
