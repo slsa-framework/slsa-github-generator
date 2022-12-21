@@ -14,7 +14,7 @@ results=$(
     || true
 )
 if [[ "$results" != "" ]]; then
-    echo "Some Actions are are not referenced at main"
+    echo "Some Actions are not referenced at main"
     echo "$results"
     exit 1
 fi
