@@ -54,6 +54,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 const github = __importStar(__nccwpck_require__(5438));
 const core = __importStar(__nccwpck_require__(2186));
 const sigstore = __importStar(__nccwpck_require__(9149));
+const process = __importStar(__nccwpck_require__(7282));
 const signOptions = {
     oidcClientID: "sigstore",
     oidcIssuer: "https://oauth2.sigstore.dev/auth",
@@ -96,7 +97,13 @@ function run() {
                     audience: workflowRecipient,
                 },
                 github: {
+                    // TODO: Re-evaluate if we need the context.
                     context: github.context,
+                    run_attempt: process.env.GITHUB_RUN_ATTEMPT,
+                    run_id: process.env.GITHUB_RUN_ID,
+                    run_number: process.env.GITHUB_RUN_NUMBER,
+                    workflow: process.env.GITHUB_WORKFLOW,
+                    sha: process.env.GITHUB_SHA,
                 },
                 tool: {
                     actions: {
@@ -44035,6 +44042,14 @@ module.exports = require("os");
 
 "use strict";
 module.exports = require("path");
+
+/***/ }),
+
+/***/ 7282:
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("process");
 
 /***/ }),
 

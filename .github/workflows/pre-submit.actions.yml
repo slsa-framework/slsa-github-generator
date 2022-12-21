@@ -132,9 +132,19 @@ jobs:
           runner_label=$(echo "$decoded_token" | jq -r '.builder."runner-label"')
           private_repository=$(echo "$decoded_token" | jq -r '.builder."private-repository"')
           action_path=$(echo "$decoded_token" | jq -r '.tool.actions."build-artifacts".path')
-          inputs=$(echo "$decoded_token" | jq -r '.tool.inputs' -c)
-          
+          inputs=$(echo "$decoded_token" | jq -rc '.tool.inputs')
+          run_attempt=$(echo "$decoded_token" | jq -r '.github.run_attempt')
+          run_id=$(echo "$decoded_token" | jq -r '.github.run_id')
+          run_number=$(echo "$decoded_token" | jq -r '.github.run_number')
+          sha=$(echo "$decoded_token" | jq -r '.github.sha')
+          workflow=$(echo "$decoded_token" | jq -r '.github.workflow')
+
           [[ "$audience" == "delegated_generic_slsa3.yml" ]]
+          [[ "$run_attempt" == "$GITHUB_RUN_ATTEMPT" ]]
+          [[ "$run_number" == "$GITHUB_RUN_NUMBER" ]]
+          [[ "$run_id" == "$GITHUB_RUN_ID" ]]
+          [[ "$sha" == "$GITHUB_SHA" ]]
+          [[ "$workflow" == "$GITHUB_WORKFLOW" ]]
           [[ "$runner_label" == "ubuntu-latest" ]]
           [[ "$private_repository" == "true" ]]
           [[ "$action_path" == "./actions/build-artifacts-composite" ]]

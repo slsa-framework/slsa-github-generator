@@ -14,6 +14,7 @@ limitations under the License.
 import * as github from "@actions/github";
 import * as core from "@actions/core";
 import * as sigstore from "sigstore";
+import * as process from "process";
 
 const signOptions = {
   oidcClientID: "sigstore",
@@ -61,7 +62,13 @@ async function run(): Promise<void> {
         audience: workflowRecipient,
       },
       github: {
+        // TODO: Re-evaluate if we need the context.
         context: github.context,
+        run_attempt: process.env.GITHUB_RUN_ATTEMPT,
+        run_id: process.env.GITHUB_RUN_ID,
+        run_number: process.env.GITHUB_RUN_NUMBER,
+        workflow: process.env.GITHUB_WORKFLOW,
+        sha: process.env.GITHUB_SHA,
       },
       tool: {
         actions: {
