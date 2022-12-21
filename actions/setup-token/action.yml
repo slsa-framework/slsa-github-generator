@@ -29,7 +29,7 @@ inputs:
       The runner label to run the callback Action (`slsa-build-action-path`) on.
     type: choice
     options:
-    - ubuntu-latest
+      - ubuntu-latest
     required: true
 
   slsa-workflow-inputs:

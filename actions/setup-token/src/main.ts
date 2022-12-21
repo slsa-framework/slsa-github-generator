@@ -63,12 +63,21 @@ async function run(): Promise<void> {
       },
       github: {
         // TODO: Re-evaluate if we need the context.
-        context: github.context,
+        context: github,
+        event_name: process.env.GITHUB_EVENT_NAME,
         run_attempt: process.env.GITHUB_RUN_ATTEMPT,
         run_id: process.env.GITHUB_RUN_ID,
         run_number: process.env.GITHUB_RUN_NUMBER,
         workflow: process.env.GITHUB_WORKFLOW,
         sha: process.env.GITHUB_SHA,
+        repository: process.env.GITHUB_REPOSITORY,
+        repository_owner: process.env.GITHUB_REPOSITORY_OWNER,
+        // TODO: enable if these become available.
+        // repository_id: process.env.GITHUB_REPOSITORY_ID,
+        // repository_owner_id: process.env.GITHUB_REPOSITORY_OWNER_ID,
+        ref: process.env.GITHUB_REF,
+        ref_type: process.env.GITHUB_REF_TYPE,
+        actor: process.env.GITHUB_ACTOR,
       },
       tool: {
         actions: {
