@@ -34,11 +34,9 @@ inputs:
 
   slsa-workflow-inputs:
     description: >
-      A JSON object containing the inputs to the Tool Reusable Workflow (TRW). 
+      A JSON object containing the inputs to the Tool Reusable Workflow (TRW).
       The inputs will be recorded in the provenance as the builder's inputs and
       passed to the tool's build Action.
-      
-      For example, ${{ toJson(inputs) }}.
 
       Note: The TRW is the reusable workflow calling this Action.
     type: string

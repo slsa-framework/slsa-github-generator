@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        action: 
+        action:
           - .github/actions/compute-sha256
           - .github/actions/privacy-check
           - ./actions/setup-token
@@ -123,7 +123,7 @@ jobs:
           b64_token="$(echo -n $SLSA_TOKEN" | cut -d '.' -f2)"
           echo "b64_token:"
           echo "$b64_token"
-          
+
           decoded_token="$(echo $b64_token | base64 -d)"
           echo "decoded_token:"
           echo "$decoded_token"
