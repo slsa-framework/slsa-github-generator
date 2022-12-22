@@ -154,6 +154,10 @@ jobs:
           fi
 
           username="${UNTRUSTED_SECRET_USERNAME:-${UNTRUSTED_INPUT_USERNAME}}"
+          if [ "${username}" == "" ]; then
+              echo "registry-username is required." >&2
+              exit 1
+          fi
 
           echo "login to ${untrusted_registry}"
           cosign login "${untrusted_registry}" -u "${username}" -p "${UNTRUSTED_PASSWORD}"
