@@ -68,13 +68,41 @@ func TestNewOIDCClient(t *testing.T) {
 func TestToken(t *testing.T) {
 	now := time.Date(2022, 4, 14, 12, 24, 0, 0, time.UTC)
 
+	errClaimsFunc := func(got error) {
+		want := &errClaims{}
+		if !errors.As(got, &want) {
+			t.Fatalf("unexpected error: %v", cmp.Diff(got, want, cmpopts.EquateErrors()))
+		}
+	}
+
+	errVerifyFunc := func(got error) {
+		want := &errVerify{}
+		if !errors.As(got, &want) {
+			t.Fatalf("unexpected error: %v", cmp.Diff(got, want, cmpopts.EquateErrors()))
+		}
+	}
+
+	errTokenFunc := func(got error) {
+		want := &errToken{}
+		if !errors.As(got, &want) {
+			t.Fatalf("unexpected error: %v", cmp.Diff(got, want, cmpopts.EquateErrors()))
+		}
+	}
+
+	errRequestErrorFunc := func(got error) {
+		want := &errRequestError{}
+		if !errors.As(got, &want) {
+			t.Fatalf("unexpected error: %v", cmp.Diff(got, want, cmpopts.EquateErrors()))
+		}
+	}
+
 	testCases := []struct {
 		name     string
 		audience []string
 		token    *OIDCToken
 		status   int
 		raw      string
-		err      error
+		err      func(error)
 	}{
 		{
 			name:     "basic token",
@@ -98,7 +126,7 @@ func TestToken(t *testing.T) {
 				RepositoryOwnerID: "4321",
 				ActorID:           "4567",
 			},
-			err: &errClaims{},
+			err: errClaimsFunc,
 		},
 		{
 			name:     "no workflow ref claim",
@@ -110,7 +138,7 @@ func TestToken(t *testing.T) {
 				RepositoryOwnerID: "4321",
 				ActorID:           "4567",
 			},
-			err: &errClaims{},
+			err: errClaimsFunc,
 		},
 		{
 			name:     "no owner id claim",
@@ -122,7 +150,7 @@ func TestToken(t *testing.T) {
 				RepositoryID:   "1234",
 				ActorID:        "4567",
 			},
-			err: &errClaims{},
+			err: errClaimsFunc,
 		},
 		{
 			name:     "no actor id claim",
@@ -134,7 +162,7 @@ func TestToken(t *testing.T) {
 				RepositoryID:      "1234",
 				RepositoryOwnerID: "4321",
 			},
-			err: &errClaims{},
+			err: errClaimsFunc,
 		},
 		{
 			name:     "expired token",
@@ -147,7 +175,7 @@ func TestToken(t *testing.T) {
 				RepositoryOwnerID: "4321",
 				ActorID:           "4567",
 			},
-			err: &errVerify{},
+			err: errVerifyFunc,
 		},
 		{
 			name:     "bad audience",
@@ -160,7 +188,7 @@ func TestToken(t *testing.T) {
 				RepositoryOwnerID: "4321",
 				ActorID:           "4567",
 			},
-			err: &errVerify{},
+			err: errVerifyFunc,
 		},
 		{
 			name:     "bad issuer",
@@ -174,49 +202,49 @@ func TestToken(t *testing.T) {
 				RepositoryOwnerID: "4321",
 				ActorID:           "4567",
 			},
-			err: &errVerify{},
-		},
-		{
-			name:     "invalid response",
-			audience: []string{"hoge"},
-			raw:      `not json`,
-			status:   http.StatusOK,
-			err:      &errToken{},
+			err: errVerifyFunc,
 		},
 		{
 			name:     "invalid parts",
 			audience: []string{"hoge"},
 			raw:      `{"value": "part1"}`,
 			status:   http.StatusOK,
-			err:      &errToken{},
+			err:      errVerifyFunc,
 		},
 		{
 			name:     "invalid base64",
 			audience: []string{"hoge"},
 			raw:      `{"value": "part1.part2.part3"}`,
 			status:   http.StatusOK,
-			err:      &errToken{},
+			err:      errVerifyFunc,
 		},
 		{
-			name:     "invalid json",
+			name:     "invalid json part",
 			audience: []string{"hoge"},
 			raw:      fmt.Sprintf(`{"value": "part1.%s.part3"}`, base64.RawURLEncoding.EncodeToString([]byte("not json"))),
 			status:   http.StatusOK,
-			err:      &errToken{},
+			err:      errVerifyFunc,
+		},
+		{
+			name:     "invalid response",
+			audience: []string{"hoge"},
+			raw:      `not json`,
+			status:   http.StatusOK,
+			err:      errTokenFunc,
 		},
 		{
 			name:     "error response",
 			audience: []string{"hoge"},
 			raw:      "",
 			status:   http.StatusServiceUnavailable,
-			err:      &errRequestError{},
+			err:      errRequestErrorFunc,
 		},
 		{
 			name:     "redirect response",
 			audience: []string{"hoge"},
 			raw:      "",
 			status:   http.StatusFound,
-			err:      &errRequestError{},
+			err:      errRequestErrorFunc,
 		},
 	}
 
@@ -234,15 +262,13 @@ func TestToken(t *testing.T) {
 			token, err := c.Token(context.Background(), tc.audience)
 			if err != nil {
 				if tc.err != nil {
-					if !errors.As(err, &tc.err) {
-						t.Fatalf("unexpected error: %v", cmp.Diff(err, tc.err, cmpopts.EquateErrors()))
-					}
+					tc.err(err)
 				} else {
 					t.Fatalf("unexpected error: %v", cmp.Diff(err, tc.err, cmpopts.EquateErrors()))
 				}
 			} else {
 				if tc.err != nil {
-					t.Fatalf("unexpected error: %v", cmp.Diff(err, tc.err, cmpopts.EquateErrors()))
+					tc.err(err)
 				} else {
 					// Successful response, as expected. Check token.
 					if want, got := tc.token, token; !tokenEqual(s.URL, want, got) {
