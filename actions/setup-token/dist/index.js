@@ -157,7 +157,7 @@ function run() {
                 core.setFailed(error.message);
             }
             else {
-                core.info(`Unexpected error: ${error}`);
+                core.setFailed(`Unexpected error: ${error}`);
             }
         }
     });

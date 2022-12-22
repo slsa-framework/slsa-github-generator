@@ -127,7 +127,7 @@ async function run(): Promise<void> {
     if (error instanceof Error) {
       core.setFailed(error.message);
     } else {
-      core.info(`Unexpected error: ${error}`);
+      core.setFailed(`Unexpected error: ${error}`);
     }
   }
 }
