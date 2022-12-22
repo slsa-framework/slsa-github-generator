@@ -37,7 +37,7 @@ find . \( ! -name vendor -o -prune \) \( ! -name node_modules -o -prune \) -type
             cosign verify --key .github/workflows/scripts/distroless.pub "$image_full"
         else
             # All other base images should be signed using Docker Content Trust.
-            if ! (DOCKER_CONTENT_TRUST=1 docker trust inspect --pretty "$image_name" | grep "$image_sha"); then
+            if ! (DOCKER_CONTENT_TRUST=1 docker trust inspect --pretty "$image_name" | sed -n 5p | grep "$image_sha"); then
                 echo "$image_full: unable to verify Docker Content Trust."
                 exit 2
             fi
