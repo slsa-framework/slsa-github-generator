@@ -209,7 +209,7 @@ jobs:
       outcome: ${{ steps.final.outputs.outcome }}
       release-id: ${{ steps.release.outputs.id }}
     runs-on: ubuntu-latest
-    needs: [generator]
+    needs: [detect-env, generator]
     permissions:
       contents: write # Needed to write artifacts to a release.
     if: inputs.upload-assets == true
