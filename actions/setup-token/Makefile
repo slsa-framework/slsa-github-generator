@@ -1,5 +1,4 @@
 SHELL := /bin/bash
-OUTPUT_FORMAT = $(shell if [ "${GITHUB_ACTIONS}" == "true" ]; then echo "github"; else echo ""; fi)
 
 .PHONY: help
 help: ## Shows all targets and help from the Makefile (this message).

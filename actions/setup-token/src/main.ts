@@ -62,7 +62,7 @@ async function run(): Promise<void> {
         audience: workflowRecipient,
       },
       github: {
-        // TODO: Re-evaluate if we need the context.
+        // TODO(#1410): Re-evaluate if we need the context.
         context: github,
         event_name: process.env.GITHUB_EVENT_NAME,
         run_attempt: process.env.GITHUB_RUN_ATTEMPT,
@@ -72,7 +72,7 @@ async function run(): Promise<void> {
         sha: process.env.GITHUB_SHA,
         repository: process.env.GITHUB_REPOSITORY,
         repository_owner: process.env.GITHUB_REPOSITORY_OWNER,
-        // TODO: enable if these become available.
+        // TODO(#1411): Record if these become available.
         // repository_id: process.env.GITHUB_REPOSITORY_ID,
         // repository_owner_id: process.env.GITHUB_REPOSITORY_OWNER_ID,
         ref: process.env.GITHUB_REF,
@@ -85,9 +85,6 @@ async function run(): Promise<void> {
             path: buildArtifactsActionPath,
           },
         },
-        // TODO: grab the calling workflow here ?
-        // We need it for policy authz and we should report it
-        // somewhere. Where?
         inputs: workflowInputs,
       },
     };
@@ -117,7 +114,7 @@ async function run(): Promise<void> {
 
     // Verify just to double check.
     // NOTE: this is an offline verification.
-    // TODO: renable when https://github.com/sigstore/sigstore-js/issues/215
+    // TODO(https://github.com/sigstore/sigstore-js/issues/215): Re-enable when fixed.
     // await sigstore.sigstore.verify(bundle, Buffer.from(unsignedB64Token));
 
     // Output the signed token.
