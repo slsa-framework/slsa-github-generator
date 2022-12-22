@@ -28,6 +28,9 @@ defaults:
 on:
   workflow_call:
     secrets:
+      registry-username:
+        description: "Username to log into the container registry."
+        type: string
       registry-password:
         description: "Password to log in the container registry."
         required: true
@@ -42,7 +45,6 @@ on:
         type: string
       registry-username:
         description: "Username to log into the container registry."
-        required: true
         type: string
       compile-generator:
         description: "Build the generator from source. This increases build time by ~2m."
@@ -135,7 +137,8 @@ jobs:
         continue-on-error: true
         env:
           UNTRUSTED_IMAGE: "${{ inputs.image }}"
-          UNTRUSTED_USERNAME: "${{ inputs.registry-username }}"
+          UNTRUSTED_INPUT_USERNAME: "${{ inputs.registry-username }}"
+          UNTRUSTED_SECRET_USERNAME: "${{ secrets.registry-username }}"
           UNTRUSTED_PASSWORD: "${{ secrets.registry-password }}"
         run: |
           set -euo pipefail
@@ -146,13 +149,15 @@ jobs:
           # See: https://stackoverflow.com/questions/37861791/how-are-docker-image-names-parsed#37867949
           untrusted_registry="docker.io"
           # NOTE: Do not fail the script if grep does not match.
-          maybe_domain=$(echo "$UNTRUSTED_IMAGE" | cut -f1 -d "/" | { grep -E "\.|:" || true; })
-          if [ "$maybe_domain" != "" ]; then
-            untrusted_registry="$maybe_domain"
+          maybe_domain=$(echo "${UNTRUSTED_IMAGE}" | cut -f1 -d "/" | { grep -E "\.|:" || true; })
+          if [ "${maybe_domain}" != "" ]; then
+            untrusted_registry="${maybe_domain}"
           fi
 
-          echo "login to $untrusted_registry"
-          cosign login "$untrusted_registry" -u "$UNTRUSTED_USERNAME" -p "$UNTRUSTED_PASSWORD"
+          username="${UNTRUSTED_SECRET_USERNAME:-${UNTRUSTED_INPUT_USERNAME}}"
+
+          echo "login to ${untrusted_registry}"
+          cosign login "${untrusted_registry}" -u "${username}" -p "${UNTRUSTED_PASSWORD}"
 
       - name: Create and sign provenance
         id: sign-prov
