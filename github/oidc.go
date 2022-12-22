@@ -104,7 +104,11 @@ func NewOIDCClient() (*OIDCClient, error) {
 	requestURL := os.Getenv(requestURLEnvKey)
 	parsedURL, err := url.ParseRequestURI(requestURL)
 	if err != nil {
-		return nil, errors.Errorf(&errURLError{}, "invalid request URL %q: %w; does your workflow have `id-token: write` scope?", requestURL, err)
+		return nil, errors.Errorf(
+			&errURLError{},
+			"invalid request URL %q: %w; does your workflow have `id-token: write` scope?",
+			requestURL, err,
+		)
 	}
 
 	c := OIDCClient{

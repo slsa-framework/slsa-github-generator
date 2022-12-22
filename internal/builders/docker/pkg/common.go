@@ -86,6 +86,7 @@ type ArtifactReference struct {
 	// OPTIONAL.
 	LocalName string `json:"localName,omitempty"`
 
+	//nolint:lll
 	// [URI] identifying the location that this artifact was downloaded from, if
 	// different and not derivable from `uri`.
 	//

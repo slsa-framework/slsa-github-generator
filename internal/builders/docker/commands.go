@@ -27,44 +27,26 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// InputOptions are the common options for the dry run and build command.
-type InputOptions struct {
-	BuildConfigPath string
-	SourceRepo      string
-	GitCommitHash   string
-	BuilderImage    string
-}
-
-// AddFlags adds input flags to the given command.
-func (o *InputOptions) AddFlags(cmd *cobra.Command) {
-	cmd.Flags().StringVarP(&o.BuildConfigPath, "build-config-path", "c", "", "Required - Path to a toml file containing the build configs.")
-
-	cmd.Flags().StringVarP(&o.SourceRepo, "source-repo", "s", "",
-		"Required - URL of the source repo.")
-
-	cmd.Flags().StringVarP(&o.GitCommitHash, "git-commit-hash", "g", "",
-		"Required - SHA1 Git commit digest of the revision of the source code to build the artefact from.")
-
-	cmd.Flags().StringVarP(&o.BuilderImage, "builder-image", "b", "",
-		"Required - URL indicating the Docker builder image, including a URI and image digest.")
-}
-
 // DryRunCmd validates the input flags, generates a BuildDefinition from them.
 func DryRunCmd(check func(error)) *cobra.Command {
-	o := &InputOptions{}
+	io := &pkg.InputOptions{}
 	var buildDefinitionPath string
 
 	cmd := &cobra.Command{
 		Use:   "dry-run [FLAGS]",
 		Short: "Generates and stores a JSON-formatted BuildDefinition based on the input arguments.",
 		Run: func(cmd *cobra.Command, args []string) {
-			// TODO(#1191): Parse the input arguments into an instance of BuildDefinition.
+			config, err := pkg.NewDockerBuildConfig(io)
+			check(err)
+			log.Printf("The config is: %v\n", config)
+
+			// TODO(#1191): Create an instance of BuildDefinition from config.
 			bd := &pkg.BuildDefinition{}
 			check(writeBuildDefinitionToFile(*bd, buildDefinitionPath))
 		},
 	}
 
-	o.AddFlags(cmd)
+	io.AddFlags(cmd)
 
 	cmd.Flags().StringVarP(&buildDefinitionPath, "build-definition-path", "o", "",
 		"Required - Path to store the generated BuildDefinition to.")
@@ -86,20 +68,24 @@ func writeBuildDefinitionToFile(bd pkg.BuildDefinition, path string) error {
 
 // BuildCmd builds the artifacts using the input flags, and prints out their digests, or exists with an error.
 func BuildCmd(check func(error)) *cobra.Command {
-	o := &InputOptions{}
+	io := &pkg.InputOptions{}
 
 	cmd := &cobra.Command{
 		Use:   "build [FLAGS]",
 		Short: "Builds the artifacts using the build config, source repo, and the builder image.",
 		Run: func(cmd *cobra.Command, args []string) {
-			// TODO(#1191): Set up build state and build the artifact.
+			config, err := pkg.NewDockerBuildConfig(io)
+			check(err)
+			log.Printf("The config is: %v\n", config)
+
+			// TODO(#1191): Set up build state using config, and build the artifact.
 			artifacts := "To be implemented"
 			log.Printf("Generated artifacts are: %v\n", artifacts)
 			// TODO(#1191): Write subjects to file.
 		},
 	}
 
-	o.AddFlags(cmd)
+	io.AddFlags(cmd)
 
 	return cmd
 }
