@@ -64,7 +64,9 @@ func (b *goProvenanceBuild) BuildConfig(context.Context) (interface{}, error) {
 // GenerateProvenance translates github context into a SLSA provenance
 // attestation.
 // Spec: https://slsa.dev/provenance/v0.2
-func GenerateProvenance(name, digest, command, envs, workingDir string, s signing.Signer, r signing.TransparencyLog, provider slsa.ClientProvider) ([]byte, error) {
+func GenerateProvenance(name, digest, command, envs, workingDir string,
+	s signing.Signer, r signing.TransparencyLog, provider slsa.ClientProvider,
+) ([]byte, error) {
 	gh, err := github.GetWorkflowContext()
 	if err != nil {
 		return nil, err
@@ -159,7 +161,10 @@ func GenerateProvenance(name, digest, command, envs, workingDir string, s signin
 	// Add details about the runner's OS to the materials
 	runnerMaterials := slsacommon.ProvenanceMaterial{
 		// TODO: capture the digest here too
-		URI: fmt.Sprintf("https://github.com/actions/virtual-environments/releases/tag/%s/%s", os.Getenv("ImageOS"), os.Getenv("ImageVersion")),
+		URI: fmt.Sprintf(
+			"https://github.com/actions/virtual-environments/releases/tag/%s/%s",
+			os.Getenv("ImageOS"), os.Getenv("ImageVersion"),
+		),
 	}
 	p.Predicate.Materials = append(p.Predicate.Materials, runnerMaterials)
 
