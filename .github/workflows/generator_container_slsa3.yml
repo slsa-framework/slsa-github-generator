@@ -30,7 +30,6 @@ on:
     secrets:
       registry-username:
         description: "Username to log into the container registry."
-        type: string
       registry-password:
         description: "Password to log in the container registry."
         required: true
