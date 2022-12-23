@@ -51,6 +51,7 @@ type goReleaserConfigFile struct {
 	Version int      `yaml:"version"`
 }
 
+// GoReleaserConfig tracks configuration for goreleaser.
 type GoReleaserConfig struct {
 	Env     map[string]string
 	Main    *string
@@ -71,12 +72,14 @@ func configFromString(b []byte) (*GoReleaserConfig, error) {
 	return fromConfig(&cf)
 }
 
-func ConfigFromFile(pathfn string) (*GoReleaserConfig, error) {
-	if err := validatePath(pathfn); err != nil {
+// ConfigFromFile reads the file located at path and builds a GoReleaserConfig
+// from it.
+func ConfigFromFile(path string) (*GoReleaserConfig, error) {
+	if err := validatePath(path); err != nil {
 		return nil, err
 	}
 
-	cfg, err := os.ReadFile(filepath.Clean(pathfn))
+	cfg, err := os.ReadFile(filepath.Clean(path))
 	if err != nil {
 		return nil, fmt.Errorf("os.ReadFile: %w", err)
 	}

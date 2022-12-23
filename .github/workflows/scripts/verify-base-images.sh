@@ -16,7 +16,7 @@
 set -euo pipefail
 
 # NOTE: Use read to avoid whitespace issues.
-find . -name Dockerfile -print0 | while IFS= read -r -d '' f; do
+find . \( ! -name vendor -o -prune \) \( ! -name node_modules -o -prune \) -type f -name Dockerfile -print0 | while IFS= read -r -d '' f; do
     echo "Checking $f"
     grep "^FROM " "$f" | while IFS= read -r line; do
         image_full=$(echo "$line" | awk '{ print $2 }')
