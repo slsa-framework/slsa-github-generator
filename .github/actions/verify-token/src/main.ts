@@ -29,6 +29,7 @@ interface githubObj {
   // TODO(#1411): Record if these become available.
   // repository_id: string;
   // repository_owner_id: string;
+  // actor_id: string;
   ref: string;
   ref_type: string;
   actor: string;
@@ -68,7 +69,7 @@ async function run(): Promise<void> {
     const b64Token = parts[1];
     const bundle = JSON.parse(bundleStr);
 
-    // First, verify the signature, ie that it is signed by a certificate that
+    // First, verify the signature, i.e., that it is signed by a certificate that
     // chains up to Fulcio.
     await sigstore.sigstore.verify(bundle, Buffer.from(b64Token));
 
@@ -113,7 +114,7 @@ async function run(): Promise<void> {
       workflowRecipient
     );
 
-    // Verify the runner label is not empty.
+    // Verify that the runner label is not empty.
     validateNonEmptyField(
       "builder.runner_label",
       rawTokenObj.builder.runner_label
@@ -187,12 +188,12 @@ function parseCertificateIdentity(
     .toString();
   const index = result.indexOf("URI:");
   if (index === -1) {
-    throw new Error(`error: cannot find URI in SAN results`);
+    throw new Error("error: cannot find URI in subjectAltName");
   }
   const toolURI = result.slice(index + 4).replace("\n", "");
   core.debug(`tool-uri: ${toolURI}`);
 
-  // TODO: use the job_workflow_ref and job_workflow_sha when available.
+  // NOTE: we can use the job_workflow_ref and job_workflow_sha when the become available.
   const [toolRepository, toolRef] = extractIdentifyFromSAN(toolURI);
   core.debug(`tool-repository: ${toolRepository}`);
   core.debug(`tool-ref: ${toolRef}`);
