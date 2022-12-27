@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-source "./.github/workflows/scripts/assert.sh"
+source "./.github/workflows/scripts/e2e-assert.sh"
 
 # NOTE: this is a pre-submit, so the signature is not generated and there is
 # just a place holder for it.
@@ -37,19 +37,19 @@ ref=$(echo "$decoded_token" | jq -r '.github.ref')
 ref_type=$(echo "$decoded_token" | jq -r '.github.ref_type')
 actor=$(echo "$decoded_token" | jq -r '.github.actor')
 
-assert_eq "delegator_generic_slsa3.yml", "$audience"
-assert_eq "$GITHUB_RUN_ATTEMPT", "$run_attempt"
-assert_eq "$GITHUB_RUN_NUMBER", "$run_number"
-assert_eq "$GITHUB_RUN_ID", "$run_id"
-assert_eq "$GITHUB_SHA", "$sha"
-assert_eq "$GITHUB_WORKFLOW", "$workflow"
-assert_eq "ubuntu-latest", "$runner_label"
-assert_eq "true", "$private_repository"
-assert_eq "./actions/build-artifacts-composite", "$action_path"
-assert_eq '{"name1":"value1","name2":"value2","private-repository":true}', "$inputs"
-assert_eq "$GITHUB_EVENT_NAME", "$event_name"
-assert_eq "$GITHUB_REPOSITORY", "$repository"
-assert_eq "$GITHUB_REPOSITORY_OWNER", "$repository_owner"
-assert_eq "$GITHUB_REF", "$ref"
-assert_eq "$GITHUB_REF_TYPE", "$ref_type"
-assert_eq "$GITHUB_ACTOR", "$actor"
+assert_eq "delegator_generic_slsa3.yml" "$audience"
+assert_eq "$GITHUB_RUN_ATTEMPT" "$run_attempt"
+assert_eq "$GITHUB_RUN_NUMBER" "$run_number"
+assert_eq "$GITHUB_RUN_ID" "$run_id"
+assert_eq "$GITHUB_SHA" "$sha"
+assert_eq "$GITHUB_WORKFLOW" "$workflow"
+assert_eq "ubuntu-latest" "$runner_label"
+assert_eq "true" "$private_repository"
+assert_eq "./actions/build-artifacts-composite" "$action_path"
+assert_eq '{"name1":"value1","name2":"value2","private-repository":true}' "$inputs"
+assert_eq "$GITHUB_EVENT_NAME" "$event_name"
+assert_eq "$GITHUB_REPOSITORY" "$repository"
+assert_eq "$GITHUB_REPOSITORY_OWNER" "$repository_owner"
+assert_eq "$GITHUB_REF" "$ref"
+assert_eq "$GITHUB_REF_TYPE" "$ref_type"
+assert_eq "$GITHUB_ACTOR" "$actor"
