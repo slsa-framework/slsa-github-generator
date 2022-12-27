@@ -129,7 +129,7 @@ function run() {
             core.info(`unsignedToken: ${unsignedToken}`);
             core.info(`unsignedB64Token: ${unsignedB64Token}`);
             // Sign and prepare the base64 bundle.
-            const eventName = process.env["GITHUB_EVENT_NAME"] || "";
+            const eventName = process.env.GITHUB_EVENT_NAME || "";
             let bundleStr = "";
             if (eventName === "pull_request") {
                 bundleStr = "PLACEHOLDER_SIGNATURE";
