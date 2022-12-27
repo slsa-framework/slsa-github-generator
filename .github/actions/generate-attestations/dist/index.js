@@ -2733,6 +2733,8 @@ exports.writeAttestations = exports.createStatement = void 0;
 const types = __importStar(__nccwpck_require__(90));
 const fs_1 = __importDefault(__nccwpck_require__(147));
 const path_1 = __importDefault(__nccwpck_require__(17));
+// Maximum number of attestations to be written.
+const MAX_ATTESTATION_COUNT = 50;
 function createStatement(subjects, type, predicate) {
     return {
         _type: types.INTOTO_TYPE,
@@ -2747,26 +2749,27 @@ function writeAttestations(layoutFile, predicateType, predicateFile) {
         // Read SLSA output layout file.
         const buffer = fs_1.default.readFileSync(layoutFile);
         const layout = JSON.parse(buffer.toString());
+        if (layout.version !== 1) {
+            throw Error(`SLSA outputs layout invalid version: ${layout.version}`);
+        }
+        const count = Object.keys(layout.attestations).length;
+        if (count > MAX_ATTESTATION_COUNT) {
+            throw Error(`SLSA outputs layout had too many attestations: ${count}`);
+        }
         // Read predicate
         const predicateBuffer = fs_1.default.readFileSync(predicateFile);
         const predicateJson = JSON.parse(predicateBuffer.toString());
         // Iterate through SLSA output layout and create attestations
         const ret = {};
-        for (const att in layout) {
-            if (att !== "version") {
-                // Validate that attestation path is not nested.
-                if (path_1.default.dirname(att) !== ".") {
-                    throw Error(`attestation filename must not be nested ${att}`);
-                }
-                // Validate that attestation is not already written.
-                if (ret[att] !== undefined) {
-                    throw Error(`duplicate attestation file ${att}`);
-                }
-                // TODO: How to cast directly into types.Subject[]?
-                const subjectJson = JSON.parse(JSON.stringify(layout[att]));
-                const attestationJSON = createStatement(subjectJson, predicateType, predicateJson);
-                ret[att] = JSON.stringify(attestationJSON, null, "\t");
+        for (const att of layout.attestations) {
+            // Validate that attestation path is not nested.
+            if (path_1.default.dirname(att.name) !== ".") {
+                throw Error(`attestation filename must not be nested ${att}`);
             }
+            // TODO: How to cast directly into types.Subject[]?
+            const subjectJson = JSON.parse(JSON.stringify(att.subjects));
+            const attestationJSON = createStatement(subjectJson, predicateType, predicateJson);
+            ret[att.name] = JSON.stringify(attestationJSON);
         }
         return ret;
     });
@@ -2829,7 +2832,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.run = void 0;
+exports.run = exports.resolvePathInput = void 0;
 const core = __importStar(__nccwpck_require__(619));
 const fs_1 = __importDefault(__nccwpck_require__(147));
 const path_1 = __importDefault(__nccwpck_require__(17));
@@ -2837,11 +2840,13 @@ const attestation_1 = __nccwpck_require__(336);
 // Detect directory traversal for input file.
 function resolvePathInput(input, wd) {
     const safeJoin = path_1.default.join(wd, input);
+    console.log(safeJoin);
     if (!safeJoin.startsWith(wd)) {
         throw Error(`unsafe path ${safeJoin}`);
     }
     return safeJoin;
 }
+exports.resolvePathInput = resolvePathInput;
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
@@ -2863,8 +2868,9 @@ function run() {
             // Write attestations
             fs_1.default.mkdirSync(outputFolder, { recursive: true });
             for (const att in attestations) {
-                const outputFile = `${outputFolder}/${att}`;
-                fs_1.default.writeFileSync(outputFile, attestations[att]);
+                const outputFile = path_1.default.join(outputFolder, att);
+                const safeOutput = resolvePathInput(outputFile, wd);
+                fs_1.default.writeFileSync(safeOutput, attestations[att]);
             }
             core.setOutput("output-folder", outputFolder);
         }

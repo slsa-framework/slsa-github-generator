@@ -4,8 +4,9 @@ import path from "path";
 import { writeAttestations } from "./attestation";
 
 // Detect directory traversal for input file.
-function resolvePathInput(input: string, wd: string): string {
+export function resolvePathInput(input: string, wd: string): string {
   const safeJoin = path.join(wd, input);
+  console.log(safeJoin);
   if (!safeJoin.startsWith(wd)) {
     throw Error(`unsafe path ${safeJoin}`);
   }
@@ -41,8 +42,9 @@ export async function run(): Promise<void> {
     // Write attestations
     fs.mkdirSync(outputFolder, { recursive: true });
     for (const att in attestations) {
-      const outputFile = `${outputFolder}/${att}`;
-      fs.writeFileSync(outputFile, attestations[att]);
+      const outputFile = path.join(outputFolder, att);
+      const safeOutput = resolvePathInput(outputFile, wd);
+      fs.writeFileSync(safeOutput, attestations[att]);
     }
 
     core.setOutput("output-folder", outputFolder);

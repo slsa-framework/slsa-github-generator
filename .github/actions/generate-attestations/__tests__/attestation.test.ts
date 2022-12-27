@@ -1,6 +1,6 @@
+import * as types from "../src/intoto";
 const fs = require("fs");
 const statement = require("../src/attestation");
-const intoto = require("../src/intoto");
 
 describe("createStatement", () => {
   const subjects = [
@@ -26,7 +26,7 @@ describe("createStatement", () => {
     );
     expect(attestation.subject).toEqual(subjects);
     expect(attestation.predicateType).toEqual(predicateType);
-    expect(attestation._type).toEqual(intoto.INTOTO_TYPE);
+    expect(attestation._type).toEqual(types.INTOTO_TYPE);
   });
 });
 
@@ -35,16 +35,24 @@ jest.mock("fs");
 describe("writeAttestation", () => {
   const layout = {
     version: 1,
-    "attestation1.intoto": [
+    attestations: [
       {
-        name: "first",
-        digest: { sha256: "deadbeaf" },
+        name: "attestation1.intoto",
+        subjects: [
+          {
+            name: "first",
+            digest: { sha256: "deadbeaf" },
+          },
+        ],
       },
-    ],
-    "attestation2.intoto": [
       {
-        name: "second",
-        digest: { sha256: "deadc0de" },
+        name: "attestation2.intoto",
+        subjects: [
+          {
+            name: "second",
+            digest: { sha256: "deadbeaf" },
+          },
+        ],
       },
     ],
   };
@@ -73,5 +81,66 @@ describe("writeAttestation", () => {
     expect(Object.keys(attestations)).toEqual(
       expect.arrayContaining(["attestation1.intoto", "attestation2.intoto"])
     );
+  });
+
+  it("nested intoto statement names", async () => {
+    fs.readFileSync.mockClear();
+
+    const nestedLayout = {
+      version: 1,
+      attestations: [
+        {
+          name: "attestation1.intoto",
+          subjects: [
+            {
+              name: "first",
+              digest: { sha256: "deadbeaf" },
+            },
+          ],
+        },
+        {
+          name: "bad/attestation2.intoto",
+          subjects: [
+            {
+              name: "second",
+              digest: { sha256: "deadbeaf" },
+            },
+          ],
+        },
+      ],
+    };
+
+    fs.readFileSync.mockReturnValueOnce(JSON.stringify(nestedLayout));
+    fs.readFileSync.mockReturnValueOnce(JSON.stringify(predicate));
+
+    await expect(
+      async () =>
+        await statement.writeAttestations(
+          "layoutMock",
+          predicateType,
+          "predicateMock"
+        )
+    ).rejects.toThrow(Error);
+  });
+
+  it("too many attestations", async () => {
+    for (var i = 0; i < 51; i++) {
+      layout.attestations.push({
+        name: i.toString(),
+        subjects: [{ name: "first", digest: { sha256: "deadbeef" } }],
+      });
+    }
+
+    fs.readFileSync.mockReturnValueOnce(JSON.stringify(layout));
+    fs.readFileSync.mockReturnValueOnce(JSON.stringify(predicate));
+
+    await expect(
+      async () =>
+        await statement.writeAttestations(
+          "layoutMock",
+          predicateType,
+          "predicateMock"
+        )
+    ).rejects.toThrow(Error);
   });
 });

@@ -308,16 +308,24 @@ jobs:
           cat <<EOF >DATA
           {
             "version": 1,
-            "attestation1.intoto":[
+            "attestations": [
               {
-              "name": "artifact11",
-              "digest": "abcde"
-              }
-            ],
-            "attestation2.intoto":[
+                "name": "attestation1.intoto",
+                "subjects": {
+                  "name": "artifact11",
+                  "digest": {
+                    "sha256": "deadbeaf"
+                  }
+                }
+              },
               {
-              "name": "artifact21",
-              "digest": "abcde"
+                "name": "attestation2.intoto",
+                "subjects": {
+                  "name": "artifact21",
+                  "digest": {
+                    "sha256": "deadbeat"
+                  }
+                }
               }
             ]
           }
@@ -340,11 +348,29 @@ jobs:
           slsa-outputs-file: slsa-outputs.json
           predicate-type: "https://slsa.dev/provenance/v0.2"
           predicate-file: predicate.json
-      - name: Get outputs
+      - name: Verify outputs
         env:
           OUTPUT_FOLDER: ${{ steps.generate.outputs.output-folder }}
         run: |
           set -euo pipefail
           ls $OUTPUT_FOLDER
-          cat $OUTPUT_FOLDER/attestation1.intoto | jq -r
-          cat $OUTPUT_FOLDER/attestation2.intoto | jq -r
+          artifact11=$(jq -r '.subject[0].name' $OUTPUT_FOLDER/attestation1.intoto)
+          if [[ $artifact11 != "artifact11" ]]; then
+            echo "expected artifact11 name" 
+            exit 2
+          fi
+          digest11=$(jq -r '.subject[0].digest["sha256"]' $OUTPUT_FOLDER/attestation1.intoto)
+          if [[ $digest11 != "deadbeef" ]]; then
+            echo "expected deadbeef digest" 
+            exit 2
+          fi
+          artifact21=$(jq -r '.subject[0].name' $OUTPUT_FOLDER/attestation2.intoto)
+          if [[ $artifact21 != "artifact21" ]]; then
+            echo "expected artifact21 name" 
+            exit 2
+          fi
+          digest21=$(jq -r '.subject[0].digest["sha256"]' $OUTPUT_FOLDER/attestation2.intoto)
+          if [[ $digest21 != "deadbeat" ]]; then
+            echo "expected deadbeat digest" 
+            exit 2
+          fi
