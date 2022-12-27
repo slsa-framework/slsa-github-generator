@@ -92,8 +92,8 @@ function run() {
                 version: 1,
                 context: "SLSA delegator framework",
                 builder: {
-                    "private_repository": privateRepository,
-                    "runner_label": runnerLabel,
+                    private_repository: privateRepository,
+                    runner_label: runnerLabel,
                     audience: workflowRecipient,
                 },
                 github: {
@@ -116,7 +116,7 @@ function run() {
                 },
                 tool: {
                     actions: {
-                        "build_artifacts": {
+                        build_artifacts: {
                             path: buildArtifactsActionPath,
                         },
                     },
