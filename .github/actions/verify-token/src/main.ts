@@ -39,7 +39,7 @@ async function run(): Promise<void> {
   try {
     /* Test locally:
         $ env INPUT_SLSA-WORKFLOW-RECIPIENT="delegator_generic_slsa3.yml" \
-        INPUT_SLSA-UNVERIFIED-TOKEN="$(cat slsa-token)" \
+        INPUT_SLSA-UNVERIFIED-TOKEN="$(cat testdata/slsa-token)" \
         GITHUB_EVENT_NAME="workflow_dispatch" \
         GITHUB_RUN_ATTEMPT="1" \
         GITHUB_RUN_ID="3789839403" \
