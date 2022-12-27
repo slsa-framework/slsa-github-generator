@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM golang:1.19.4@sha256:cfaad8202aed5121121dfe3a252e98d5c89cc67fc456cc69fe70eb7dcc1b8cff as builder
+FROM golang:1.19.4@sha256:941582ed5a1189ce2c8cf6a806cfb8f5924694e1f58856869f98364315de6231 as builder
 
 WORKDIR /app
 COPY . /app
