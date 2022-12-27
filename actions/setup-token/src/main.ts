@@ -57,8 +57,8 @@ async function run(): Promise<void> {
       version: 1,
       context: "SLSA delegator framework",
       builder: {
-        "private-repository": privateRepository,
-        "runner-label": runnerLabel,
+        "private_repository": privateRepository,
+        "runner_label": runnerLabel,
         audience: workflowRecipient,
       },
       github: {
@@ -81,7 +81,7 @@ async function run(): Promise<void> {
       },
       tool: {
         actions: {
-          "build-artifacts": {
+          "build_artifacts": {
             path: buildArtifactsActionPath,
           },
         },

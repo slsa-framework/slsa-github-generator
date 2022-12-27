@@ -2,6 +2,8 @@
 
 set -euo pipefail
 
+source "./.github/workflows/scripts/assert.sh"
+
 # NOTE: this is a pre-submit, so the signature is not generated and there is
 # just a place holder for it.
 echo "SLSA_TOKEN: $SLSA_TOKEN"
@@ -17,9 +19,9 @@ echo "$decoded_token"
 
 # Non-GitHub's information.
 audience=$(echo "$decoded_token" | jq -r '.builder.audience')
-runner_label=$(echo "$decoded_token" | jq -r '.builder."runner-label"')
-private_repository=$(echo "$decoded_token" | jq -r '.builder."private-repository"')
-action_path=$(echo "$decoded_token" | jq -r '.tool.actions."build-artifacts".path')
+runner_label=$(echo "$decoded_token" | jq -r '.builder.runner_label')
+private_repository=$(echo "$decoded_token" | jq -r '.builder.private_repository')
+action_path=$(echo "$decoded_token" | jq -r '.tool.actions.build_artifacts.path')
 inputs=$(echo "$decoded_token" | jq -rc '.tool.inputs')
 
 # GitHub's information.
