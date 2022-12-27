@@ -1,0 +1,37 @@
+{
+  "name": "setup-token",
+  "version": "1.0.0",
+  "description": "",
+  "main": "lib/main.js",
+  "scripts": {
+    "ci": "npm ci",
+    "build": "tsc",
+    "format": "prettier --write '**/*.ts'",
+    "format-check": "prettier --check '**/*.ts'",
+    "package": "ncc build --source-map",
+    "lint": "eslint src/**/*.ts",
+    "all": "npm ci && npm run format && npm run lint && npm run build && npm run package",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "bin": {
+    "setup-token": "bin/setup-token.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "@actions/core": "^1.10.0",
+    "@actions/github": "^5.1.1",
+    "sigstore": "^0.2.0"
+  },
+  "devDependencies": {
+    "@types/node": "^18.11.9",
+    "@typescript-eslint/eslint-plugin": "^5.45.0",
+    "@typescript-eslint/parser": "^5.45.0",
+    "@vercel/ncc": "^0.34.0",
+    "eslint": "^8.27.0",
+    "eslint-plugin-github": "^4.4.1",
+    "prettier": "^2.7.1",
+    "typescript": "^4.8.4"
+  }
+}
