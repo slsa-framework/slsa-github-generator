@@ -14,7 +14,7 @@ are considered "external" even though they are hosted on the same repository: th
 
 but instead via their "fully-qualified" name:
 
-```slsa-framework/slsa-github-generator/.github/actions/name@vX.Y.Z```. 
+```slsa-framework/slsa-github-generator/.github/actions/name@vX.Y.Z```.
 
 We do this because the Actions are part of the builder, whereas the workflow runs in the "context" of the calling repository.
 
