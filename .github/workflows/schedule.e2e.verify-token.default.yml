@@ -1,0 +1,51 @@
+name: schedule actions
+
+on:
+  # Daily run.
+  schedule:
+    - cron: "0 4 * * *"
+  workflow_dispatch:
+
+permissions: read-all
+
+jobs:
+  verify-token:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # tag=v3.1.0
+      - id: setup
+        uses: ./actions/setup-token
+        with:
+          slsa-workflow-recipient: "delegator_generic_slsa3.yml"
+          slsa-private-repository: true
+          slsa-runner-label: "ubuntu-latest"
+          slsa-build-action-path: "./actions/build-artifacts-composite"
+          slsa-workflow-inputs: '{"name1":"value1","name2":"value2","private-repository":true}'
+      - id: verify
+        uses: ./actions/verify-token
+        with:
+          slsa-unverified-token: ${{ steps.setup.outputs.slsa-token }}
+          slsa-workflow-recipient: "delegator_generic_slsa3.yml"
+      - run: ./.github/workflows/scripts/schedule.actions/verify-token.sh
+        env:
+          VERIFIED_TOKEN: ${{ steps.verify.outputs.slsa-verified-token }}
+          TOOL_REPOSITORY: ${{ steps.verify.outputs.tool-repository }}
+          TOOL_REF: ${{ steps.verify.outputs.tool-ref }}
+          TOOL_URI: ${{ steps.verify.outputs.tool-uri }}
+      - id: verify-mismatch-recipient
+        uses: ./actions/verify-token
+        continue-on-error: true
+        with:
+          slsa-unverified-token: ${{ steps.verify.outputs.slsa-verified-token }}
+          slsa-workflow-recipient: "elegator_generic_slsa3.yml"
+      - id: verify-mismatch-token
+        uses: ./actions/verify-token
+        continue-on-error: true
+        with:
+          slsa-unverified-token: aGVsbG8K
+          slsa-workflow-recipient: "delegator_generic_slsa3.yml"
+      - env:
+          SUCCESS: ${{ steps.verify-mismatch-recipient.outcome == 'failure' && steps.verify-mismatch-token.outcome == 'failure' }}
+        run: |
+          [ "$SUCCESS" == "true" ]
+      #TODO(1419): Add more tests that manipulate the token.
