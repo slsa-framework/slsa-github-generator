@@ -64,8 +64,8 @@ function run() {
                 INPUT_SLSA-UNVERIFIED-TOKEN="$(cat testdata/slsa-token)" \
                 GITHUB_EVENT_NAME="workflow_dispatch" \
                 GITHUB_RUN_ATTEMPT="1" \
-                GITHUB_RUN_ID="3789839403" \
-                GITHUB_RUN_NUMBER="198" \
+                GITHUB_RUN_ID="3790385865" \
+                GITHUB_RUN_NUMBER="200" \
                 GITHUB_WORKFLOW="delegate release project" \
                 GITHUB_SHA="8cbf4d422367d8499d5980a837cb9cc8e1e67001" \
                 GITHUB_REPOSITORY="laurentsimon/slsa-delegate-project" \
@@ -101,8 +101,8 @@ function run() {
             validateField("context", rawTokenObj.context, "SLSA delegator framework");
             // Verify the intended recipient.
             validateField("builder.audience", rawTokenObj.builder.audience, workflowRecipient);
-            // Verify that the runner label is not empty.
-            validateNonEmptyField("builder.runner_label", rawTokenObj.builder.runner_label);
+            // Verify the runner label.
+            validateFieldAnyOf("builder.runner_label", rawTokenObj.builder.runner_label, ["ubuntu-latest"]);
             // Verify the GitHub event information.
             validateGitHubFields(rawTokenObj.github);
             // Validate the build Action is not empty.
@@ -205,6 +205,15 @@ function validateGitHubFields(gho) {
     // repository_id: process.env.GITHUB_REPOSITORY_ID,
     // repository_owner_id: process.env.GITHUB_REPOSITORY_OWNER_ID,
     // repository_actor_id: process.env.GITHUB_ACTOR_ID,
+}
+function validateFieldAnyOf(name, actual, expected) {
+    for (const value of expected) {
+        if (actual === value) {
+            // Found a match.
+            return;
+        }
+    }
+    throw new Error(`mismatch ${name}: got '${actual}', expected one of '${expected.join(",")}'.`);
 }
 function validateField(name, actual, expected) {
     if (actual !== expected) {
