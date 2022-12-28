@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-source "./.github/workflows/scripts/assert.sh"
+source "./.github/workflows/scripts/e2e-assert.sh"
 
 # Tool information.
 echo "VERIFIED_TOKEN: $VERIFIED_TOKEN"
@@ -30,22 +30,22 @@ ref=$(echo "$VERIFIED_TOKEN" | jq -r '.github.ref')
 ref_type=$(echo "$VERIFIED_TOKEN" | jq -r '.github.ref_type')
 actor=$(echo "$VERIFIED_TOKEN" | jq -r '.github.actor')
 
-assert_eq "delegator_generic_slsa3.yml", "$audience"
-assert_eq "$GITHUB_RUN_ATTEMPT", "$run_attempt"
-assert_eq "$GITHUB_RUN_NUMBER", "$run_number"
-assert_eq "$GITHUB_RUN_ID", "$run_id"
-assert_eq "$GITHUB_SHA", "$sha"
-assert_eq "$GITHUB_WORKFLOW", "$workflow"
-assert_eq "ubuntu-latest", "$runner_label"
-assert_eq "true", "$private_repository"
-assert_eq "./actions/build-artifacts-composite", "$action_path"
-assert_eq '{"name1":"value1","name2":"value2","private-repository":true}', "$inputs"
-assert_eq "$GITHUB_EVENT_NAME", "$event_name"
-assert_eq "$GITHUB_REPOSITORY", "$repository"
-assert_eq "$GITHUB_REPOSITORY_OWNER", "$repository_owner"
-assert_eq "$GITHUB_REF", "$ref"
-assert_eq "$GITHUB_REF_TYPE", "$ref_type"
-assert_eq "$GITHUB_ACTOR", "$actor"
-assert_eq "$TOOL_REPOSITORY", "$GITHUB_REPOSITORY"
-assert_eq "$TOOL_REF", "$GITHUB_REF"
-assert_eq "$GITHUB_URI", "https://github.com/$GITHUB_REPOSITORY/.github/workflows/schedule.e2e.verify-token.default.yml@$GITHUB_REF"
+e2e_assert_eq "delegator_generic_slsa3.yml" "$audience"
+e2e_assert_eq "$GITHUB_RUN_ATTEMPT" "$run_attempt"
+e2e_assert_eq "$GITHUB_RUN_NUMBER" "$run_number"
+e2e_assert_eq "$GITHUB_RUN_ID" "$run_id"
+e2e_assert_eq "$GITHUB_SHA" "$sha"
+e2e_assert_eq "$GITHUB_WORKFLOW" "$workflow"
+e2e_assert_eq "ubuntu-latest" "$runner_label"
+e2e_assert_eq "true" "$private_repository"
+e2e_assert_eq "./actions/build-artifacts-composite" "$action_path"
+e2e_assert_eq '{"name1":"value1","name2":"value2","private-repository":true}' "$inputs"
+e2e_assert_eq "$GITHUB_EVENT_NAME" "$event_name"
+e2e_assert_eq "$GITHUB_REPOSITORY" "$repository"
+e2e_assert_eq "$GITHUB_REPOSITORY_OWNER" "$repository_owner"
+e2e_assert_eq "$GITHUB_REF" "$ref"
+e2e_assert_eq "$GITHUB_REF_TYPE" "$ref_type"
+e2e_assert_eq "$GITHUB_ACTOR" "$actor"
+e2e_assert_eq "$TOOL_REPOSITORY" "$GITHUB_REPOSITORY"
+e2e_assert_eq "$TOOL_REF" "$GITHUB_REF"
+e2e_assert_eq "$TOOL_URI" "https://github.com/$GITHUB_REPOSITORY/.github/workflows/schedule.e2e.verify-token.default.yml@$GITHUB_REF"

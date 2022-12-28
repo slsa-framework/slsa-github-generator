@@ -14,6 +14,9 @@ env:
 
 jobs:
   verify-token:
+    permissions:
+      contents: read
+      id-token: write
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b # v3.2.0
@@ -26,7 +29,7 @@ jobs:
           slsa-build-action-path: "./actions/build-artifacts-composite"
           slsa-workflow-inputs: '{"name1":"value1","name2":"value2","private-repository":true}'
       - id: verify
-        uses: ./actions/verify-token
+        uses: ./.github/actions/verify-token
         with:
           slsa-unverified-token: ${{ steps.setup.outputs.slsa-token }}
           slsa-workflow-recipient: "delegator_generic_slsa3.yml"
@@ -37,13 +40,13 @@ jobs:
           TOOL_REF: ${{ steps.verify.outputs.tool-ref }}
           TOOL_URI: ${{ steps.verify.outputs.tool-uri }}
       - id: verify-mismatch-recipient
-        uses: ./actions/verify-token
+        uses: ./.github/actions/verify-token
         continue-on-error: true
         with:
           slsa-unverified-token: ${{ steps.verify.outputs.slsa-verified-token }}
           slsa-workflow-recipient: "elegator_generic_slsa3.yml"
       - id: verify-mismatch-token
-        uses: ./actions/verify-token
+        uses: ./.github/actions/verify-token
         continue-on-error: true
         with:
           slsa-unverified-token: aGVsbG8K

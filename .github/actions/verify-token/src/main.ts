@@ -99,7 +99,8 @@ async function run(): Promise<void> {
       };
     }
 
-    const rawTokenObj: rawTokenInterface = JSON.parse(rawToken.toString());
+    const rawTokenStr = rawToken.toString()
+    const rawTokenObj: rawTokenInterface = JSON.parse(rawTokenStr);
 
     // Verify the version.
     validateField("version", rawTokenObj.version, 1);
@@ -134,11 +135,13 @@ async function run(): Promise<void> {
 
     // Extract certificate information.
     const [toolURI, toolRepository, toolRef] = parseCertificateIdentity(bundle);
+    
+    core.debug(`slsa-verified-token: ${rawTokenStr}`);
 
     core.setOutput("tool-repository", toolRepository);
     core.setOutput("tool-ref", toolRef);
     core.setOutput("tool-uri", toolURI);
-    core.setOutput("slsa-verified-token", rawToken);
+    core.setOutput("slsa-verified-token", rawTokenStr);
   } catch (error) {
     if (error instanceof Error) {
       core.setFailed(error.message);
