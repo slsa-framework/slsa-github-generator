@@ -1,20 +1,27 @@
 {
-    "version": 1,
-    "attestations": [
-      {
-        "name": "attestation1.intoto",
-        "subjects": {
+  "version": 1,
+  "attestations": [
+    {
+      "name": "attestation1.intoto",
+      "subjects": [
+        {
           "name": "artifact11",
-          "digest": "abcde"
+          "digest": {
+            "sha256": "deadbeaf"
+          }
         }
-      },
-      {
-        "name": "attestation2.intoto",
-        "subjects": {
+      ]
+    },
+    {
+      "name": "attestation2.intoto",
+      "subjects": [
+        {
           "name": "artifact21",
-          "digest": "abcde"
+          "digest": {
+            "sha256": "deadbeat"
+          }
         }
-      }
-    ]
-  }
-  
+      ]
+    }
+  ]
+}
