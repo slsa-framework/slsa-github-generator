@@ -22,12 +22,16 @@ help: ## Shows all targets and help from the Makefile (this message).
 
 .PHONY: unit-test
 unit-test: 
-	# Run unit tests for the generate-attestations action.
-	make -C .github/actions/generate-attestations/ unit-test
 	# Run unit tests for the detect-workflow action.
 	make -C .github/actions/detect-workflow/ unit-test
 	go mod vendor
 	go test -mod=vendor -v ./...
+
+.PHONY: ts-test
+ts-test: 
+	# Run unit tests for the generate-attestations action.
+	make -C .github/actions/generate-attestations/ unit-test
+
 
 ## Linters
 #####################################################################

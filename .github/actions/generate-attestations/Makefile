@@ -22,7 +22,7 @@ help: ## Shows all targets and help from the Makefile (this message).
 
 .PHONY: unit-test
 unit-test: ## Runs all unit tests.
-	npm test
+	npm run all
 
 ## Build
 #####################################################################

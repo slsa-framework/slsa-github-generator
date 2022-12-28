@@ -31,6 +31,16 @@ jobs:
           set -euo pipefail
           make unit-test
 
+      - name: Setup node
+        uses: actions/setup-node@8c91899e586c5b171469028077307d293428b516 # v3
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: npm
+      - name: typescript tests
+        run: |
+          set -euo pipefail
+          make ts-test
+
   check-verifier:
     name: verify slsa-verifier is latest
     runs-on: ubuntu-latest
