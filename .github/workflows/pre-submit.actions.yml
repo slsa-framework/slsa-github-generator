@@ -24,6 +24,7 @@ jobs:
           - .github/actions/privacy-check
           - .github/actions/generate-attestations
           - ./actions/setup-token
+          #TODO(1418): enable .github/actions/verify-token.
     steps:
       - uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b # v3.2.0
 
