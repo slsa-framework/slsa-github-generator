@@ -376,21 +376,21 @@ jobs:
           ls $OUTPUT_FOLDER
           artifact11=$(jq -r '.subject[0].name' $OUTPUT_FOLDER/attestation1.intoto)
           if [[ $artifact11 != "artifact11" ]]; then
-            echo "expected artifact11 name" 
+            echo "expected artifact11 name"
             exit 2
           fi
           digest11=$(jq -r '.subject[0].digest["sha256"]' $OUTPUT_FOLDER/attestation1.intoto)
           if [[ $digest11 != "deadbeef" ]]; then
-            echo "expected deadbeef digest" 
+            echo "expected deadbeef digest"
             exit 2
           fi
           artifact21=$(jq -r '.subject[0].name' $OUTPUT_FOLDER/attestation2.intoto)
           if [[ $artifact21 != "artifact21" ]]; then
-            echo "expected artifact21 name" 
+            echo "expected artifact21 name"
             exit 2
           fi
           digest21=$(jq -r '.subject[0].digest["sha256"]' $OUTPUT_FOLDER/attestation2.intoto)
           if [[ $digest21 != "deadbeat" ]]; then
-            echo "expected deadbeat digest" 
+            echo "expected deadbeat digest"
             exit 2
           fi
