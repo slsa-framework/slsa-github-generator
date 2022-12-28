@@ -22,8 +22,9 @@ jobs:
         action:
           - .github/actions/compute-sha256
           - .github/actions/privacy-check
+          - .github/actions/generate-attestations
           - ./actions/setup-token
-          #TODO(1418): enable .github/actions/verify-token.
+          # TODO(1418): enable .github/actions/verify-token.
     steps:
       - uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b # v3.2.0
 
@@ -319,3 +320,42 @@ jobs:
           directory: "internal/builders/generic"
           # NOTE: compile-builder explicitly set to false.
           compile-builder: false
+
+  generate-attestations:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b # v3.2.0
+      - name: Test generate attestations
+        id: generate
+        uses: ./.github/actions/generate-attestations
+        with:
+          slsa-outputs-file: .github/actions/generate-attestations/testdata/layouts/valid-layout.json
+          predicate-type: "https://slsa.dev/provenance/v0.2"
+          predicate-file: .github/actions/generate-attestations/testdata/predicates/valid-slsa-v02.json
+          output-folder: attestations
+      - name: Verify outputs
+        env:
+          OUTPUT_FOLDER: attestations
+        run: |
+          set -euo pipefail
+          ls $OUTPUT_FOLDER
+          artifact11=$(jq -r '.subject[0].name' $OUTPUT_FOLDER/attestation1.intoto)
+          if [[ $artifact11 != "artifact11" ]]; then
+            echo "expected artifact11 name"
+            exit 2
+          fi
+          digest11=$(jq -r '.subject[0].digest["sha256"]' $OUTPUT_FOLDER/attestation1.intoto)
+          if [[ $digest11 != "deadbeaf" ]]; then
+            echo "expected deadbeaf digest"
+            exit 2
+          fi
+          artifact21=$(jq -r '.subject[0].name' $OUTPUT_FOLDER/attestation2.intoto)
+          if [[ $artifact21 != "artifact21" ]]; then
+            echo "expected artifact21 name"
+            exit 2
+          fi
+          digest21=$(jq -r '.subject[0].digest["sha256"]' $OUTPUT_FOLDER/attestation2.intoto)
+          if [[ $digest21 != "deadbeat" ]]; then
+            echo "expected deadbeat digest"
+            exit 2
+          fi

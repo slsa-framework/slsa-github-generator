@@ -55,7 +55,7 @@ jobs:
           SUCCESS: ${{ steps.verify-mismatch-recipient.outcome == 'failure' && steps.verify-mismatch-token.outcome == 'failure' }}
         run: |
           [ "$SUCCESS" == "true" ]
-      #TODO(1419): Add more tests that manipulate the token.
+      # TODO(1419): Add more tests that manipulate the token.
 
   if-succeed:
     needs: [verify-token]
