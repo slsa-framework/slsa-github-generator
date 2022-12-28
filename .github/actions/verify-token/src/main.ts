@@ -197,7 +197,7 @@ function parseCertificateIdentity(
   const toolURI = result.slice(index + 4).replace("\n", "");
   core.debug(`tool-uri: ${toolURI}`);
 
-  // NOTE: we can use the job_workflow_ref and job_workflow_sha when the become available.
+  // NOTE: we can use the job_workflow_ref and job_workflow_sha when they become available.
   const [toolRepository, toolRef] = extractIdentifyFromSAN(toolURI);
   core.debug(`tool-repository: ${toolRepository}`);
   core.debug(`tool-ref: ${toolRef}`);
