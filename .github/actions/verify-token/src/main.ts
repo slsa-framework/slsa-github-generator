@@ -99,7 +99,7 @@ async function run(): Promise<void> {
       };
     }
 
-    const rawTokenStr = rawToken.toString()
+    const rawTokenStr = rawToken.toString();
     const rawTokenObj: rawTokenInterface = JSON.parse(rawTokenStr);
 
     // Verify the version.
@@ -135,7 +135,7 @@ async function run(): Promise<void> {
 
     // Extract certificate information.
     const [toolURI, toolRepository, toolRef] = parseCertificateIdentity(bundle);
-    
+
     core.debug(`slsa-verified-token: ${rawTokenStr}`);
 
     core.setOutput("tool-repository", toolRepository);
@@ -216,7 +216,7 @@ function extractIdentifyFromSAN(URI: string): [string, string] {
   }
   const ref = parts[1];
   const url = parts[0];
-  const gitHubURL = "https://github.com/"
+  const gitHubURL = "https://github.com/";
   if (!url.startsWith(gitHubURL)) {
     throw new Error(`not a GitHub URI: ${URI}`);
   }

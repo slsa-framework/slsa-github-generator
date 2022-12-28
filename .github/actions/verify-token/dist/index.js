@@ -61,7 +61,7 @@ function run() {
         try {
             /* Test locally:
                 $ env INPUT_SLSA-WORKFLOW-RECIPIENT="delegator_generic_slsa3.yml" \
-                INPUT_SLSA-UNVERIFIED-TOKEN="$(cat slsa-token)" \
+                INPUT_SLSA-UNVERIFIED-TOKEN="$(cat testdata/slsa-token)" \
                 GITHUB_EVENT_NAME="workflow_dispatch" \
                 GITHUB_RUN_ATTEMPT="1" \
                 GITHUB_RUN_ID="3789839403" \
@@ -87,20 +87,21 @@ function run() {
             const bundleStr = Buffer.from(parts[0], "base64").toString("utf-8");
             const b64Token = parts[1];
             const bundle = JSON.parse(bundleStr);
-            // First, verify the signature, ie that it is signed by a certificate that
+            // First, verify the signature, i.e., that it is signed by a certificate that
             // chains up to Fulcio.
             yield sigstore.sigstore.verify(bundle, Buffer.from(b64Token));
             const rawToken = Buffer.from(b64Token, "base64");
             core.debug(`bundle: ${bundleStr}`);
             core.debug(`token: ${rawToken}`);
-            const rawTokenObj = JSON.parse(rawToken.toString());
+            const rawTokenStr = rawToken.toString();
+            const rawTokenObj = JSON.parse(rawTokenStr);
             // Verify the version.
             validateField("version", rawTokenObj.version, 1);
             // Verify the context of the signature.
             validateField("context", rawTokenObj.context, "SLSA delegator framework");
             // Verify the intended recipient.
             validateField("builder.audience", rawTokenObj.builder.audience, workflowRecipient);
-            // Verify the runner label is not empty.
+            // Verify that the runner label is not empty.
             validateNonEmptyField("builder.runner_label", rawTokenObj.builder.runner_label);
             // Verify the GitHub event information.
             validateGitHubFields(rawTokenObj.github);
@@ -110,10 +111,11 @@ function run() {
             // They may be empty.
             // Extract certificate information.
             const [toolURI, toolRepository, toolRef] = parseCertificateIdentity(bundle);
+            core.debug(`slsa-verified-token: ${rawTokenStr}`);
             core.setOutput("tool-repository", toolRepository);
             core.setOutput("tool-ref", toolRef);
             core.setOutput("tool-uri", toolURI);
-            core.setOutput("slsa-verified-token", rawToken);
+            core.setOutput("slsa-verified-token", rawTokenStr);
         }
         catch (error) {
             if (error instanceof Error) {
@@ -153,27 +155,34 @@ function parseCertificateIdentity(bundle) {
         .toString();
     const index = result.indexOf("URI:");
     if (index === -1) {
-        throw new Error(`error: cannot find URI in SAN results`);
+        throw new Error("error: cannot find URI in subjectAltName");
     }
     const toolURI = result.slice(index + 4).replace("\n", "");
     core.debug(`tool-uri: ${toolURI}`);
-    // TODO: use the job_workflow_ref and job_workflow_sha when available.
+    // NOTE: we can use the job_workflow_ref and job_workflow_sha when the become available.
     const [toolRepository, toolRef] = extractIdentifyFromSAN(toolURI);
     core.debug(`tool-repository: ${toolRepository}`);
     core.debug(`tool-ref: ${toolRef}`);
     return [toolURI, toolRepository, toolRef];
 }
 function extractIdentifyFromSAN(URI) {
+    // NOTE: the URI looks like:
+    // https://github.com/laurentsimon/slsa-delegated-tool/.github/workflows/tool1_slsa3.yml@refs/heads/main.
+    // We want to extract:
+    // - the repository: laurentsimon/slsa-delegated-tool
+    // - the ref: refs/heads/main
     const parts = URI.split("@");
     if (parts.length !== 2) {
         throw new Error(`invalid URI (1): ${URI}`);
     }
     const ref = parts[1];
     const url = parts[0];
-    if (!url.startsWith("https://github.com/")) {
+    const gitHubURL = "https://github.com/";
+    if (!url.startsWith(gitHubURL)) {
         throw new Error(`not a GitHub URI: ${URI}`);
     }
-    const parts2 = parts[0].slice(19).split("/");
+    // NOTE: we omit the gitHubURL from the URL.
+    const parts2 = url.slice(gitHubURL.length).split("/");
     if (parts2.length <= 2) {
         throw new Error(`invalid URI (2): ${URI}`);
     }
