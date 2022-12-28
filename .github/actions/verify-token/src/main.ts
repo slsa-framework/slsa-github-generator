@@ -202,16 +202,23 @@ function parseCertificateIdentity(
 }
 
 function extractIdentifyFromSAN(URI: string): [string, string] {
+  // NOTE: the URI looks like:
+  // https://github.com/laurentsimon/slsa-delegated-tool/.github/workflows/tool1_slsa3.yml@refs/heads/main.
+  // We want to extract:
+  // - the repository: laurentsimon/slsa-delegated-tool
+  // - the ref: refs/heads/main
   const parts = URI.split("@");
   if (parts.length !== 2) {
     throw new Error(`invalid URI (1): ${URI}`);
   }
   const ref = parts[1];
   const url = parts[0];
-  if (!url.startsWith("https://github.com/")) {
+  const gitHubURL = "https://github.com/"
+  if (!url.startsWith(gitHubURL)) {
     throw new Error(`not a GitHub URI: ${URI}`);
   }
-  const parts2 = parts[0].slice(19).split("/");
+  // NOTE: we omit the gitHubURL from the URL.
+  const parts2 = url.slice(gitHubURL.length).split("/");
   if (parts2.length <= 2) {
     throw new Error(`invalid URI (2): ${URI}`);
   }
