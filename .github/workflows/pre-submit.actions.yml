@@ -19,7 +19,11 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        action: [compute-sha256, privacy-check, generate-attestations]
+        action:
+          - .github/actions/compute-sha256
+          - .github/actions/privacy-check
+          - .github/actions/generate-attestations
+          - ./actions/setup-token
     steps:
       - uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b # v3.2.0
 
@@ -29,11 +33,11 @@ jobs:
           node-version: 16
 
       - name: Rebuild the dist/ directory
-        working-directory: .github/actions/${{ matrix.action }}
+        working-directory: ${{ matrix.action }}
         run: make package
 
       - name: Compare the expected and actual dist/ directories
-        working-directory: .github/actions/${{ matrix.action }}
+        working-directory: ${{ matrix.action }}
         id: diff
         run: |
           set -euo pipefail
@@ -92,6 +96,22 @@ jobs:
         run: |
           echo "Got output: $OUTPUT"
           [[ "$OUTPUT" != "" ]]
+
+  setup-token:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # tag=v3.1.0
+      - id: setup
+        uses: ./actions/setup-token
+        with:
+          slsa-workflow-recipient: "delegator_generic_slsa3.yml"
+          slsa-private-repository: true
+          slsa-runner-label: "ubuntu-latest"
+          slsa-build-action-path: "./actions/build-artifacts-composite"
+          slsa-workflow-inputs: '{"name1":"value1","name2":"value2","private-repository":true}'
+      - env:
+          SLSA_TOKEN: ${{ steps.setup.outputs.slsa-token }}
+        run: ./.github/workflows/scripts/pre-submit.actions/setup-token.sh
 
   references:
     runs-on: ubuntu-latest

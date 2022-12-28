@@ -10,7 +10,7 @@
     "format-check": "prettier --check '**/*.ts'",
     "package": "ncc build --source-map",
     "lint": "eslint src/**/*.ts",
-    "all": "npm run build && npm run format && npm run lint && npm run package"
+    "all": "npm run format && npm run lint && npm run build && npm run package"
   },
   "keywords": [
     "actions",

@@ -85,7 +85,7 @@ There is one integration test we cannot easily test "live", so we need to simula
    "$GH" release -R "$VERIFIER_REPOSITORY" upload "$VERIFIER_TAG" slsa-verifier-linux-amd64
    ```
 
-1. Ensure your fork of the builder is at the same commit hash as the offical builder's `$BUILDER_TAG` release.
+1. Ensure your fork of the builder is at the same commit hash as the official builder's `$BUILDER_TAG` release.
 1. Create a new branch `git checkout -b "$BUILDER_REF"`
 1. Update the file `$BUILDER_REPOSITORY/main/.github/actions/generate-builder/action.yml` by replacing the strings `BUILDER_REPOSITORY` and `VERIFIER_REPOSITORY` with your own username (value of `$GITHUB_USERNAME`). Then push the changes.
 1. For the Go builder, update the file `$BUILDER_REPOSITORY/main/.github/workflows/builder_go_slsa3.yml` to:
