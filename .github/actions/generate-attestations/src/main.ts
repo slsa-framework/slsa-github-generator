@@ -2,16 +2,7 @@ import * as core from "@actions/core";
 import fs from "fs";
 import path from "path";
 import { writeAttestations } from "./attestation";
-
-// Detect directory traversal for input file.
-export function resolvePathInput(input: string, wd: string): string {
-  const safeJoin = path.join(wd, input);
-  console.log(safeJoin);
-  if (!safeJoin.startsWith(wd)) {
-    throw Error(`unsafe path ${safeJoin}`);
-  }
-  return safeJoin;
-}
+import { resolvePathInput } from "./utils";
 
 export async function run(): Promise<void> {
   try {

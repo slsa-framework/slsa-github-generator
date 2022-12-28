@@ -2833,32 +2833,23 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.run = exports.resolvePathInput = void 0;
+exports.run = void 0;
 const core = __importStar(__nccwpck_require__(186));
 const fs_1 = __importDefault(__nccwpck_require__(147));
 const path_1 = __importDefault(__nccwpck_require__(17));
 const attestation_1 = __nccwpck_require__(673);
-// Detect directory traversal for input file.
-function resolvePathInput(input, wd) {
-    const safeJoin = path_1.default.join(wd, input);
-    console.log(safeJoin);
-    if (!safeJoin.startsWith(wd)) {
-        throw Error(`unsafe path ${safeJoin}`);
-    }
-    return safeJoin;
-}
-exports.resolvePathInput = resolvePathInput;
+const utils_1 = __nccwpck_require__(314);
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const wd = process.env[`GITHUB_WORKSPACE`] || "";
             // SLSA subjects layout file.
             const slsaOutputs = core.getInput("slsa-outputs-file");
-            const safeSlsaOutputs = resolvePathInput(slsaOutputs, wd);
+            const safeSlsaOutputs = (0, utils_1.resolvePathInput)(slsaOutputs, wd);
             core.debug(`Using SLSA output file at ${safeSlsaOutputs}!`);
             // Predicate.
             const predicateFile = core.getInput("predicate-file");
-            const safePredicateFile = resolvePathInput(predicateFile, wd);
+            const safePredicateFile = (0, utils_1.resolvePathInput)(predicateFile, wd);
             core.debug(`Inputs: Predicate file ${safePredicateFile}!`);
             // Predicate type
             const predicateType = core.getInput("predicate-type");
@@ -2870,7 +2861,7 @@ function run() {
             fs_1.default.mkdirSync(outputFolder, { recursive: true });
             for (const att in attestations) {
                 const outputFile = path_1.default.join(outputFolder, att);
-                const safeOutput = resolvePathInput(outputFile, wd);
+                const safeOutput = (0, utils_1.resolvePathInput)(outputFile, wd);
                 fs_1.default.writeFileSync(safeOutput, attestations[att]);
             }
             core.setOutput("output-folder", outputFolder);
@@ -2887,6 +2878,30 @@ function run() {
 }
 exports.run = run;
 run();
+
+
+/***/ }),
+
+/***/ 314:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.resolvePathInput = void 0;
+const path_1 = __importDefault(__nccwpck_require__(17));
+// Detect directory traversal for input file.
+function resolvePathInput(input, wd) {
+    const safeJoin = path_1.default.resolve(path_1.default.join(wd, input));
+    if (!(safeJoin + path_1.default.sep).startsWith(wd + path_1.default.sep)) {
+        throw Error(`unsafe path ${safeJoin}`);
+    }
+    return safeJoin;
+}
+exports.resolvePathInput = resolvePathInput;
 
 
 /***/ }),

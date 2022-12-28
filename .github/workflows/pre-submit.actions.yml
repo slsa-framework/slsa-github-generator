@@ -331,21 +331,21 @@ jobs:
             "attestations": [
               {
                 "name": "attestation1.intoto",
-                "subjects": {
-                  "name": "artifact11",
-                  "digest": {
-                    "sha256": "deadbeaf"
+                "subjects": [
+                  {
+                    "name": "artifact11",
+                    "digest": { "sha256": "deadbeaf" }
                   }
-                }
+                ]
               },
               {
                 "name": "attestation2.intoto",
-                "subjects": {
-                  "name": "artifact21",
-                  "digest": {
-                    "sha256": "deadbeat"
+                "subjects": [
+                  {
+                    "name": "artifact21",
+                    "digest": { "sha256": "deadbeat" }
                   }
-                }
+                ]
               }
             ]
           }
