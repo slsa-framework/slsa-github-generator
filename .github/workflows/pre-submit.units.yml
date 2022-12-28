@@ -31,6 +31,16 @@ jobs:
           set -euo pipefail
           make unit-test
 
+      - name: Set Node.js 16
+        uses: actions/setup-node@8c91899e586c5b171469028077307d293428b516 # tag=v3.5.1
+        with:
+          node-version: 16
+
+      - name: typescript tests
+        run: |
+          set -euo pipefail
+          make ts-test
+
   check-verifier:
     name: verify slsa-verifier is latest
     runs-on: ubuntu-latest
