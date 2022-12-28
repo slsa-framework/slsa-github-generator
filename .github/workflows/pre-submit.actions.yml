@@ -380,8 +380,8 @@ jobs:
             exit 2
           fi
           digest11=$(jq -r '.subject[0].digest["sha256"]' $OUTPUT_FOLDER/attestation1.intoto)
-          if [[ $digest11 != "deadbeef" ]]; then
-            echo "expected deadbeef digest"
+          if [[ $digest11 != "deadbeaf" ]]; then
+            echo "expected deadbeaf digest"
             exit 2
           fi
           artifact21=$(jq -r '.subject[0].name' $OUTPUT_FOLDER/attestation2.intoto)
