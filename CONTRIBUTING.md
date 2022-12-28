@@ -109,7 +109,7 @@ unit tests locally using `make`. This requires that the Go runtime be installed.
 make unit-test
 ```
 
-Tests for GitHub Actions created with Typescript require Jest.
+Tests for GitHub Actions created with Typescript require [Jest](https://jestjs.io).
 
 ```
 make ts-test 

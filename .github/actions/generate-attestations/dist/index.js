@@ -2716,15 +2716,6 @@ var __importStar = (this && this.__importStar) || function (mod) {
     __setModuleDefault(result, mod);
     return result;
 };
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -2745,35 +2736,32 @@ function createStatement(subjects, type, predicate) {
 }
 exports.createStatement = createStatement;
 function writeAttestations(layoutFile, predicateType, predicateFile) {
-    return __awaiter(this, void 0, void 0, function* () {
-        // Read SLSA output layout file.
-        const buffer = fs_1.default.readFileSync(layoutFile);
-        const layout = JSON.parse(buffer.toString());
-        if (layout.version !== 1) {
-            throw Error(`SLSA outputs layout invalid version: ${layout.version}`);
+    // Read SLSA output layout file.
+    const buffer = fs_1.default.readFileSync(layoutFile);
+    const layout = JSON.parse(buffer.toString());
+    if (layout.version !== 1) {
+        throw Error(`SLSA outputs layout invalid version: ${layout.version}`);
+    }
+    const count = Object.keys(layout.attestations).length;
+    if (count > MAX_ATTESTATION_COUNT) {
+        throw Error(`SLSA outputs layout had too many attestations: ${count}`);
+    }
+    // Read predicate
+    const predicateBuffer = fs_1.default.readFileSync(predicateFile);
+    const predicateJson = JSON.parse(predicateBuffer.toString());
+    // TODO(https://github.com/slsa-framework/slsa-github-generator/issues/1422): Add other predicate validations.
+    // Iterate through SLSA output layout and create attestations
+    const ret = {};
+    for (const att of layout.attestations) {
+        // Validate that attestation path is not nested.
+        if (path_1.default.dirname(att.name) !== ".") {
+            throw Error(`attestation filename must not be nested ${att}`);
         }
-        const count = Object.keys(layout.attestations).length;
-        if (count > MAX_ATTESTATION_COUNT) {
-            throw Error(`SLSA outputs layout had too many attestations: ${count}`);
-        }
-        // Read predicate
-        const predicateBuffer = fs_1.default.readFileSync(predicateFile);
-        const predicateJson = JSON.parse(predicateBuffer.toString());
-        // TODO(https://github.com/slsa-framework/slsa-github-generator/issues/1422): Add other predicate validations.
-        // Iterate through SLSA output layout and create attestations
-        const ret = {};
-        for (const att of layout.attestations) {
-            // Validate that attestation path is not nested.
-            if (path_1.default.dirname(att.name) !== ".") {
-                throw Error(`attestation filename must not be nested ${att}`);
-            }
-            // TODO: How to cast directly into types.Subject[]?
-            const subjectJson = JSON.parse(JSON.stringify(att.subjects));
-            const attestationJSON = createStatement(subjectJson, predicateType, predicateJson);
-            ret[att.name] = JSON.stringify(attestationJSON);
-        }
-        return ret;
-    });
+        const subjectJson = JSON.parse(JSON.stringify(att.subjects));
+        const attestationJSON = createStatement(subjectJson, predicateType, predicateJson);
+        ret[att.name] = JSON.stringify(attestationJSON);
+    }
+    return ret;
 }
 exports.writeAttestations = writeAttestations;
 
@@ -2820,15 +2808,6 @@ var __importStar = (this && this.__importStar) || function (mod) {
     __setModuleDefault(result, mod);
     return result;
 };
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -2840,41 +2819,38 @@ const path_1 = __importDefault(__nccwpck_require__(17));
 const attestation_1 = __nccwpck_require__(673);
 const utils_1 = __nccwpck_require__(314);
 function run() {
-    return __awaiter(this, void 0, void 0, function* () {
-        try {
-            const wd = process.env[`GITHUB_WORKSPACE`] || "";
-            // SLSA subjects layout file.
-            const slsaOutputs = core.getInput("slsa-outputs-file");
-            const safeSlsaOutputs = (0, utils_1.resolvePathInput)(slsaOutputs, wd);
-            core.debug(`Using SLSA output file at ${safeSlsaOutputs}!`);
-            // Predicate.
-            const predicateFile = core.getInput("predicate-file");
-            const safePredicateFile = (0, utils_1.resolvePathInput)(predicateFile, wd);
-            core.debug(`Inputs: Predicate file ${safePredicateFile}!`);
-            // Predicate type
-            const predicateType = core.getInput("predicate-type");
-            core.debug(`Inputs: Predicate type ${predicateType}!`);
-            // Attach subjects and generate attestation files
-            const outputFolder = core.getInput("output-folder");
-            const attestations = yield (0, attestation_1.writeAttestations)(safeSlsaOutputs, predicateType, safePredicateFile);
-            // Write attestations
-            fs_1.default.mkdirSync(outputFolder, { recursive: true });
-            for (const att in attestations) {
-                const outputFile = path_1.default.join(outputFolder, att);
-                const safeOutput = (0, utils_1.resolvePathInput)(outputFile, wd);
-                fs_1.default.writeFileSync(safeOutput, attestations[att]);
-            }
-            core.setOutput("output-folder", outputFolder);
+    try {
+        const wd = process.env[`GITHUB_WORKSPACE`] || "";
+        // SLSA subjects layout file.
+        const slsaOutputs = core.getInput("slsa-outputs-file");
+        const safeSlsaOutputs = (0, utils_1.resolvePathInput)(slsaOutputs, wd);
+        core.debug(`Using SLSA output file at ${safeSlsaOutputs}!`);
+        // Predicate.
+        const predicateFile = core.getInput("predicate-file");
+        const safePredicateFile = (0, utils_1.resolvePathInput)(predicateFile, wd);
+        core.debug(`Inputs: Predicate file ${safePredicateFile}!`);
+        // Predicate type
+        const predicateType = core.getInput("predicate-type");
+        core.debug(`Inputs: Predicate type ${predicateType}!`);
+        // Attach subjects and generate attestation files
+        const outputFolder = core.getInput("output-folder");
+        const attestations = (0, attestation_1.writeAttestations)(safeSlsaOutputs, predicateType, safePredicateFile);
+        // Write attestations
+        fs_1.default.mkdirSync(outputFolder, { recursive: true });
+        for (const att in attestations) {
+            const outputFile = path_1.default.join(outputFolder, att);
+            const safeOutput = (0, utils_1.resolvePathInput)(outputFile, wd);
+            fs_1.default.writeFileSync(safeOutput, attestations[att]);
         }
-        catch (error) {
-            if (error instanceof Error) {
-                core.setFailed(error.message);
-            }
-            else {
-                core.info(`Unexpected error: ${error}`);
-            }
+    }
+    catch (error) {
+        if (error instanceof Error) {
+            core.setFailed(error.message);
         }
-    });
+        else {
+            core.setFailed(`Unexpected error: ${error}`);
+        }
+    }
 }
 exports.run = run;
 run();

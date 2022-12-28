@@ -18,11 +18,11 @@ export function createStatement(
   };
 }
 
-export async function writeAttestations(
+export function writeAttestations(
   layoutFile: string,
   predicateType: string,
   predicateFile: string
-): Promise<Record<string, string>> {
+): Record<string, string> {
   // Read SLSA output layout file.
   const buffer = fs.readFileSync(layoutFile);
   const layout: types.Layout = JSON.parse(buffer.toString());
@@ -50,7 +50,6 @@ export async function writeAttestations(
       throw Error(`attestation filename must not be nested ${att}`);
     }
 
-    // TODO: How to cast directly into types.Subject[]?
     const subjectJson: types.Subject[] = JSON.parse(
       JSON.stringify(att.subjects)
     );

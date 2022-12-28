@@ -66,24 +66,23 @@ describe("writeAttestation", () => {
 
   const predicateType = "https://slsa.dev/provenance/v0.2";
 
-  it("writes correct intoto statement", async () => {
+  it("writes correct intoto statement", () => {
     fs.readFileSync.mockClear();
 
     fs.readFileSync.mockReturnValueOnce(JSON.stringify(layout));
     fs.readFileSync.mockReturnValueOnce(JSON.stringify(predicate));
 
-    const attestations: Record<string, string> =
-      await statement.writeAttestations(
-        "layoutMock",
-        predicateType,
-        "predicateMock"
-      );
+    const attestations: Record<string, string> = statement.writeAttestations(
+      "layoutMock",
+      predicateType,
+      "predicateMock"
+    );
     expect(Object.keys(attestations)).toEqual(
       expect.arrayContaining(["attestation1.intoto", "attestation2.intoto"])
     );
   });
 
-  it("nested intoto statement names", async () => {
+  it("nested intoto statement names", () => {
     fs.readFileSync.mockClear();
 
     const nestedLayout = {
@@ -113,17 +112,12 @@ describe("writeAttestation", () => {
     fs.readFileSync.mockReturnValueOnce(JSON.stringify(nestedLayout));
     fs.readFileSync.mockReturnValueOnce(JSON.stringify(predicate));
 
-    await expect(
-      async () =>
-        await statement.writeAttestations(
-          "layoutMock",
-          predicateType,
-          "predicateMock"
-        )
-    ).rejects.toThrow(Error);
+    expect(() =>
+      statement.writeAttestations("layoutMock", predicateType, "predicateMock")
+    ).toThrow(Error);
   });
 
-  it("too many attestations", async () => {
+  it("too many attestations", () => {
     for (var i = 0; i < 51; i++) {
       layout.attestations.push({
         name: i.toString(),
@@ -134,13 +128,8 @@ describe("writeAttestation", () => {
     fs.readFileSync.mockReturnValueOnce(JSON.stringify(layout));
     fs.readFileSync.mockReturnValueOnce(JSON.stringify(predicate));
 
-    await expect(
-      async () =>
-        await statement.writeAttestations(
-          "layoutMock",
-          predicateType,
-          "predicateMock"
-        )
-    ).rejects.toThrow(Error);
+    expect(() =>
+      statement.writeAttestations("layoutMock", predicateType, "predicateMock")
+    ).toThrow(Error);
   });
 });

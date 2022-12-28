@@ -4,7 +4,7 @@ import path from "path";
 import { writeAttestations } from "./attestation";
 import { resolvePathInput } from "./utils";
 
-export async function run(): Promise<void> {
+export function run(): void {
   try {
     const wd = process.env[`GITHUB_WORKSPACE`] || "";
 
@@ -24,7 +24,7 @@ export async function run(): Promise<void> {
 
     // Attach subjects and generate attestation files
     const outputFolder = core.getInput("output-folder");
-    const attestations = await writeAttestations(
+    const attestations = writeAttestations(
       safeSlsaOutputs,
       predicateType,
       safePredicateFile
@@ -37,13 +37,11 @@ export async function run(): Promise<void> {
       const safeOutput = resolvePathInput(outputFile, wd);
       fs.writeFileSync(safeOutput, attestations[att]);
     }
-
-    core.setOutput("output-folder", outputFolder);
   } catch (error) {
     if (error instanceof Error) {
       core.setFailed(error.message);
     } else {
-      core.info(`Unexpected error: ${error}`);
+      core.setFailed(`Unexpected error: ${error}`);
     }
   }
 }

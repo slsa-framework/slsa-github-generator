@@ -12,11 +12,7 @@ inputs:
     required: true
   output-folder:
     description: 'Output folder to place attestations'
-    required: false
-    default: 'attestations'
-outputs:
-  output-folder:
-    description: 'Output folder where attestations were placed'
+    required: true
 runs:
   using: 'node16'
   main: 'dist/index.js'

@@ -1,0 +1,20 @@
+{
+    "version": 1,
+    "attestations": [
+      {
+        "name": "attestation1.intoto",
+        "subjects": {
+          "name": "artifact11",
+          "digest": "abcde"
+        }
+      },
+      {
+        "name": "attestation2.intoto",
+        "subjects": {
+          "name": "artifact21",
+          "digest": "abcde"
+        }
+      }
+    ]
+  }
+  
