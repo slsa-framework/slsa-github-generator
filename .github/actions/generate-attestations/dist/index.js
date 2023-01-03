@@ -2840,7 +2840,10 @@ function run() {
         for (const att in attestations) {
             const outputFile = path_1.default.join(outputFolder, att);
             const safeOutput = (0, utils_1.resolvePathInput)(outputFile, wd);
-            fs_1.default.writeFileSync(safeOutput, attestations[att], { flag: "ax" });
+            fs_1.default.writeFileSync(safeOutput, attestations[att], {
+                flag: "ax",
+                mode: 0o600,
+            });
         }
     }
     catch (error) {
