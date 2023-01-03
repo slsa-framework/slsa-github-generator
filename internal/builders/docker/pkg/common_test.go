@@ -35,7 +35,7 @@ func Test_BuildDefinition(t *testing.T) {
 	}
 
 	wantSource := ArtifactReference{
-		URI:    "git+https://github.com/https://github.com/project-oak/transparent-release",
+		URI:    "git+https://github.com/project-oak/transparent-release",
 		Digest: map[string]string{"sha1": "9b5f98310dbbad675834474fa68c37d880687cb9"},
 	}
 

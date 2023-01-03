@@ -122,10 +122,17 @@ func SetUpBuildState(config *DockerBuildConfig) (*DockerBuild, error) {
 // BuildArtifact builds the artifacts based on the user-provided inputs, and
 // returns the names and SHA256 digests of the generated artifacts.
 func (db *DockerBuild) BuildArtifact() ([]intoto.Subject, error) {
+	if err := runDockerRun(db); err != nil {
+		return nil, fmt.Errorf("running `docker run` failed: %v", err)
+	}
+	return inspectArtifacts(db.BuildConfig.ArtifactPath)
+}
+
+func runDockerRun(db *DockerBuild) error {
 	// Get the current working directory. We will mount it as a Docker volume.
 	cwd, err := os.Getwd()
 	if err != nil {
-		return nil, fmt.Errorf("couldn't get the current working directory: %v", err)
+		return fmt.Errorf("couldn't get the current working directory: %v", err)
 	}
 
 	defaultDockerRunFlags := []string{
@@ -145,26 +152,26 @@ func (db *DockerBuild) BuildArtifact() ([]intoto.Subject, error) {
 
 	outFileName, err := saveToTempFile(cmd.StdoutPipe)
 	if err != nil {
-		return nil, fmt.Errorf("couldn't save logs to file: %v", err)
+		return fmt.Errorf("couldn't save logs to file: %v", err)
 	}
 
 	errFileName, err := saveToTempFile(cmd.StderrPipe)
 	if err != nil {
-		return nil, fmt.Errorf("couldn't save error logs to file: %v", err)
+		return fmt.Errorf("couldn't save error logs to file: %v", err)
 	}
 
 	log.Printf("Running command: %q.", cmd.String())
 
 	if err := cmd.Start(); err != nil {
-		return nil, fmt.Errorf("couldn't start the command: %v", err)
+		return fmt.Errorf("couldn't start the command: %v", err)
 	}
 
 	if err := cmd.Wait(); err != nil {
-		return nil, fmt.Errorf("failed to complete the command: %v; see %s for logs, and %s for errors",
+		return fmt.Errorf("failed to complete the command: %v; see %s for logs, and %s for errors",
 			err, outFileName, errFileName)
 	}
 
-	return getArtifacts(db.BuildConfig.ArtifactPath)
+	return nil
 }
 
 // verifyOrFetchRepo checks that the current working directly is a Git repository
@@ -179,7 +186,7 @@ func verifyOrFetchRepo(config *DockerBuildConfig) (*RepoCheckoutInfo, error) {
 		return nil, err
 	}
 	if !repoIsCheckedOut {
-		info, err := fetchSourcesFromGitRepo(config.SourceRepo, commitHash)
+		info, err := fetchSourcesFromGitRepo(config.SourceRepo, commitHash, 0)
 		if err != nil {
 			return nil, fmt.Errorf("couldn't fetch sources from %q at commit %q: %v", config.SourceRepo, commitHash, err)
 		}
@@ -209,10 +216,13 @@ func verifyCommit(commitHash string) (bool, error) {
 	return true, nil
 }
 
-// fetchSourcesFromGitRepo fetches a repo from the given URL into a temporary
-// directory, and checks out the specified commit. Returns an instance of
-// RepoCheckoutInfo containing the absolute path of the root of the repo.
-func fetchSourcesFromGitRepo(repoURL, commitHash string) (*RepoCheckoutInfo, error) {
+// fetchSourcesFromGitRepo clones a repo from the given URL, up to the given
+// depth, into a temporary directory, then checks out the specified commit.
+// If depth is not a positive number, the entire repo and its history is cloned.
+// Returns an error if the repo cannot be cloned, or the commit hash does not
+// exist. Otherwise, returns an instance of RepoCheckoutInfo containing the
+// absolute path of the root of the repo.
+func fetchSourcesFromGitRepo(repoURL, commitHash string, depth int) (*RepoCheckoutInfo, error) {
 	// create a temp folder in the current directory for fetching the repo.
 	targetDir, err := os.MkdirTemp("", "release-*")
 	if err != nil {
@@ -229,7 +239,7 @@ func fetchSourcesFromGitRepo(repoURL, commitHash string) (*RepoCheckoutInfo, err
 	}
 
 	// Clone the repo.
-	err = cloneGitRepo(repoURL)
+	err = cloneGitRepo(repoURL, depth)
 	if err != nil {
 		return nil, fmt.Errorf("couldn't clone the Git repo: %v", err)
 	}
@@ -258,8 +268,13 @@ func fetchSourcesFromGitRepo(repoURL, commitHash string) (*RepoCheckoutInfo, err
 	return &info, nil
 }
 
-func cloneGitRepo(repo string) error {
+// Clones a Git repo from the given URI up to the given depth. If depth is 0 or
+// negative, the entire repo is cloned.
+func cloneGitRepo(repo string, depth int) error {
 	cmd := exec.Command("git", "clone", repo)
+	if depth > 0 {
+		cmd = exec.Command("git", "clone", "--depth", fmt.Sprintf("%d", depth), repo)
+	}
 	log.Printf("Cloning the repo from %s...", repo)
 
 	outFileName, err := saveToTempFile(cmd.StdoutPipe)
@@ -351,7 +366,7 @@ func checkExistingFiles(pattern string) error {
 // Finds all files matching the given pattern, measures the SHA256 digest of
 // each file, and returns filenames and digests as an array of intoto.Subject.
 // Precondition: The pattern is a relative file path pattern.
-func getArtifacts(pattern string) ([]intoto.Subject, error) {
+func inspectArtifacts(pattern string) ([]intoto.Subject, error) {
 	matches, err := filepath.Glob(pattern)
 	// The only possible error is ErrBadPattern
 	if err != nil {
