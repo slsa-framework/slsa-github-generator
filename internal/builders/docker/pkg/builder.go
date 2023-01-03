@@ -94,8 +94,8 @@ func builderImage(config *DockerBuildConfig) ArtifactReference {
 // if setting up the build state fails.
 func SetUpBuildState(config *DockerBuildConfig) (*DockerBuild, error) {
 	// 1. Check out the repo, or verify that it is checked out.
-	repoInfo, err := verifyOrFetchRepo(config)
-	if err != nil {
+	gc := newGitClient(config, /* depth */ 0)
+	if err := gc.verifyOrFetchRepo(); err != nil {
 		return nil, fmt.Errorf("couldn't verify or fetch source repo: %v", err)
 	}
 
@@ -114,7 +114,7 @@ func SetUpBuildState(config *DockerBuildConfig) (*DockerBuild, error) {
 	db := &DockerBuild{
 		BuildDefinition: CreateBuildDefinition(config),
 		BuildConfig:     *bc,
-		RepoInfo:        *repoInfo,
+		RepoInfo:        *gc.checkoutInfo,
 	}
 	return db, nil
 }
@@ -174,33 +174,56 @@ func runDockerRun(db *DockerBuild) error {
 	return nil
 }
 
+type GitClient struct {
+	sourceRepo      string
+	sourceDigest    Digest
+	depth int
+	checkoutInfo *RepoCheckoutInfo
+	logFiles	[]string
+	errFiles 	[]string
+}
+
+func newGitClient(config *DockerBuildConfig, depth int) *GitClient {
+	return &GitClient {
+		sourceRepo: config.SourceRepo,
+		sourceDigest: config.SourceDigest,
+		depth: depth,
+		checkoutInfo: &RepoCheckoutInfo{},
+	}
+}
+
+func (c *GitClient) cleanupAllFiles() {
+	c.checkoutInfo.Cleanup()
+	for _, file := range append(c.logFiles, c.errFiles...) {
+		if err := os.Remove(file); err != nil {
+			log.Printf("failed to remove temp file %q: %v", file, err)
+		}
+	}
+}
+
 // verifyOrFetchRepo checks that the current working directly is a Git repository
 // at the expected Git commit hash; fetches the repo, if this is not the case.
-func verifyOrFetchRepo(config *DockerBuildConfig) (*RepoCheckoutInfo, error) {
-	if config.SourceDigest.Alg != "sha1" {
-		return nil, fmt.Errorf("git commit digest must be a sha1 digest")
+func (c *GitClient) verifyOrFetchRepo() error {
+	if c.sourceDigest.Alg != "sha1" {
+		return fmt.Errorf("git commit digest must be a sha1 digest")
 	}
-	commitHash := config.SourceDigest.Value
-	repoIsCheckedOut, err := verifyCommit(commitHash)
+	repoIsCheckedOut, err := c.verifyCommit()
 	if err != nil {
-		return nil, err
+		return err
 	}
 	if !repoIsCheckedOut {
-		info, err := fetchSourcesFromGitRepo(config.SourceRepo, commitHash, 0)
-		if err != nil {
-			return nil, fmt.Errorf("couldn't fetch sources from %q at commit %q: %v", config.SourceRepo, commitHash, err)
+		if err := c.fetchSourcesFromGitRepo(); err != nil {
+			return fmt.Errorf("couldn't fetch sources from %q at commit %q: %v", c.sourceRepo, c.sourceDigest, err)
 		}
-		// Return info about the checked out repo for future cleanup.
-		return info, nil
 	}
 	// Repo is checked out at the right commit; no future cleanup needed.
-	return &RepoCheckoutInfo{}, nil
+	return nil
 }
 
 // verifyCommit checks that the current working directory is the root of a Git
 // repository at the given commit hash. Returns an error if the working
 // directory is a Git repository at a different commit.
-func verifyCommit(commitHash string) (bool, error) {
+func (c *GitClient) verifyCommit() (bool, error) {
 	cmd := exec.Command("git", "rev-parse", "--verify", "HEAD")
 	lastCommitIDBytes, err := cmd.Output()
 	if err != nil {
@@ -209,82 +232,82 @@ func verifyCommit(commitHash string) (bool, error) {
 	}
 	lastCommitID := strings.TrimSpace(string(lastCommitIDBytes))
 
-	if lastCommitID != commitHash {
+	if lastCommitID != c.sourceDigest.Value {
 		return false, fmt.Errorf("the repo is already checked out at a different commit (%q)", lastCommitID)
 	}
 
 	return true, nil
 }
 
-// fetchSourcesFromGitRepo clones a repo from the given URL, up to the given
-// depth, into a temporary directory, then checks out the specified commit.
-// If depth is not a positive number, the entire repo and its history is cloned.
+// fetchSourcesFromGitRepo clones a repo from the URL given in this GitClient,
+// up to the depth given in this GitClient, into a temporary directory. It then
+// checks out the specified commit. If depth is not a positive number, the
+// entire repo and its history is cloned.
 // Returns an error if the repo cannot be cloned, or the commit hash does not
-// exist. Otherwise, returns an instance of RepoCheckoutInfo containing the
-// absolute path of the root of the repo.
-func fetchSourcesFromGitRepo(repoURL, commitHash string, depth int) (*RepoCheckoutInfo, error) {
+// exist. Otherwise, updates this GitClient with RepoCheckoutInfo containing
+// the absolute path of the root of the repo, and other generated file paths.
+func (c *GitClient) fetchSourcesFromGitRepo() error {
 	// create a temp folder in the current directory for fetching the repo.
 	targetDir, err := os.MkdirTemp("", "release-*")
 	if err != nil {
-		return nil, fmt.Errorf("couldn't create temp directory: %v", err)
+		return fmt.Errorf("couldn't create temp directory: %v", err)
 	}
 	log.Printf("Checking out the repo in %q.", targetDir)
 
 	// Make targetDir and its parents, and cd to it.
 	if err := os.MkdirAll(targetDir, 0o755); err != nil {
-		return nil, fmt.Errorf("couldn't create directories at %q: %v", targetDir, err)
+		return fmt.Errorf("couldn't create directories at %q: %v", targetDir, err)
 	}
 	if err := os.Chdir(targetDir); err != nil {
-		return nil, fmt.Errorf("couldn't change directory to %q: %v", targetDir, err)
+		return fmt.Errorf("couldn't change directory to %q: %v", targetDir, err)
 	}
 
 	// Clone the repo.
-	err = cloneGitRepo(repoURL, depth)
-	if err != nil {
-		return nil, fmt.Errorf("couldn't clone the Git repo: %v", err)
+	if err = c.cloneGitRepo(); err != nil {
+		return fmt.Errorf("couldn't clone the Git repo: %v", err)
 	}
 
 	// Change directory to the root of the cloned repo.
-	repoName := path.Base(repoURL)
+	repoName := path.Base(c.sourceRepo)
 	if err := os.Chdir(repoName); err != nil {
-		return nil, fmt.Errorf("couldn't change directory to %q: %v", repoName, err)
+		return fmt.Errorf("couldn't change directory to %q: %v", repoName, err)
 	}
 
 	cwd, err := os.Getwd()
 	if err != nil {
-		return nil, fmt.Errorf("couldn't get current working directory: %v", err)
+		return fmt.Errorf("couldn't get current working directory: %v", err)
 	}
 
 	// Checkout the commit.
-	err = checkoutGitCommit(commitHash)
-	if err != nil {
-		return nil, fmt.Errorf("couldn't checkout the Git commit %q: %v", commitHash, err)
+	if err = c.checkoutGitCommit(); err != nil {
+		return fmt.Errorf("couldn't checkout the Git commit: %v", err)
 	}
 
-	info := RepoCheckoutInfo{
-		RepoRoot: cwd,
-	}
+	c.checkoutInfo.RepoRoot = cwd
 
-	return &info, nil
+	return nil
 }
 
-// Clones a Git repo from the given URI up to the given depth. If depth is 0 or
-// negative, the entire repo is cloned.
-func cloneGitRepo(repo string, depth int) error {
-	cmd := exec.Command("git", "clone", repo)
-	if depth > 0 {
-		cmd = exec.Command("git", "clone", "--depth", fmt.Sprintf("%d", depth), repo)
+// Clones a Git repo from the URI in this GitClient, up to the depth given in
+// this GitClient. If depth is 0 or negative, the entire repo is cloned.
+func (c *GitClient) cloneGitRepo() error {
+	cmd := exec.Command("git", "clone", c.sourceRepo)
+	if c.depth > 0 {
+		cmd = exec.Command("git", "clone", "--depth", fmt.Sprintf("%d", c.depth), c.sourceRepo)
 	}
-	log.Printf("Cloning the repo from %s...", repo)
+	log.Printf("Cloning the repo from %s...", c.sourceRepo)
 
 	outFileName, err := saveToTempFile(cmd.StdoutPipe)
 	if err != nil {
 		return fmt.Errorf("couldn't save logs to file: %v", err)
 	}
+	c.logFiles = append(c.logFiles, outFileName)
+
 	errFileName, err := saveToTempFile(cmd.StderrPipe)
 	if err != nil {
 		return fmt.Errorf("couldn't save errors to file: %v", err)
 	}
+	c.errFiles = append(c.errFiles, errFileName)
 
 	if err := cmd.Start(); err != nil {
 		return fmt.Errorf("couldn't start the 'git clone' command: %v", err)
@@ -295,21 +318,24 @@ func cloneGitRepo(repo string, depth int) error {
 			err, outFileName, errFileName)
 	}
 	log.Printf("'git clone' completed. See %q, and %q for logs, and errors.", outFileName, errFileName)
-
+	
 	return nil
 }
 
-func checkoutGitCommit(commitHash string) error {
-	cmd := exec.Command("git", "checkout", commitHash)
+func (c *GitClient) checkoutGitCommit() error {
+	cmd := exec.Command("git", "checkout", c.sourceDigest.Value)
 
 	outFileName, err := saveToTempFile(cmd.StdoutPipe)
 	if err != nil {
 		return fmt.Errorf("cannot save logs to file: %v", err)
 	}
+	c.logFiles = append(c.logFiles, outFileName)
+
 	errFileName, err := saveToTempFile(cmd.StderrPipe)
 	if err != nil {
 		return fmt.Errorf("cannot save errors to file: %v", err)
 	}
+	c.errFiles = append(c.errFiles, errFileName)
 
 	if err := cmd.Start(); err != nil {
 		return fmt.Errorf("couldn't start the 'git checkout' command: %v", err)
