@@ -115,7 +115,6 @@ jobs:
           SLSA_TOKEN: ${{ steps.setup.outputs.slsa-token }}
         run: ./.github/workflows/scripts/pre-submit.actions/setup-token.sh
 
-
   verify-token:
     runs-on: ubuntu-latest
     steps:
