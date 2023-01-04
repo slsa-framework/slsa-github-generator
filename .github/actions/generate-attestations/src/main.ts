@@ -35,7 +35,10 @@ export function run(): void {
     for (const att in attestations) {
       const outputFile = path.join(outputFolder, att);
       const safeOutput = resolvePathInput(outputFile, wd);
-      fs.writeFileSync(safeOutput, attestations[att]);
+      fs.writeFileSync(safeOutput, attestations[att], {
+        flag: "ax",
+        mode: 0o600,
+      });
     }
   } catch (error) {
     if (error instanceof Error) {
