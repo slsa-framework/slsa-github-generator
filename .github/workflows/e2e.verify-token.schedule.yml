@@ -1,4 +1,4 @@
-name: schedule actions
+name: schedule verify-token
 
 on:
   # Daily run.
