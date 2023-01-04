@@ -16,6 +16,7 @@ package pkg
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"testing"
 
@@ -24,14 +25,9 @@ import (
 
 func Test_BuildDefinition(t *testing.T) {
 	path := "../testdata/build-definition.json"
-	bdBytes, err := os.ReadFile(path)
+	got, err := loadBuildDefinitionFromFile(path)
 	if err != nil {
-		t.Fatalf("Could not read the JSON file in %q:\n%v", path, err)
-	}
-
-	var got BuildDefinition
-	if err := json.Unmarshal(bdBytes, &got); err != nil {
-		t.Fatalf("Could not unmarshal the JSON file in %q as a BuildDefinition:\n%v", path, err)
+		t.Fatalf("%v", err)
 	}
 
 	wantSource := ArtifactReference{
@@ -52,7 +48,20 @@ func Test_BuildDefinition(t *testing.T) {
 		},
 	}
 
-	if diff := cmp.Diff(got, want); diff != "" {
+	if diff := cmp.Diff(*got, want); diff != "" {
 		t.Errorf(diff)
 	}
+}
+
+func loadBuildDefinitionFromFile(path string) (*BuildDefinition, error) {
+	bdBytes, err := os.ReadFile(path)
+	if err != nil {
+		return nil, fmt.Errorf("could not read the JSON file in %q: %v", path, err)
+	}
+
+	var bd BuildDefinition
+	if err := json.Unmarshal(bdBytes, &bd); err != nil {
+		return nil, fmt.Errorf("Could not unmarshal the JSON file in %q as a BuildDefinition: %v", path, err)
+	}
+	return &bd, nil
 }

@@ -65,6 +65,7 @@ type DockerBuildConfig struct {
 	SourceDigest    Digest
 	BuilderImage    DockerImage
 	BuildConfigPath string
+	ForceCheckout   bool
 }
 
 // NewDockerBuildConfig validates the inputs and generates an instance of

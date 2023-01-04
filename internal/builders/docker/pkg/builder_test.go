@@ -15,7 +15,6 @@
 package pkg
 
 import (
-	"encoding/json"
 	"fmt"
 	"os"
 	"strings"
@@ -48,19 +47,6 @@ func Test_CreateBuildDefinition(t *testing.T) {
 	}
 }
 
-func loadBuildDefinitionFromFile(path string) (*BuildDefinition, error) {
-	bdBytes, err := os.ReadFile(path)
-	if err != nil {
-		return nil, fmt.Errorf("could not read the JSON file in %q:\n%v", path, err)
-	}
-
-	var bd BuildDefinition
-	if err := json.Unmarshal(bdBytes, &bd); err != nil {
-		return nil, fmt.Errorf("Could not unmarshal the JSON file in %q as a BuildDefinition:\n%v", path, err)
-	}
-	return &bd, nil
-}
-
 func Test_GitClient_verifyOrFetchRepo(t *testing.T) {
 	config := &DockerBuildConfig{
 		// Use a small repo for test
@@ -70,7 +56,7 @@ func Test_GitClient_verifyOrFetchRepo(t *testing.T) {
 		BuildConfigPath: "internal/builders/docker/testdata/config.toml",
 		// BuilderImage field is not relevant, so it is omitted
 	}
-	gc, err := newGitClient(config, 1)
+	gc, err := newGitClient(config, false, 1)
 	if err != nil {
 		t.Fatalf("Could create GitClient: %v", err)
 	}
@@ -83,7 +69,7 @@ func Test_GitClient_verifyOrFetchRepo(t *testing.T) {
 
 func Test_GitClient_fetchSourcesFromGitRepo(t *testing.T) {
 	// The call to fetchSourcesFromGitRepo will change directory. Here we store
-	// the current working directory, to change back to at the end of the test.
+	// the current working directory, and change back to it when the test ends.
 	cwd, err := os.Getwd()
 	if err != nil {
 		t.Fatalf("couldn't get current working directory: %v", err)
@@ -97,9 +83,9 @@ func Test_GitClient_fetchSourcesFromGitRepo(t *testing.T) {
 		BuildConfigPath: "internal/builders/docker/testdata/config.toml",
 		// BuilderImage field is not relevant, so it is omitted
 	}
-	gc, err := newGitClient(config, 1)
+	gc, err := newGitClient(config, false, 1)
 	if err != nil {
-		t.Fatalf("Could create GitClient: %v", err)
+		t.Fatalf("Could not create GitClient: %v", err)
 	}
 
 	// We expect the checkout to fail

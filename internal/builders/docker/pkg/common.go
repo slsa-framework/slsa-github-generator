@@ -18,7 +18,7 @@ package pkg
 // replaced once the format is finalized.
 
 const (
-	// DockerBasedBuildType is type for container based builds.
+	// DockerBasedBuildType is type for container-based builds.
 	// TODO(#1191): Update to the final BuildType URI.
 	DockerBasedBuildType = "https://slsa.dev/container-based-build/v0.1?draft"
 	// SourceKey is the lookup key for source repository in ExternalParameters.

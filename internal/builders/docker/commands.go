@@ -68,6 +68,7 @@ func writeBuildDefinitionToFile(bd pkg.BuildDefinition, path string) error {
 // BuildCmd builds the artifacts using the input flags, and prints out their digests, or exists with an error.
 func BuildCmd(check func(error)) *cobra.Command {
 	io := &pkg.InputOptions{}
+	var forceCheckout bool
 
 	cmd := &cobra.Command{
 		Use:   "build [FLAGS]",
@@ -76,7 +77,7 @@ func BuildCmd(check func(error)) *cobra.Command {
 			config, err := pkg.NewDockerBuildConfig(io)
 			check(err)
 
-			builder, err := pkg.NewBuilderWithGitFetcher(*config)
+			builder, err := pkg.NewBuilderWithGitFetcher(*config, forceCheckout)
 			check(err)
 			db, err := builder.SetUpBuildState()
 			check(err)
@@ -93,6 +94,8 @@ func BuildCmd(check func(error)) *cobra.Command {
 	}
 
 	io.AddFlags(cmd)
+	cmd.Flags().BoolVarP(&forceCheckout, "force-checkout", "f", false,
+		"Optional - Forces checking out the source code from the given Git repo.")
 
 	return cmd
 }

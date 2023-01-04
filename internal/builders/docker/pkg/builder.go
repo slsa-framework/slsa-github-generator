@@ -69,8 +69,8 @@ type Builder struct {
 
 // NewBuilderWithGitFetcher creates a new Builder fetches the sources from a
 // Git repository.
-func NewBuilderWithGitFetcher(config DockerBuildConfig) (*Builder, error) {
-	gc, err := newGitClient(&config /* depth */, 0)
+func NewBuilderWithGitFetcher(config DockerBuildConfig, forceCheckout bool) (*Builder, error) {
+	gc, err := newGitClient(&config, forceCheckout, 0 /* depth */)
 	if err != nil {
 		return nil, fmt.Errorf("could not create builder: %v", err)
 	}
@@ -208,15 +208,16 @@ func runDockerRun(db *DockerBuild) error {
 // GitClient provides data and functions for fetching the source files from a
 // Git repository.
 type GitClient struct {
-	sourceRepo   string
-	sourceDigest Digest
-	depth        int
-	checkoutInfo *RepoCheckoutInfo
-	logFiles     []string
-	errFiles     []string
+	sourceRepo    string
+	sourceDigest  Digest
+	forceCheckout bool
+	depth         int
+	checkoutInfo  *RepoCheckoutInfo
+	logFiles      []string
+	errFiles      []string
 }
 
-func newGitClient(config *DockerBuildConfig, depth int) (*GitClient, error) {
+func newGitClient(config *DockerBuildConfig, forceCheckout bool, depth int) (*GitClient, error) {
 	repo := config.SourceRepo
 	parsed, err := url.Parse(repo)
 	if err != nil {
@@ -235,10 +236,11 @@ func newGitClient(config *DockerBuildConfig, depth int) (*GitClient, error) {
 	}
 
 	return &GitClient{
-		sourceRepo:   repo,
-		sourceDigest: config.SourceDigest,
-		depth:        depth,
-		checkoutInfo: &RepoCheckoutInfo{},
+		sourceRepo:    repo,
+		sourceDigest:  config.SourceDigest,
+		forceCheckout: forceCheckout,
+		depth:         depth,
+		checkoutInfo:  &RepoCheckoutInfo{},
 	}, nil
 }
 
@@ -267,10 +269,10 @@ func (c *GitClient) verifyOrFetchRepo() error {
 		return fmt.Errorf("git commit digest must be a sha1 digest")
 	}
 	repoIsCheckedOut, err := c.verifyCommit()
-	if err != nil {
+	if err != nil && !c.forceCheckout {
 		return err
 	}
-	if !repoIsCheckedOut {
+	if !repoIsCheckedOut || c.forceCheckout {
 		if err := c.fetchSourcesFromGitRepo(); err != nil {
 			return fmt.Errorf("couldn't fetch sources from %q at commit %q: %v", c.sourceRepo, c.sourceDigest, err)
 		}
