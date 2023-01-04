@@ -76,7 +76,9 @@ func BuildCmd(check func(error)) *cobra.Command {
 			config, err := pkg.NewDockerBuildConfig(io)
 			check(err)
 
-			db, err := pkg.SetUpBuildState(config)
+			builder, err := pkg.NewBuilderWithGitFetcher(*config)
+			check(err)
+			db, err := builder.SetUpBuildState()
 			check(err)
 			artifacts, err := db.BuildArtifact()
 			check(err)

@@ -16,6 +16,11 @@ package pkg
 
 // This file contains the structs and functionality for building artifacts
 // using a builder Docker image, and user-provided build configurations.
+//
+// In particular, this file defines a GitClient struct for handling git
+// commands for fetching the repo at a Git commit hash. It also defines an
+// exposed Builder struct for handling the steps of building artifacts using a
+// Docker image.
 
 import (
 	"crypto/sha256"
@@ -23,6 +28,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"net/url"
 	"os"
 	"os/exec"
 	"path"
@@ -30,12 +36,6 @@ import (
 	"strings"
 
 	intoto "github.com/in-toto/in-toto-golang/in_toto"
-)
-
-const (
-	SourceKey       = "source"
-	BuilderImageKey = "builderImage"
-	ConfigFileKey   = "configFile"
 )
 
 // DockerBuild represents a state in the process of building the artifacts
@@ -52,6 +52,33 @@ type DockerBuild struct {
 type RepoCheckoutInfo struct {
 	// Path to the root of the repo
 	RepoRoot string
+}
+
+// Fetcher is an interface with a single method Fetch, for fetching a
+// repository from its source.
+type Fetcher interface {
+	Fetch() (*RepoCheckoutInfo, error)
+}
+
+// Builder is responsible for setting up the environment and using docker
+// commands to build artifacts as specified in a DockerBuildConfig.
+type Builder struct {
+	repoFetcher Fetcher
+	config      DockerBuildConfig
+}
+
+// NewBuilderWithGitFetcher creates a new Builder fetches the sources from a
+// Git repository.
+func NewBuilderWithGitFetcher(config DockerBuildConfig) (*Builder, error) {
+	gc, err := newGitClient(&config /* depth */, 0)
+	if err != nil {
+		return nil, fmt.Errorf("could not create builder: %v", err)
+	}
+
+	return &Builder{
+		repoFetcher: gc,
+		config:      config,
+	}, nil
 }
 
 // CreateBuildDefinition creates a BuildDefinition from the given DockerBuildConfig.
@@ -92,17 +119,17 @@ func builderImage(config *DockerBuildConfig) ArtifactReference {
 // SetUpBuildState sets up the build by checking out the source repository and
 // loading the config file. It returns an instance of DockerBuild, or an error
 // if setting up the build state fails.
-func SetUpBuildState(config *DockerBuildConfig) (*DockerBuild, error) {
+func (b *Builder) SetUpBuildState() (*DockerBuild, error) {
 	// 1. Check out the repo, or verify that it is checked out.
-	gc := newGitClient(config, /* depth */ 0)
-	if err := gc.verifyOrFetchRepo(); err != nil {
+	repoInfo, err := b.repoFetcher.Fetch()
+	if err != nil {
 		return nil, fmt.Errorf("couldn't verify or fetch source repo: %v", err)
 	}
 
 	// 2. Load and parse the config file.
-	bc, err := config.LoadBuildConfigFromFile()
+	bc, err := b.config.LoadBuildConfigFromFile()
 	if err != nil {
-		return nil, fmt.Errorf("couldn't load config file from %q: %v", config.BuildConfigPath, err)
+		return nil, fmt.Errorf("couldn't load config file from %q: %v", b.config.BuildConfigPath, err)
 	}
 
 	// 3. Check that the ArtifactPath pattern does not match any existing files,
@@ -112,9 +139,9 @@ func SetUpBuildState(config *DockerBuildConfig) (*DockerBuild, error) {
 	}
 
 	db := &DockerBuild{
-		BuildDefinition: CreateBuildDefinition(config),
+		BuildDefinition: CreateBuildDefinition(&b.config),
 		BuildConfig:     *bc,
-		RepoInfo:        *gc.checkoutInfo,
+		RepoInfo:        *repoInfo,
 	}
 	return db, nil
 }
@@ -150,46 +177,69 @@ func runDockerRun(db *DockerBuild) error {
 	args = append(args, db.BuildConfig.Command...)
 	cmd := exec.Command("docker", args...)
 
-	outFileName, err := saveToTempFile(cmd.StdoutPipe)
-	if err != nil {
-		return fmt.Errorf("couldn't save logs to file: %v", err)
-	}
-
-	errFileName, err := saveToTempFile(cmd.StderrPipe)
-	if err != nil {
-		return fmt.Errorf("couldn't save error logs to file: %v", err)
-	}
-
 	log.Printf("Running command: %q.", cmd.String())
 
+	stdout, err := cmd.StdoutPipe()
+	if err != nil {
+		return fmt.Errorf("couldn't get the command's stdout: %v", err)
+	}
+	stderr, err := cmd.StderrPipe()
+	if err != nil {
+		return fmt.Errorf("couldn't get the command's stderr: %v", err)
+	}
+
 	if err := cmd.Start(); err != nil {
-		return fmt.Errorf("couldn't start the command: %v", err)
+		return fmt.Errorf("couldn't start the 'git checkout' command: %v", err)
+	}
+
+	files, err := saveToTempFile(stdout, stderr)
+	if err != nil {
+		return fmt.Errorf("cannot save logs and errs to file: %v", err)
 	}
 
 	if err := cmd.Wait(); err != nil {
 		return fmt.Errorf("failed to complete the command: %v; see %s for logs, and %s for errors",
-			err, outFileName, errFileName)
+			err, files[0], files[1])
 	}
 
 	return nil
 }
 
+// GitClient provides data and functions for fetching the source files from a
+// Git repository.
 type GitClient struct {
-	sourceRepo      string
-	sourceDigest    Digest
-	depth int
+	sourceRepo   string
+	sourceDigest Digest
+	depth        int
 	checkoutInfo *RepoCheckoutInfo
-	logFiles	[]string
-	errFiles 	[]string
+	logFiles     []string
+	errFiles     []string
 }
 
-func newGitClient(config *DockerBuildConfig, depth int) *GitClient {
-	return &GitClient {
-		sourceRepo: config.SourceRepo,
-		sourceDigest: config.SourceDigest,
-		depth: depth,
-		checkoutInfo: &RepoCheckoutInfo{},
+func newGitClient(config *DockerBuildConfig, depth int) (*GitClient, error) {
+	repo := config.SourceRepo
+	parsed, err := url.Parse(repo)
+	if err != nil {
+		return nil, fmt.Errorf("could not parse repo URI: %v", err)
 	}
+
+	switch parsed.Scheme {
+	case "https":
+		break
+	case "git+https":
+		repo = strings.Replace(repo, "git+https", "https", 1)
+	case "https+git":
+		repo = strings.Replace(repo, "https+git", "https", 1)
+	default:
+		return nil, fmt.Errorf("unsupported scheme: %v", parsed.Scheme)
+	}
+
+	return &GitClient{
+		sourceRepo:   repo,
+		sourceDigest: config.SourceDigest,
+		depth:        depth,
+		checkoutInfo: &RepoCheckoutInfo{},
+	}, nil
 }
 
 func (c *GitClient) cleanupAllFiles() {
@@ -199,6 +249,15 @@ func (c *GitClient) cleanupAllFiles() {
 			log.Printf("failed to remove temp file %q: %v", file, err)
 		}
 	}
+}
+
+// Fetch is implemented for GitClient to make it usable in contexts where a
+// Fetcher is needed.
+func (c *GitClient) Fetch() (*RepoCheckoutInfo, error) {
+	if err := c.verifyOrFetchRepo(); err != nil {
+		return nil, err
+	}
+	return c.checkoutInfo, nil
 }
 
 // verifyOrFetchRepo checks that the current working directly is a Git repository
@@ -295,55 +354,64 @@ func (c *GitClient) cloneGitRepo() error {
 	if c.depth > 0 {
 		cmd = exec.Command("git", "clone", "--depth", fmt.Sprintf("%d", c.depth), c.sourceRepo)
 	}
+
 	log.Printf("Cloning the repo from %s...", c.sourceRepo)
 
-	outFileName, err := saveToTempFile(cmd.StdoutPipe)
+	stdout, err := cmd.StdoutPipe()
 	if err != nil {
-		return fmt.Errorf("couldn't save logs to file: %v", err)
+		return fmt.Errorf("couldn't get the command's stdout: %v", err)
 	}
-	c.logFiles = append(c.logFiles, outFileName)
-
-	errFileName, err := saveToTempFile(cmd.StderrPipe)
+	stderr, err := cmd.StderrPipe()
 	if err != nil {
-		return fmt.Errorf("couldn't save errors to file: %v", err)
+		return fmt.Errorf("couldn't get the command's stderr: %v", err)
 	}
-	c.errFiles = append(c.errFiles, errFileName)
 
 	if err := cmd.Start(); err != nil {
-		return fmt.Errorf("couldn't start the 'git clone' command: %v", err)
+		return fmt.Errorf("couldn't start the 'git checkout' command: %v", err)
 	}
+
+	files, err := saveToTempFile(stdout, stderr)
+	if err != nil {
+		return fmt.Errorf("cannot save logs and errs to file: %v", err)
+	}
+	c.logFiles = append(c.logFiles, files[0])
+	c.errFiles = append(c.errFiles, files[1])
 
 	if err := cmd.Wait(); err != nil {
 		return fmt.Errorf("failed to complete the command: %v; see %q for logs, and %q for errors",
-			err, outFileName, errFileName)
+			err, files[0], files[1])
 	}
-	log.Printf("'git clone' completed. See %q, and %q for logs, and errors.", outFileName, errFileName)
-	
+	log.Printf("'git clone' completed. See %q, and %q for logs, and errors.", files[0], files[1])
+
 	return nil
 }
 
 func (c *GitClient) checkoutGitCommit() error {
 	cmd := exec.Command("git", "checkout", c.sourceDigest.Value)
 
-	outFileName, err := saveToTempFile(cmd.StdoutPipe)
+	stdout, err := cmd.StdoutPipe()
 	if err != nil {
-		return fmt.Errorf("cannot save logs to file: %v", err)
+		return fmt.Errorf("couldn't get the command's stdout: %v", err)
 	}
-	c.logFiles = append(c.logFiles, outFileName)
-
-	errFileName, err := saveToTempFile(cmd.StderrPipe)
+	stderr, err := cmd.StderrPipe()
 	if err != nil {
-		return fmt.Errorf("cannot save errors to file: %v", err)
+		return fmt.Errorf("couldn't get the command's stderr: %v", err)
 	}
-	c.errFiles = append(c.errFiles, errFileName)
 
 	if err := cmd.Start(); err != nil {
 		return fmt.Errorf("couldn't start the 'git checkout' command: %v", err)
 	}
 
+	files, err := saveToTempFile(stdout, stderr)
+	if err != nil {
+		return fmt.Errorf("cannot save logs and errs to file: %v", err)
+	}
+	c.logFiles = append(c.logFiles, files[0])
+	c.errFiles = append(c.errFiles, files[1])
+
 	if err := cmd.Wait(); err != nil {
 		return fmt.Errorf("failed to complete the command: %v; see %q for logs, and %q for errors",
-			err, outFileName, errFileName)
+			err, files[0], files[1])
 	}
 
 	return nil
@@ -351,28 +419,27 @@ func (c *GitClient) checkoutGitCommit() error {
 
 // saveToTempFile creates a tempfile in `/tmp` and writes the content of the
 // given reader to that file.
-func saveToTempFile(pipe func() (io.ReadCloser, error)) (string, error) {
-	reader, err := pipe()
-	if err != nil {
-		return "", fmt.Errorf("couldn't get a pipe: %v", err)
+func saveToTempFile(readers ...io.Reader) ([]string, error) {
+	var files []string
+	for _, reader := range readers {
+		bytes, err := io.ReadAll(reader)
+		if err != nil {
+			return files, err
+		}
+
+		tmpfile, err := os.CreateTemp("", "log-*.txt")
+		if err != nil {
+			return files, fmt.Errorf("couldn't create tempfile: %v", err)
+		}
+
+		if _, err := tmpfile.Write(bytes); err != nil {
+			tmpfile.Close()
+			return files, fmt.Errorf("couldn't write bytes to tempfile: %v", err)
+		}
+		files = append(files, tmpfile.Name())
 	}
 
-	bytes, err := io.ReadAll(reader)
-	if err != nil {
-		return "", err
-	}
-
-	tmpfile, err := os.CreateTemp("", "log-*.txt")
-	if err != nil {
-		return "", fmt.Errorf("couldn't create tempfile: %v", err)
-	}
-
-	if _, err := tmpfile.Write(bytes); err != nil {
-		tmpfile.Close()
-		return "", fmt.Errorf("couldn't write bytes to tempfile: %v", err)
-	}
-
-	return tmpfile.Name(), nil
+	return files, nil
 }
 
 // Checks if any files match the given pattern, and returns an error if so.

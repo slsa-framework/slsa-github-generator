@@ -50,13 +50,13 @@ type Digest struct {
 // DockerImage fully specifies a docker image by a URI (e.g., including the
 // docker image name and registry), and its digest.
 type DockerImage struct {
-	URI    string
+	Name   string
 	Digest Digest
 }
 
 // ToString returns the builder image in the form of NAME@ALG:VALUE.
 func (bi *DockerImage) ToString() string {
-	return fmt.Sprintf("%s@%s:%s", bi.URI, bi.Digest.Alg, bi.Digest.Value)
+	return fmt.Sprintf("%s@%s:%s", bi.Name, bi.Digest.Alg, bi.Digest.Value)
 }
 
 // DockerBuildConfig is a convenience class for holding validated user inputs.
@@ -133,7 +133,7 @@ func validateDockerImage(image string) (*DockerImage, error) {
 	}
 
 	dockerImage := DockerImage{
-		URI:    imageParts[0],
+		Name:   imageParts[0],
 		Digest: *digest,
 	}
 

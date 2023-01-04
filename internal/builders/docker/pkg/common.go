@@ -17,9 +17,17 @@ package pkg
 // This file contains structs for the slsa provenance V1.0, and will be
 // replaced once the format is finalized.
 
-// DockerBasedBuildType is type for container based builds.
-// TODO(#1191): Update to the final BuildType URI.
-const DockerBasedBuildType = "https://slsa.dev/container-based-build/v0.1?draft"
+const (
+	// DockerBasedBuildType is type for container based builds.
+	// TODO(#1191): Update to the final BuildType URI.
+	DockerBasedBuildType = "https://slsa.dev/container-based-build/v0.1?draft"
+	// SourceKey is the lookup key for source repository in ExternalParameters.
+	SourceKey = "source"
+	// BuilderImageKey is the lookup key for builder image in ExternalParameters.
+	BuilderImageKey = "builderImage"
+	// ConfigFileKey is the lookup key for the config file in ExternalParameters.
+	ConfigFileKey = "configFile"
+)
 
 // BuildDefinition contains the information required for building an artifact using a Docker image.
 // Based on BuildDefinition in https://github.com/slsa-framework/slsa/pull/525.
