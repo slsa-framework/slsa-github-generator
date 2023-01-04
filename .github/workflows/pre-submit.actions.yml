@@ -124,24 +124,28 @@ jobs:
           set -euo pipefail
           # Note: the token is always invalid due to the GitHub run verification.
           token=$(cat .github/actions/verify-token/testdata/slsa-token)
-          echo "value=$token" >> "$GITHUB_OUTPUT"
+          verified_token=$(echo "$token" | cut -d '.' -f2 | base64 -d)
+          echo "unverified=$token" >> "$GITHUB_OUTPUT"
+          echo "verified=$verified_token" >> "$GITHUB_OUTPUT"
+      # Verify the values in the "verified" token.
+      - run: ./.github/workflows/scripts/schedule.actions/verify-token.sh
+        env:
+          VERIFIED_TOKEN: ${{ steps.token.outputs.verified }}
+          TOOL_REPOSITORY: "laurentsimon/slsa-delegated-tool"
+          TOOL_REF: "refs/heads/main"
+          TOOL_URI: "https://github.com/laurentsimon/slsa-delegated-tool/.github/workflows/tool1_slsa3.yml@refs/heads/main"
       - id: verify
         uses: ./.github/actions/verify-token
         continue-on-error: true
         with:
-          slsa-unverified-token: ${{ steps.token.outputs.value }}
+          # Always fails due to the GitHub run mismatch.
+          slsa-unverified-token: ${{ steps.token.outputs.unverified }}
           slsa-workflow-recipient: "delegator_generic_slsa3.yml"
-      - run: ./.github/workflows/scripts/schedule.actions/verify-token.sh
-        env:
-          VERIFIED_TOKEN: ${{ steps.verify.outputs.slsa-verified-token }}
-          TOOL_REPOSITORY: ${{ steps.verify.outputs.tool-repository }}
-          TOOL_REF: ${{ steps.verify.outputs.tool-ref }}
-          TOOL_URI: ${{ steps.verify.outputs.tool-uri }}
       - id: verify-mismatch-recipient
         uses: ./.github/actions/verify-token
         continue-on-error: true
         with:
-          slsa-unverified-token: ${{ steps.verify.outputs.slsa-verified-token }}
+          slsa-unverified-token: ${{ steps.token.outputs.unverified }}
           slsa-workflow-recipient: "elegator_generic_slsa3.yml"
       - id: verify-mismatch-token
         uses: ./.github/actions/verify-token
