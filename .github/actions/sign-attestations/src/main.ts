@@ -38,10 +38,7 @@ async function run(): Promise<void> {
 
     const files = await fs.promises.readdir(safeAttestationFolder);
     for (const file of files) {
-      const fpath = resolvePathInput(
-        path.join(safeAttestationFolder, file),
-        wd
-      );
+      const fpath = resolvePathInput(path.join(attestationFolder, file), wd);
       const stat = await fs.promises.stat(fpath);
       if (stat.isFile()) {
         core.debug(`Signing ${fpath}...`);
