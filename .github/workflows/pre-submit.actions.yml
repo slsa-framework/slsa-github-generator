@@ -50,7 +50,7 @@ jobs:
           fi
 
       # If index.js was different from expected, upload the expected version as an artifact
-      - uses: actions/upload-artifact@83fd05a356d7e2593de66fc9913b3002723633cb
+      - uses: actions/upload-artifact@055b8b3f04a4a7ed853f2c6ab04256f83e4874dc
         if: ${{ failure() && steps.diff.conclusion == 'failure' }}
         with:
           name: dist
@@ -102,7 +102,7 @@ jobs:
   setup-token:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # tag=v3.1.0
+      - uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b # v3.2.0
       - id: setup
         uses: ./actions/setup-token
         with:
