@@ -23,6 +23,7 @@ jobs:
           - .github/actions/compute-sha256
           - .github/actions/privacy-check
           - .github/actions/generate-attestations
+          - .github/actions/sign-attestations
           - ./actions/setup-token
           # TODO(1418): enable .github/actions/verify-token.
     steps:
