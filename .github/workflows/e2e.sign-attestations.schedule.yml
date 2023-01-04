@@ -1,0 +1,69 @@
+name: schedule sign-attestations
+
+on:
+  # Daily run.
+  schedule:
+    - cron: "0 4 * * *"
+  workflow_dispatch:
+
+permissions: read-all
+
+env:
+  GH_TOKEN: ${{ github.token }}
+  ISSUE_REPOSITORY: ${{ github.repository }}
+
+jobs:
+  sign-attestations:
+    permissions:
+      contents: read
+      id-token: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b # v3.2.0
+      - id: setup
+        uses: ./.github/actions/sign-attestations
+        with:
+          attestations: .github/actions/sign-attestations/testdata/attestations
+          output-folder: outputs
+      - name: Setup node
+        uses: actions/setup-node@8c91899e586c5b171469028077307d293428b516 # v3
+        with:
+          node-version: 16
+      - name: install sigstore-js
+        run: npm i sigstore -g
+      # TODO: Add subject verification. This only verifies the signature on the DSSE envelope.
+      - name: run verify
+        working-directory: outputs
+        run: |
+          for file in *; do
+            sigstore verify $file
+          done
+
+  if-succeed:
+    needs: [sign-attestations]
+    runs-on: ubuntu-latest
+    # We use `== 'failure'` instead of ` != 'success'` because we want to ignore skipped jobs, if there are any.
+    if: github.event_name != 'workflow_dispatch' && needs.sign-attestations.result != 'failure'
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@dc323e67f16fb5f7663d20ff7941f27f5809e9b6 # v2.6.0
+        with:
+          repository: slsa-framework/example-package
+          ref: main
+      - run: ./.github/workflows/scripts/e2e-report-success.sh
+
+  if-failed:
+    needs: [sign-attestations]
+    runs-on: ubuntu-latest
+    if: always() && github.event_name != 'workflow_dispatch' && needs.sign-attestations.result == 'failure'
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@dc323e67f16fb5f7663d20ff7941f27f5809e9b6 # v2.6.0
+        with:
+          repository: slsa-framework/example-package
+          ref: main
+      - run: ./.github/workflows/scripts/e2e-report-failure.sh
