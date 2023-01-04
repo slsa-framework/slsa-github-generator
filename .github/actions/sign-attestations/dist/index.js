@@ -37093,27 +37093,46 @@ const signOptions = {
     oidcIssuer: "https://oauth2.sigstore.dev/auth",
     rekorBaseURL: sigstore.sigstore.DEFAULT_REKOR_BASE_URL,
 };
+// Detect directory traversal for input file.
+function resolvePathInput(input, wd) {
+    const safeJoin = path.resolve(path.join(wd, input));
+    if (!(safeJoin + path.sep).startsWith(wd + path.sep)) {
+        throw Error(`unsafe path ${safeJoin}`);
+    }
+    return safeJoin;
+}
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
+            const wd = process.env.GITHUB_WORKSPACE;
+            if (!wd) {
+                core.setFailed("No repository detected.");
+                return;
+            }
             // Attestations
             const attestationFolder = core.getInput("attestations");
+            const safeAttestationFolder = resolvePathInput(attestationFolder, wd);
             const payloadType = core.getInput("payload-type");
             // Output folder
             const outputFolder = core.getInput("output-folder");
-            const files = yield fs.promises.readdir(attestationFolder);
-            fs.mkdirSync(outputFolder, { recursive: true });
+            const safeOutputFolder = resolvePathInput(outputFolder, wd);
+            fs.mkdirSync(safeOutputFolder, { recursive: true });
+            const files = yield fs.promises.readdir(safeAttestationFolder);
             for (const file of files) {
-                const fpath = path.join(attestationFolder, file);
+                const fpath = resolvePathInput(path.join(safeAttestationFolder, file), wd);
                 const stat = yield fs.promises.stat(fpath);
                 if (stat.isFile()) {
-                    console.log("Signing '%s'.", fpath);
+                    core.debug(`Signing ${fpath}...`);
                     const buffer = fs.readFileSync(fpath);
                     const bundle = yield sigstore.sigstore.signAttestation(buffer, payloadType, signOptions);
                     const bundleStr = JSON.stringify(bundle);
-                    const outputPath = path.join(outputFolder, path.basename(file), ".sigstore");
-                    fs.writeFileSync(outputPath, bundleStr);
-                    console.log("Wrote signed attestation to '%s'.", outputPath);
+                    // We detect path traversal for safeOutputFolder, so this should be safe.
+                    const outputPath = path.join(safeOutputFolder, path.basename(file), ".sigstore");
+                    fs.writeFileSync(outputPath, bundleStr, {
+                        flag: "ax",
+                        mode: 0o600,
+                    });
+                    core.debug(`Wrote signed attestation to '${outputPath}.`);
                 }
             }
         }
