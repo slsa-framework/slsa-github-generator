@@ -5,7 +5,7 @@ inputs:
     description: 'A JSON file describing the SLSA output layout with attestation filename keys and the generated subjects (and digests)'
     required: true
   predicate-type:
-    description: 'A URI dedining the type of the predicate, for e.g. https://slsa.dev/provenance/v0.2'
+    description: 'A URI defining the type of the predicate, for e.g. https://slsa.dev/provenance/v0.2'
     required: true
   predicate-file:
     description: 'A JSON file describing the SLSA predicate to attach to the subjects'
