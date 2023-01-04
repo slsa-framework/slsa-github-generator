@@ -122,7 +122,8 @@ jobs:
       - id: token
         run: |
           set -euo pipefail
-          token=$(cat .github/workflows/testdata/pre-submit.actions/token)
+          # Note: the token is always invalid due to the GitHub run verification.
+          token=$(cat .github/actions/verify-token/testdata/slsa-token)
           echo "value=$token" >> "$GITHUB_OUTPUT"
       - id: verify
         uses: ./.github/actions/verify-token
