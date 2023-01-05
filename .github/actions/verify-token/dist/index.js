@@ -53,9 +53,8 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core = __importStar(__nccwpck_require__(2186));
 const sigstore = __importStar(__nccwpck_require__(9149));
-const process = __importStar(__nccwpck_require__(7282));
-const fs = __importStar(__nccwpck_require__(7147));
-const child_process = __importStar(__nccwpck_require__(2081));
+const token_1 = __nccwpck_require__(6021);
+const validate_1 = __nccwpck_require__(1997);
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
@@ -96,21 +95,21 @@ function run() {
             const rawTokenStr = rawToken.toString();
             const rawTokenObj = JSON.parse(rawTokenStr);
             // Verify the version.
-            validateField("version", rawTokenObj.version, 1);
+            (0, validate_1.validateField)("version", rawTokenObj.version, 1);
             // Verify the context of the signature.
-            validateField("context", rawTokenObj.context, "SLSA delegator framework");
+            (0, validate_1.validateField)("context", rawTokenObj.context, "SLSA delegator framework");
             // Verify the intended recipient.
-            validateField("builder.audience", rawTokenObj.builder.audience, workflowRecipient);
+            (0, validate_1.validateField)("builder.audience", rawTokenObj.builder.audience, workflowRecipient);
             // Verify the runner label.
-            validateFieldAnyOf("builder.runner_label", rawTokenObj.builder.runner_label, ["ubuntu-latest"]);
+            (0, validate_1.validateFieldAnyOf)("builder.runner_label", rawTokenObj.builder.runner_label, ["ubuntu-latest"]);
             // Verify the GitHub event information.
-            validateGitHubFields(rawTokenObj.github);
+            (0, validate_1.validateGitHubFields)(rawTokenObj.github);
             // Validate the build Action is not empty.
-            validateNonEmptyField("tool.actions.build_artifacts.path", rawTokenObj.tool.actions.build_artifacts.path);
+            (0, validate_1.validateNonEmptyField)("tool.actions.build_artifacts.path", rawTokenObj.tool.actions.build_artifacts.path);
             // No validation needed for the builder inputs.
             // They may be empty.
             // Extract certificate information.
-            const [toolURI, toolRepository, toolRef] = parseCertificateIdentity(bundle);
+            const [toolURI, toolRepository, toolRef] = (0, token_1.parseCertificateIdentity)(bundle);
             core.debug(`slsa-verified-token: ${rawTokenStr}`);
             core.setOutput("tool-repository", toolRepository);
             core.setOutput("tool-ref", toolRef);
@@ -127,6 +126,77 @@ function run() {
         }
     });
 }
+run();
+
+
+/***/ }),
+
+/***/ 6021:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.parseCertificateIdentity = exports.extractIdentityFromSAN = void 0;
+const fs = __importStar(__nccwpck_require__(7147));
+const child_process = __importStar(__nccwpck_require__(2081));
+const core = __importStar(__nccwpck_require__(2186));
+/**
+ * extractIdentityFromSAN extracts the repository name and ref from the given SAN URI.
+ */
+function extractIdentityFromSAN(URI) {
+    // NOTE: the URI looks like:
+    // https://github.com/laurentsimon/slsa-delegated-tool/.github/workflows/tool1_slsa3.yml@refs/heads/main.
+    // We want to extract:
+    // - the repository: laurentsimon/slsa-delegated-tool
+    // - the ref: refs/heads/main
+    const parts = URI.split("@");
+    if (parts.length !== 2) {
+        throw new Error(`invalid URI (1): ${URI}`);
+    }
+    const ref = parts[1];
+    const url = parts[0];
+    const gitHubURL = "https://github.com/";
+    if (!url.startsWith(gitHubURL)) {
+        throw new Error(`not a GitHub URI: ${URI}`);
+    }
+    // NOTE: we omit the gitHubURL from the URL.
+    const parts2 = url.slice(gitHubURL.length).split("/");
+    if (parts2.length <= 2) {
+        throw new Error(`invalid URI (2): ${URI}`);
+    }
+    const repo = `${parts2[0]}/${parts2[1]}`;
+    return [repo, ref];
+}
+exports.extractIdentityFromSAN = extractIdentityFromSAN;
+/**
+ * parseCertificateIdentity parses the sigstore.Bundle's certificate identity
+ * and returns the Tool Reusable Workflow's URI, repository, and ref as a three
+ * tuple.
+ */
 function parseCertificateIdentity(bundle) {
     if (bundle === undefined) {
         throw new Error(`undefined bundle.`);
@@ -160,35 +230,23 @@ function parseCertificateIdentity(bundle) {
     const toolURI = result.slice(index + 4).replace("\n", "");
     core.debug(`tool-uri: ${toolURI}`);
     // NOTE: we can use the job_workflow_ref and job_workflow_sha when they become available.
-    const [toolRepository, toolRef] = extractIdentifyFromSAN(toolURI);
+    const [toolRepository, toolRef] = extractIdentityFromSAN(toolURI);
     core.debug(`tool-repository: ${toolRepository}`);
     core.debug(`tool-ref: ${toolRef}`);
     return [toolURI, toolRepository, toolRef];
 }
-function extractIdentifyFromSAN(URI) {
-    // NOTE: the URI looks like:
-    // https://github.com/laurentsimon/slsa-delegated-tool/.github/workflows/tool1_slsa3.yml@refs/heads/main.
-    // We want to extract:
-    // - the repository: laurentsimon/slsa-delegated-tool
-    // - the ref: refs/heads/main
-    const parts = URI.split("@");
-    if (parts.length !== 2) {
-        throw new Error(`invalid URI (1): ${URI}`);
-    }
-    const ref = parts[1];
-    const url = parts[0];
-    const gitHubURL = "https://github.com/";
-    if (!url.startsWith(gitHubURL)) {
-        throw new Error(`not a GitHub URI: ${URI}`);
-    }
-    // NOTE: we omit the gitHubURL from the URL.
-    const parts2 = url.slice(gitHubURL.length).split("/");
-    if (parts2.length <= 2) {
-        throw new Error(`invalid URI (2): ${URI}`);
-    }
-    const repo = `${parts2[0]}/${parts2[1]}`;
-    return [repo, ref];
-}
+exports.parseCertificateIdentity = parseCertificateIdentity;
+
+
+/***/ }),
+
+/***/ 1997:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.validateNonEmptyField = exports.validateField = exports.validateFieldAnyOf = exports.validateGitHubFields = void 0;
 function validateGitHubFields(gho) {
     validateField("github.event_name", gho.event_name, process.env.GITHUB_EVENT_NAME);
     validateField("github.run_attempt", gho.run_attempt, process.env.GITHUB_RUN_ATTEMPT);
@@ -206,6 +264,7 @@ function validateGitHubFields(gho) {
     // repository_owner_id: process.env.GITHUB_REPOSITORY_OWNER_ID,
     // repository_actor_id: process.env.GITHUB_ACTOR_ID,
 }
+exports.validateGitHubFields = validateGitHubFields;
 function validateFieldAnyOf(name, actual, expected) {
     for (const value of expected) {
         if (actual === value) {
@@ -215,17 +274,19 @@ function validateFieldAnyOf(name, actual, expected) {
     }
     throw new Error(`mismatch ${name}: got '${actual}', expected one of '${expected.join(",")}'.`);
 }
+exports.validateFieldAnyOf = validateFieldAnyOf;
 function validateField(name, actual, expected) {
     if (actual !== expected) {
         throw new Error(`mismatch ${name}: got '${actual}', expected '${expected}'.`);
     }
 }
+exports.validateField = validateField;
 function validateNonEmptyField(name, actual) {
     if (actual === "") {
         throw new Error(`empty ${name}, expected non-empty value.`);
     }
 }
-run();
+exports.validateNonEmptyField = validateNonEmptyField;
 
 
 /***/ }),
@@ -30821,17 +30882,14 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 const crypto_1 = __nccwpck_require__(6113);
+const fs_1 = __importDefault(__nccwpck_require__(7147));
+const path_1 = __importDefault(__nccwpck_require__(1017));
 const util_1 = __nccwpck_require__(6901);
 // Returns the set of trusted log keys which can be used to verify the
 // Signed Entry Timestamps in the log.
 function getKeys() {
     // TODO: This should be be loaded via TUF
-    const pem = `
------BEGIN PUBLIC KEY-----
-MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE2G2Y+2tabdTV5BcGiBIx0a9fAFwr
-kBbmLSGtks4L3qX6yYY0zufBnhC8Ur/iy55GhWP/9A/bY2LhC30M9+RYtw==
------END PUBLIC KEY-----
-    `
+    const pem = fs_1.default.readFileSync(path_1.default.resolve(__dirname, '../../store/rekor.pub'), 'utf-8');
     const key = (0, crypto_1.createPublicKey)(pem);
     // Calculate logID from the key
     const logID = getLogID(key);
@@ -37387,14 +37445,6 @@ module.exports = require("os");
 
 "use strict";
 module.exports = require("path");
-
-/***/ }),
-
-/***/ 7282:
-/***/ ((module) => {
-
-"use strict";
-module.exports = require("process");
 
 /***/ }),
 

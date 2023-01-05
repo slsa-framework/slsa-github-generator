@@ -3,20 +3,13 @@ import * as fs from "fs";
 import * as sigstore from "sigstore";
 import * as path from "path";
 
+import { resolvePathInput } from "./path";
+
 const signOptions = {
   oidcClientID: "sigstore",
   oidcIssuer: "https://oauth2.sigstore.dev/auth",
   rekorBaseURL: sigstore.sigstore.DEFAULT_REKOR_BASE_URL,
 };
-
-// Detect directory traversal for input file.
-function resolvePathInput(input: string, wd: string): string {
-  const safeJoin = path.resolve(path.join(wd, input));
-  if (!(safeJoin + path.sep).startsWith(wd + path.sep)) {
-    throw Error(`unsafe path ${safeJoin}`);
-  }
-  return safeJoin;
-}
 
 async function run(): Promise<void> {
   try {

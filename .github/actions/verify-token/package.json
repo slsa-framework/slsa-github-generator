@@ -10,8 +10,8 @@
     "format-check": "prettier --check '**/*.ts'",
     "package": "ncc build --source-map",
     "lint": "eslint src/**/*.ts",
-    "all": "npm ci && npm run format && npm run lint && npm run build && npm run package",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "all": "npm ci && npm run format && npm run lint && npm run build && npm test && npm run package",
+    "test": "jest"
   },
   "keywords": [],
   "author": "",
@@ -22,6 +22,7 @@
     "sigstore": "^0.2.0"
   },
   "devDependencies": {
+    "@types/jest": "^29.2.4",
     "@types/node": "^18.11.9",
     "@typescript-eslint/eslint-plugin": "^5.45.0",
     "@typescript-eslint/parser": "^5.45.0",
@@ -29,6 +30,7 @@
     "eslint": "^8.27.0",
     "eslint-plugin-github": "^4.4.1",
     "prettier": "^2.7.1",
+    "ts-jest": "^29.0.3",
     "typescript": "^4.8.4"
   }
 }

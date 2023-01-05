@@ -1,6 +1,8 @@
 import * as types from "../src/intoto";
+import * as statement from "../src/attestation";
+
+// Import using commonJS so it can be mocked.
 const fs = require("fs");
-const statement = require("../src/attestation");
 
 describe("createStatement", () => {
   const subjects = [
@@ -33,6 +35,10 @@ describe("createStatement", () => {
 jest.mock("fs");
 
 describe("writeAttestation", () => {
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
   const layout = {
     version: 1,
     attestations: [
@@ -67,8 +73,6 @@ describe("writeAttestation", () => {
   const predicateType = "https://slsa.dev/provenance/v0.2";
 
   it("writes correct intoto statement", () => {
-    fs.readFileSync.mockClear();
-
     fs.readFileSync.mockReturnValueOnce(JSON.stringify(layout));
     fs.readFileSync.mockReturnValueOnce(JSON.stringify(predicate));
 
@@ -83,8 +87,6 @@ describe("writeAttestation", () => {
   });
 
   it("nested intoto statement names", () => {
-    fs.readFileSync.mockClear();
-
     const nestedLayout = {
       version: 1,
       attestations: [

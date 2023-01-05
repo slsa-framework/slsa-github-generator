@@ -13,27 +13,14 @@ limitations under the License.
 
 import * as core from "@actions/core";
 import * as sigstore from "sigstore";
-import * as process from "process";
-import * as fs from "fs";
-import * as child_process from "child_process";
 
-interface githubObj {
-  event_name: string;
-  run_attempt: string;
-  run_id: string;
-  run_number: string;
-  workflow: string;
-  sha: string;
-  repository: string;
-  repository_owner: string;
-  // TODO(#1411): Record if these become available.
-  // repository_id: string;
-  // repository_owner_id: string;
-  // actor_id: string;
-  ref: string;
-  ref_type: string;
-  actor: string;
-}
+import { parseCertificateIdentity, RawToken } from "./token";
+import {
+  validateGitHubFields,
+  validateField,
+  validateFieldAnyOf,
+  validateNonEmptyField,
+} from "./validate";
 
 async function run(): Promise<void> {
   try {
@@ -77,30 +64,8 @@ async function run(): Promise<void> {
     core.debug(`bundle: ${bundleStr}`);
     core.debug(`token: ${rawToken}`);
 
-    interface rawTokenInterface {
-      version: number;
-      context: string;
-      builder: {
-        private_repository: boolean;
-        runner_label: string;
-        audience: string;
-      };
-      github: githubObj;
-      tool: {
-        actions: {
-          build_artifacts: {
-            path: string;
-          };
-        };
-        // NOTE: reusable workflows only support inputs of type
-        // boolean, number, or string.
-        // https://docs.github.com/en/actions/using-workflows/reusing-workflows#passing-inputs-and-secrets-to-a-reusable-workflow.
-        inputs: Map<string, Object>;
-      };
-    }
-
     const rawTokenStr = rawToken.toString();
-    const rawTokenObj: rawTokenInterface = JSON.parse(rawTokenStr);
+    const rawTokenObj: RawToken = JSON.parse(rawTokenStr);
 
     // Verify the version.
     validateField("version", rawTokenObj.version, 1);
@@ -149,150 +114,6 @@ async function run(): Promise<void> {
     } else {
       core.setFailed(`Unexpected error: ${error}`);
     }
-  }
-}
-
-function parseCertificateIdentity(
-  bundle: sigstore.sigstore.Bundle
-): [string, string, string] {
-  if (bundle === undefined) {
-    throw new Error(`undefined bundle.`);
-  }
-  if (bundle.verificationMaterial === undefined) {
-    throw new Error(`undefined bundle.verificationMaterial.`);
-  }
-  if (bundle.verificationMaterial.x509CertificateChain === undefined) {
-    throw new Error(
-      `undefined bundle.verificationMaterial.x509CertificateChain.`
-    );
-  }
-  if (
-    bundle.verificationMaterial.x509CertificateChain.certificates.length === 0
-  ) {
-    throw new Error(
-      `bundle.verificationMaterial.x509CertificateChaincertificates is empty.`
-    );
-  }
-  // NOTE: the first certificate is the client certificate.
-  const clientCertDer = Buffer.from(
-    bundle.verificationMaterial.x509CertificateChain.certificates[0].rawBytes,
-    "base64"
-  );
-  const clientCertPath = "client.cert";
-  fs.writeFileSync(clientCertPath, clientCertDer);
-
-  // https://stackabuse.com/executing-shell-commands-with-node-js/
-  // The SAN from the certificate looks like:
-  // `
-  //  X509v3 Subject Alternative Name: critical\n
-  //      URI:https://github.com/laurentsimon/slsa-delegated-tool/.github/workflows/tool1_slsa3.yml@refs/heads/main\n
-  // `
-  const result = child_process
-    .execSync(`openssl x509 -in ${clientCertPath} -noout -ext subjectAltName`)
-    .toString();
-  const index = result.indexOf("URI:");
-  if (index === -1) {
-    throw new Error("error: cannot find URI in subjectAltName");
-  }
-  const toolURI = result.slice(index + 4).replace("\n", "");
-  core.debug(`tool-uri: ${toolURI}`);
-
-  // NOTE: we can use the job_workflow_ref and job_workflow_sha when they become available.
-  const [toolRepository, toolRef] = extractIdentifyFromSAN(toolURI);
-  core.debug(`tool-repository: ${toolRepository}`);
-  core.debug(`tool-ref: ${toolRef}`);
-
-  return [toolURI, toolRepository, toolRef];
-}
-
-function extractIdentifyFromSAN(URI: string): [string, string] {
-  // NOTE: the URI looks like:
-  // https://github.com/laurentsimon/slsa-delegated-tool/.github/workflows/tool1_slsa3.yml@refs/heads/main.
-  // We want to extract:
-  // - the repository: laurentsimon/slsa-delegated-tool
-  // - the ref: refs/heads/main
-  const parts = URI.split("@");
-  if (parts.length !== 2) {
-    throw new Error(`invalid URI (1): ${URI}`);
-  }
-  const ref = parts[1];
-  const url = parts[0];
-  const gitHubURL = "https://github.com/";
-  if (!url.startsWith(gitHubURL)) {
-    throw new Error(`not a GitHub URI: ${URI}`);
-  }
-  // NOTE: we omit the gitHubURL from the URL.
-  const parts2 = url.slice(gitHubURL.length).split("/");
-  if (parts2.length <= 2) {
-    throw new Error(`invalid URI (2): ${URI}`);
-  }
-  const repo = `${parts2[0]}/${parts2[1]}`;
-  return [repo, ref];
-}
-
-function validateGitHubFields(gho: githubObj): void {
-  validateField(
-    "github.event_name",
-    gho.event_name,
-    process.env.GITHUB_EVENT_NAME
-  );
-  validateField(
-    "github.run_attempt",
-    gho.run_attempt,
-    process.env.GITHUB_RUN_ATTEMPT
-  );
-  validateField("github.run_id", gho.run_id, process.env.GITHUB_RUN_ID);
-  validateField(
-    "github.run_number",
-    gho.run_number,
-    process.env.GITHUB_RUN_NUMBER
-  );
-  validateField("github.workflow", gho.workflow, process.env.GITHUB_WORKFLOW);
-  validateField("github.sha", gho.sha, process.env.GITHUB_SHA);
-  validateField(
-    "github.repository",
-    gho.repository,
-    process.env.GITHUB_REPOSITORY
-  );
-  validateField(
-    "github.repository_owner",
-    gho.repository_owner,
-    process.env.GITHUB_REPOSITORY_OWNER
-  );
-  validateField("github.ref", gho.ref, process.env.GITHUB_REF);
-  validateField("github.ref_type", gho.ref_type, process.env.GITHUB_REF_TYPE);
-  validateField("github.actor", gho.actor, process.env.GITHUB_ACTOR);
-  // TODO(#1411): Record if these become available.
-  // repository_id: process.env.GITHUB_REPOSITORY_ID,
-  // repository_owner_id: process.env.GITHUB_REPOSITORY_OWNER_ID,
-  // repository_actor_id: process.env.GITHUB_ACTOR_ID,
-}
-
-function validateFieldAnyOf<T>(name: string, actual: T, expected: T[]): void {
-  for (const value of expected) {
-    if (actual === value) {
-      // Found a match.
-      return;
-    }
-  }
-  throw new Error(
-    `mismatch ${name}: got '${actual}', expected one of '${expected.join(
-      ","
-    )}'.`
-  );
-}
-
-function validateField<T>(name: string, actual: T, expected: T): void {
-  if (actual !== expected) {
-    throw new Error(
-      `mismatch ${name}: got '${actual}', expected '${expected}'.`
-    );
-  }
-}
-
-function validateNonEmptyField(name: string, actual: string): void {
-  if (actual === "") {
-    throw new Error(`empty ${name}, expected non-empty value.`);
   }
 }
 

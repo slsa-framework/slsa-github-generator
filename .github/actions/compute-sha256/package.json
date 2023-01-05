@@ -1,6 +1,6 @@
 {
-  "name": "typescript-action",
-  "version": "0.0.0",
+  "name": "compute-sha256",
+  "version": "0.0.1",
   "private": true,
   "description": "TypeScript template action",
   "main": "lib/main.js",
@@ -10,7 +10,8 @@
     "format-check": "prettier --check '**/*.ts'",
     "package": "ncc build --source-map",
     "lint": "eslint src/**/*.ts",
-    "all": "npm run format && npm run lint && npm run build && npm run package"
+    "all": "npm ci && npm run format && npm run lint && npm run build && npm test && npm run package",
+    "test": "jest"
   },
   "keywords": [
     "actions",
@@ -21,6 +22,7 @@
     "@actions/core": "1.10.0"
   },
   "devDependencies": {
+    "@types/jest": "^29.2.4",
     "@types/node": "18.11.11",
     "@typescript-eslint/eslint-plugin": "5.45.1",
     "@typescript-eslint/parser": "5.45.1",
@@ -28,6 +30,7 @@
     "eslint": "8.29.0",
     "eslint-plugin-github": "4.6.0",
     "prettier": "2.8.0",
+    "ts-jest": "^29.0.3",
     "typescript": "4.9.3"
   }
 }
