@@ -40,27 +40,27 @@ var supportedVersions = map[int]bool{
 }
 
 type goReleaserConfigFile struct {
+	Main    *string  `yaml:"main"`
+	Dir     *string  `yaml:"dir"`
 	Goos    string   `yaml:"goos"`
 	Goarch  string   `yaml:"goarch"`
+	Binary  string   `yaml:"binary"`
 	Env     []string `yaml:"env"`
 	Flags   []string `yaml:"flags"`
 	Ldflags []string `yaml:"ldflags"`
-	Binary  string   `yaml:"binary"`
 	Version int      `yaml:"version"`
-	Main    *string  `yaml:"main"`
-	Dir     *string  `yaml:"dir"`
 }
 
 // GoReleaserConfig tracks configuration for goreleaser.
 type GoReleaserConfig struct {
-	Goos    string
-	Goarch  string
+	Env     map[string]string
 	Main    *string
 	Dir     *string
-	Env     map[string]string
+	Goos    string
+	Goarch  string
+	Binary  string
 	Flags   []string
 	Ldflags []string
-	Binary  string
 }
 
 func configFromString(b []byte) (*GoReleaserConfig, error) {

@@ -1,4 +1,4 @@
-name: schedule actions
+name: schedule sign-attestations
 
 on:
   # Daily run.
