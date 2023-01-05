@@ -53,9 +53,9 @@ type BuildType interface {
 
 // GithubActionsBuild is a basic build type for builders running in GitHub Actions.
 type GithubActionsBuild struct {
-	subject []intoto.Subject
 	Context github.WorkflowContext
 	Clients ClientProvider
+	subject []intoto.Subject
 }
 
 // WorkflowParameters contains parameters given to the workflow invocation.
