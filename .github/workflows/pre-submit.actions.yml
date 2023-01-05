@@ -50,7 +50,7 @@ jobs:
           fi
 
       # If index.js was different from expected, upload the expected version as an artifact
-      - uses: actions/upload-artifact@055b8b3f04a4a7ed853f2c6ab04256f83e4874dc
+      - uses: actions/upload-artifact@83fd05a356d7e2593de66fc9913b3002723633cb # v3.1.1
         if: ${{ failure() && steps.diff.conclusion == 'failure' }}
         with:
           name: dist
