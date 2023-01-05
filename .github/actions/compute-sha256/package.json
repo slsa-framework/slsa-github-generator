@@ -1,8 +1,8 @@
 {
-  "name": "typescript-action",
-  "version": "0.0.0",
+  "name": "compute-sha256",
+  "version": "0.0.1",
   "private": true,
-  "description": "TypeScript template action",
+  "description": "Compute a sha256 of a file.",
   "main": "lib/main.js",
   "scripts": {
     "build": "tsc",
