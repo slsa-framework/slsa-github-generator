@@ -43,14 +43,14 @@ import (
 // parsed, and we are ready for running the `docker run` command.
 type DockerBuild struct {
 	BuildDefinition *BuildDefinition
-	BuildConfig     BuildConfig
-	RepoInfo        RepoCheckoutInfo
+	BuildConfig     *BuildConfig
+	RepoInfo        *RepoCheckoutInfo
 }
 
 // RepoCheckoutInfo contains info about the location of a locally checked out
 // repository.
 type RepoCheckoutInfo struct {
-	// Path to the root of the repo
+	// Path to the root of the repo.
 	RepoRoot string
 }
 
@@ -67,8 +67,8 @@ type Builder struct {
 	config      DockerBuildConfig
 }
 
-// NewBuilderWithGitFetcher creates a new Builder fetches the sources from a
-// Git repository.
+// NewBuilderWithGitFetcher creates a new Builder that fetches the sources
+// from a Git repository.
 func NewBuilderWithGitFetcher(config DockerBuildConfig, forceCheckout bool) (*Builder, error) {
 	gc, err := newGitClient(&config, forceCheckout, 0 /* depth */)
 	if err != nil {
@@ -140,8 +140,8 @@ func (b *Builder) SetUpBuildState() (*DockerBuild, error) {
 
 	db := &DockerBuild{
 		BuildDefinition: CreateBuildDefinition(&b.config),
-		BuildConfig:     *bc,
-		RepoInfo:        *repoInfo,
+		BuildConfig:     bc,
+		RepoInfo:        repoInfo,
 	}
 	return db, nil
 }
@@ -208,13 +208,13 @@ func runDockerRun(db *DockerBuild) error {
 // GitClient provides data and functions for fetching the source files from a
 // Git repository.
 type GitClient struct {
-	sourceRepo    string
-	sourceDigest  Digest
-	forceCheckout bool
-	depth         int
+	sourceRepo    *string
+	sourceDigest  *Digest
 	checkoutInfo  *RepoCheckoutInfo
 	logFiles      []string
 	errFiles      []string
+	forceCheckout bool
+	depth         int
 }
 
 func newGitClient(config *DockerBuildConfig, forceCheckout bool, depth int) (*GitClient, error) {
@@ -236,8 +236,8 @@ func newGitClient(config *DockerBuildConfig, forceCheckout bool, depth int) (*Gi
 	}
 
 	return &GitClient{
-		sourceRepo:    repo,
-		sourceDigest:  config.SourceDigest,
+		sourceRepo:    &repo,
+		sourceDigest:  &config.SourceDigest,
 		forceCheckout: forceCheckout,
 		depth:         depth,
 		checkoutInfo:  &RepoCheckoutInfo{},
@@ -274,10 +274,9 @@ func (c *GitClient) verifyOrFetchRepo() error {
 	}
 	if !repoIsCheckedOut || c.forceCheckout {
 		if err := c.fetchSourcesFromGitRepo(); err != nil {
-			return fmt.Errorf("couldn't fetch sources from %q at commit %q: %v", c.sourceRepo, c.sourceDigest, err)
+			return fmt.Errorf("couldn't fetch sources from %q at commit %q: %v", *c.sourceRepo, c.sourceDigest, err)
 		}
 	}
-	// Repo is checked out at the right commit; no future cleanup needed.
 	return nil
 }
 
@@ -288,7 +287,7 @@ func (c *GitClient) verifyCommit() (bool, error) {
 	cmd := exec.Command("git", "rev-parse", "--verify", "HEAD")
 	lastCommitIDBytes, err := cmd.Output()
 	if err != nil {
-		// The current working directory is not a git repo
+		// The current working directory is not a git repo.
 		return false, nil
 	}
 	lastCommitID := strings.TrimSpace(string(lastCommitIDBytes))
@@ -306,7 +305,7 @@ func (c *GitClient) verifyCommit() (bool, error) {
 // entire repo and its history is cloned.
 // Returns an error if the repo cannot be cloned, or the commit hash does not
 // exist. Otherwise, updates this GitClient with RepoCheckoutInfo containing
-// the absolute path of the root of the repo, and other generated file paths.
+// the absolute path of the root of the repo, and other generated files paths.
 func (c *GitClient) fetchSourcesFromGitRepo() error {
 	// create a temp folder in the current directory for fetching the repo.
 	targetDir, err := os.MkdirTemp("", "release-*")
@@ -329,7 +328,7 @@ func (c *GitClient) fetchSourcesFromGitRepo() error {
 	}
 
 	// Change directory to the root of the cloned repo.
-	repoName := path.Base(c.sourceRepo)
+	repoName := path.Base(*c.sourceRepo)
 	if err := os.Chdir(repoName); err != nil {
 		return fmt.Errorf("couldn't change directory to %q: %v", repoName, err)
 	}
@@ -352,12 +351,11 @@ func (c *GitClient) fetchSourcesFromGitRepo() error {
 // Clones a Git repo from the URI in this GitClient, up to the depth given in
 // this GitClient. If depth is 0 or negative, the entire repo is cloned.
 func (c *GitClient) cloneGitRepo() error {
-	cmd := exec.Command("git", "clone", c.sourceRepo)
+	cmd := exec.Command("git", "clone", *c.sourceRepo)
 	if c.depth > 0 {
-		cmd = exec.Command("git", "clone", "--depth", fmt.Sprintf("%d", c.depth), c.sourceRepo)
+		cmd = exec.Command("git", "clone", "--depth", fmt.Sprintf("%d", c.depth), *c.sourceRepo)
 	}
-
-	log.Printf("Cloning the repo from %s...", c.sourceRepo)
+	log.Printf("Cloning the repo from %s...", *c.sourceRepo)
 
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
@@ -447,7 +445,7 @@ func saveToTempFile(readers ...io.Reader) ([]string, error) {
 // Checks if any files match the given pattern, and returns an error if so.
 func checkExistingFiles(pattern string) error {
 	matches, err := filepath.Glob(pattern)
-	// The only possible error is ErrBadPattern
+	// The only possible error is ErrBadPattern.
 	if err != nil {
 		return fmt.Errorf("the pattern (%q) is malformed: %v", pattern, err)
 	}
@@ -463,7 +461,7 @@ func checkExistingFiles(pattern string) error {
 // Precondition: The pattern is a relative file path pattern.
 func inspectArtifacts(pattern string) ([]intoto.Subject, error) {
 	matches, err := filepath.Glob(pattern)
-	// The only possible error is ErrBadPattern
+	// The only possible error is ErrBadPattern.
 	if err != nil {
 		return nil, fmt.Errorf("the pattern (%q) is malformed: %v", pattern, err)
 	}
