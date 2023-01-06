@@ -305,6 +305,7 @@ const fs = __importStar(__nccwpck_require__(7147));
 const DELEGATOR_BUILD_TYPE = "https://github.com/slsa-framework/slsa-github-generator/delegator-generic@v0";
 function createPredicate(rawTokenObj, toolURI) {
     const workflowInputs = {};
+    const callerRepo = createURI(process.env.GITHUB_REPOSITORY || "", process.env.GITHUB_REF || "");
     // getEntryPoint via GitHub API via runID and repository
     const predicate = {
         builder: { id: toolURI },
@@ -312,7 +313,7 @@ function createPredicate(rawTokenObj, toolURI) {
         invocation: {
             parameters: workflowInputs,
             config_source: {
-                uri: process.env.GITHUB_REPOSITORY || "",
+                uri: callerRepo,
                 entry_point: process.env.GITHUB_WORKFLOW || "",
                 digest: {
                     sha1: process.env.GITHUB_SHA || "",
@@ -341,7 +342,7 @@ function createPredicate(rawTokenObj, toolURI) {
         },
         materials: [
             {
-                uri: `git+https://github.com/${process.env.GITHUB_REPOSITORY || ""}@${process.env.GITHUB_REF || ""}`,
+                uri: callerRepo,
                 digest: {
                     sha1: process.env.GITHUB_SHA || "",
                 },
@@ -366,6 +367,10 @@ function createPredicate(rawTokenObj, toolURI) {
     return predicate;
 }
 exports.createPredicate = createPredicate;
+// createURI creates the fully qualified URI out of the repository
+function createURI(repository, ref) {
+    return `git+https://github.com/${repository}@${ref}`;
+}
 
 
 /***/ }),

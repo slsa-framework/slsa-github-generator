@@ -141,14 +141,18 @@ export function createPredicate(
   toolURI: string
 ): SLSAv02Predicate {
   const workflowInputs: WorkflowParameters = {};
+  const callerRepo: string = createURI(
+    process.env.GITHUB_REPOSITORY || "",
+    process.env.GITHUB_REF || ""
+  );
   // getEntryPoint via GitHub API via runID and repository
   const predicate: SLSAv02Predicate = {
     builder: { id: toolURI },
     build_type: DELEGATOR_BUILD_TYPE,
     invocation: {
-      parameters: workflowInputs,
+      parameters: workflowInputs, // The caller's workflow inputs.
       config_source: {
-        uri: process.env.GITHUB_REPOSITORY || "",
+        uri: callerRepo,
         entry_point: process.env.GITHUB_WORKFLOW || "",
         digest: {
           sha1: process.env.GITHUB_SHA || "",
@@ -178,9 +182,7 @@ export function createPredicate(
     },
     materials: [
       {
-        uri: `git+https://github.com/${process.env.GITHUB_REPOSITORY || ""}@${
-          process.env.GITHUB_REF || ""
-        }`,
+        uri: callerRepo,
         digest: {
           sha1: process.env.GITHUB_SHA || "",
         },
@@ -206,4 +208,9 @@ export function createPredicate(
   }
 
   return predicate;
+}
+
+// createURI creates the fully qualified URI out of the repository
+function createURI(repository: string, ref: string): string {
+  return `git+https://github.com/${repository}@${ref}`;
 }
