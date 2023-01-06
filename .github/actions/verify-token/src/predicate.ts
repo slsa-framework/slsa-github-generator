@@ -11,7 +11,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-import * as core from "@actions/core";
 import * as process from "process";
 
 const DELEGATOR_BUILD_TYPE =
@@ -32,7 +31,7 @@ interface Environment {
 }
 
 interface WorkflowParameters {
-  event_inputs: Object;
+  event_inputs?: Object;
 }
 
 interface DigestSet {
@@ -140,14 +139,17 @@ export function createPredicate(
   rawTokenObj: rawTokenInterface,
   toolURI: string
 ): SLSAv02Predicate {
-  core.info(`${rawTokenObj.builder.audience}`);
-  core.info(`${toolURI}`);
+  const workflowInputs: WorkflowParameters = {};
+  if (process.env.GITHUB_EVENT !== undefined) {
+    const ghEvent = JSON.parse(process.env.GITHUB_EVENT);
+    workflowInputs.event_inputs = ghEvent.inputs;
+  }
   // getEntryPoint via GitHub API via runID and repository
   const predicate: SLSAv02Predicate = {
     builder: { id: toolURI },
     build_type: DELEGATOR_BUILD_TYPE,
     invocation: {
-      parameters: rawTokenObj.tool.inputs, // reusable workflow input?
+      parameters: workflowInputs,
       config_source: {
         uri: process.env.GITHUB_REPOSITORY || "",
         entry_point: process.env.GITHUB_WORKFLOW || "",
@@ -171,6 +173,7 @@ export function createPredicate(
           process.env.GITHUB_REPOSITORY_OWNER_ID || "",
         github_actor_id: process.env.GITHUB_ACTOR_ID || "",
         github_repository_id: process.env.GITHUB_REPOSITORY_ID || "",
+        github_event_payload: process.env.GITHUB_EVENT || "",
       },
     },
     build_config: {
@@ -196,14 +199,6 @@ export function createPredicate(
       },
     },
   };
-  if (process.env.GITHUB_EVENT) {
-    const ghEvent = JSON.parse(process.env.GITHUB_EVENT);
-    const workflowInputs: WorkflowParameters = {
-      event_inputs: ghEvent.inputs,
-    };
-    predicate.invocation.parameters = workflowInputs;
-    predicate.invocation.environment["github_event_payload"] =
-      process.env.GITHUB_EVENT;
-  }
+
   return predicate;
 }

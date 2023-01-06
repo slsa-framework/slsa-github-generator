@@ -279,18 +279,20 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.createPredicate = void 0;
-const core = __importStar(__nccwpck_require__(2186));
 const process = __importStar(__nccwpck_require__(7282));
 const DELEGATOR_BUILD_TYPE = "https://github.com/slsa-framework/slsa-github-generator/delegator-generic@v0";
 function createPredicate(rawTokenObj, toolURI) {
-    core.info(`${rawTokenObj.builder.audience}`);
-    core.info(`${toolURI}`);
+    const workflowInputs = {};
+    if (process.env.GITHUB_EVENT !== undefined) {
+        const ghEvent = JSON.parse(process.env.GITHUB_EVENT);
+        workflowInputs.event_inputs = ghEvent.inputs;
+    }
     // getEntryPoint via GitHub API via runID and repository
     const predicate = {
         builder: { id: toolURI },
         build_type: DELEGATOR_BUILD_TYPE,
         invocation: {
-            parameters: rawTokenObj.tool.inputs,
+            parameters: workflowInputs,
             config_source: {
                 uri: process.env.GITHUB_REPOSITORY || "",
                 entry_point: process.env.GITHUB_WORKFLOW || "",
@@ -313,6 +315,7 @@ function createPredicate(rawTokenObj, toolURI) {
                 github_repository_owner_id: process.env.GITHUB_REPOSITORY_OWNER_ID || "",
                 github_actor_id: process.env.GITHUB_ACTOR_ID || "",
                 github_repository_id: process.env.GITHUB_REPOSITORY_ID || "",
+                github_event_payload: process.env.GITHUB_EVENT || "",
             },
         },
         build_config: {
@@ -336,15 +339,6 @@ function createPredicate(rawTokenObj, toolURI) {
             },
         },
     };
-    if (process.env.GITHUB_EVENT) {
-        const ghEvent = JSON.parse(process.env.GITHUB_EVENT);
-        const workflowInputs = {
-            event_inputs: ghEvent.inputs,
-        };
-        predicate.invocation.parameters = workflowInputs;
-        predicate.invocation.environment["github_event_payload"] =
-            process.env.GITHUB_EVENT;
-    }
     return predicate;
 }
 exports.createPredicate = createPredicate;
