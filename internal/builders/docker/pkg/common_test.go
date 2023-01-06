@@ -40,7 +40,7 @@ func Test_BuildDefinition(t *testing.T) {
 		Digest: map[string]string{"sha256": "9e2ba52487d945504d250de186cb4fe2e3ba023ed2921dd6ac8b97ed43e76af9"},
 	}
 
-	want := BuildDefinition{
+	want := &BuildDefinition{
 		BuildType: "https://slsa.dev/container-based-build/v0.1?draft",
 		ExternalParameters: ParameterCollection{
 			Artifacts: map[string]ArtifactReference{"source": wantSource, "builderImage": wantBuilderImage},
@@ -48,7 +48,7 @@ func Test_BuildDefinition(t *testing.T) {
 		},
 	}
 
-	if diff := cmp.Diff(*got, want); diff != "" {
+	if diff := cmp.Diff(got, want); diff != "" {
 		t.Errorf(diff)
 	}
 }
@@ -56,12 +56,12 @@ func Test_BuildDefinition(t *testing.T) {
 func loadBuildDefinitionFromFile(path string) (*BuildDefinition, error) {
 	bdBytes, err := os.ReadFile(path)
 	if err != nil {
-		return nil, fmt.Errorf("could not read the JSON file in %q: %v", path, err)
+		return nil, fmt.Errorf("could not read the JSON file in %q: %w", path, err)
 	}
 
 	var bd BuildDefinition
 	if err := json.Unmarshal(bdBytes, &bd); err != nil {
-		return nil, fmt.Errorf("Could not unmarshal the JSON file in %q as a BuildDefinition: %v", path, err)
+		return nil, fmt.Errorf("could not unmarshal the JSON file in %q as a BuildDefinition: %w", path, err)
 	}
 	return &bd, nil
 }

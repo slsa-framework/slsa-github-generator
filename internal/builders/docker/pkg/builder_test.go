@@ -157,6 +157,7 @@ func Test_Builder_SetUpBuildState(t *testing.T) {
 	}
 }
 
+// TODO(#1478): Use custom error types, and check errors based on their type.
 func checkError(t *testing.T, err error, want string) {
 	if err == nil {
 		t.Errorf("expected error, got nil")

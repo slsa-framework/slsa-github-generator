@@ -29,12 +29,12 @@ func Test_LoadBuildConfigFromFile(t *testing.T) {
 		t.Fatalf("couldn't load config file: %v", err)
 	}
 
-	want := BuildConfig{
+	want := &BuildConfig{
 		Command:      []string{"cp", "internal/builders/docker/testdata/config.toml", "config.toml"},
 		ArtifactPath: "config.toml",
 	}
 
-	if diff := cmp.Diff(*got, want); diff != "" {
+	if diff := cmp.Diff(got, want); diff != "" {
 		t.Errorf(diff)
 	}
 }
@@ -51,7 +51,7 @@ func Test_NewDockerBuildConfig(t *testing.T) {
 		t.Fatalf("invalid inputs: %v", err)
 	}
 
-	want := DockerBuildConfig{
+	want := &DockerBuildConfig{
 		SourceRepo: io.SourceRepo,
 		SourceDigest: Digest{
 			Alg:   "sha1",
@@ -67,7 +67,7 @@ func Test_NewDockerBuildConfig(t *testing.T) {
 		BuildConfigPath: io.BuildConfigPath,
 	}
 
-	if diff := cmp.Diff(*got, want); diff != "" {
+	if diff := cmp.Diff(got, want); diff != "" {
 		t.Errorf(diff)
 	}
 }

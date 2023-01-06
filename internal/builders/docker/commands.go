@@ -27,8 +27,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// DryRunCmd validates the input flags, and generates a BuildDefinition from,
-// them, or terminates with an error.
+// DryRunCmd returns a new *cobra.Command that validates the input flags, and
+// generates a BuildDefinition from them, or terminates with an error.
 func DryRunCmd(check func(error)) *cobra.Command {
 	io := &pkg.InputOptions{}
 	var buildDefinitionPath string
@@ -65,7 +65,8 @@ func writeBuildDefinitionToFile(bd pkg.BuildDefinition, path string) error {
 	return nil
 }
 
-// BuildCmd builds the artifacts using the input flags, and prints out their digests, or exists with an error.
+// BuildCmd returns a new *cobra.Command that builds the artifacts using the
+// input flags, and prints out their digests, or terminates with an error.
 func BuildCmd(check func(error)) *cobra.Command {
 	io := &pkg.InputOptions{}
 	var forceCheckout bool
@@ -79,16 +80,16 @@ func BuildCmd(check func(error)) *cobra.Command {
 
 			builder, err := pkg.NewBuilderWithGitFetcher(*config, forceCheckout)
 			check(err)
+
 			db, err := builder.SetUpBuildState()
+			// Remove any temporary files that were generated during the setup.
+			defer db.RepoInfo.Cleanup()
 			check(err)
+
 			artifacts, err := db.BuildArtifact()
 			check(err)
+
 			log.Printf("Generated artifacts are: %v\n", artifacts)
-			if db.RepoInfo.RepoRoot != "" {
-				// If the repo was checked out by the tool into a temporary
-				// directory, remove the files and the directory.
-				db.RepoInfo.Cleanup()
-			}
 			// TODO(#1191): Write subjects to a file.
 		},
 	}

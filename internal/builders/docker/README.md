@@ -2,8 +2,8 @@
 
 This folder contains a command line tool for building artifacts using a Docker image.
 
-It is meant to be used as part of a GitHub Actions workflow for generating
-SLSA provenances. However, the users can also run the command locally.
+It is meant to be used as part of a GitHub Actions reusable workflow for
+generating SLSA provenances. However, users can also run the command locally.
 
 The command line tool provides two sub-commands, namely `dry-run` and `build`.
 
@@ -17,11 +17,11 @@ command. The following is an example, which assumes you are running the code in
 
 ```bash
 go run *.go  dry-run \
-  -c testdata/config.toml \
-  -o bd.json \
-  -b bash@sha256:9e2ba52487d \
-  -g sha1:9b5f98310dbbad675834474fa68c37d880687cb9 \
-  -s git+https://github.com/project-oak/transparent-release
+  --build-config-path testdata/config.toml \
+  --build-definition-path bd.json \
+  --builder-image bash@sha256:9e2ba52487d \
+  --git-commit-hash sha1:9b5f98310dbbad675834474fa68c37d880687cb9 \
+  --source-repo git+https://github.com/project-oak/transparent-release
 ```
 
 The output of this is a JSON document stored in `bd.json`.
@@ -36,10 +36,11 @@ The following is an example:
 
 ```bash
 go run *.go build \
-  -c internal/builders/docker/testdata/config.toml \
-  -b bash@sha256:9e2ba52487d945504d250de186cb4fe2e3ba023ed2921dd6ac8b97ed43e76af9 \
-  -g sha1:cf5804b5c6f1a4b2a0b03401a487dfdfbe3a5f00 \
-  -s git+https://github.com/slsa-framework/slsa-github-generator -f
+  --build-config-path internal/builders/docker/testdata/config.toml \
+  --builder-image bash@sha256:9e2ba52487d945504d250de186cb4fe2e3ba023ed2921dd6ac8b97ed43e76af9 \
+  --git-commit-hash sha1:cf5804b5c6f1a4b2a0b03401a487dfdfbe3a5f00 \
+  --source-repo git+https://github.com/slsa-framework/slsa-github-generator \
+  --force-checkout
 ```
 
 If the build is successful, this command will generate and output a list of
