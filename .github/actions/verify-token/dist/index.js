@@ -56,6 +56,7 @@ const sigstore = __importStar(__nccwpck_require__(9149));
 const process = __importStar(__nccwpck_require__(7282));
 const fs = __importStar(__nccwpck_require__(7147));
 const child_process = __importStar(__nccwpck_require__(2081));
+const predicate_1 = __nccwpck_require__(5464);
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
@@ -69,8 +70,12 @@ function run() {
                 GITHUB_WORKFLOW="delegate release project" \
                 GITHUB_SHA="8cbf4d422367d8499d5980a837cb9cc8e1e67001" \
                 GITHUB_REPOSITORY="laurentsimon/slsa-delegate-project" \
+                GITHUB_REPOSITORY_ID="567955265" \
                 GITHUB_REPOSITORY_OWNER="laurentsimon" \
+                GITHUB_REPOSITORY_OWNER_ID="64505099" \
+                GITHUB_ACTOR_ID="64505099" \
                 GITHUB_REF="refs/heads/main" \
+                GITHUB_BASE_REF="" \
                 GITHUB_REF_TYPE="branch" \
                 GITHUB_ACTOR="laurentsimon" \
                 nodejs ./dist/index.js
@@ -112,9 +117,11 @@ function run() {
             // Extract certificate information.
             const [toolURI, toolRepository, toolRef] = parseCertificateIdentity(bundle);
             core.debug(`slsa-verified-token: ${rawTokenStr}`);
+            // Now generate the SLSA predicate using the verified token and the GH context.
+            const predicate = (0, predicate_1.createPredicate)(rawTokenObj, toolURI);
+            core.info(`predicate: ${JSON.stringify(predicate)}`);
             core.setOutput("tool-repository", toolRepository);
             core.setOutput("tool-ref", toolRef);
-            core.setOutput("tool-uri", toolURI);
             core.setOutput("slsa-verified-token", rawTokenStr);
         }
         catch (error) {
@@ -226,6 +233,121 @@ function validateNonEmptyField(name, actual) {
     }
 }
 run();
+
+
+/***/ }),
+
+/***/ 5464:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+/*
+Copyright 2023 SLSA Authors
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+    https://www.apache.org/licenses/LICENSE-2.0
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WIHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.createPredicate = void 0;
+const core = __importStar(__nccwpck_require__(2186));
+const process = __importStar(__nccwpck_require__(7282));
+const DELEGATOR_BUILD_TYPE = "https://github.com/slsa-framework/slsa-github-generator/delegator-generic@v0";
+function createPredicate(rawTokenObj, toolURI) {
+    core.info(`${rawTokenObj.builder.audience}`);
+    core.info(`${toolURI}`);
+    // getEntryPoint via GitHub API via runID and repository
+    const predicate = {
+        builder: { id: toolURI },
+        build_type: DELEGATOR_BUILD_TYPE,
+        invocation: {
+            parameters: rawTokenObj.tool.inputs,
+            config_source: {
+                uri: process.env.GITHUB_REPOSITORY || "",
+                entry_point: process.env.GITHUB_WORKFLOW || "",
+                digest: {
+                    sha1: process.env.GITHUB_SHA || "",
+                },
+            },
+            environment: {
+                github_run_number: process.env.GITHUB_RUN_NUMBER || "",
+                github_run_id: process.env.GITHUB_RUN_ID || "",
+                github_run_attempt: process.env.GITHUB_RUN_ATTEMPT || "",
+                github_event_name: process.env.GITHUB_EVENT_NAME || "",
+                github_ref_type: process.env.GITHUB_REF_TYPE || "",
+                github_ref: process.env.GITHUB_REF || "",
+                github_base_ref: process.env.GITHUB_BASE_REF || "",
+                github_head_ref: process.env.GITHUB_HEAD_REF || "",
+                github_actor: process.env.GITHUB_ACTOR || "",
+                github_sha1: process.env.GITHUB_SHA || "",
+                github_repository_owner: process.env.GITHUB_REPOSITORY_OWNER || "",
+                github_repository_owner_id: process.env.GITHUB_REPOSITORY_OWNER_ID || "",
+                github_actor_id: process.env.GITHUB_ACTOR_ID || "",
+                github_repository_id: process.env.GITHUB_REPOSITORY_ID || "",
+            },
+        },
+        build_config: {
+            version: 1,
+            inputs: rawTokenObj.tool.inputs,
+        },
+        materials: [
+            {
+                uri: `git+https://github.com/${process.env.GITHUB_REPOSITORY || ""}@${process.env.GITHUB_REF || ""}`,
+                digest: {
+                    sha1: process.env.GITHUB_SHA || "",
+                },
+            },
+        ],
+        metadata: {
+            reproducible: false,
+            completeness: {
+                parameters: true,
+                environment: false,
+                materials: false, // This may be true here.
+            },
+        },
+    };
+    if (process.env.GITHUB_EVENT) {
+        const ghEvent = JSON.parse(process.env.GITHUB_EVENT);
+        const workflowInputs = {
+            event_inputs: ghEvent.inputs,
+        };
+        predicate.invocation.parameters = workflowInputs;
+        predicate.invocation.environment["github_event_payload"] =
+            process.env.GITHUB_EVENT;
+    }
+    return predicate;
+}
+exports.createPredicate = createPredicate;
 
 
 /***/ }),
@@ -29683,6 +29805,7 @@ class HTTPError extends Error {
         super(`HTTP Error: ${response.status} ${response.statusText}`);
         this.response = response;
         this.statusCode = response.status;
+        this.location = response.headers?.get('Location') || undefined;
     }
 }
 exports.HTTPError = HTTPError;
@@ -29920,7 +30043,7 @@ function entryFromResponse(data) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.UnsupportedVersionError = exports.InvalidBundleError = exports.VerificationError = void 0;
+exports.CertificateChainVerificationError = exports.UnsupportedVersionError = exports.InvalidBundleError = exports.VerificationError = void 0;
 class VerificationError extends Error {
 }
 exports.VerificationError = VerificationError;
@@ -29930,6 +30053,9 @@ exports.InvalidBundleError = InvalidBundleError;
 class UnsupportedVersionError extends Error {
 }
 exports.UnsupportedVersionError = UnsupportedVersionError;
+class CertificateChainVerificationError extends VerificationError {
+}
+exports.CertificateChainVerificationError = CertificateChainVerificationError;
 
 
 /***/ }),
@@ -30506,7 +30632,9 @@ async function createRekorEntry(dsseEnvelope, publicKey, options = {}) {
     const envelope = (0, bundle_1.envelopeFromJSON)(dsseEnvelope);
     const tlog = createTLogClient(options);
     const sigMaterial = (0, signature_1.extractSignatureMaterial)(envelope, publicKey);
-    const bundle = await tlog.createDSSEEntry(envelope, sigMaterial);
+    const bundle = await tlog.createDSSEEntry(envelope, sigMaterial, {
+        fetchOnConflict: true,
+    });
     return (0, bundle_1.bundleToJSON)(bundle);
 }
 exports.createRekorEntry = createRekorEntry;
@@ -30773,6 +30901,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 const client_1 = __nccwpck_require__(3969);
+const error_1 = __nccwpck_require__(7045);
 const bundle_1 = __nccwpck_require__(5107);
 const format_1 = __nccwpck_require__(8810);
 class TLogClient {
@@ -30784,13 +30913,33 @@ class TLogClient {
         const entry = await this.rekor.createEntry(proposedEntry);
         return bundle_1.bundle.toMessageSignatureBundle(digest, sigMaterial, entry);
     }
-    async createDSSEEntry(envelope, sigMaterial) {
-        const proposedEntry = (0, format_1.toProposedIntotoEntry)(envelope, sigMaterial);
-        const entry = await this.rekor.createEntry(proposedEntry);
+    async createDSSEEntry(envelope, sigMaterial, options = {}) {
+        const fetchOnConflict = options.fetchOnConflict ?? false;
+        let entry;
+        try {
+            const proposedEntry = (0, format_1.toProposedIntotoEntry)(envelope, sigMaterial);
+            entry = await this.rekor.createEntry(proposedEntry);
+        }
+        catch (err) {
+            // If the entry already exists, fetch it (if enabled)
+            if (entryExistsError(err) && fetchOnConflict) {
+                // Grab the UUID of the existing entry from the location header
+                const uuid = err.location.split('/').pop() || '';
+                entry = await this.rekor.getEntry(uuid);
+            }
+            else {
+                throw err;
+            }
+        }
         return bundle_1.bundle.toDSSEBundle(envelope, sigMaterial, entry);
     }
 }
 exports.TLogClient = TLogClient;
+function entryExistsError(value) {
+    return (value instanceof error_1.HTTPError &&
+        value.statusCode === 409 &&
+        value.location !== undefined);
+}
 
 
 /***/ }),
@@ -30821,17 +30970,13 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 const crypto_1 = __nccwpck_require__(6113);
+const fs_1 = __importDefault(__nccwpck_require__(7147));
 const util_1 = __nccwpck_require__(6901);
 // Returns the set of trusted log keys which can be used to verify the
 // Signed Entry Timestamps in the log.
 function getKeys() {
     // TODO: This should be be loaded via TUF
-    const pem = `
------BEGIN PUBLIC KEY-----
-MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE2G2Y+2tabdTV5BcGiBIx0a9fAFwr
-kBbmLSGtks4L3qX6yYY0zufBnhC8Ur/iy55GhWP/9A/bY2LhC30M9+RYtw==
------END PUBLIC KEY-----
-    `
+    const pem = fs_1.default.readFileSync(__nccwpck_require__.ab + "rekor.pub", 'utf-8');
     const key = (0, crypto_1.createPublicKey)(pem);
     // Calculate logID from the key
     const logID = getLogID(key);
@@ -31838,7 +31983,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.randomBytes = exports.hash = exports.verifyBlob = exports.signBlob = exports.generateKeyPair = void 0;
+exports.randomBytes = exports.hash = exports.verifyBlob = exports.signBlob = exports.createPublicKey = exports.generateKeyPair = void 0;
 /*
 Copyright 2022 The Sigstore Authors.
 
@@ -31864,15 +32009,24 @@ function generateKeyPair() {
     });
 }
 exports.generateKeyPair = generateKeyPair;
+function createPublicKey(key) {
+    if (typeof key === 'string') {
+        return crypto_1.default.createPublicKey(key);
+    }
+    else {
+        return crypto_1.default.createPublicKey({ key, format: 'der', type: 'spki' });
+    }
+}
+exports.createPublicKey = createPublicKey;
 function signBlob(data, privateKey) {
     return crypto_1.default.sign(null, data, privateKey);
 }
 exports.signBlob = signBlob;
-function verifyBlob(data, key, signature) {
+function verifyBlob(data, key, signature, algorithm) {
     // The try/catch is to work around an issue in Node 14.x where verify throws
     // an error in some scenarios if the signature is invalid.
     try {
-        return crypto_1.default.verify(null, data, key, signature);
+        return crypto_1.default.verify(algorithm, data, key, signature);
     }
     catch (e) {
         return false;
@@ -37546,7 +37700,7 @@ module.exports = {"i8":"3.0.1"};
 /***/ ((module) => {
 
 "use strict";
-module.exports = {"i8":"0.2.0"};
+module.exports = {"i8":"0.3.0"};
 
 /***/ })
 

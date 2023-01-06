@@ -19,7 +19,7 @@
   "dependencies": {
     "@actions/core": "^1.10.0",
     "@actions/github": "^5.1.1",
-    "sigstore": "^0.2.0"
+    "sigstore": "^0.3.0"
   },
   "devDependencies": {
     "@types/node": "^18.11.9",
