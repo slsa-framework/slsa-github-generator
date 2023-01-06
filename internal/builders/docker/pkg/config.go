@@ -28,16 +28,16 @@ import (
 
 // BuildConfig is a collection of parameters to use for building the artifact.
 type BuildConfig struct {
+	// The path, relative to the root of the git repository, where the artifact
+	// built by the `docker run` command is expected to be found.
+	ArtifactPath string `toml:"artifact_path"`
+
 	// TODO(#1191): Add env and options if needed.
 	// Command to pass to `docker run`. The command is taken as an array
 	// instead of a single string to avoid unnecessary parsing. See
 	// https://docs.docker.com/engine/reference/builder/#cmd and
 	// https://man7.org/linux/man-pages/man3/exec.3.html for more details.
 	Command []string `toml:"command"`
-
-	// The path, relative to the root of the git repository, where the artifact
-	// built by the `docker run` command is expected to be found.
-	ArtifactPath string `toml:"artifact_path"`
 }
 
 // Digest specifies a digest values, including the name of the hash function

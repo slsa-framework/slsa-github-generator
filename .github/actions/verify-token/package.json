@@ -1,5 +1,5 @@
 {
-  "name": "setup-token",
+  "name": "verify-token",
   "version": "1.0.0",
   "description": "",
   "main": "lib/main.js",
@@ -13,12 +13,9 @@
     "all": "npm ci && npm run format && npm run lint && npm run build && npm run package",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "bin": {
-    "setup-token": "bin/setup-token.js"
-  },
   "keywords": [],
   "author": "",
-  "license": "ISC",
+  "license": "Apache-2.0",
   "dependencies": {
     "@actions/core": "^1.10.0",
     "@actions/github": "^5.1.1",
@@ -28,7 +25,7 @@
     "@types/node": "^18.11.9",
     "@typescript-eslint/eslint-plugin": "^5.45.0",
     "@typescript-eslint/parser": "^5.45.0",
-    "@vercel/ncc": "^0.34.0",
+    "@vercel/ncc": "^0.36.0",
     "eslint": "^8.27.0",
     "eslint-plugin-github": "^4.4.1",
     "prettier": "^2.7.1",

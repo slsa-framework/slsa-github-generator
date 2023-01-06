@@ -1,4 +1,4 @@
-name: schedule actions
+name: schedule verify-token
 
 on:
   # Daily run.
@@ -66,7 +66,7 @@ jobs:
       contents: read
       issues: write
     steps:
-      - uses: actions/checkout@dc323e67f16fb5f7663d20ff7941f27f5809e9b6 # v2.6.0
+      - uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b # v3.2.0
         with:
           repository: slsa-framework/example-package
           ref: main
@@ -80,7 +80,7 @@ jobs:
       contents: read
       issues: write
     steps:
-      - uses: actions/checkout@dc323e67f16fb5f7663d20ff7941f27f5809e9b6 # v2.6.0
+      - uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b # v3.2.0
         with:
           repository: slsa-framework/example-package
           ref: main

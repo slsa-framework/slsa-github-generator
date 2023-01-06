@@ -1,6 +1,203 @@
 require('./sourcemap-register.js');/******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
+/***/ 420:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.writeAttestations = exports.createStatement = void 0;
+const types = __importStar(__nccwpck_require__(905));
+const fs_1 = __importDefault(__nccwpck_require__(147));
+const path_1 = __importDefault(__nccwpck_require__(17));
+// Maximum number of attestations to be written.
+const MAX_ATTESTATION_COUNT = 50;
+function createStatement(subjects, type, predicate) {
+    return {
+        _type: types.INTOTO_TYPE,
+        subject: subjects,
+        predicateType: type,
+        predicate,
+    };
+}
+exports.createStatement = createStatement;
+function writeAttestations(layoutFile, predicateType, predicateFile) {
+    // Read SLSA output layout file.
+    const buffer = fs_1.default.readFileSync(layoutFile);
+    const layout = JSON.parse(buffer.toString());
+    if (layout.version !== 1) {
+        throw Error(`SLSA outputs layout invalid version: ${layout.version}`);
+    }
+    const count = Object.keys(layout.attestations).length;
+    if (count > MAX_ATTESTATION_COUNT) {
+        throw Error(`SLSA outputs layout had too many attestations: ${count}`);
+    }
+    // Read predicate
+    const predicateBuffer = fs_1.default.readFileSync(predicateFile);
+    const predicateJson = JSON.parse(predicateBuffer.toString());
+    // TODO(https://github.com/slsa-framework/slsa-github-generator/issues/1422): Add other predicate validations.
+    // Iterate through SLSA output layout and create attestations
+    const ret = {};
+    for (const att of layout.attestations) {
+        // Validate that attestation path is not nested.
+        if (path_1.default.dirname(att.name) !== ".") {
+            throw Error(`attestation filename must not be nested ${att}`);
+        }
+        const subjectJson = JSON.parse(JSON.stringify(att.subjects));
+        const attestationJSON = createStatement(subjectJson, predicateType, predicateJson);
+        ret[att.name] = JSON.stringify(attestationJSON);
+    }
+    return ret;
+}
+exports.writeAttestations = writeAttestations;
+
+
+/***/ }),
+
+/***/ 905:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.INTOTO_TYPE = void 0;
+exports.INTOTO_TYPE = "https://in-toto.io/Statement/v0.1";
+
+
+/***/ }),
+
+/***/ 109:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.run = void 0;
+const core = __importStar(__nccwpck_require__(186));
+const fs_1 = __importDefault(__nccwpck_require__(147));
+const path_1 = __importDefault(__nccwpck_require__(17));
+const attestation_1 = __nccwpck_require__(420);
+const utils_1 = __nccwpck_require__(918);
+function run() {
+    try {
+        const wd = process.env[`GITHUB_WORKSPACE`] || "";
+        // SLSA subjects layout file.
+        const slsaOutputs = core.getInput("slsa-outputs-file");
+        const safeSlsaOutputs = (0, utils_1.resolvePathInput)(slsaOutputs, wd);
+        core.debug(`Using SLSA output file at ${safeSlsaOutputs}!`);
+        // Predicate.
+        const predicateFile = core.getInput("predicate-file");
+        const safePredicateFile = (0, utils_1.resolvePathInput)(predicateFile, wd);
+        core.debug(`Inputs: Predicate file ${safePredicateFile}!`);
+        // Predicate type
+        const predicateType = core.getInput("predicate-type");
+        core.debug(`Inputs: Predicate type ${predicateType}!`);
+        // Attach subjects and generate attestation files
+        const outputFolder = core.getInput("output-folder");
+        const attestations = (0, attestation_1.writeAttestations)(safeSlsaOutputs, predicateType, safePredicateFile);
+        // Write attestations
+        fs_1.default.mkdirSync(outputFolder, { recursive: true });
+        for (const att in attestations) {
+            const outputFile = path_1.default.join(outputFolder, att);
+            const safeOutput = (0, utils_1.resolvePathInput)(outputFile, wd);
+            fs_1.default.writeFileSync(safeOutput, attestations[att], {
+                flag: "ax",
+                mode: 0o600,
+            });
+        }
+    }
+    catch (error) {
+        if (error instanceof Error) {
+            core.setFailed(error.message);
+        }
+        else {
+            core.setFailed(`Unexpected error: ${error}`);
+        }
+    }
+}
+exports.run = run;
+run();
+
+
+/***/ }),
+
+/***/ 918:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.resolvePathInput = void 0;
+const path_1 = __importDefault(__nccwpck_require__(17));
+// Detect directory traversal for input file.
+function resolvePathInput(input, wd) {
+    const safeJoin = path_1.default.resolve(path_1.default.join(wd, input));
+    if (!(safeJoin + path_1.default.sep).startsWith(wd + path_1.default.sep)) {
+        throw Error(`unsafe path ${safeJoin}`);
+    }
+    return safeJoin;
+}
+exports.resolvePathInput = resolvePathInput;
+
+
+/***/ }),
+
 /***/ 351:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
@@ -2688,203 +2885,6 @@ exports["default"] = _default;
 
 /***/ }),
 
-/***/ 673:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.writeAttestations = exports.createStatement = void 0;
-const types = __importStar(__nccwpck_require__(609));
-const fs_1 = __importDefault(__nccwpck_require__(147));
-const path_1 = __importDefault(__nccwpck_require__(17));
-// Maximum number of attestations to be written.
-const MAX_ATTESTATION_COUNT = 50;
-function createStatement(subjects, type, predicate) {
-    return {
-        _type: types.INTOTO_TYPE,
-        subject: subjects,
-        predicateType: type,
-        predicate,
-    };
-}
-exports.createStatement = createStatement;
-function writeAttestations(layoutFile, predicateType, predicateFile) {
-    // Read SLSA output layout file.
-    const buffer = fs_1.default.readFileSync(layoutFile);
-    const layout = JSON.parse(buffer.toString());
-    if (layout.version !== 1) {
-        throw Error(`SLSA outputs layout invalid version: ${layout.version}`);
-    }
-    const count = Object.keys(layout.attestations).length;
-    if (count > MAX_ATTESTATION_COUNT) {
-        throw Error(`SLSA outputs layout had too many attestations: ${count}`);
-    }
-    // Read predicate
-    const predicateBuffer = fs_1.default.readFileSync(predicateFile);
-    const predicateJson = JSON.parse(predicateBuffer.toString());
-    // TODO(https://github.com/slsa-framework/slsa-github-generator/issues/1422): Add other predicate validations.
-    // Iterate through SLSA output layout and create attestations
-    const ret = {};
-    for (const att of layout.attestations) {
-        // Validate that attestation path is not nested.
-        if (path_1.default.dirname(att.name) !== ".") {
-            throw Error(`attestation filename must not be nested ${att}`);
-        }
-        const subjectJson = JSON.parse(JSON.stringify(att.subjects));
-        const attestationJSON = createStatement(subjectJson, predicateType, predicateJson);
-        ret[att.name] = JSON.stringify(attestationJSON);
-    }
-    return ret;
-}
-exports.writeAttestations = writeAttestations;
-
-
-/***/ }),
-
-/***/ 609:
-/***/ ((__unused_webpack_module, exports) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.INTOTO_TYPE = void 0;
-exports.INTOTO_TYPE = "https://in-toto.io/Statement/v0.1";
-
-
-/***/ }),
-
-/***/ 399:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.run = void 0;
-const core = __importStar(__nccwpck_require__(186));
-const fs_1 = __importDefault(__nccwpck_require__(147));
-const path_1 = __importDefault(__nccwpck_require__(17));
-const attestation_1 = __nccwpck_require__(673);
-const utils_1 = __nccwpck_require__(314);
-function run() {
-    try {
-        const wd = process.env[`GITHUB_WORKSPACE`] || "";
-        // SLSA subjects layout file.
-        const slsaOutputs = core.getInput("slsa-outputs-file");
-        const safeSlsaOutputs = (0, utils_1.resolvePathInput)(slsaOutputs, wd);
-        core.debug(`Using SLSA output file at ${safeSlsaOutputs}!`);
-        // Predicate.
-        const predicateFile = core.getInput("predicate-file");
-        const safePredicateFile = (0, utils_1.resolvePathInput)(predicateFile, wd);
-        core.debug(`Inputs: Predicate file ${safePredicateFile}!`);
-        // Predicate type
-        const predicateType = core.getInput("predicate-type");
-        core.debug(`Inputs: Predicate type ${predicateType}!`);
-        // Attach subjects and generate attestation files
-        const outputFolder = core.getInput("output-folder");
-        const attestations = (0, attestation_1.writeAttestations)(safeSlsaOutputs, predicateType, safePredicateFile);
-        // Write attestations
-        fs_1.default.mkdirSync(outputFolder, { recursive: true });
-        for (const att in attestations) {
-            const outputFile = path_1.default.join(outputFolder, att);
-            const safeOutput = (0, utils_1.resolvePathInput)(outputFile, wd);
-            fs_1.default.writeFileSync(safeOutput, attestations[att], {
-                flag: "ax",
-                mode: 0o600,
-            });
-        }
-    }
-    catch (error) {
-        if (error instanceof Error) {
-            core.setFailed(error.message);
-        }
-        else {
-            core.setFailed(`Unexpected error: ${error}`);
-        }
-    }
-}
-exports.run = run;
-run();
-
-
-/***/ }),
-
-/***/ 314:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.resolvePathInput = void 0;
-const path_1 = __importDefault(__nccwpck_require__(17));
-// Detect directory traversal for input file.
-function resolvePathInput(input, wd) {
-    const safeJoin = path_1.default.resolve(path_1.default.join(wd, input));
-    if (!(safeJoin + path_1.default.sep).startsWith(wd + path_1.default.sep)) {
-        throw Error(`unsafe path ${safeJoin}`);
-    }
-    return safeJoin;
-}
-exports.resolvePathInput = resolvePathInput;
-
-
-/***/ }),
-
 /***/ 491:
 /***/ ((module) => {
 
@@ -3015,7 +3015,7 @@ module.exports = require("util");
 /******/ 	// startup
 /******/ 	// Load entry module and return exports
 /******/ 	// This entry module is referenced by other modules so it can't be inlined
-/******/ 	var __webpack_exports__ = __nccwpck_require__(399);
+/******/ 	var __webpack_exports__ = __nccwpck_require__(109);
 /******/ 	module.exports = __webpack_exports__;
 /******/ 	
 /******/ })()
