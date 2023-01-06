@@ -12,6 +12,7 @@ limitations under the License.
 */
 
 import * as process from "process";
+import * as core from "@actions/core";
 
 const DELEGATOR_BUILD_TYPE =
   "https://github.com/slsa-framework/slsa-github-generator/delegator-generic@v0";
@@ -142,6 +143,7 @@ export function createPredicate(
   const workflowInputs: WorkflowParameters = {};
   if (process.env.GITHUB_EVENT !== undefined) {
     const ghEvent = JSON.parse(process.env.GITHUB_EVENT);
+    core.info(`${JSON.stringify(ghEvent)}`);
     workflowInputs.event_inputs = ghEvent.inputs;
   }
   // getEntryPoint via GitHub API via runID and repository
@@ -173,7 +175,7 @@ export function createPredicate(
           process.env.GITHUB_REPOSITORY_OWNER_ID || "",
         github_actor_id: process.env.GITHUB_ACTOR_ID || "",
         github_repository_id: process.env.GITHUB_REPOSITORY_ID || "",
-        github_event_payload: process.env.GITHUB_EVENT || "",
+        github_event_payload: process.env.GITHUB_EVENT || {},
       },
     },
     build_config: {

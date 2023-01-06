@@ -280,11 +280,13 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.createPredicate = void 0;
 const process = __importStar(__nccwpck_require__(7282));
+const core = __importStar(__nccwpck_require__(2186));
 const DELEGATOR_BUILD_TYPE = "https://github.com/slsa-framework/slsa-github-generator/delegator-generic@v0";
 function createPredicate(rawTokenObj, toolURI) {
     const workflowInputs = {};
     if (process.env.GITHUB_EVENT !== undefined) {
         const ghEvent = JSON.parse(process.env.GITHUB_EVENT);
+        core.info(`${JSON.stringify(ghEvent)}`);
         workflowInputs.event_inputs = ghEvent.inputs;
     }
     // getEntryPoint via GitHub API via runID and repository
@@ -315,7 +317,7 @@ function createPredicate(rawTokenObj, toolURI) {
                 github_repository_owner_id: process.env.GITHUB_REPOSITORY_OWNER_ID || "",
                 github_actor_id: process.env.GITHUB_ACTOR_ID || "",
                 github_repository_id: process.env.GITHUB_REPOSITORY_ID || "",
-                github_event_payload: process.env.GITHUB_EVENT || "",
+                github_event_payload: process.env.GITHUB_EVENT || {},
             },
         },
         build_config: {
