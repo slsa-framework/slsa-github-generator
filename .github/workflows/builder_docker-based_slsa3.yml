@@ -91,6 +91,15 @@ on:
         #      * registry-password
 
 jobs:
+  rng:
+    outputs:
+      value: ${{ steps.rng.outputs.random }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Generate random 16-byte value (32-char hex encoded)
+        id: rng
+        uses: slsa-framework/slsa-github-generator/.github/actions/rng@main
+
   # This detects the repository and ref of the reusable workflow.
   # For pull request, this gets the head repository and head SHA.
   detect-env:
@@ -186,24 +195,20 @@ jobs:
           {
             "buildType": "https://slsa.dev/container-based-build/v0.1?draft",
             "externalParameters": {
-                "source": {
-                    "artifact": {
-                        "uri": "git+https://github.com/${SOURCE_REPOSITORY}@${SOURCE_DIGEST}",
-                        "digest": { "$SOURCE_ALG": "$SOURCE_DIGEST" }
-                    }
+                "artifacts": {
+                  "source": {
+                    "uri": "git+https://github.com/${SOURCE_REPOSITORY}@${SOURCE_DIGEST}",
+                    "digest": { "$SOURCE_ALG": "$SOURCE_DIGEST" }
+                  },
+                  "builderImage": {
+                    "uri": "${BUILDER_IMAGE}",
+                    "digest": { "$IMAGE_ALG": "$IMAGE_DIGEST" }
+                  }
                 },
-                "buildImage": {
-                    "artifact": {
-                        "uri": "${BUILDER_IMAGE}",
-                        "digest": { "$IMAGE_ALG": "$IMAGE_DIGEST" }
-                    }
-                },
-                "configFile": {
-                    "value": "${CONFIG_PATH}"
+                "values": {
+                  "configFile": "${CONFIG_PATH}"
                 }
             },
-            "systemParameters": null,
-            "resolvedDependencies": null
           }
           EOF
 
@@ -248,11 +253,16 @@ jobs:
           cat <<EOF >DATA
           {
             "version": 1,
-            "attestation1.intoto.json":[
-              { "name": "artifact11",
-                "digest": { "sha256": "ad91970864102a59765e20ce16216efc9d6ad381471f7accceceab7d905703ef" }},
-              { "name": "artifact12",
-                "digest": { "sha256": "d4d5899a3868fbb6ae1856c3e55a32ce35913de3956d1973caccd37bd0174fa2" }}
+             "attestations": [
+              {
+                "name": "attestation1.intoto",
+                "subjects": [
+                  { "name": "artifact11",
+                    "digest": { "sha256": "ad91970864102a59765e20ce16216efc9d6ad381471f7accceceab7d905703ef" }},
+                  { "name": "artifact12",
+                    "digest": { "sha256": "d4d5899a3868fbb6ae1856c3e55a32ce35913de3956d1973caccd37bd0174fa2" }}
+                ]
+              }
             ]
           }
           EOF
@@ -281,7 +291,7 @@ jobs:
   ###################################################################
   provenance:
     runs-on: ubuntu-latest
-    needs: [detect-env, build, generate-build-definition, generate-builder]
+    needs: [rng, detect-env, build, generate-build-definition, generate-builder]
     outputs:
       provenance: ${{ steps.sign.outputs.output-name }}
     steps:
@@ -317,7 +327,24 @@ jobs:
       - name: Create predicate
         id: predicate
         run: |
-          echo "{}" > predicate.json
+          cat <<EOF >DATA
+          {
+            "version": 1,
+             "attestations": [
+              {
+                "name": "attestation1.intoto",
+                "subjects": [
+                  { "name": "artifact11",
+                    "digest": { "sha256": "ad91970864102a59765e20ce16216efc9d6ad381471f7accceceab7d905703ef" }},
+                  { "name": "artifact12",
+                    "digest": { "sha256": "d4d5899a3868fbb6ae1856c3e55a32ce35913de3956d1973caccd37bd0174fa2" }}
+                ]
+              }
+            ]
+          }
+          EOF
+
+          cat DATA > predicate.json
           echo "predicate=predicate.json" >> $GITHUB_OUTPUT
 
       ###################################################################
@@ -331,28 +358,20 @@ jobs:
           path: "${{ needs.build.outputs.slsa-outputs-name }}"
           sha256: "${{ needs.build.outputs.slsa-outputs-sha256 }}"
 
-      # - name: Create attestations
-      #   id: attestations
-      #   uses: ./__BUILDER_CHECKOUT_DIR__/.github/actions/generate-attestations
-      #   with:
-      #     slsa-outputs-file: "${{ needs.build.outputs.slsa-outputs-name }}"
-      #     predicate-file: "${{ steps.predicate.outputs.predicate }}"
-      #     output-folder: "attestations"
-
       - name: Create attestations
         id: attestations
-        run: |
-          mkdir attestations
-          echo "{}" > attestations/attestation1.json
-          echo "{}" > attestations/attestation2.json
-          echo "output-folder=attestations" >> $GITHUB_OUTPUT
+        uses: ./__BUILDER_CHECKOUT_DIR__/.github/actions/generate-attestations
+        with:
+          slsa-outputs-file: "${{ needs.build.outputs.slsa-outputs-name }}"
+          predicate-file: "${{ steps.predicate.outputs.predicate }}"
+          output-folder: "attestations-${{ needs.rng.outputs.value }}"
 
       - name: Upload unsigned intoto attestations file for pull request
         if: ${{ github.event_name == 'pull_request' }}
         uses: actions/upload-artifact@83fd05a356d7e2593de66fc9913b3002723633cb # tag=v3.1.1
         with:
-          name: "${{ steps.attestations.outputs.output-folder }}"
-          path: "${{ steps.attestations.outputs.output-folder }}"
+          name: "attestations-${{ needs.rng.outputs.value }}"
+          path: "attestations-${{ needs.rng.outputs.value }}"
 
       ###################################################################
       #                       Sign the attestation                      #

@@ -28,9 +28,9 @@ func Test_PathIsUnderCurrentDirectory(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
+		expected error
 		name     string
 		path     string
-		expected error
 	}{
 		{
 			name:     "valid same path",
@@ -90,9 +90,9 @@ func Test_VerifyAttestationPath(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
+		expected error
 		name     string
 		path     string
-		expected error
 	}{
 		{
 			name:     "valid file",
@@ -161,10 +161,10 @@ func tempWD() (func() error, error) {
 
 func Test_CreateNewFileUnderCurrentDirectory(t *testing.T) {
 	tests := []struct {
+		expected     error
 		name         string
 		path         string
 		existingPath bool
-		expected     error
 	}{
 		{
 			name:     "valid file cannot create",
