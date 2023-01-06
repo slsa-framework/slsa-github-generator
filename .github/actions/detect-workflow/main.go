@@ -157,6 +157,6 @@ func main() {
 	fmt.Printf("ref:%s\n", ref)
 
 	// Output of the Action.
-	fmt.Println(fmt.Sprintf(`::set-output name=repository::%s`, repository))
-	fmt.Println(fmt.Sprintf(`::set-output name=ref::%s`, ref))
+	github.SetOutput("repository", repository)
+	github.SetOutput("ref", ref)
 }

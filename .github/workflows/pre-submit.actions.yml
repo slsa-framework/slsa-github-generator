@@ -12,16 +12,22 @@ jobs:
     name: verify no checkout in Actions
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # tag=v3.1.0
+      - uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b # v3.2.0
       - run: ./.github/workflows/scripts/pre-submit.actions/checkout.sh
 
   check-dist-matrix:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        action: [compute-sha256, privacy-check]
+        action:
+          - .github/actions/compute-sha256
+          - .github/actions/privacy-check
+          - .github/actions/generate-attestations
+          - .github/actions/sign-attestations
+          - ./actions/setup-token
+          # TODO(1418): enable .github/actions/verify-token.
     steps:
-      - uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # tag=v3.1.0
+      - uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b # v3.2.0
 
       - name: Set Node.js 16
         uses: actions/setup-node@8c91899e586c5b171469028077307d293428b516 # tag=v3.5.1
@@ -29,11 +35,11 @@ jobs:
           node-version: 16
 
       - name: Rebuild the dist/ directory
-        working-directory: .github/actions/${{ matrix.action }}
+        working-directory: ${{ matrix.action }}
         run: make package
 
       - name: Compare the expected and actual dist/ directories
-        working-directory: .github/actions/${{ matrix.action }}
+        working-directory: ${{ matrix.action }}
         id: diff
         run: |
           set -euo pipefail
@@ -44,7 +50,7 @@ jobs:
           fi
 
       # If index.js was different from expected, upload the expected version as an artifact
-      - uses: actions/upload-artifact@83fd05a356d7e2593de66fc9913b3002723633cb
+      - uses: actions/upload-artifact@83fd05a356d7e2593de66fc9913b3002723633cb # v3.1.1
         if: ${{ failure() && steps.diff.conclusion == 'failure' }}
         with:
           name: dist
@@ -67,7 +73,7 @@ jobs:
   compute-sha256:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # tag=v3.1.0
+      - uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b # v3.2.0
       - run: |
           echo "foo" > artifact
       - id: compute-sha256
@@ -82,7 +88,7 @@ jobs:
   rng:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # tag=v3.1.0
+      - uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b # v3.2.0
       - run: |
           echo "foo" > artifact
       - id: rng
@@ -93,13 +99,29 @@ jobs:
           echo "Got output: $OUTPUT"
           [[ "$OUTPUT" != "" ]]
 
+  setup-token:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b # v3.2.0
+      - id: setup
+        uses: ./actions/setup-token
+        with:
+          slsa-workflow-recipient: "delegator_generic_slsa3.yml"
+          slsa-private-repository: true
+          slsa-runner-label: "ubuntu-latest"
+          slsa-build-action-path: "./actions/build-artifacts-composite"
+          slsa-workflow-inputs: '{"name1":"value1","name2":"value2","private-repository":true}'
+      - env:
+          SLSA_TOKEN: ${{ steps.setup.outputs.slsa-token }}
+        run: ./.github/workflows/scripts/pre-submit.actions/setup-token.sh
+
   references:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # tag=v3.1.0
+      - uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b # v3.2.0
         with:
           path: __THIS_REPO__
-      - uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # tag=v3.1.0
+      - uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b # v3.2.0
         with:
           repository: slsa-framework/example-package
           ref: main
@@ -112,13 +134,16 @@ jobs:
         env:
           BODY: "${{ github.event.pull_request.body }}"
         run: |
-          RELEASE_TAG=$(echo "$BODY" | grep -o -e 'v[0-9]\+\.[0-9]\+\.[0-9]\+')
+          # match the first instance of a line with 'label:release vX.Y.Z' with only leading or trailing whitespace.
+          set -euo pipefail
+          # NOTE: grep is not matching if there is a trailing '$' in the pattern for some reason...
+          RELEASE_TAG=$(echo "$BODY" | grep -oe '^[[:blank:]]*#label:release[[:blank:]]*v[0-9]\+\.[0-9]\+\.[0-9]\+\(-rc\.[0-9]\+\)\?[[:blank:]]*' | head -n1 | sed -n 's/^[[:blank:]]*#label:release[[:blank:]]*\([^[:blank:]]*\)[[:blank:]]*/\1/p')
           RELEASE_TAG=${RELEASE_TAG} ./__THIS_REPO__/.github/workflows/scripts/pre-release/references.sh
 
   secure-project-checkout-go:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # tag=v3.1.0
+      - uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b # v3.2.0
         with:
           path: __BUILDER_CHECKOUT_DIR__
 
@@ -131,7 +156,7 @@ jobs:
   secure-project-checkout-node:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # tag=v3.1.0
+      - uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b # v3.2.0
         with:
           path: __BUILDER_CHECKOUT_DIR__
 
@@ -144,7 +169,7 @@ jobs:
   secure-download-artifact:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # tag=v3.1.0
+      - uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b # v3.2.0
         with:
           path: __BUILDER_CHECKOUT_DIR__
 
@@ -171,7 +196,7 @@ jobs:
   secure-download-artifact-builder-name:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # tag=v3.1.0
+      - uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b # v3.2.0
         with:
           path: __BUILDER_CHECKOUT_DIR__
 
@@ -204,7 +229,7 @@ jobs:
   secure-download-artifact-builder-repo-folder:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # tag=v3.1.0
+      - uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b # v3.2.0
         with:
           path: __BUILDER_CHECKOUT_DIR__
 
@@ -238,7 +263,7 @@ jobs:
   secure-download-artifact-builder-repo-file:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # tag=v3.1.0
+      - uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b # v3.2.0
         with:
           path: __BUILDER_CHECKOUT_DIR__
 
@@ -272,7 +297,7 @@ jobs:
   generate-builder-generic-compile:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # tag=v3.1.0
+      - uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b # v3.2.0
       - uses: ./.github/actions/generate-builder
         with:
           repository: "slsa-framework/slsa-github-generator"
@@ -286,14 +311,52 @@ jobs:
   generate-builder-generic-no-compile:
     runs-on: ubuntu-latest
     steps:
-      # TODO(github.com/slsa-framework/slsa-github-generator/issues/1163): temporarily disabled
-      # - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # tag=v3.0.2
-      # - uses: ./.github/actions/generate-builder
-      #   with:
-      #     repository: "slsa-framework/slsa-github-generator"
-      #     ref: "refs/tags/v1.2.1"
-      #     compile-builder: false
-      #     go-version: 1.18
-      #     binary: "slsa-generator-generic-linux-amd64"
-      #     directory: "internal/builders/generic"
-      - run: 'echo "Temporarily disabled. See: https://github.com/slsa-framework/slsa-github-generator/issues/1163" '
+      - uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b # v3.2.0
+      - uses: ./.github/actions/generate-builder
+        with:
+          repository: "slsa-framework/slsa-github-generator"
+          ref: "refs/tags/v1.2.2"
+          go-version: 1.18
+          binary: "slsa-generator-generic-linux-amd64"
+          directory: "internal/builders/generic"
+          # NOTE: compile-builder explicitly set to false.
+          compile-builder: false
+
+  generate-attestations:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b # v3.2.0
+      - name: Test generate attestations
+        id: generate
+        uses: ./.github/actions/generate-attestations
+        with:
+          slsa-outputs-file: .github/actions/generate-attestations/testdata/layouts/valid-layout.json
+          predicate-type: "https://slsa.dev/provenance/v0.2"
+          predicate-file: .github/actions/generate-attestations/testdata/predicates/valid-slsa-v02.json
+          output-folder: attestations
+      - name: Verify outputs
+        env:
+          OUTPUT_FOLDER: attestations
+        run: |
+          set -euo pipefail
+          ls $OUTPUT_FOLDER
+          artifact11=$(jq -r '.subject[0].name' $OUTPUT_FOLDER/attestation1.intoto)
+          if [[ $artifact11 != "artifact11" ]]; then
+            echo "expected artifact11 name"
+            exit 2
+          fi
+          digest11=$(jq -r '.subject[0].digest["sha256"]' $OUTPUT_FOLDER/attestation1.intoto)
+          if [[ $digest11 != "deadbeaf" ]]; then
+            echo "expected deadbeaf digest"
+            exit 2
+          fi
+          artifact21=$(jq -r '.subject[0].name' $OUTPUT_FOLDER/attestation2.intoto)
+          if [[ $artifact21 != "artifact21" ]]; then
+            echo "expected artifact21 name"
+            exit 2
+          fi
+          digest21=$(jq -r '.subject[0].digest["sha256"]' $OUTPUT_FOLDER/attestation2.intoto)
+          if [[ $digest21 != "deadbeat" ]]; then
+            echo "expected deadbeat digest"
+            exit 2
+          fi

@@ -42,12 +42,6 @@ type OIDCToken struct {
 	// Issuer is the token issuer.
 	Issuer string
 
-	// Audience is the audience for which the token was granted.
-	Audience []string
-
-	// Expiry is the expiration date of the token.
-	Expiry time.Time
-
 	// JobWorkflowRef is a reference to the current job workflow.
 	JobWorkflowRef string `json:"job_workflow_ref"`
 
@@ -59,6 +53,12 @@ type OIDCToken struct {
 
 	// ActorID is the unique ID of the actor who triggered the build.
 	ActorID string `json:"actor_id"`
+
+	// Expiry is the expiration date of the token.
+	Expiry time.Time
+
+	// Audience is the audience for which the token was granted.
+	Audience []string
 }
 
 // errURLError indicates the OIDC server URL is invalid.
@@ -91,12 +91,12 @@ type OIDCClient struct {
 	// requestURL is the GitHub URL to request a OIDC token.
 	requestURL *url.URL
 
-	// bearerToken is used to request an ID token.
-	bearerToken string
-
 	// verifierFunc is a factory to generate an oidc.IDTokenVerifier for token verification.
 	// This is used for tests.
 	verifierFunc func(context.Context) (*oidc.IDTokenVerifier, error)
+
+	// bearerToken is used to request an ID token.
+	bearerToken string
 }
 
 // NewOIDCClient returns new GitHub OIDC provider client.
@@ -104,7 +104,11 @@ func NewOIDCClient() (*OIDCClient, error) {
 	requestURL := os.Getenv(requestURLEnvKey)
 	parsedURL, err := url.ParseRequestURI(requestURL)
 	if err != nil {
-		return nil, errors.Errorf(&errURLError{}, "invalid request URL %q: %w; does your workflow have `id-token: write` scope?", requestURL, err)
+		return nil, errors.Errorf(
+			&errURLError{},
+			"invalid request URL %q: %w; does your workflow have `id-token: write` scope?",
+			requestURL, err,
+		)
 	}
 
 	c := OIDCClient{

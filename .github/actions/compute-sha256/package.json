@@ -1,8 +1,8 @@
 {
-  "name": "typescript-action",
-  "version": "0.0.0",
+  "name": "compute-sha256",
+  "version": "0.0.1",
   "private": true,
-  "description": "TypeScript template action",
+  "description": "Compute a sha256 of a file.",
   "main": "lib/main.js",
   "scripts": {
     "build": "tsc",
@@ -10,7 +10,7 @@
     "format-check": "prettier --check '**/*.ts'",
     "package": "ncc build --source-map",
     "lint": "eslint src/**/*.ts",
-    "all": "npm run build && npm run format && npm run lint && npm run package"
+    "all": "npm run format && npm run lint && npm run build && npm run package"
   },
   "keywords": [
     "actions",
@@ -21,13 +21,13 @@
     "@actions/core": "1.10.0"
   },
   "devDependencies": {
-    "@types/node": "18.11.9",
-    "@typescript-eslint/eslint-plugin": "5.43.0",
-    "@typescript-eslint/parser": "5.43.0",
-    "@vercel/ncc": "0.34.0",
-    "eslint": "8.27.0",
-    "eslint-plugin-github": "4.4.1",
-    "prettier": "2.7.1",
-    "typescript": "4.8.4"
+    "@types/node": "18.11.18",
+    "@typescript-eslint/eslint-plugin": "5.48.0",
+    "@typescript-eslint/parser": "5.48.0",
+    "@vercel/ncc": "0.36.0",
+    "eslint": "8.31.0",
+    "eslint-plugin-github": "4.6.0",
+    "prettier": "2.8.1",
+    "typescript": "4.9.4"
   }
 }

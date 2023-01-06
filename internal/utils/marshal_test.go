@@ -25,8 +25,8 @@ func Test_MarshalToString(t *testing.T) {
 
 	tests := []struct {
 		name      string
-		variables []string
 		expected  string
+		variables []string
 	}{
 		{
 			name:      "single arg",
@@ -41,7 +41,8 @@ func Test_MarshalToString(t *testing.T) {
 				"-tags=netgo",
 				"-ldflags=-X main.gitVersion=v1.2.3 -X main.gitSomething=somthg",
 			},
-			expected: "WyIvdXNyL2xpYi9nb29nbGUtZ29sYW5nL2Jpbi9nbyIsImJ1aWxkIiwiLW1vZD12ZW5kb3IiLCItdHJpbXBhdGgiLCItdGFncz1uZXRnbyIsIi1sZGZsYWdzPS1YIG1haW4uZ2l0VmVyc2lvbj12MS4yLjMgLVggbWFpbi5naXRTb21ldGhpbmc9c29tdGhnIl0=",
+			expected: "WyIvdXNyL2xpYi9nb29nbGUtZ29sYW5nL2Jpbi9nbyIsImJ1aWxkIiwiLW1vZD12ZW5kb3IiLCItdHJpbXBhdGgiLCItdGF" +
+				"ncz1uZXRnbyIsIi1sZGZsYWdzPS1YIG1haW4uZ2l0VmVyc2lvbj12MS4yLjMgLVggbWFpbi5naXRTb21ldGhpbmc9c29tdGhnIl0=",
 		},
 	}
 	for _, tt := range tests {
@@ -85,7 +86,8 @@ func Test_UnmarshalList(t *testing.T) {
 				"-tags=netgo",
 				"-ldflags=-X main.gitVersion=v1.2.3 -X main.gitSomething=somthg",
 			},
-			value: "WyIvdXNyL2xpYi9nb29nbGUtZ29sYW5nL2Jpbi9nbyIsImJ1aWxkIiwiLW1vZD12ZW5kb3IiLCItdHJpbXBhdGgiLCItdGFncz1uZXRnbyIsIi1sZGZsYWdzPS1YIG1haW4uZ2l0VmVyc2lvbj12MS4yLjMgLVggbWFpbi5naXRTb21ldGhpbmc9c29tdGhnIl0=",
+			value: "WyIvdXNyL2xpYi9nb29nbGUtZ29sYW5nL2Jpbi9nbyIsImJ1aWxkIiwiLW1vZD12ZW5kb3IiLCItdHJpbXBhdGgiLCItdGFncz" +
+				"1uZXRnbyIsIi1sZGZsYWdzPS1YIG1haW4uZ2l0VmVyc2lvbj12MS4yLjMgLVggbWFpbi5naXRTb21ldGhpbmc9c29tdGhnIl0=",
 		},
 	}
 	for _, tt := range tests {

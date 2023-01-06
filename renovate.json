@@ -1,6 +1,9 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": ["config:base"],
+  "extends": [
+    "config:base", 
+    ":gitSignOff"
+  ],
   "schedule": ["every weekend"],
   "packageRules": [
     {
@@ -9,6 +12,7 @@
     },
     {
       "matchManagers": ["gomod"],
+      "excludePackageNames": ["go"],
       "matchUpdateTypes": ["minor", "patch"],
       "groupName": "go"
     },

@@ -28,14 +28,14 @@ provenance.
 At present, the trusted builder **MUST** be referenced
 by a tag of the form `@vX.Y.Z`, because the build will fail if you reference it via a shorter tag like `@vX.Y` or `@vX` or if you reference it by a hash.
 
-For more information about this design decision and how to configure renovatebot,see the main repository [README.md](../../../README.md).
+For more information about this design decision and how to configure renovatebot, see the main repository [README.md](../../../README.md).
 
 ### Private Repositories
 
 Private repositories are supported with some caveats. Currently all builds
 generate and post a new entry in the public
 [Rekor](https://github.com/sigstore/rekor) API server instance at
-rekor.sigstore.dev. This entry includes the repository name. This will cause the
+https://rekor.sigstore.dev/. This entry includes the repository name. This will cause the
 private repository name to leak and be discoverable via the public Rekor API
 server.
 
@@ -143,7 +143,7 @@ The configuration file accepts many of the common fields GoReleaser uses, as you
 | `{{ .Minor }}`       | `$(git describe --tags --always --dirty \| cut -d '.' -f2`                                                                       | `2`                                        |
 | `{{ .Patch }}`       | `$(git describe --tags --always --dirty \| cut -d '.' -f3 \| cut -d '-' -f1 \| cut -d '+' -f1`                                   | `3`                                        |
 
-If you think you need suppport for other variables, please [open an issue](https://github.com/slsa-framework/slsa-github-generator/issues/new).
+If you think you need support for other variables, please [open an issue](https://github.com/slsa-framework/slsa-github-generator/issues/new).
 
 ### Workflow Inputs
 
@@ -202,7 +202,7 @@ jobs:
       contents: write # To upload assets to release.
       actions: read # To read the workflow path.
     needs: args
-    uses: slsa-framework/slsa-github-generator/.github/workflows/builder_go_slsa3.yml@v1.2.2
+    uses: slsa-framework/slsa-github-generator/.github/workflows/builder_go_slsa3.yml@v1.4.0
     with:
       go-version: 1.17
       # Optional: only needed if using ldflags.
@@ -227,7 +227,7 @@ An example of the provenance generated from this repo is below:
   ],
   "predicate": {
     "builder": {
-      "id": "https://github.com/slsa-framework/slsa-github-generator/.github/workflows/builder_go_slsa3.yml@v1.1.1"
+      "id": "https://github.com/slsa-framework/slsa-github-generator/.github/workflows/builder_go_slsa3.yml@v1.4.0"
     },
     "buildType": "https://github.com/slsa-framework/slsa-github-generator/go@v1",
     "invocation": {
@@ -316,7 +316,7 @@ The `BuildConfig` contains the following fields:
 
 `version`: The version of the `BuildConfig` format.
 
-`steps`: The steps that were performed in the buid.
+`steps`: The steps that were performed in the build.
 
 `steps[*].command`: The list of commands that were executed in a step.
 
@@ -371,5 +371,5 @@ the latest release. Make sure you continue to reference the workflow using a
 release tag in order to allow verification by `slsa-verifier`.
 
 ```yaml
-uses: slsa-framework/slsa-github-generator/.github/workflows/builder_go_slsa3.yml@v1.2.2
+uses: slsa-framework/slsa-github-generator/.github/workflows/builder_go_slsa3.yml@v1.4.0
 ```
