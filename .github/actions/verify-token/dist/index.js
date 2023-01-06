@@ -281,11 +281,12 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.createPredicate = void 0;
 const process = __importStar(__nccwpck_require__(7282));
 const core = __importStar(__nccwpck_require__(2186));
+const fs = __importStar(__nccwpck_require__(7147));
 const DELEGATOR_BUILD_TYPE = "https://github.com/slsa-framework/slsa-github-generator/delegator-generic@v0";
 function createPredicate(rawTokenObj, toolURI) {
     const workflowInputs = {};
-    if (process.env.GITHUB_EVENT !== undefined) {
-        const ghEvent = JSON.parse(process.env.GITHUB_EVENT);
+    if (process.env.GITHUB_EVENT_PATH !== undefined) {
+        const ghEvent = JSON.parse(fs.readFileSync(process.env.GITHUB_EVENT_PATH).toString());
         core.info(`${JSON.stringify(ghEvent)}`);
         workflowInputs.event_inputs = ghEvent.inputs;
     }
