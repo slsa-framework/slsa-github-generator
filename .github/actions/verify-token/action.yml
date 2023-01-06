@@ -13,10 +13,10 @@ inputs:
     type: string
     required: true
 
-  # output-predicate:
-  #   description: 'The filename to place the output SLSA predicate based on the verified token'
-  #   type: string
-  #   required: true
+  output-predicate:
+    description: 'The filename to place the output SLSA predicate based on the verified token'
+    type: string
+    required: true
 
 outputs:
   slsa-verified-token:

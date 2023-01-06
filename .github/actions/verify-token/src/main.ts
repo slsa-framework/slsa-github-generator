@@ -17,6 +17,7 @@ import * as process from "process";
 import * as fs from "fs";
 import * as child_process from "child_process";
 import { githubObj, rawTokenInterface, createPredicate } from "./predicate";
+import path from "path";
 
 async function run(): Promise<void> {
   try {
@@ -38,11 +39,17 @@ async function run(): Promise<void> {
         GITHUB_BASE_REF="" \
         GITHUB_REF_TYPE="branch" \
         GITHUB_ACTOR="laurentsimon" \
+        INPUT_OUTPUT-PREDICATE="predicate.json" \
+        GITHUB_WORKFPSACE="." \
         nodejs ./dist/index.js
     */
 
     const workflowRecipient = core.getInput("slsa-workflow-recipient");
     const unverifiedToken = core.getInput("slsa-unverified-token");
+
+    const outputPredicate = core.getInput("output-predicate");
+    const wd = process.env[`GITHUB_WORKSPACE`] || "";
+    const safeOutput = resolvePathInput(outputPredicate, wd);
 
     // Log the inputs for troubleshooting.
     core.debug(`workflowRecipient: ${workflowRecipient}`);
@@ -106,7 +113,12 @@ async function run(): Promise<void> {
 
     // Now generate the SLSA predicate using the verified token and the GH context.
     const predicate = createPredicate(rawTokenObj, toolURI);
-    core.info(`predicate: ${JSON.stringify(predicate)}`);
+    fs.writeFileSync(safeOutput, JSON.stringify(predicate), {
+      flag: "ax",
+      mode: 0o600,
+    });
+    core.debug(`predicate: ${JSON.stringify(predicate)}`);
+    core.debug(`Wrote predicate to ${safeOutput}`);
 
     core.setOutput("tool-repository", toolRepository);
     core.setOutput("tool-ref", toolRef);
@@ -262,6 +274,14 @@ function validateNonEmptyField(name: string, actual: string): void {
   if (actual === "") {
     throw new Error(`empty ${name}, expected non-empty value.`);
   }
+}
+
+function resolvePathInput(input: string, wd: string): string {
+  const safeJoin = path.resolve(path.join(wd, input));
+  if (!(safeJoin + path.sep).startsWith(wd + path.sep)) {
+    throw Error(`unsafe path ${safeJoin}`);
+  }
+  return safeJoin;
 }
 
 run();

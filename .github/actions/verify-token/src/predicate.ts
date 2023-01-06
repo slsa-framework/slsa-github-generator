@@ -12,7 +12,6 @@ limitations under the License.
 */
 
 import * as process from "process";
-import * as core from "@actions/core";
 import * as fs from "fs";
 
 const DELEGATOR_BUILD_TYPE =
@@ -142,14 +141,6 @@ export function createPredicate(
   toolURI: string
 ): SLSAv02Predicate {
   const workflowInputs: WorkflowParameters = {};
-  if (process.env.GITHUB_EVENT_PATH !== undefined) {
-    const ghEvent = JSON.parse(
-      fs.readFileSync(process.env.GITHUB_EVENT_PATH).toString()
-    );
-    core.info(`${JSON.stringify(ghEvent)}`);
-    workflowInputs.event_inputs = ghEvent.inputs;
-  }
-
   // getEntryPoint via GitHub API via runID and repository
   const predicate: SLSAv02Predicate = {
     builder: { id: toolURI },
@@ -179,7 +170,6 @@ export function createPredicate(
           process.env.GITHUB_REPOSITORY_OWNER_ID || "",
         github_actor_id: process.env.GITHUB_ACTOR_ID || "",
         github_repository_id: process.env.GITHUB_REPOSITORY_ID || "",
-        github_event_payload: process.env.GITHUB_EVENT || {},
       },
     },
     build_config: {
@@ -205,6 +195,15 @@ export function createPredicate(
       },
     },
   };
+  if (process.env.GITHUB_EVENT_PATH !== undefined) {
+    const ghEvent = JSON.parse(
+      fs.readFileSync(process.env.GITHUB_EVENT_PATH).toString()
+    );
+    workflowInputs.event_inputs = ghEvent.inputs;
+    predicate.invocation.parameters = workflowInputs;
+    predicate.invocation.config_source.entry_point = ghEvent.workflow;
+    predicate.invocation.environment["github_event_payload"] = ghEvent;
+  }
 
   return predicate;
 }

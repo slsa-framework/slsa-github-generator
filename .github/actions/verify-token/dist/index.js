@@ -50,6 +50,9 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core = __importStar(__nccwpck_require__(2186));
 const sigstore = __importStar(__nccwpck_require__(9149));
@@ -57,6 +60,7 @@ const process = __importStar(__nccwpck_require__(7282));
 const fs = __importStar(__nccwpck_require__(7147));
 const child_process = __importStar(__nccwpck_require__(2081));
 const predicate_1 = __nccwpck_require__(5464);
+const path_1 = __importDefault(__nccwpck_require__(1017));
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
@@ -78,10 +82,15 @@ function run() {
                 GITHUB_BASE_REF="" \
                 GITHUB_REF_TYPE="branch" \
                 GITHUB_ACTOR="laurentsimon" \
+                INPUT_OUTPUT-PREDICATE="predicate.json" \
+                GITHUB_WORKFPSACE="." \
                 nodejs ./dist/index.js
             */
             const workflowRecipient = core.getInput("slsa-workflow-recipient");
             const unverifiedToken = core.getInput("slsa-unverified-token");
+            const outputPredicate = core.getInput("output-predicate");
+            const wd = process.env[`GITHUB_WORKSPACE`] || "";
+            const safeOutput = resolvePathInput(outputPredicate, wd);
             // Log the inputs for troubleshooting.
             core.debug(`workflowRecipient: ${workflowRecipient}`);
             core.debug(`unverifiedToken: ${unverifiedToken}`);
@@ -119,7 +128,12 @@ function run() {
             core.debug(`slsa-verified-token: ${rawTokenStr}`);
             // Now generate the SLSA predicate using the verified token and the GH context.
             const predicate = (0, predicate_1.createPredicate)(rawTokenObj, toolURI);
-            core.info(`predicate: ${JSON.stringify(predicate)}`);
+            fs.writeFileSync(safeOutput, JSON.stringify(predicate), {
+                flag: "ax",
+                mode: 0o600,
+            });
+            core.debug(`predicate: ${JSON.stringify(predicate)}`);
+            core.debug(`Wrote predicate to ${safeOutput}`);
             core.setOutput("tool-repository", toolRepository);
             core.setOutput("tool-ref", toolRef);
             core.setOutput("slsa-verified-token", rawTokenStr);
@@ -232,6 +246,13 @@ function validateNonEmptyField(name, actual) {
         throw new Error(`empty ${name}, expected non-empty value.`);
     }
 }
+function resolvePathInput(input, wd) {
+    const safeJoin = path_1.default.resolve(path_1.default.join(wd, input));
+    if (!(safeJoin + path_1.default.sep).startsWith(wd + path_1.default.sep)) {
+        throw Error(`unsafe path ${safeJoin}`);
+    }
+    return safeJoin;
+}
 run();
 
 
@@ -280,16 +301,10 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.createPredicate = void 0;
 const process = __importStar(__nccwpck_require__(7282));
-const core = __importStar(__nccwpck_require__(2186));
 const fs = __importStar(__nccwpck_require__(7147));
 const DELEGATOR_BUILD_TYPE = "https://github.com/slsa-framework/slsa-github-generator/delegator-generic@v0";
 function createPredicate(rawTokenObj, toolURI) {
     const workflowInputs = {};
-    if (process.env.GITHUB_EVENT_PATH !== undefined) {
-        const ghEvent = JSON.parse(fs.readFileSync(process.env.GITHUB_EVENT_PATH).toString());
-        core.info(`${JSON.stringify(ghEvent)}`);
-        workflowInputs.event_inputs = ghEvent.inputs;
-    }
     // getEntryPoint via GitHub API via runID and repository
     const predicate = {
         builder: { id: toolURI },
@@ -318,7 +333,6 @@ function createPredicate(rawTokenObj, toolURI) {
                 github_repository_owner_id: process.env.GITHUB_REPOSITORY_OWNER_ID || "",
                 github_actor_id: process.env.GITHUB_ACTOR_ID || "",
                 github_repository_id: process.env.GITHUB_REPOSITORY_ID || "",
-                github_event_payload: process.env.GITHUB_EVENT || {},
             },
         },
         build_config: {
@@ -342,6 +356,13 @@ function createPredicate(rawTokenObj, toolURI) {
             },
         },
     };
+    if (process.env.GITHUB_EVENT_PATH !== undefined) {
+        const ghEvent = JSON.parse(fs.readFileSync(process.env.GITHUB_EVENT_PATH).toString());
+        workflowInputs.event_inputs = ghEvent.inputs;
+        predicate.invocation.parameters = workflowInputs;
+        predicate.invocation.config_source.entry_point = ghEvent.workflow;
+        predicate.invocation.environment["github_event_payload"] = ghEvent;
+    }
     return predicate;
 }
 exports.createPredicate = createPredicate;
