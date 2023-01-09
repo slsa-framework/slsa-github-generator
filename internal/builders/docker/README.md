@@ -40,8 +40,9 @@ go run *.go build \
   --builder-image bash@sha256:9e2ba52487d945504d250de186cb4fe2e3ba023ed2921dd6ac8b97ed43e76af9 \
   --git-commit-hash sha1:cf5804b5c6f1a4b2a0b03401a487dfdfbe3a5f00 \
   --source-repo git+https://github.com/slsa-framework/slsa-github-generator \
+  --subjects-path subjects.json \
   --force-checkout
 ```
 
-If the build is successful, this command will generate and output a list of
-generated artifacts and their SHA256 digests.
+If the build is successful, this command will generate `subjects.json`
+containing a JSON-encoded list of generated artifacts and their SHA256 digests.

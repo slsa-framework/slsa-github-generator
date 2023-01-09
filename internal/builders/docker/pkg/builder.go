@@ -146,9 +146,9 @@ func (b *Builder) SetUpBuildState() (*DockerBuild, error) {
 	return db, nil
 }
 
-// BuildArtifact builds the artifacts based on the user-provided inputs, and
+// BuildArtifacts builds the artifacts based on the user-provided inputs, and
 // returns the names and SHA256 digests of the generated artifacts.
-func (db *DockerBuild) BuildArtifact() ([]intoto.Subject, error) {
+func (db *DockerBuild) BuildArtifacts() ([]intoto.Subject, error) {
 	if err := runDockerRun(db); err != nil {
 		return nil, fmt.Errorf("running `docker run` failed: %v", err)
 	}
