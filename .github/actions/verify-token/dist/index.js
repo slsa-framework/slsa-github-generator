@@ -304,39 +304,46 @@ const process = __importStar(__nccwpck_require__(7282));
 const fs = __importStar(__nccwpck_require__(7147));
 const DELEGATOR_BUILD_TYPE = "https://github.com/slsa-framework/slsa-github-generator/delegator-generic@v0";
 function createPredicate(rawTokenObj, toolURI) {
+    const { env } = process;
     const workflowInputs = {};
-    const callerRepo = createURI(process.env.GITHUB_REPOSITORY || "", process.env.GITHUB_REF || "");
+    const callerRepo = createURI(env.GITHUB_REPOSITORY || "", env.GITHUB_REF || "");
     // getEntryPoint via GitHub API via runID and repository
     const predicate = {
         builder: { id: toolURI },
-        build_type: DELEGATOR_BUILD_TYPE,
+        buildType: DELEGATOR_BUILD_TYPE,
         invocation: {
             parameters: workflowInputs,
-            config_source: {
+            configSource: {
                 uri: callerRepo,
-                entry_point: process.env.GITHUB_WORKFLOW || "",
+                entryPoint: env.GITHUB_WORKFLOW || "",
                 digest: {
-                    sha1: process.env.GITHUB_SHA || "",
+                    sha1: env.GITHUB_SHA || "",
                 },
             },
             environment: {
-                github_run_number: process.env.GITHUB_RUN_NUMBER || "",
-                github_run_id: process.env.GITHUB_RUN_ID || "",
-                github_run_attempt: process.env.GITHUB_RUN_ATTEMPT || "",
-                github_event_name: process.env.GITHUB_EVENT_NAME || "",
-                github_ref_type: process.env.GITHUB_REF_TYPE || "",
-                github_ref: process.env.GITHUB_REF || "",
-                github_base_ref: process.env.GITHUB_BASE_REF || "",
-                github_head_ref: process.env.GITHUB_HEAD_REF || "",
-                github_actor: process.env.GITHUB_ACTOR || "",
-                github_sha1: process.env.GITHUB_SHA || "",
-                github_repository_owner: process.env.GITHUB_REPOSITORY_OWNER || "",
-                github_repository_owner_id: process.env.GITHUB_REPOSITORY_OWNER_ID || "",
-                github_actor_id: process.env.GITHUB_ACTOR_ID || "",
-                github_repository_id: process.env.GITHUB_REPOSITORY_ID || "",
+                GITHUB_ACTOR_ID: env.GITHUB_ACTOR_ID,
+                GITHUB_EVENT_NAME: env.GITHUB_EVENT_NAME,
+                GITHUB_JOB: env.GITHUB_JOB,
+                GITHUB_REF: env.GITHUB_REF,
+                GITHUB_REF_TYPE: env.GITHUB_REF_TYPE,
+                GITHUB_REPOSITORY: env.GITHUB_REPOSITORY,
+                GITHUB_REPOSITORY_ID: env.GITHUB_REPOSITORY_ID,
+                GITHUB_REPOSITORY_OWNER_ID: env.GITHUB_REPOSITORY_OWNER_ID,
+                GITHUB_RUN_ATTEMPT: env.GITHUB_RUN_ATTEMPT,
+                GITHUB_RUN_ID: env.GITHUB_RUN_ID,
+                GITHUB_RUN_NUMBER: env.GITHUB_RUN_NUMBER,
+                GITHUB_SHA: env.GITHUB_SHA,
+                GITHUB_WORKFLOW: env.GITHUB_WORKFLOW,
+                GITHUB_WORKFLOW_REF: env.GITHUB_WORKFLOW_REF,
+                GITHUB_WORKFLOW_SHA: env.GITHUB_WORKFLOW_SHA,
+                IMAGE_OS: env.ImageOS,
+                IMAGE_VERSION: env.ImageVersion,
+                RUNNER_ARCH: env.RUNNER_ARCH,
+                RUNNER_NAME: env.RUNNER_NAME,
+                RUNNER_OS: env.RUNNER_OS,
             },
         },
-        build_config: {
+        buildConfig: {
             version: 1,
             inputs: rawTokenObj.tool.inputs,
         },
@@ -357,12 +364,12 @@ function createPredicate(rawTokenObj, toolURI) {
             },
         },
     };
-    if (process.env.GITHUB_EVENT_PATH !== undefined) {
-        const ghEvent = JSON.parse(fs.readFileSync(process.env.GITHUB_EVENT_PATH).toString());
-        workflowInputs.event_inputs = ghEvent.inputs;
+    if (env.GITHUB_EVENT_PATH !== undefined) {
+        const ghEvent = JSON.parse(fs.readFileSync(env.GITHUB_EVENT_PATH).toString());
+        workflowInputs.eventInputs = ghEvent.inputs;
         predicate.invocation.parameters = workflowInputs;
-        predicate.invocation.config_source.entry_point = ghEvent.workflow;
-        predicate.invocation.environment["github_event_payload"] = ghEvent;
+        predicate.invocation.configSource.entryPoint = ghEvent.workflow;
+        predicate.invocation.environment["GITHUB_EVENT_PAYLOAD"] = ghEvent;
     }
     return predicate;
 }

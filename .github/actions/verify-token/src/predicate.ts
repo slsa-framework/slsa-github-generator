@@ -22,17 +22,17 @@ interface Builder {
 }
 
 interface Invocation {
-  config_source: ConfigSource;
+  configSource: ConfigSource;
   parameters: Object;
   environment: Environment;
 }
 
 interface Environment {
-  [key: string]: Object;
+  [key: string]: Object | undefined;
 }
 
 interface WorkflowParameters {
-  event_inputs?: Object;
+  eventInputs?: Object;
 }
 
 interface DigestSet {
@@ -42,11 +42,11 @@ interface DigestSet {
 interface ConfigSource {
   uri: string;
   digest: DigestSet;
-  entry_point: string;
+  entryPoint: string;
 }
 
 interface Steps {
-  working_dir: string;
+  workingDir: string;
   command: string[];
   env: string[];
 }
@@ -58,9 +58,9 @@ interface BuildConfig {
 }
 
 interface Metadata {
-  build_invocation_id?: string;
-  build_started_on?: Date;
-  build_finished_on?: Date;
+  buildInvocationId?: string;
+  buildStartedOn?: Date;
+  buildFinishedOn?: Date;
   completeness?: Completeness;
   reproducible?: boolean;
 }
@@ -81,13 +81,13 @@ interface SLSAv02Predicate {
   builder: Builder;
 
   // URI indicating the type of build.
-  build_type?: string;
+  buildType: string;
 
   // Invocation information including the entry point.
   invocation: Invocation;
 
   // A JSON object describing the BuildConfig.
-  build_config?: BuildConfig;
+  buildConfig?: BuildConfig;
 
   // Build Metadata.
   metadata: Metadata;
@@ -140,43 +140,50 @@ export function createPredicate(
   rawTokenObj: rawTokenInterface,
   toolURI: string
 ): SLSAv02Predicate {
+  const { env } = process;
+
   const workflowInputs: WorkflowParameters = {};
   const callerRepo: string = createURI(
-    process.env.GITHUB_REPOSITORY || "",
-    process.env.GITHUB_REF || ""
+    env.GITHUB_REPOSITORY || "",
+    env.GITHUB_REF || ""
   );
   // getEntryPoint via GitHub API via runID and repository
   const predicate: SLSAv02Predicate = {
     builder: { id: toolURI },
-    build_type: DELEGATOR_BUILD_TYPE,
+    buildType: DELEGATOR_BUILD_TYPE,
     invocation: {
       parameters: workflowInputs, // The caller's workflow inputs.
-      config_source: {
+      configSource: {
         uri: callerRepo,
-        entry_point: process.env.GITHUB_WORKFLOW || "",
+        entryPoint: env.GITHUB_WORKFLOW || "",
         digest: {
-          sha1: process.env.GITHUB_SHA || "",
+          sha1: env.GITHUB_SHA || "",
         },
       },
       environment: {
-        github_run_number: process.env.GITHUB_RUN_NUMBER || "",
-        github_run_id: process.env.GITHUB_RUN_ID || "",
-        github_run_attempt: process.env.GITHUB_RUN_ATTEMPT || "",
-        github_event_name: process.env.GITHUB_EVENT_NAME || "",
-        github_ref_type: process.env.GITHUB_REF_TYPE || "",
-        github_ref: process.env.GITHUB_REF || "",
-        github_base_ref: process.env.GITHUB_BASE_REF || "",
-        github_head_ref: process.env.GITHUB_HEAD_REF || "",
-        github_actor: process.env.GITHUB_ACTOR || "",
-        github_sha1: process.env.GITHUB_SHA || "",
-        github_repository_owner: process.env.GITHUB_REPOSITORY_OWNER || "",
-        github_repository_owner_id:
-          process.env.GITHUB_REPOSITORY_OWNER_ID || "",
-        github_actor_id: process.env.GITHUB_ACTOR_ID || "",
-        github_repository_id: process.env.GITHUB_REPOSITORY_ID || "",
+        GITHUB_ACTOR_ID: env.GITHUB_ACTOR_ID,
+        GITHUB_EVENT_NAME: env.GITHUB_EVENT_NAME,
+        GITHUB_JOB: env.GITHUB_JOB,
+        GITHUB_REF: env.GITHUB_REF,
+        GITHUB_REF_TYPE: env.GITHUB_REF_TYPE,
+        GITHUB_REPOSITORY: env.GITHUB_REPOSITORY,
+        GITHUB_REPOSITORY_ID: env.GITHUB_REPOSITORY_ID,
+        GITHUB_REPOSITORY_OWNER_ID: env.GITHUB_REPOSITORY_OWNER_ID,
+        GITHUB_RUN_ATTEMPT: env.GITHUB_RUN_ATTEMPT,
+        GITHUB_RUN_ID: env.GITHUB_RUN_ID,
+        GITHUB_RUN_NUMBER: env.GITHUB_RUN_NUMBER,
+        GITHUB_SHA: env.GITHUB_SHA,
+        GITHUB_WORKFLOW: env.GITHUB_WORKFLOW,
+        GITHUB_WORKFLOW_REF: env.GITHUB_WORKFLOW_REF,
+        GITHUB_WORKFLOW_SHA: env.GITHUB_WORKFLOW_SHA,
+        IMAGE_OS: env.ImageOS,
+        IMAGE_VERSION: env.ImageVersion,
+        RUNNER_ARCH: env.RUNNER_ARCH,
+        RUNNER_NAME: env.RUNNER_NAME,
+        RUNNER_OS: env.RUNNER_OS,
       },
     },
-    build_config: {
+    buildConfig: {
       version: 1,
       inputs: rawTokenObj.tool.inputs,
     },
@@ -197,14 +204,14 @@ export function createPredicate(
       },
     },
   };
-  if (process.env.GITHUB_EVENT_PATH !== undefined) {
+  if (env.GITHUB_EVENT_PATH !== undefined) {
     const ghEvent = JSON.parse(
-      fs.readFileSync(process.env.GITHUB_EVENT_PATH).toString()
+      fs.readFileSync(env.GITHUB_EVENT_PATH).toString()
     );
-    workflowInputs.event_inputs = ghEvent.inputs;
+    workflowInputs.eventInputs = ghEvent.inputs;
     predicate.invocation.parameters = workflowInputs;
-    predicate.invocation.config_source.entry_point = ghEvent.workflow;
-    predicate.invocation.environment["github_event_payload"] = ghEvent;
+    predicate.invocation.configSource.entryPoint = ghEvent.workflow;
+    predicate.invocation.environment["GITHUB_EVENT_PAYLOAD"] = ghEvent;
   }
 
   return predicate;
