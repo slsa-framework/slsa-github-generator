@@ -19,12 +19,8 @@ const DELEGATOR_BUILD_TYPE =
 
 interface Builder {
   id: string;
-}
-
-interface Invocation {
-  configSource: ConfigSource;
-  parameters: Object;
-  environment: Environment;
+  version?: string;
+  builderDependencies?: ArtifactReference[];
 }
 
 interface Environment {
@@ -39,61 +35,59 @@ interface DigestSet {
   [key: string]: string;
 }
 
-interface ConfigSource {
-  uri: string;
-  digest: DigestSet;
-  entryPoint: string;
-}
-
-interface Steps {
-  workingDir: string;
-  command: string[];
-  env: string[];
-}
-
-interface BuildConfig {
-  inputs: Object;
-  steps?: Steps[];
-  version: number;
-}
-
 interface Metadata {
-  buildInvocationId?: string;
-  buildStartedOn?: Date;
-  buildFinishedOn?: Date;
-  completeness?: Completeness;
-  reproducible?: boolean;
+  invocationId?: string;
+  startedOn?: Date;
+  finishedOn?: Date;
 }
 
-interface Completeness {
-  parameters: boolean;
-  environment: boolean;
-  materials: boolean;
+
+interface ParameterValue_Artifact {
+  artifact: ArtifactReference
 }
 
-interface Material {
+interface ParameterValue_String  {
+  value: string | undefined
+}
+
+type ParameterValue = ParameterValue_Artifact | ParameterValue_String;
+
+interface ExternalParameters {
+    [key: string]: ParameterValue;
+}
+
+interface ArtifactReference {
   uri: string;
   digest: DigestSet;
+  localName?: string;
+  downloadLocation?: string;
+  mediaType?: string;
 }
 
-interface SLSAv02Predicate {
-  // URI identifying the builder making the attestation.
-  builder: Builder;
-
+interface BuildDefinition {
   // URI indicating the type of build.
   buildType: string;
 
-  // Invocation information including the entry point.
-  invocation: Invocation;
+  // external
+  externalParameters?: { [key: string]: ParameterValue; };
 
-  // A JSON object describing the BuildConfig.
-  buildConfig?: BuildConfig;
+  systemParameters?: { [key: string]: ParameterValue; }
 
-  // Build Metadata.
+  resolvedDependencies?: ArtifactReference[];
+}
+
+interface RunDetails {
+  builder: Builder;
+
   metadata: Metadata;
 
-  // Materials required for the build.
-  materials: Material[];
+  byproducts?: ArtifactReference[];
+}
+
+interface SLSAv1Predicate {
+  buildDefinition: BuildDefinition
+
+  runDetails: RunDetails
 }
 
 export interface rawTokenInterface {
@@ -139,71 +133,71 @@ export interface githubObj {
 export function createPredicate(
   rawTokenObj: rawTokenInterface,
   toolURI: string
-): SLSAv02Predicate {
+): SLSAv1Predicate {
   const { env } = process;
 
-  const workflowInputs: WorkflowParameters = {};
   const callerRepo: string = createURI(
     env.GITHUB_REPOSITORY || "",
     env.GITHUB_REF || ""
   );
-  // getEntryPoint via GitHub API via runID and repository
-  const predicate: SLSAv02Predicate = {
-    builder: { id: toolURI },
-    buildType: DELEGATOR_BUILD_TYPE,
-    invocation: {
-      parameters: workflowInputs, // The caller's workflow inputs.
-      configSource: {
-        uri: callerRepo,
-        entryPoint: env.GITHUB_WORKFLOW || "",
-        digest: {
-          sha1: env.GITHUB_SHA || "",
-        },
+
+  const predicate: SLSAv1Predicate = {
+    buildDefinition: {
+      buildType: DELEGATOR_BUILD_TYPE,
+      externalParameters: {
+        // The invocation parameters belong here and are the GitHub
+        // workflow inputs.
+
+        // This is the v0.2 entryPoint.
+        // TODO: Get path via GitHub API via runID and repository
+        workflow: { value: env.GITHUB_WORKFLOW },
+        // We use source here because the source contained the source
+        // repository and the build configuration.
+        source: {
+          artifact: {
+            uri: callerRepo,
+            digest: {
+              sha1: env.GITHUB_SHA || "",
+            }
+          }
+        }
       },
-      environment: {
-        GITHUB_ACTOR_ID: env.GITHUB_ACTOR_ID,
-        GITHUB_EVENT_NAME: env.GITHUB_EVENT_NAME,
-        GITHUB_JOB: env.GITHUB_JOB,
-        GITHUB_REF: env.GITHUB_REF,
-        GITHUB_REF_TYPE: env.GITHUB_REF_TYPE,
-        GITHUB_REPOSITORY: env.GITHUB_REPOSITORY,
-        GITHUB_REPOSITORY_ID: env.GITHUB_REPOSITORY_ID,
-        GITHUB_REPOSITORY_OWNER_ID: env.GITHUB_REPOSITORY_OWNER_ID,
-        GITHUB_RUN_ATTEMPT: env.GITHUB_RUN_ATTEMPT,
-        GITHUB_RUN_ID: env.GITHUB_RUN_ID,
-        GITHUB_RUN_NUMBER: env.GITHUB_RUN_NUMBER,
-        GITHUB_SHA: env.GITHUB_SHA,
-        GITHUB_WORKFLOW: env.GITHUB_WORKFLOW,
-        GITHUB_WORKFLOW_REF: env.GITHUB_WORKFLOW_REF,
-        GITHUB_WORKFLOW_SHA: env.GITHUB_WORKFLOW_SHA,
-        IMAGE_OS: env.ImageOS,
-        IMAGE_VERSION: env.ImageVersion,
-        RUNNER_ARCH: env.RUNNER_ARCH,
-        RUNNER_NAME: env.RUNNER_NAME,
-        RUNNER_OS: env.RUNNER_OS,
-      },
+      systemParameters: {
+        // environment
+        GITHUB_ACTOR_ID: { value: env.GITHUB_ACTOR_ID },
+        GITHUB_EVENT_NAME: { value: env.GITHUB_EVENT_NAME},
+        GITHUB_JOB: {value:env.GITHUB_JOB},
+        GITHUB_REF: {value:env.GITHUB_REF},
+        GITHUB_REF_TYPE: {value:env.GITHUB_REF_TYPE},
+        GITHUB_REPOSITORY: {value:env.GITHUB_REPOSITORY},
+        GITHUB_REPOSITORY_ID: {value:env.GITHUB_REPOSITORY_ID},
+        GITHUB_REPOSITORY_OWNER_ID: {value:env.GITHUB_REPOSITORY_OWNER_ID},
+        GITHUB_RUN_ATTEMPT: {value:env.GITHUB_RUN_ATTEMPT},
+        GITHUB_RUN_ID: {value:env.GITHUB_RUN_ID},
+        GITHUB_RUN_NUMBER: {value:env.GITHUB_RUN_NUMBER},
+        GITHUB_SHA: {value:env.GITHUB_SHA},
+        GITHUB_WORKFLOW: {value:env.GITHUB_WORKFLOW},
+        GITHUB_WORKFLOW_REF: {value:env.GITHUB_WORKFLOW_REF},
+        GITHUB_WORKFLOW_SHA:{value: env.GITHUB_WORKFLOW_SHA},
+        IMAGE_OS: {value: env.ImageOS},
+        IMAGE_VERSION: {value: env.ImageVersion},
+        RUNNER_ARCH: {value: env.RUNNER_ARCH},
+        RUNNER_NAME: {value: env.RUNNER_NAME},
+        RUNNER_OS: {value: env.RUNNER_OS}
+      }
     },
-    buildConfig: {
-      version: 1,
-      inputs: rawTokenObj.tool.inputs,
-    },
-    materials: [
-      {
-        uri: callerRepo,
-        digest: {
-          sha1: process.env.GITHUB_SHA || "",
-        },
+    runDetails: {
+      // TODO: Where do the raw token inputs go?
+      // rawTokenObj.tool.inputs
+      builder: {
+        id: toolURI,
       },
-    ],
-    metadata: {
-      reproducible: false,
-      completeness: {
-        parameters: true,
-        environment: false,
-        materials: false, // This may be true here.
-      },
-    },
-  };
+      metadata: {
+        invocationId: env.GITHUB_RUN_ID
+      }
+    }
+  }
+
   if (env.GITHUB_EVENT_PATH !== undefined) {
     const ghEvent = JSON.parse(
       fs.readFileSync(env.GITHUB_EVENT_PATH).toString()
