@@ -18,8 +18,9 @@ jobs:
       actions: read # For reading workflow info.
     uses: ./.github/workflows/builder_docker-based_slsa3.yml
     with:
-      source-repository: "bcoe/slsa-on-github-test"
-      source-digest: "sha1:167d361e9831e9b13f1283e2014d0cb0c6fa65f6817790597df7ee488883fb03"
-      builder-image: "pkg:oci/builder-image?repository_url=gcr.io"
-      builder-digest: "sha256:7d8e3642927faefa5e907ab011001dbc1fca9a3e28c99d7bd97ff6c50ff6c42b"
-      config-path: "path/to/config.toml"
+      source-repository: "slsa-framework/slsa-github-generator"
+      source-digest: "sha1:cf5804b5c6f1a4b2a0b03401a487dfdfbe3a5f00"
+      builder-image: "bash"
+      builder-digest: "sha256:9e2ba52487d945504d250de186cb4fe2e3ba023ed2921dd6ac8b97ed43e76af9"
+      config-path: "internal/builders/docker/testdata/config.toml"
+      compile-builder: true
