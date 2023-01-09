@@ -37133,7 +37133,7 @@ function run() {
                     const bundle = yield sigstore.sigstore.signAttestation(buffer, payloadType, signOptions);
                     const bundleStr = JSON.stringify(bundle);
                     // We detect path traversal for safeOutputFolder, so this should be safe.
-                    const outputPath = `${path.join(safeOutputFolder, path.basename(fpath))}.sigstore`;
+                    const outputPath = path.join(safeOutputFolder, `${path.basename(fpath)}.sigstore`);
                     fs.writeFileSync(outputPath, bundleStr, {
                         flag: "ax",
                         mode: 0o600,

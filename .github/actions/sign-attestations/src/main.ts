@@ -56,10 +56,10 @@ async function run(): Promise<void> {
         );
         const bundleStr = JSON.stringify(bundle);
         // We detect path traversal for safeOutputFolder, so this should be safe.
-        const outputPath = `${path.join(
+        const outputPath = path.join(
           safeOutputFolder,
-          path.basename(fpath)
-        )}.sigstore`;
+          `${path.basename(fpath)}.sigstore`
+        );
         fs.writeFileSync(outputPath, bundleStr, {
           flag: "ax",
           mode: 0o600,
