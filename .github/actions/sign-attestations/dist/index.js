@@ -37104,6 +37104,12 @@ function resolvePathInput(input, wd) {
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
+            /* Test locally:
+                $ env INPUT_ATTESTATIONS="testdata/attestations" \
+                INPUT_OUTPUT-FOLDER="outputs" \
+                GITHUB_WORKSPACE="$(pwd)" \
+                nodejs ./dist/index.js
+            */
             const wd = process.env.GITHUB_WORKSPACE;
             if (!wd) {
                 core.setFailed("No repository detected.");
@@ -37127,7 +37133,7 @@ function run() {
                     const bundle = yield sigstore.sigstore.signAttestation(buffer, payloadType, signOptions);
                     const bundleStr = JSON.stringify(bundle);
                     // We detect path traversal for safeOutputFolder, so this should be safe.
-                    const outputPath = path.join(safeOutputFolder, path.basename(file), ".sigstore");
+                    const outputPath = path.join(safeOutputFolder, `${path.basename(fpath)}.sigstore`);
                     fs.writeFileSync(outputPath, bundleStr, {
                         flag: "ax",
                         mode: 0o600,
