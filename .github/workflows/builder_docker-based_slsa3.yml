@@ -214,10 +214,9 @@ jobs:
           GITHUB_SHA: ${{ github.sha }}
         run: |
           if [ -z "$SOURCE_DIGEST" ]; then
-            ref=$(echo ${SOURCE_DIGEST} | cut -d':' -f2)
-            echo "ref=$ref" >> $GITHUB_OUTPUT
+            echo "ref=${SOURCE_DIGEST}" >> $GITHUB_OUTPUT
           else
-            echo "ref=$GITHUB_SHA" >> $GITHUB_OUTPUT
+            echo "ref=sha1:$GITHUB_SHA" >> $GITHUB_OUTPUT
           fi
 
       - name: Generate build definition
@@ -297,10 +296,9 @@ jobs:
           GITHUB_SHA: ${{ github.sha }}
         run: |
           if [ -z "$SOURCE_DIGEST" ]; then
-            ref=$(echo ${SOURCE_DIGEST} | cut -d':' -f2)
-            echo "ref=$ref" >> $GITHUB_OUTPUT
+            echo "ref=${SOURCE_DIGEST}" >> $GITHUB_OUTPUT
           else
-            echo "ref=$GITHUB_SHA" >> $GITHUB_OUTPUT
+            echo "ref=sha1:$GITHUB_SHA" >> $GITHUB_OUTPUT
           fi
 
       - name: Run builder binary
