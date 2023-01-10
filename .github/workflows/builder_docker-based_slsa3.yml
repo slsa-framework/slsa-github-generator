@@ -23,6 +23,8 @@ env:
   # Builder.
   BUILDER_BINARY: slsa-builder-docker-linux-amd64 # Name of the binary in the release assets.
   BUILDER_DIR: internal/builders/docker # Source directory if we compile the builder.
+  # Outputs folder.
+  OUTPUT_FOLDER: outputs
 
 defaults:
   run:
@@ -171,7 +173,7 @@ jobs:
           allow-private-repository: ${{ inputs.private-repository }}
 
       - name: Upload builder
-        uses: actions/upload-artifact@83fd05a356d7e2593de66fc9913b3002723633cb # tag=v3.1.1
+        uses: actions/upload-artifact@83fd05a356d7e2593de66fc9913b3002723633cb # v3.1.1
         with:
           name: "${{ env.BUILDER_BINARY }}-${{ needs.rng.outputs.value }}"
           path: "${{ env.BUILDER_BINARY }}"
@@ -211,10 +213,10 @@ jobs:
           SOURCE_DIGEST: ${{ inputs.source-digest }}
           GITHUB_SHA: ${{ github.sha }}
         run: |
-          if [ -z "$SOURCE_DIGEST" ]; then 
+          if [ -z "$SOURCE_DIGEST" ]; then
             ref=$(echo ${SOURCE_DIGEST} | cut -d':' -f2)
             echo "ref=$ref" >> $GITHUB_OUTPUT
-          else 
+          else
             echo "ref=$GITHUB_SHA" >> $GITHUB_OUTPUT
           fi
 
@@ -245,18 +247,18 @@ jobs:
 
           # Note: this outputs information about resolved arguments, etc.
           # the values are trusted because the compiler is not invoked.
-          echo "$GITHUB_WORKSPACE/$BUILDER_BINARY" dry-run \
-            --build-config-path ${CONFIG_PATH} \
+          echo "${GITHUB_WORKSPACE}/${BUILDER_BINARY}" dry-run \
+            --build-config-path "${CONFIG_PATH}" \
             --build-definition-path build-definition.json \
-            --builder-image ${BUILDER_IMAGE}@${BUILDER_DIGEST} \
-            --git-commit-hash ${SOURCE_DIGEST} \
-            --source-repo git+https://github.com/${SOURCE_REPOSITORY}
-          "$GITHUB_WORKSPACE/$BUILDER_BINARY" dry-run \
-            --build-config-path ${CONFIG_PATH} \
+            --builder-image "${BUILDER_IMAGE}@${BUILDER_DIGEST}" \
+            --git-commit-hash "${SOURCE_DIGEST}" \
+            --source-repo "git+https://github.com/${SOURCE_REPOSITORY}"
+          "${GITHUB_WORKSPACE}/${BUILDER_BINARY}" dry-run \
+            --build-config-path "${CONFIG_PATH}" \
             --build-definition-path build-definition.json \
-            --builder-image ${BUILDER_IMAGE}@${BUILDER_DIGEST} \
-            --git-commit-hash ${SOURCE_DIGEST} \
-            --source-repo git+https://github.com/${SOURCE_REPOSITORY}
+            --builder-image "${BUILDER_IMAGE}@${BUILDER_DIGEST}" \
+            --git-commit-hash "${SOURCE_DIGEST}" \
+            --source-repo "git+https://github.com/${SOURCE_REPOSITORY}"
 
           echo "build-definition-name=build-definition.json" >> $GITHUB_OUTPUT
 
@@ -332,7 +334,7 @@ jobs:
     needs: [rng, detect-env, build, generate-build-definition, generate-builder]
     permissions:
       id-token: write # Needed to create an OIDC token for keyless signing.
-      contents: read
+      contents: read  # Needed to check out the repository.
       actions: read # Needed to read workflow info.
     outputs:
       provenance: ${{ steps.sign.outputs.output-name }}
@@ -388,10 +390,10 @@ jobs:
 
       - name: Upload unsigned intoto attestations file for pull request
         if: ${{ github.event_name == 'pull_request' }}
-        uses: actions/upload-artifact@83fd05a356d7e2593de66fc9913b3002723633cb # tag=v3.1.1
+        uses: actions/upload-artifact@83fd05a356d7e2593de66fc9913b3002723633cb # v3.1.1
         with:
-          name: "attestations-${{ needs.rng.outputs.value }}"
-          path: "attestations"
+          name: "${{ env.OUTPUT_FOLDER }}"
+          path: "attestations-${{ needs.rng.outputs.value }}"
           if-no-files-found: error
 
       ###################################################################
@@ -403,14 +405,13 @@ jobs:
         uses: ./__BUILDER_CHECKOUT_DIR__/.github/actions/sign-attestations
         with:
           attestations: "attestations-${{ needs.rng.outputs.value }}"
-          output-folder: "outputs"
+          output-folder: "${{ env.OUTPUT_FOLDER }}"
 
       - name: Upload the signed attestations
         id: upload
         if: ${{ github.event_name != 'pull_request' }}
-        uses: actions/upload-artifact@83fd05a356d7e2593de66fc9913b3002723633cb # tag=v3.1.1
+        uses: actions/upload-artifact@83fd05a356d7e2593de66fc9913b3002723633cb # v3.1.1
         with:
-          name: "outputs"
-          path: "outputs"
+          name: "${{ env.OUTPUT_FOLDER }}"
+          path: "${{ env.OUTPUT_FOLDER }}"
           if-no-files-found: error
-
