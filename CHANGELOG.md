@@ -2,6 +2,7 @@
 
 <!-- toc -->
 
+- [Next Release](#next-release)
 - [v1.5.0-rc.0](#v150-rc0)
   - [Summary of changes](#summary-of-changes)
     - [Go builder](#go-builder)
@@ -36,15 +37,15 @@
   - [New Contributors](#new-contributors-4)
   - [Full Changelog](#full-changelog-4)
 - [v1.2.1](#v121)
-- [What's Changed](#whats-changed-5)
-  - [Generic generator](#generic-generator-1)
-    - [buildType](#buildtype)
-    - [Provenance file names](#provenance-file-names)
-    - [Explicit opt-in for private repos](#explicit-opt-in-for-private-repos)
-  - [Go builder](#go-builder-1)
-    - [Support private repos](#support-private-repos)
-- [New Contributors](#new-contributors-5)
-- [Full Changelog](#full-changelog-5)
+  - [What's Changed](#whats-changed-5)
+    - [Generic generator](#generic-generator-1)
+      - [buildType](#buildtype)
+      - [Provenance file names](#provenance-file-names)
+      - [Explicit opt-in for private repos](#explicit-opt-in-for-private-repos)
+    - [Go builder](#go-builder-1)
+      - [Support private repos](#support-private-repos)
+  - [New Contributors](#new-contributors-5)
+  - [Full Changelog](#full-changelog-5)
 - [v1.2.0](#v120)
   - [What's Changed](#whats-changed-6)
     - [Generic generator](#generic-generator-2)
@@ -60,6 +61,10 @@
   - [Contributors](#contributors)
 
 <!-- tocstop -->
+
+# Next Release
+
+<!-- Information on the next release goes here -->
 
 # v1.5.0-rc.0
 
