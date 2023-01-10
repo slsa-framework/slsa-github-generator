@@ -20,11 +20,13 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"os"
-	"path/filepath"
+
+	"github.com/spf13/cobra"
 
 	"github.com/slsa-framework/slsa-github-generator/internal/builders/docker/pkg"
-	"github.com/spf13/cobra"
+	"github.com/slsa-framework/slsa-github-generator/internal/utils"
 )
 
 // DryRunCmd returns a new *cobra.Command that validates the input flags, and
@@ -37,14 +39,14 @@ func DryRunCmd(check func(error)) *cobra.Command {
 		Use:   "dry-run [FLAGS]",
 		Short: "Generates and stores a JSON-formatted BuildDefinition based on the input arguments.",
 		Run: func(cmd *cobra.Command, args []string) {
-			outPath, err := filepath.Abs(buildDefinitionPath)
+			w, err := utils.CreateNewFileUnderCurrentDirectory(buildDefinitionPath, os.O_WRONLY)
 			check(err)
 
 			config, err := pkg.NewDockerBuildConfig(io)
 			check(err)
 
 			bd := pkg.CreateBuildDefinition(config)
-			check(writeToFile(*bd, outPath))
+			check(writeToFile(*bd, w))
 		},
 	}
 
@@ -54,18 +56,6 @@ func DryRunCmd(check func(error)) *cobra.Command {
 		"Required - Path to store the generated BuildDefinition to.")
 
 	return cmd
-}
-
-func writeToFile[T any](obj T, path string) error {
-	bytes, err := json.Marshal(obj)
-	if err != nil {
-		return fmt.Errorf("marshaling the object failed: %v", err)
-	}
-
-	if err := os.WriteFile(path, bytes, 0o600); err != nil {
-		return fmt.Errorf("writing to file failed: %v", err)
-	}
-	return nil
 }
 
 // BuildCmd returns a new *cobra.Command that builds the artifacts using the
@@ -79,9 +69,7 @@ func BuildCmd(check func(error)) *cobra.Command {
 		Use:   "build [FLAGS]",
 		Short: "Builds the artifacts using the build config, source repo, and the builder image.",
 		Run: func(cmd *cobra.Command, args []string) {
-			// The BuildArtifacts function changes directory. Here we convert
-			// the output path `subjectsPath` to an absolute path.
-			outPath, err := filepath.Abs(subjectsPath)
+			w, err := utils.CreateNewFileUnderCurrentDirectory(subjectsPath, os.O_WRONLY)
 			check(err)
 			config, err := pkg.NewDockerBuildConfig(io)
 			check(err)
@@ -96,7 +84,7 @@ func BuildCmd(check func(error)) *cobra.Command {
 
 			artifacts, err := db.BuildArtifacts()
 			check(err)
-			check(writeToFile(artifacts, outPath))
+			check(writeToFile(artifacts, w))
 		},
 	}
 
@@ -107,4 +95,16 @@ func BuildCmd(check func(error)) *cobra.Command {
 		"Required - Path to store a JSON-encoded array of subjects of the generated artifacts.")
 
 	return cmd
+}
+
+func writeToFile[T any](obj T, w io.Writer) error {
+	bytes, err := json.Marshal(obj)
+	if err != nil {
+		return fmt.Errorf("marshaling the object failed: %w", err)
+	}
+
+	if _, err := w.Write(bytes); err != nil {
+		return fmt.Errorf("writing to file failed: %w", err)
+	}
+	return nil
 }

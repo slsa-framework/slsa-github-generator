@@ -20,7 +20,7 @@ go run *.go  dry-run \
   --build-config-path testdata/config.toml \
   --build-definition-path bd.json \
   --builder-image bash@sha256:9e2ba52487d \
-  --git-commit-hash sha1:9b5f98310dbbad675834474fa68c37d880687cb9 \
+  --git-commit-digest sha1:9b5f98310dbbad675834474fa68c37d880687cb9 \
   --source-repo git+https://github.com/project-oak/transparent-release
 ```
 
@@ -38,7 +38,7 @@ The following is an example:
 go run *.go build \
   --build-config-path internal/builders/docker/testdata/config.toml \
   --builder-image bash@sha256:9e2ba52487d945504d250de186cb4fe2e3ba023ed2921dd6ac8b97ed43e76af9 \
-  --git-commit-hash sha1:cf5804b5c6f1a4b2a0b03401a487dfdfbe3a5f00 \
+  --git-commit-digest sha1:cf5804b5c6f1a4b2a0b03401a487dfdfbe3a5f00 \
   --source-repo git+https://github.com/slsa-framework/slsa-github-generator \
   --subjects-path subjects.json \
   --force-checkout
