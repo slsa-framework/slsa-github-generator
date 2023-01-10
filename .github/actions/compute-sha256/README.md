@@ -4,4 +4,4 @@
 - Install node
 - Install typescript
 - `npm ci`
-- `npm run all` 
+- `npm run all`

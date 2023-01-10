@@ -16,6 +16,7 @@ package pkg
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"testing"
 
@@ -24,18 +25,13 @@ import (
 
 func Test_BuildDefinition(t *testing.T) {
 	path := "../testdata/build-definition.json"
-	bdBytes, err := os.ReadFile(path)
+	got, err := loadBuildDefinitionFromFile(path)
 	if err != nil {
-		t.Fatalf("Could not read the JSON file in %q:\n%v", path, err)
-	}
-
-	var got BuildDefinition
-	if err := json.Unmarshal(bdBytes, &got); err != nil {
-		t.Fatalf("Could not unmarshal the JSON file in %q as a BuildDefinition:\n%v", path, err)
+		t.Fatalf("%v", err)
 	}
 
 	wantSource := ArtifactReference{
-		URI:    "git+https://github.com/https://github.com/project-oak/transparent-release",
+		URI:    "git+https://github.com/project-oak/transparent-release",
 		Digest: map[string]string{"sha1": "9b5f98310dbbad675834474fa68c37d880687cb9"},
 	}
 
@@ -44,7 +40,7 @@ func Test_BuildDefinition(t *testing.T) {
 		Digest: map[string]string{"sha256": "9e2ba52487d945504d250de186cb4fe2e3ba023ed2921dd6ac8b97ed43e76af9"},
 	}
 
-	want := BuildDefinition{
+	want := &BuildDefinition{
 		BuildType: "https://slsa.dev/container-based-build/v0.1?draft",
 		ExternalParameters: ParameterCollection{
 			Artifacts: map[string]ArtifactReference{"source": wantSource, "builderImage": wantBuilderImage},
@@ -52,7 +48,20 @@ func Test_BuildDefinition(t *testing.T) {
 		},
 	}
 
-	if !cmp.Equal(got, want) {
-		t.Errorf(cmp.Diff(got, want))
+	if diff := cmp.Diff(got, want); diff != "" {
+		t.Errorf(diff)
 	}
+}
+
+func loadBuildDefinitionFromFile(path string) (*BuildDefinition, error) {
+	bdBytes, err := os.ReadFile(path)
+	if err != nil {
+		return nil, fmt.Errorf("could not read the JSON file in %q: %w", path, err)
+	}
+
+	var bd BuildDefinition
+	if err := json.Unmarshal(bdBytes, &bd); err != nil {
+		return nil, fmt.Errorf("could not unmarshal the JSON file in %q as a BuildDefinition: %w", path, err)
+	}
+	return &bd, nil
 }

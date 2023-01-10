@@ -27,44 +27,25 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// InputOptions are the common options for the dry run and build command.
-type InputOptions struct {
-	BuildConfigPath string
-	SourceRepo      string
-	GitCommitHash   string
-	BuilderImage    string
-}
-
-// AddFlags adds input flags to the given command.
-func (o *InputOptions) AddFlags(cmd *cobra.Command) {
-	cmd.Flags().StringVarP(&o.BuildConfigPath, "build-config-path", "c", "", "Required - Path to a toml file containing the build configs.")
-
-	cmd.Flags().StringVarP(&o.SourceRepo, "source-repo", "s", "",
-		"Required - URL of the source repo.")
-
-	cmd.Flags().StringVarP(&o.GitCommitHash, "git-commit-hash", "g", "",
-		"Required - SHA1 Git commit digest of the revision of the source code to build the artefact from.")
-
-	cmd.Flags().StringVarP(&o.BuilderImage, "builder-image", "b", "",
-		"Required - URL indicating the Docker builder image, including a URI and image digest.")
-}
-
-// DryRunCmd validates the input flags, generates a BuildDefinition from them.
+// DryRunCmd returns a new *cobra.Command that validates the input flags, and
+// generates a BuildDefinition from them, or terminates with an error.
 func DryRunCmd(check func(error)) *cobra.Command {
-	o := &InputOptions{}
+	io := &pkg.InputOptions{}
 	var buildDefinitionPath string
 
 	cmd := &cobra.Command{
 		Use:   "dry-run [FLAGS]",
 		Short: "Generates and stores a JSON-formatted BuildDefinition based on the input arguments.",
 		Run: func(cmd *cobra.Command, args []string) {
-			// TODO(#1191): Parse the input arguments into an instance of BuildDefinition.
-			bd := &pkg.BuildDefinition{}
+			config, err := pkg.NewDockerBuildConfig(io)
+			check(err)
+
+			bd := pkg.CreateBuildDefinition(config)
 			check(writeBuildDefinitionToFile(*bd, buildDefinitionPath))
 		},
 	}
 
-	o.AddFlags(cmd)
+	io.AddFlags(cmd)
 
 	cmd.Flags().StringVarP(&buildDefinitionPath, "build-definition-path", "o", "",
 		"Required - Path to store the generated BuildDefinition to.")
@@ -84,22 +65,38 @@ func writeBuildDefinitionToFile(bd pkg.BuildDefinition, path string) error {
 	return nil
 }
 
-// BuildCmd builds the artifacts using the input flags, and prints out their digests, or exists with an error.
+// BuildCmd returns a new *cobra.Command that builds the artifacts using the
+// input flags, and prints out their digests, or terminates with an error.
 func BuildCmd(check func(error)) *cobra.Command {
-	o := &InputOptions{}
+	io := &pkg.InputOptions{}
+	var forceCheckout bool
 
 	cmd := &cobra.Command{
 		Use:   "build [FLAGS]",
 		Short: "Builds the artifacts using the build config, source repo, and the builder image.",
 		Run: func(cmd *cobra.Command, args []string) {
-			// TODO(#1191): Set up build state and build the artifact.
-			artifacts := "To be implemented"
+			config, err := pkg.NewDockerBuildConfig(io)
+			check(err)
+
+			builder, err := pkg.NewBuilderWithGitFetcher(*config, forceCheckout)
+			check(err)
+
+			db, err := builder.SetUpBuildState()
+			// Remove any temporary files that were generated during the setup.
+			defer db.RepoInfo.Cleanup()
+			check(err)
+
+			artifacts, err := db.BuildArtifact()
+			check(err)
+
 			log.Printf("Generated artifacts are: %v\n", artifacts)
-			// TODO(#1191): Write subjects to file.
+			// TODO(#1191): Write subjects to a file.
 		},
 	}
 
-	o.AddFlags(cmd)
+	io.AddFlags(cmd)
+	cmd.Flags().BoolVarP(&forceCheckout, "force-checkout", "f", false,
+		"Optional - Forces checking out the source code from the given Git repo.")
 
 	return cmd
 }

@@ -49,7 +49,11 @@ func Test_generateCmd_default_predicate(t *testing.T) {
 	if err := os.Chdir(dir); err != nil {
 		t.Errorf("unexpected failure: %v", err)
 	}
-	defer os.Chdir(currentDir)
+	defer func() {
+		if err := os.Chdir(currentDir); err != nil {
+			t.Errorf("unexpected failure: %v", err)
+		}
+	}()
 
 	c := generateCmd(&slsa.NilClientProvider{}, checkTest(t))
 	c.SetOut(new(bytes.Buffer))
@@ -79,7 +83,11 @@ func Test_generateCmd_custom_predicate(t *testing.T) {
 	if err := os.Chdir(dir); err != nil {
 		t.Errorf("unexpected failure: %v", err)
 	}
-	defer os.Chdir(currentDir)
+	defer func() {
+		if err := os.Chdir(currentDir); err != nil {
+			t.Errorf("unexpected failure: %v", err)
+		}
+	}()
 
 	c := generateCmd(&slsa.NilClientProvider{}, checkTest(t))
 	c.SetOut(new(bytes.Buffer))
@@ -110,7 +118,11 @@ func Test_generateCmd_invalid_path(t *testing.T) {
 	if err := os.Chdir(dir); err != nil {
 		t.Errorf("unexpected failure: %v", err)
 	}
-	defer os.Chdir(currentDir)
+	defer func() {
+		if err := os.Chdir(currentDir); err != nil {
+			t.Errorf("unexpected failure: %v", err)
+		}
+	}()
 
 	// A custom check function that checks the error type is the expected error type.
 	check := func(err error) {
