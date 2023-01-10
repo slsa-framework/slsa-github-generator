@@ -21,17 +21,20 @@ import (
 )
 
 func Test_LoadBuildConfigFromFile(t *testing.T) {
-	got, err := loadBuildConfigFromFile("../testdata/config.toml")
+	dbc := DockerBuildConfig{
+		BuildConfigPath: "../testdata/config.toml",
+	}
+	got, err := dbc.LoadBuildConfigFromFile()
 	if err != nil {
 		t.Fatalf("couldn't load config file: %v", err)
 	}
 
-	want := BuildConfig{
+	want := &BuildConfig{
 		Command:      []string{"cp", "internal/builders/docker/testdata/config.toml", "config.toml"},
 		ArtifactPath: "config.toml",
 	}
 
-	if diff := cmp.Diff(*got, want); diff != "" {
+	if diff := cmp.Diff(got, want); diff != "" {
 		t.Errorf(diff)
 	}
 }
@@ -48,14 +51,14 @@ func Test_NewDockerBuildConfig(t *testing.T) {
 		t.Fatalf("invalid inputs: %v", err)
 	}
 
-	want := DockerBuildConfig{
+	want := &DockerBuildConfig{
 		SourceRepo: io.SourceRepo,
 		SourceDigest: Digest{
 			Alg:   "sha1",
 			Value: "9b5f98310dbbad675834474fa68c37d880687cb9",
 		},
 		BuilderImage: DockerImage{
-			URI: "bash",
+			Name: "bash",
 			Digest: Digest{
 				Alg:   "sha256",
 				Value: "9e2ba52487d945504d250de186cb4fe2e3ba023ed2921dd6ac8b97ed43e76af9",
@@ -64,7 +67,7 @@ func Test_NewDockerBuildConfig(t *testing.T) {
 		BuildConfigPath: io.BuildConfigPath,
 	}
 
-	if diff := cmp.Diff(*got, want); diff != "" {
+	if diff := cmp.Diff(got, want); diff != "" {
 		t.Errorf(diff)
 	}
 }

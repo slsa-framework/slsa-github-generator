@@ -20,6 +20,12 @@ function resolvePathInput(input: string, wd: string): string {
 
 async function run(): Promise<void> {
   try {
+    /* Test locally:
+        $ env INPUT_ATTESTATIONS="testdata/attestations" \
+        INPUT_OUTPUT-FOLDER="outputs" \
+        GITHUB_WORKSPACE="$(pwd)" \
+        nodejs ./dist/index.js
+    */
     const wd = process.env.GITHUB_WORKSPACE;
     if (!wd) {
       core.setFailed("No repository detected.");
@@ -38,10 +44,7 @@ async function run(): Promise<void> {
 
     const files = await fs.promises.readdir(safeAttestationFolder);
     for (const file of files) {
-      const fpath = resolvePathInput(
-        path.join(safeAttestationFolder, file),
-        wd
-      );
+      const fpath = resolvePathInput(path.join(attestationFolder, file), wd);
       const stat = await fs.promises.stat(fpath);
       if (stat.isFile()) {
         core.debug(`Signing ${fpath}...`);
@@ -55,8 +58,7 @@ async function run(): Promise<void> {
         // We detect path traversal for safeOutputFolder, so this should be safe.
         const outputPath = path.join(
           safeOutputFolder,
-          path.basename(file),
-          ".sigstore"
+          `${path.basename(fpath)}.sigstore`
         );
         fs.writeFileSync(outputPath, bundleStr, {
           flag: "ax",
