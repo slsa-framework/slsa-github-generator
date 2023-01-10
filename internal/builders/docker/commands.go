@@ -27,7 +27,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// DryRunCmd validates the input flags, generates a BuildDefinition from them.
+// DryRunCmd returns a new *cobra.Command that validates the input flags, and
+// generates a BuildDefinition from them, or terminates with an error.
 func DryRunCmd(check func(error)) *cobra.Command {
 	io := &pkg.InputOptions{}
 	var buildDefinitionPath string
@@ -38,10 +39,8 @@ func DryRunCmd(check func(error)) *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			config, err := pkg.NewDockerBuildConfig(io)
 			check(err)
-			log.Printf("The config is: %v\n", config)
 
-			// TODO(#1191): Create an instance of BuildDefinition from config.
-			bd := &pkg.BuildDefinition{}
+			bd := pkg.CreateBuildDefinition(config)
 			check(writeBuildDefinitionToFile(*bd, buildDefinitionPath))
 		},
 	}
@@ -66,9 +65,11 @@ func writeBuildDefinitionToFile(bd pkg.BuildDefinition, path string) error {
 	return nil
 }
 
-// BuildCmd builds the artifacts using the input flags, and prints out their digests, or exists with an error.
+// BuildCmd returns a new *cobra.Command that builds the artifacts using the
+// input flags, and prints out their digests, or terminates with an error.
 func BuildCmd(check func(error)) *cobra.Command {
 	io := &pkg.InputOptions{}
+	var forceCheckout bool
 
 	cmd := &cobra.Command{
 		Use:   "build [FLAGS]",
@@ -76,16 +77,26 @@ func BuildCmd(check func(error)) *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			config, err := pkg.NewDockerBuildConfig(io)
 			check(err)
-			log.Printf("The config is: %v\n", config)
 
-			// TODO(#1191): Set up build state using config, and build the artifact.
-			artifacts := "To be implemented"
+			builder, err := pkg.NewBuilderWithGitFetcher(*config, forceCheckout)
+			check(err)
+
+			db, err := builder.SetUpBuildState()
+			// Remove any temporary files that were generated during the setup.
+			defer db.RepoInfo.Cleanup()
+			check(err)
+
+			artifacts, err := db.BuildArtifact()
+			check(err)
+
 			log.Printf("Generated artifacts are: %v\n", artifacts)
-			// TODO(#1191): Write subjects to file.
+			// TODO(#1191): Write subjects to a file.
 		},
 	}
 
 	io.AddFlags(cmd)
+	cmd.Flags().BoolVarP(&forceCheckout, "force-checkout", "f", false,
+		"Optional - Forces checking out the source code from the given Git repo.")
 
 	return cmd
 }
