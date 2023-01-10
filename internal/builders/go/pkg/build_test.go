@@ -704,7 +704,7 @@ func Test_generateEnvVariables(t *testing.T) {
 			}
 			b := GoBuildNew("go compiler", c)
 
-			flags, err := b.generateEnvVariables()
+			flags, err := b.generateCommandEnvVariables()
 
 			if !errCmp(err, tt.expected.err) {
 				t.Errorf(cmp.Diff(err, tt.expected.err))
@@ -712,8 +712,7 @@ func Test_generateEnvVariables(t *testing.T) {
 			if err != nil {
 				return
 			}
-			// Note: generated env variables contain the process's env variables too.
-			expectedFlags := append(os.Environ(), tt.expected.flags...)
+			expectedFlags := tt.expected.flags
 			sorted := cmpopts.SortSlices(func(a, b string) bool { return a < b })
 			if !cmp.Equal(flags, expectedFlags, sorted) {
 				t.Errorf(cmp.Diff(flags, expectedFlags))

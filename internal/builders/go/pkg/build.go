@@ -89,7 +89,7 @@ func (b *GoBuild) Run(dry bool) error {
 	}
 
 	// Generate env variables.
-	envs, err := b.generateEnvVariables()
+	envs, err := b.generateCommandEnvVariables()
 	if err != nil {
 		return err
 	}
@@ -259,19 +259,6 @@ func (b *GoBuild) generateCommandEnvVariables() ([]string, error) {
 
 		env = append(env, fmt.Sprintf("%s=%s", k, v))
 	}
-
-	return env, nil
-}
-
-func (b *GoBuild) generateEnvVariables() ([]string, error) {
-	env := os.Environ()
-
-	cenv, err := b.generateCommandEnvVariables()
-	if err != nil {
-		return cenv, err
-	}
-
-	env = append(env, cenv...)
 
 	return env, nil
 }
