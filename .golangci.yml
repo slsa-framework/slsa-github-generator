@@ -4,11 +4,11 @@ run:
   deadline: 5m
 issues:
   # TODO(github.com/slsa-framework/slsa-github-generator/issues/450): revive `package-comments` and `exported` rules.
-  # include:
-  #   - EXC0012
-  #   - EXC0013
-  #   - EXC0014
-  #   - EXC0015
+  include:
+    - EXC0012
+    - EXC0013
+    - EXC0014
+  # - EXC0015
   # Maximum issues count per one linter.
   # Set to 0 to disable.
   # Default: 50
@@ -32,8 +32,7 @@ linters:
     # TODO(github.com/slsa-framework/slsa-github-generator/issues/450): enable errorlint
     # - errorlint
     - exhaustive
-    # TODO(github.com/slsa-framework/slsa-github-generator/issues/450): enable exportloopref
-    # - exportloopref
+    - exportloopref
     # TODO(github.com/slsa-framework/slsa-github-generator/issues/450): enable gci
     # - gci
     - gochecknoinits
@@ -55,11 +54,9 @@ linters:
     # TODO(github.com/slsa-framework/slsa-github-generator/issues/450): enable gosec
     # - gosec
     - gosimple
-    # TODO(github.com/slsa-framework/slsa-github-generator/issues/450): enable govet
-    # - govet
+    - govet
     - ineffassign
-    # TODO(github.com/slsa-framework/slsa-github-generator/issues/450): enable lll
-    # - lll
+    - lll
     - makezero
     - misspell
     - nakedret

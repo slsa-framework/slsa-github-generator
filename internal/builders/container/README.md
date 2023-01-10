@@ -156,14 +156,14 @@ jobs:
 At present, the generator **MUST** be referenced
 by a tag of the form `@vX.Y.Z`, because the build will fail if you reference it via a shorter tag like `@vX.Y` or `@vX` or if you reference it by a hash.
 
-For more information about this design decision and how to configure renovatebot,see the main repository [README.md](../../../README.md).
+For more information about this design decision and how to configure renovatebot, see the main repository [README.md](../../../README.md).
 
 ### Private Repositories
 
 Private repositories are supported with some caveats. Currently all builds
 generate and post a new entry in the public
 [Rekor](https://github.com/sigstore/rekor) API server instance at
-rekor.sigstore.dev. This entry includes the repository name. This will cause the
+https://rekor.sigstore.dev/. This entry includes the repository name. This will cause the
 private repository name to leak and be discoverable via the public Rekor API
 server.
 
@@ -206,16 +206,17 @@ Inputs:
 | -------------------- | -------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `image`              | yes      |         | The OCI image name. This must not include a tag or digest.                                                                                                                                                                      |
 | `digest`             | yes      |         | The OCI image digest. The image digest of the form '<algorithm>:<digest>' (e.g. 'sha256:abcdef...')                                                                                                                             |
-| `registry-username`  | yes      |         | Username to log into the container registry.                                                                                                                                                                                    |
+| `registry-username`  | no       |         | Username to log in the container registry. Either `registry-username` input or `registry-username` secret is required.                                                                                                          |
 | `compile-generator`  | false    | false   | Whether to build the generator from source. This increases build time by ~2m.                                                                                                                                                   |
 | `private-repository` | no       | false   | Set to true to opt-in to posting to the public transparency log. Will generate an error if false for private repositories. This input has no effect for public repositories. See [Private Repositories](#private-repositories). |
 | `continue-on-error`  | no       | false   | Set to true to ignore errors. This option is useful if you won't want a failure to fail your entire workflow.                                                                                                                   |
 
 Secrets:
 
-| Name                | Required | Description                                |
-| ------------------- | -------- | ------------------------------------------ |
-| `registry-password` | yes      | Password to log in the container registry. |
+| Name                | Required | Description                                                                                                            |
+| ------------------- | -------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `registry-username` | no       | Username to log in the container registry. Either `registry-username` input or `registry-username` secret is required. |
+| `registry-password` | yes      | Password to log in the container registry.                                                                             |
 
 ### Workflow Outputs
 
@@ -236,7 +237,7 @@ The project generates SLSA provenance with the following values.
 
 ### Provenance Example
 
-The following is an example of the generated proveanance. Provenance is
+The following is an example of the generated provenance. Provenance is
 generated as an [in-toto](https://in-toto.io/) statement with a SLSA predicate.
 
 ```json
@@ -685,7 +686,7 @@ check-slsa-attestations:
 
 ### `packages: write` permission required even if not using ghcr.io
 
-Due to limitations in how GitHub actions manages permessions on ephemeral tokens
+Due to limitations in how GitHub actions manages permissions on ephemeral tokens
 in reusable workflows, and how cosign uses available credentials, the container
 workflow always requires `packages: write`.
 

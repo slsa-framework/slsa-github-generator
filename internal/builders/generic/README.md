@@ -178,14 +178,14 @@ jobs:
 At present, the generator **MUST** be referenced
 by a tag of the form `@vX.Y.Z`, because the build will fail if you reference it via a shorter tag like `@vX.Y` or `@vX` or if you reference it by a hash.
 
-For more information about this design decision and how to configure renovatebot,see the main repository [README.md](../../../README.md).
+For more information about this design decision and how to configure renovatebot, see the main repository [README.md](../../../README.md).
 
 ### Private Repositories
 
 Private repositories are supported with some caveats. Currently all builds
 generate and post a new entry in the public
 [Rekor](https://github.com/sigstore/rekor) API server instance at
-rekor.sigstore.dev. This entry includes the repository name. This will cause the
+https://rekor.sigstore.dev/. This entry includes the repository name. This will cause the
 private repository name to leak and be discoverable via the public Rekor API
 server.
 
@@ -547,7 +547,7 @@ jobs:
       hashes: ${{ steps.hash.outputs.hashes }}
 ```
 
-2. Add an `id: build` field to your maven build step; and save the location of the maven output files for easier reference:
+2. Add an `id: build` field to your maven build step and save the location of the maven output files for easier reference:
 
 ```yaml
     steps:
@@ -658,7 +658,7 @@ jobs:
           ./gradlew clean build
 ```
 
-3. Add a step to generate the provenance subjects as shown below. Update the sha256 sum arguments to include all binaries that you generate provenance for. (This build assumes build artifacts are saved in ./build/libs).
+3. Add a step to generate the provenance subjects as shown below. Update the sha256 sum arguments to include all binaries that you generate provenance for. (This build assumes build artifacts are saved in `./build/libs`).
 
 ```yaml
 - name: Generate subject
@@ -856,7 +856,6 @@ jobs:
           set -euo pipefail
 
           echo "hashes=$(sha256sum target_binary | base64 -w0)" >> "$GITHUB_OUTPUT"
-
 ```
 
 3. Call the generic workflow to generate provenance by declaring the job below:
@@ -980,7 +979,9 @@ provenance:
     base64-subjects: "${{ needs.build.outputs.hashes }}"
     upload-assets: true # Optional: Upload to a new release
 ```
+
 All in all, it will look as the following:
+
 ```yaml
 jobs:
   build:
@@ -1037,8 +1038,8 @@ Regardless of your choice, there's unfortunately a bit of necessary boilerplate.
 ### A single provenance attestation for all artifacts
 
 1. As with the examples above, the first thing to do is define the build job,
-with its outputs and now its matrix strategy.  
-  
+with its outputs and its matrix strategy.
+
 GitHub currently doesn't support different outputs for matrix builds. We must
 therefore declare a different hash output for each iteration. A follow-up job
 will collate all the hashes into a single string.
