@@ -10,6 +10,7 @@ This is a document to describe the release process for the slsa-github-generator
 
 - [Prerequisites](#prerequisites)
 - [Release candidate](#release-candidate)
+  - [Update CHANGELOG](#update-changelog)
   - [RC tagging](#rc-tagging)
   - [Verify RC version references](#verify-rc-version-references)
   - [Adversarial verifier tests](#adversarial-verifier-tests)
@@ -23,6 +24,7 @@ This is a document to describe the release process for the slsa-github-generator
   - [Finalize release candidate.](#finalize-release-candidate)
   - [Code Freeze](#code-freeze)
 - [Finalize release](#finalize-release)
+  - [Update CHANGELOG](#update-changelog-1)
   - [Release tagging](#release-tagging)
   - [Verify final version references](#verify-final-version-references)
   - [Final adversarial tests](#final-adversarial-tests)
@@ -61,6 +63,10 @@ export GH_TOKEN
 The first step in creating a release is to create a release candidate. Release candidates exercise the release and testing process.
 
 If any tests fail for a release candidate you can address the issues and create a new release candidate after incrementing the release candidate number.
+
+### Update CHANGELOG
+
+Finalize the [CHANGELOG](./CHANGELOG.md) entry for the release candidate noting changes since the last release or release candidate.
 
 ### RC tagging
 
@@ -337,6 +343,10 @@ Update your `BUILDER_TAG` environment variable to the final release tag.
 ```shell
 export BUILDER_TAG="vX.Y.Z"
 ```
+
+### Update CHANGELOG
+
+Finalize the [CHANGELOG](./CHANGELOG.md) entry for the release candidate noting changes since the last major release (not including release candidates).
 
 ### Release tagging
 
