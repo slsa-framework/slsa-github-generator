@@ -64,7 +64,7 @@
 
 # Next Release
 
-<!-- Information on the next release goes here -->
+Information on the next release will be added here.
 
 # v1.5.0-rc.0
 
