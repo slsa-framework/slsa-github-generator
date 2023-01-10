@@ -2,7 +2,7 @@
 
 <!-- toc -->
 
-- [v1.5.0](#v150)
+- [v1.5.0-rc.0](#v150-rc0)
   - [Summary of changes](#summary-of-changes)
     - [Go builder](#go-builder)
       - [New Features](#new-features)
@@ -14,7 +14,7 @@
 
 <!-- tocstop -->
 
-# v1.5.0
+# v1.5.0-rc.0
 
 ## Summary of changes
 
