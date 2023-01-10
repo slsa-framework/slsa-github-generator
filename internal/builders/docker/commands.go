@@ -78,9 +78,9 @@ func BuildCmd(check func(error)) *cobra.Command {
 			check(err)
 
 			db, err := builder.SetUpBuildState()
+			check(err)
 			// Remove any temporary files that were generated during the setup.
 			defer db.RepoInfo.Cleanup()
-			check(err)
 
 			artifacts, err := db.BuildArtifacts()
 			check(err)
