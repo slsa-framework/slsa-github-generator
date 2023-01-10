@@ -351,8 +351,10 @@ func (c *GitClient) fetchSourcesFromGitRepo() error {
 // Clones a Git repo from the URI in this GitClient, up to the depth given in
 // this GitClient. If depth is 0 or negative, the entire repo is cloned.
 func (c *GitClient) cloneGitRepo() error {
+	//#nosec G204 -- Input from user config file.
 	cmd := exec.Command("git", "clone", *c.sourceRepo)
 	if c.depth > 0 {
+		//#nosec G204 -- Input from user config file.
 		cmd = exec.Command("git", "clone", "--depth", fmt.Sprintf("%d", c.depth), *c.sourceRepo)
 	}
 	log.Printf("Cloning the repo from %s...", *c.sourceRepo)
@@ -387,6 +389,7 @@ func (c *GitClient) cloneGitRepo() error {
 }
 
 func (c *GitClient) checkoutGitCommit() error {
+	//#nosec G204 -- Input from user config file.
 	cmd := exec.Command("git", "checkout", c.sourceDigest.Value)
 
 	stdout, err := cmd.StdoutPipe()
