@@ -40,17 +40,18 @@ This is a document to describe the release process for the slsa-github-generator
 Set up env variables:
 
 ```shell
-export GH_TOKEN=<PAT-token>
 export GITHUB_USERNAME="laurentsimon"
 # This is the existing slsa-verifier version used by the builder. (https://github.com/slsa-framework/slsa-github-generator/blob/main/.github/actions/generate-builder/action.yml#L55)
-export VERIFIER_TAG="v1.3.2"
+export VERIFIER_TAG="v2.0.1"
 export VERIFIER_REPOSITORY="$GITHUB_USERNAME/slsa-verifier"
 # Release tag of the builder we want to release. Release Candidates end with "-rc.#"
-export BUILDER_TAG="v1.2.2-rc.0"
+export BUILDER_TAG="v1.5.0-rc.0"
 # Branch name for our test
 export BUILDER_REF="release/bad-verifier-$BUILDER_TAG"
 export BUILDER_REPOSITORY="$GITHUB_USERNAME/slsa-github-generator"
 export GH=/path/to/gh
+GH_TOKEN=$(${GH} auth token)
+export GH_TOKEN
 ```
 
 ## Release candidate
