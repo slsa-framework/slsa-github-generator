@@ -401,6 +401,7 @@ jobs:
       ###################################################################
 
       - name: Sign attestations
+        if: ${{ github.event_name != 'pull_request' }}
         id: sign
         uses: ./__BUILDER_CHECKOUT_DIR__/.github/actions/sign-attestations
         with:
