@@ -23,14 +23,6 @@ interface Builder {
   builderDependencies?: ArtifactReference[];
 }
 
-interface Environment {
-  [key: string]: Object | undefined;
-}
-
-interface WorkflowParameters {
-  eventInputs?: Object;
-}
-
 interface DigestSet {
   [key: string]: string;
 }
@@ -41,20 +33,15 @@ interface Metadata {
   finishedOn?: Date;
 }
 
-
 interface ParameterValue_Artifact {
-  artifact: ArtifactReference
+  artifact: ArtifactReference;
 }
 
-interface ParameterValue_String  {
-  value: string | undefined
+interface ParameterValue_String {
+  value: string | undefined;
 }
 
 type ParameterValue = ParameterValue_Artifact | ParameterValue_String;
-
-interface ExternalParameters {
-    [key: string]: ParameterValue;
-}
 
 interface ArtifactReference {
   uri: string;
@@ -69,9 +56,9 @@ interface BuildDefinition {
   buildType: string;
 
   // external
-  externalParameters?: { [key: string]: ParameterValue; };
+  externalParameters: { [key: string]: ParameterValue };
 
-  systemParameters?: { [key: string]: ParameterValue; }
+  systemParameters?: { [key: string]: ParameterValue };
 
   resolvedDependencies?: ArtifactReference[];
 }
@@ -85,9 +72,9 @@ interface RunDetails {
 }
 
 interface SLSAv1Predicate {
-  buildDefinition: BuildDefinition
+  buildDefinition: BuildDefinition;
 
-  runDetails: RunDetails
+  runDetails: RunDetails;
 }
 
 export interface rawTokenInterface {
@@ -132,7 +119,8 @@ export interface githubObj {
 
 export function createPredicate(
   rawTokenObj: rawTokenInterface,
-  toolURI: string
+  toolURI: string,
+  workflow_name: string
 ): SLSAv1Predicate {
   const { env } = process;
 
@@ -145,12 +133,9 @@ export function createPredicate(
     buildDefinition: {
       buildType: DELEGATOR_BUILD_TYPE,
       externalParameters: {
-        // The invocation parameters belong here and are the GitHub
-        // workflow inputs.
-
         // This is the v0.2 entryPoint.
         // TODO: Get path via GitHub API via runID and repository
-        workflow: { value: env.GITHUB_WORKFLOW },
+        workflow: { value: workflow_name },
         // We use source here because the source contained the source
         // repository and the build configuration.
         source: {
@@ -158,54 +143,57 @@ export function createPredicate(
             uri: callerRepo,
             digest: {
               sha1: env.GITHUB_SHA || "",
-            }
-          }
-        }
+            },
+          },
+        },
       },
       systemParameters: {
         // environment
+        // TODO: Add GitHub event payload.
         GITHUB_ACTOR_ID: { value: env.GITHUB_ACTOR_ID },
-        GITHUB_EVENT_NAME: { value: env.GITHUB_EVENT_NAME},
-        GITHUB_JOB: {value:env.GITHUB_JOB},
-        GITHUB_REF: {value:env.GITHUB_REF},
-        GITHUB_REF_TYPE: {value:env.GITHUB_REF_TYPE},
-        GITHUB_REPOSITORY: {value:env.GITHUB_REPOSITORY},
-        GITHUB_REPOSITORY_ID: {value:env.GITHUB_REPOSITORY_ID},
-        GITHUB_REPOSITORY_OWNER_ID: {value:env.GITHUB_REPOSITORY_OWNER_ID},
-        GITHUB_RUN_ATTEMPT: {value:env.GITHUB_RUN_ATTEMPT},
-        GITHUB_RUN_ID: {value:env.GITHUB_RUN_ID},
-        GITHUB_RUN_NUMBER: {value:env.GITHUB_RUN_NUMBER},
-        GITHUB_SHA: {value:env.GITHUB_SHA},
-        GITHUB_WORKFLOW: {value:env.GITHUB_WORKFLOW},
-        GITHUB_WORKFLOW_REF: {value:env.GITHUB_WORKFLOW_REF},
-        GITHUB_WORKFLOW_SHA:{value: env.GITHUB_WORKFLOW_SHA},
-        IMAGE_OS: {value: env.ImageOS},
-        IMAGE_VERSION: {value: env.ImageVersion},
-        RUNNER_ARCH: {value: env.RUNNER_ARCH},
-        RUNNER_NAME: {value: env.RUNNER_NAME},
-        RUNNER_OS: {value: env.RUNNER_OS}
-      }
+        GITHUB_EVENT_NAME: { value: env.GITHUB_EVENT_NAME },
+        GITHUB_JOB: { value: env.GITHUB_JOB },
+        GITHUB_REF: { value: env.GITHUB_REF },
+        GITHUB_REF_TYPE: { value: env.GITHUB_REF_TYPE },
+        GITHUB_REPOSITORY: { value: env.GITHUB_REPOSITORY },
+        GITHUB_REPOSITORY_ID: { value: env.GITHUB_REPOSITORY_ID },
+        GITHUB_REPOSITORY_OWNER_ID: { value: env.GITHUB_REPOSITORY_OWNER_ID },
+        GITHUB_RUN_ATTEMPT: { value: env.GITHUB_RUN_ATTEMPT },
+        GITHUB_RUN_ID: { value: env.GITHUB_RUN_ID },
+        GITHUB_RUN_NUMBER: { value: env.GITHUB_RUN_NUMBER },
+        GITHUB_SHA: { value: env.GITHUB_SHA },
+        GITHUB_WORKFLOW: { value: env.GITHUB_WORKFLOW },
+        GITHUB_WORKFLOW_REF: { value: env.GITHUB_WORKFLOW_REF },
+        GITHUB_WORKFLOW_SHA: { value: env.GITHUB_WORKFLOW_SHA },
+        IMAGE_OS: { value: env.ImageOS },
+        IMAGE_VERSION: { value: env.ImageVersion },
+        RUNNER_ARCH: { value: env.RUNNER_ARCH },
+        RUNNER_NAME: { value: env.RUNNER_NAME },
+        RUNNER_OS: { value: env.RUNNER_OS },
+      },
     },
     runDetails: {
-      // TODO: Where do the raw token inputs go?
-      // rawTokenObj.tool.inputs
+      // TODO: Where do the raw token inputs (the tool inputs) go?
       builder: {
         id: toolURI,
       },
       metadata: {
-        invocationId: env.GITHUB_RUN_ID
-      }
-    }
-  }
+        invocationId: env.GITHUB_RUN_ID,
+      },
+    },
+  };
 
   if (env.GITHUB_EVENT_PATH !== undefined) {
     const ghEvent = JSON.parse(
       fs.readFileSync(env.GITHUB_EVENT_PATH).toString()
     );
-    workflowInputs.eventInputs = ghEvent.inputs;
-    predicate.invocation.parameters = workflowInputs;
-    predicate.invocation.configSource.entryPoint = ghEvent.workflow;
-    predicate.invocation.environment["GITHUB_EVENT_PAYLOAD"] = ghEvent;
+    for (const input in ghEvent.inputs) {
+      // The invocation parameters belong here and are the top-level GitHub
+      // workflow inputs.
+      predicate.buildDefinition.externalParameters[`input_${input}`] = {
+        value: ghEvent.inputs.input,
+      };
+    }
   }
 
   return predicate;

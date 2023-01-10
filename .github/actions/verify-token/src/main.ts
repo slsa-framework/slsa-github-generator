@@ -12,6 +12,7 @@ limitations under the License.
 */
 
 import * as core from "@actions/core";
+import * as github from "@actions/github";
 import * as sigstore from "sigstore";
 import * as process from "process";
 import * as fs from "fs";
@@ -24,6 +25,7 @@ async function run(): Promise<void> {
     /* Test locally:
         $ env INPUT_SLSA-WORKFLOW-RECIPIENT="delegator_generic_slsa3.yml" \
         INPUT_SLSA-UNVERIFIED-TOKEN="$(cat testdata/slsa-token)" \
+        INPUT_TOKEN="" \
         GITHUB_EVENT_NAME="workflow_dispatch" \
         GITHUB_RUN_ATTEMPT="1" \
         GITHUB_RUN_ID="3790385865" \
@@ -50,6 +52,8 @@ async function run(): Promise<void> {
     const outputPredicate = core.getInput("output-predicate");
     const wd = process.env[`GITHUB_WORKSPACE`] || "";
     const safeOutput = resolvePathInput(outputPredicate, wd);
+
+    const token = core.getInput("token");
 
     // Log the inputs for troubleshooting.
     core.debug(`workflowRecipient: ${workflowRecipient}`);
@@ -112,7 +116,19 @@ async function run(): Promise<void> {
     core.debug(`slsa-verified-token: ${rawTokenStr}`);
 
     // Now generate the SLSA predicate using the verified token and the GH context.
-    const predicate = createPredicate(rawTokenObj, toolURI);
+    let workflow_path = String(process.env.GITHUB_WORKFLOW);
+    if (token !== "") {
+      const octokit = github.getOctokit(token);
+
+      const { data: current_run } = await octokit.rest.actions.getWorkflowRun({
+        owner: String(process.env.GITHUB_REPOSITORY_OWNER),
+        repo: String(process.env.GITHUB_REPOSITORY),
+        run_id: Number(process.env.GITHUB_RUN_ID),
+      });
+      workflow_path = current_run.path;
+    }
+
+    const predicate = createPredicate(rawTokenObj, toolURI, workflow_path);
     fs.writeFileSync(safeOutput, JSON.stringify(predicate), {
       flag: "ax",
       mode: 0o600,
