@@ -13,6 +13,7 @@ limitations under the License.
 
 import * as process from "process";
 import * as fs from "fs";
+import type { WorkflowDispatchEvent } from "@octokit/webhooks-types";
 
 const DELEGATOR_BUILD_TYPE =
   "https://github.com/slsa-framework/slsa-github-generator/delegator-generic@v0";
@@ -134,8 +135,7 @@ export function createPredicate(
       buildType: DELEGATOR_BUILD_TYPE,
       externalParameters: {
         // This is the v0.2 entryPoint.
-        // TODO: Get path via GitHub API via runID and repository
-        workflow: { value: workflow_name },
+        workflowPath: { value: workflow_name },
         // We use source here because the source contained the source
         // repository and the build configuration.
         source: {
@@ -150,6 +150,9 @@ export function createPredicate(
       systemParameters: {
         // environment
         // TODO: Add GitHub event payload.
+        // TODO: GITHUB_WORKFLOW_REF and GITHUB_WORKFLOW_SHA are found in
+        // https://github.com/npm/cli/blob/provenance/workspaces/libnpmpublish/lib/provenance.js#L73
+        // but are not populated in the env.
         GITHUB_ACTOR_ID: { value: env.GITHUB_ACTOR_ID },
         GITHUB_EVENT_NAME: { value: env.GITHUB_EVENT_NAME },
         GITHUB_JOB: { value: env.GITHUB_JOB },
@@ -163,8 +166,6 @@ export function createPredicate(
         GITHUB_RUN_NUMBER: { value: env.GITHUB_RUN_NUMBER },
         GITHUB_SHA: { value: env.GITHUB_SHA },
         GITHUB_WORKFLOW: { value: env.GITHUB_WORKFLOW },
-        GITHUB_WORKFLOW_REF: { value: env.GITHUB_WORKFLOW_REF },
-        GITHUB_WORKFLOW_SHA: { value: env.GITHUB_WORKFLOW_SHA },
         IMAGE_OS: { value: env.ImageOS },
         IMAGE_VERSION: { value: env.ImageVersion },
         RUNNER_ARCH: { value: env.RUNNER_ARCH },
@@ -183,16 +184,19 @@ export function createPredicate(
     },
   };
 
-  if (env.GITHUB_EVENT_PATH !== undefined) {
-    const ghEvent = JSON.parse(
-      fs.readFileSync(env.GITHUB_EVENT_PATH).toString()
-    );
-    for (const input in ghEvent.inputs) {
-      // The invocation parameters belong here and are the top-level GitHub
-      // workflow inputs.
-      predicate.buildDefinition.externalParameters[`input_${input}`] = {
-        value: ghEvent.inputs.input,
-      };
+  if (env.GITHUB_EVENT_NAME === "workflow_dispatch") {
+    if (env.GITHUB_EVENT_PATH !== undefined) {
+      const ghEvent: WorkflowDispatchEvent = JSON.parse(
+        fs.readFileSync(env.GITHUB_EVENT_PATH).toString()
+      );
+
+      for (const input in ghEvent.inputs) {
+        // The invocation parameters belong here and are the top-level GitHub
+        // workflow inputs.
+        predicate.buildDefinition.externalParameters[`input_${input}`] = {
+          value: String(ghEvent.inputs[input]),
+        };
+      }
     }
   }
 
