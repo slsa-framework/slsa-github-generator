@@ -12,7 +12,7 @@ limitations under the License.
 */
 
 import * as core from "@actions/core";
-//import * as github from "@actions/github";
+import * as github from "@actions/github";
 import * as sigstore from "sigstore";
 import * as process from "process";
 import * as fs from "fs";
@@ -114,20 +114,21 @@ async function run(): Promise<void> {
     core.debug(`slsa-verified-token: ${rawTokenStr}`);
 
     // Now generate the SLSA predicate using the verified token and the GH context.
-    const workflow_path = String(process.env.GITHUB_WORKFLOW);
-    /*
+    let workflow_path = String(process.env.GITHUB_WORKFLOW);
+
     const token = core.getInput("token");
     if (token !== "") {
       const octokit = github.getOctokit(token);
+      const ownerRepo = process.env["GITHUB_REPOSITORY"] || "/";
+      const [owner, repo] = ownerRepo.split("/");
 
       const { data: current_run } = await octokit.rest.actions.getWorkflowRun({
-        owner: String(process.env.GITHUB_REPOSITORY_OWNER),
-        repo: String(process.env.GITHUB_REPOSITORY),
+        owner,
+        repo,
         run_id: Number(process.env.GITHUB_RUN_ID),
       });
       workflow_path = current_run.path;
     }
-    */
 
     const predicate = createPredicate(rawTokenObj, toolURI, workflow_path);
     fs.writeFileSync(safeOutput, JSON.stringify(predicate), {
