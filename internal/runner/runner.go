@@ -150,14 +150,32 @@ func (r *CommandRunner) runStep(ctx context.Context, step *CommandStep, dry bool
 }
 
 func dedupEnv(env []string) []string {
-	var deduped []string
-	seen := map[string]bool{}
+	deduped := make([]string, 0, len(env))
+	seen := make(map[string]bool, len(env))
 	for i := len(env) - 1; i >= 0; i-- {
+		if env[i] == "" {
+			continue
+		}
+
 		k, _, found := strings.Cut(env[i], "=")
-		if found && !seen[k] {
+		if !found {
+			// NOTE: The entry is not in the form of "key=value". We add the
+			// value as-is for now to do what the Go exec package does.
+			// See: https://github.com/golang/go/issues/52436
+			k = env[i]
+		}
+
+		if !seen[k] {
 			deduped = append(deduped, env[i])
 			seen[k] = true
 		}
 	}
+
+	// Reverse the slice to preserve the original order.
+	for i := 0; i < len(deduped)/2; i++ {
+		j := len(deduped) - i - 1
+		deduped[i], deduped[j] = deduped[j], deduped[i]
+	}
+
 	return deduped
 }

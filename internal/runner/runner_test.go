@@ -281,8 +281,9 @@ func Test_dedupEnv(t *testing.T) {
 				"FOO=bar",
 			},
 			expected: []string{
-				"FOO=bar",
 				"EXTRA=fuga",
+				// NOTE: The active variable appears after EXTRA
+				"FOO=bar",
 			},
 		},
 		"no duplicate": {
@@ -299,8 +300,7 @@ func Test_dedupEnv(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			sorted := cmpopts.SortSlices(func(a, b string) bool { return a < b })
-			if diff := cmp.Diff(dedupEnv(tc.input), tc.expected, sorted); diff != "" {
+			if diff := cmp.Diff(dedupEnv(tc.input), tc.expected); diff != "" {
 				t.Fatalf("unexpected result: %v", diff)
 			}
 		})
