@@ -13,6 +13,11 @@ inputs:
     type: string
     required: true
 
+  token:
+    description: "The GitHub Actions token."
+    required: false
+    default: ${{ github.token }}
+
   output-predicate:
     description: 'The filename to place the output SLSA predicate based on the verified token'
     type: string
