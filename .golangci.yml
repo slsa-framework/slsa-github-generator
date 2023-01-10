@@ -51,8 +51,7 @@ linters:
     - goimports
     - gomodguard
     - goprintffuncname
-    # TODO(github.com/slsa-framework/slsa-github-generator/issues/450): enable gosec
-    # - gosec
+    - gosec
     - gosimple
     - govet
     - ineffassign
