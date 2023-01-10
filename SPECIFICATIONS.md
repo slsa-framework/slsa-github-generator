@@ -125,7 +125,7 @@ A reusable workflow itself can contain multiple jobs: so we can define a trusted
                                                      │   └─────────┬─────────────┘   │
                                                      │             │                 │
                                                      └─────────────┼─────────────────┘
-                                                                   │                                                                     
+                                                                   │
                                                                    │
                                                      ┌─────────────▼─────────────────┐
                                                      │                               │
@@ -156,10 +156,10 @@ on:
   workflow_dispatch:
   push:
     tags:
-      - "*" 
+      - "*"
 
 permissions: read-all
-      
+
 jobs:
  build:
     permissions:
@@ -230,7 +230,7 @@ The provenance verification demo code is hosted [here](https://github.com/slsa-f
 ```shell
 $ go run main.go --binary ~/Downloads/binary-linux-amd64 --provenance ~/Downloads/binary-linux-amd64.intoto.jsonl --source github.com/asraa/slsa-on-github-test
 Verified against tlog entry 1544571
-verified SLSA provenance produced at 
+verified SLSA provenance produced at
  {
         "caller": "asraa/slsa-on-github-test",
         "commit": "0dfcd24824432c4ce587f79c918eef8fc2c44d7b",
@@ -273,7 +273,7 @@ Here we explain how SLSA requirements can be achieved:
 
 ### Build-level provenance
 
-| Requirements | Fulfilled | 
+| Requirements | Fulfilled |
 |--------|---------|
 | Hermetic | Yes. In general, we can set up IP table rules at the start of the VM (even remove sudo access if needed). In practice, hermiticity depends on support from the compilation/packaging toolchain. The toolchain needs to support distinct steps to download the dependencies and to compile. Otherwise we can never truly achieve hermeticity. In golang, it's easy to achieve using go mod vendor to download dependencies, and go build -mod-vendor to build the project. For Python and npm, pre-compilation scripts can be run so we need support from the tooling to separate these steps from the compilation steps. |
 | Parameterless | Yes, by the nature of the workflow. Note: golang accepts dynamic parameters like ldflags to pass variables to the linker. These flags often need to run scripts to be generated. An example is to generate the hash commit or version of a project so that it can be displayed by the final binary. In this case, it requires running git command to set the ldflags. |

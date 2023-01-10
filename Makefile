@@ -21,11 +21,20 @@ help: ## Shows all targets and help from the Makefile (this message).
 #####################################################################
 
 .PHONY: unit-test
-unit-test: ## Runs all unit tests.
+unit-test: go-test ts-test
+
+.PHONY: go-test
+go-test: ## Run Go unit tests.
 	# Run unit tests for the detect-workflow action.
 	make -C .github/actions/detect-workflow/ unit-test
 	go mod vendor
 	go test -mod=vendor -v ./...
+
+
+.PHONY: ts-test
+ts-test: ## Run TypeScript tests.
+	# Run unit tests for the generate-attestations action.
+	make -C .github/actions/generate-attestations/ unit-test
 
 
 ## Linters
@@ -76,6 +85,7 @@ shellcheck: ## Runs the shellcheck linter.
 eslint: ## Runs the eslint linter.
 	make -C .github/actions/compute-sha256 lint
 	make -C .github/actions/privacy-check lint
+	make -C .github/actions/generate-attestations lint
 
 .PHONY: yamllint
 yamllint: ## Runs the yamllint linter.

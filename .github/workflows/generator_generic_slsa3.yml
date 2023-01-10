@@ -147,7 +147,7 @@ jobs:
         with:
           repository: "${{ needs.detect-env.outputs.repository }}"
           ref: "${{ needs.detect-env.outputs.ref }}"
-          go-version: 1.18
+          go-version: 1.19
           binary: "${{ env.BUILDER_BINARY }}"
           compile-builder: "${{ inputs.compile-generator }}"
           directory: "${{ env.BUILDER_DIR }}"
@@ -209,7 +209,7 @@ jobs:
       outcome: ${{ steps.final.outputs.outcome }}
       release-id: ${{ steps.release.outputs.id }}
     runs-on: ubuntu-latest
-    needs: [generator]
+    needs: [detect-env, generator]
     permissions:
       contents: write # Needed to write artifacts to a release.
     if: inputs.upload-assets == true

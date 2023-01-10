@@ -26,29 +26,29 @@ import (
 
 // CommandRunner runs commands and returns the build steps that were run.
 type CommandRunner struct {
-	// Env is global environment variables passed to all commands.
-	Env []string
-
-	// Steps are the steps to execute.
-	Steps []*CommandStep
-
 	// Stdout is the Writer used for Stdout. If nil then os.Stdout is used.
 	Stdout io.Writer
 
 	// Stderr is the Writer used for Stderr. If nil then os.Stderr is used.
 	Stderr io.Writer
+
+	// Env is global environment variables passed to all commands.
+	Env []string
+
+	// Steps are the steps to execute.
+	Steps []*CommandStep
 }
 
 // CommandStep is a command that was executed by the builder.
 type CommandStep struct {
+	// WorkingDir is the working directory the command was executed in.
+	WorkingDir string `json:"workingDir"`
+
 	// Command is the command that was run.
 	Command []string `json:"command"`
 
 	// Env are the environment variables passed to the command.
 	Env []string `json:"env"`
-
-	// WorkingDir is the working directory the command was executed in.
-	WorkingDir string `json:"workingDir"`
 }
 
 // Dry returns the command steps as they would be executed by the runner

@@ -82,7 +82,11 @@ that it is being run in the context of a Github Actions workflow.`,
 		},
 	}
 
-	c.Flags().StringVarP(&predicatePath, "predicate", "p", "predicate.json", "Path to write the unsigned provenance predicate.")
+	c.Flags().StringVarP(
+		&predicatePath,
+		"predicate", "p", "predicate.json",
+		"Path to write the unsigned provenance predicate.",
+	)
 
 	return c
 }

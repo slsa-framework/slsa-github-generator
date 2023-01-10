@@ -14,7 +14,10 @@ project simply generates provenance as a separate step in an existing workflow.
 
 ---
 
-- [Project Status](#project-status)
+<!-- markdown-toc --bullets="-" -i README.md -->
+
+<!-- toc -->
+
 - [Benefits of Provenance](#benefits-of-provenance)
 - [Generating Provenance](#generating-provenance)
   - [Getting Started](#getting-started)
@@ -27,18 +30,17 @@ project simply generates provenance as a separate step in an existing workflow.
   - [Provenance Example](#provenance-example)
 - [Integration With Other Build Systems](#integration-with-other-build-systems)
   - [Ko](#ko)
+- [Provenance for matrix strategy builds](#provenance-for-matrix-strategy-builds)
 - [Verification](#verification)
   - [Cosign](#cosign)
   - [Sigstore policy-controller](#sigstore-policy-controller)
   - [Kyverno](#kyverno)
+- [Known Issues](#known-issues)
+  - [`packages: write` permission required even if not using ghcr.io](#packages-write-permission-required-even-if-not-using-ghcrio)
+
+<!-- tocstop -->
 
 ---
-
-## Project Status
-
-This workflow is currently under active development. The API could change while
-approaching an initial release. You can track progress towards General
-Availability via [this milestone](https://github.com/slsa-framework/slsa-github-generator/milestone/3).
 
 ## Benefits of Provenance
 
@@ -71,7 +73,7 @@ provenance:
   if: startsWith(github.ref, 'refs/tags/')
   uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v1.4.0
   with:
-    image: ${{ needs.build.outputs.tag }}
+    image: ${{ needs.build.outputs.image }}
     digest: ${{ needs.build.outputs.digest }}
     registry-username: ${{ github.actor }}
   secrets:
@@ -154,14 +156,14 @@ jobs:
 At present, the generator **MUST** be referenced
 by a tag of the form `@vX.Y.Z`, because the build will fail if you reference it via a shorter tag like `@vX.Y` or `@vX` or if you reference it by a hash.
 
-For more information about this design decision and how to configure renovatebot,see the main repository [README.md](../../../README.md).
+For more information about this design decision and how to configure renovatebot, see the main repository [README.md](../../../README.md).
 
 ### Private Repositories
 
 Private repositories are supported with some caveats. Currently all builds
 generate and post a new entry in the public
 [Rekor](https://github.com/sigstore/rekor) API server instance at
-rekor.sigstore.dev. This entry includes the repository name. This will cause the
+https://rekor.sigstore.dev/. This entry includes the repository name. This will cause the
 private repository name to leak and be discoverable via the public Rekor API
 server.
 
@@ -204,24 +206,25 @@ Inputs:
 | -------------------- | -------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `image`              | yes      |         | The OCI image name. This must not include a tag or digest.                                                                                                                                                                      |
 | `digest`             | yes      |         | The OCI image digest. The image digest of the form '<algorithm>:<digest>' (e.g. 'sha256:abcdef...')                                                                                                                             |
-| `registry-username`  | yes      |         | Username to log into the container registry.                                                                                                                                                                                    |
+| `registry-username`  | no       |         | Username to log in the container registry. Either `registry-username` input or `registry-username` secret is required.                                                                                                          |
 | `compile-generator`  | false    | false   | Whether to build the generator from source. This increases build time by ~2m.                                                                                                                                                   |
 | `private-repository` | no       | false   | Set to true to opt-in to posting to the public transparency log. Will generate an error if false for private repositories. This input has no effect for public repositories. See [Private Repositories](#private-repositories). |
-| `continue-on-error` | no       | false                                                                                           | Set to true to ignore errors. This option is useful if you won't want a failure to fail your entire workflow. |
+| `continue-on-error`  | no       | false   | Set to true to ignore errors. This option is useful if you won't want a failure to fail your entire workflow.                                                                                                                   |
 
 Secrets:
 
-| Name                | Required | Description                                |
-| ------------------- | -------- | ------------------------------------------ |
-| `registry-password` | yes      | Password to log in the container registry. |
+| Name                | Required | Description                                                                                                            |
+| ------------------- | -------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `registry-username` | no       | Username to log in the container registry. Either `registry-username` input or `registry-username` secret is required. |
+| `registry-password` | yes      | Password to log in the container registry.                                                                             |
 
 ### Workflow Outputs
 
 The [container workflow](https://github.com/slsa-framework/slsa-github-generator/blob/main/.github/workflows/generator_container_slsa3.yml) accepts the following outputs:
 
-| Name               | Description                                                                            |
-| ------------------ | -------------------------------------------------------------------------------------- |
-| `outcome`          | If `continue-on-error` is `true`, will contain the outcome of the run (`success` or `failure`). |
+| Name      | Description                                                                                     |
+| --------- | ----------------------------------------------------------------------------------------------- |
+| `outcome` | If `continue-on-error` is `true`, will contain the outcome of the run (`success` or `failure`). |
 
 ### Provenance Format
 
@@ -234,7 +237,7 @@ The project generates SLSA provenance with the following values.
 
 ### Provenance Example
 
-The following is an example of the generated proveanance. Provenance is
+The following is an example of the generated provenance. Provenance is
 generated as an [in-toto](https://in-toto.io/) statement with a SLSA predicate.
 
 ```json
@@ -436,6 +439,12 @@ jobs:
       registry-password: ${{ secrets.GITHUB_TOKEN }}
 ```
 
+## Provenance for matrix strategy builds
+
+See the
+[equivalent section](../generic/README.md#provenance-for-matrix-strategy-builds)
+for the generic generator.
+
 ## Verification
 
 Verification of provenance attestations can be done via several different tools. This section shows examples of several popular tools.
@@ -476,22 +485,31 @@ predicate: {
 
 We can then use `cosign` to verify the attestation using the policy.
 
-<!-- TODO(github.com/slsa-framework/slsa-github-generator/issues/492): update example -->
-
 ```shell
-$ COSIGN_EXPERIMENTAL=1 cosign verify-attestation \
+COSIGN_EXPERIMENTAL=1 cosign verify-attestation \
   --type slsaprovenance \
   --policy policy.cue \
-  ghcr.io/ianlewis/actions-test:v0.0.38 > /dev/null
+  ghcr.io/ianlewis/actions-test:v0.0.79
+```
+
+This should result in output like the following:
+
+```
 will be validating against CUE policies: [policy.cue]
 
-Verification for ghcr.io/ianlewis/actions-test:v0.0.38 --
+Verification for ghcr.io/ianlewis/actions-test:v0.0.79 --
 The following checks were performed on each of these signatures:
   - The cosign claims were validated
   - Existence of the claims in the transparency log was verified offline
   - Any certificates were verified against the Fulcio roots.
-Certificate subject:  https://github.com/ianlewis/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@refs/heads/409-feature-add-generic-container-workflow
+Certificate subject:  https://github.com/slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@refs/tags/v1.4.0
 Certificate issuer URL:  https://token.actions.githubusercontent.com
+GitHub Workflow Trigger: push
+GitHub Workflow SHA: 3f938aae461d2a8bc7897ff975e77a876e3d9123
+GitHub Workflow Name: Generic container
+GitHub Workflow Trigger ianlewis/actions-test
+GitHub Workflow Ref: refs/tags/v0.0.79
+{"payloadType":"application/vnd.in-toto+json","payload":"...","signatures":[{"keyid":"","sig":"..."}]}
 ```
 
 You can read more in the [cosign documentation](https://docs.sigstore.dev/cosign/attestation/).
@@ -663,3 +681,13 @@ check-slsa-attestations:
     failed to verify signature for ghcr.io/ianlewis/actions-test:v0.0.11: .attestors[0].entries[0].keyless: no matching attestations:
     no certificate found on attestation
 ```
+
+## Known Issues
+
+### `packages: write` permission required even if not using ghcr.io
+
+Due to limitations in how GitHub actions manages permissions on ephemeral tokens
+in reusable workflows, and how cosign uses available credentials, the container
+workflow always requires `packages: write`.
+
+Please see #1257 for details.
