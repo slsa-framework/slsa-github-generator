@@ -220,16 +220,6 @@ jobs:
             echo "ref=$GITHUB_SHA" >> $GITHUB_OUTPUT
           fi
 
-      # TODO: Use secure-checkout, but this requires configuring the source-repository.
-      - name: Checkout the source repository
-        uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b # v3.2.0
-        with:
-          fetch-depth: 1
-          persist-credentials: false
-          path: __PROJECT_CHECKOUT_DIR__
-          repository: ${{ inputs.source-repository || github.repository }}
-          ref: ${{ steps.resolve.outputs.ref }}
-
       - name: Generate build definition
         id: generate
         # These are the inputs, it may be with: for an action or
@@ -241,7 +231,7 @@ jobs:
           # Either the provided source repository or the caller's GITHUB_REPOSITORY
           SOURCE_REPOSITORY: ${{ inputs.source-repository || github.repository }}
           # Either the provided digest, or the caller's GITHUB_REF
-          SOURCE_DIGEST: ${{ inputs.source-digest || github.ref }}
+          SOURCE_DIGEST: ${{ steps.resolve.outputs.ref }}
         run: |
           set -euo pipefail
 
@@ -251,13 +241,13 @@ jobs:
             --build-config-path "${CONFIG_PATH}" \
             --build-definition-path build-definition.json \
             --builder-image "${BUILDER_IMAGE}@${BUILDER_DIGEST}" \
-            --git-commit-hash "${SOURCE_DIGEST}" \
+            --git-commit-digest "${SOURCE_DIGEST}" \
             --source-repo "git+https://github.com/${SOURCE_REPOSITORY}"
           "${GITHUB_WORKSPACE}/${BUILDER_BINARY}" dry-run \
             --build-config-path "${CONFIG_PATH}" \
             --build-definition-path build-definition.json \
             --builder-image "${BUILDER_IMAGE}@${BUILDER_DIGEST}" \
-            --git-commit-hash "${SOURCE_DIGEST}" \
+            --git-commit-digest "${SOURCE_DIGEST}" \
             --source-repo "git+https://github.com/${SOURCE_REPOSITORY}"
 
           echo "build-definition-name=build-definition.json" >> $GITHUB_OUTPUT
@@ -285,37 +275,83 @@ jobs:
     needs: [rng, detect-env, generate-builder]
     # TODO: Replace with builder binary
     steps:
-      - name: Run builder binary
-        id: build
-        run: |
-          echo "run builder and output subjects!"
-
-          cat <<EOF >DATA
-          {
-            "version": 1,
-             "attestations": [
-              {
-                "name": "attestation1.intoto",
-                "subjects": [
-                  { "name": "artifact11",
-                    "digest": { "sha256": "ad91970864102a59765e20ce16216efc9d6ad381471f7accceceab7d905703ef" }},
-                  { "name": "artifact12",
-                    "digest": { "sha256": "d4d5899a3868fbb6ae1856c3e55a32ce35913de3956d1973caccd37bd0174fa2" }}
-                ]
-              }
-            ]
-          }
-          EOF
-
-          cat DATA > slsa-outputs.json
-          echo "slsa-outputs-name=slsa-outputs.json" >> $GITHUB_OUTPUT
-
       - name: Checkout builder repository
         uses: slsa-framework/slsa-github-generator/.github/actions/secure-builder-checkout@main
         with:
           repository: "${{ needs.detect-env.outputs.repository }}"
           ref: "${{ needs.detect-env.outputs.ref }}"
           path: __BUILDER_CHECKOUT_DIR__
+
+      - name: Download builder
+        uses: ./__BUILDER_CHECKOUT_DIR__/.github/actions/secure-download-artifact
+        with:
+          name: "${{ env.BUILDER_BINARY }}-${{ needs.rng.outputs.value }}"
+          path: "${{ env.BUILDER_BINARY }}"
+          sha256: "${{ needs.generate-builder.outputs.builder-binary-sha256 }}"
+          set-executable: true
+
+      - name: Get source ref
+        id: resolve
+        env:
+          SOURCE_DIGEST: ${{ inputs.source-digest }}
+          GITHUB_SHA: ${{ github.sha }}
+        run: |
+          if [ -z "$SOURCE_DIGEST" ]; then
+            ref=$(echo ${SOURCE_DIGEST} | cut -d':' -f2)
+            echo "ref=$ref" >> $GITHUB_OUTPUT
+          else
+            echo "ref=$GITHUB_SHA" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Run builder binary
+        id: build
+        # These are the inputs, it may be with: for an action or
+        # specified with these env vars.
+        env:
+          BUILDER_IMAGE: ${{ inputs.builder-image }}
+          BUILDER_DIGEST: ${{ inputs.builder-digest }}
+          CONFIG_PATH: ${{ inputs.config-path }}
+          # Either the provided source repository or the caller's GITHUB_REPOSITORY
+          SOURCE_REPOSITORY: ${{ inputs.source-repository || github.repository }}
+          # Either the provided digest, or the caller's GITHUB_REF
+          SOURCE_DIGEST: ${{ steps.resolve.outputs.ref }}
+        run: |
+          set -euo pipefail
+
+          # Note: this outputs information about resolved arguments, etc.
+          # the values are trusted because the compiler is not invoked.
+          echo "${GITHUB_WORKSPACE}/${BUILDER_BINARY}" build \
+            --build-config-path "${CONFIG_PATH}" \
+            --builder-image "${BUILDER_IMAGE}@${BUILDER_DIGEST}" \
+            --git-commit-digest "${SOURCE_DIGEST}" \
+            --source-repo "git+https://github.com/${SOURCE_REPOSITORY}" \
+            --subjects-path subjects.json \
+            --force-checkout
+          "${GITHUB_WORKSPACE}/${BUILDER_BINARY}" build \
+            --build-config-path "${CONFIG_PATH}" \
+            --builder-image "${BUILDER_IMAGE}@${BUILDER_DIGEST}" \
+            --git-commit-digest "${SOURCE_DIGEST}" \
+            --source-repo "git+https://github.com/${SOURCE_REPOSITORY}" \
+            --subjects-path subjects.json \
+            --force-checkout
+
+          
+          cat <<EOF >DATA
+          {
+            "version": 1,
+             "attestations": [
+              {
+                "name": "attestation1.intoto",
+                "subjects": []
+              }
+            ]
+          }
+          EOF
+
+          cat DATA > output-template.json
+
+          jq --argjson subjects "$(<subjects.json)" '.attestations[0].subjects += $subjects' output-template.json > slsa-outputs.json
+          echo "slsa-outputs-name=slsa-outputs.json" >> $GITHUB_OUTPUT
 
       - name: Upload the SLSA outputs file
         id: upload
