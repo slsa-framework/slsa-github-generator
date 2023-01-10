@@ -1012,7 +1012,7 @@ func Test_generateCommand(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			cfgs := []goReleaserConfigFile{
+			cfgs := []*goReleaserConfigFile{
 				{
 					Version: 1,
 					Flags:   tt.flags,
@@ -1025,8 +1025,7 @@ func Test_generateCommand(t *testing.T) {
 			}
 
 			for _, cfg := range cfgs {
-				cfg := cfg
-				c, err := fromConfig(&cfg)
+				c, err := fromConfig(cfg)
 				if err != nil {
 					t.Errorf("fromConfig: %v", err)
 				}
