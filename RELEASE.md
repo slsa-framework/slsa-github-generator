@@ -66,11 +66,17 @@ Create a new tag for the Release Candidate via [slsa-framework/slsa-github-gener
 
 Release candidates should include a suffix indicating the release candidate number of the form `-rc.#` where `#` is a number starting from `0`.
 
-Set the title to `$BUILDER_TAG`.
+1. Set the title to `$BUILDER_TAG`
+1. Add the following description.
 
-Tick the `This is a pre-release` option.
+   ```
+   **This is an un-finalized pre-release.**
 
-Click `Publish release`.
+   See the [CHANGELOG](./CHANGELOG.md) for details.
+   ```
+
+1. Tick the `This is a pre-release` option.
+1. Click `Publish release`.
 
 This will trigger the [release workflow](https://github.com/slsa-framework/slsa-github-generator/actions/workflows/release.yml). Cancel this in the [UI](https://github.com/slsa-framework/slsa-github-generator/actions/workflows/release.yml).
 
@@ -310,6 +316,10 @@ End-to-end tests run daily in [github.com/slsa-framework/example-package/.github
 
    If it does not, delete the release, fix the bug and re-start the release process at the top of this page.
 
+### Finalize release candidate.
+
+Remove the "This is an un-finalized pre-release." note from the release description.
+
 ### Code Freeze
 
 Code freeze the repository for 1-2 days.
@@ -331,11 +341,17 @@ export BUILDER_TAG="vX.Y.Z"
 Create a new tag for the final release via [slsa-framework/slsa-github-generator/releases/new](https://github.com/slsa-framework/slsa-github-generator/releases/new). The tag _MUST_ be a "canonical" [semantic version](https://semver.org/) without metadata (`$BUILDER_TAG`). Shorter versions are not accepted by the builder's
 and verifier's code.
 
-Set the title to `$BUILDER_TAG`.
+1. Set the title to `$BUILDER_TAG`
+1. Add the following description.
 
-Tick the `This is a pre-release` option.
+   ```
+   **This is an un-finalized release.**
 
-Click `Publish release`.
+   See the [CHANGELOG](./CHANGELOG.md) for details.
+   ```
+
+1. Tick the `This is a pre-release` option.
+1. Click `Publish release`.
 
 This will trigger the [release workflow](https://github.com/slsa-framework/slsa-github-generator/actions/workflows/release.yml). Cancel this in the [UI](https://github.com/slsa-framework/slsa-github-generator/actions/workflows/release.yml).
 
@@ -408,7 +424,8 @@ For each of the GHA builders, you will need to:
 
 ### Finish the release.
 
-Un-tick the `This is a pre-release` option.
+1. Remove the "This is an un-finalized release." note from the release description.
+1. Un-tick the `This is a pre-release` option.
 
 ### Update the starter workflows
 
