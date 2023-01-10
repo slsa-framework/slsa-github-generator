@@ -18,4 +18,3 @@ if [[ "$results" != "" ]]; then
     echo "$results"
     exit 1
 fi
-

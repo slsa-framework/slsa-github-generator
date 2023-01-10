@@ -36,13 +36,13 @@ const (
 
 type (
 	step struct {
+		WorkingDir string   `json:"workingDir"`
 		Command    []string `json:"command"`
 		Env        []string `json:"env"`
-		WorkingDir string   `json:"workingDir"`
 	}
 	buildConfig struct {
-		Version int    `json:"version"`
 		Steps   []step `json:"steps"`
+		Version int    `json:"version"`
 	}
 )
 

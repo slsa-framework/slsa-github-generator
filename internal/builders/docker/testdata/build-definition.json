@@ -3,7 +3,7 @@
     "externalParameters": {
         "artifacts": {
             "source": {
-                "uri": "git+https://github.com/https://github.com/project-oak/transparent-release",
+                "uri": "git+https://github.com/project-oak/transparent-release",
                 "digest": {
                     "sha1": "9b5f98310dbbad675834474fa68c37d880687cb9"
                 }
