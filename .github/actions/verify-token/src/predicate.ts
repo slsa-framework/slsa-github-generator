@@ -39,7 +39,7 @@ interface ParameterValue_Artifact {
 }
 
 interface ParameterValue_String {
-  value: string | undefined;
+  value: string;
 }
 
 type ParameterValue = ParameterValue_Artifact | ParameterValue_String;
@@ -136,7 +136,7 @@ export function createPredicate(
       externalParameters: {
         // This is the v0.2 entryPoint.
         workflowPath: { value: workflow_name },
-        // We use source here because the source contained the source
+        // We only use source here because the source contained the source
         // repository and the build configuration.
         source: {
           artifact: {
@@ -148,33 +148,33 @@ export function createPredicate(
         },
       },
       systemParameters: {
-        // environment
-        // TODO: Add GitHub event payload.
-        // TODO: GITHUB_WORKFLOW_REF and GITHUB_WORKFLOW_SHA are found in
+        // TODO(https://github.com/slsa-framework/slsa-github-generator/issues/1505):
+        // Add GitHub event payload.
+        // TODO(https://github.com/slsa-framework/slsa-github-generator/issues/1506):
+        // Populate GITHUB_ACTOR_ID, GITHUB_REPOSITORY_ID, and GITHUB_REPOSITORY_OWNER_ID.
+        // GITHUB_WORKFLOW_REF and GITHUB_WORKFLOW_SHA are found in
         // https://github.com/npm/cli/blob/provenance/workspaces/libnpmpublish/lib/provenance.js#L73
         // but are not populated in the env.
-        GITHUB_ACTOR_ID: { value: env.GITHUB_ACTOR_ID },
-        GITHUB_EVENT_NAME: { value: env.GITHUB_EVENT_NAME },
-        GITHUB_JOB: { value: env.GITHUB_JOB },
-        GITHUB_REF: { value: env.GITHUB_REF },
-        GITHUB_REF_TYPE: { value: env.GITHUB_REF_TYPE },
-        GITHUB_REPOSITORY: { value: env.GITHUB_REPOSITORY },
-        GITHUB_REPOSITORY_ID: { value: env.GITHUB_REPOSITORY_ID },
-        GITHUB_REPOSITORY_OWNER_ID: { value: env.GITHUB_REPOSITORY_OWNER_ID },
-        GITHUB_RUN_ATTEMPT: { value: env.GITHUB_RUN_ATTEMPT },
-        GITHUB_RUN_ID: { value: env.GITHUB_RUN_ID },
-        GITHUB_RUN_NUMBER: { value: env.GITHUB_RUN_NUMBER },
-        GITHUB_SHA: { value: env.GITHUB_SHA },
-        GITHUB_WORKFLOW: { value: env.GITHUB_WORKFLOW },
-        IMAGE_OS: { value: env.ImageOS },
-        IMAGE_VERSION: { value: env.ImageVersion },
-        RUNNER_ARCH: { value: env.RUNNER_ARCH },
-        RUNNER_NAME: { value: env.RUNNER_NAME },
-        RUNNER_OS: { value: env.RUNNER_OS },
+        GITHUB_EVENT_NAME: { value: String(env.GITHUB_EVENT_NAME) },
+        GITHUB_JOB: { value: String(env.GITHUB_JOB) },
+        GITHUB_REF: { value: String(env.GITHUB_REF) },
+        GITHUB_REF_TYPE: { value: String(env.GITHUB_REF_TYPE) },
+        GITHUB_REPOSITORY: { value: String(env.GITHUB_REPOSITORY) },
+        GITHUB_RUN_ATTEMPT: { value: String(env.GITHUB_RUN_ATTEMPT) },
+        GITHUB_RUN_ID: { value: String(env.GITHUB_RUN_ID) },
+        GITHUB_RUN_NUMBER: { value: String(env.GITHUB_RUN_NUMBER) },
+        GITHUB_SHA: { value: String(env.GITHUB_SHA) },
+        GITHUB_WORKFLOW: { value: String(env.GITHUB_WORKFLOW) },
+        IMAGE_OS: { value: String(env.ImageOS) },
+        IMAGE_VERSION: { value: String(env.ImageVersion) },
+        RUNNER_ARCH: { value: String(env.RUNNER_ARCH) },
+        RUNNER_NAME: { value: String(env.RUNNER_NAME) },
+        RUNNER_OS: { value: String(env.RUNNER_OS) },
       },
     },
     runDetails: {
-      // TODO: Where do the raw token inputs (the tool inputs) go?
+      // TODO(https://github.com/slsa-framework/slsa-github-generator/issues/1504):
+      // Record raw token inputs (tool action inputs).
       builder: {
         id: toolURI,
       },
