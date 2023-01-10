@@ -53,8 +53,6 @@ async function run(): Promise<void> {
     const wd = process.env[`GITHUB_WORKSPACE`] || "";
     const safeOutput = resolvePathInput(outputPredicate, wd);
 
-    const token = core.getInput("token");
-
     // Log the inputs for troubleshooting.
     core.debug(`workflowRecipient: ${workflowRecipient}`);
     core.debug(`unverifiedToken: ${unverifiedToken}`);
@@ -117,6 +115,7 @@ async function run(): Promise<void> {
 
     // Now generate the SLSA predicate using the verified token and the GH context.
     let workflow_path = String(process.env.GITHUB_WORKFLOW);
+    const token = core.getInput("token");
     if (token !== "") {
       const octokit = github.getOctokit(token);
 
