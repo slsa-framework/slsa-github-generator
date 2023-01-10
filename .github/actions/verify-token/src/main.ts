@@ -12,7 +12,7 @@ limitations under the License.
 */
 
 import * as core from "@actions/core";
-import * as github from "@actions/github";
+//import * as github from "@actions/github";
 import * as sigstore from "sigstore";
 import * as process from "process";
 import * as fs from "fs";
@@ -114,7 +114,8 @@ async function run(): Promise<void> {
     core.debug(`slsa-verified-token: ${rawTokenStr}`);
 
     // Now generate the SLSA predicate using the verified token and the GH context.
-    let workflow_path = String(process.env.GITHUB_WORKFLOW);
+    const workflow_path = String(process.env.GITHUB_WORKFLOW);
+    /*
     const token = core.getInput("token");
     if (token !== "") {
       const octokit = github.getOctokit(token);
@@ -126,6 +127,7 @@ async function run(): Promise<void> {
       });
       workflow_path = current_run.path;
     }
+    */
 
     const predicate = createPredicate(rawTokenObj, toolURI, workflow_path);
     fs.writeFileSync(safeOutput, JSON.stringify(predicate), {
