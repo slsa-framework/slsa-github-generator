@@ -291,7 +291,7 @@ jobs:
             --git-commit-digest "sha1:${GITHUB_SHA}" \
             --source-repo "git+https://github.com/${GITHUB_REPOSITORY}" \
             --subjects-path subjects.json
-          
+
           cat <<EOF >DATA
           {
             "version": 1,
