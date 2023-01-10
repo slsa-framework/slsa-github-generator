@@ -154,7 +154,10 @@ func GenerateProvenance(name, digest, command, envs, workingDir string,
 	//
 	// NOTE: map is a reference so modifying invEnv modifies
 	// p.Predicate.Invocation.Environment.
-	invEnv := p.Predicate.Invocation.Environment.(map[string]interface{})
+	invEnv, ok := p.Predicate.Invocation.Environment.(map[string]interface{})
+	if !ok {
+		panic(fmt.Sprintf("converting %T to map[string]interface{}", p.Predicate.Invocation.Environment))
+	}
 	invEnv["arch"] = os.Getenv("RUNNER_ARCH")
 	invEnv["os"] = os.Getenv("ImageOS")
 
