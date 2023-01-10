@@ -306,7 +306,7 @@ jobs:
 
           cat DATA > output-template.json
 
-          jq --argjson subjects "$(<subjects.json)" '.attestations[0].subjects += $subjects' output-template.json > slsa-outputs.json
+          jq --argjson subjects "$(<subjects.json)" '.attestations[0].subjects += $subjects' output-template.json > "${GITHUB_WORKSPACE}"/slsa-outputs.json
           echo "slsa-outputs-name=slsa-outputs.json" >> $GITHUB_OUTPUT
 
       - name: Upload the SLSA outputs file
