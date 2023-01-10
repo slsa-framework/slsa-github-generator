@@ -285,7 +285,6 @@ jobs:
             --source-repo "git+https://github.com/${GITHUB_REPOSITORY}" \
             --subjects-path subjects.json \
             --force-checkout
-
           
           cat <<EOF >DATA
           {
