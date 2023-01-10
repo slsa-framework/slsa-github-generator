@@ -257,8 +257,16 @@ jobs:
           sha256: "${{ needs.generate-builder.outputs.builder-binary-sha256 }}"
           set-executable: true
 
+      - name: Checkout the source repository
+        uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b # v3.2.0
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+          path: __PROJECT_CHECKOUT_DIR__
+
       - name: Run builder binary
         id: build
+        working-directory: __PROJECT_CHECKOUT_DIR__
         # These are the inputs, it may be with: for an action or
         # specified with these env vars.
         env:
@@ -276,15 +284,13 @@ jobs:
             --builder-image "${BUILDER_IMAGE}@${BUILDER_DIGEST}" \
             --git-commit-digest "sha1:${GITHUB_SHA}" \
             --source-repo "git+https://github.com/${GITHUB_REPOSITORY}" \
-            --subjects-path subjects.json \
-            --force-checkout
+            --subjects-path subjects.json
           "${GITHUB_WORKSPACE}/${BUILDER_BINARY}" build \
             --build-config-path "${CONFIG_PATH}" \
             --builder-image "${BUILDER_IMAGE}@${BUILDER_DIGEST}" \
             --git-commit-digest "sha1:${GITHUB_SHA}" \
             --source-repo "git+https://github.com/${GITHUB_REPOSITORY}" \
-            --subjects-path subjects.json \
-            --force-checkout
+            --subjects-path subjects.json
           
           cat <<EOF >DATA
           {
