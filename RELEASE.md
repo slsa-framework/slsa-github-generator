@@ -385,23 +385,29 @@ The next step is to update the verifier's GitHub Actions e2e tests. There are Gi
 
 For each of the GHA builders, you will need to:
 
-1. Generate binaries and provenance in [example-package](https://github.com/slsa-framework/example-package) using the GHA action builder. These require using the updated builders, so validate that the workflows you use below are pinned at `$BUILDER_TAG`.
+1. Generate binaries and provenance in [example-package](https://github.com/slsa-framework/example-package) using the GHA action builder.
 
-You will need the following trigger types:
+   These require using the updated builders, so the first step is to update [verifier-e2e.all.workflow_dispatch.main.all.slsa3.yml](https://github.com/slsa-framework/example-package/blob/main/.github/workflows/verifier-e2e.all.workflow_dispatch.main.all.slsa3.yml) to reference actions at `$BUILDER_TAG`.
 
-- A workflow dispatch event.
-- A tag of the form `vX.Y.Z`.
-- Tags of the form `vX` and `vX.Y`.
+   For example:
 
-To do this, trigger the [verifier-e2e.all.workflow_dispatch.main.all.slsa3.yml](https://github.com/slsa-framework/example-package/blob/main/.github/workflows/verifier-e2e.all.workflow_dispatch.main.all.slsa3.yml) workflow. This will dispatch the workflow and create provenance for the workflow dispatch event, and then trigger subsequent runs on the following fixed release tags.
+   ```yaml
+   uses: slsa-framework/slsa-github-generator/.github/workflows/builder_go_slsa3.yml@$BUILDER_TAG
+   ```
 
-- [v14](https://github.com/slsa-framework/example-package/releases/tag/v14)
-- [v14.2](https://github.com/slsa-framework/example-package/releases/tag/v14.2)
-- [v13.0.30](https://github.com/slsa-framework/example-package/releases/tag/v13.0.30)
+   Next run the [verifier-e2e.all.workflow_dispatch.main.all.slsa3.yml](https://github.com/slsa-framework/example-package/actions/workflows/verifier-e2e.all.workflow_dispatch.main.all.slsa3.yml). This will dispatch the workflow and create provenance for the workflow dispatch event, and then trigger subsequent runs on the following fixed release tags.
 
-Wait for the runs to complete and download the uploaded artifacts of each of the created releases.
+   - [v14](https://github.com/slsa-framework/example-package/releases/tag/v14)
+   - [v14.2](https://github.com/slsa-framework/example-package/releases/tag/v14.2)
+   - [v13.0.30](https://github.com/slsa-framework/example-package/releases/tag/v13.0.30)
+
+   Wait for the runs to complete and download the uploaded artifacts of each of the created releases.
 
 2. Move these files to `./cli/slsa-verifier/testdata/gha_$BUILDER_TYPE/$BUILDER_TAG/`. Send a pull request to merge the changes into the verifier's repository. The pre-submits will validate that the verifier is able to verify provenance from the `$BUILDER_TAG` builder.
+
+### Finish the release.
+
+Un-tick the `This is a pre-release` option.
 
 ### Update the starter workflows
 
