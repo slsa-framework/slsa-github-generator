@@ -218,7 +218,7 @@ https://github.com/slsa-framework/slsa-github-generator/compare/v1.2.1...v1.2.2
 
 **DO NOT USE THIS RELEASE. This version will no longer work and is not supported due to errors described in #1163. Please upgrade to [v1.2.2](https://github.com/slsa-framework/slsa-github-generator/releases/tag/v1.2.2) or later.**
 
-# What's Changed
+## What's Changed
 
 This release fixes an error that occurs on the "Generate Builder" step for various workflows.
 
@@ -228,9 +228,9 @@ FAILED: SLSA verification failed: could not find a matching valid signature entr
 
 See #942
 
-## Generic generator
+### Generic generator
 
-### buildType
+#### buildType
 
 This release changes the [`buildType`](https://slsa.dev/provenance/v0.2#buildType) used in provenance created by the generic generator.
 
@@ -248,13 +248,13 @@ The new value is:
 
 See #627
 
-### Provenance file names
+#### Provenance file names
 
 Previously the default file name for provenance was `attestation.intoto.jsonl`. This has been updated to be in line with [intoto attestation file naming conventions](https://github.com/in-toto/attestation/blob/main/spec/bundle.md#file-naming-convention). The file name now defaults to `<artifact filename>.intoto.jsonl` if there is a single artifact, or `multiple.intoto.jsonl` if there are multiple artifacts.
 
 See #654
 
-### Explicit opt-in for private repos
+#### Explicit opt-in for private repos
 
 Private repository support was enhanced to required the `private-repository` input field as the repository name will be made public in the public Rekor transparency log.
 
@@ -267,9 +267,9 @@ with:
 
 See #823
 
-## Go builder
+### Go builder
 
-### Support private repos
+#### Support private repos
 
 Support for private repositories was fixed. If using a private repository you must specify the `private-repository` input field as the repository name will be made public in the public Rekor transparency log.
 
@@ -282,13 +282,13 @@ with:
 
 See #823
 
-# New Contributors
+## New Contributors
 
 - @sethmlarson made their first contribution in https://github.com/slsa-framework/slsa-github-generator/pull/758
 - @yunginnanet made their first contribution in https://github.com/slsa-framework/slsa-github-generator/pull/776
 - @diogoteles08 made their first contribution in https://github.com/slsa-framework/slsa-github-generator/pull/957
 
-# Full Changelog
+## Full Changelog
 
 https://github.com/slsa-framework/slsa-github-generator/compare/v1.2.0...v1.2.1
 
