@@ -18,8 +18,6 @@ jobs:
       actions: read # For reading workflow info.
     uses: ./.github/workflows/builder_docker-based_slsa3.yml
     with:
-      source-repository: "slsa-framework/slsa-github-generator"
-      source-digest: "sha1:cf5804b5c6f1a4b2a0b03401a487dfdfbe3a5f00"
       builder-image: "bash"
       builder-digest: "sha256:9e2ba52487d945504d250de186cb4fe2e3ba023ed2921dd6ac8b97ed43e76af9"
       config-path: "internal/builders/docker/testdata/config.toml"

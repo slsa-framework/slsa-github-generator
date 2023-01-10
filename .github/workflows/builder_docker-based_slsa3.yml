@@ -68,22 +68,6 @@ on:
         required: false
         type: string
         default: 'output/**'
-      source-repository:
-        description: >
-          Source repository to checkout for the build. For example, octocat/hello-world.
-          The builder will mount the root of this source repository to the workspace.
-
-          By default, uses the source repository of the caller workflow.
-        required: false
-        type: string
-      source-digest:
-        description: >
-          The SHA of the source repository to checkout. The digest is of the form
-          '<alg>:<digest>'.
-
-          By default, uses the source repository of the caller workflow.
-        required: false
-        type: string
       compile-builder:
         description: "Build the builder from source. This increases build time by ~2m."
         required: false
@@ -207,18 +191,6 @@ jobs:
           sha256: "${{ needs.generate-builder.outputs.builder-binary-sha256 }}"
           set-executable: true
 
-      - name: Get source ref
-        id: resolve
-        env:
-          SOURCE_DIGEST: ${{ inputs.source-digest }}
-          GITHUB_SHA: ${{ github.sha }}
-        run: |
-          if [ -z "$SOURCE_DIGEST" ]; then
-            echo "ref=${SOURCE_DIGEST}" >> $GITHUB_OUTPUT
-          else
-            echo "ref=sha1:$GITHUB_SHA" >> $GITHUB_OUTPUT
-          fi
-
       - name: Generate build definition
         id: generate
         # These are the inputs, it may be with: for an action or
@@ -227,10 +199,6 @@ jobs:
           BUILDER_IMAGE: ${{ inputs.builder-image }}
           BUILDER_DIGEST: ${{ inputs.builder-digest }}
           CONFIG_PATH: ${{ inputs.config-path }}
-          # Either the provided source repository or the caller's GITHUB_REPOSITORY
-          SOURCE_REPOSITORY: ${{ inputs.source-repository || github.repository }}
-          # Either the provided digest, or the caller's GITHUB_REF
-          SOURCE_DIGEST: ${{ steps.resolve.outputs.ref }}
         run: |
           set -euo pipefail
 
@@ -240,14 +208,14 @@ jobs:
             --build-config-path "${CONFIG_PATH}" \
             --build-definition-path build-definition.json \
             --builder-image "${BUILDER_IMAGE}@${BUILDER_DIGEST}" \
-            --git-commit-digest "${SOURCE_DIGEST}" \
-            --source-repo "git+https://github.com/${SOURCE_REPOSITORY}"
+            --git-commit-digest "sha1:${GITHUB_SHA}" \
+            --source-repo "git+https://github.com/${GITHUB_REPOSITORY}"
           "${GITHUB_WORKSPACE}/${BUILDER_BINARY}" dry-run \
             --build-config-path "${CONFIG_PATH}" \
             --build-definition-path build-definition.json \
             --builder-image "${BUILDER_IMAGE}@${BUILDER_DIGEST}" \
-            --git-commit-digest "${SOURCE_DIGEST}" \
-            --source-repo "git+https://github.com/${SOURCE_REPOSITORY}"
+            --git-commit-digest "sha1:${GITHUB_SHA}" \
+            --source-repo "git+https://github.com/${GITHUB_REPOSITORY}"
 
           echo "build-definition-name=build-definition.json" >> $GITHUB_OUTPUT
 
@@ -289,18 +257,6 @@ jobs:
           sha256: "${{ needs.generate-builder.outputs.builder-binary-sha256 }}"
           set-executable: true
 
-      - name: Get source ref
-        id: resolve
-        env:
-          SOURCE_DIGEST: ${{ inputs.source-digest }}
-          GITHUB_SHA: ${{ github.sha }}
-        run: |
-          if [ -z "$SOURCE_DIGEST" ]; then
-            echo "ref=${SOURCE_DIGEST}" >> $GITHUB_OUTPUT
-          else
-            echo "ref=sha1:$GITHUB_SHA" >> $GITHUB_OUTPUT
-          fi
-
       - name: Run builder binary
         id: build
         # These are the inputs, it may be with: for an action or
@@ -309,10 +265,7 @@ jobs:
           BUILDER_IMAGE: ${{ inputs.builder-image }}
           BUILDER_DIGEST: ${{ inputs.builder-digest }}
           CONFIG_PATH: ${{ inputs.config-path }}
-          # Either the provided source repository or the caller's GITHUB_REPOSITORY
-          SOURCE_REPOSITORY: ${{ inputs.source-repository || github.repository }}
-          # Either the provided digest, or the caller's GITHUB_REF
-          SOURCE_DIGEST: ${{ steps.resolve.outputs.ref }}
+
         run: |
           set -euo pipefail
 
@@ -321,15 +274,15 @@ jobs:
           echo "${GITHUB_WORKSPACE}/${BUILDER_BINARY}" build \
             --build-config-path "${CONFIG_PATH}" \
             --builder-image "${BUILDER_IMAGE}@${BUILDER_DIGEST}" \
-            --git-commit-digest "${SOURCE_DIGEST}" \
-            --source-repo "git+https://github.com/${SOURCE_REPOSITORY}" \
+            --git-commit-digest "sha1:${GITHUB_SHA}" \
+            --source-repo "git+https://github.com/${GITHUB_REPOSITORY}" \
             --subjects-path subjects.json \
             --force-checkout
           "${GITHUB_WORKSPACE}/${BUILDER_BINARY}" build \
             --build-config-path "${CONFIG_PATH}" \
             --builder-image "${BUILDER_IMAGE}@${BUILDER_DIGEST}" \
-            --git-commit-digest "${SOURCE_DIGEST}" \
-            --source-repo "git+https://github.com/${SOURCE_REPOSITORY}" \
+            --git-commit-digest "sha1:${GITHUB_SHA}" \
+            --source-repo "git+https://github.com/${GITHUB_REPOSITORY}" \
             --subjects-path subjects.json \
             --force-checkout
 
