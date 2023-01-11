@@ -138,7 +138,6 @@ function run() {
                 repo,
                 run_id: Number(process.env.GITHUB_RUN_ID),
             });
-            core.debug(`current_run: ${JSON.stringify(current_run)}`);
             const predicate = (0, predicate_1.createPredicate)(rawTokenObj, toolURI, current_run);
             fs.writeFileSync(safeOutput, JSON.stringify(predicate), {
                 flag: "ax",
