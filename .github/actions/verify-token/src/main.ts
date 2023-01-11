@@ -18,14 +18,15 @@ import * as process from "process";
 import * as fs from "fs";
 import * as child_process from "child_process";
 import { githubObj, rawTokenInterface, createPredicate } from "./predicate";
-import path from "path";
+import { getEnv, resolvePathInput } from "./utils";
 
 async function run(): Promise<void> {
   try {
-    /* Test locally:
+    /* Test locally. Requires a GitHub token:
         $ env INPUT_SLSA-WORKFLOW-RECIPIENT="delegator_generic_slsa3.yml" \
         INPUT_SLSA-UNVERIFIED-TOKEN="$(cat testdata/slsa-token)" \
-        INPUT_TOKEN="" \
+        INPUT_TOKEN="${GITHUB_TOKEN}" \
+        INPUT_OUTPUT-PREDICATE="predicate.json" \
         GITHUB_EVENT_NAME="workflow_dispatch" \
         GITHUB_RUN_ATTEMPT="1" \
         GITHUB_RUN_ID="3790385865" \
@@ -41,8 +42,7 @@ async function run(): Promise<void> {
         GITHUB_BASE_REF="" \
         GITHUB_REF_TYPE="branch" \
         GITHUB_ACTOR="laurentsimon" \
-        INPUT_OUTPUT-PREDICATE="predicate.json" \
-        GITHUB_WORKFPSACE="." \
+        GITHUB_WORKSPACE="$(pwd)" \
         nodejs ./dist/index.js
     */
 
@@ -50,7 +50,7 @@ async function run(): Promise<void> {
     const unverifiedToken = core.getInput("slsa-unverified-token");
 
     const outputPredicate = core.getInput("output-predicate");
-    const wd = process.env[`GITHUB_WORKSPACE`] || "";
+    const wd = getEnv("GITHUB_WORKSPACE");
     const safeOutput = resolvePathInput(outputPredicate, wd);
 
     // Log the inputs for troubleshooting.
@@ -114,23 +114,23 @@ async function run(): Promise<void> {
     core.debug(`slsa-verified-token: ${rawTokenStr}`);
 
     // Now generate the SLSA predicate using the verified token and the GH context.
-    let workflow_path = String(process.env.GITHUB_WORKFLOW);
-
     const token = core.getInput("token");
-    if (token !== "") {
-      const octokit = github.getOctokit(token);
-      const ownerRepo = process.env["GITHUB_REPOSITORY"] || "/";
-      const [owner, repo] = ownerRepo.split("/");
-
-      const { data: current_run } = await octokit.rest.actions.getWorkflowRun({
-        owner,
-        repo,
-        run_id: Number(process.env.GITHUB_RUN_ID),
-      });
-      workflow_path = current_run.path;
+    if (!token) {
+      throw new Error("token not provided");
     }
+    const octokit = github.getOctokit(token);
+    const ownerRepo = getEnv("GITHUB_REPOSITORY");
+    const [owner, repo] = ownerRepo.split("/");
 
-    const predicate = createPredicate(rawTokenObj, toolURI, workflow_path);
+    const { data: current_run } = await octokit.rest.actions.getWorkflowRun({
+      owner,
+      repo,
+      run_id: Number(process.env.GITHUB_RUN_ID),
+    });
+    core.debug(`current_run: ${JSON.stringify(current_run)}`);
+    core.debug(`${typeof current_run}`);
+
+    const predicate = createPredicate(rawTokenObj, toolURI, current_run);
     fs.writeFileSync(safeOutput, JSON.stringify(predicate), {
       flag: "ax",
       mode: 0o600,
@@ -292,14 +292,6 @@ function validateNonEmptyField(name: string, actual: string): void {
   if (actual === "") {
     throw new Error(`empty ${name}, expected non-empty value.`);
   }
-}
-
-function resolvePathInput(input: string, wd: string): string {
-  const safeJoin = path.resolve(path.join(wd, input));
-  if (!(safeJoin + path.sep).startsWith(wd + path.sep)) {
-    throw Error(`unsafe path ${safeJoin}`);
-  }
-  return safeJoin;
 }
 
 run();

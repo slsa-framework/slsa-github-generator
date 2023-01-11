@@ -50,9 +50,6 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core = __importStar(__nccwpck_require__(2186));
 const github = __importStar(__nccwpck_require__(5438));
@@ -61,14 +58,15 @@ const process = __importStar(__nccwpck_require__(7282));
 const fs = __importStar(__nccwpck_require__(7147));
 const child_process = __importStar(__nccwpck_require__(2081));
 const predicate_1 = __nccwpck_require__(5464);
-const path_1 = __importDefault(__nccwpck_require__(1017));
+const utils_1 = __nccwpck_require__(918);
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            /* Test locally:
+            /* Test locally. Requires a GitHub token:
                 $ env INPUT_SLSA-WORKFLOW-RECIPIENT="delegator_generic_slsa3.yml" \
                 INPUT_SLSA-UNVERIFIED-TOKEN="$(cat testdata/slsa-token)" \
-                INPUT_TOKEN="" \
+                INPUT_TOKEN="${GITHUB_TOKEN}" \
+                INPUT_OUTPUT-PREDICATE="predicate.json" \
                 GITHUB_EVENT_NAME="workflow_dispatch" \
                 GITHUB_RUN_ATTEMPT="1" \
                 GITHUB_RUN_ID="3790385865" \
@@ -84,15 +82,14 @@ function run() {
                 GITHUB_BASE_REF="" \
                 GITHUB_REF_TYPE="branch" \
                 GITHUB_ACTOR="laurentsimon" \
-                INPUT_OUTPUT-PREDICATE="predicate.json" \
-                GITHUB_WORKFPSACE="." \
+                GITHUB_WORKSPACE="$(pwd)" \
                 nodejs ./dist/index.js
             */
             const workflowRecipient = core.getInput("slsa-workflow-recipient");
             const unverifiedToken = core.getInput("slsa-unverified-token");
             const outputPredicate = core.getInput("output-predicate");
-            const wd = process.env[`GITHUB_WORKSPACE`] || "";
-            const safeOutput = resolvePathInput(outputPredicate, wd);
+            const wd = (0, utils_1.getEnv)("GITHUB_WORKSPACE");
+            const safeOutput = (0, utils_1.resolvePathInput)(outputPredicate, wd);
             // Log the inputs for troubleshooting.
             core.debug(`workflowRecipient: ${workflowRecipient}`);
             core.debug(`unverifiedToken: ${unverifiedToken}`);
@@ -129,20 +126,21 @@ function run() {
             const [toolURI, toolRepository, toolRef] = parseCertificateIdentity(bundle);
             core.debug(`slsa-verified-token: ${rawTokenStr}`);
             // Now generate the SLSA predicate using the verified token and the GH context.
-            let workflow_path = String(process.env.GITHUB_WORKFLOW);
             const token = core.getInput("token");
-            if (token !== "") {
-                const octokit = github.getOctokit(token);
-                const ownerRepo = process.env["GITHUB_REPOSITORY"] || "/";
-                const [owner, repo] = ownerRepo.split("/");
-                const { data: current_run } = yield octokit.rest.actions.getWorkflowRun({
-                    owner,
-                    repo,
-                    run_id: Number(process.env.GITHUB_RUN_ID),
-                });
-                workflow_path = current_run.path;
+            if (!token) {
+                throw new Error("token not provided");
             }
-            const predicate = (0, predicate_1.createPredicate)(rawTokenObj, toolURI, workflow_path);
+            const octokit = github.getOctokit(token);
+            const ownerRepo = (0, utils_1.getEnv)("GITHUB_REPOSITORY");
+            const [owner, repo] = ownerRepo.split("/");
+            const { data: current_run } = yield octokit.rest.actions.getWorkflowRun({
+                owner,
+                repo,
+                run_id: Number(process.env.GITHUB_RUN_ID),
+            });
+            core.debug(`current_run: ${JSON.stringify(current_run)}`);
+            core.debug(`${typeof current_run}`);
+            const predicate = (0, predicate_1.createPredicate)(rawTokenObj, toolURI, current_run);
             fs.writeFileSync(safeOutput, JSON.stringify(predicate), {
                 flag: "ax",
                 mode: 0o600,
@@ -261,13 +259,6 @@ function validateNonEmptyField(name, actual) {
         throw new Error(`empty ${name}, expected non-empty value.`);
     }
 }
-function resolvePathInput(input, wd) {
-    const safeJoin = path_1.default.resolve(path_1.default.join(wd, input));
-    if (!(safeJoin + path_1.default.sep).startsWith(wd + path_1.default.sep)) {
-        throw Error(`unsafe path ${safeJoin}`);
-    }
-    return safeJoin;
-}
 run();
 
 
@@ -318,7 +309,8 @@ exports.createPredicate = void 0;
 const process = __importStar(__nccwpck_require__(7282));
 const fs = __importStar(__nccwpck_require__(7147));
 const DELEGATOR_BUILD_TYPE = "https://github.com/slsa-framework/slsa-github-generator/delegator-generic@v0";
-function createPredicate(rawTokenObj, toolURI, workflow_name) {
+function createPredicate(rawTokenObj, toolURI, currentRun) {
+    var _a;
     const { env } = process;
     const callerRepo = createURI(env.GITHUB_REPOSITORY || "", env.GITHUB_REF || "");
     const predicate = {
@@ -326,7 +318,7 @@ function createPredicate(rawTokenObj, toolURI, workflow_name) {
             buildType: DELEGATOR_BUILD_TYPE,
             externalParameters: {
                 // This is the v0.2 entryPoint.
-                workflowPath: { value: workflow_name },
+                workflowPath: { value: currentRun.path },
                 // We only use source here because the source contained the source
                 // repository and the build configuration.
                 source: {
@@ -342,7 +334,6 @@ function createPredicate(rawTokenObj, toolURI, workflow_name) {
                 // TODO(https://github.com/slsa-framework/slsa-github-generator/issues/1505):
                 // Add GitHub event payload.
                 // TODO(https://github.com/slsa-framework/slsa-github-generator/issues/1506):
-                // Populate GITHUB_ACTOR_ID, GITHUB_REPOSITORY_ID, and GITHUB_REPOSITORY_OWNER_ID.
                 // GITHUB_WORKFLOW_REF and GITHUB_WORKFLOW_SHA are found in
                 // https://github.com/npm/cli/blob/provenance/workspaces/libnpmpublish/lib/provenance.js#L73
                 // but are not populated in the env.
@@ -356,6 +347,11 @@ function createPredicate(rawTokenObj, toolURI, workflow_name) {
                 GITHUB_RUN_NUMBER: { value: String(env.GITHUB_RUN_NUMBER) },
                 GITHUB_SHA: { value: String(env.GITHUB_SHA) },
                 GITHUB_WORKFLOW: { value: String(env.GITHUB_WORKFLOW) },
+                GITHUB_ACTOR_ID: { value: String((_a = currentRun.actor) === null || _a === void 0 ? void 0 : _a.id) },
+                GITHUB_REPOSITORY_ID: { value: String(currentRun.repository.id) },
+                GITHUB_REPSITORY_OWNER_ID: {
+                    value: String(currentRun.repository.owner.id),
+                },
                 IMAGE_OS: { value: String(env.ImageOS) },
                 IMAGE_VERSION: { value: String(env.ImageVersion) },
                 RUNNER_ARCH: { value: String(env.RUNNER_ARCH) },
@@ -370,7 +366,7 @@ function createPredicate(rawTokenObj, toolURI, workflow_name) {
                 id: toolURI,
             },
             metadata: {
-                invocationId: env.GITHUB_RUN_ID,
+                invocationId: `https://github.com/${currentRun.repository.full_name}/actions/runs/${currentRun.id}/attempts/${currentRun.run_attempt}`,
             },
         },
     };
@@ -393,6 +389,61 @@ exports.createPredicate = createPredicate;
 function createURI(repository, ref) {
     return `git+https://github.com/${repository}@${ref}`;
 }
+
+
+/***/ }),
+
+/***/ 918:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.resolvePathInput = exports.getEnv = void 0;
+const path_1 = __importDefault(__nccwpck_require__(1017));
+const process = __importStar(__nccwpck_require__(7282));
+function getEnv(name) {
+    const res = process.env[name];
+    if (typeof res === "undefined") {
+        throw new Error(`missing env: ${name}`);
+    }
+    return String(res);
+}
+exports.getEnv = getEnv;
+function resolvePathInput(untrustedInput, wd) {
+    const safeJoin = path_1.default.resolve(path_1.default.join(wd, untrustedInput));
+    if (!(safeJoin + path_1.default.sep).startsWith(wd + path_1.default.sep)) {
+        throw Error(`unsafe path ${safeJoin}`);
+    }
+    return safeJoin;
+}
+exports.resolvePathInput = resolvePathInput;
 
 
 /***/ }),

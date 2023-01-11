@@ -13,10 +13,14 @@ limitations under the License.
 
 import * as process from "process";
 import * as fs from "fs";
+import type { Endpoints } from "@octokit/types";
 import type { WorkflowDispatchEvent } from "@octokit/webhooks-types";
 
 const DELEGATOR_BUILD_TYPE =
   "https://github.com/slsa-framework/slsa-github-generator/delegator-generic@v0";
+
+type ApiWorkflowRun =
+  Endpoints["GET /repos/{owner}/{repo}/actions/runs/{run_id}"]["response"]["data"];
 
 interface Builder {
   id: string;
@@ -53,14 +57,16 @@ interface ArtifactReference {
 }
 
 interface BuildDefinition {
-  // URI indicating the type of build.
+  // buildType is a TypeURI that unambiguously indicates the type of this message and how to initiate the build.
   buildType: string;
 
-  // external
+  // externalParameters is the set of top-level external inputs to the build.
   externalParameters: { [key: string]: ParameterValue };
 
+  // systemParameters describes parameters of the build environment provided by the `builder`.
   systemParameters?: { [key: string]: ParameterValue };
 
+  // resolvedDependencies are dependencies needed at build time.
   resolvedDependencies?: ArtifactReference[];
 }
 
@@ -73,8 +79,10 @@ interface RunDetails {
 }
 
 interface SLSAv1Predicate {
+  // buildDefinition describes the inputs to the build.
   buildDefinition: BuildDefinition;
 
+  // runDetails includes details specific to this particular execution of the build.
   runDetails: RunDetails;
 }
 
@@ -96,7 +104,7 @@ export interface rawTokenInterface {
     // NOTE: reusable workflows only support inputs of type
     // boolean, number, or string.
     // https://docs.github.com/en/actions/using-workflows/reusing-workflows#passing-inputs-and-secrets-to-a-reusable-workflow.
-    inputs: Map<string, Object>;
+    inputs: Map<string, string | number | boolean>;
   };
 }
 
@@ -121,7 +129,7 @@ export interface githubObj {
 export function createPredicate(
   rawTokenObj: rawTokenInterface,
   toolURI: string,
-  workflow_name: string
+  currentRun: ApiWorkflowRun
 ): SLSAv1Predicate {
   const { env } = process;
 
@@ -135,7 +143,7 @@ export function createPredicate(
       buildType: DELEGATOR_BUILD_TYPE,
       externalParameters: {
         // This is the v0.2 entryPoint.
-        workflowPath: { value: workflow_name },
+        workflowPath: { value: currentRun.path },
         // We only use source here because the source contained the source
         // repository and the build configuration.
         source: {
@@ -151,7 +159,6 @@ export function createPredicate(
         // TODO(https://github.com/slsa-framework/slsa-github-generator/issues/1505):
         // Add GitHub event payload.
         // TODO(https://github.com/slsa-framework/slsa-github-generator/issues/1506):
-        // Populate GITHUB_ACTOR_ID, GITHUB_REPOSITORY_ID, and GITHUB_REPOSITORY_OWNER_ID.
         // GITHUB_WORKFLOW_REF and GITHUB_WORKFLOW_SHA are found in
         // https://github.com/npm/cli/blob/provenance/workspaces/libnpmpublish/lib/provenance.js#L73
         // but are not populated in the env.
@@ -165,6 +172,11 @@ export function createPredicate(
         GITHUB_RUN_NUMBER: { value: String(env.GITHUB_RUN_NUMBER) },
         GITHUB_SHA: { value: String(env.GITHUB_SHA) },
         GITHUB_WORKFLOW: { value: String(env.GITHUB_WORKFLOW) },
+        GITHUB_ACTOR_ID: { value: String(currentRun.actor?.id) },
+        GITHUB_REPOSITORY_ID: { value: String(currentRun.repository.id) },
+        GITHUB_REPSITORY_OWNER_ID: {
+          value: String(currentRun.repository.owner.id),
+        },
         IMAGE_OS: { value: String(env.ImageOS) },
         IMAGE_VERSION: { value: String(env.ImageVersion) },
         RUNNER_ARCH: { value: String(env.RUNNER_ARCH) },
@@ -179,7 +191,7 @@ export function createPredicate(
         id: toolURI,
       },
       metadata: {
-        invocationId: env.GITHUB_RUN_ID,
+        invocationId: `https://github.com/${currentRun.repository.full_name}/actions/runs/${currentRun.id}/attempts/${currentRun.run_attempt}`,
       },
     },
   };
