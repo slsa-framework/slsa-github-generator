@@ -32,6 +32,7 @@ project simply generates provenance as a separate step in an existing workflow.
   - [Ko](#ko)
 - [Provenance for matrix strategy builds](#provenance-for-matrix-strategy-builds)
 - [Verification](#verification)
+  - [slsa-verifier](#slsa-verifier)
   - [Cosign](#cosign)
   - [Sigstore policy-controller](#sigstore-policy-controller)
   - [Kyverno](#kyverno)
@@ -206,16 +207,17 @@ Inputs:
 | -------------------- | -------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `image`              | yes      |         | The OCI image name. This must not include a tag or digest.                                                                                                                                                                      |
 | `digest`             | yes      |         | The OCI image digest. The image digest of the form '<algorithm>:<digest>' (e.g. 'sha256:abcdef...')                                                                                                                             |
-| `registry-username`  | yes      |         | Username to log into the container registry.                                                                                                                                                                                    |
+| `registry-username`  | no       |         | Username to log in the container registry. Either `registry-username` input or `registry-username` secret is required.                                                                                                          |
 | `compile-generator`  | false    | false   | Whether to build the generator from source. This increases build time by ~2m.                                                                                                                                                   |
 | `private-repository` | no       | false   | Set to true to opt-in to posting to the public transparency log. Will generate an error if false for private repositories. This input has no effect for public repositories. See [Private Repositories](#private-repositories). |
 | `continue-on-error`  | no       | false   | Set to true to ignore errors. This option is useful if you won't want a failure to fail your entire workflow.                                                                                                                   |
 
 Secrets:
 
-| Name                | Required | Description                                |
-| ------------------- | -------- | ------------------------------------------ |
-| `registry-password` | yes      | Password to log in the container registry. |
+| Name                | Required | Description                                                                                                            |
+| ------------------- | -------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `registry-username` | no       | Username to log in the container registry. Either `registry-username` input or `registry-username` secret is required. |
+| `registry-password` | yes      | Password to log in the container registry.                                                                             |
 
 ### Workflow Outputs
 
@@ -447,6 +449,10 @@ for the generic generator.
 ## Verification
 
 Verification of provenance attestations can be done via several different tools. This section shows examples of several popular tools.
+
+### slsa-verifier
+
+`slsa-verifier` can be used to verify the provenance attestation for the image. Please see the [documentation](https://github.com/slsa-framework/slsa-verifier#containers) in the slsa-verifier repository.
 
 ### Cosign
 

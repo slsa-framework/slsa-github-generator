@@ -28,16 +28,16 @@ import (
 
 // BuildConfig is a collection of parameters to use for building the artifact.
 type BuildConfig struct {
+	// The path, relative to the root of the git repository, where the artifact
+	// built by the `docker run` command is expected to be found.
+	ArtifactPath string `toml:"artifact_path"`
+
 	// TODO(#1191): Add env and options if needed.
 	// Command to pass to `docker run`. The command is taken as an array
 	// instead of a single string to avoid unnecessary parsing. See
 	// https://docs.docker.com/engine/reference/builder/#cmd and
 	// https://man7.org/linux/man-pages/man3/exec.3.html for more details.
 	Command []string `toml:"command"`
-
-	// The path, relative to the root of the git repository, where the artifact
-	// built by the `docker run` command is expected to be found.
-	ArtifactPath string `toml:"artifact_path"`
 }
 
 // Digest specifies a digest values, including the name of the hash function
@@ -50,13 +50,13 @@ type Digest struct {
 // DockerImage fully specifies a docker image by a URI (e.g., including the
 // docker image name and registry), and its digest.
 type DockerImage struct {
-	URI    string
+	Name   string
 	Digest Digest
 }
 
 // ToString returns the builder image in the form of NAME@ALG:VALUE.
 func (bi *DockerImage) ToString() string {
-	return fmt.Sprintf("%s@%s:%s", bi.URI, bi.Digest.Alg, bi.Digest.Value)
+	return fmt.Sprintf("%s@%s:%s", bi.Name, bi.Digest.Alg, bi.Digest.Value)
 }
 
 // DockerBuildConfig is a convenience class for holding validated user inputs.
@@ -65,6 +65,7 @@ type DockerBuildConfig struct {
 	SourceDigest    Digest
 	BuilderImage    DockerImage
 	BuildConfigPath string
+	ForceCheckout   bool
 }
 
 // NewDockerBuildConfig validates the inputs and generates an instance of
@@ -133,7 +134,7 @@ func validateDockerImage(image string) (*DockerImage, error) {
 	}
 
 	dockerImage := DockerImage{
-		URI:    imageParts[0],
+		Name:   imageParts[0],
 		Digest: *digest,
 	}
 

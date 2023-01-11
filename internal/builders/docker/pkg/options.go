@@ -32,9 +32,9 @@ func (io *InputOptions) AddFlags(cmd *cobra.Command) {
 	cmd.Flags().StringVarP(&io.SourceRepo, "source-repo", "s", "",
 		"Required - URL of the source repo.")
 
-	cmd.Flags().StringVarP(&io.GitCommitHash, "git-commit-hash", "g", "",
+	cmd.Flags().StringVarP(&io.GitCommitHash, "git-commit-digest", "d", "",
 		"Required - SHA1 Git commit digest of the revision of the source code to build the artefact from.")
 
-	cmd.Flags().StringVarP(&io.BuilderImage, "builder-image", "b", "",
+	cmd.Flags().StringVarP(&io.BuilderImage, "builder-image", "i", "",
 		"Required - URL indicating the Docker builder image, including a URI and image digest.")
 }

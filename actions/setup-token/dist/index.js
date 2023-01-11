@@ -34147,6 +34147,53 @@ module.exports = validRange
 
 /***/ }),
 
+/***/ 609:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.toCertificateRequest = void 0;
+function toCertificateRequest(publicKey, challenge) {
+    return {
+        publicKey: {
+            content: publicKey
+                .export({ type: 'spki', format: 'der' })
+                .toString('base64'),
+        },
+        signedEmailAddress: challenge.toString('base64'),
+    };
+}
+exports.toCertificateRequest = toCertificateRequest;
+
+
+/***/ }),
+
+/***/ 7021:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.CAClient = void 0;
+const client_1 = __nccwpck_require__(3969);
+const util_1 = __nccwpck_require__(6901);
+const format_1 = __nccwpck_require__(609);
+class CAClient {
+    constructor(options) {
+        this.fulcio = new client_1.Fulcio({ baseURL: options.fulcioBaseURL });
+    }
+    async createSigningCertificate(identityToken, publicKey, challenge) {
+        const request = (0, format_1.toCertificateRequest)(publicKey, challenge);
+        const certificate = await this.fulcio.createSigningCertificate(identityToken, request);
+        return util_1.pem.split(certificate);
+    }
+}
+exports.CAClient = CAClient;
+
+
+/***/ }),
+
 /***/ 7045:
 /***/ ((__unused_webpack_module, exports) => {
 
@@ -34159,6 +34206,7 @@ class HTTPError extends Error {
         super(`HTTP Error: ${response.status} ${response.statusText}`);
         this.response = response;
         this.statusCode = response.status;
+        this.location = response.headers?.get('Location') || undefined;
     }
 }
 exports.HTTPError = HTTPError;
@@ -34203,7 +34251,6 @@ limitations under the License.
 const make_fetch_happen_1 = __importDefault(__nccwpck_require__(9525));
 const util_1 = __nccwpck_require__(6901);
 const error_1 = __nccwpck_require__(7045);
-const DEFAULT_BASE_URL = 'https://fulcio.sigstore.dev';
 /**
  * Fulcio API client.
  */
@@ -34218,7 +34265,7 @@ class Fulcio {
                 'User-Agent': util_1.ua.getUserAgent(),
             },
         });
-        this.baseUrl = options.baseURL ?? DEFAULT_BASE_URL;
+        this.baseUrl = options.baseURL;
     }
     async createSigningCertificate(idToken, request) {
         const url = `${this.baseUrl}/api/v1/signingCert`;
@@ -34396,7 +34443,7 @@ function entryFromResponse(data) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.UnsupportedVersionError = exports.InvalidBundleError = exports.VerificationError = void 0;
+exports.CertificateChainVerificationError = exports.UnsupportedVersionError = exports.InvalidBundleError = exports.VerificationError = void 0;
 class VerificationError extends Error {
 }
 exports.VerificationError = VerificationError;
@@ -34406,6 +34453,9 @@ exports.InvalidBundleError = InvalidBundleError;
 class UnsupportedVersionError extends Error {
 }
 exports.UnsupportedVersionError = UnsupportedVersionError;
+class CertificateChainVerificationError extends VerificationError {
+}
+exports.CertificateChainVerificationError = CertificateChainVerificationError;
 
 
 /***/ }),
@@ -34851,12 +34901,11 @@ exports.sigstore = __importStar(__nccwpck_require__(1111));
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Signer = void 0;
-const fulcio_1 = __nccwpck_require__(975);
 const util_1 = __nccwpck_require__(6901);
 class Signer {
     constructor(options) {
         this.identityProviders = [];
-        this.fulcio = options.fulcio;
+        this.ca = options.ca;
         this.tlog = options.tlog;
         this.identityProviders = options.identityProviders;
         this.signer = options.signer || this.signWithEphemeralKey.bind(this);
@@ -34896,12 +34945,12 @@ class Signer {
         // Construct challenge value by encrypting subject with private key
         const challenge = util_1.crypto.signBlob(Buffer.from(subject), keypair.privateKey);
         // Create signing certificate
-        const certificate = await this.fulcio.createSigningCertificate(identityToken, fulcio_1.fulcio.toCertificateRequest(keypair.publicKey, challenge));
+        const certificates = await this.ca.createSigningCertificate(identityToken, keypair.publicKey, challenge);
         // Generate artifact signature
         const signature = util_1.crypto.signBlob(payload, keypair.privateKey);
         return {
             signature,
-            certificates: util_1.pem.split(certificate),
+            certificates,
             key: undefined,
         };
     }
@@ -34982,7 +35031,9 @@ async function createRekorEntry(dsseEnvelope, publicKey, options = {}) {
     const envelope = (0, bundle_1.envelopeFromJSON)(dsseEnvelope);
     const tlog = createTLogClient(options);
     const sigMaterial = (0, signature_1.extractSignatureMaterial)(envelope, publicKey);
-    const bundle = await tlog.createDSSEEntry(envelope, sigMaterial);
+    const bundle = await tlog.createDSSEEntry(envelope, sigMaterial, {
+        fetchOnConflict: true,
+    });
     return (0, bundle_1.bundleToJSON)(bundle);
 }
 exports.createRekorEntry = createRekorEntry;
@@ -35022,7 +35073,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.verify = exports.signAttestation = exports.sign = exports.DEFAULT_REKOR_BASE_URL = exports.utils = void 0;
+exports.verify = exports.signAttestation = exports.sign = exports.DEFAULT_REKOR_BASE_URL = exports.DEFAULT_FULCIO_BASE_URL = exports.utils = void 0;
 /*
 Copyright 2022 The Sigstore Authors.
 
@@ -35038,7 +35089,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-const client_1 = __nccwpck_require__(3969);
+const ca_1 = __nccwpck_require__(7021);
 const identity_1 = __importDefault(__nccwpck_require__(8761));
 const sign_1 = __nccwpck_require__(9884);
 const tlog_1 = __nccwpck_require__(2030);
@@ -35046,18 +35097,24 @@ const keys_1 = __nccwpck_require__(7663);
 const bundle_1 = __nccwpck_require__(5107);
 const verify_1 = __nccwpck_require__(7995);
 exports.utils = __importStar(__nccwpck_require__(2021));
+exports.DEFAULT_FULCIO_BASE_URL = 'https://fulcio.sigstore.dev';
 exports.DEFAULT_REKOR_BASE_URL = 'https://rekor.sigstore.dev';
+function createCAClient(options) {
+    return new ca_1.CAClient({
+        fulcioBaseURL: options.fulcioBaseURL || exports.DEFAULT_FULCIO_BASE_URL,
+    });
+}
 function createTLogClient(options) {
     return new tlog_1.TLogClient({
         rekorBaseURL: options.rekorBaseURL || exports.DEFAULT_REKOR_BASE_URL,
     });
 }
 async function sign(payload, options = {}) {
-    const fulcio = new client_1.Fulcio({ baseURL: options.fulcioBaseURL });
+    const ca = createCAClient(options);
     const tlog = createTLogClient(options);
     const idps = configureIdentityProviders(options);
     const signer = new sign_1.Signer({
-        fulcio,
+        ca,
         tlog,
         identityProviders: idps,
     });
@@ -35066,11 +35123,11 @@ async function sign(payload, options = {}) {
 }
 exports.sign = sign;
 async function signAttestation(payload, payloadType, options = {}) {
-    const fulcio = new client_1.Fulcio({ baseURL: options.fulcioBaseURL });
+    const ca = createCAClient(options);
     const tlog = createTLogClient(options);
     const idps = configureIdentityProviders(options);
     const signer = new sign_1.Signer({
-        fulcio,
+        ca,
         tlog,
         identityProviders: idps,
     });
@@ -35249,6 +35306,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 const client_1 = __nccwpck_require__(3969);
+const error_1 = __nccwpck_require__(7045);
 const bundle_1 = __nccwpck_require__(5107);
 const format_1 = __nccwpck_require__(8810);
 class TLogClient {
@@ -35260,13 +35318,33 @@ class TLogClient {
         const entry = await this.rekor.createEntry(proposedEntry);
         return bundle_1.bundle.toMessageSignatureBundle(digest, sigMaterial, entry);
     }
-    async createDSSEEntry(envelope, sigMaterial) {
-        const proposedEntry = (0, format_1.toProposedIntotoEntry)(envelope, sigMaterial);
-        const entry = await this.rekor.createEntry(proposedEntry);
+    async createDSSEEntry(envelope, sigMaterial, options = {}) {
+        const fetchOnConflict = options.fetchOnConflict ?? false;
+        let entry;
+        try {
+            const proposedEntry = (0, format_1.toProposedIntotoEntry)(envelope, sigMaterial);
+            entry = await this.rekor.createEntry(proposedEntry);
+        }
+        catch (err) {
+            // If the entry already exists, fetch it (if enabled)
+            if (entryExistsError(err) && fetchOnConflict) {
+                // Grab the UUID of the existing entry from the location header
+                const uuid = err.location.split('/').pop() || '';
+                entry = await this.rekor.getEntry(uuid);
+            }
+            else {
+                throw err;
+            }
+        }
         return bundle_1.bundle.toDSSEBundle(envelope, sigMaterial, entry);
     }
 }
 exports.TLogClient = TLogClient;
+function entryExistsError(value) {
+    return (value instanceof error_1.HTTPError &&
+        value.statusCode === 409 &&
+        value.location !== undefined);
+}
 
 
 /***/ }),
@@ -35298,13 +35376,12 @@ limitations under the License.
 */
 const crypto_1 = __nccwpck_require__(6113);
 const fs_1 = __importDefault(__nccwpck_require__(7147));
-const path_1 = __importDefault(__nccwpck_require__(1017));
 const util_1 = __nccwpck_require__(6901);
 // Returns the set of trusted log keys which can be used to verify the
 // Signed Entry Timestamps in the log.
 function getKeys() {
     // TODO: This should be be loaded via TUF
-    const pem = fs_1.default.readFileSync(path_1.default.resolve(__dirname, '../../store/rekor.pub'), 'utf-8');
+    const pem = fs_1.default.readFileSync(__nccwpck_require__.ab + "rekor.pub", 'utf-8');
     const key = (0, crypto_1.createPublicKey)(pem);
     // Calculate logID from the key
     const logID = getLogID(key);
@@ -35356,7 +35433,7 @@ function verifyTLogEntries(bundle, tlogKeys) {
                 .rawBytes;
     }
     // Iterate over the tlog entries and verify each one
-    bundle.verificationData?.tlogEntries.forEach((entry) => {
+    bundle.verificationMaterial?.tlogEntries.forEach((entry) => {
         verifyTLogBody(entry, bundle);
         verifyTLogSET(entry, tlogKeys);
         // If there is no signing certificate, we can't verify the integrated time
@@ -35603,13 +35680,45 @@ function isSet(value) {
 
 /***/ }),
 
+/***/ 92:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+/* eslint-disable */
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Timestamp = void 0;
+function createBaseTimestamp() {
+    return { seconds: "0", nanos: 0 };
+}
+exports.Timestamp = {
+    fromJSON(object) {
+        return {
+            seconds: isSet(object.seconds) ? String(object.seconds) : "0",
+            nanos: isSet(object.nanos) ? Number(object.nanos) : 0,
+        };
+    },
+    toJSON(message) {
+        const obj = {};
+        message.seconds !== undefined && (obj.seconds = message.seconds);
+        message.nanos !== undefined && (obj.nanos = Math.round(message.nanos));
+        return obj;
+    },
+};
+function isSet(value) {
+    return value !== null && value !== undefined;
+}
+
+
+/***/ }),
+
 /***/ 3216:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.Bundle = exports.VerificationData = exports.TimestampVerificationData = void 0;
+exports.Bundle = exports.VerificationMaterial = exports.TimestampVerificationData = void 0;
 /* eslint-disable */
 const envelope_1 = __nccwpck_require__(9976);
 const sigstore_common_1 = __nccwpck_require__(1681);
@@ -35636,12 +35745,20 @@ exports.TimestampVerificationData = {
         return obj;
     },
 };
-function createBaseVerificationData() {
-    return { tlogEntries: [], timestampVerificationData: undefined };
+function createBaseVerificationMaterial() {
+    return { content: undefined, tlogEntries: [], timestampVerificationData: undefined };
 }
-exports.VerificationData = {
+exports.VerificationMaterial = {
     fromJSON(object) {
         return {
+            content: isSet(object.publicKey)
+                ? { $case: "publicKey", publicKey: sigstore_common_1.PublicKeyIdentifier.fromJSON(object.publicKey) }
+                : isSet(object.x509CertificateChain)
+                    ? {
+                        $case: "x509CertificateChain",
+                        x509CertificateChain: sigstore_common_1.X509CertificateChain.fromJSON(object.x509CertificateChain),
+                    }
+                    : undefined,
             tlogEntries: Array.isArray(object?.tlogEntries)
                 ? object.tlogEntries.map((e) => sigstore_rekor_1.TransparencyLogEntry.fromJSON(e))
                 : [],
@@ -35652,6 +35769,12 @@ exports.VerificationData = {
     },
     toJSON(message) {
         const obj = {};
+        message.content?.$case === "publicKey" &&
+            (obj.publicKey = message.content?.publicKey ? sigstore_common_1.PublicKeyIdentifier.toJSON(message.content?.publicKey) : undefined);
+        message.content?.$case === "x509CertificateChain" &&
+            (obj.x509CertificateChain = message.content?.x509CertificateChain
+                ? sigstore_common_1.X509CertificateChain.toJSON(message.content?.x509CertificateChain)
+                : undefined);
         if (message.tlogEntries) {
             obj.tlogEntries = message.tlogEntries.map((e) => e ? sigstore_rekor_1.TransparencyLogEntry.toJSON(e) : undefined);
         }
@@ -35666,15 +35789,14 @@ exports.VerificationData = {
     },
 };
 function createBaseBundle() {
-    return { mediaType: "", verificationData: undefined, verificationMaterial: undefined, content: undefined };
+    return { mediaType: "", verificationMaterial: undefined, content: undefined };
 }
 exports.Bundle = {
     fromJSON(object) {
         return {
             mediaType: isSet(object.mediaType) ? String(object.mediaType) : "",
-            verificationData: isSet(object.verificationData) ? exports.VerificationData.fromJSON(object.verificationData) : undefined,
             verificationMaterial: isSet(object.verificationMaterial)
-                ? sigstore_common_1.VerificationMaterial.fromJSON(object.verificationMaterial)
+                ? exports.VerificationMaterial.fromJSON(object.verificationMaterial)
                 : undefined,
             content: isSet(object.messageSignature)
                 ? { $case: "messageSignature", messageSignature: sigstore_common_1.MessageSignature.fromJSON(object.messageSignature) }
@@ -35686,10 +35808,8 @@ exports.Bundle = {
     toJSON(message) {
         const obj = {};
         message.mediaType !== undefined && (obj.mediaType = message.mediaType);
-        message.verificationData !== undefined &&
-            (obj.verificationData = message.verificationData ? exports.VerificationData.toJSON(message.verificationData) : undefined);
         message.verificationMaterial !== undefined && (obj.verificationMaterial = message.verificationMaterial
-            ? sigstore_common_1.VerificationMaterial.toJSON(message.verificationMaterial)
+            ? exports.VerificationMaterial.toJSON(message.verificationMaterial)
             : undefined);
         message.content?.$case === "messageSignature" && (obj.messageSignature = message.content?.messageSignature
             ? sigstore_common_1.MessageSignature.toJSON(message.content?.messageSignature)
@@ -35707,27 +35827,27 @@ function isSet(value) {
 /***/ }),
 
 /***/ 1681:
-/***/ ((__unused_webpack_module, exports) => {
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
 
-/* eslint-disable */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.VerificationMaterial = exports.X509CertificateChain = exports.X509Certificate = exports.PublicKeyIdentifier = exports.RFC3161SignedTimestamp = exports.MessageSignature = exports.HashOutput = exports.hashAlgorithmToJSON = exports.hashAlgorithmFromJSON = exports.HashAlgorithm = void 0;
+exports.TimeRange = exports.X509CertificateChain = exports.SubjectAlternativeName = exports.X509Certificate = exports.DistinguishedName = exports.ObjectIdentifierValuePair = exports.ObjectIdentifier = exports.PublicKeyIdentifier = exports.PublicKey = exports.RFC3161SignedTimestamp = exports.LogId = exports.MessageSignature = exports.HashOutput = exports.subjectAlternativeNameTypeToJSON = exports.subjectAlternativeNameTypeFromJSON = exports.SubjectAlternativeNameType = exports.publicKeyDetailsToJSON = exports.publicKeyDetailsFromJSON = exports.PublicKeyDetails = exports.hashAlgorithmToJSON = exports.hashAlgorithmFromJSON = exports.HashAlgorithm = void 0;
+/* eslint-disable */
+const timestamp_1 = __nccwpck_require__(92);
 /**
  * Only a subset of the secure hash standard algorithms are supported.
- * See https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.180-4.pdf for more
+ * See <https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.180-4.pdf> for more
  * details.
  * UNSPECIFIED SHOULD not be used, primary reason for inclusion is to force
  * any proto JSON serialization to emit the used hash algorithm, as default
- * option is to *omit* the default value of an emum (which is the first
+ * option is to *omit* the default value of an enum (which is the first
  * value, represented by '0'.
  */
 var HashAlgorithm;
 (function (HashAlgorithm) {
     HashAlgorithm[HashAlgorithm["HASH_ALGORITHM_UNSPECIFIED"] = 0] = "HASH_ALGORITHM_UNSPECIFIED";
     HashAlgorithm[HashAlgorithm["SHA2_256"] = 1] = "SHA2_256";
-    HashAlgorithm[HashAlgorithm["SHA2_512"] = 2] = "SHA2_512";
 })(HashAlgorithm = exports.HashAlgorithm || (exports.HashAlgorithm = {}));
 function hashAlgorithmFromJSON(object) {
     switch (object) {
@@ -35737,9 +35857,6 @@ function hashAlgorithmFromJSON(object) {
         case 1:
         case "SHA2_256":
             return HashAlgorithm.SHA2_256;
-        case 2:
-        case "SHA2_512":
-            return HashAlgorithm.SHA2_512;
         default:
             throw new globalThis.Error("Unrecognized enum value " + object + " for enum HashAlgorithm");
     }
@@ -35751,13 +35868,135 @@ function hashAlgorithmToJSON(object) {
             return "HASH_ALGORITHM_UNSPECIFIED";
         case HashAlgorithm.SHA2_256:
             return "SHA2_256";
-        case HashAlgorithm.SHA2_512:
-            return "SHA2_512";
         default:
             throw new globalThis.Error("Unrecognized enum value " + object + " for enum HashAlgorithm");
     }
 }
 exports.hashAlgorithmToJSON = hashAlgorithmToJSON;
+/**
+ * Details of a specific public key, capturing the the key encoding method,
+ * and signature algorithm.
+ * To avoid the possibility of contradicting formats such as PKCS1 with
+ * ED25519 the valid permutations are listed as a linear set instead of a
+ * cartesian set (i.e one combined variable instead of two, one for encoding
+ * and one for the signature algorithm).
+ */
+var PublicKeyDetails;
+(function (PublicKeyDetails) {
+    PublicKeyDetails[PublicKeyDetails["PUBLIC_KEY_DETAILS_UNSPECIFIED"] = 0] = "PUBLIC_KEY_DETAILS_UNSPECIFIED";
+    /** PKCS1_RSA_PKCS1V5 - RSA */
+    PublicKeyDetails[PublicKeyDetails["PKCS1_RSA_PKCS1V5"] = 1] = "PKCS1_RSA_PKCS1V5";
+    /** PKCS1_RSA_PSS - See RFC8017 */
+    PublicKeyDetails[PublicKeyDetails["PKCS1_RSA_PSS"] = 2] = "PKCS1_RSA_PSS";
+    PublicKeyDetails[PublicKeyDetails["PKIX_RSA_PKCS1V5"] = 3] = "PKIX_RSA_PKCS1V5";
+    PublicKeyDetails[PublicKeyDetails["PKIX_RSA_PSS"] = 4] = "PKIX_RSA_PSS";
+    /** PKIX_ECDSA_P256_SHA_256 - ECDSA */
+    PublicKeyDetails[PublicKeyDetails["PKIX_ECDSA_P256_SHA_256"] = 5] = "PKIX_ECDSA_P256_SHA_256";
+    /** PKIX_ECDSA_P256_HMAC_SHA_256 - See RFC6979 */
+    PublicKeyDetails[PublicKeyDetails["PKIX_ECDSA_P256_HMAC_SHA_256"] = 6] = "PKIX_ECDSA_P256_HMAC_SHA_256";
+    /** PKIX_ED25519 - Ed 25519 */
+    PublicKeyDetails[PublicKeyDetails["PKIX_ED25519"] = 7] = "PKIX_ED25519";
+})(PublicKeyDetails = exports.PublicKeyDetails || (exports.PublicKeyDetails = {}));
+function publicKeyDetailsFromJSON(object) {
+    switch (object) {
+        case 0:
+        case "PUBLIC_KEY_DETAILS_UNSPECIFIED":
+            return PublicKeyDetails.PUBLIC_KEY_DETAILS_UNSPECIFIED;
+        case 1:
+        case "PKCS1_RSA_PKCS1V5":
+            return PublicKeyDetails.PKCS1_RSA_PKCS1V5;
+        case 2:
+        case "PKCS1_RSA_PSS":
+            return PublicKeyDetails.PKCS1_RSA_PSS;
+        case 3:
+        case "PKIX_RSA_PKCS1V5":
+            return PublicKeyDetails.PKIX_RSA_PKCS1V5;
+        case 4:
+        case "PKIX_RSA_PSS":
+            return PublicKeyDetails.PKIX_RSA_PSS;
+        case 5:
+        case "PKIX_ECDSA_P256_SHA_256":
+            return PublicKeyDetails.PKIX_ECDSA_P256_SHA_256;
+        case 6:
+        case "PKIX_ECDSA_P256_HMAC_SHA_256":
+            return PublicKeyDetails.PKIX_ECDSA_P256_HMAC_SHA_256;
+        case 7:
+        case "PKIX_ED25519":
+            return PublicKeyDetails.PKIX_ED25519;
+        default:
+            throw new globalThis.Error("Unrecognized enum value " + object + " for enum PublicKeyDetails");
+    }
+}
+exports.publicKeyDetailsFromJSON = publicKeyDetailsFromJSON;
+function publicKeyDetailsToJSON(object) {
+    switch (object) {
+        case PublicKeyDetails.PUBLIC_KEY_DETAILS_UNSPECIFIED:
+            return "PUBLIC_KEY_DETAILS_UNSPECIFIED";
+        case PublicKeyDetails.PKCS1_RSA_PKCS1V5:
+            return "PKCS1_RSA_PKCS1V5";
+        case PublicKeyDetails.PKCS1_RSA_PSS:
+            return "PKCS1_RSA_PSS";
+        case PublicKeyDetails.PKIX_RSA_PKCS1V5:
+            return "PKIX_RSA_PKCS1V5";
+        case PublicKeyDetails.PKIX_RSA_PSS:
+            return "PKIX_RSA_PSS";
+        case PublicKeyDetails.PKIX_ECDSA_P256_SHA_256:
+            return "PKIX_ECDSA_P256_SHA_256";
+        case PublicKeyDetails.PKIX_ECDSA_P256_HMAC_SHA_256:
+            return "PKIX_ECDSA_P256_HMAC_SHA_256";
+        case PublicKeyDetails.PKIX_ED25519:
+            return "PKIX_ED25519";
+        default:
+            throw new globalThis.Error("Unrecognized enum value " + object + " for enum PublicKeyDetails");
+    }
+}
+exports.publicKeyDetailsToJSON = publicKeyDetailsToJSON;
+var SubjectAlternativeNameType;
+(function (SubjectAlternativeNameType) {
+    SubjectAlternativeNameType[SubjectAlternativeNameType["SUBJECT_ALTERNATIVE_NAME_TYPE_UNSPECIFIED"] = 0] = "SUBJECT_ALTERNATIVE_NAME_TYPE_UNSPECIFIED";
+    SubjectAlternativeNameType[SubjectAlternativeNameType["EMAIL"] = 1] = "EMAIL";
+    SubjectAlternativeNameType[SubjectAlternativeNameType["URI"] = 2] = "URI";
+    /**
+     * OTHER_NAME - OID 1.3.6.1.4.1.57264.1.7
+     * See https://github.com/sigstore/fulcio/blob/main/docs/oid-info.md#1361415726417--othername-san
+     * for more details.
+     */
+    SubjectAlternativeNameType[SubjectAlternativeNameType["OTHER_NAME"] = 3] = "OTHER_NAME";
+})(SubjectAlternativeNameType = exports.SubjectAlternativeNameType || (exports.SubjectAlternativeNameType = {}));
+function subjectAlternativeNameTypeFromJSON(object) {
+    switch (object) {
+        case 0:
+        case "SUBJECT_ALTERNATIVE_NAME_TYPE_UNSPECIFIED":
+            return SubjectAlternativeNameType.SUBJECT_ALTERNATIVE_NAME_TYPE_UNSPECIFIED;
+        case 1:
+        case "EMAIL":
+            return SubjectAlternativeNameType.EMAIL;
+        case 2:
+        case "URI":
+            return SubjectAlternativeNameType.URI;
+        case 3:
+        case "OTHER_NAME":
+            return SubjectAlternativeNameType.OTHER_NAME;
+        default:
+            throw new globalThis.Error("Unrecognized enum value " + object + " for enum SubjectAlternativeNameType");
+    }
+}
+exports.subjectAlternativeNameTypeFromJSON = subjectAlternativeNameTypeFromJSON;
+function subjectAlternativeNameTypeToJSON(object) {
+    switch (object) {
+        case SubjectAlternativeNameType.SUBJECT_ALTERNATIVE_NAME_TYPE_UNSPECIFIED:
+            return "SUBJECT_ALTERNATIVE_NAME_TYPE_UNSPECIFIED";
+        case SubjectAlternativeNameType.EMAIL:
+            return "EMAIL";
+        case SubjectAlternativeNameType.URI:
+            return "URI";
+        case SubjectAlternativeNameType.OTHER_NAME:
+            return "OTHER_NAME";
+        default:
+            throw new globalThis.Error("Unrecognized enum value " + object + " for enum SubjectAlternativeNameType");
+    }
+}
+exports.subjectAlternativeNameTypeToJSON = subjectAlternativeNameTypeToJSON;
 function createBaseHashOutput() {
     return { algorithm: 0, digest: Buffer.alloc(0) };
 }
@@ -35795,6 +36034,20 @@ exports.MessageSignature = {
         return obj;
     },
 };
+function createBaseLogId() {
+    return { keyId: Buffer.alloc(0) };
+}
+exports.LogId = {
+    fromJSON(object) {
+        return { keyId: isSet(object.keyId) ? Buffer.from(bytesFromBase64(object.keyId)) : Buffer.alloc(0) };
+    },
+    toJSON(message) {
+        const obj = {};
+        message.keyId !== undefined &&
+            (obj.keyId = base64FromBytes(message.keyId !== undefined ? message.keyId : Buffer.alloc(0)));
+        return obj;
+    },
+};
 function createBaseRFC3161SignedTimestamp() {
     return { signedTimestamp: Buffer.alloc(0) };
 }
@@ -35813,6 +36066,27 @@ exports.RFC3161SignedTimestamp = {
         return obj;
     },
 };
+function createBasePublicKey() {
+    return { rawBytes: undefined, keyDetails: 0, validFor: undefined };
+}
+exports.PublicKey = {
+    fromJSON(object) {
+        return {
+            rawBytes: isSet(object.rawBytes) ? Buffer.from(bytesFromBase64(object.rawBytes)) : undefined,
+            keyDetails: isSet(object.keyDetails) ? publicKeyDetailsFromJSON(object.keyDetails) : 0,
+            validFor: isSet(object.validFor) ? exports.TimeRange.fromJSON(object.validFor) : undefined,
+        };
+    },
+    toJSON(message) {
+        const obj = {};
+        message.rawBytes !== undefined &&
+            (obj.rawBytes = message.rawBytes !== undefined ? base64FromBytes(message.rawBytes) : undefined);
+        message.keyDetails !== undefined && (obj.keyDetails = publicKeyDetailsToJSON(message.keyDetails));
+        message.validFor !== undefined &&
+            (obj.validFor = message.validFor ? exports.TimeRange.toJSON(message.validFor) : undefined);
+        return obj;
+    },
+};
 function createBasePublicKeyIdentifier() {
     return { hint: "" };
 }
@@ -35823,6 +36097,59 @@ exports.PublicKeyIdentifier = {
     toJSON(message) {
         const obj = {};
         message.hint !== undefined && (obj.hint = message.hint);
+        return obj;
+    },
+};
+function createBaseObjectIdentifier() {
+    return { id: [] };
+}
+exports.ObjectIdentifier = {
+    fromJSON(object) {
+        return { id: Array.isArray(object?.id) ? object.id.map((e) => Number(e)) : [] };
+    },
+    toJSON(message) {
+        const obj = {};
+        if (message.id) {
+            obj.id = message.id.map((e) => Math.round(e));
+        }
+        else {
+            obj.id = [];
+        }
+        return obj;
+    },
+};
+function createBaseObjectIdentifierValuePair() {
+    return { oid: undefined, value: Buffer.alloc(0) };
+}
+exports.ObjectIdentifierValuePair = {
+    fromJSON(object) {
+        return {
+            oid: isSet(object.oid) ? exports.ObjectIdentifier.fromJSON(object.oid) : undefined,
+            value: isSet(object.value) ? Buffer.from(bytesFromBase64(object.value)) : Buffer.alloc(0),
+        };
+    },
+    toJSON(message) {
+        const obj = {};
+        message.oid !== undefined && (obj.oid = message.oid ? exports.ObjectIdentifier.toJSON(message.oid) : undefined);
+        message.value !== undefined &&
+            (obj.value = base64FromBytes(message.value !== undefined ? message.value : Buffer.alloc(0)));
+        return obj;
+    },
+};
+function createBaseDistinguishedName() {
+    return { organization: "", commonName: "" };
+}
+exports.DistinguishedName = {
+    fromJSON(object) {
+        return {
+            organization: isSet(object.organization) ? String(object.organization) : "",
+            commonName: isSet(object.commonName) ? String(object.commonName) : "",
+        };
+    },
+    toJSON(message) {
+        const obj = {};
+        message.organization !== undefined && (obj.organization = message.organization);
+        message.commonName !== undefined && (obj.commonName = message.commonName);
         return obj;
     },
 };
@@ -35837,6 +36164,28 @@ exports.X509Certificate = {
         const obj = {};
         message.rawBytes !== undefined &&
             (obj.rawBytes = base64FromBytes(message.rawBytes !== undefined ? message.rawBytes : Buffer.alloc(0)));
+        return obj;
+    },
+};
+function createBaseSubjectAlternativeName() {
+    return { type: 0, identity: undefined };
+}
+exports.SubjectAlternativeName = {
+    fromJSON(object) {
+        return {
+            type: isSet(object.type) ? subjectAlternativeNameTypeFromJSON(object.type) : 0,
+            identity: isSet(object.regexp)
+                ? { $case: "regexp", regexp: String(object.regexp) }
+                : isSet(object.value)
+                    ? { $case: "value", value: String(object.value) }
+                    : undefined,
+        };
+    },
+    toJSON(message) {
+        const obj = {};
+        message.type !== undefined && (obj.type = subjectAlternativeNameTypeToJSON(message.type));
+        message.identity?.$case === "regexp" && (obj.regexp = message.identity?.regexp);
+        message.identity?.$case === "value" && (obj.value = message.identity?.value);
         return obj;
     },
 };
@@ -35862,30 +36211,20 @@ exports.X509CertificateChain = {
         return obj;
     },
 };
-function createBaseVerificationMaterial() {
-    return { content: undefined };
+function createBaseTimeRange() {
+    return { start: undefined, end: undefined };
 }
-exports.VerificationMaterial = {
+exports.TimeRange = {
     fromJSON(object) {
         return {
-            content: isSet(object.publicKey)
-                ? { $case: "publicKey", publicKey: exports.PublicKeyIdentifier.fromJSON(object.publicKey) }
-                : isSet(object.x509CertificateChain)
-                    ? {
-                        $case: "x509CertificateChain",
-                        x509CertificateChain: exports.X509CertificateChain.fromJSON(object.x509CertificateChain),
-                    }
-                    : undefined,
+            start: isSet(object.start) ? fromJsonTimestamp(object.start) : undefined,
+            end: isSet(object.end) ? fromJsonTimestamp(object.end) : undefined,
         };
     },
     toJSON(message) {
         const obj = {};
-        message.content?.$case === "publicKey" &&
-            (obj.publicKey = message.content?.publicKey ? exports.PublicKeyIdentifier.toJSON(message.content?.publicKey) : undefined);
-        message.content?.$case === "x509CertificateChain" &&
-            (obj.x509CertificateChain = message.content?.x509CertificateChain
-                ? exports.X509CertificateChain.toJSON(message.content?.x509CertificateChain)
-                : undefined);
+        message.start !== undefined && (obj.start = message.start.toISOString());
+        message.end !== undefined && (obj.end = message.end.toISOString());
         return obj;
     },
 };
@@ -35929,6 +36268,22 @@ function base64FromBytes(arr) {
         return globalThis.btoa(bin.join(""));
     }
 }
+function fromTimestamp(t) {
+    let millis = Number(t.seconds) * 1000;
+    millis += t.nanos / 1000000;
+    return new Date(millis);
+}
+function fromJsonTimestamp(o) {
+    if (o instanceof Date) {
+        return o;
+    }
+    else if (typeof o === "string") {
+        return new Date(o);
+    }
+    else {
+        return fromTimestamp(timestamp_1.Timestamp.fromJSON(o));
+    }
+}
 function isSet(value) {
     return value !== null && value !== undefined;
 }
@@ -35937,13 +36292,14 @@ function isSet(value) {
 /***/ }),
 
 /***/ 1270:
-/***/ ((__unused_webpack_module, exports) => {
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
 
-/* eslint-disable */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.TransparencyLogEntry = exports.LogId = exports.InclusionPromise = exports.InclusionProof = exports.Checkpoint = exports.KindVersion = void 0;
+exports.TransparencyLogEntry = exports.InclusionPromise = exports.InclusionProof = exports.Checkpoint = exports.KindVersion = void 0;
+/* eslint-disable */
+const sigstore_common_1 = __nccwpck_require__(1681);
 function createBaseKindVersion() {
     return { kind: "", version: "" };
 }
@@ -36022,20 +36378,6 @@ exports.InclusionPromise = {
         return obj;
     },
 };
-function createBaseLogId() {
-    return { keyId: Buffer.alloc(0) };
-}
-exports.LogId = {
-    fromJSON(object) {
-        return { keyId: isSet(object.keyId) ? Buffer.from(bytesFromBase64(object.keyId)) : Buffer.alloc(0) };
-    },
-    toJSON(message) {
-        const obj = {};
-        message.keyId !== undefined &&
-            (obj.keyId = base64FromBytes(message.keyId !== undefined ? message.keyId : Buffer.alloc(0)));
-        return obj;
-    },
-};
 function createBaseTransparencyLogEntry() {
     return {
         logIndex: "0",
@@ -36051,7 +36393,7 @@ exports.TransparencyLogEntry = {
     fromJSON(object) {
         return {
             logIndex: isSet(object.logIndex) ? String(object.logIndex) : "0",
-            logId: isSet(object.logId) ? exports.LogId.fromJSON(object.logId) : undefined,
+            logId: isSet(object.logId) ? sigstore_common_1.LogId.fromJSON(object.logId) : undefined,
             kindVersion: isSet(object.kindVersion) ? exports.KindVersion.fromJSON(object.kindVersion) : undefined,
             integratedTime: isSet(object.integratedTime) ? String(object.integratedTime) : "0",
             inclusionPromise: isSet(object.inclusionPromise) ? exports.InclusionPromise.fromJSON(object.inclusionPromise) : undefined,
@@ -36064,7 +36406,7 @@ exports.TransparencyLogEntry = {
     toJSON(message) {
         const obj = {};
         message.logIndex !== undefined && (obj.logIndex = message.logIndex);
-        message.logId !== undefined && (obj.logId = message.logId ? exports.LogId.toJSON(message.logId) : undefined);
+        message.logId !== undefined && (obj.logId = message.logId ? sigstore_common_1.LogId.toJSON(message.logId) : undefined);
         message.kindVersion !== undefined &&
             (obj.kindVersion = message.kindVersion ? exports.KindVersion.toJSON(message.kindVersion) : undefined);
         message.integratedTime !== undefined && (obj.integratedTime = message.integratedTime);
@@ -36167,13 +36509,7 @@ exports.bundle = {
             $case: 'dsseEnvelope',
             dsseEnvelope: envelope,
         },
-        verificationData: {
-            tlogEntries: [toTransparencyLogEntry(rekorEntry)],
-            timestampVerificationData: {
-                rfc3161Timestamps: [],
-            },
-        },
-        verificationMaterial: toVerificationMaterial(signature),
+        verificationMaterial: toVerificationMaterial(signature, rekorEntry),
     }),
     toMessageSignatureBundle: (digest, signature, rekorEntry) => ({
         mediaType: BUNDLE_MEDIA_TYPE,
@@ -36187,13 +36523,7 @@ exports.bundle = {
                 signature: signature.signature,
             },
         },
-        verificationData: {
-            tlogEntries: [toTransparencyLogEntry(rekorEntry)],
-            timestampVerificationData: {
-                rfc3161Timestamps: [],
-            },
-        },
-        verificationMaterial: toVerificationMaterial(signature),
+        verificationMaterial: toVerificationMaterial(signature, rekorEntry),
     }),
 };
 function toTransparencyLogEntry(entry) {
@@ -36219,30 +36549,27 @@ function toTransparencyLogEntry(entry) {
         canonicalizedBody: Buffer.from(entry.body, 'base64'),
     };
 }
-function toVerificationMaterial(signature) {
-    return signature.certificates
-        ? toVerificationMaterialx509CertificateChain(signature.certificates)
-        : toVerificationMaterialPublicKey(signature.key.id || '');
+function toVerificationMaterial(signature, entry) {
+    return {
+        content: signature.certificates
+            ? toVerificationMaterialx509CertificateChain(signature.certificates)
+            : toVerificationMaterialPublicKey(signature.key.id || ''),
+        tlogEntries: [toTransparencyLogEntry(entry)],
+        timestampVerificationData: undefined,
+    };
 }
 function toVerificationMaterialx509CertificateChain(certificates) {
     return {
-        content: {
-            $case: 'x509CertificateChain',
-            x509CertificateChain: {
-                certificates: certificates.map((c) => ({
-                    rawBytes: util_1.pem.toDER(c),
-                })),
-            },
+        $case: 'x509CertificateChain',
+        x509CertificateChain: {
+            certificates: certificates.map((c) => ({
+                rawBytes: util_1.pem.toDER(c),
+            })),
         },
     };
 }
 function toVerificationMaterialPublicKey(hint) {
-    return {
-        content: {
-            $case: 'publicKey',
-            publicKey: { hint },
-        },
-    };
+    return { $case: 'publicKey', publicKey: { hint } };
 }
 
 
@@ -36254,27 +36581,6 @@ function toVerificationMaterialPublicKey(hint) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-
-
-/***/ }),
-
-/***/ 975:
-/***/ ((__unused_webpack_module, exports) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.fulcio = void 0;
-exports.fulcio = {
-    toCertificateRequest: (publicKey, challenge) => ({
-        publicKey: {
-            content: publicKey
-                .export({ type: 'spki', format: 'der' })
-                .toString('base64'),
-        },
-        signedEmailAddress: challenge.toString('base64'),
-    }),
-};
 
 
 /***/ }),
@@ -36311,7 +36617,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.randomBytes = exports.hash = exports.verifyBlob = exports.signBlob = exports.generateKeyPair = void 0;
+exports.randomBytes = exports.hash = exports.verifyBlob = exports.signBlob = exports.createPublicKey = exports.generateKeyPair = void 0;
 /*
 Copyright 2022 The Sigstore Authors.
 
@@ -36337,15 +36643,24 @@ function generateKeyPair() {
     });
 }
 exports.generateKeyPair = generateKeyPair;
+function createPublicKey(key) {
+    if (typeof key === 'string') {
+        return crypto_1.default.createPublicKey(key);
+    }
+    else {
+        return crypto_1.default.createPublicKey({ key, format: 'der', type: 'spki' });
+    }
+}
+exports.createPublicKey = createPublicKey;
 function signBlob(data, privateKey) {
     return crypto_1.default.sign(null, data, privateKey);
 }
 exports.signBlob = signBlob;
-function verifyBlob(data, key, signature) {
+function verifyBlob(data, key, signature, algorithm) {
     // The try/catch is to work around an issue in Node 14.x where verify throws
     // an error in some scenarios if the signature is invalid.
     try {
-        return crypto_1.default.verify(null, data, key, signature);
+        return crypto_1.default.verify(algorithm, data, key, signature);
     }
     catch (e) {
         return false;
@@ -44215,7 +44530,7 @@ module.exports = {"i8":"3.0.1"};
 /***/ ((module) => {
 
 "use strict";
-module.exports = {"i8":"0.2.0"};
+module.exports = {"i8":"0.4.0"};
 
 /***/ }),
 

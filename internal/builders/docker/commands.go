@@ -20,14 +20,17 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"log"
+	"io"
 	"os"
 
-	"github.com/slsa-framework/slsa-github-generator/internal/builders/docker/pkg"
 	"github.com/spf13/cobra"
+
+	"github.com/slsa-framework/slsa-github-generator/internal/builders/docker/pkg"
+	"github.com/slsa-framework/slsa-github-generator/internal/utils"
 )
 
-// DryRunCmd validates the input flags, generates a BuildDefinition from them.
+// DryRunCmd returns a new *cobra.Command that validates the input flags, and
+// generates a BuildDefinition from them, or terminates with an error.
 func DryRunCmd(check func(error)) *cobra.Command {
 	io := &pkg.InputOptions{}
 	var buildDefinitionPath string
@@ -36,13 +39,14 @@ func DryRunCmd(check func(error)) *cobra.Command {
 		Use:   "dry-run [FLAGS]",
 		Short: "Generates and stores a JSON-formatted BuildDefinition based on the input arguments.",
 		Run: func(cmd *cobra.Command, args []string) {
+			w, err := utils.CreateNewFileUnderCurrentDirectory(buildDefinitionPath, os.O_WRONLY)
+			check(err)
+
 			config, err := pkg.NewDockerBuildConfig(io)
 			check(err)
-			log.Printf("The config is: %v\n", config)
 
-			// TODO(#1191): Create an instance of BuildDefinition from config.
-			bd := &pkg.BuildDefinition{}
-			check(writeBuildDefinitionToFile(*bd, buildDefinitionPath))
+			bd := pkg.CreateBuildDefinition(config)
+			check(writeToFile(*bd, w))
 		},
 	}
 
@@ -54,38 +58,53 @@ func DryRunCmd(check func(error)) *cobra.Command {
 	return cmd
 }
 
-func writeBuildDefinitionToFile(bd pkg.BuildDefinition, path string) error {
-	bytes, err := json.Marshal(bd)
-	if err != nil {
-		return fmt.Errorf("couldn't marshal the BuildDefinition: %v", err)
-	}
-
-	if err := os.WriteFile(path, bytes, 0o600); err != nil {
-		return fmt.Errorf("couldn't write BuildDefinition to file: %v", err)
-	}
-	return nil
-}
-
-// BuildCmd builds the artifacts using the input flags, and prints out their digests, or exists with an error.
+// BuildCmd returns a new *cobra.Command that builds the artifacts using the
+// input flags, and prints out their digests, or terminates with an error.
 func BuildCmd(check func(error)) *cobra.Command {
 	io := &pkg.InputOptions{}
+	var forceCheckout bool
+	var subjectsPath string
 
 	cmd := &cobra.Command{
 		Use:   "build [FLAGS]",
 		Short: "Builds the artifacts using the build config, source repo, and the builder image.",
 		Run: func(cmd *cobra.Command, args []string) {
+			w, err := utils.CreateNewFileUnderCurrentDirectory(subjectsPath, os.O_WRONLY)
+			check(err)
 			config, err := pkg.NewDockerBuildConfig(io)
 			check(err)
-			log.Printf("The config is: %v\n", config)
 
-			// TODO(#1191): Set up build state using config, and build the artifact.
-			artifacts := "To be implemented"
-			log.Printf("Generated artifacts are: %v\n", artifacts)
-			// TODO(#1191): Write subjects to file.
+			builder, err := pkg.NewBuilderWithGitFetcher(*config, forceCheckout)
+			check(err)
+
+			db, err := builder.SetUpBuildState()
+			check(err)
+			// Remove any temporary files that were generated during the setup.
+			defer db.RepoInfo.Cleanup()
+
+			artifacts, err := db.BuildArtifacts()
+			check(err)
+			check(writeToFile(artifacts, w))
 		},
 	}
 
 	io.AddFlags(cmd)
+	cmd.Flags().BoolVarP(&forceCheckout, "force-checkout", "f", false,
+		"Optional - Forces checking out the source code from the given Git repo.")
+	cmd.Flags().StringVarP(&subjectsPath, "subjects-path", "o", "",
+		"Required - Path to store a JSON-encoded array of subjects of the generated artifacts.")
 
 	return cmd
+}
+
+func writeToFile[T any](obj T, w io.Writer) error {
+	bytes, err := json.Marshal(obj)
+	if err != nil {
+		return fmt.Errorf("marshaling the object failed: %w", err)
+	}
+
+	if _, err := w.Write(bytes); err != nil {
+		return fmt.Errorf("writing to file failed: %w", err)
+	}
+	return nil
 }
