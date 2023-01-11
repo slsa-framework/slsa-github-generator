@@ -32,6 +32,7 @@ project simply generates provenance as a separate step in an existing workflow.
   - [Ko](#ko)
 - [Provenance for matrix strategy builds](#provenance-for-matrix-strategy-builds)
 - [Verification](#verification)
+  - [slsa-verifier](#slsa-verifier)
   - [Cosign](#cosign)
   - [Sigstore policy-controller](#sigstore-policy-controller)
   - [Kyverno](#kyverno)
@@ -448,6 +449,10 @@ for the generic generator.
 ## Verification
 
 Verification of provenance attestations can be done via several different tools. This section shows examples of several popular tools.
+
+### slsa-verifier
+
+`slsa-verifier` can be used to verify the provenance attestation for the image. Please see the [documentation](https://github.com/slsa-framework/slsa-verifier#containers) in the slsa-verifier repository.
 
 ### Cosign
 
