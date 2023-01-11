@@ -144,8 +144,10 @@ The configuration file accepts many of the common fields GoReleaser uses, as you
 | `{{ .Patch }}`       | `$(git describe --tags --always --dirty \| cut -d '.' -f3 \| cut -d '-' -f1 \| cut -d '+' -f1`                                   | `3`                                        |
 
 If you think you need support for other variables, please [open an issue](https://github.com/slsa-framework/slsa-github-generator/issues/new).
+
 ### Multi-platform builds
-Similar to the goreleaser workflow, it's easy to generate binaries for multiple platforms. To accomplish this, we can use the maxtrix functionality of github actions and several config files. In the below code sample, you'll see that we have a `strategy` section which lists the platforms and architectures to build for. These reference a `config-file` property at the bottom which will select the correct config for that platform.
+
+Similar to the goreleaser workflow, it's easy to generate binaries for multiple platforms. To accomplish this, we can use the [maxtrix functionality](https://docs.github.com/en/actions/using-jobs/using-a-matrix-for-your-jobs) of github actions and several config files. In the below code sample, you'll see that we have a `strategy` section which lists the platforms and architectures to build for. These reference a `config-file` property at the bottom which will select the correct config for that platform.
 
 ```
   build:
@@ -153,7 +155,6 @@ Similar to the goreleaser workflow, it's easy to generate binaries for multiple 
       id-token: write # To sign the provenance.
       contents: write # To upload assets to release.
       actions: read # To read the workflow path.
-    needs: args
     strategy:
       matrix:
         os:
@@ -166,9 +167,8 @@ Similar to the goreleaser workflow, it's easy to generate binaries for multiple 
     uses: slsa-framework/slsa-github-generator/.github/workflows/builder_go_slsa3.yml@v1.2.2
     with:
       go-version: 1.17
-      # Optional: only needed if using ldflags.
-      evaluated-envs: "COMMIT_DATE:${{needs.args.outputs.commit-date}}, COMMIT:${{needs.args.outputs.commit}}, VERSION:${{needs.args.outputs.version}}, TREE_STATE:${{needs.args.outputs.tree-state}}"
       config-file: .slsa-goreleaser/${{matrix.os}}-${{matrix.arch}}.yml
+      # ... your other stuff here.
 ```
 
 
