@@ -158,10 +158,6 @@ export function createPredicate(
       systemParameters: {
         // TODO(https://github.com/slsa-framework/slsa-github-generator/issues/1505):
         // Add GitHub event payload.
-        // TODO(https://github.com/slsa-framework/slsa-github-generator/issues/1506):
-        // GITHUB_WORKFLOW_REF and GITHUB_WORKFLOW_SHA are found in
-        // https://github.com/npm/cli/blob/provenance/workspaces/libnpmpublish/lib/provenance.js#L73
-        // but are not populated in the env.
         GITHUB_EVENT_NAME: { value: String(env.GITHUB_EVENT_NAME) },
         GITHUB_JOB: { value: String(env.GITHUB_JOB) },
         GITHUB_REF: { value: String(env.GITHUB_REF) },
@@ -177,6 +173,8 @@ export function createPredicate(
         GITHUB_REPSITORY_OWNER_ID: {
           value: String(currentRun.repository.owner.id),
         },
+        GITHUB_WORKFLOW_REF: { value: String(env.GITHUB_WORKFLOW_REF) },
+        GITHUB_WORKFLOW_SHA: { value: String(env.GITHUB_WORKFLOW_SHA) },
         IMAGE_OS: { value: String(env.ImageOS) },
         IMAGE_VERSION: { value: String(env.ImageVersion) },
         RUNNER_ARCH: { value: String(env.RUNNER_ARCH) },
