@@ -165,9 +165,9 @@ It's easy to generate binaries for multiple platforms. To accomplish this, we ca
         arch:
           - amd64
           - arm64
-    uses: slsa-framework/slsa-github-generator/.github/workflows/builder_go_slsa3.yml@v1.2.2
+    uses: slsa-framework/slsa-github-generator/.github/workflows/builder_go_slsa3.yml@v1.4.0
     with:
-      go-version: 1.17
+      go-version: 1.19
       config-file: .slsa-goreleaser/${{matrix.os}}-${{matrix.arch}}.yml
       # ... your other stuff here.
 ```
