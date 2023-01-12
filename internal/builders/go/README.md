@@ -10,6 +10,7 @@ This document explains how to use the builder for [Go](https://go.dev/) projects
   - [Supported Triggers](#supported-triggers)
   - [Configuration File](#configuration-file)
   - [Migration from GoReleaser](#migration-from-GoReleaser)
+  - [Multi-platform builds](multi-platform-builds)
   - [Workflow Inputs](#workflow-inputs)
   - [Workflow Example](#workflow-example)
   - [Provenance Example](#provenance-example)
@@ -147,7 +148,7 @@ If you think you need support for other variables, please [open an issue](https:
 
 ### Multi-platform builds
 
-Similar to the goreleaser workflow, it's easy to generate binaries for multiple platforms. To accomplish this, we can use the [maxtrix functionality](https://docs.github.com/en/actions/using-jobs/using-a-matrix-for-your-jobs) of github actions and several config files. In the below code sample, you'll see that we have a `strategy` section which lists the platforms and architectures to build for. These reference a `config-file` property at the bottom which will select the correct config for that platform.
+It's easy to generate binaries for multiple platforms. To accomplish this, we can use the [maxtrix functionality](https://docs.github.com/en/actions/using-jobs/using-a-matrix-for-your-jobs) of github actions and several config files. In the below code sample, you'll see that we have a `strategy` section which lists the platforms and architectures to build for. These reference a `config-file` property at the bottom which will select the correct config for that platform.
 
 ```
   build:
