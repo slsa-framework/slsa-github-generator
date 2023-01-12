@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Verify that Action calls that are pinned (not locally called)
-# use the same referemnce as the relealse tag.
+# use the same reference as the release tag.
 # See reasoning in ./github/actions/README.md
 
 set -euo pipefail
