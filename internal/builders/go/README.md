@@ -10,7 +10,7 @@ This document explains how to use the builder for [Go](https://go.dev/) projects
   - [Supported Triggers](#supported-triggers)
   - [Configuration File](#configuration-file)
   - [Migration from GoReleaser](#migration-from-GoReleaser)
-  - [Multi-platform builds](multi-platform-builds)
+  - [Multi-platform builds](#multi-platform-builds)
   - [Workflow Inputs](#workflow-inputs)
   - [Workflow Example](#workflow-example)
   - [Provenance Example](#provenance-example)
