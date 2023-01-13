@@ -12,34 +12,21 @@ limitations under the License.
 */
 
 import * as core from "@actions/core";
+import * as github from "@actions/github";
 import * as sigstore from "sigstore";
 import * as process from "process";
 import * as fs from "fs";
 import * as child_process from "child_process";
-
-interface githubObj {
-  event_name: string;
-  run_attempt: string;
-  run_id: string;
-  run_number: string;
-  workflow: string;
-  sha: string;
-  repository: string;
-  repository_owner: string;
-  // TODO(#1411): Record if these become available.
-  // repository_id: string;
-  // repository_owner_id: string;
-  // actor_id: string;
-  ref: string;
-  ref_type: string;
-  actor: string;
-}
+import { githubObj, rawTokenInterface, createPredicate } from "./predicate";
+import { getEnv, resolvePathInput } from "./utils";
 
 async function run(): Promise<void> {
   try {
-    /* Test locally:
+    /* Test locally. Requires a GitHub token:
         $ env INPUT_SLSA-WORKFLOW-RECIPIENT="delegator_generic_slsa3.yml" \
         INPUT_SLSA-UNVERIFIED-TOKEN="$(cat testdata/slsa-token)" \
+        INPUT_TOKEN="$(gh auth token)" \
+        INPUT_OUTPUT-PREDICATE="predicate.json" \
         GITHUB_EVENT_NAME="workflow_dispatch" \
         GITHUB_RUN_ATTEMPT="1" \
         GITHUB_RUN_ID="3790385865" \
@@ -47,15 +34,24 @@ async function run(): Promise<void> {
         GITHUB_WORKFLOW="delegate release project" \
         GITHUB_SHA="8cbf4d422367d8499d5980a837cb9cc8e1e67001" \
         GITHUB_REPOSITORY="laurentsimon/slsa-delegate-project" \
+        GITHUB_REPOSITORY_ID="567955265" \
         GITHUB_REPOSITORY_OWNER="laurentsimon" \
+        GITHUB_REPOSITORY_OWNER_ID="64505099" \
+        GITHUB_ACTOR_ID="64505099" \
         GITHUB_REF="refs/heads/main" \
+        GITHUB_BASE_REF="" \
         GITHUB_REF_TYPE="branch" \
         GITHUB_ACTOR="laurentsimon" \
+        GITHUB_WORKSPACE="$(pwd)" \
         nodejs ./dist/index.js
     */
 
     const workflowRecipient = core.getInput("slsa-workflow-recipient");
     const unverifiedToken = core.getInput("slsa-unverified-token");
+
+    const outputPredicate = core.getInput("output-predicate");
+    const wd = getEnv("GITHUB_WORKSPACE");
+    const safeOutput = resolvePathInput(outputPredicate, wd);
 
     // Log the inputs for troubleshooting.
     core.debug(`workflowRecipient: ${workflowRecipient}`);
@@ -76,28 +72,6 @@ async function run(): Promise<void> {
     const rawToken = Buffer.from(b64Token, "base64");
     core.debug(`bundle: ${bundleStr}`);
     core.debug(`token: ${rawToken}`);
-
-    interface rawTokenInterface {
-      version: number;
-      context: string;
-      builder: {
-        private_repository: boolean;
-        runner_label: string;
-        audience: string;
-      };
-      github: githubObj;
-      tool: {
-        actions: {
-          build_artifacts: {
-            path: string;
-          };
-        };
-        // NOTE: reusable workflows only support inputs of type
-        // boolean, number, or string.
-        // https://docs.github.com/en/actions/using-workflows/reusing-workflows#passing-inputs-and-secrets-to-a-reusable-workflow.
-        inputs: Map<string, Object>;
-      };
-    }
 
     const rawTokenStr = rawToken.toString();
     const rawTokenObj: rawTokenInterface = JSON.parse(rawTokenStr);
@@ -139,9 +113,31 @@ async function run(): Promise<void> {
 
     core.debug(`slsa-verified-token: ${rawTokenStr}`);
 
+    // Now generate the SLSA predicate using the verified token and the GH context.
+    const token = core.getInput("token");
+    if (!token) {
+      throw new Error("token not provided");
+    }
+    const octokit = github.getOctokit(token);
+    const ownerRepo = getEnv("GITHUB_REPOSITORY");
+    const [owner, repo] = ownerRepo.split("/");
+
+    const { data: current_run } = await octokit.rest.actions.getWorkflowRun({
+      owner,
+      repo,
+      run_id: Number(process.env.GITHUB_RUN_ID),
+    });
+
+    const predicate = createPredicate(rawTokenObj, toolURI, current_run);
+    fs.writeFileSync(safeOutput, JSON.stringify(predicate), {
+      flag: "ax",
+      mode: 0o600,
+    });
+    core.debug(`predicate: ${JSON.stringify(predicate)}`);
+    core.debug(`Wrote predicate to ${safeOutput}`);
+
     core.setOutput("tool-repository", toolRepository);
     core.setOutput("tool-ref", toolRef);
-    core.setOutput("tool-uri", toolURI);
     core.setOutput("slsa-verified-token", rawTokenStr);
   } catch (error) {
     if (error instanceof Error) {
