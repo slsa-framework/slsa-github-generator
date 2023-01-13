@@ -19,7 +19,9 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 	intoto "github.com/in-toto/in-toto-golang/in_toto"
+
 	"github.com/slsa-framework/slsa-github-generator/internal/errors"
 )
 
@@ -156,8 +158,8 @@ func Test_Builder_SetUpBuildState(t *testing.T) {
 	}
 }
 
-func checkError(t *testing.T, got error, want any) {
+func checkError[T error](t *testing.T, got error, want T) {
 	if !errors.As(got, &want) {
-		t.Errorf("unexpected error: got (%q), want (%q)", got, want)
+		t.Errorf("unexpected error: %v", cmp.Diff(got, want, cmpopts.EquateErrors()))
 	}
 }

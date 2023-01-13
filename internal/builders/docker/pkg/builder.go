@@ -36,6 +36,7 @@ import (
 	"strings"
 
 	intoto "github.com/in-toto/in-toto-golang/in_toto"
+
 	"github.com/slsa-framework/slsa-github-generator/internal/errors"
 )
 
