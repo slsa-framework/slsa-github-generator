@@ -27,8 +27,9 @@ runs:
         # Ensure no directory traversal.
         # NOTE: the actions/download-artifact Action only creates files
         # in the workspace directory, but this may change in the future.
-        resolved_dir=$(dirname $(readlink -m "$UNTRUSTED_PATH"))
-        if [[ "$resolved_dir" != "$PWD" ]]; then
+        resolved_dir=$(readlink -m "$UNTRUSTED_PATH")
+        wd=$(readlink -m "$PWD")
+        if [[ "$resolved_dir" != "$wd"/* ]]; then
           echo "Path is not in the current directory: $UNTRUSTED_PATH"
           exit 1
         fi
