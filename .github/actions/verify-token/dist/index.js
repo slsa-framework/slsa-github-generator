@@ -65,7 +65,7 @@ function run() {
             /* Test locally. Requires a GitHub token:
                 $ env INPUT_SLSA-WORKFLOW-RECIPIENT="delegator_generic_slsa3.yml" \
                 INPUT_SLSA-UNVERIFIED-TOKEN="$(cat testdata/slsa-token)" \
-                INPUT_TOKEN="${GITHUB_TOKEN}" \
+                INPUT_TOKEN="$(gh auth token)" \
                 INPUT_OUTPUT-PREDICATE="predicate.json" \
                 GITHUB_EVENT_NAME="workflow_dispatch" \
                 GITHUB_RUN_ATTEMPT="1" \
@@ -315,7 +315,7 @@ function createPredicate(rawTokenObj, toolURI, currentRun) {
         buildDefinition: {
             buildType: DELEGATOR_BUILD_TYPE,
             externalParameters: {
-                // This is the v0.2 entryPoint.
+                // NOTE: This is equivalent to the v0.2 entryPoint.
                 workflowPath: { value: currentRun.path },
                 // We only use source here because the source contained the source
                 // repository and the build configuration.
@@ -331,28 +331,28 @@ function createPredicate(rawTokenObj, toolURI, currentRun) {
             systemParameters: {
                 // TODO(https://github.com/slsa-framework/slsa-github-generator/issues/1505):
                 // Add GitHub event payload.
-                GITHUB_EVENT_NAME: { value: String(env.GITHUB_EVENT_NAME) },
-                GITHUB_JOB: { value: String(env.GITHUB_JOB) },
-                GITHUB_REF: { value: String(env.GITHUB_REF) },
-                GITHUB_REF_TYPE: { value: String(env.GITHUB_REF_TYPE) },
-                GITHUB_REPOSITORY: { value: String(env.GITHUB_REPOSITORY) },
-                GITHUB_RUN_ATTEMPT: { value: String(env.GITHUB_RUN_ATTEMPT) },
-                GITHUB_RUN_ID: { value: String(env.GITHUB_RUN_ID) },
-                GITHUB_RUN_NUMBER: { value: String(env.GITHUB_RUN_NUMBER) },
-                GITHUB_SHA: { value: String(env.GITHUB_SHA) },
-                GITHUB_WORKFLOW: { value: String(env.GITHUB_WORKFLOW) },
-                GITHUB_ACTOR_ID: { value: String((_a = currentRun.actor) === null || _a === void 0 ? void 0 : _a.id) },
-                GITHUB_REPOSITORY_ID: { value: String(currentRun.repository.id) },
+                GITHUB_EVENT_NAME: { value: env.GITHUB_EVENT_NAME || "" },
+                GITHUB_JOB: { value: env.GITHUB_JOB || "" },
+                GITHUB_REF: { value: env.GITHUB_REF || "" },
+                GITHUB_REF_TYPE: { value: env.GITHUB_REF_TYPE || "" },
+                GITHUB_REPOSITORY: { value: env.GITHUB_REPOSITORY || "" },
+                GITHUB_RUN_ATTEMPT: { value: env.GITHUB_RUN_ATTEMPT || "" },
+                GITHUB_RUN_ID: { value: env.GITHUB_RUN_ID || "" },
+                GITHUB_RUN_NUMBER: { value: env.GITHUB_RUN_NUMBER || "" },
+                GITHUB_SHA: { value: env.GITHUB_SHA || "" },
+                GITHUB_WORKFLOW: { value: env.GITHUB_WORKFLOW || "" },
+                GITHUB_ACTOR_ID: { value: String(((_a = currentRun.actor) === null || _a === void 0 ? void 0 : _a.id) || "") },
+                GITHUB_REPOSITORY_ID: { value: String(currentRun.repository.id || "") },
                 GITHUB_REPSITORY_OWNER_ID: {
-                    value: String(currentRun.repository.owner.id),
+                    value: String(currentRun.repository.owner.id || ""),
                 },
-                GITHUB_WORKFLOW_REF: { value: String(env.GITHUB_WORKFLOW_REF) },
-                GITHUB_WORKFLOW_SHA: { value: String(env.GITHUB_WORKFLOW_SHA) },
-                IMAGE_OS: { value: String(env.ImageOS) },
-                IMAGE_VERSION: { value: String(env.ImageVersion) },
-                RUNNER_ARCH: { value: String(env.RUNNER_ARCH) },
-                RUNNER_NAME: { value: String(env.RUNNER_NAME) },
-                RUNNER_OS: { value: String(env.RUNNER_OS) },
+                GITHUB_WORKFLOW_REF: { value: env.GITHUB_WORKFLOW_REF || "" },
+                GITHUB_WORKFLOW_SHA: { value: env.GITHUB_WORKFLOW_SHA || "" },
+                IMAGE_OS: { value: env.ImageOS || "" },
+                IMAGE_VERSION: { value: env.ImageVersion || "" },
+                RUNNER_ARCH: { value: env.RUNNER_ARCH || "" },
+                RUNNER_NAME: { value: env.RUNNER_NAME || "" },
+                RUNNER_OS: { value: env.RUNNER_OS || "" },
             },
         },
         runDetails: {
@@ -367,13 +367,13 @@ function createPredicate(rawTokenObj, toolURI, currentRun) {
         },
     };
     if (env.GITHUB_EVENT_NAME === "workflow_dispatch") {
-        if (env.GITHUB_EVENT_PATH !== undefined) {
+        if (env.GITHUB_EVENT_PATH) {
             const ghEvent = JSON.parse(fs.readFileSync(env.GITHUB_EVENT_PATH).toString());
             for (const input in ghEvent.inputs) {
                 // The invocation parameters belong here and are the top-level GitHub
                 // workflow inputs.
                 predicate.buildDefinition.externalParameters[`input_${input}`] = {
-                    value: String(ghEvent.inputs[input]),
+                    value: String(ghEvent.inputs[input] || ""),
                 };
             }
         }
@@ -383,7 +383,14 @@ function createPredicate(rawTokenObj, toolURI, currentRun) {
 exports.createPredicate = createPredicate;
 // createURI creates the fully qualified URI out of the repository
 function createURI(repository, ref) {
-    return `git+https://github.com/${repository}@${ref}`;
+    if (!repository) {
+        throw new Error(`cannot create URI: repository undefined`);
+    }
+    let refVal = "";
+    if (ref) {
+        refVal = `@${ref}`;
+    }
+    return `git+https://github.com/${repository}${refVal}`;
 }
 
 
@@ -426,7 +433,7 @@ const path_1 = __importDefault(__nccwpck_require__(1017));
 const process = __importStar(__nccwpck_require__(7282));
 function getEnv(name) {
     const res = process.env[name];
-    if (typeof res === "undefined") {
+    if (!res) {
         throw new Error(`missing env: ${name}`);
     }
     return String(res);
