@@ -40,6 +40,11 @@ if [[ "$results" != "" ]]; then
     exit 1
 fi
 
+if [[ "$RELEASE_TAG" =~ .*-rc[0-9]*$ ]]; then
+    # don't check documentation for release candidates
+    exit 0
+fi
+
 # Verify documentation refers to the most recent release tag
 results=$(
     find . -name "*.md" -print0 |
