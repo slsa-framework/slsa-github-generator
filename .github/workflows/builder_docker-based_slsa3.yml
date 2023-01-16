@@ -1,0 +1,410 @@
+# Copyright The GOSST team.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+name: SLSA Docker-based builder
+
+permissions:
+  contents: read
+
+env:
+  # Project.
+  GENERATED_BINARY_NAME: docker-compiled-binary
+  # Builder.
+  BUILDER_BINARY: slsa-builder-docker-linux-amd64 # Name of the binary in the release assets.
+  BUILDER_DIR: internal/builders/docker # Source directory if we compile the builder.
+  # Outputs folder.
+  OUTPUT_FOLDER: outputs
+
+defaults:
+  run:
+    shell: bash
+
+###################################################################
+#                                                                 #
+#            Input and output argument definitions                #
+#                                                                 #
+###################################################################
+on:
+  workflow_call:
+    inputs:
+      builder-image:
+        description: >
+          The OCI image name of the builder image responsible for
+          creating the artifact. This must not include a tag or digest.
+        required: true
+        type: string
+      builder-digest:
+        description: >
+          The OCI image digest of the builder-image.
+          This must be specified in order to fully specify the builder
+          image. The image digest is of the form '<alg>:<digest>'
+        required: true
+        type: string
+      config-path:
+        description: >
+          Path to a configuration file relative to the root of the repository
+          containing a command that the builder image should be invoked with and
+          optionally, docker options and environment variables.
+        required: true
+        type: string
+      builder-output-path:
+        description: >
+          Path to the builder's output artifact(s) relative to the root of the Git
+          repository.
+          Users may specify a single artifact or use a shell-style wildcard
+          pattern to match multiple artifacts.
+          Defaults to the sub-folder output/.
+        required: false
+        type: string
+        default: 'output/**'
+      compile-builder:
+        description: "Build the builder from source. This increases build time by ~2m."
+        required: false
+        type: boolean
+        default: false
+      private-repository:
+        description: "If true, private repositories can post to the public transparency log."
+        required: false
+        type: boolean
+        default: false
+        # TODO: Options for requesting and verifying provenance of builder image
+        # This will use slsa-verifier and slsa-verifier option.
+        #      * request-builder-verification
+
+        # TODO: Secrets and Authentication options for the builder-image.
+        #      * registry-username
+        #      * registry-password
+
+jobs:
+  rng:
+    outputs:
+      value: ${{ steps.rng.outputs.random }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Generate random 16-byte value (32-char hex encoded)
+        id: rng
+        uses: slsa-framework/slsa-github-generator/.github/actions/rng@main
+
+  # This detects the repository and ref of the reusable workflow.
+  # For pull request, this gets the head repository and head SHA.
+  detect-env:
+    outputs:
+      repository: ${{ steps.detect.outputs.repository }}
+      ref: ${{ steps.detect.outputs.ref }}
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write # Needed to detect the current reusable repository and ref.
+    steps:
+      - name: Detect the builder ref
+        id: detect
+        uses: slsa-framework/slsa-github-generator/.github/actions/detect-workflow@main
+
+  ###################################################################
+  #                                                                 #
+  #           Optional: Verify builder-image provenance             #
+  #                                                                 #
+  ###################################################################
+  verify-builder-image:
+    # This is a no-op right now.
+    outputs:
+      verified: ${{ steps.verify.outputs.verified }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: run no-op slsa-verifier
+        id: verify
+        env:
+          BUILDER_IMAGE: ${{ inputs.builder-image }}
+          BUILDER_DIGEST: ${{ inputs.builder-digest }}
+          SOURCE_URI: octocat/hello-world
+        run: |
+          echo "verified=false" >> $GITHUB_OUTPUT
+
+  ###################################################################
+  #                                                                 #
+  #                   Generate builder binary                       #
+  #                                                                 #
+  ###################################################################
+  generate-builder:
+    # TODO: would it be convenient to output the builderDependency?
+    # TODO: this is a no-op right now. Replace with final builder.
+    outputs:
+      builder-binary-sha256: ${{ steps.generate.outputs.sha256 }}
+    needs: [detect-env, rng]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Generate builder binary
+        id: generate
+        uses: slsa-framework/slsa-github-generator/.github/actions/generate-builder@main
+        with:
+          repository: "${{ needs.detect-env.outputs.repository }}"
+          ref: "${{ needs.detect-env.outputs.ref }}"
+          go-version: 1.19
+          # Note: This must be the non-randomized binary name, so that it can be downloaded from the release assets.
+          binary: "${{ env.BUILDER_BINARY }}"
+          compile-builder: "${{ inputs.compile-builder }}"
+          directory: "${{ env.BUILDER_DIR }}"
+          allow-private-repository: ${{ inputs.private-repository }}
+
+      - name: Upload builder
+        uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
+        with:
+          name: "${{ env.BUILDER_BINARY }}-${{ needs.rng.outputs.value }}"
+          path: "${{ env.BUILDER_BINARY }}"
+          if-no-files-found: error
+          retention-days: 5
+
+  ###################################################################
+  #                                                                 #
+  #     Invoke the builder binary to create a buildDefinition       #
+  #                                                                 #
+  ###################################################################
+  generate-build-definition:
+    outputs:
+      build-definition-name: ${{ steps.generate.outputs.build-definition-name }}
+      build-definition-sha256: ${{ steps.upload.outputs.sha256 }}
+    runs-on: ubuntu-latest
+    needs: [rng, detect-env, verify-builder-image, generate-builder]
+    steps:
+      - name: Checkout builder repository
+        uses: slsa-framework/slsa-github-generator/.github/actions/secure-builder-checkout@main
+        with:
+          repository: "${{ needs.detect-env.outputs.repository }}"
+          ref: "${{ needs.detect-env.outputs.ref }}"
+          path: __BUILDER_CHECKOUT_DIR__
+
+      - name: Download builder
+        uses: ./__BUILDER_CHECKOUT_DIR__/.github/actions/secure-download-artifact
+        with:
+          name: "${{ env.BUILDER_BINARY }}-${{ needs.rng.outputs.value }}"
+          path: "${{ env.BUILDER_BINARY }}"
+          sha256: "${{ needs.generate-builder.outputs.builder-binary-sha256 }}"
+          set-executable: true
+
+      - name: Generate build definition
+        id: generate
+        # These are the inputs, it may be with: for an action or
+        # specified with these env vars.
+        env:
+          BUILDER_IMAGE: ${{ inputs.builder-image }}
+          BUILDER_DIGEST: ${{ inputs.builder-digest }}
+          CONFIG_PATH: ${{ inputs.config-path }}
+        run: |
+          set -euo pipefail
+
+          # Note: this outputs information about resolved arguments, etc.
+          # the values are trusted because the compiler is not invoked.
+          echo "${GITHUB_WORKSPACE}/${BUILDER_BINARY}" dry-run \
+            --build-config-path "${CONFIG_PATH}" \
+            --build-definition-path build-definition.json \
+            --builder-image "${BUILDER_IMAGE}@${BUILDER_DIGEST}" \
+            --git-commit-digest "sha1:${GITHUB_SHA}" \
+            --source-repo "git+https://github.com/${GITHUB_REPOSITORY}"
+          "${GITHUB_WORKSPACE}/${BUILDER_BINARY}" dry-run \
+            --build-config-path "${CONFIG_PATH}" \
+            --build-definition-path build-definition.json \
+            --builder-image "${BUILDER_IMAGE}@${BUILDER_DIGEST}" \
+            --git-commit-digest "sha1:${GITHUB_SHA}" \
+            --source-repo "git+https://github.com/${GITHUB_REPOSITORY}"
+
+          echo "build-definition-name=build-definition.json" >> $GITHUB_OUTPUT
+
+      - name: Upload the build definition file
+        id: upload
+        uses: ./__BUILDER_CHECKOUT_DIR__/.github/actions/secure-upload-artifact
+        with:
+          name: "${{ steps.generate.outputs.build-definition-name }}-${{ needs.rng.outputs.value }}"
+          path: "${{ steps.generate.outputs.build-definition-name }}"
+
+  ###################################################################
+  #                                                                 #
+  #            Build the project and output subjects                #
+  #                                                                 #
+  ###################################################################
+  build:
+    # TODO: This may require authentication for the container image.
+    runs-on: ubuntu-latest
+    outputs:
+      # The filename of the SLSA subject outputs file for secure download.
+      slsa-outputs-name: ${{ steps.build.outputs.slsa-outputs-name }}
+      # The digest of the SLSA subject outputs file for secure download.
+      slsa-outputs-sha256: ${{ steps.upload.outputs.sha256 }}
+    needs: [rng, detect-env, generate-builder]
+    # TODO: Replace with builder binary
+    steps:
+      - name: Checkout builder repository
+        uses: slsa-framework/slsa-github-generator/.github/actions/secure-builder-checkout@main
+        with:
+          repository: "${{ needs.detect-env.outputs.repository }}"
+          ref: "${{ needs.detect-env.outputs.ref }}"
+          path: __BUILDER_CHECKOUT_DIR__
+
+      - name: Download builder
+        uses: ./__BUILDER_CHECKOUT_DIR__/.github/actions/secure-download-artifact
+        with:
+          name: "${{ env.BUILDER_BINARY }}-${{ needs.rng.outputs.value }}"
+          path: "${{ env.BUILDER_BINARY }}"
+          sha256: "${{ needs.generate-builder.outputs.builder-binary-sha256 }}"
+          set-executable: true
+
+      - name: Checkout the source repository
+        uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # v3.3.0
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+          path: __PROJECT_CHECKOUT_DIR__
+
+      - name: Run builder binary
+        id: build
+        working-directory: __PROJECT_CHECKOUT_DIR__
+        # These are the inputs, it may be with: for an action or
+        # specified with these env vars.
+        env:
+          BUILDER_IMAGE: ${{ inputs.builder-image }}
+          BUILDER_DIGEST: ${{ inputs.builder-digest }}
+          CONFIG_PATH: ${{ inputs.config-path }}
+
+        run: |
+          set -euo pipefail
+
+          # Note: this outputs information about resolved arguments, etc.
+          # the values are trusted because the compiler is not invoked.
+          echo "${GITHUB_WORKSPACE}/${BUILDER_BINARY}" build \
+            --build-config-path "${CONFIG_PATH}" \
+            --builder-image "${BUILDER_IMAGE}@${BUILDER_DIGEST}" \
+            --git-commit-digest "sha1:${GITHUB_SHA}" \
+            --source-repo "git+https://github.com/${GITHUB_REPOSITORY}" \
+            --subjects-path subjects.json
+          "${GITHUB_WORKSPACE}/${BUILDER_BINARY}" build \
+            --build-config-path "${CONFIG_PATH}" \
+            --builder-image "${BUILDER_IMAGE}@${BUILDER_DIGEST}" \
+            --git-commit-digest "sha1:${GITHUB_SHA}" \
+            --source-repo "git+https://github.com/${GITHUB_REPOSITORY}" \
+            --subjects-path subjects.json
+
+          cat <<EOF >DATA
+          {
+            "version": 1,
+             "attestations": [
+              {
+                "name": "attestation1.intoto",
+                "subjects": []
+              }
+            ]
+          }
+          EOF
+
+          cat DATA > output-template.json
+
+          jq --argjson subjects "$(<subjects.json)" '.attestations[0].subjects += $subjects' output-template.json > "${GITHUB_WORKSPACE}"/slsa-outputs.json
+          echo "slsa-outputs-name=slsa-outputs.json" >> $GITHUB_OUTPUT
+
+      - name: Upload the SLSA outputs file
+        id: upload
+        uses: ./__BUILDER_CHECKOUT_DIR__/.github/actions/secure-upload-artifact
+        with:
+          name: "${{ steps.build.outputs.slsa-outputs-name }}-${{ needs.rng.outputs.value }}"
+          path: "${{ steps.build.outputs.slsa-outputs-name }}"
+
+  ###################################################################
+  #                                                                 #
+  #                Generate the provenance                          #
+  #                                                                 #
+  ###################################################################
+  provenance:
+    runs-on: ubuntu-latest
+    needs: [rng, detect-env, build, generate-build-definition, generate-builder]
+    permissions:
+      id-token: write # Needed to create an OIDC token for keyless signing.
+      contents: read  # Needed to check out the repository.
+      actions: read # Needed to read workflow info.
+    outputs:
+      provenance: ${{ steps.sign.outputs.output-name }}
+    steps:
+      - name: Checkout builder repository
+        uses: slsa-framework/slsa-github-generator/.github/actions/secure-builder-checkout@main
+        with:
+          repository: "${{ needs.detect-env.outputs.repository }}"
+          ref: "${{ needs.detect-env.outputs.ref }}"
+          path: __BUILDER_CHECKOUT_DIR__
+
+      - name: Download build definition
+        uses: ./__BUILDER_CHECKOUT_DIR__/.github/actions/secure-download-artifact
+        with:
+          name: "${{ needs.generate-build-definition.outputs.build-definition-name }}-${{ needs.rng.outputs.value }}"
+          path: "${{ needs.generate-build-definition.outputs.build-definition-name }}"
+          sha256: "${{ needs.generate-build-definition.outputs.build-definition-sha256 }}"
+
+      ###################################################################
+      #                1. Create the predicate                          #
+      ###################################################################
+
+      # - name: Create predicate
+      #   id: predicate
+      #   uses: ./__BUILDER_CHECKOUT_DIR__/internal/builders/docker-based/docker-based-predicate
+      #   with:
+      #     build-definition: "${{ needs.generate-build-definition.outputs.build-definition-name }}"
+      #     builder-repository: "${{ needs.detect-env.outputs.repository }}"
+      #     builder-ref: "${{ needs.detect-env.outputs.ref }}"
+      #     binary-sha256: "${{ needs.generate-builder.outputs.builder-binary-sha256 }}"
+      #     binary-name: "internal/builders/docker-based/cmd/build"
+      #     binary-repository: "${{ needs.detect-env.outputs.repository }}"
+      #     binary-ref: "${{ needs.detect-env.outputs.ref }}"
+
+      ###################################################################
+      #                Generate the intoto attestations                 #
+      ###################################################################
+
+      - name: Download SLSA outputs
+        uses: ./__BUILDER_CHECKOUT_DIR__/.github/actions/secure-download-artifact
+        with:
+          name: "${{ needs.build.outputs.slsa-outputs-name }}-${{ needs.rng.outputs.value }}"
+          path: "${{ needs.build.outputs.slsa-outputs-name }}"
+          sha256: "${{ needs.build.outputs.slsa-outputs-sha256 }}"
+
+      - name: Create attestations
+        id: attestations
+        uses: ./__BUILDER_CHECKOUT_DIR__/.github/actions/generate-attestations
+        with:
+          slsa-outputs-file: "${{ needs.build.outputs.slsa-outputs-name }}"
+          predicate-file: "${{ needs.generate-build-definition.outputs.build-definition-name }}"
+          output-folder: "attestations-${{ needs.rng.outputs.value }}"
+
+      - name: Upload unsigned intoto attestations file for pull request
+        if: ${{ github.event_name == 'pull_request' }}
+        uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
+        with:
+          name: "${{ env.OUTPUT_FOLDER }}"
+          path: "attestations-${{ needs.rng.outputs.value }}"
+          if-no-files-found: error
+
+      ###################################################################
+      #                       Sign the attestation                      #
+      ###################################################################
+
+      - name: Sign attestations
+        if: ${{ github.event_name != 'pull_request' }}
+        id: sign
+        uses: ./__BUILDER_CHECKOUT_DIR__/.github/actions/sign-attestations
+        with:
+          attestations: "attestations-${{ needs.rng.outputs.value }}"
+          output-folder: "${{ env.OUTPUT_FOLDER }}"
+
+      - name: Upload the signed attestations
+        id: upload
+        if: ${{ github.event_name != 'pull_request' }}
+        uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
+        with:
+          name: "${{ env.OUTPUT_FOLDER }}"
+          path: "${{ env.OUTPUT_FOLDER }}"
+          if-no-files-found: error

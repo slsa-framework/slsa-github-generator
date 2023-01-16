@@ -48,10 +48,10 @@ func Test_runBuild(t *testing.T) {
 		name       string
 		config     string
 		evalEnvs   string
+		workingDir string
 		err        error
 		commands   []string
 		envs       []string
-		workingDir string
 	}{
 		{
 			name:     "two ldflags",
@@ -273,7 +273,6 @@ func Test_runBuild(t *testing.T) {
 		tt := tt // Re-initializing variable so it is not changed while executing the closure below
 		t.Run(tt.name, func(t *testing.T) {
 			// *** WARNING: do not enable t.Parallel(), because we're writing to  ***.
-
 			file, err := os.CreateTemp("", "")
 			if err != nil {
 				t.Fatalf("unable to create a temp env file: %s", err)
@@ -295,7 +294,9 @@ func Test_runBuild(t *testing.T) {
 				return
 			}
 
-			file.Seek(0, 0)
+			if ret, err := file.Seek(0, 0); ret != 0 || err != nil {
+				t.Errorf("seek to zero")
+			}
 			cmd, env, subject, wd, err := extract(file)
 			if err != nil {
 				t.Errorf("extract: %v", err)

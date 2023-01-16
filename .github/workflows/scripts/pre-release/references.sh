@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Verify that Action calls that are pinned (not locally called)
-# use the same referemnce as the relealse tag.
+# use the same reference as the release tag.
 # See reasoning in ./github/actions/README.md
 
 set -euo pipefail
@@ -20,6 +20,11 @@ echo "minor: $minor"
 echo "patch: $patch"
 echo "rc: $rc"
 cd -
+
+if [ "$RELEASE_TAG" == "" ]; then
+    echo "Release tag is empty: \"$RELEASE_TAG\""
+    exit 1
+fi
 
 # Verify internal Actions are referenced by the release tag.
 cd __THIS_REPO__

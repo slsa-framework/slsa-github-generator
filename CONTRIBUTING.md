@@ -52,6 +52,10 @@ are written in [YAML](https://yaml.org/) and make heavy use of Bash scripts.
 - [Install Go](https://go.dev/doc/install)
 - [Install Node.js](https://nodejs.org/en/download/)
 
+Some Node.js projects require Jest as a testing framework.
+
+- [Install Jest](https://jestjs.io/docs/getting-started)
+
 This project also uses several linters in order to maintain code quality. If you
 wish to run these linters locally, follow the instructions for each of these to
 install them on your development machine.
@@ -105,6 +109,12 @@ unit tests locally using `make`. This requires that the Go runtime be installed.
 make unit-test
 ```
 
+Tests for GitHub Actions created with Typescript require [Jest](https://jestjs.io).
+
+```
+make ts-test 
+```
+
 #### End-to-End (e2e) Tests
 
 This project has a number of End-to-End tests that are scheduled to run daily.
@@ -144,4 +154,4 @@ communication and sharing ideas.
 Communication about bugs, usage, and new feature development is also done on
 [GitHub issues](https://github.com/slsa-framework/slsa-github-generator/issues).
 
-[code of conduct]: https://github.com/slsa-framework/slsa/blob/main/code-of-conduct.md
+[code of conduct]: https://github.com/slsa-framework/governance/blob/main/8._Code_of_Conduct.md
