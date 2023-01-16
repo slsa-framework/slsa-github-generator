@@ -36,7 +36,24 @@ import (
 	"strings"
 
 	intoto "github.com/in-toto/in-toto-golang/in_toto"
+
+	"github.com/slsa-framework/slsa-github-generator/internal/errors"
 )
+
+// errGitCommitMismatch indicates that the repo is checked out at an unexpected commit hash.
+type errGitCommitMismatch struct {
+	errors.WrappableError
+}
+
+// errGitFetch indicates an error when cloning a Git repo.
+type errGitFetch struct {
+	errors.WrappableError
+}
+
+// errGitCheckout indicates an error when checking out a given commit hash.
+type errGitCheckout struct {
+	errors.WrappableError
+}
 
 // DockerBuild represents a state in the process of building the artifacts
 // where the source repository is checked out and the config file is loaded and
@@ -293,7 +310,8 @@ func (c *GitClient) verifyCommit() (bool, error) {
 	lastCommitID := strings.TrimSpace(string(lastCommitIDBytes))
 
 	if lastCommitID != c.sourceDigest.Value {
-		return false, fmt.Errorf("the repo is already checked out at a different commit (%q)", lastCommitID)
+		return false, errors.Errorf(&errGitCommitMismatch{},
+			"the repo is already checked out at a different commit (%q)", lastCommitID)
 	}
 
 	return true, nil
@@ -324,7 +342,7 @@ func (c *GitClient) fetchSourcesFromGitRepo() error {
 
 	// Clone the repo.
 	if err = c.cloneGitRepo(); err != nil {
-		return fmt.Errorf("couldn't clone the Git repo: %v", err)
+		return errors.Errorf(&errGitFetch{}, "couldn't clone the Git repo: %w", err)
 	}
 
 	// Change directory to the root of the cloned repo.
@@ -340,7 +358,7 @@ func (c *GitClient) fetchSourcesFromGitRepo() error {
 
 	// Checkout the commit.
 	if err = c.checkoutGitCommit(); err != nil {
-		return fmt.Errorf("couldn't checkout the Git commit: %v", err)
+		return errors.Errorf(&errGitCheckout{}, "couldn't checkout the Git commit: %w", err)
 	}
 
 	c.checkoutInfo.RepoRoot = cwd

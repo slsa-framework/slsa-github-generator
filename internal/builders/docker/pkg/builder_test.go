@@ -15,13 +15,14 @@
 package pkg
 
 import (
-	"fmt"
 	"os"
-	"strings"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 	intoto "github.com/in-toto/in-toto-golang/in_toto"
+
+	"github.com/slsa-framework/slsa-github-generator/internal/errors"
 )
 
 func Test_CreateBuildDefinition(t *testing.T) {
@@ -61,8 +62,8 @@ func Test_GitClient_verifyOrFetchRepo(t *testing.T) {
 		t.Fatalf("Could create GitClient: %v", err)
 	}
 
-	// We expect it to fail at verify commit
-	want := "the repo is already checked out at a different commit"
+	// We expect it to fail at verifyCommit
+	want := &errGitCommitMismatch{}
 	err = gc.verifyOrFetchRepo()
 	checkError(t, err, want)
 }
@@ -89,7 +90,7 @@ func Test_GitClient_fetchSourcesFromGitRepo(t *testing.T) {
 	}
 
 	// We expect the checkout to fail
-	want := "couldn't checkout the Git commit"
+	want := &errGitCheckout{}
 	err = gc.fetchSourcesFromGitRepo()
 	checkError(t, err, want)
 
@@ -157,13 +158,8 @@ func Test_Builder_SetUpBuildState(t *testing.T) {
 	}
 }
 
-// TODO(#1478): Use custom error types, and check errors based on their type.
-func checkError(t *testing.T, err error, want string) {
-	if err == nil {
-		t.Errorf("expected error, got nil")
-	}
-	got := fmt.Sprintf("%v", err)
-	if !strings.Contains(got, want) {
-		t.Errorf("unexpected error message: got (%q) does not contain want (%q)", got, want)
+func checkError[T error](t *testing.T, got error, want T) {
+	if !errors.As(got, &want) {
+		t.Errorf("unexpected error: %v", cmp.Diff(got, want, cmpopts.EquateErrors()))
 	}
 }
