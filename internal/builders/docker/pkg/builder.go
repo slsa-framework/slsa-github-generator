@@ -342,7 +342,7 @@ func (c *GitClient) fetchSourcesFromGitRepo() error {
 
 	// Clone the repo.
 	if err = c.cloneGitRepo(); err != nil {
-		return errors.Errorf(&errGitFetch{}, "couldn't clone the Git repo: %v", err)
+		return errors.Errorf(&errGitFetch{}, "couldn't clone the Git repo: %w", err)
 	}
 
 	// Change directory to the root of the cloned repo.
@@ -358,7 +358,7 @@ func (c *GitClient) fetchSourcesFromGitRepo() error {
 
 	// Checkout the commit.
 	if err = c.checkoutGitCommit(); err != nil {
-		return errors.Errorf(&errGitCheckout{}, "couldn't checkout the Git commit: %v", err)
+		return errors.Errorf(&errGitCheckout{}, "couldn't checkout the Git commit: %w", err)
 	}
 
 	c.checkoutInfo.RepoRoot = cwd
