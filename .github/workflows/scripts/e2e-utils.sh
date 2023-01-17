@@ -75,3 +75,27 @@ _e2e_verify_query() {
     name=$(echo -n "${attestation}" | jq -c -r "${query}")
     e2e_assert_eq "${name}" "${expected}" "${query} should be ${expected}"
 }
+
+e2e_verify_predicate_v1_buildDefinition_externalParameters_workflowPath() {
+    _e2e_verify_query "$1" "$2" '.buildDefinition.externalParameters.workflowPath.value'
+}
+
+e2e_verify_predicate_v1_buildDefinition_externalParameters_source() {
+    _e2e_verify_query "$1" "$2" '.buildDefinition.externalParameters.source'
+}
+
+e2e_verify_predicate_v1_buildDefinition_buildType() {
+    _e2e_verify_query "$1" "$2" '.buildDefinition.buildType'
+}
+
+e2e_verify_predicate_v1_buildDefinition_systemParameters() {
+    _e2e_verify_query "$1" "$3" '.buildDefinition.systemParamters.'"$2"
+}
+
+e2e_verify_predicate_v1_runDetails_builder_id() {
+    _e2e_verify_query "$1" "$2" '.runDetails.builder.id'
+}
+
+e2e_verify_predicate_v1_runDetails_metadata_invocationId() {
+    _e2e_verify_query "$1" "$2" '.runDetails.metadata.invocationId'
+}
