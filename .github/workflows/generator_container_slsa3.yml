@@ -182,6 +182,10 @@ jobs:
                 exit 1
             fi
             password="${UNTRUSTED_PASSWORD}"
+            if [ "${password}" == "" ]; then
+                echo "registry-password is required." >&2
+                exit 1
+            fi
           fi
 
           echo "login to ${untrusted_registry}"
