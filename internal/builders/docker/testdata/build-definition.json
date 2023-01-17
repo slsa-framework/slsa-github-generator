@@ -16,6 +16,8 @@
             }
         },
         "values": {
+            "artifactPath": "config.toml",
+            "command": "cp, internal/builders/docker/testdata/config.toml, config.toml",
             "configFile": "internal/builders/docker/testdata/config.toml"
         }
     }

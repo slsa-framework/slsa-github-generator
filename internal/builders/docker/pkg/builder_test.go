@@ -36,7 +36,15 @@ func Test_CreateBuildDefinition(t *testing.T) {
 		BuildConfigPath: "internal/builders/docker/testdata/config.toml",
 	}
 
-	got := CreateBuildDefinition(config)
+	db := &DockerBuild{
+		config: config,
+		buildConfig: &BuildConfig{
+			Command:      []string{"cp", "internal/builders/docker/testdata/config.toml", "config.toml"},
+			ArtifactPath: "config.toml",
+		},
+	}
+
+	got := db.CreateBuildDefinition()
 
 	want, err := loadBuildDefinitionFromFile("../testdata/build-definition.json")
 	if err != nil {
@@ -55,9 +63,10 @@ func Test_GitClient_verifyOrFetchRepo(t *testing.T) {
 		// The digest value does not matter for the test
 		SourceDigest:    Digest{Alg: "sha1", Value: "does-not-matter"},
 		BuildConfigPath: "internal/builders/docker/testdata/config.toml",
+		ForceCheckout:   false,
 		// BuilderImage field is not relevant, so it is omitted
 	}
-	gc, err := newGitClient(config, false, 1)
+	gc, err := newGitClient(config, 1)
 	if err != nil {
 		t.Fatalf("Could create GitClient: %v", err)
 	}
@@ -82,9 +91,10 @@ func Test_GitClient_fetchSourcesFromGitRepo(t *testing.T) {
 		// The digest value does not matter for the test
 		SourceDigest:    Digest{Alg: "sha1", Value: "does-no-matter"},
 		BuildConfigPath: "internal/builders/docker/testdata/config.toml",
+		ForceCheckout:   false,
 		// BuilderImage field is not relevant, so it is omitted
 	}
-	gc, err := newGitClient(config, false, 1)
+	gc, err := newGitClient(config, 1)
 	if err != nil {
 		t.Fatalf("Could not create GitClient: %v", err)
 	}
@@ -112,7 +122,7 @@ func Test_inspectArtifacts(t *testing.T) {
 
 	s1 := intoto.Subject{
 		Name:   "build-definition.json",
-		Digest: map[string]string{"sha256": "f139aef0c32000161fa71052276697fa8acbecaa2fd68f5c20f1a5ca95458e13"},
+		Digest: map[string]string{"sha256": "51df084c4f57a6d52c64055afe5fc95eb65a53179902a2038e67682a849c5fc4"},
 	}
 	s2 := intoto.Subject{
 		Name:   "config.toml",

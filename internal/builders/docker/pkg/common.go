@@ -27,6 +27,10 @@ const (
 	BuilderImageKey = "builderImage"
 	// ConfigFileKey is the lookup key for the config file in ExternalParameters.
 	ConfigFileKey = "configFile"
+	// ArtifactPathKey is the lookup key for the artifacts path in ExternalParameters.
+	ArtifactPathKey = "artifactPath"
+	// CommandKey is the lookup key for the command in ExternalParameters.
+	CommandKey = "command"
 )
 
 // BuildDefinition contains the information required for building an artifact using a Docker image.
