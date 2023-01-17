@@ -137,7 +137,7 @@ jobs:
           allow-private-repository: ${{ inputs.private-repository }}
 
       - id: auth
-        name: "Authenticate to Google Cloud"
+        name: Authenticate to Google Cloud
         if: ${{ inputs.gcp-workload-identity-provider != "" }}
         uses: google-github-actions/auth@ef5d53e30bbcd8d0836f4288f5e50ff3e086997d # v1.0.0
         with:
@@ -153,7 +153,7 @@ jobs:
         id: login
         continue-on-error: true
         env:
-          eNTRUSTED_IMAGE: "${{ inputs.image }}"
+          UNTRUSTED_IMAGE: "${{ inputs.image }}"
           UNTRUSTED_INPUT_USERNAME: "${{ inputs.registry-username }}"
           UNTRUSTED_SECRET_USERNAME: "${{ secrets.registry-username }}"
           UNTRUSTED_PASSWORD: "${{ secrets.registry-password }}"
