@@ -25,6 +25,7 @@ package pkg
 import (
 	"crypto/sha256"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"io"
 	"log"
@@ -105,12 +106,16 @@ func (db *DockerBuild) CreateBuildDefinition() *BuildDefinition {
 	artifacts[SourceKey] = sourceArtifact(db.config)
 	artifacts[BuilderImageKey] = builderImage(db.config)
 
+	// Ignoring the error, as the input is a simple string array.
+	cmdBytes, _ := json.Marshal(db.buildConfig.Command)
+	cmd := string(cmdBytes)
+
 	ep := ParameterCollection{
 		Artifacts: artifacts,
 		Values: map[string]string{
 			ConfigFileKey:   db.config.BuildConfigPath,
 			ArtifactPathKey: db.buildConfig.ArtifactPath,
-			CommandKey:      strings.Join(db.buildConfig.Command, ", "),
+			CommandKey:      cmd,
 		},
 	}
 

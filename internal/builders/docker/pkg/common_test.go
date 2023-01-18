@@ -46,7 +46,7 @@ func Test_BuildDefinition(t *testing.T) {
 			Artifacts: map[string]ArtifactReference{"source": wantSource, "builderImage": wantBuilderImage},
 			Values: map[string]string{
 				"artifactPath": "config.toml",
-				"command":      "cp, internal/builders/docker/testdata/config.toml, config.toml",
+				"command":      "[\"cp\",\"internal/builders/docker/testdata/config.toml\",\"config.toml\"]",
 				"configFile":   "internal/builders/docker/testdata/config.toml",
 			},
 		},
