@@ -1,0 +1,67 @@
+# Copyright 2022 SLSA Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+name: SLSA Delegated Builder
+
+permissions: {}
+
+on:
+  workflow_call:
+    inputs:
+      slsa-token:
+        # FIXME: Fix description.
+        description: "The slsa-token"
+        required: true
+        type: string
+
+    secrets:
+      secrets:
+        # FIXME: Fix description.
+        description: "Secrets to provide to the tool action"
+        required: true
+        type: string
+
+jobs:
+  # detect-env detects the reusable workflow's repository and ref for use later
+  # in the workflow.
+  detect-env:
+    outputs:
+      outcome: ${{ steps.final.outputs.outcome }}
+      repository: ${{ steps.detect.outputs.repository }}
+      ref: ${{ steps.detect.outputs.ref }}
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write # Needed to detect the current reusable repository and ref.
+    steps:
+      - name: Detect the generator ref
+        id: detect
+        continue-on-error: true
+        uses: slsa-framework/slsa-github-generator/.github/actions/detect-workflow@main
+
+      - name: Final outcome
+        id: final
+        env:
+          SUCCESS: ${{ steps.detect.outcome != 'failure' }}
+        run: |
+          echo "outcome=$([ "$SUCCESS" == "true" ] && echo "success" || echo "failure")" >> $GITHUB_OUTPUT
+
+  verify-slsa-token:
+    - name: Verify SLSA Token
+      uses: slsa-framework/slsa-github-generator/.github/actions/verify-token@main
+      with:
+        # The token must have been created with the "builder_delegated_slsa3.yml" audience.
+        slsa-workflow-recipient: "builder_delegated_slsa3.yml"
+        slsa-unverified-token: ${{ inputs.slsa-token }}
+        # FIXME: what path should this be?
+        output-predicate: "predicate.json"
