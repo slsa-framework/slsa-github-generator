@@ -94,6 +94,7 @@ function run() {
             }
             const wd = (0, utils_1.getEnv)("GITHUB_WORKSPACE");
             const safeOutput = (0, utils_1.resolvePathInput)(outputPredicate, wd);
+            // TODO(#1513): Use a common utility to harden file writes.
             if (fs.existsSync(safeOutput)) {
                 throw new Error("output-predicate file already exists");
             }

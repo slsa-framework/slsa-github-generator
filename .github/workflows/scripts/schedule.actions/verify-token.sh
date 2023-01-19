@@ -52,7 +52,7 @@ e2e_assert_eq "$TOOL_REPOSITORY" "$GITHUB_REPOSITORY"
 e2e_assert_eq "$TOOL_REF" "$GITHUB_REF"
 e2e_assert_eq "$TOOL_URI" "https://github.com/$GITHUB_REPOSITORY/.github/workflows/e2e.verify-token.schedule.yml@$GITHUB_REF"
 
-PREDICATE_CONTENT=$(cat "$PREDICATE")
+PREDICATE_CONTENT=$(<"$PREDICATE")
 
 # Verify common predicate fields.
 e2e_verify_common_all_v1  "$PREDICATE_CONTENT"
