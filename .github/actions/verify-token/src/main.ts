@@ -19,6 +19,7 @@ import * as fs from "fs";
 import * as child_process from "child_process";
 import { githubObj, rawTokenInterface, createPredicate } from "./predicate";
 import { getEnv, resolvePathInput } from "./utils";
+import type { ApiWorkflowRun } from "predicate-utils";
 
 async function run(): Promise<void> {
   try {
@@ -130,13 +131,17 @@ async function run(): Promise<void> {
     const ownerRepo = getEnv("GITHUB_REPOSITORY");
     const [owner, repo] = ownerRepo.split("/");
 
-    const { data: current_run } = await octokit.rest.actions.getWorkflowRun({
+    const res = await octokit.rest.actions.getWorkflowRun({
       owner,
       repo,
       run_id: Number(process.env.GITHUB_RUN_ID),
     });
 
-    const predicate = createPredicate(rawTokenObj, toolURI, current_run);
+    const predicate = createPredicate(
+      rawTokenObj,
+      toolURI,
+      res.data as ApiWorkflowRun
+    );
     fs.writeFileSync(safeOutput, JSON.stringify(predicate), {
       flag: "ax",
       mode: 0o600,
