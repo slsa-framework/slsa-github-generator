@@ -50,8 +50,16 @@ async function run(): Promise<void> {
     const unverifiedToken = core.getInput("slsa-unverified-token");
 
     const outputPredicate = core.getInput("output-predicate");
+    if (!outputPredicate) {
+      // detect if output predicate is null or empty string.
+      throw new Error("output-predicate must be supplied");
+    }
     const wd = getEnv("GITHUB_WORKSPACE");
     const safeOutput = resolvePathInput(outputPredicate, wd);
+    // TODO(#1513): Use a common utility to harden file writes.
+    if (fs.existsSync(safeOutput)) {
+      throw new Error("output-predicate file already exists");
+    }
 
     // Log the inputs for troubleshooting.
     core.debug(`workflowRecipient: ${workflowRecipient}`);

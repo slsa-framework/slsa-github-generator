@@ -33,24 +33,28 @@ jobs:
         with:
           slsa-unverified-token: ${{ steps.setup.outputs.slsa-token }}
           slsa-workflow-recipient: "delegator_generic_slsa3.yml"
+          output-predicate: predicate.json
       - run: ./.github/workflows/scripts/schedule.actions/verify-token.sh
         env:
           VERIFIED_TOKEN: ${{ steps.verify.outputs.slsa-verified-token }}
           TOOL_REPOSITORY: ${{ steps.verify.outputs.tool-repository }}
           TOOL_REF: ${{ steps.verify.outputs.tool-ref }}
           TOOL_URI: ${{ steps.verify.outputs.tool-uri }}
+          PREDICATE: predicate.json
       - id: verify-mismatch-recipient
         uses: ./.github/actions/verify-token
         continue-on-error: true
         with:
           slsa-unverified-token: ${{ steps.verify.outputs.slsa-verified-token }}
           slsa-workflow-recipient: "elegator_generic_slsa3.yml"
+          output-predicate: mismatch-recipient-predicate.json
       - id: verify-mismatch-token
         uses: ./.github/actions/verify-token
         continue-on-error: true
         with:
           slsa-unverified-token: aGVsbG8K
           slsa-workflow-recipient: "delegator_generic_slsa3.yml"
+          output-predicate: mismatch-token-predicate.json
       - env:
           SUCCESS: ${{ steps.verify-mismatch-recipient.outcome == 'failure' && steps.verify-mismatch-token.outcome == 'failure' }}
         run: |

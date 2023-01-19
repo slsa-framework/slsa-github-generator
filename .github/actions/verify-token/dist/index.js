@@ -88,8 +88,16 @@ function run() {
             const workflowRecipient = core.getInput("slsa-workflow-recipient");
             const unverifiedToken = core.getInput("slsa-unverified-token");
             const outputPredicate = core.getInput("output-predicate");
+            if (!outputPredicate) {
+                // detect if output predicate is null or empty string.
+                throw new Error("output-predicate must be supplied");
+            }
             const wd = (0, utils_1.getEnv)("GITHUB_WORKSPACE");
             const safeOutput = (0, utils_1.resolvePathInput)(outputPredicate, wd);
+            // TODO(#1513): Use a common utility to harden file writes.
+            if (fs.existsSync(safeOutput)) {
+                throw new Error("output-predicate file already exists");
+            }
             // Log the inputs for troubleshooting.
             core.debug(`workflowRecipient: ${workflowRecipient}`);
             core.debug(`unverifiedToken: ${unverifiedToken}`);
