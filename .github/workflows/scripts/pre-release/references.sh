@@ -30,11 +30,32 @@ fi
 cd __THIS_REPO__
 results=$(
     find .github/workflows/ -maxdepth 1 -type f -print0 -name '*.yaml' -o -name '*.yml' |
-        xargs -0 grep -P "slsa-framework/slsa-github-generator/.github/actions/.*@(?!$RELEASE_TAG)" ||
+        xargs -0 grep -Pn "slsa-framework/slsa-github-generator/.github/actions/.*@(?!$RELEASE_TAG)" |
+        sed 's/\(.*:\) *uses:.*\(\/.*\)/\1 [...]\2/' ||
         true
 )
 if [[ "$results" != "" ]]; then
     echo "Some Actions are not referenced via the correct release tag \"$RELEASE_TAG\""
+    echo "$results"
+    exit 1
+fi
+
+if [[ "$RELEASE_TAG" =~ .*-rc[0-9]*$ ]]; then
+    # don't check documentation for release candidates
+    exit 0
+fi
+
+# Verify documentation refers to the most recent release tag
+results=$(
+    find . -name "*.md" -print0 |
+        xargs -0 grep -Pn "uses: slsa-framework/slsa-github-generator/.*@(?!<|$RELEASE_TAG)" |
+        sed "s/\(.*:\) *uses:.*\(\/.*\)/\1 [...]\2/" ||
+        true
+)
+
+if [[ "$results" != "" ]]; then
+    echo "Some documentation refers to an incorrect release tag"
+    echo "Allowed tags are \"<pseudo_tags>\" or \"$RELEASE_TAG\""
     echo "$results"
     exit 1
 fi
