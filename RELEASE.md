@@ -29,7 +29,6 @@ This is a document to describe the release process for the slsa-github-generator
   - [Verify final version references](#verify-final-version-references)
   - [Final adversarial tests](#final-adversarial-tests)
   - [Reference Actions at main](#reference-actions-at-main)
-  - [Update documentation](#update-documentation)
   - [Update verifier](#update-verifier)
   - [Finish the release.](#finish-the-release)
   - [Update the starter workflows](#update-the-starter-workflows)
@@ -375,6 +374,12 @@ Update version references with the following command:
 find .github/workflows/ -name '*.yaml' -o -name '*.yml' | xargs sed -i "s/uses: slsa-framework\/slsa-github-generator\/\.github\/actions\/\(.*\)@\(main\|v[0-9]\+\.[0-9]\+\.[0-9]\+\(-rc\.[0-9]\+\)\?\)/uses: slsa-framework\/slsa-github-generator\/.github\/actions\/\1@$BUILDER_TAG/"
 ```
 
+Likewise, update documentation with the following command:
+
+```shell
+find . -name "*.md" -exec sed -i "s~\(uses: .*/slsa-github-generator/.*@\)v[0-9]\+\.[0-9]\+\.[0-9]\+~\1$BUILDER_TAG~g" {} +
+```
+
 Send a PR with this update and add `#label:release ${BUILDER_TAG}` in the PR description.
 
 Once the PR is merged, immediately update the tag to point to HEAD.
@@ -396,14 +401,6 @@ Send a PR to reference the internal Actions at `@main`. You can use:
 
 ```shell
 find .github/workflows/ -name '*.yaml' -o -name '*.yml' | xargs sed -i "s/uses: slsa-framework\/slsa-github-generator\/\.github\/actions\/\(.*\)@${BUILDER_TAG}/uses: slsa-framework\/slsa-github-generator\/.github\/actions\/\1@main/"
-```
-
-### Update documentation
-
-Send a PR to update the documentation to recommend using the new version:
-
-```shell
-find . -name '*.md' | xargs sed -i "s/slsa-framework\/slsa-github-generator\/\.github\/\(.*\)@v[0-9]\+\.[0-9]\+\.[0-9]\+/slsa-framework\/slsa-github-generator\/.github\/\1@${BUILDER_TAG}/"
 ```
 
 ### Update verifier

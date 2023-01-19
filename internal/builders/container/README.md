@@ -350,7 +350,7 @@ steps:
       image_and_digest=$(ko build --tags="${tag}" .)
 
       # Output the image name and digest so we can generate provenance.
-      image=$(echo "${image_and_digest}" | cut -d':' -f1)
+      image=$(echo "${image_and_digest}" | cut -d'@' -f1 | cut -d':' -f1)
       digest=$(echo "${image_and_digest}" | cut -d'@' -f2)
       echo "image=$image" >> "$GITHUB_OUTPUT"
       echo "digest=$digest" >> "$GITHUB_OUTPUT"
