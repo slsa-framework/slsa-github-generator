@@ -118,7 +118,8 @@ jobs:
     runs-on: ubuntu-latest
     needs: [detect-env]
     permissions:
-      id-token: write # Needed to get OIDC token for keyless signing.
+      id-token: write # Needed to get OIDC token for keyless signing, and for GCP Auth.
+      contents: read # Needed for GCP Auth.
       actions: read # Needed to read workflow info.
       packages: write # Needed to login and upload attestations to ghcr.io.
     steps:
