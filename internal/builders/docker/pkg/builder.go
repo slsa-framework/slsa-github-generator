@@ -106,8 +106,12 @@ func (db *DockerBuild) CreateBuildDefinition() *BuildDefinition {
 	artifacts[SourceKey] = sourceArtifact(db.config)
 	artifacts[BuilderImageKey] = builderImage(db.config)
 
-	// Ignoring the error, as the input is a simple string array.
-	cmdBytes, _ := json.Marshal(db.buildConfig.Command)
+	// The input is a simple string array, no errors occur. But we check and
+	// print the error to make the linters happy.
+	cmdBytes, err := json.Marshal(db.buildConfig.Command)
+	if err != nil {
+		log.Printf("Could not unmarshal command array: %v.", err)
+	}
 	cmd := string(cmdBytes)
 
 	ep := ParameterCollection{
