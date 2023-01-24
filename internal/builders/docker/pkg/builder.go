@@ -25,6 +25,7 @@ package pkg
 import (
 	"crypto/sha256"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"io"
 	"log"
@@ -59,9 +60,9 @@ type errGitCheckout struct {
 // where the source repository is checked out and the config file is loaded and
 // parsed, and we are ready for running the `docker run` command.
 type DockerBuild struct {
-	BuildDefinition *BuildDefinition
-	BuildConfig     *BuildConfig
-	RepoInfo        *RepoCheckoutInfo
+	config      *DockerBuildConfig
+	buildConfig *BuildConfig
+	RepoInfo    *RepoCheckoutInfo
 }
 
 // RepoCheckoutInfo contains info about the location of a locally checked out
@@ -86,8 +87,8 @@ type Builder struct {
 
 // NewBuilderWithGitFetcher creates a new Builder that fetches the sources
 // from a Git repository.
-func NewBuilderWithGitFetcher(config DockerBuildConfig, forceCheckout bool) (*Builder, error) {
-	gc, err := newGitClient(&config, forceCheckout, 0 /* depth */)
+func NewBuilderWithGitFetcher(config DockerBuildConfig) (*Builder, error) {
+	gc, err := newGitClient(&config, 0 /* depth */)
 	if err != nil {
 		return nil, fmt.Errorf("could not create builder: %v", err)
 	}
@@ -98,15 +99,28 @@ func NewBuilderWithGitFetcher(config DockerBuildConfig, forceCheckout bool) (*Bu
 	}, nil
 }
 
-// CreateBuildDefinition creates a BuildDefinition from the given DockerBuildConfig.
-func CreateBuildDefinition(config *DockerBuildConfig) *BuildDefinition {
+// CreateBuildDefinition creates a BuildDefinition from the DockerBuildConfig
+// and BuildConfig in this DockerBuild.
+func (db *DockerBuild) CreateBuildDefinition() *BuildDefinition {
 	artifacts := make(map[string]ArtifactReference)
-	artifacts[SourceKey] = sourceArtifact(config)
-	artifacts[BuilderImageKey] = builderImage(config)
+	artifacts[SourceKey] = sourceArtifact(db.config)
+	artifacts[BuilderImageKey] = builderImage(db.config)
+
+	// The input is a simple string array, no errors occur. But we check and
+	// print the error to make the linters happy.
+	cmdBytes, err := json.Marshal(db.buildConfig.Command)
+	if err != nil {
+		log.Printf("Could not unmarshal command array: %v.", err)
+	}
+	cmd := string(cmdBytes)
 
 	ep := ParameterCollection{
 		Artifacts: artifacts,
-		Values:    map[string]string{ConfigFileKey: config.BuildConfigPath},
+		Values: map[string]string{
+			ConfigFileKey:   db.config.BuildConfigPath,
+			ArtifactPathKey: db.buildConfig.ArtifactPath,
+			CommandKey:      cmd,
+		},
 	}
 
 	// Currently we don't have any SystemParameters or ResolvedDependencies.
@@ -156,9 +170,9 @@ func (b *Builder) SetUpBuildState() (*DockerBuild, error) {
 	}
 
 	db := &DockerBuild{
-		BuildDefinition: CreateBuildDefinition(&b.config),
-		BuildConfig:     bc,
-		RepoInfo:        repoInfo,
+		config:      &b.config,
+		buildConfig: bc,
+		RepoInfo:    repoInfo,
 	}
 	return db, nil
 }
@@ -169,7 +183,7 @@ func (db *DockerBuild) BuildArtifacts() ([]intoto.Subject, error) {
 	if err := runDockerRun(db); err != nil {
 		return nil, fmt.Errorf("running `docker run` failed: %v", err)
 	}
-	return inspectArtifacts(db.BuildConfig.ArtifactPath)
+	return inspectArtifacts(db.buildConfig.ArtifactPath)
 }
 
 func runDockerRun(db *DockerBuild) error {
@@ -187,11 +201,13 @@ func runDockerRun(db *DockerBuild) error {
 		"--rm",
 	}
 
+	buildDef := db.CreateBuildDefinition()
+
 	var args []string
 	args = append(args, "run")
 	args = append(args, defaultDockerRunFlags...)
-	args = append(args, db.BuildDefinition.ExternalParameters.Artifacts[BuilderImageKey].URI)
-	args = append(args, db.BuildConfig.Command...)
+	args = append(args, buildDef.ExternalParameters.Artifacts[BuilderImageKey].URI)
+	args = append(args, db.buildConfig.Command...)
 	cmd := exec.Command("docker", args...)
 
 	log.Printf("Running command: %q.", cmd.String())
@@ -234,7 +250,7 @@ type GitClient struct {
 	depth         int
 }
 
-func newGitClient(config *DockerBuildConfig, forceCheckout bool, depth int) (*GitClient, error) {
+func newGitClient(config *DockerBuildConfig, depth int) (*GitClient, error) {
 	repo := config.SourceRepo
 	parsed, err := url.Parse(repo)
 	if err != nil {
@@ -255,7 +271,7 @@ func newGitClient(config *DockerBuildConfig, forceCheckout bool, depth int) (*Gi
 	return &GitClient{
 		sourceRepo:    &repo,
 		sourceDigest:  &config.SourceDigest,
-		forceCheckout: forceCheckout,
+		forceCheckout: config.ForceCheckout,
 		depth:         depth,
 		checkoutInfo:  &RepoCheckoutInfo{},
 	}, nil

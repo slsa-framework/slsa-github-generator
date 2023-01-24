@@ -22,6 +22,7 @@ type InputOptions struct {
 	SourceRepo      string
 	GitCommitHash   string
 	BuilderImage    string
+	ForceCheckout   bool
 }
 
 // AddFlags adds input flags to the given command.
@@ -37,4 +38,7 @@ func (io *InputOptions) AddFlags(cmd *cobra.Command) {
 
 	cmd.Flags().StringVarP(&io.BuilderImage, "builder-image", "i", "",
 		"Required - URL indicating the Docker builder image, including a URI and image digest.")
+
+	cmd.Flags().BoolVarP(&io.ForceCheckout, "force-checkout", "f", false,
+		"Optional - Forces checking out the source code from the given Git repo.")
 }
