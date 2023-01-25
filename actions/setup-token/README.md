@@ -1,4 +1,4 @@
-# verify-token
+# setup-token
 
 The token has the following format:
 ```
