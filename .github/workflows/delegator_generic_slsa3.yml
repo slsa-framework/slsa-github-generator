@@ -219,7 +219,7 @@ jobs:
 
       - name: debug
         run: |
-          echo "predicate file: $(cat ${{ env.SLSA_PREDICATE_FILE }})" 
+          echo "predicate file: $(cat ${{ env.SLSA_PREDICATE_FILE }})"
           echo "artifact file: $(cat ${{ env.SLSA_ARTIFACTS_FILE }})"
 
       - name: Generate attestations
