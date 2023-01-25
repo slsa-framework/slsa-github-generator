@@ -17,11 +17,12 @@ command. The following is an example, which assumes you are running the code in
 
 ```bash
 go run *.go  dry-run \
-  --build-config-path testdata/config.toml \
-  --build-definition-path bd.json \
+  --build-config-path internal/builders/docker/testdata/config.toml \
   --builder-image bash@sha256:9e2ba52487d \
-  --git-commit-digest sha1:9b5f98310dbbad675834474fa68c37d880687cb9 \
-  --source-repo git+https://github.com/project-oak/transparent-release
+  --git-commit-digest sha1:cf5804b5c6f1a4b2a0b03401a487dfdfbe3a5f00 \
+  --source-repo git+https://github.com/slsa-framework/slsa-github-generator \
+  --build-definition-path bd.json \
+  --force-checkout
 ```
 
 The output of this is a JSON document stored in `bd.json`.

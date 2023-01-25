@@ -45,13 +45,19 @@ func DryRunCmd(check func(error)) *cobra.Command {
 			config, err := pkg.NewDockerBuildConfig(io)
 			check(err)
 
-			bd := pkg.CreateBuildDefinition(config)
-			check(writeToFile(*bd, w))
+			builder, err := pkg.NewBuilderWithGitFetcher(*config)
+			check(err)
+
+			db, err := builder.SetUpBuildState()
+			check(err)
+			// Remove any temporary files that were fetched during the setup.
+			defer db.RepoInfo.Cleanup()
+
+			check(writeToFile(*db.CreateBuildDefinition(), w))
 		},
 	}
 
 	io.AddFlags(cmd)
-
 	cmd.Flags().StringVarP(&buildDefinitionPath, "build-definition-path", "o", "",
 		"Required - Path to store the generated BuildDefinition to.")
 
@@ -62,7 +68,6 @@ func DryRunCmd(check func(error)) *cobra.Command {
 // input flags, and prints out their digests, or terminates with an error.
 func BuildCmd(check func(error)) *cobra.Command {
 	io := &pkg.InputOptions{}
-	var forceCheckout bool
 	var subjectsPath string
 
 	cmd := &cobra.Command{
@@ -74,7 +79,7 @@ func BuildCmd(check func(error)) *cobra.Command {
 			config, err := pkg.NewDockerBuildConfig(io)
 			check(err)
 
-			builder, err := pkg.NewBuilderWithGitFetcher(*config, forceCheckout)
+			builder, err := pkg.NewBuilderWithGitFetcher(*config)
 			check(err)
 
 			db, err := builder.SetUpBuildState()
@@ -89,8 +94,6 @@ func BuildCmd(check func(error)) *cobra.Command {
 	}
 
 	io.AddFlags(cmd)
-	cmd.Flags().BoolVarP(&forceCheckout, "force-checkout", "f", false,
-		"Optional - Forces checking out the source code from the given Git repo.")
 	cmd.Flags().StringVarP(&subjectsPath, "subjects-path", "o", "",
 		"Required - Path to store a JSON-encoded array of subjects of the generated artifacts.")
 

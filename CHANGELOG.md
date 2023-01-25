@@ -86,6 +86,7 @@
 #### New Features
 
 - A new boolean [`continue-on-error`](https://github.com/slsa-framework/slsa-github-generator/blob/main/internal/builders/container/README.md#workflow-inputs) input was added which, when set to `true`, prevents the workflow from failing when a step fails. If set to true, the result of the reusable workflow will be return in the [`outcome`](https://github.com/slsa-framework/slsa-github-generator/blob/main/internal/builders/container/README.md#workflow-outputs) output.
+- Support was added for authenticating with [Google Artifact Registry](https://cloud.google.com/artifact-registry) and [Google Container Registry](https://cloud.google.com/container-registry) using [Workload Identity Federation](https://cloud.google.com/iam/docs/workload-identity-federation). Users can use this new feature by using the [`gcp-workload-identity-provider` and `gcp-service-account` inputs](https://github.com/slsa-framework/slsa-github-generator/blob/main/internal/builders/container/README.md#workflow-inputs)
 
 ## Changelog since v1.4.0
 

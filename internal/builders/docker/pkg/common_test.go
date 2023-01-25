@@ -44,7 +44,11 @@ func Test_BuildDefinition(t *testing.T) {
 		BuildType: "https://slsa.dev/container-based-build/v0.1?draft",
 		ExternalParameters: ParameterCollection{
 			Artifacts: map[string]ArtifactReference{"source": wantSource, "builderImage": wantBuilderImage},
-			Values:    map[string]string{"configFile": "internal/builders/docker/testdata/config.toml"},
+			Values: map[string]string{
+				"artifactPath": "config.toml",
+				"command":      "[\"cp\",\"internal/builders/docker/testdata/config.toml\",\"config.toml\"]",
+				"configFile":   "internal/builders/docker/testdata/config.toml",
+			},
 		},
 	}
 
