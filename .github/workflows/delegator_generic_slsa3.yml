@@ -47,7 +47,7 @@ on:
     # formatted as a map.
     inputs:
       slsa-token:
-        description: "The SLSA token identifying the request"
+        description: "The signed SLSA token identifying the request"
         required: true
         type: string
 
@@ -57,10 +57,14 @@ on:
       build-artifacts-outputs:
         description: "The outputs from the build-artitacts Action, unchanged."
         value: ${{ jobs.build-artifacts-ubuntu.outputs.outputs }}
-      
+
       # This is an output from the framework.
       attestations-download-name:
-        description: "Name of the artifact to download all the attestations."
+        description: >
+          Name of the artifact to download all the attestations.
+
+          When run on a `pull_request` trigger, attestations are not signed and have an ".intoto" extension.
+          When run on other trggers, attestations are signed and have an "intoto.sigstore" extension.
         value: ${{ jobs.generate-provenance.outputs.attestations-download-name }}
 
 jobs:
@@ -93,16 +97,6 @@ jobs:
           slsa-unverified-token: ${{ inputs.slsa-token }}
           output-predicate: ${{ env.SLSA_PREDICATE_FILE }}
 
-      - name: Debug output predicate
-        env: 
-          PREDICATE_FILE: ${{ env.SLSA_PREDICATE_FILE }}
-          TOKEN: ${{ toJson(steps.verify.outputs.slsa-verified-token) }}
-          RUNNER: ${{ fromJson(steps.verify.outputs.slsa-verified-token).builder.runner_label }}
-        run: |
-          cat "$PREDICATE_FILE" |  jq -r
-          echo "TOKEN: $TOKEN"
-          echo "RUNNER: $RUNNER"
-
       - name: Upload predicate
         id: upload
         uses: slsa-framework/slsa-github-generator/.github/actions/secure-upload-artifact@main
@@ -115,11 +109,11 @@ jobs:
     needs: [rng, verify-token]
     runs-on: ubuntu-latest
     steps:
-    - name: Check private repos
-      uses: slsa-framework/slsa-github-generator/.github/actions/privacy-check@main
-      with:
-        error_message: "Repository is private. The workflow has halted in order to keep the repository name from being exposed in the public transparency log. Set 'private-repository' to override."
-        override: ${{ fromJson(needs.verify-token.outputs.slsa-verified-token).builder.private_repository }}
+      - name: Check private repos
+        uses: slsa-framework/slsa-github-generator/.github/actions/privacy-check@main
+        with:
+          error_message: "Repository is private. The workflow has halted in order to keep the repository name from being exposed in the public transparency log. Set 'private-repository' to override."
+          override: ${{ fromJson(needs.verify-token.outputs.slsa-verified-token).builder.private_repository }}
 
   # build-artifacts-ubuntu builds the projects.
   build-artifacts-ubuntu:
@@ -204,7 +198,7 @@ jobs:
   generate-provenance:
     needs: [rng, verify-token, privacy-check, build-artifacts-ubuntu]
     outputs:
-      attestations-download-name: "slsa-attestations-${{ needs.rng.outputs.value }}"
+      attestations-download-name: "${{ needs.rng.outputs.value }}-slsa-attestations"
     permissions:
       id-token: write # Needed to sign
     runs-on: ubuntu-latest
@@ -242,16 +236,12 @@ jobs:
         uses: slsa-framework/slsa-github-generator/.github/actions/sign-attestations@main
         with:
           attestations: attestations
-          output-folder: slsa-attestations-${{ needs.rng.outputs.value }}
+          output-folder: "${{ needs.rng.outputs.value }}-slsa-attestations"
 
-      # NOTE: we don't need to perform a secure upload, since the attestations are signed.
+      # TODO(#1571): Upload securely so that it works on pull_request triggers for unsigned attestations.
       - name: Upload attestations
         id: upload
         uses: actions/upload-artifact@83fd05a356d7e2593de66fc9913b3002723633cb # tag=v3.1.1
         with:
-          name: slsa-attestations-${{ needs.rng.outputs.value }}
-          path: slsa-attestations-${{ needs.rng.outputs.value }}
-
-
-
-  
+          name: "${{ needs.rng.outputs.value }}-slsa-attestations"
+          path: "${{ needs.rng.outputs.value }}-slsa-attestations"
