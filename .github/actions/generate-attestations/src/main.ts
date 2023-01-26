@@ -6,6 +6,14 @@ import { resolvePathInput } from "./utils";
 
 export function run(): void {
   try {
+    /*
+    Test:
+      env INPUT_SLSA-LAYOUT-FILE=layout.json \
+      INPUT_PREDICATE-TYPE=https://slsa.dev/provenance/v1.0?draft \
+      INPUT-PREDICATE-FILE=predicate.json \
+      INPUT_OUTPUT-FOLDER=out-folder \
+      nodejs ./dist/index.js
+    */
     const wd = process.env[`GITHUB_WORKSPACE`] || "";
 
     // SLSA subjects layout file.

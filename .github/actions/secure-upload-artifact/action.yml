@@ -21,7 +21,7 @@ runs:
     # `.github/actions/secure-builder-checkout`.
     - name: Compute binary hash
       id: compute-digest
-      uses: ./__BUILDER_CHECKOUT_DIR__/.github/actions/compute-sha256
+      uses: slsa-framework/slsa-github-generator/.github/actions/compute-sha256@main
       with:
         path: "${{ inputs.path }}"
 
