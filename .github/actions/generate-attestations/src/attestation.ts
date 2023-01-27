@@ -44,6 +44,9 @@ export function writeAttestations(
 
   // Iterate through SLSA output layout and create attestations
   const ret: Record<string, string> = {};
+  if (layout.attestations.length === 0) {
+    throw Error("attestation list is empty");
+  }
   for (const att of layout.attestations) {
     // Validate that attestation path is not nested.
     if (path.dirname(att.name) !== ".") {
