@@ -65,14 +65,14 @@ function run() {
         try {
             /* Test locally:
                 $ env INPUT_SLSA-WORKFLOW-RECIPIENT="laurentsimon/slsa-delegated-tool" \
-                INPUT_SLSA-PRIVATE-REPOSITORY=true \
+                INPUT_SLSA-REKOR-LOG-PUBLIC=true \
                 INPUT_SLSA-RUNNER-LABEL="ubuntu-latest" \
                 INPUT_SLSA-BUILD-ACTION-PATH="./actions/build-artifacts-composite" \
                 INPUT_SLSA-WORKFLOW-INPUTS="{\"name1\":\"value1\",\"name2\":\"value2\",\"private-repository\":true}" \
                 nodejs ./dist/index.js
             */
             const workflowRecipient = core.getInput("slsa-workflow-recipient");
-            const privateRepository = core.getInput("slsa-private-repository");
+            const rekorLogPublic = core.getInput("slsa-rekor-log-public");
             const runnerLabel = core.getInput("slsa-runner-label");
             const buildArtifactsActionPath = core.getInput("slsa-build-action-path");
             // The workflow inputs are represented as a JSON object theselves.
@@ -92,7 +92,7 @@ function run() {
                 version: 1,
                 context: "SLSA delegator framework",
                 builder: {
-                    private_repository: privateRepository,
+                    rekor_log_public: rekorLogPublic,
                     runner_label: runnerLabel,
                     audience: workflowRecipient,
                 },
