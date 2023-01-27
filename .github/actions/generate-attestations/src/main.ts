@@ -10,8 +10,9 @@ export function run(): void {
     Test:
       env INPUT_SLSA-LAYOUT-FILE=layout.json \
       INPUT_PREDICATE-TYPE=https://slsa.dev/provenance/v1.0?draft \
-      INPUT-PREDICATE-FILE=predicate.json \
+      INPUT_PREDICATE-FILE=predicate.json \
       INPUT_OUTPUT-FOLDER=out-folder \
+      GITHUB_WORKSPACE=$PWD \
       nodejs ./dist/index.js
     */
     const wd = process.env[`GITHUB_WORKSPACE`] || "";
