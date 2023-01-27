@@ -113,7 +113,7 @@ jobs:
         uses: slsa-framework/slsa-github-generator/.github/actions/privacy-check@main
         with:
           error_message: "Repository is private. The workflow has halted in order to keep the repository name from being exposed in the public transparency log. Set 'private-repository' to override."
-          override: ${{ fromJson(needs.verify-token.outputs.slsa-verified-token).builder.private_repository }}
+          override: ${{ fromJson(needs.verify-token.outputs.slsa-verified-token).builder.rekor_log_public }}
 
   # build-artifacts-ubuntu builds the projects.
   build-artifacts-ubuntu:
