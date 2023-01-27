@@ -39,7 +39,6 @@ jobs:
           VERIFIED_TOKEN: ${{ steps.verify.outputs.slsa-verified-token }}
           TOOL_REPOSITORY: ${{ steps.verify.outputs.tool-repository }}
           TOOL_REF: ${{ steps.verify.outputs.tool-ref }}
-          TOOL_URI: ${{ steps.verify.outputs.tool-uri }}
           PREDICATE: predicate.json
       - id: verify-mismatch-recipient
         uses: ./.github/actions/verify-token

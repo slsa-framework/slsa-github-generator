@@ -9,7 +9,6 @@ source "./.github/workflows/scripts/e2e-verify.common.sh"
 echo "VERIFIED_TOKEN: $VERIFIED_TOKEN"
 echo "TOOL_REPOSITORY: $TOOL_REPOSITORY"
 echo "TOOL_REF: $TOOL_REF"
-echo "TOOL_URI: $TOOL_URI"
 echo "PREDICATE: $PREDICATE"
 
 # Non-GitHub's information.
@@ -50,7 +49,6 @@ e2e_assert_eq "$GITHUB_REF_TYPE" "$ref_type"
 e2e_assert_eq "$GITHUB_ACTOR" "$actor"
 e2e_assert_eq "$TOOL_REPOSITORY" "$GITHUB_REPOSITORY"
 e2e_assert_eq "$TOOL_REF" "$GITHUB_REF"
-e2e_assert_eq "$TOOL_URI" "https://github.com/$GITHUB_REPOSITORY/.github/workflows/e2e.verify-token.schedule.yml@$GITHUB_REF"
 
 PREDICATE_CONTENT=$(<"$PREDICATE")
 
