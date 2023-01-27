@@ -65,6 +65,9 @@ function writeAttestations(layoutFile, predicateType, predicateFile) {
     // TODO(https://github.com/slsa-framework/slsa-github-generator/issues/1422): Add other predicate validations.
     // Iterate through SLSA output layout and create attestations
     const ret = {};
+    if (layout.attestations.length === 0) {
+        throw Error("attestation list is empty");
+    }
     for (const att of layout.attestations) {
         // Validate that attestation path is not nested.
         if (path_1.default.dirname(att.name) !== ".") {
