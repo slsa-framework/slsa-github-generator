@@ -8,6 +8,10 @@ e2e_this_file() {
     gh api -H "Accept: application/vnd.github.v3+json" "/repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" | jq -r '.path' | cut -d '/' -f3
 }
 
+e2e_this_file_full_path() {
+    gh api -H "Accept: application/vnd.github.v3+json" "/repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" | jq -r '.path'
+}
+
 e2e_verify_predicate_subject_name() {
     _e2e_verify_query "$1" "$2" '.subject[0].name'
 }
