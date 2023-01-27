@@ -20,7 +20,7 @@ echo "$decoded_token"
 # Non-GitHub's information.
 audience=$(echo "$decoded_token" | jq -r '.builder.audience')
 runner_label=$(echo "$decoded_token" | jq -r '.builder.runner_label')
-private_repository=$(echo "$decoded_token" | jq -r '.builder.private_repository')
+rekor_public_log=$(echo "$decoded_token" | jq -r '.builder.rekor_public_log')
 action_path=$(echo "$decoded_token" | jq -r '.tool.actions.build_artifacts.path')
 inputs=$(echo "$decoded_token" | jq -rc '.tool.inputs')
 
@@ -44,7 +44,7 @@ assert_eq "$GITHUB_RUN_ID" "$run_id"
 assert_eq "$GITHUB_SHA" "$sha"
 assert_eq "$GITHUB_WORKFLOW" "$workflow"
 assert_eq "ubuntu-latest" "$runner_label"
-assert_eq "true" "$private_repository"
+assert_eq "true" "$rekor_public_log"
 assert_eq "./actions/build-artifacts-composite" "$action_path"
 assert_eq '{"name1":"value1","name2":"value2","private-repository":true}' "$inputs"
 assert_eq "$GITHUB_EVENT_NAME" "$event_name"
