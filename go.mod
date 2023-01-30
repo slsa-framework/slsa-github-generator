@@ -8,7 +8,8 @@ require (
 	github.com/go-openapi/swag v0.22.3
 	github.com/google/go-cmp v0.5.9
 	github.com/google/go-github/v44 v44.1.0
-	github.com/google/go-github/v49 v49.1.0
+	github.com/google/go-github/v50 v50.0.0
+	github.com/google/go-github/v50 v50.0.0
 	github.com/in-toto/in-toto-golang v0.5.0
 	github.com/pelletier/go-toml v1.9.5
 	github.com/pelletier/go-toml/v2 v2.0.6
