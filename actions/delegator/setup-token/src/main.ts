@@ -29,7 +29,7 @@ async function run(): Promise<void> {
         INPUT_SLSA-REKOR-LOG-PUBLIC=true \
         INPUT_SLSA-RUNNER-LABEL="ubuntu-latest" \
         INPUT_SLSA-BUILD-ACTION-PATH="./actions/build-artifacts-composite" \
-        INPUT_SLSA-WORKFLOW-INPUTS="{\"name1\":\"value1\",\"name2\":\"value2\",\"private-repository\":true}" \
+        INPUT_SLSA-WORKFLOW-INPUTS="{\"name1\":\"value1\",\"name2\":\"value2\"}" \
         nodejs ./dist/index.js
     */
 
