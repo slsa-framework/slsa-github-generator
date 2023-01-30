@@ -18,7 +18,7 @@ export function run(): void {
     const wd = process.env[`GITHUB_WORKSPACE`] || "";
 
     // SLSA subjects layout file.
-    const slsaOutputs = core.getInput("slsa-outputs-file");
+    const slsaOutputs = core.getInput("slsa-layout-file");
     const safeSlsaOutputs = resolvePathInput(slsaOutputs, wd);
     core.debug(`Using SLSA output file at ${safeSlsaOutputs}!`);
 

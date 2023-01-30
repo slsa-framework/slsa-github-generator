@@ -224,7 +224,7 @@ jobs:
 
       - name: Generate attestations
         id: attestations
-        uses: laurentsimon/slsa-delegator/.github/actions/generate-attestations@main
+        uses: slsa-framework/slsa-github-generator/.github/actions/generate-attestations@main
         with:
           slsa-layout-file: ${{ env.SLSA_ARTIFACTS_FILE }}
           predicate-type: "https://slsa.dev/provenance/v1.0?draft"
