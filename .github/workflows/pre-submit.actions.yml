@@ -330,7 +330,7 @@ jobs:
         id: generate
         uses: ./.github/actions/generate-attestations
         with:
-          slsa-outputs-file: .github/actions/generate-attestations/testdata/layouts/valid-layout.json
+          slsa-layout-file: .github/actions/generate-attestations/testdata/layouts/valid-layout.json
           predicate-type: "https://slsa.dev/provenance/v0.2"
           predicate-file: .github/actions/generate-attestations/testdata/predicates/valid-slsa-v02.json
           output-folder: attestations
