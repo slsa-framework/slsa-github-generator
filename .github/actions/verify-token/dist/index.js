@@ -351,7 +351,7 @@ function createPredicate(rawTokenObj, toolURI, currentRun) {
                 GITHUB_WORKFLOW: { value: env.GITHUB_WORKFLOW || "" },
                 GITHUB_ACTOR_ID: { value: String(((_a = currentRun.actor) === null || _a === void 0 ? void 0 : _a.id) || "") },
                 GITHUB_REPOSITORY_ID: { value: String(currentRun.repository.id || "") },
-                GITHUB_REPSITORY_OWNER_ID: {
+                GITHUB_REPOSITORY_OWNER_ID: {
                     value: String(currentRun.repository.owner.id || ""),
                 },
                 GITHUB_WORKFLOW_REF: { value: env.GITHUB_WORKFLOW_REF || "" },
