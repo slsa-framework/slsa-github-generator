@@ -4,11 +4,11 @@ run:
   deadline: 5m
 issues:
   # TODO(github.com/slsa-framework/slsa-github-generator/issues/450): revive `package-comments` and `exported` rules.
-  # include:
-  #   - EXC0012
-  #   - EXC0013
-  #   - EXC0014
-  #   - EXC0015
+  include:
+    - EXC0012
+    - EXC0013
+    - EXC0014
+  # - EXC0015
   # Maximum issues count per one linter.
   # Set to 0 to disable.
   # Default: 50
@@ -24,16 +24,13 @@ linters:
     # Some linters have been removed because of the go 1.18 issues.
     # https://github.com/golangci/golangci-lint/issues/2649
     - asciicheck
-    - deadcode
     - depguard
     - dogsled
-    # TODO(github.com/slsa-framework/slsa-github-generator/issues/450): enable errcheck
-    # - errcheck
+    - errcheck
     # TODO(github.com/slsa-framework/slsa-github-generator/issues/450): enable errorlint
     # - errorlint
     - exhaustive
-    # TODO(github.com/slsa-framework/slsa-github-generator/issues/450): enable exportloopref
-    # - exportloopref
+    - exportloopref
     # TODO(github.com/slsa-framework/slsa-github-generator/issues/450): enable gci
     # - gci
     - gochecknoinits
@@ -53,14 +50,11 @@ linters:
     - goimports
     - gomodguard
     - goprintffuncname
-    # TODO(github.com/slsa-framework/slsa-github-generator/issues/450): enable gosec
-    # - gosec
+    - gosec
     - gosimple
-    # TODO(github.com/slsa-framework/slsa-github-generator/issues/450): enable govet
-    # - govet
+    - govet
     - ineffassign
-    # TODO(github.com/slsa-framework/slsa-github-generator/issues/450): enable lll
-    # - lll
+    - lll
     - makezero
     - misspell
     - nakedret
@@ -79,7 +73,6 @@ linters:
     - typecheck
     - unconvert
     - unused
-    - varcheck
     - whitespace
     # TODO(github.com/slsa-framework/slsa-github-generator/issues/450): enable thelper
     # - wrapcheck
@@ -87,6 +80,10 @@ linters-settings:
   errcheck:
     check-type-assertions: true
     check-blank: true
+  gocognit:
+    # Minimal code complexity to report
+    # Increased beyond default to support table-driven tests.
+    min-complexity: 35
   govet:
     enable:
       - fieldalignment

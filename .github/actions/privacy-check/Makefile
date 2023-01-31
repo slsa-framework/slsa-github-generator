@@ -1,9 +1,9 @@
 SHELL := /bin/bash
-OUTPUT_FORMAT = $(shell if [ "${GITHUB_ACTIONS}" == "true" ]; then echo "github"; else echo ""; fi)
+ACTION_NAME = $(shell basename "$$(pwd)")
 
 .PHONY: help
 help: ## Shows all targets and help from the Makefile (this message).
-	@echo "privacy-check Makefile"
+	@echo "$(ACTION_NAME) Makefile"
 	@echo "Usage: make [COMMAND]"
 	@echo ""
 	@grep --no-filename -E '^([/a-z.A-Z0-9_%-]+:.*?|)##' $(MAKEFILE_LIST) | \
@@ -39,4 +39,3 @@ clean:
 .PHONY: lint
 lint: node_modules/.installed ## Runs eslint.
 	npm run lint
-

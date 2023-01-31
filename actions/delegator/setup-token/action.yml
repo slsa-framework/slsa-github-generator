@@ -1,0 +1,51 @@
+name: setup token
+
+description: "setup token"
+
+inputs:
+  slsa-workflow-recipient:
+    description: >
+      The workflow filename that this token is intended for.
+
+      Example: delegator_generic_slsa3.yml
+    type: string
+    required: true
+
+  slsa-rekor-log-public:
+    description: "If true, private repositories can post to the public transparency log."
+    required: false
+    type: boolean
+    default: false
+
+  slsa-build-action-path:
+    description: >
+      The action path to invoke, from the root of the repository where this action is invoked
+      Example: ./actions/build-artifacts'
+    type: string
+    required: true
+
+  slsa-runner-label:
+    description: >
+      The runner label to run the callback Action (`slsa-build-action-path`) on.
+    type: choice
+    options:
+      - ubuntu-latest
+    required: true
+
+  slsa-workflow-inputs:
+    description: >
+      A JSON object containing the inputs to the Tool Reusable Workflow (TRW).
+      The inputs will be recorded in the provenance as the builder's inputs and
+      passed to the tool's build Action.
+
+      Note: The TRW is the reusable workflow calling this Action.
+    type: string
+    required: true
+
+outputs:
+  slsa-token:
+    description: "SLSA token"
+
+runs:
+  using: "node16"
+  main: "dist/index.js"

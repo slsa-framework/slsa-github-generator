@@ -51,8 +51,8 @@ func (s TestSigner) Sign(context.Context, *intoto.Statement) (signing.Attestatio
 // TestLogEntry is a basic LogEntry implementation.
 type TestLogEntry struct {
 	IDVal       string
-	LogIndexVal int64
 	UUIDVal     string
+	LogIndexVal int64
 }
 
 // ID implements LogEntry.ID.

@@ -8,6 +8,10 @@ e2e_this_file() {
     gh api -H "Accept: application/vnd.github.v3+json" "/repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" | jq -r '.path' | cut -d '/' -f3
 }
 
+e2e_this_file_full_path() {
+    gh api -H "Accept: application/vnd.github.v3+json" "/repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" | jq -r '.path'
+}
+
 e2e_verify_predicate_subject_name() {
     _e2e_verify_query "$1" "$2" '.subject[0].name'
 }
@@ -74,4 +78,28 @@ _e2e_verify_query() {
     local query="$3"
     name=$(echo -n "${attestation}" | jq -c -r "${query}")
     e2e_assert_eq "${name}" "${expected}" "${query} should be ${expected}"
+}
+
+e2e_verify_predicate_v1_buildDefinition_externalParameters_workflowPath() {
+    _e2e_verify_query "$1" "$2" '.buildDefinition.externalParameters.workflowPath.value'
+}
+
+e2e_verify_predicate_v1_buildDefinition_externalParameters_source() {
+    _e2e_verify_query "$1" "$2" '.buildDefinition.externalParameters.source'
+}
+
+e2e_verify_predicate_v1_buildDefinition_buildType() {
+    _e2e_verify_query "$1" "$2" '.buildDefinition.buildType'
+}
+
+e2e_verify_predicate_v1_buildDefinition_systemParameters() {
+    _e2e_verify_query "$1" "$3" '.buildDefinition.systemParamters.'"$2"
+}
+
+e2e_verify_predicate_v1_runDetails_builder_id() {
+    _e2e_verify_query "$1" "$2" '.runDetails.builder.id'
+}
+
+e2e_verify_predicate_v1_runDetails_metadata_invocationId() {
+    _e2e_verify_query "$1" "$2" '.runDetails.metadata.invocationId'
 }

@@ -15,24 +15,31 @@ project simply generates provenance as a separate step in an existing workflow.
 
 ---
 
-- [Benefits of Provenance](#benefits-of-provenance)
-- [Generating Provenance](#generating-provenance)
-  - [Getting Started](#getting-started)
-  - [Referencing the SLSA generator](#referencing-the-slsa-generator)
-  - [Private Repositories](#private-repositories)
-  - [Supported Triggers](#supported-triggers)
-  - [Workflow Inputs](#workflow-inputs)
-  - [Workflow Outputs](#workflow-outputs)
-  - [Provenance Format](#provenance-format)
-  - [Provenance Example](#provenance-example)
-- [Integration With Other Build Systems](#integration-with-other-build-systems)
-  - [Provenance for GoReleaser](#provenance-for-goreleaser)
-  - [Provenance for Bazel](#provenance-for-bazel)
-  - [Provenance for Java](#provenance-for-java)
-  - [Provenance for Rust](#provenance-for-rust)
-  - [Provenance for Haskell](#provenance-for-haskell)
-  - [Provenance for Python](#provenance-for-python)
-- [Known Issues](#known-issues)
+- [Generation of SLSA3+ provenance for arbitrary projects](#generation-of-slsa3-provenance-for-arbitrary-projects)
+  - [Benefits of Provenance](#benefits-of-provenance)
+  - [Generating Provenance](#generating-provenance)
+    - [Getting Started](#getting-started)
+    - [Referencing the SLSA generator](#referencing-the-slsa-generator)
+    - [Private Repositories](#private-repositories)
+    - [Supported Triggers](#supported-triggers)
+    - [Workflow Inputs](#workflow-inputs)
+    - [Workflow Outputs](#workflow-outputs)
+    - [Provenance Format](#provenance-format)
+    - [Provenance Example](#provenance-example)
+  - [Integration With Other Build Systems](#integration-with-other-build-systems)
+    - [Provenance for GoReleaser](#provenance-for-goreleaser)
+    - [Provenance for Bazel](#provenance-for-bazel)
+    - [Provenance for Java](#provenance-for-java)
+      - [Maven](#maven)
+      - [Gradle](#gradle)
+    - [Provenance for Rust](#provenance-for-rust)
+    - [Provenance for Haskell](#provenance-for-haskell)
+    - [Provenance for Python](#provenance-for-python)
+  - [Provenance for matrix strategy builds](#provenance-for-matrix-strategy-builds)
+    - [A single provenance attestation for all artifacts](#a-single-provenance-attestation-for-all-artifacts)
+    - [A different attestation for each iteration](#a-different-attestation-for-each-iteration)
+  - [Known Issues](#known-issues)
+    - [error updating to TUF remote mirror: tuf: invalid key](#error-updating-to-tuf-remote-mirror-tuf-invalid-key)
 
 ---
 
@@ -171,14 +178,14 @@ jobs:
 At present, the generator **MUST** be referenced
 by a tag of the form `@vX.Y.Z`, because the build will fail if you reference it via a shorter tag like `@vX.Y` or `@vX` or if you reference it by a hash.
 
-For more information about this design decision and how to configure renovatebot,see the main repository [README.md](../../../README.md).
+For more information about this design decision and how to configure renovatebot, see the main repository [README.md](../../../README.md).
 
 ### Private Repositories
 
 Private repositories are supported with some caveats. Currently all builds
 generate and post a new entry in the public
 [Rekor](https://github.com/sigstore/rekor) API server instance at
-rekor.sigstore.dev. This entry includes the repository name. This will cause the
+https://rekor.sigstore.dev/. This entry includes the repository name. This will cause the
 private repository name to leak and be discoverable via the public Rekor API
 server.
 
@@ -540,7 +547,7 @@ jobs:
       hashes: ${{ steps.hash.outputs.hashes }}
 ```
 
-2. Add an `id: build` field to your maven build step; and save the location of the maven output files for easier reference:
+2. Add an `id: build` field to your maven build step and save the location of the maven output files for easier reference:
 
 ```yaml
     steps:
@@ -651,7 +658,7 @@ jobs:
           ./gradlew clean build
 ```
 
-3. Add a step to generate the provenance subjects as shown below. Update the sha256 sum arguments to include all binaries that you generate provenance for. (This build assumes build artifacts are saved in ./build/libs).
+3. Add a step to generate the provenance subjects as shown below. Update the sha256 sum arguments to include all binaries that you generate provenance for. (This build assumes build artifacts are saved in `./build/libs`).
 
 ```yaml
 - name: Generate subject
@@ -849,7 +856,6 @@ jobs:
           set -euo pipefail
 
           echo "hashes=$(sha256sum target_binary | base64 -w0)" >> "$GITHUB_OUTPUT"
-
 ```
 
 3. Call the generic workflow to generate provenance by declaring the job below:
@@ -921,11 +927,11 @@ steps indicated in the workflow below:
 ```yaml
 jobs:
   build:
-    name: "Build dists"    
-    runs-on: "ubuntu-latest"    
-    environment:      
+    name: "Build dists"
+    runs-on: "ubuntu-latest"
+    environment:
       name: "publish"
-      outputs:
+    outputs:
       hashes: ${{ steps.hash.outputs.hashes }}
 ```
 
@@ -933,15 +939,15 @@ jobs:
 
 ```yaml
 steps:
-  - name: "Checkout repository"        
+  - name: "Checkout repository"
     uses: "actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b" # tag=v3
 
-  - name: "Setup Python"        
+  - name: "Setup Python"
     uses: "actions/setup-python@13ae5bb136fac2878aff31522b9efb785519f984" # tag=v4
-    with:  
+    with:
       python-version: "3.x"
 
-  - name: "Install dependencies"        
+  - name: "Install dependencies"
     run: python -m pip install build
 
   - name: Build using python
@@ -955,7 +961,9 @@ steps:
 - name: Generate subject
   id: hash
   run: |
-    cd dist && echo "::set-output name=hashes::$(sha256sum * | base64 -w0)"
+    cd dist
+    HASHES=$(sha256sum * | base64 -w0)
+    echo "hashes=$HASHES" >> "$GITHUB_OUTPUT"
 ```
 
 4. Call the generic workflow to generate provenance by declaring the job below:
@@ -971,26 +979,28 @@ provenance:
     base64-subjects: "${{ needs.build.outputs.hashes }}"
     upload-assets: true # Optional: Upload to a new release
 ```
+
 All in all, it will look as the following:
+
 ```yaml
 jobs:
   build:
-    name: "Build dists"    
-    runs-on: "ubuntu-latest"    
-    environment:      
+    name: "Build dists"
+    runs-on: "ubuntu-latest"
+    environment:
       name: "publish"
     outputs:
       hashes: ${{ steps.hash.outputs.hashes }}
   steps:
-    - name: "Checkout repository"        
+    - name: "Checkout repository"
       uses: "actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b" # tag=v3
 
-    - name: "Setup Python"        
-      uses: "actions/setup-python@13ae5bb136fac2878aff31522b9efb785519f984" # tag=v4       
-      with:  
+    - name: "Setup Python"
+      uses: "actions/setup-python@13ae5bb136fac2878aff31522b9efb785519f984" # tag=v4
+      with:
         python-version: "3.x"
 
-    - name: "Install dependencies"        
+    - name: "Install dependencies"
       run: python -m pip install build
 
     - name: Build using Python
@@ -1001,7 +1011,9 @@ jobs:
     - name: Generate subject
     id: hash
     run: |
-      cd dist && echo "::set-output name=hashes::$(sha256sum * | base64 -w0)"
+      cd dist
+      HASHES=$(sha256sum * | base64 -w0)
+      echo "hashes=$HASHES" >> "$GITHUB_OUTPUT"
 
   provenance:
     needs: [build]
@@ -1012,6 +1024,230 @@ jobs:
     uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.4.0
     with:
       base64-subjects: "${{ needs.build.outputs.hashes }}"
+      upload-assets: true # Optional: Upload to a new release
+```
+
+## Provenance for matrix strategy builds
+
+There are a few ways to handle provenance for matrix builds. You can create a
+single provenance file describing all the artifacts from the different
+iterations or a different file for each iteration's artifact(s).
+
+Regardless of your choice, there's unfortunately a bit of necessary boilerplate.
+
+### A single provenance attestation for all artifacts
+
+1. As with the examples above, the first thing to do is define the build job,
+with its outputs and its matrix strategy.
+
+GitHub currently doesn't support different outputs for matrix builds. We must
+therefore declare a different hash output for each iteration. A follow-up job
+will collate all the hashes into a single string.
+
+```yml
+jobs:
+  build:
+    strategy:
+      matrix:
+        color: ["red", "blue", "green"]
+        flavor: ["mint", "vanilla"]
+    outputs:
+      # The key-names are actually irrelevant, but keep them descriptive
+      hash-red-mint:      ${{ steps.hash.outputs.hash-red-mint }}
+      hash-red-vanilla:   ${{ steps.hash.outputs.hash-red-vanilla }}
+      hash-blue-mint:     ${{ steps.hash.outputs.hash-blue-mint }}
+      hash-blue-vanilla:  ${{ steps.hash.outputs.hash-blue-vanilla }}
+      hash-green-mint:    ${{ steps.hash.outputs.hash-green-mint }}
+      hash-green-vanilla: ${{ steps.hash.outputs.hash-green-vanilla }}
+````
+
+2. You'll now have to build your project as usual:
+
+```yml
+    steps:
+      # whatever you need to do to build (checkout, setup the environment,
+      # get dependencies, compile...)
+      - ...
+      - ...
+      - ...
+```
+
+3. As with the other examples, you'll then have to generate the hashes that
+represent your build. This step is effectively identical to all the examples
+above, except each iteration must store its hash in a different output
+variable.
+
+```yml
+      - name: Generate subject
+        id: hash
+        run: |
+          echo "hash-${{ matrix.color }}-${{ matrix.flavor }}=$( \
+            sha256sum ... | base64 -w0 \
+          )" >> "$GITHUB_OUTPUT"
+```
+
+4. Now you'll collate all the individual hashes into a single bas64 string.
+
+```yml
+  combine_hashes:
+    needs: [build]
+    outputs:
+      hashes: ${{ steps.hashes.outputs.hashes }}
+    env:
+      HASHES: ${{ toJSON(needs.build.outputs) }}
+    steps:
+      - id: hashes
+        run: |
+          echo "$HASHES" | jq -r '.[] | @base64d' | sed "/^$/d" > hashes.txt
+          echo "hashes=$(cat hashes.txt | base64 -w0)" >> "$GITHUB_OUTPUT"
+```
+
+5. The provenance job is also effectively identical to the examples above,
+except that it relies on `combine_hashes` instead of the `build` job.
+
+```yml
+  provenance:
+    needs: [combine_hashes]
+    permissions:
+      actions: read # To read the workflow path.
+      id-token: write # To sign the provenance.
+      contents: write # To add assets to a release.
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.2.2
+    with:
+      base64-subjects: "${{ needs.combine_hashes.outputs.hashes }}"
+      upload-assets: true # Optional: Upload to a new release
+```
+
+Now all together:
+
+```yml
+jobs:
+  build:
+    strategy:
+      matrix:
+        color: ["red", "blue", "green"]
+        flavor: ["mint", "vanilla"]
+    outputs:
+      hash-red-mint:      ${{ steps.hash.outputs.hash-red-mint }}
+      hash-red-vanilla:   ${{ steps.hash.outputs.hash-red-vanilla }}
+      hash-blue-mint:     ${{ steps.hash.outputs.hash-blue-mint }}
+      hash-blue-vanilla:  ${{ steps.hash.outputs.hash-blue-vanilla }}
+      hash-green-mint:    ${{ steps.hash.outputs.hash-green-mint }}
+      hash-green-vanilla: ${{ steps.hash.outputs.hash-green-vanilla }}
+    steps:
+      # all your build steps
+      - ...
+      - ...
+      - ...
+
+      - name: Generate subject
+        id: hash
+        run: |
+          echo "hash-${{ matrix.color }}-${{ matrix.flavor }}=$( \
+            sha256sum ... | base64 -w0 \
+          )" >> "$GITHUB_OUTPUT"
+
+  combine_hashes:
+    needs: [build]
+    outputs:
+      hashes: ${{ steps.hashes.outputs.hashes }}
+    env:
+      HASHES: ${{ toJSON(needs.build.outputs) }}
+    steps:
+      - id: hashes
+        run: |
+          echo "$HASHES" | jq -r '.[] | @base64d' | sed "/^$/d" > hashes.txt
+          echo "hashes=$(cat hashes.txt | base64 -w0)" >> "$GITHUB_OUTPUT"
+
+  provenance:
+    needs: [combine_hashes]
+    permissions:
+      actions: read # To read the workflow path.
+      id-token: write # To sign the provenance.
+      contents: write # To add assets to a release.
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.2.2
+    with:
+      base64-subjects: "${{ needs.combine_hashes.outputs.hashes }}"
+      upload-assets: true # Optional: Upload to a new release
+```
+
+This will create a single provenance file that describes all of the built
+artifacts. The default name will be `multiple.intoto.jsonl`, but can be modified
+by passing the `provenance-name` argument to the generator.
+
+Should your build job require other outputs (not just the hashes, but other
+values such as the artifact name, for example), you'll need to change the `jq`
+command within the `combine_hashes` job. You'll use a regex to only use the hash
+values. Assuming your hashes are stored in
+`needs.build.outputs.[hash-$color-$flavor]`:
+
+```bash
+... | jq -r 'with_entries(select(.key | match("hash-.*-.*")))[] | @base64d' | ...
+```
+
+### A different attestation for each iteration
+
+This case is simpler. We can copy the single-attestation version's steps 1-3 and
+ignore step 4's `combine_hashes` job entirely. The changes are entirely within
+the provenance job, where we'll have to repeat the build's matrix strategy and
+use its values to define unique names for each provenance attestation using the
+[format](https://docs.github.com/en/actions/learn-github-actions/expressions#format)
+function.
+
+```yml
+  provenance:
+    needs: [build]
+    matrix:
+      color: ["red", "blue", "green"]
+      flavor: ["mint", "vanilla"]
+    permissions:
+      actions: read # To read the workflow path.
+      id-token: write # To sign the provenance.
+      contents: write # To add assets to a release.
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.2.2
+    with:
+      base64-subjects: "${{ needs.build.outputs[format('hash-{0}-{1}', matrix.color, matrix.flavor)] }}"
+      upload-assets: true # Optional: Upload to a new release
+```
+
+So, all together, this version becomes:
+
+```yml
+jobs:
+  build:
+    strategy:
+      matrix:
+        color: ["red", "blue", "green"]
+        flavor: ["mint", "vanilla"]
+    outputs:
+      hash-red-mint:      ${{ steps.hash.outputs.hash-red-mint }}
+      hash-red-vanilla:   ${{ steps.hash.outputs.hash-red-vanilla }}
+      hash-blue-mint:     ${{ steps.hash.outputs.hash-blue-mint }}
+      hash-blue-vanilla:  ${{ steps.hash.outputs.hash-blue-vanilla }}
+      hash-green-mint:    ${{ steps.hash.outputs.hash-green-mint }}
+      hash-green-vanilla: ${{ steps.hash.outputs.hash-green-vanilla }}
+    steps:
+      # all your build steps
+      - ...
+      - ...
+      - ...
+
+      - name: Generate subject
+        id: hash
+        run: |
+          echo "hash-${{ matrix.color }}-${{ matrix.flavor }}=$( \
+            sha256sum ... | base64 -w0 \
+          )" >> "$GITHUB_OUTPUT"
+
+  provenance:
+    needs: [build]
+    permissions:
+      actions: read # To read the workflow path.
+      id-token: write # To sign the provenance.
+      contents: write # To add assets to a release.
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.2.2
+    with:
+      base64-subjects: "${{ needs.build.outputs[format('hash-{0}-{1}', matrix.color, matrix.flavor)] }}"
       upload-assets: true # Optional: Upload to a new release
 ```
 

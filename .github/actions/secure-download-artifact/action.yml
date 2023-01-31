@@ -24,33 +24,41 @@ runs:
       run: |
         set -euo pipefail
 
-        # Check that the name of the path does not clash with the
-        # directory where the builder code is stored.
+        # Ensure no directory traversal.
+        # NOTE: the actions/download-artifact Action only creates files
+        # in the workspace directory, but this may change in the future.
+        resolved_dir=$(readlink -m "$UNTRUSTED_PATH")
+        wd=$(readlink -m "$PWD")
+        if [[ "$resolved_dir" != "$wd"/* ]]; then
+          echo "Path is not in the current directory: $UNTRUSTED_PATH"
+          exit 1
+        fi
+
         # Check that the name of the path does not clash with the
         # directory where the builder code is stored.
         results=$(
-            echo "$UNTRUSTED_PATH" | grep __BUILDER_CHECKOUT_DIR__ || true
+          echo "$UNTRUSTED_PATH" | grep __BUILDER_CHECKOUT_DIR__ || true
         )
         if [[ "$results" != "" ]]; then
-            echo "\"$UNTRUSTED_PATH\" contains '__BUILDER_CHECKOUT_DIR__'"
-            echo "$results"
-            exit 1
+          echo "\"$UNTRUSTED_PATH\" contains '__BUILDER_CHECKOUT_DIR__'"
+          echo "$results"
+          exit 1
         fi
 
         # Ensure we don't overwrite existing files.
         if [ -e "$UNTRUSTED_PATH" ]; then
-            echo "Path $UNTRUSTED_PATH already exists"
-            exit 5
+          echo "Path $UNTRUSTED_PATH already exists"
+          exit 5
         fi
 
     - name: Download the artifact
-      uses: actions/download-artifact@9782bd6a9848b53b110e712e20e42d89988822b7 # tag=v3.0.1
+      uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
       with:
         name: "${{ inputs.name }}"
 
     - name: Compute the hash
       id: compute
-      uses: ./__BUILDER_CHECKOUT_DIR__/.github/actions/compute-sha256
+      uses: slsa-framework/slsa-github-generator/.github/actions/compute-sha256@main
       with:
         path: "${{ inputs.path }}"
 
@@ -68,18 +76,18 @@ runs:
         set -euo pipefail
 
         if ! [[ -f "$UNTRUSTED_PATH" ]]; then
-            echo "File $UNTRUSTED_PATH not present"
-            exit 5
+          echo "File $UNTRUSTED_PATH not present"
+          exit 5
         fi
 
         echo "expected hash is $UNTRUSTED_EXPECTED_HASH"
         echo "computed hash is $UNTRUSTED_COMPUTED_HASH"
         if [[ "$UNTRUSTED_COMPUTED_HASH" != "$UNTRUSTED_EXPECTED_HASH" ]]; then
-            echo "hashes do not match"
-            exit -2
+          echo "hashes do not match"
+          exit -2
         fi
         echo "hashes match"
         if [[ "$SET_EXECUTABLE" == "true" ]]; then
-            echo "Setting $UNTRUSTED_PATH as executable"
-            chmod u+x "$UNTRUSTED_PATH"
+          echo "Setting $UNTRUSTED_PATH as executable"
+          chmod u+x "$UNTRUSTED_PATH"
         fi

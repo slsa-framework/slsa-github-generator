@@ -10,6 +10,7 @@ This document explains how to use the builder for [Go](https://go.dev/) projects
   - [Supported Triggers](#supported-triggers)
   - [Configuration File](#configuration-file)
   - [Migration from GoReleaser](#migration-from-GoReleaser)
+  - [Multi-platform builds](#multi-platform-builds)
   - [Workflow Inputs](#workflow-inputs)
   - [Workflow Example](#workflow-example)
   - [Provenance Example](#provenance-example)
@@ -28,14 +29,14 @@ provenance.
 At present, the trusted builder **MUST** be referenced
 by a tag of the form `@vX.Y.Z`, because the build will fail if you reference it via a shorter tag like `@vX.Y` or `@vX` or if you reference it by a hash.
 
-For more information about this design decision and how to configure renovatebot,see the main repository [README.md](../../../README.md).
+For more information about this design decision and how to configure renovatebot, see the main repository [README.md](../../../README.md).
 
 ### Private Repositories
 
 Private repositories are supported with some caveats. Currently all builds
 generate and post a new entry in the public
 [Rekor](https://github.com/sigstore/rekor) API server instance at
-rekor.sigstore.dev. This entry includes the repository name. This will cause the
+https://rekor.sigstore.dev/. This entry includes the repository name. This will cause the
 private repository name to leak and be discoverable via the public Rekor API
 server.
 
@@ -143,7 +144,34 @@ The configuration file accepts many of the common fields GoReleaser uses, as you
 | `{{ .Minor }}`       | `$(git describe --tags --always --dirty \| cut -d '.' -f2`                                                                       | `2`                                        |
 | `{{ .Patch }}`       | `$(git describe --tags --always --dirty \| cut -d '.' -f3 \| cut -d '-' -f1 \| cut -d '+' -f1`                                   | `3`                                        |
 
-If you think you need suppport for other variables, please [open an issue](https://github.com/slsa-framework/slsa-github-generator/issues/new).
+If you think you need support for other variables, please [open an issue](https://github.com/slsa-framework/slsa-github-generator/issues/new).
+
+### Multi-platform builds
+
+It's easy to generate binaries for multiple platforms. To accomplish this, we can use the [maxtrix functionality](https://docs.github.com/en/actions/using-jobs/using-a-matrix-for-your-jobs) of github actions and several config files. In the below code sample, you'll see that we have a `strategy` section which lists the platforms and architectures to build for. These reference a `config-file` property at the bottom which will select the correct config for that platform.
+
+```
+  build:
+    permissions:
+      id-token: write # To sign the provenance.
+      contents: write # To upload assets to release.
+      actions: read # To read the workflow path.
+    strategy:
+      matrix:
+        os:
+          - linux
+          - windows
+          - darwin
+        arch:
+          - amd64
+          - arm64
+    uses: slsa-framework/slsa-github-generator/.github/workflows/builder_go_slsa3.yml@v1.4.0
+    with:
+      go-version: 1.19
+      config-file: .slsa-goreleaser/${{matrix.os}}-${{matrix.arch}}.yml
+      # ... your other stuff here.
+```
+
 
 ### Workflow Inputs
 
@@ -316,7 +344,7 @@ The `BuildConfig` contains the following fields:
 
 `version`: The version of the `BuildConfig` format.
 
-`steps`: The steps that were performed in the buid.
+`steps`: The steps that were performed in the build.
 
 `steps[*].command`: The list of commands that were executed in a step.
 

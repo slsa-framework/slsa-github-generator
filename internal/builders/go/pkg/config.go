@@ -31,26 +31,27 @@ var supportedVersions = map[int]bool{
 }
 
 type goReleaserConfigFile struct {
+	Main    *string  `yaml:"main"`
+	Dir     *string  `yaml:"dir"`
 	Goos    string   `yaml:"goos"`
 	Goarch  string   `yaml:"goarch"`
+	Binary  string   `yaml:"binary"`
 	Env     []string `yaml:"env"`
 	Flags   []string `yaml:"flags"`
 	Ldflags []string `yaml:"ldflags"`
-	Binary  string   `yaml:"binary"`
 	Version int      `yaml:"version"`
-	Main    *string  `yaml:"main"`
-	Dir     *string  `yaml:"dir"`
 }
 
+// GoReleaserConfig tracks configuration for goreleaser.
 type GoReleaserConfig struct {
-	Goos    string
-	Goarch  string
+	Env     map[string]string
 	Main    *string
 	Dir     *string
-	Env     map[string]string
+	Goos    string
+	Goarch  string
+	Binary  string
 	Flags   []string
 	Ldflags []string
-	Binary  string
 }
 
 // ErrUnsupportedVersion indicates an unsupported GoReleaser version.
@@ -78,17 +79,23 @@ func configFromString(b []byte) (*GoReleaserConfig, error) {
 	return fromConfig(&cf)
 }
 
-func ConfigFromFile(pathfn string) (*GoReleaserConfig, error) {
-	if err := validatePath(pathfn); err != nil {
-		return nil, err
+// ConfigFromFile reads the file located at path and builds a GoReleaserConfig
+// from it.
+func ConfigFromFile(path string) (*GoReleaserConfig, error) {
+	if err := validatePath(path); err != nil {
+		return nil, fmt.Errorf("%q: %w", path, err)
 	}
 
-	cfg, err := os.ReadFile(filepath.Clean(pathfn))
+	cfg, err := os.ReadFile(filepath.Clean(path))
 	if err != nil {
-		return nil, fmt.Errorf("os.ReadFile: %w", err)
+		return nil, fmt.Errorf("%q: os.ReadFile: %w", path, err)
 	}
 
-	return configFromString(cfg)
+	c, err := configFromString(cfg)
+	if err != nil {
+		return nil, fmt.Errorf("%q: %w", path, err)
+	}
+	return c, nil
 }
 
 func fromConfig(cf *goReleaserConfigFile) (*GoReleaserConfig, error) {

@@ -28,9 +28,10 @@ defaults:
 on:
   workflow_call:
     secrets:
+      registry-username:
+        description: "Username to log into the container registry."
       registry-password:
         description: "Password to log in the container registry."
-        required: true
     inputs:
       image:
         description: "The OCI image name. This must not include a tag or digest."
@@ -42,7 +43,6 @@ on:
         type: string
       registry-username:
         description: "Username to log into the container registry."
-        required: true
         type: string
       compile-generator:
         description: "Build the generator from source. This increases build time by ~2m."
@@ -59,6 +59,16 @@ on:
         required: false
         type: boolean
         default: false
+      gcp-workload-identity-provider:
+        description: "The full identifier of the Workload Identity Provider, including the project number, pool name, and provider name.."
+        required: false
+        type: string
+        default: ""
+      gcp-service-account:
+        description: "Email address or unique identifier of the Google Cloud service account for which to generate credentials."
+        required: false
+        type: string
+        default: ""
     outputs:
       # Note: we use this output because there is no buildt-in `outcome` and `result` is always `success`
       # if `continue-on-error` is set to `true`.
@@ -108,7 +118,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [detect-env]
     permissions:
-      id-token: write # Needed to get OIDC token for keyless signing.
+      id-token: write # Needed to get OIDC token for keyless signing, and for GCP Auth.
       actions: read # Needed to read workflow info.
       packages: write # Needed to login and upload attestations to ghcr.io.
     steps:
@@ -119,15 +129,24 @@ jobs:
         with:
           repository: "${{ needs.detect-env.outputs.repository }}"
           ref: "${{ needs.detect-env.outputs.ref }}"
-          go-version: 1.18
+          go-version: 1.19
           binary: "${{ env.BUILDER_BINARY }}"
           compile-builder: "${{ inputs.compile-generator }}"
           # NOTE: We are using the generic generator.
           directory: "${{ env.BUILDER_DIR }}"
           allow-private-repository: ${{ inputs.private-repository }}
 
-      - uses: sigstore/cosign-installer@9becc617647dfa20ae7b1151972e9b3a2c338a2b # tag=v2.8.1
-        id: cosign-install
+      - id: auth
+        name: Authenticate to Google Cloud
+        if: inputs.gcp-workload-identity-provider != ''
+        uses: google-github-actions/auth@ef5d53e30bbcd8d0836f4288f5e50ff3e086997d # v1.0.0
+        with:
+          token_format: "access_token"
+          workload_identity_provider: ${{ inputs.gcp-workload-identity-provider }}
+          service_account: ${{ inputs.gcp-service-account }}
+
+      - id: cosign-install
+        uses: sigstore/cosign-installer@9becc617647dfa20ae7b1151972e9b3a2c338a2b # tag=v2.8.1
         continue-on-error: true
 
       - name: Login
@@ -135,8 +154,10 @@ jobs:
         continue-on-error: true
         env:
           UNTRUSTED_IMAGE: "${{ inputs.image }}"
-          UNTRUSTED_USERNAME: "${{ inputs.registry-username }}"
+          UNTRUSTED_INPUT_USERNAME: "${{ inputs.registry-username }}"
+          UNTRUSTED_SECRET_USERNAME: "${{ secrets.registry-username }}"
           UNTRUSTED_PASSWORD: "${{ secrets.registry-password }}"
+          GCP_ACCESS_TOKEN: "${{ steps.auth.outputs.access_token }}"
         run: |
           set -euo pipefail
 
@@ -146,13 +167,29 @@ jobs:
           # See: https://stackoverflow.com/questions/37861791/how-are-docker-image-names-parsed#37867949
           untrusted_registry="docker.io"
           # NOTE: Do not fail the script if grep does not match.
-          maybe_domain=$(echo "$UNTRUSTED_IMAGE" | cut -f1 -d "/" | { grep -E "\.|:" || true; })
-          if [ "$maybe_domain" != "" ]; then
-            untrusted_registry="$maybe_domain"
+          maybe_domain=$(echo "${UNTRUSTED_IMAGE}" | cut -f1 -d "/" | { grep -E "\.|:" || true; })
+          if [ "${maybe_domain}" != "" ]; then
+            untrusted_registry="${maybe_domain}"
           fi
 
-          echo "login to $untrusted_registry"
-          cosign login "$untrusted_registry" -u "$UNTRUSTED_USERNAME" -p "$UNTRUSTED_PASSWORD"
+          if [ "${GCP_ACCESS_TOKEN}" != "" ]; then
+            username="oauth2accesstoken"
+            password="${GCP_ACCESS_TOKEN}"
+          else
+            username="${UNTRUSTED_SECRET_USERNAME:-${UNTRUSTED_INPUT_USERNAME}}"
+            if [ "${username}" == "" ]; then
+                echo "registry-username is required." >&2
+                exit 1
+            fi
+            password="${UNTRUSTED_PASSWORD}"
+            if [ "${password}" == "" ]; then
+                echo "registry-password is required." >&2
+                exit 1
+            fi
+          fi
+
+          echo "login to ${untrusted_registry}"
+          cosign login "${untrusted_registry}" -u "${username}" -p "${password}"
 
       - name: Create and sign provenance
         id: sign-prov

@@ -19,6 +19,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 )
 
 func errCmp(e1, e2 error) bool {
@@ -174,7 +175,7 @@ func Test_ConfigFromFile(t *testing.T) {
 			cfg, err := ConfigFromFile(tt.path)
 
 			if !errCmp(err, tt.err) {
-				t.Errorf(cmp.Diff(err, tt.err))
+				t.Errorf(cmp.Diff(err, tt.err, cmpopts.EquateErrors()))
 			}
 			if err != nil {
 				return

@@ -59,9 +59,9 @@ var allowedEnvVariablePrefix = map[string]bool{
 // GoBuild implements building a Go application.
 type GoBuild struct {
 	cfg *GoReleaserConfig
-	goc string
 	// Note: static env variables are contained in cfg.Env.
 	argEnv map[string]string
+	goc    string
 }
 
 // GoBuildNew returns a new GoBuild.
@@ -89,7 +89,7 @@ func (b *GoBuild) Run(dry bool) error {
 	}
 
 	// Generate env variables.
-	envs, err := b.generateEnvVariables()
+	envs, err := b.generateCommandEnvVariables()
 	if err != nil {
 		return err
 	}
@@ -153,17 +153,22 @@ func (b *GoBuild) Run(dry bool) error {
 		}
 
 		// Share the resolved name of the binary.
-		github.SetOutput("go-binary-name", filename)
+		if err = github.SetOutput("go-binary-name", filename); err != nil {
+			return err
+		}
 
 		// Share the command used.
-		github.SetOutput("go-command", command)
+		if err = github.SetOutput("go-command", command); err != nil {
+			return err
+		}
 
 		// Share the env variables used.
-		github.SetOutput("go-env", menv)
+		if err = github.SetOutput("go-env", menv); err != nil {
+			return err
+		}
 
 		// Share working directory necessary for issuing the vendoring command.
-		github.SetOutput("go-working-dir", dir)
-		return nil
+		return github.SetOutput("go-working-dir", dir)
 	}
 
 	binary, err := getOutputBinaryPath(os.Getenv("OUTPUT_BINARY"))
@@ -259,19 +264,6 @@ func (b *GoBuild) generateCommandEnvVariables() ([]string, error) {
 
 		env = append(env, fmt.Sprintf("%s=%s", k, v))
 	}
-
-	return env, nil
-}
-
-func (b *GoBuild) generateEnvVariables() ([]string, error) {
-	env := os.Environ()
-
-	cenv, err := b.generateCommandEnvVariables()
-	if err != nil {
-		return cenv, err
-	}
-
-	env = append(env, cenv...)
 
 	return env, nil
 }
