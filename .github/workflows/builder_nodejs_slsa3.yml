@@ -175,7 +175,7 @@ jobs:
           allow-private-repository: ${{ inputs.private-repository }}
 
       - name: Upload builder
-        uses: actions/upload-artifact@83fd05a356d7e2593de66fc9913b3002723633cb # tag=v3.1.1
+        uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
         with:
           name: "${{ env.BUILDER_BINARY }}-${{ needs.rng.outputs.value }}"
           path: "${{ env.BUILDER_BINARY }}"
@@ -323,7 +323,7 @@ jobs:
            "$GITHUB_WORKSPACE/$BUILDER_BINARY" provenance
 
       - name: Upload the signed provenance
-        uses: actions/upload-artifact@83fd05a356d7e2593de66fc9913b3002723633cb # tag=v3.1.1
+        uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
         with:
           name: "<TODO>"
           path: "<TODO>"

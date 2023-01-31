@@ -65,6 +65,9 @@ function writeAttestations(layoutFile, predicateType, predicateFile) {
     // TODO(https://github.com/slsa-framework/slsa-github-generator/issues/1422): Add other predicate validations.
     // Iterate through SLSA output layout and create attestations
     const ret = {};
+    if (layout.attestations.length === 0) {
+        throw Error("attestation list is empty");
+    }
     for (const att of layout.attestations) {
         // Validate that attestation path is not nested.
         if (path_1.default.dirname(att.name) !== ".") {
@@ -133,9 +136,18 @@ const attestation_1 = __nccwpck_require__(420);
 const utils_1 = __nccwpck_require__(918);
 function run() {
     try {
+        /*
+        Test:
+          env INPUT_SLSA-LAYOUT-FILE=layout.json \
+          INPUT_PREDICATE-TYPE=https://slsa.dev/provenance/v1.0?draft \
+          INPUT_PREDICATE-FILE=predicate.json \
+          INPUT_OUTPUT-FOLDER=out-folder \
+          GITHUB_WORKSPACE=$PWD \
+          nodejs ./dist/index.js
+        */
         const wd = process.env[`GITHUB_WORKSPACE`] || "";
         // SLSA subjects layout file.
-        const slsaOutputs = core.getInput("slsa-outputs-file");
+        const slsaOutputs = core.getInput("slsa-layout-file");
         const safeSlsaOutputs = (0, utils_1.resolvePathInput)(slsaOutputs, wd);
         core.debug(`Using SLSA output file at ${safeSlsaOutputs}!`);
         // Predicate.

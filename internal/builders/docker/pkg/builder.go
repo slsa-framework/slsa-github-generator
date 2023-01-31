@@ -25,6 +25,7 @@ package pkg
 import (
 	"crypto/sha256"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"io"
 	"log"
@@ -36,15 +37,32 @@ import (
 	"strings"
 
 	intoto "github.com/in-toto/in-toto-golang/in_toto"
+
+	"github.com/slsa-framework/slsa-github-generator/internal/errors"
 )
+
+// errGitCommitMismatch indicates that the repo is checked out at an unexpected commit hash.
+type errGitCommitMismatch struct {
+	errors.WrappableError
+}
+
+// errGitFetch indicates an error when cloning a Git repo.
+type errGitFetch struct {
+	errors.WrappableError
+}
+
+// errGitCheckout indicates an error when checking out a given commit hash.
+type errGitCheckout struct {
+	errors.WrappableError
+}
 
 // DockerBuild represents a state in the process of building the artifacts
 // where the source repository is checked out and the config file is loaded and
 // parsed, and we are ready for running the `docker run` command.
 type DockerBuild struct {
-	BuildDefinition *BuildDefinition
-	BuildConfig     *BuildConfig
-	RepoInfo        *RepoCheckoutInfo
+	config      *DockerBuildConfig
+	buildConfig *BuildConfig
+	RepoInfo    *RepoCheckoutInfo
 }
 
 // RepoCheckoutInfo contains info about the location of a locally checked out
@@ -69,8 +87,8 @@ type Builder struct {
 
 // NewBuilderWithGitFetcher creates a new Builder that fetches the sources
 // from a Git repository.
-func NewBuilderWithGitFetcher(config *DockerBuildConfig, forceCheckout bool) (*Builder, error) {
-	gc, err := newGitClient(config, forceCheckout, 0 /* depth */)
+func NewBuilderWithGitFetcher(config *DockerBuildConfig) (*Builder, error) {
+	gc, err := newGitClient(config, 0 /* depth */)
 	if err != nil {
 		return nil, fmt.Errorf("could not create builder: %v", err)
 	}
@@ -81,15 +99,28 @@ func NewBuilderWithGitFetcher(config *DockerBuildConfig, forceCheckout bool) (*B
 	}, nil
 }
 
-// CreateBuildDefinition creates a BuildDefinition from the given DockerBuildConfig.
-func CreateBuildDefinition(config *DockerBuildConfig) *BuildDefinition {
+// CreateBuildDefinition creates a BuildDefinition from the DockerBuildConfig
+// and BuildConfig in this DockerBuild.
+func (db *DockerBuild) CreateBuildDefinition() *BuildDefinition {
 	artifacts := make(map[string]ArtifactReference)
-	artifacts[SourceKey] = sourceArtifact(config)
-	artifacts[BuilderImageKey] = builderImage(config)
+	artifacts[SourceKey] = sourceArtifact(db.config)
+	artifacts[BuilderImageKey] = builderImage(db.config)
+
+	// The input is a simple string array, no errors occur. But we check and
+	// print the error to make the linters happy.
+	cmdBytes, err := json.Marshal(db.buildConfig.Command)
+	if err != nil {
+		log.Printf("Could not unmarshal command array: %v.", err)
+	}
+	cmd := string(cmdBytes)
 
 	ep := ParameterCollection{
 		Artifacts: artifacts,
-		Values:    map[string]string{ConfigFileKey: config.BuildConfigPath},
+		Values: map[string]string{
+			ConfigFileKey:   db.config.BuildConfigPath,
+			ArtifactPathKey: db.buildConfig.ArtifactPath,
+			CommandKey:      cmd,
+		},
 	}
 
 	// Currently we don't have any SystemParameters or ResolvedDependencies.
@@ -139,20 +170,20 @@ func (b *Builder) SetUpBuildState() (*DockerBuild, error) {
 	}
 
 	db := &DockerBuild{
-		BuildDefinition: CreateBuildDefinition(&b.config),
-		BuildConfig:     bc,
-		RepoInfo:        repoInfo,
+		config:      &b.config,
+		buildConfig: bc,
+		RepoInfo:    repoInfo,
 	}
 	return db, nil
 }
 
-// BuildArtifact builds the artifacts based on the user-provided inputs, and
+// BuildArtifacts builds the artifacts based on the user-provided inputs, and
 // returns the names and SHA256 digests of the generated artifacts.
-func (db *DockerBuild) BuildArtifact() ([]intoto.Subject, error) {
+func (db *DockerBuild) BuildArtifacts() ([]intoto.Subject, error) {
 	if err := runDockerRun(db); err != nil {
 		return nil, fmt.Errorf("running `docker run` failed: %v", err)
 	}
-	return inspectArtifacts(db.BuildConfig.ArtifactPath)
+	return inspectArtifacts(db.buildConfig.ArtifactPath)
 }
 
 func runDockerRun(db *DockerBuild) error {
@@ -170,11 +201,13 @@ func runDockerRun(db *DockerBuild) error {
 		"--rm",
 	}
 
+	buildDef := db.CreateBuildDefinition()
+
 	var args []string
 	args = append(args, "run")
 	args = append(args, defaultDockerRunFlags...)
-	args = append(args, db.BuildDefinition.ExternalParameters.Artifacts[BuilderImageKey].URI)
-	args = append(args, db.BuildConfig.Command...)
+	args = append(args, buildDef.ExternalParameters.Artifacts[BuilderImageKey].URI)
+	args = append(args, db.buildConfig.Command...)
 	cmd := exec.Command("docker", args...)
 
 	log.Printf("Running command: %q.", cmd.String())
@@ -217,7 +250,7 @@ type GitClient struct {
 	depth         int
 }
 
-func newGitClient(config *DockerBuildConfig, forceCheckout bool, depth int) (*GitClient, error) {
+func newGitClient(config *DockerBuildConfig, depth int) (*GitClient, error) {
 	repo := config.SourceRepo
 	parsed, err := url.Parse(repo)
 	if err != nil {
@@ -238,7 +271,7 @@ func newGitClient(config *DockerBuildConfig, forceCheckout bool, depth int) (*Gi
 	return &GitClient{
 		sourceRepo:    &repo,
 		sourceDigest:  &config.SourceDigest,
-		forceCheckout: forceCheckout,
+		forceCheckout: config.ForceCheckout,
 		depth:         depth,
 		checkoutInfo:  &RepoCheckoutInfo{},
 	}, nil
@@ -293,7 +326,8 @@ func (c *GitClient) verifyCommit() (bool, error) {
 	lastCommitID := strings.TrimSpace(string(lastCommitIDBytes))
 
 	if lastCommitID != c.sourceDigest.Value {
-		return false, fmt.Errorf("the repo is already checked out at a different commit (%q)", lastCommitID)
+		return false, errors.Errorf(&errGitCommitMismatch{},
+			"the repo is already checked out at a different commit (%q)", lastCommitID)
 	}
 
 	return true, nil
@@ -324,7 +358,7 @@ func (c *GitClient) fetchSourcesFromGitRepo() error {
 
 	// Clone the repo.
 	if err = c.cloneGitRepo(); err != nil {
-		return fmt.Errorf("couldn't clone the Git repo: %v", err)
+		return errors.Errorf(&errGitFetch{}, "couldn't clone the Git repo: %w", err)
 	}
 
 	// Change directory to the root of the cloned repo.
@@ -340,7 +374,7 @@ func (c *GitClient) fetchSourcesFromGitRepo() error {
 
 	// Checkout the commit.
 	if err = c.checkoutGitCommit(); err != nil {
-		return fmt.Errorf("couldn't checkout the Git commit: %v", err)
+		return errors.Errorf(&errGitCheckout{}, "couldn't checkout the Git commit: %w", err)
 	}
 
 	c.checkoutInfo.RepoRoot = cwd
@@ -351,8 +385,10 @@ func (c *GitClient) fetchSourcesFromGitRepo() error {
 // Clones a Git repo from the URI in this GitClient, up to the depth given in
 // this GitClient. If depth is 0 or negative, the entire repo is cloned.
 func (c *GitClient) cloneGitRepo() error {
+	//#nosec G204 -- Input from user config file.
 	cmd := exec.Command("git", "clone", *c.sourceRepo)
 	if c.depth > 0 {
+		//#nosec G204 -- Input from user config file.
 		cmd = exec.Command("git", "clone", "--depth", fmt.Sprintf("%d", c.depth), *c.sourceRepo)
 	}
 	log.Printf("Cloning the repo from %s...", *c.sourceRepo)
@@ -387,6 +423,7 @@ func (c *GitClient) cloneGitRepo() error {
 }
 
 func (c *GitClient) checkoutGitCommit() error {
+	//#nosec G204 -- Input from user config file.
 	cmd := exec.Command("git", "checkout", c.sourceDigest.Value)
 
 	stdout, err := cmd.StdoutPipe()

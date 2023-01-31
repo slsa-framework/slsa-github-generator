@@ -21,12 +21,12 @@ runs:
     # `.github/actions/secure-builder-checkout`.
     - name: Compute binary hash
       id: compute-digest
-      uses: ./__BUILDER_CHECKOUT_DIR__/.github/actions/compute-sha256
+      uses: slsa-framework/slsa-github-generator/.github/actions/compute-sha256@main
       with:
         path: "${{ inputs.path }}"
 
     - name: Upload the artifact
-      uses: actions/upload-artifact@83fd05a356d7e2593de66fc9913b3002723633cb # tag=v3.1.1
+      uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
       with:
         name: "${{ inputs.name }}"
         path: "${{ inputs.path }}"
