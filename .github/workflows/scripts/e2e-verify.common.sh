@@ -82,7 +82,7 @@ e2e_verify_common_buildDefinition_v1() {
     e2e_verify_predicate_v1_buildDefinition_systemParameters "$1" "GITHUB_WORKFLOW" "$GITHUB_WORKFLOW"
     e2e_verify_predicate_v1_buildDefinition_systemParameters "$1" "GITHUB_ACTOR_ID" "$GITHUB_ACTOR_ID"
     e2e_verify_predicate_v1_buildDefinition_systemParameters "$1" "GITHUB_REPOSITORY_ID" "$GITHUB_REPOSITORY_ID"
-    e2e_verify_predicate_v1_buildDefinition_systemParameters "$1" "GITHUB_REPSITORY_OWNER_ID" "$GITHUB_REPSITORY_OWNER_ID"
+    e2e_verify_predicate_v1_buildDefinition_systemParameters "$1" "GITHUB_REPOSITORY_OWNER_ID" "$GITHUB_REPOSITORY_OWNER_ID"
     e2e_verify_predicate_v1_buildDefinition_systemParameters "$1" "GITHUB_WORKFLOW_REF" "$GITHUB_WORKFLOW_REF"
     e2e_verify_predicate_v1_buildDefinition_systemParameters "$1" "GITHUB_WORKFLOW_SHA" "$GITHUB_WORKFLOW_SHA"
     e2e_verify_predicate_v1_buildDefinition_systemParameters "$1" "IMAGE_OS" "$IMAGE_OS"
