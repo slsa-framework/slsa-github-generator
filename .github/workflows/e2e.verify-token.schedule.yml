@@ -24,7 +24,7 @@ jobs:
         uses: ./actions/delegator/setup-token
         with:
           slsa-workflow-recipient: "delegator_generic_slsa3.yml"
-          slsa-private-repository: true
+          slsa-rekor-log-public: true
           slsa-runner-label: "ubuntu-latest"
           slsa-build-action-path: "./actions/build-artifacts-composite"
           slsa-workflow-inputs: '{"name1":"value1","name2":"value2","private-repository":true}'

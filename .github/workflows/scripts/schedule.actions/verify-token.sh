@@ -14,7 +14,7 @@ echo "PREDICATE: $PREDICATE"
 # Non-GitHub's information.
 audience=$(echo "$VERIFIED_TOKEN" | jq -r '.builder.audience')
 runner_label=$(echo "$VERIFIED_TOKEN" | jq -r '.builder.runner_label')
-private_repository=$(echo "$VERIFIED_TOKEN" | jq -r '.builder.private_repository')
+rekor_log_public=$(echo "$VERIFIED_TOKEN" | jq -r '.builder.rekor_log_public')
 action_path=$(echo "$VERIFIED_TOKEN" | jq -r '.tool.actions.build_artifacts.path')
 inputs=$(echo "$VERIFIED_TOKEN" | jq -rc '.tool.inputs')
 
@@ -38,7 +38,7 @@ e2e_assert_eq "$GITHUB_RUN_ID" "$run_id"
 e2e_assert_eq "$GITHUB_SHA" "$sha"
 e2e_assert_eq "$GITHUB_WORKFLOW" "$workflow"
 e2e_assert_eq "ubuntu-latest" "$runner_label"
-e2e_assert_eq "true" "$private_repository"
+e2e_assert_eq "true" "$rekor_log_public"
 e2e_assert_eq "./actions/build-artifacts-composite" "$action_path"
 e2e_assert_eq '{"name1":"value1","name2":"value2","private-repository":true}' "$inputs"
 e2e_assert_eq "$GITHUB_EVENT_NAME" "$event_name"
@@ -51,6 +51,7 @@ e2e_assert_eq "$TOOL_REPOSITORY" "$GITHUB_REPOSITORY"
 e2e_assert_eq "$TOOL_REF" "$GITHUB_REF"
 
 PREDICATE_CONTENT=$(<"$PREDICATE")
+echo "PREDICATE_CONTENT: $PREDICATE_CONTENT"
 
 # Verify common predicate fields.
 e2e_verify_common_all_v1  "$PREDICATE_CONTENT"
