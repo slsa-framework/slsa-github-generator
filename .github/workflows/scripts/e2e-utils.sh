@@ -93,7 +93,7 @@ e2e_verify_predicate_v1_buildDefinition_buildType() {
 }
 
 e2e_verify_predicate_v1_buildDefinition_systemParameters() {
-    _e2e_verify_query "$1" "$3" '.buildDefinition.systemParamters.'"$2"
+    _e2e_verify_query "$1" "$3" ".buildDefinition.systemParameters.\"$2\".value"
 }
 
 e2e_verify_predicate_v1_runDetails_builder_id() {
