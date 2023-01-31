@@ -16,7 +16,6 @@ package pkg
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -24,16 +23,9 @@ import (
 	"strings"
 
 	"github.com/slsa-framework/slsa-github-generator/github"
+	"github.com/slsa-framework/slsa-github-generator/internal/errors"
 	"github.com/slsa-framework/slsa-github-generator/internal/runner"
 	"github.com/slsa-framework/slsa-github-generator/internal/utils"
-)
-
-var (
-	errorEnvVariableNameEmpty      = errors.New("env variable empty or not set")
-	errorUnsupportedArguments      = errors.New("argument not supported")
-	errorInvalidEnvArgument        = errors.New("invalid env passed via argument")
-	errorEnvVariableNameNotAllowed = errors.New("env variable not allowed")
-	errorInvalidFilename           = errors.New("invalid filename")
 )
 
 var unknownTag = "unknown"
@@ -54,6 +46,26 @@ var allowedBuildArgs = map[string]bool{
 
 var allowedEnvVariablePrefix = map[string]bool{
 	"GO": true, "CGO_": true,
+}
+
+type errEnvVariableNameEmpty struct {
+	errors.WrappableError
+}
+
+type errUnsupportedArguments struct {
+	errors.WrappableError
+}
+
+type errInvalidEnvArgument struct {
+	errors.WrappableError
+}
+
+type errEnvVariableNameNotAllowed struct {
+	errors.WrappableError
+}
+
+type errInvalidFilename struct {
+	errors.WrappableError
 }
 
 // GoBuild implements building a Go application.
@@ -209,11 +221,11 @@ func getOutputBinaryPath(binary string) (string, error) {
 	}
 
 	if binary == "" {
-		return "", fmt.Errorf("%w: OUTPUT_BINARY not defined", errorInvalidFilename)
+		return "", fmt.Errorf("%w: OUTPUT_BINARY not defined", &errInvalidFilename{})
 	}
 
 	if binary != abinary {
-		return "", fmt.Errorf("%w: %v is not an absolute path", errorInvalidFilename, binary)
+		return "", fmt.Errorf("%w: %v is not an absolute path", &errInvalidFilename{}, binary)
 	}
 
 	return binary, nil
@@ -247,19 +259,19 @@ func (b *GoBuild) generateCommandEnvVariables() ([]string, error) {
 	var env []string
 
 	if b.cfg.Goos == "" {
-		return nil, fmt.Errorf("%w: %s", errorEnvVariableNameEmpty, "GOOS")
+		return nil, fmt.Errorf("%w: %s", &errEnvVariableNameEmpty{}, "GOOS")
 	}
 	env = append(env, fmt.Sprintf("GOOS=%s", b.cfg.Goos))
 
 	if b.cfg.Goarch == "" {
-		return nil, fmt.Errorf("%w: %s", errorEnvVariableNameEmpty, "GOARCH")
+		return nil, fmt.Errorf("%w: %s", &errEnvVariableNameEmpty{}, "GOARCH")
 	}
 	env = append(env, fmt.Sprintf("GOARCH=%s", b.cfg.Goarch))
 
 	// Set env variables from config file.
 	for k, v := range b.cfg.Env {
 		if !isAllowedEnvVariable(k) {
-			return env, fmt.Errorf("%w: %s", errorEnvVariableNameNotAllowed, v)
+			return env, fmt.Errorf("%w: %s", &errEnvVariableNameNotAllowed{}, v)
 		}
 
 		env = append(env, fmt.Sprintf("%s=%s", k, v))
@@ -286,7 +298,7 @@ func (b *GoBuild) SetArgEnvVariables(envs string) error {
 
 		sp := strings.Split(s, ":")
 		if len(sp) != 2 {
-			return fmt.Errorf("%w: %s", errorInvalidEnvArgument, s)
+			return fmt.Errorf("%w: %s", &errInvalidEnvArgument{}, s)
 		}
 		name := strings.Trim(sp[0], " ")
 		value := strings.Trim(sp[1], " ")
@@ -318,12 +330,12 @@ func (b *GoBuild) generateOutputFilename() (string, error) {
 
 	for _, char := range name {
 		if !strings.Contains(alpha, strings.ToLower(string(char))) {
-			return "", fmt.Errorf("%w: found character '%c'", errorInvalidFilename, char)
+			return "", fmt.Errorf("%w: found character '%c'", &errInvalidFilename{}, char)
 		}
 	}
 
 	if name == "" {
-		return "", fmt.Errorf("%w: filename is empty", errorInvalidFilename)
+		return "", fmt.Errorf("%w: filename is empty", &errInvalidFilename{})
 	}
 
 	// Validate the path.
@@ -340,7 +352,7 @@ func (b *GoBuild) generateFlags() ([]string, error) {
 
 	for _, v := range b.cfg.Flags {
 		if !isAllowedArg(v) {
-			return nil, fmt.Errorf("%w: %s", errorUnsupportedArguments, v)
+			return nil, fmt.Errorf("%w: %s", &errUnsupportedArguments{}, v)
 		}
 		flags = append(flags, v)
 	}
@@ -405,13 +417,13 @@ func (b *GoBuild) resolveSpecialVariables(s string) (string, error) {
 		switch name {
 		case "Os":
 			if b.cfg.Goos == "" {
-				return "", fmt.Errorf("%w: {{ .Os }}", errorEnvVariableNameEmpty)
+				return "", fmt.Errorf("%w: {{ .Os }}", &errEnvVariableNameEmpty{})
 			}
 			s = strings.ReplaceAll(s, n, b.cfg.Goos)
 
 		case "Arch":
 			if b.cfg.Goarch == "" {
-				return "", fmt.Errorf("%w: {{ .Arch }}", errorEnvVariableNameEmpty)
+				return "", fmt.Errorf("%w: {{ .Arch }}", &errEnvVariableNameEmpty{})
 			}
 			s = strings.ReplaceAll(s, n, b.cfg.Goarch)
 
@@ -419,7 +431,7 @@ func (b *GoBuild) resolveSpecialVariables(s string) (string, error) {
 			tag := getTag()
 			s = strings.ReplaceAll(s, n, tag)
 		default:
-			return "", fmt.Errorf("%w: %s", errorInvalidEnvArgument, n)
+			return "", fmt.Errorf("%w: %s", &errInvalidEnvArgument{}, n)
 		}
 	}
 	return s, nil
@@ -434,7 +446,7 @@ func (b *GoBuild) resolveEnvVariables(s string) (string, error) {
 
 		val, exists := b.argEnv[name]
 		if !exists {
-			return "", fmt.Errorf("%w: %s", errorEnvVariableNameEmpty, n)
+			return "", fmt.Errorf("%w: %s", &errEnvVariableNameEmpty{}, n)
 		}
 		s = strings.ReplaceAll(s, n, val)
 	}

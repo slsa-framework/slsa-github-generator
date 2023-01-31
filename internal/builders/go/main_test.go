@@ -16,10 +16,6 @@ import (
 	"github.com/slsa-framework/slsa-github-generator/internal/utils"
 )
 
-func errCmp(e1, e2 error) bool {
-	return errors.Is(e1, e2) || errors.Is(e2, e1)
-}
-
 func checkWorkingDir(t *testing.T, wd, expected string) {
 	var expectedWd string
 	var err error
@@ -40,6 +36,27 @@ func checkWorkingDir(t *testing.T, wd, expected string) {
 	}
 }
 
+func errInvalidDirectoryFunc(t *testing.T, got error) {
+	want := &pkg.ErrInvalidDirectory{}
+	if !errors.As(got, &want) {
+		t.Fatalf("unexpected error: %v", cmp.Diff(got, want, cmpopts.EquateErrors()))
+	}
+}
+
+func errUnsupportedVersionFunc(t *testing.T, got error) {
+	want := &pkg.ErrUnsupportedVersion{}
+	if !errors.As(got, &want) {
+		t.Fatalf("unexpected error: %v", cmp.Diff(got, want, cmpopts.EquateErrors()))
+	}
+}
+
+func errInvalidEnvironmentVariableFunc(t *testing.T, got error) {
+	want := &pkg.ErrInvalidEnvironmentVariable{}
+	if !errors.As(got, &want) {
+		t.Fatalf("unexpected error: %v", cmp.Diff(got, want, cmpopts.EquateErrors()))
+	}
+}
+
 func Test_runBuild(t *testing.T) {
 	t.Parallel()
 
@@ -49,7 +66,7 @@ func Test_runBuild(t *testing.T) {
 		config     string
 		evalEnvs   string
 		workingDir string
-		err        error
+		err        func(*testing.T, error)
 		commands   []string
 		envs       []string
 	}{
@@ -236,37 +253,35 @@ func Test_runBuild(t *testing.T) {
 			},
 			workingDir: "./valid/path/",
 		},
-		// Below are the same tests we do in pkg/config_test.go
-		// TODO: Do they provide additional value then? Can we remove them instead of exporting errors?
 		{
 			name:   "invalid main",
 			config: "./pkg/testdata/releaser-invalid-main.yml",
-			err:    &pkg.ErrInvalidDirectory{},
+			err:    errInvalidDirectoryFunc,
 		},
 		{
 			name:   "missing version",
 			config: "./pkg/testdata/releaser-noversion.yml",
-			err:    &pkg.ErrUnsupportedVersion{},
+			err:    errUnsupportedVersionFunc,
 		},
 		{
 			name:   "invalid version",
 			config: "./pkg/testdata/releaser-invalid-version.yml",
-			err:    &pkg.ErrUnsupportedVersion{},
+			err:    errUnsupportedVersionFunc,
 		},
 		{
 			name:   "invalid envs",
 			config: "./pkg/testdata/releaser-invalid-envs.yml",
-			err:    &pkg.ErrInvalidEnvironmentVariable{},
+			err:    errInvalidEnvironmentVariableFunc,
 		},
 		{
 			name:   "invalid path",
 			config: "../pkg/testdata/releaser-invalid-main.yml",
-			err:    &pkg.ErrInvalidDirectory{},
+			err:    errInvalidDirectoryFunc,
 		},
 		{
 			name:   "invalid dir path",
 			config: "../pkg/testdata/releaser-invalid-dir.yml",
-			err:    &pkg.ErrInvalidDirectory{},
+			err:    errInvalidDirectoryFunc,
 		},
 	}
 
@@ -287,8 +302,8 @@ func Test_runBuild(t *testing.T) {
 				tt.config,
 				tt.evalEnvs)
 
-			if !errCmp(err, tt.err) {
-				t.Errorf(cmp.Diff(err, tt.err, cmpopts.EquateErrors()))
+			if tt.err != nil {
+				tt.err(t, err)
 			}
 
 			if err != nil {

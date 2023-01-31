@@ -54,8 +54,7 @@ type GoReleaserConfig struct {
 	Ldflags []string
 }
 
-// ErrUnsupportedVersion indicates an unsupported GoReleaser version.
-// TODO: Is it fine to have these exported? Or should I refactor ../main_test.go to do a generic error check?
+// ErrUnsupportedVersion indicates an unsupported Go builder version.
 type ErrUnsupportedVersion struct {
 	errors.WrappableError
 }
