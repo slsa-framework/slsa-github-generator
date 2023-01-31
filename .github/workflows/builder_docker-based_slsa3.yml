@@ -377,7 +377,7 @@ jobs:
         id: attestations
         uses: ./__BUILDER_CHECKOUT_DIR__/.github/actions/generate-attestations
         with:
-          slsa-outputs-file: "${{ needs.build.outputs.slsa-outputs-name }}"
+          slsa-layout-file: "${{ needs.build.outputs.slsa-outputs-name }}"
           predicate-file: "${{ needs.generate-build-definition.outputs.build-definition-name }}"
           output-folder: "attestations-${{ needs.rng.outputs.value }}"
 
