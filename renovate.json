@@ -5,6 +5,10 @@
     ":gitSignOff"
   ],
   "schedule": ["every weekend"],
+  "postUpdateOptions": [
+    "gomodTidy",
+    "gomodUpdateImportPaths"
+  ],
   "packageRules": [
     {
       "matchManagers": ["github-actions"],
