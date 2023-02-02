@@ -26,7 +26,6 @@
   - [Inputs](#inputs)
   - [Command line examples](#command-line-examples)
 - [Technical design](#technical-design)
-  - [Blog post](#blog-post)
   - [Specifications](#specifications)
   - [Provenance format](#provenance-format)
 - [Contributing](#contributing)
