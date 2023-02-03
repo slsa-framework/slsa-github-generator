@@ -32,7 +32,7 @@ import (
 // DryRunCmd returns a new *cobra.Command that validates the input flags, and
 // generates a BuildDefinition from them, or terminates with an error.
 func DryRunCmd(check func(error)) *cobra.Command {
-	io := &pkg.InputOptions{}
+	inputOptions := &pkg.InputOptions{}
 	var buildDefinitionPath string
 
 	cmd := &cobra.Command{
@@ -42,10 +42,10 @@ func DryRunCmd(check func(error)) *cobra.Command {
 			w, err := utils.CreateNewFileUnderCurrentDirectory(buildDefinitionPath, os.O_WRONLY)
 			check(err)
 
-			config, err := pkg.NewDockerBuildConfig(io)
+			config, err := pkg.NewDockerBuildConfig(inputOptions)
 			check(err)
 
-			builder, err := pkg.NewBuilderWithGitFetcher(*config)
+			builder, err := pkg.NewBuilderWithGitFetcher(config)
 			check(err)
 
 			db, err := builder.SetUpBuildState()
@@ -57,7 +57,7 @@ func DryRunCmd(check func(error)) *cobra.Command {
 		},
 	}
 
-	io.AddFlags(cmd)
+	inputOptions.AddFlags(cmd)
 	cmd.Flags().StringVarP(&buildDefinitionPath, "build-definition-path", "o", "",
 		"Required - Path to store the generated BuildDefinition to.")
 
@@ -67,7 +67,7 @@ func DryRunCmd(check func(error)) *cobra.Command {
 // BuildCmd returns a new *cobra.Command that builds the artifacts using the
 // input flags, and prints out their digests, or terminates with an error.
 func BuildCmd(check func(error)) *cobra.Command {
-	io := &pkg.InputOptions{}
+	inputOptions := &pkg.InputOptions{}
 	var subjectsPath string
 
 	cmd := &cobra.Command{
@@ -76,10 +76,10 @@ func BuildCmd(check func(error)) *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			w, err := utils.CreateNewFileUnderCurrentDirectory(subjectsPath, os.O_WRONLY)
 			check(err)
-			config, err := pkg.NewDockerBuildConfig(io)
+			config, err := pkg.NewDockerBuildConfig(inputOptions)
 			check(err)
 
-			builder, err := pkg.NewBuilderWithGitFetcher(*config)
+			builder, err := pkg.NewBuilderWithGitFetcher(config)
 			check(err)
 
 			db, err := builder.SetUpBuildState()
@@ -93,7 +93,7 @@ func BuildCmd(check func(error)) *cobra.Command {
 		},
 	}
 
-	io.AddFlags(cmd)
+	inputOptions.AddFlags(cmd)
 	cmd.Flags().StringVarP(&subjectsPath, "subjects-path", "o", "",
 		"Required - Path to store a JSON-encoded array of subjects of the generated artifacts.")
 

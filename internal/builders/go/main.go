@@ -94,7 +94,7 @@ func runProvenanceGeneration(subject, digest, commands, envs, workingDir, rekor 
 		return err
 	}
 
-	if err = github.SetOutput("signed-provenance-name", filename); err != nil {
+	if err := github.SetOutput("signed-provenance-name", filename); err != nil {
 		return err
 	}
 
@@ -103,7 +103,7 @@ func runProvenanceGeneration(subject, digest, commands, envs, workingDir, rekor 
 		return err
 	}
 
-	if err = github.SetOutput("signed-provenance-sha256", h); err != nil {
+	if err := github.SetOutput("signed-provenance-sha256", h); err != nil {
 		return err
 	}
 
