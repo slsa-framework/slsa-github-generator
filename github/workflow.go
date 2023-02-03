@@ -49,7 +49,7 @@ type WorkflowContext struct {
 }
 
 // RepositoryURI returns a full repository URI for the repo that triggered the workflow.
-func (c WorkflowContext) RepositoryURI() string {
+func (c *WorkflowContext) RepositoryURI() string {
 	if c.ServerURL == "" || c.Repository == "" {
 		return ""
 	}
