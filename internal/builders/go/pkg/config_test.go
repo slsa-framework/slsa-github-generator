@@ -22,8 +22,25 @@ import (
 	"github.com/google/go-cmp/cmp/cmpopts"
 )
 
-func errCmp(e1, e2 error) bool {
-	return errors.Is(e1, e2) || errors.Is(e2, e1)
+func errInvalidDirectoryFunc(t *testing.T, got error) {
+	want := &ErrInvalidDirectory{}
+	if !errors.As(got, &want) {
+		t.Fatalf("unexpected error: %v", cmp.Diff(got, want, cmpopts.EquateErrors()))
+	}
+}
+
+func errUnsupportedVersionFunc(t *testing.T, got error) {
+	want := &ErrUnsupportedVersion{}
+	if !errors.As(got, &want) {
+		t.Fatalf("unexpected error: %v", cmp.Diff(got, want, cmpopts.EquateErrors()))
+	}
+}
+
+func errInvalidEnvironmentVariableFunc(t *testing.T, got error) {
+	want := &ErrInvalidEnvironmentVariable{}
+	if !errors.As(got, &want) {
+		t.Fatalf("unexpected error: %v", cmp.Diff(got, want, cmpopts.EquateErrors()))
+	}
 }
 
 func Test_ConfigFromFile(t *testing.T) {
@@ -32,7 +49,7 @@ func Test_ConfigFromFile(t *testing.T) {
 	tests := []struct {
 		name   string
 		path   string
-		err    error
+		err    func(*testing.T, error)
 		config GoReleaserConfig
 	}{
 		{
@@ -104,32 +121,32 @@ func Test_ConfigFromFile(t *testing.T) {
 		{
 			name: "missing version",
 			path: "./testdata/releaser-noversion.yml",
-			err:  ErrorUnsupportedVersion,
+			err:  errUnsupportedVersionFunc,
 		},
 		{
 			name: "invalid version",
 			path: "./testdata/releaser-invalid-version.yml",
-			err:  ErrorUnsupportedVersion,
+			err:  errUnsupportedVersionFunc,
 		},
 		{
 			name: "invalid envs",
 			path: "./testdata/releaser-invalid-envs.yml",
-			err:  ErrorInvalidEnvironmentVariable,
+			err:  errInvalidEnvironmentVariableFunc,
 		},
 		{
 			name: "invalid main",
 			path: "./testdata/releaser-invalid-main.yml",
-			err:  ErrorInvalidDirectory,
+			err:  errInvalidDirectoryFunc,
 		},
 		{
 			name: "invalid main path",
 			path: "../testdata/releaser-invalid-main.yml",
-			err:  ErrorInvalidDirectory,
+			err:  errInvalidDirectoryFunc,
 		},
 		{
 			name: "invalid dir path",
 			path: "../testdata/releaser-invalid-dir.yml",
-			err:  ErrorInvalidDirectory,
+			err:  errInvalidDirectoryFunc,
 		},
 		{
 			name: "valid dir path",
@@ -164,7 +181,7 @@ func Test_ConfigFromFile(t *testing.T) {
 			name: "invalid config path with dots",
 			// Resolves to "../releaser-valid-dir.yml".
 			path: "./testdata/../testdata/./foo/../../../releaser-valid-dir.yml",
-			err:  ErrorInvalidDirectory,
+			err:  errInvalidDirectoryFunc,
 		},
 	}
 	for _, tt := range tests {
@@ -174,8 +191,8 @@ func Test_ConfigFromFile(t *testing.T) {
 
 			cfg, err := ConfigFromFile(tt.path)
 
-			if !errCmp(err, tt.err) {
-				t.Errorf(cmp.Diff(err, tt.err, cmpopts.EquateErrors()))
+			if tt.err != nil {
+				tt.err(t, err)
 			}
 			if err != nil {
 				return
