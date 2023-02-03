@@ -153,17 +153,17 @@ func (b *GoBuild) Run(dry bool) error {
 		}
 
 		// Share the resolved name of the binary.
-		if err = github.SetOutput("go-binary-name", filename); err != nil {
+		if err := github.SetOutput("go-binary-name", filename); err != nil {
 			return err
 		}
 
 		// Share the command used.
-		if err = github.SetOutput("go-command", command); err != nil {
+		if err := github.SetOutput("go-command", command); err != nil {
 			return err
 		}
 
 		// Share the env variables used.
-		if err = github.SetOutput("go-env", menv); err != nil {
+		if err := github.SetOutput("go-env", menv); err != nil {
 			return err
 		}
 
@@ -234,7 +234,9 @@ func (b *GoBuild) getDir() (string, error) {
 }
 
 func (b *GoBuild) generateCommand(flags []string, binary string) []string {
-	command := append(flags, []string{"-o", binary}...)
+	var command []string
+	command = append(command, flags...)
+	command = append(command, "-o", binary)
 
 	// Add the entry point.
 	if b.cfg.Main != nil {

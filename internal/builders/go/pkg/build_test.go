@@ -113,48 +113,28 @@ func Test_getOutputBinaryPath(t *testing.T) {
 func Test_isAllowedArg(t *testing.T) {
 	t.Parallel()
 
-	var tests []struct {
+	type test struct {
 		name     string
 		argument string
 		expected bool
 	}
 
+	var tests []test
+
 	for k := range allowedBuildArgs {
-		tests = append(tests, struct {
-			name     string
-			argument string
-			expected bool
-		}{
+		tests = append(tests, test{
 			name:     fmt.Sprintf("%s argument", k),
 			argument: k,
 			expected: true,
-		})
-
-		tests = append(tests, struct {
-			name     string
-			argument string
-			expected bool
-		}{
+		}, test{
 			name:     fmt.Sprintf("%sbla argument", k),
 			argument: fmt.Sprintf("%sbla", k),
 			expected: true,
-		})
-
-		tests = append(tests, struct {
-			name     string
-			argument string
-			expected bool
-		}{
+		}, test{
 			name:     fmt.Sprintf("bla %s argument", k),
 			argument: fmt.Sprintf("bla%s", k),
 			expected: false,
-		})
-
-		tests = append(tests, struct {
-			name     string
-			argument string
-			expected bool
-		}{
+		}, test{
 			name:     fmt.Sprintf("space %s argument", k),
 			argument: fmt.Sprintf(" %s", k),
 			expected: false,
@@ -1032,7 +1012,8 @@ func Test_generateCommand(t *testing.T) {
 				b := GoBuildNew("gocompiler", c)
 
 				command := b.generateCommand(tt.flags, "out-binary")
-				expectedCommand := append(tt.flags, "-o", "out-binary")
+				expectedCommand := tt.flags
+				expectedCommand = append(expectedCommand, "-o", "out-binary")
 				if cfg.Main != nil {
 					expectedCommand = append(expectedCommand, *cfg.Main)
 				}

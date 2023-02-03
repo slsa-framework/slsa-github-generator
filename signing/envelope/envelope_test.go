@@ -26,7 +26,7 @@ import (
 	"github.com/sigstore/sigstore/pkg/signature"
 )
 
-func intotoEntry(certPem []byte, provenance []byte) (*intotod.V001Entry, error) {
+func intotoEntry(certPem, provenance []byte) (*intotod.V001Entry, error) {
 	cert := strfmt.Base64(certPem)
 	return &intotod.V001Entry{
 		IntotoObj: models.IntotoV001Schema{
@@ -162,7 +162,7 @@ func TestAddCert(t *testing.T) {
 
 // This servers as a regression test to make sure that the Rekor intoto
 // type can successfully unmarshal our "Envelope" with included cert.
-func testRekorSupport(t *testing.T, certPem []byte, envWithCert []byte) {
+func testRekorSupport(t *testing.T, certPem, envWithCert []byte) {
 	ctx := context.Background()
 	intotoEntry, err := intotoEntry(certPem, envWithCert)
 	if err != nil {
