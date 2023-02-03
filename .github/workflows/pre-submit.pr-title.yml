@@ -8,6 +8,7 @@ permissions: read-all
 
 jobs:
   validate:
+    name: Validate PR Title
     runs-on: ubuntu-latest
     steps:
       - uses: thehanimo/pr-title-checker@e914bff8ab5e6f1a6a270da6954cd6bfd1d7f1fb # v1
