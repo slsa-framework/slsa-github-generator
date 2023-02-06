@@ -373,7 +373,7 @@ function createPredicate(rawTokenObj, toolURI, currentRun) {
         },
     };
     // Put GitHub event payload into systemParameters.
-    // TODO(1505): Redact sensitive information.
+    // TODO(github.com/slsa-framework/slsa-github-generator/issues/1575): Redact sensitive information.
     if (env.GITHUB_EVENT_PATH) {
         const ghEvent = JSON.parse(fs.readFileSync(env.GITHUB_EVENT_PATH).toString());
         predicate.buildDefinition.systemParameters.GITHUB_EVENT_PAYLOAD = ghEvent;
