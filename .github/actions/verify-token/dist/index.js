@@ -312,6 +312,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.createPredicate = void 0;
+const github = __importStar(__nccwpck_require__(5438));
 const process = __importStar(__nccwpck_require__(7282));
 const fs = __importStar(__nccwpck_require__(7147));
 const DELEGATOR_BUILD_TYPE = "https://github.com/slsa-framework/slsa-github-generator/delegator-generic@v0";
@@ -319,12 +320,13 @@ function createPredicate(rawTokenObj, toolURI, currentRun) {
     var _a;
     const { env } = process;
     const callerRepo = createURI(env.GITHUB_REPOSITORY || "", env.GITHUB_REF || "");
+    const payload = github.context;
     const predicate = {
         buildDefinition: {
             buildType: DELEGATOR_BUILD_TYPE,
             externalParameters: {
                 // NOTE: This is equivalent to the v0.2 entryPoint.
-                workflowPath: { value: currentRun.path },
+                workflowPath: currentRun.path,
                 // We only use source here because the source contained the source
                 // repository and the build configuration.
                 source: {
@@ -337,30 +339,26 @@ function createPredicate(rawTokenObj, toolURI, currentRun) {
                 },
             },
             systemParameters: {
-                // TODO(https://github.com/slsa-framework/slsa-github-generator/issues/1505):
-                // Add GitHub event payload.
-                GITHUB_EVENT_NAME: { value: env.GITHUB_EVENT_NAME || "" },
-                GITHUB_JOB: { value: env.GITHUB_JOB || "" },
-                GITHUB_REF: { value: env.GITHUB_REF || "" },
-                GITHUB_REF_TYPE: { value: env.GITHUB_REF_TYPE || "" },
-                GITHUB_REPOSITORY: { value: env.GITHUB_REPOSITORY || "" },
-                GITHUB_RUN_ATTEMPT: { value: env.GITHUB_RUN_ATTEMPT || "" },
-                GITHUB_RUN_ID: { value: env.GITHUB_RUN_ID || "" },
-                GITHUB_RUN_NUMBER: { value: env.GITHUB_RUN_NUMBER || "" },
-                GITHUB_SHA: { value: env.GITHUB_SHA || "" },
-                GITHUB_WORKFLOW: { value: env.GITHUB_WORKFLOW || "" },
-                GITHUB_ACTOR_ID: { value: String(((_a = currentRun.actor) === null || _a === void 0 ? void 0 : _a.id) || "") },
-                GITHUB_REPOSITORY_ID: { value: String(currentRun.repository.id || "") },
-                GITHUB_REPOSITORY_OWNER_ID: {
-                    value: String(currentRun.repository.owner.id || ""),
-                },
-                GITHUB_WORKFLOW_REF: { value: env.GITHUB_WORKFLOW_REF || "" },
-                GITHUB_WORKFLOW_SHA: { value: env.GITHUB_WORKFLOW_SHA || "" },
-                IMAGE_OS: { value: env.ImageOS || "" },
-                IMAGE_VERSION: { value: env.ImageVersion || "" },
-                RUNNER_ARCH: { value: env.RUNNER_ARCH || "" },
-                RUNNER_NAME: { value: env.RUNNER_NAME || "" },
-                RUNNER_OS: { value: env.RUNNER_OS || "" },
+                GITHUB_EVENT_NAME: payload.eventName,
+                GITHUB_JOB: payload.job,
+                GITHUB_REF: payload.ref,
+                GITHUB_REF_TYPE: env.GITHUB_REF_TYPE || "",
+                GITHUB_REPOSITORY: env.GITHUB_REPOSITORY || "",
+                GITHUB_RUN_ATTEMPT: env.GITHUB_RUN_ATTEMPT || "",
+                GITHUB_RUN_ID: payload.runId,
+                GITHUB_RUN_NUMBER: payload.runNumber,
+                GITHUB_SHA: payload.sha,
+                GITHUB_WORKFLOW: payload.workflow,
+                GITHUB_ACTOR_ID: String(((_a = currentRun.actor) === null || _a === void 0 ? void 0 : _a.id) || ""),
+                GITHUB_REPOSITORY_ID: String(currentRun.repository.id || ""),
+                GITHUB_REPOSITORY_OWNER_ID: String(currentRun.repository.owner.id || ""),
+                GITHUB_WORKFLOW_REF: env.GITHUB_WORKFLOW_REF || "",
+                GITHUB_WORKFLOW_SHA: env.GITHUB_WORKFLOW_SHA || "",
+                IMAGE_OS: env.ImageOS || "",
+                IMAGE_VERSION: env.ImageVersion || "",
+                RUNNER_ARCH: env.RUNNER_ARCH || "",
+                RUNNER_NAME: env.RUNNER_NAME || "",
+                RUNNER_OS: env.RUNNER_OS || "",
             },
         },
         runDetails: {
@@ -374,17 +372,16 @@ function createPredicate(rawTokenObj, toolURI, currentRun) {
             },
         },
     };
+    // Put GitHub event payload into systemParameters.
+    // TODO(1505): Redact sensitive information.
+    if (env.GITHUB_EVENT_PATH) {
+        const ghEvent = JSON.parse(fs.readFileSync(env.GITHUB_EVENT_PATH).toString());
+        predicate.buildDefinition.systemParameters.GITHUB_EVENT_PAYLOAD = ghEvent;
+    }
+    // Add workflow inputs to top-level externalParameters.
     if (env.GITHUB_EVENT_NAME === "workflow_dispatch") {
-        if (env.GITHUB_EVENT_PATH) {
-            const ghEvent = JSON.parse(fs.readFileSync(env.GITHUB_EVENT_PATH).toString());
-            for (const input in ghEvent.inputs) {
-                // The invocation parameters belong here and are the top-level GitHub
-                // workflow inputs.
-                predicate.buildDefinition.externalParameters[`input_${input}`] = {
-                    value: String(ghEvent.inputs[input] || ""),
-                };
-            }
-        }
+        predicate.buildDefinition.externalParameters.inputs =
+            payload.payload.inputs;
     }
     return predicate;
 }

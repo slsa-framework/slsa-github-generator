@@ -81,7 +81,7 @@ _e2e_verify_query() {
 }
 
 e2e_verify_predicate_v1_buildDefinition_externalParameters_workflowPath() {
-    _e2e_verify_query "$1" "$2" '.buildDefinition.externalParameters.workflowPath.value'
+    _e2e_verify_query "$1" "$2" '.buildDefinition.externalParameters.workflowPath'
 }
 
 e2e_verify_predicate_v1_buildDefinition_externalParameters_source() {
@@ -93,7 +93,7 @@ e2e_verify_predicate_v1_buildDefinition_buildType() {
 }
 
 e2e_verify_predicate_v1_buildDefinition_systemParameters() {
-    _e2e_verify_query "$1" "$3" ".buildDefinition.systemParameters.\"$2\".value"
+    _e2e_verify_query "$1" "$3" '.buildDefinition.systemParameters.'"$2"
 }
 
 e2e_verify_predicate_v1_runDetails_builder_id() {

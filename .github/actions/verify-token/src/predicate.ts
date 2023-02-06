@@ -11,10 +11,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+import * as github from "@actions/github";
 import * as process from "process";
 import * as fs from "fs";
 import type { Endpoints } from "@octokit/types";
-import type { WorkflowDispatchEvent } from "@octokit/webhooks-types";
 
 const DELEGATOR_BUILD_TYPE =
   "https://github.com/slsa-framework/slsa-github-generator/delegator-generic@v0";
@@ -38,16 +38,6 @@ interface Metadata {
   finishedOn?: Date;
 }
 
-interface ParameterValue_Artifact {
-  artifact: ArtifactReference;
-}
-
-interface ParameterValue_String {
-  value: string;
-}
-
-type ParameterValue = ParameterValue_Artifact | ParameterValue_String;
-
 interface ArtifactReference {
   uri: string;
   digest: DigestSet;
@@ -61,10 +51,12 @@ interface BuildDefinition {
   buildType: string;
 
   // externalParameters is the set of top-level external inputs to the build.
-  externalParameters: { [key: string]: ParameterValue };
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  externalParameters: any;
 
   // systemParameters describes parameters of the build environment provided by the `builder`.
-  systemParameters?: { [key: string]: ParameterValue };
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  systemParameters?: any;
 
   // resolvedDependencies are dependencies needed at build time.
   resolvedDependencies?: ArtifactReference[];
@@ -138,12 +130,13 @@ export function createPredicate(
     env.GITHUB_REF || ""
   );
 
+  const payload = github.context;
   const predicate: SLSAv1Predicate = {
     buildDefinition: {
       buildType: DELEGATOR_BUILD_TYPE,
       externalParameters: {
         // NOTE: This is equivalent to the v0.2 entryPoint.
-        workflowPath: { value: currentRun.path },
+        workflowPath: currentRun.path,
         // We only use source here because the source contained the source
         // repository and the build configuration.
         source: {
@@ -156,30 +149,28 @@ export function createPredicate(
         },
       },
       systemParameters: {
-        // TODO(https://github.com/slsa-framework/slsa-github-generator/issues/1505):
-        // Add GitHub event payload.
-        GITHUB_EVENT_NAME: { value: env.GITHUB_EVENT_NAME || "" },
-        GITHUB_JOB: { value: env.GITHUB_JOB || "" },
-        GITHUB_REF: { value: env.GITHUB_REF || "" },
-        GITHUB_REF_TYPE: { value: env.GITHUB_REF_TYPE || "" },
-        GITHUB_REPOSITORY: { value: env.GITHUB_REPOSITORY || "" },
-        GITHUB_RUN_ATTEMPT: { value: env.GITHUB_RUN_ATTEMPT || "" },
-        GITHUB_RUN_ID: { value: env.GITHUB_RUN_ID || "" },
-        GITHUB_RUN_NUMBER: { value: env.GITHUB_RUN_NUMBER || "" },
-        GITHUB_SHA: { value: env.GITHUB_SHA || "" },
-        GITHUB_WORKFLOW: { value: env.GITHUB_WORKFLOW || "" },
-        GITHUB_ACTOR_ID: { value: String(currentRun.actor?.id || "") },
-        GITHUB_REPOSITORY_ID: { value: String(currentRun.repository.id || "") },
-        GITHUB_REPOSITORY_OWNER_ID: {
-          value: String(currentRun.repository.owner.id || ""),
-        },
-        GITHUB_WORKFLOW_REF: { value: env.GITHUB_WORKFLOW_REF || "" },
-        GITHUB_WORKFLOW_SHA: { value: env.GITHUB_WORKFLOW_SHA || "" },
-        IMAGE_OS: { value: env.ImageOS || "" },
-        IMAGE_VERSION: { value: env.ImageVersion || "" },
-        RUNNER_ARCH: { value: env.RUNNER_ARCH || "" },
-        RUNNER_NAME: { value: env.RUNNER_NAME || "" },
-        RUNNER_OS: { value: env.RUNNER_OS || "" },
+        GITHUB_EVENT_NAME: payload.eventName,
+        GITHUB_JOB: payload.job,
+        GITHUB_REF: payload.ref,
+        GITHUB_REF_TYPE: env.GITHUB_REF_TYPE || "",
+        GITHUB_REPOSITORY: env.GITHUB_REPOSITORY || "",
+        GITHUB_RUN_ATTEMPT: env.GITHUB_RUN_ATTEMPT || "",
+        GITHUB_RUN_ID: payload.runId,
+        GITHUB_RUN_NUMBER: payload.runNumber,
+        GITHUB_SHA: payload.sha,
+        GITHUB_WORKFLOW: payload.workflow,
+        GITHUB_ACTOR_ID: String(currentRun.actor?.id || ""),
+        GITHUB_REPOSITORY_ID: String(currentRun.repository.id || ""),
+        GITHUB_REPOSITORY_OWNER_ID: String(
+          currentRun.repository.owner.id || ""
+        ),
+        GITHUB_WORKFLOW_REF: env.GITHUB_WORKFLOW_REF || "",
+        GITHUB_WORKFLOW_SHA: env.GITHUB_WORKFLOW_SHA || "",
+        IMAGE_OS: env.ImageOS || "",
+        IMAGE_VERSION: env.ImageVersion || "",
+        RUNNER_ARCH: env.RUNNER_ARCH || "",
+        RUNNER_NAME: env.RUNNER_NAME || "",
+        RUNNER_OS: env.RUNNER_OS || "",
       },
     },
     runDetails: {
@@ -194,20 +185,19 @@ export function createPredicate(
     },
   };
 
-  if (env.GITHUB_EVENT_NAME === "workflow_dispatch") {
-    if (env.GITHUB_EVENT_PATH) {
-      const ghEvent: WorkflowDispatchEvent = JSON.parse(
-        fs.readFileSync(env.GITHUB_EVENT_PATH).toString()
-      );
+  // Put GitHub event payload into systemParameters.
+  // TODO(1505): Redact sensitive information.
+  if (env.GITHUB_EVENT_PATH) {
+    const ghEvent = JSON.parse(
+      fs.readFileSync(env.GITHUB_EVENT_PATH).toString()
+    );
+    predicate.buildDefinition.systemParameters.GITHUB_EVENT_PAYLOAD = ghEvent;
+  }
 
-      for (const input in ghEvent.inputs) {
-        // The invocation parameters belong here and are the top-level GitHub
-        // workflow inputs.
-        predicate.buildDefinition.externalParameters[`input_${input}`] = {
-          value: String(ghEvent.inputs[input] || ""),
-        };
-      }
-    }
+  // Add workflow inputs to top-level externalParameters.
+  if (env.GITHUB_EVENT_NAME === "workflow_dispatch") {
+    predicate.buildDefinition.externalParameters.inputs =
+      payload.payload.inputs;
   }
 
   return predicate;
