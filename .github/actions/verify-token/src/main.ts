@@ -12,13 +12,13 @@ limitations under the License.
 */
 
 import * as core from "@actions/core";
-import * as github from "@actions/github";
 import * as sigstore from "sigstore";
 import * as process from "process";
 import * as fs from "fs";
 import * as child_process from "child_process";
 import { githubObj, rawTokenInterface, createPredicate } from "./predicate";
 import { getEnv, resolvePathInput } from "./utils";
+import * as pred from "predicate-utils";
 
 async function run(): Promise<void> {
   try {
@@ -126,17 +126,20 @@ async function run(): Promise<void> {
     if (!token) {
       throw new Error("token not provided");
     }
-    const octokit = github.getOctokit(token);
     const ownerRepo = getEnv("GITHUB_REPOSITORY");
-    const [owner, repo] = ownerRepo.split("/");
 
-    const { data: current_run } = await octokit.rest.actions.getWorkflowRun({
-      owner,
-      repo,
-      run_id: Number(process.env.GITHUB_RUN_ID),
-    });
+    const currentWorkflowRun = await pred.getWorkflowRun(
+      ownerRepo,
+      Number(process.env.GITHUB_RUN_ID),
+      token
+    );
 
-    const predicate = createPredicate(rawTokenObj, toolURI, current_run);
+    const predicate = await createPredicate(
+      rawTokenObj,
+      toolURI,
+      currentWorkflowRun
+    );
+
     fs.writeFileSync(safeOutput, JSON.stringify(predicate), {
       flag: "ax",
       mode: 0o600,

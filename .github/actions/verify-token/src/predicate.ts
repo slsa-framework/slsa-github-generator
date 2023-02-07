@@ -11,72 +11,11 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-import * as github from "@actions/github";
-import * as process from "process";
-import * as fs from "fs";
-import type { Endpoints } from "@octokit/types";
+import * as pred from "predicate-utils";
+import type { ApiWorkflowRun } from "predicate-utils";
 
 const DELEGATOR_BUILD_TYPE =
   "https://github.com/slsa-framework/slsa-github-generator/delegator-generic@v0";
-
-type ApiWorkflowRun =
-  Endpoints["GET /repos/{owner}/{repo}/actions/runs/{run_id}"]["response"]["data"];
-
-interface Builder {
-  id: string;
-  version?: string;
-  builderDependencies?: ArtifactReference[];
-}
-
-interface DigestSet {
-  [key: string]: string;
-}
-
-interface Metadata {
-  invocationId?: string;
-  startedOn?: Date;
-  finishedOn?: Date;
-}
-
-interface ArtifactReference {
-  uri: string;
-  digest: DigestSet;
-  localName?: string;
-  downloadLocation?: string;
-  mediaType?: string;
-}
-
-interface BuildDefinition {
-  // buildType is a TypeURI that unambiguously indicates the type of this message and how to initiate the build.
-  buildType: string;
-
-  // externalParameters is the set of top-level external inputs to the build.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  externalParameters: any;
-
-  // systemParameters describes parameters of the build environment provided by the `builder`.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  systemParameters?: any;
-
-  // resolvedDependencies are dependencies needed at build time.
-  resolvedDependencies?: ArtifactReference[];
-}
-
-interface RunDetails {
-  builder: Builder;
-
-  metadata: Metadata;
-
-  byproducts?: ArtifactReference[];
-}
-
-interface SLSAv1Predicate {
-  // buildDefinition describes the inputs to the build.
-  buildDefinition: BuildDefinition;
-
-  // runDetails includes details specific to this particular execution of the build.
-  runDetails: RunDetails;
-}
 
 export interface rawTokenInterface {
   version: number;
@@ -118,20 +57,12 @@ export interface githubObj {
   actor: string;
 }
 
-export function createPredicate(
+export async function createPredicate(
   rawTokenObj: rawTokenInterface,
   toolURI: string,
   currentRun: ApiWorkflowRun
-): SLSAv1Predicate {
-  const { env } = process;
-
-  const callerRepo: string = createURI(
-    env.GITHUB_REPOSITORY || "",
-    env.GITHUB_REF || ""
-  );
-
-  const payload = github.context;
-  const predicate: SLSAv1Predicate = {
+): Promise<pred.SLSAv1Predicate> {
+  const predicate: pred.SLSAv1Predicate = {
     buildDefinition: {
       buildType: DELEGATOR_BUILD_TYPE,
       externalParameters: {
@@ -140,38 +71,10 @@ export function createPredicate(
         // We only use source here because the source contained the source
         // repository and the build configuration.
         source: {
-          artifact: {
-            uri: callerRepo,
-            digest: {
-              sha1: env.GITHUB_SHA || "",
-            },
-          },
+          artifact: pred.getSourceArtifactReference(),
         },
       },
-      systemParameters: {
-        GITHUB_EVENT_NAME: payload.eventName,
-        GITHUB_JOB: payload.job,
-        GITHUB_REF: payload.ref,
-        GITHUB_REF_TYPE: env.GITHUB_REF_TYPE || "",
-        GITHUB_REPOSITORY: env.GITHUB_REPOSITORY || "",
-        GITHUB_RUN_ATTEMPT: env.GITHUB_RUN_ATTEMPT || "",
-        GITHUB_RUN_ID: payload.runId,
-        GITHUB_RUN_NUMBER: payload.runNumber,
-        GITHUB_SHA: payload.sha,
-        GITHUB_WORKFLOW: payload.workflow,
-        GITHUB_ACTOR_ID: String(currentRun.actor?.id || ""),
-        GITHUB_REPOSITORY_ID: String(currentRun.repository.id || ""),
-        GITHUB_REPOSITORY_OWNER_ID: String(
-          currentRun.repository.owner.id || ""
-        ),
-        GITHUB_WORKFLOW_REF: env.GITHUB_WORKFLOW_REF || "",
-        GITHUB_WORKFLOW_SHA: env.GITHUB_WORKFLOW_SHA || "",
-        IMAGE_OS: env.ImageOS || "",
-        IMAGE_VERSION: env.ImageVersion || "",
-        RUNNER_ARCH: env.RUNNER_ARCH || "",
-        RUNNER_NAME: env.RUNNER_NAME || "",
-        RUNNER_OS: env.RUNNER_OS || "",
-      },
+      systemParameters: {},
     },
     runDetails: {
       // TODO(https://github.com/slsa-framework/slsa-github-generator/issues/1504):
@@ -180,37 +83,11 @@ export function createPredicate(
         id: toolURI,
       },
       metadata: {
-        invocationId: `https://github.com/${currentRun.repository.full_name}/actions/runs/${currentRun.id}/attempts/${currentRun.run_attempt}`,
+        invocationId: pred.getInvocationID(currentRun),
       },
     },
   };
 
-  // Put GitHub event payload into systemParameters.
-  // TODO(github.com/slsa-framework/slsa-github-generator/issues/1575): Redact sensitive information.
-  if (env.GITHUB_EVENT_PATH) {
-    const ghEvent = JSON.parse(
-      fs.readFileSync(env.GITHUB_EVENT_PATH).toString()
-    );
-    predicate.buildDefinition.systemParameters.GITHUB_EVENT_PAYLOAD = ghEvent;
-  }
-
-  // Add workflow inputs to top-level externalParameters.
-  if (env.GITHUB_EVENT_NAME === "workflow_dispatch") {
-    predicate.buildDefinition.externalParameters.inputs =
-      payload.payload.inputs;
-  }
-
-  return predicate;
-}
-
-// createURI creates the fully qualified URI out of the repository
-function createURI(repository: string, ref: string): string {
-  if (!repository) {
-    throw new Error(`cannot create URI: repository undefined`);
-  }
-  let refVal = "";
-  if (ref) {
-    refVal = `@${ref}`;
-  }
-  return `git+https://github.com/${repository}${refVal}`;
+  // Add trusted GitHub context to systemParameters.
+  return pred.addGitHubSystemParameters(predicate, currentRun);
 }
