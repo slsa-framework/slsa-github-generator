@@ -15,10 +15,7 @@ import * as fs from "fs";
 import * as process from "process";
 import * as types from "./types";
 import * as github from "@actions/github";
-import type { Endpoints } from "@octokit/types";
-
-export type ApiWorkflowRun =
-  Endpoints["GET /repos/{owner}/{repo}/actions/runs/{run_id}"]["response"]["data"];
+import type { ApiWorkflowRun } from "./types";
 
 // getWorkflowRun retrieves the current WorkflowRun given the repository (owner/repo)
 // and run ID.

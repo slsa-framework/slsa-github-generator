@@ -1,3 +1,5 @@
+import type { Endpoints } from "@octokit/types";
+export type ApiWorkflowRun = Endpoints["GET /repos/{owner}/{repo}/actions/runs/{run_id}"]["response"]["data"];
 export interface Builder {
     id: string;
     version?: string;
