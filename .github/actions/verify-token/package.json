@@ -19,9 +19,10 @@
   "dependencies": {
     "@actions/core": "^1.10.0",
     "@actions/github": "^5.1.1",
+    "@octokit/types": "^9.0.0",
     "@octokit/webhooks-types": "^6.9.0",
-    "sigstore": "^0.4.0",
-    "predicate-utils": "file:../common/predicate-utils"
+    "predicate-utils": "file:../common/predicate-utils",
+    "sigstore": "^0.4.0"
   },
   "devDependencies": {
     "@types/node": "^18.11.9",
