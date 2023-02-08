@@ -35,6 +35,15 @@ jobs:
         with:
           node-version: 16
 
+      - name: Debug ncc and tsc versions
+        working-directory: ${{ matrix.action }}
+        run: |
+          echo "tsc --version"
+          tsc --version
+
+          echo "ncc version"
+          ncc version
+
       - name: Rebuild the dist/ directory
         working-directory: ${{ matrix.action }}
         run: make package
