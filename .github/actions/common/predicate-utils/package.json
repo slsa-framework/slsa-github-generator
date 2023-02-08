@@ -10,8 +10,8 @@
   ],
   "scripts": {
     "build": "tsc",
-    "format": "prettier --write '**/*.ts'",
-    "format-check": "prettier --check '**/*.ts'",
+    "format": "prettier --write 'src/**/*.ts'",
+    "format-check": "prettier --check 'src/**/*.ts'",
     "package": "ncc build --source-map",
     "lint": "eslint src/**/*.ts",
     "all": "npm run format && npm run lint && npm run build && npm run package",
