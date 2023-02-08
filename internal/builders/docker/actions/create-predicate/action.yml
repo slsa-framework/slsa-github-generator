@@ -1,0 +1,26 @@
+name: "Create SLSA predicate"
+description: "Creates a SLSA predicate given a BuildDefinition."
+inputs:
+  build-definition:
+    description: 'A JSON file describing the SLSA BuildDefinition'
+    required: true
+  output-file:
+    description: 'Output file to place predicate'
+    required: true
+  binary-sha256:
+    description: 'Builder binary digest to place in resolvedDependencies'
+    required: true
+  binary-uri:
+    description: 'Builder binary source location to place in resolvedDependencies'
+    required: true
+  builder-id:
+    description: 'Trusted builder identity'
+    required: true
+  token:
+    description: "The GitHub Actions token."
+    required: false
+    default: ${{ github.token }}
+
+runs:
+  using: node16
+  main: "dist/index.js"

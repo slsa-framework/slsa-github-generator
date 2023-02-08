@@ -21,6 +21,9 @@ outputs:
   ref:
     description: The current workflow reference
     value: ${{ steps.detect.outputs.ref }}
+  workflow:
+    description: The full current job workflow
+    value: ${{ steps.detect.outputs.workflow }}
 runs:
   using: "docker"
   image: "Dockerfile"

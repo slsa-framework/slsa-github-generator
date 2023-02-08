@@ -91,8 +91,8 @@ func (a *action) getEventValue(key string) string {
 	}
 }
 
-func (a *action) getRepoRef(ctx context.Context) (string, string, error) {
-	var repository, ref string
+func (a *action) getRepoRef(ctx context.Context) (string, string, string, error) {
+	var repository, workflow, ref string
 
 	// TODO(github.com/slsa-framework/slsa-github-generator/issues/124): Remove special logic for pull_requests.
 	eventName := a.getenv("GITHUB_EVENT_NAME")
@@ -101,44 +101,47 @@ func (a *action) getRepoRef(ctx context.Context) (string, string, error) {
 		repository = a.getEventValue("pull_request.head.repo.full_name")
 		// We use the SHA of the head branch of the pull request.
 		ref = a.getEventValue("pull_request.head.sha")
+		// There seems to be no way to detect the workflow in pull_request.
 	} else {
 		audience := a.getenv("GITHUB_REPOSITORY")
 		if audience == "" {
-			return "", "", errors.New("missing github repository context")
+			return "", "", "", errors.New("missing github repository context")
 		}
 		audience = path.Join(audience, "detect-workflow")
 
 		client, err := a.getClient()
 		if err != nil {
-			return "", "", fmt.Errorf("creating OIDC client: %w", err)
+			return "", "", "", fmt.Errorf("creating OIDC client: %w", err)
 		}
 		t, err := client.Token(ctx, []string{audience})
 		if err != nil {
-			return "", "", fmt.Errorf("getting OIDC token: %w", err)
+			return "", "", "", fmt.Errorf("getting OIDC token: %w", err)
 		}
 
-		pathParts := strings.SplitN(t.JobWorkflowRef, "/", 3)
+		pathParts := strings.Split(t.JobWorkflowRef, "/")
 		if len(pathParts) < 3 {
-			return "", "", errors.New("missing org/repository in job workflow ref")
+			return "", "", "", errors.New("missing org/repository in job workflow ref")
 		}
 		repository = strings.Join(pathParts[:2], "/")
 
-		refParts := strings.Split(t.JobWorkflowRef, "@")
+		workflowRef := strings.Join(pathParts[2:], "/")
+		refParts := strings.Split(workflowRef, "@")
 		if len(refParts) < 2 {
-			return "", "", errors.New("missing reference in job workflow ref")
+			return "", "", "", errors.New("missing reference in job workflow ref")
 		}
+		workflow = refParts[0]
 		// This is a fully formed ref, in the form refs/*.
 		ref = refParts[1]
 	}
 
 	if repository == "" {
-		return "", "", errors.New("no repository detected")
+		return "", "", "", errors.New("no repository detected")
 	}
 	if ref == "" {
-		return "", "", errors.New("no ref detected")
+		return "", "", "", errors.New("no ref detected")
 	}
 
-	return repository, ref, nil
+	return repository, workflow, ref, nil
 }
 
 func main() {
@@ -147,7 +150,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	repository, ref, err := a.getRepoRef(context.Background())
+	repository, workflow, ref, err := a.getRepoRef(context.Background())
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -159,4 +162,5 @@ func main() {
 	// Output of the Action.
 	github.SetOutput("repository", repository)
 	github.SetOutput("ref", ref)
+	github.SetOutput("workflow", workflow)
 }
