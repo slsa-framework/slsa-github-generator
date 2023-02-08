@@ -41,9 +41,6 @@ jobs:
           echo "tsc --version"
           tsc --version
 
-          echo "ncc version"
-          ncc version
-
       - name: Rebuild the dist/ directory
         working-directory: ${{ matrix.action }}
         run: make package
