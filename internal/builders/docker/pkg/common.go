@@ -40,13 +40,15 @@ const (
 // DockerBasedExternalParmaters is a representation of the top level inputs to a
 // docker-based build.
 type DockerBasedExternalParmaters struct {
+	// The source GitHub repo
 	Source slsa1.ArtifactReference `json:"source"`
 
+	// The Docker builder image
 	BuilderImage slsa1.ArtifactReference `json:"builderImage"`
 
-	ArtifactPath string `json:"artifactPath"`
+	// Path to a configuration file relative to the root of the repository.
+	ConfigPath string `json:"configPath"`
 
-	Command string `json:"command"`
-
-	ConfigFile string `json:"configFile"`
+	// Unpacked build config parameters
+	Config BuildConfig `json:"buildConfig"`
 }

@@ -46,9 +46,15 @@ func Test_BuildDefinition(t *testing.T) {
 		ExternalParameters: DockerBasedExternalParmaters{
 			Source:       wantSource,
 			BuilderImage: wantBuilderImage,
-			ArtifactPath: "config.toml",
-			Command:      "[\"cp\",\"internal/builders/docker/testdata/config.toml\",\"config.toml\"]",
-			ConfigFile:   "internal/builders/docker/testdata/config.toml",
+			ConfigPath:   "internal/builders/docker/testdata/config.toml",
+			Config: BuildConfig{
+				ArtifactPath: "config.toml",
+				Command: []string{
+					"cp",
+					"internal/builders/docker/testdata/config.toml",
+					"config.toml",
+				},
+			},
 		},
 	}
 

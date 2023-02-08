@@ -25,7 +25,6 @@ package pkg
 import (
 	"crypto/sha256"
 	"encoding/hex"
-	"encoding/json"
 	"fmt"
 	"io"
 	"log"
@@ -103,20 +102,11 @@ func NewBuilderWithGitFetcher(config *DockerBuildConfig) (*Builder, error) {
 // CreateBuildDefinition creates a BuildDefinition from the DockerBuildConfig
 // and BuildConfig in this DockerBuild.
 func (db *DockerBuild) CreateBuildDefinition() *slsa1.ProvenanceBuildDefinition {
-	// The input is a simple string array, no errors occur. But we check and
-	// print the error to make the linters happy.
-	cmdBytes, err := json.Marshal(db.buildConfig.Command)
-	if err != nil {
-		log.Printf("Could not unmarshal command array: %v.", err)
-	}
-	cmd := string(cmdBytes)
-
 	ep := DockerBasedExternalParmaters{
 		Source:       sourceArtifact(db.config),
 		BuilderImage: builderImage(db.config),
-		ConfigFile:   db.config.BuildConfigPath,
-		ArtifactPath: db.buildConfig.ArtifactPath,
-		Command:      cmd,
+		ConfigPath:   db.config.BuildConfigPath,
+		Config:       *db.buildConfig,
 	}
 
 	// Currently we don't have any SystemParameters or ResolvedDependencies.
