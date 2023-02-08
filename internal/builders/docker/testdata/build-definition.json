@@ -1,24 +1,20 @@
 {
     "buildType": "https://slsa.dev/container-based-build/v0.1?draft",
     "externalParameters": {
-        "artifacts": {
-            "source": {
-                "uri": "git+https://github.com/project-oak/transparent-release",
-                "digest": {
-                    "sha1": "9b5f98310dbbad675834474fa68c37d880687cb9"
-                }
-            },
-            "builderImage": {
-                "uri": "bash@sha256:9e2ba52487d945504d250de186cb4fe2e3ba023ed2921dd6ac8b97ed43e76af9",
-                "digest": {
-                    "sha256": "9e2ba52487d945504d250de186cb4fe2e3ba023ed2921dd6ac8b97ed43e76af9"
-                }
+        "source": {
+            "uri": "git+https://github.com/project-oak/transparent-release",
+            "digest": {
+                "sha1": "9b5f98310dbbad675834474fa68c37d880687cb9"
             }
         },
-        "values": {
-            "artifactPath": "config.toml",
-            "command": "[\"cp\",\"internal/builders/docker/testdata/config.toml\",\"config.toml\"]",
-            "configFile": "internal/builders/docker/testdata/config.toml"
-        }
+        "builderImage": {
+            "uri": "bash@sha256:9e2ba52487d945504d250de186cb4fe2e3ba023ed2921dd6ac8b97ed43e76af9",
+            "digest": {
+                "sha256": "9e2ba52487d945504d250de186cb4fe2e3ba023ed2921dd6ac8b97ed43e76af9"
+            }
+        },
+        "artifactPath": "config.toml",
+        "command": "[\"cp\",\"internal/builders/docker/testdata/config.toml\",\"config.toml\"]",
+        "configFile": "internal/builders/docker/testdata/config.toml"
     }
 }

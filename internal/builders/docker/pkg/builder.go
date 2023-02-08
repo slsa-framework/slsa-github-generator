@@ -37,6 +37,7 @@ import (
 	"strings"
 
 	intoto "github.com/in-toto/in-toto-golang/in_toto"
+	slsa1 "github.com/in-toto/in-toto-golang/in_toto/slsa_provenance/v1.0"
 
 	"github.com/slsa-framework/slsa-github-generator/internal/errors"
 )
@@ -101,11 +102,7 @@ func NewBuilderWithGitFetcher(config *DockerBuildConfig) (*Builder, error) {
 
 // CreateBuildDefinition creates a BuildDefinition from the DockerBuildConfig
 // and BuildConfig in this DockerBuild.
-func (db *DockerBuild) CreateBuildDefinition() *BuildDefinition {
-	artifacts := make(map[string]ArtifactReference)
-	artifacts[SourceKey] = sourceArtifact(db.config)
-	artifacts[BuilderImageKey] = builderImage(db.config)
-
+func (db *DockerBuild) CreateBuildDefinition() *slsa1.ProvenanceBuildDefinition {
 	// The input is a simple string array, no errors occur. But we check and
 	// print the error to make the linters happy.
 	cmdBytes, err := json.Marshal(db.buildConfig.Command)
@@ -114,34 +111,33 @@ func (db *DockerBuild) CreateBuildDefinition() *BuildDefinition {
 	}
 	cmd := string(cmdBytes)
 
-	ep := ParameterCollection{
-		Artifacts: artifacts,
-		Values: map[string]string{
-			ConfigFileKey:   db.config.BuildConfigPath,
-			ArtifactPathKey: db.buildConfig.ArtifactPath,
-			CommandKey:      cmd,
-		},
+	ep := DockerBasedExternalParmaters{
+		Source:       sourceArtifact(db.config),
+		BuilderImage: builderImage(db.config),
+		ConfigFile:   db.config.BuildConfigPath,
+		ArtifactPath: db.buildConfig.ArtifactPath,
+		Command:      cmd,
 	}
 
 	// Currently we don't have any SystemParameters or ResolvedDependencies.
 	// So these fields are left empty.
-	return &BuildDefinition{
+	return &slsa1.ProvenanceBuildDefinition{
 		BuildType:          DockerBasedBuildType,
 		ExternalParameters: ep,
 	}
 }
 
 // sourceArtifact returns the source repo and its digest as an instance of ArtifactReference.
-func sourceArtifact(config *DockerBuildConfig) ArtifactReference {
-	return ArtifactReference{
+func sourceArtifact(config *DockerBuildConfig) slsa1.ArtifactReference {
+	return slsa1.ArtifactReference{
 		URI:    config.SourceRepo,
 		Digest: config.SourceDigest.ToMap(),
 	}
 }
 
 // builderImage returns the builder image as an instance of ArtifactReference.
-func builderImage(config *DockerBuildConfig) ArtifactReference {
-	return ArtifactReference{
+func builderImage(config *DockerBuildConfig) slsa1.ArtifactReference {
+	return slsa1.ArtifactReference{
 		URI:    config.BuilderImage.ToString(),
 		Digest: config.BuilderImage.Digest.ToMap(),
 	}
@@ -202,11 +198,15 @@ func runDockerRun(db *DockerBuild) error {
 	}
 
 	buildDef := db.CreateBuildDefinition()
+	dockerEp, ok := buildDef.ExternalParameters.(DockerBasedExternalParmaters)
+	if !ok {
+		return fmt.Errorf("expected docker-based external parameters")
+	}
 
 	var args []string
 	args = append(args, "run")
 	args = append(args, defaultDockerRunFlags...)
-	args = append(args, buildDef.ExternalParameters.Artifacts[BuilderImageKey].URI)
+	args = append(args, dockerEp.BuilderImage.URI)
 	args = append(args, db.buildConfig.Command...)
 	cmd := exec.Command("docker", args...)
 
