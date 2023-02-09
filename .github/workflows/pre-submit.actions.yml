@@ -54,7 +54,7 @@ jobs:
         if: ${{ failure() && steps.diff.conclusion == 'failure' }}
         with:
           name: dist
-          path: dist/
+          path: ${{ matrix.action }}/dist/
 
   # NOTE: needed for protected branch checks.
   check-dist:

@@ -122,7 +122,7 @@ func Test_inspectArtifacts(t *testing.T) {
 
 	s1 := intoto.Subject{
 		Name:   "build-definition.json",
-		Digest: map[string]string{"sha256": "3913a85032595e7fba00f907fe7cd89d96ed4a69e80a8a4ac6246a2e1925a3db"},
+		Digest: map[string]string{"sha256": "1a60da949ad34d060ac2650bc4d7cba287cb7d2ffda4e8f4a65459c77801e2d5"},
 	}
 	s2 := intoto.Subject{
 		Name:   "config.toml",
