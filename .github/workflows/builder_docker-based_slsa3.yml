@@ -352,7 +352,7 @@ jobs:
 
       - name: Create predicate
         id: predicate
-        uses: ./__BUILDER_CHECKOUT_DIR__/.github/actions/create-predicate
+        uses: ./__BUILDER_CHECKOUT_DIR__/.github/actions/create-docker_based-predicate
         with:
           build-definition: "${{ needs.generate-build-definition.outputs.build-definition-name }}"
           binary-sha256: "${{ needs.generate-builder.outputs.builder-binary-sha256 }}"
