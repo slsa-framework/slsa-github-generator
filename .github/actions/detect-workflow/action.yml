@@ -22,7 +22,7 @@ outputs:
     description: The current workflow reference
     value: ${{ steps.detect.outputs.ref }}
   workflow:
-    description: The full current job workflow
+    description: The fully qualified current job workflow ref, for example "https://github.com/org/repo/path/to/workflow@refs/heads/main"
     value: ${{ steps.detect.outputs.workflow }}
 runs:
   using: "docker"
