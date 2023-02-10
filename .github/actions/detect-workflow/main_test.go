@@ -127,7 +127,7 @@ func Test_action_getRepoRef(t *testing.T) {
 			},
 		}
 
-		repo, ref, err := a.getRepoRef(context.Background())
+		repo, workflow, ref, err := a.getRepoRef(context.Background())
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
@@ -135,6 +135,9 @@ func Test_action_getRepoRef(t *testing.T) {
 			t.Errorf("unexpected repository, want: %q, got: %q", want, got)
 		}
 		if want, got := "refs/heads/main", ref; want != got {
+			t.Errorf("unexpected ref, want: %q, got: %q", want, got)
+		}
+		if want, got := "path/to/workflow", workflow; want != got {
 			t.Errorf("unexpected ref, want: %q, got: %q", want, got)
 		}
 	})
@@ -167,7 +170,7 @@ func Test_action_getRepoRef(t *testing.T) {
 			},
 		}
 
-		repo, ref, err := a.getRepoRef(context.Background())
+		repo, workflow, ref, err := a.getRepoRef(context.Background())
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
@@ -176,6 +179,9 @@ func Test_action_getRepoRef(t *testing.T) {
 		}
 		if want, got := "123", ref; want != got {
 			t.Errorf("unexpected ref, want: %q, got: %q", want, got)
+		}
+		if want, got := "", workflow; want != got {
+			t.Errorf("unexpected workflow, want: %q, got: %q", want, got)
 		}
 	})
 }

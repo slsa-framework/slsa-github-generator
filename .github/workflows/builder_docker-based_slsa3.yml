@@ -350,17 +350,15 @@ jobs:
       #                1. Create the predicate                          #
       ###################################################################
 
-      # - name: Create predicate
-      #   id: predicate
-      #   uses: ./__BUILDER_CHECKOUT_DIR__/internal/builders/docker-based/docker-based-predicate
-      #   with:
-      #     build-definition: "${{ needs.generate-build-definition.outputs.build-definition-name }}"
-      #     builder-repository: "${{ needs.detect-env.outputs.repository }}"
-      #     builder-ref: "${{ needs.detect-env.outputs.ref }}"
-      #     binary-sha256: "${{ needs.generate-builder.outputs.builder-binary-sha256 }}"
-      #     binary-name: "internal/builders/docker-based/cmd/build"
-      #     binary-repository: "${{ needs.detect-env.outputs.repository }}"
-      #     binary-ref: "${{ needs.detect-env.outputs.ref }}"
+      - name: Create predicate
+        id: predicate
+        uses: ./__BUILDER_CHECKOUT_DIR__/internal/builders/docker/actions/create-predicate
+        with:
+          build-definition: "${{ needs.generate-build-definition.outputs.build-definition-name }}"
+          binary-sha256: "${{ needs.generate-builder.outputs.builder-binary-sha256 }}"
+          binary-uri: "git+https://github.com/${{ needs.detect-env.outputs.repository }}@refs/heads/${{ needs.detect-env.outputs.ref }}"
+          builder-id: "https://github.com/${{ needs.detect-env.outputs.repository }}/${{ needs.detect-env.outputs.workflow }}@refs/heads/${{ needs.detect-env.outputs.ref }}"
+          output-file: "predicate-${{ needs.rng.outputs.value }}"
 
       ###################################################################
       #                Generate the intoto attestations                 #
@@ -378,7 +376,8 @@ jobs:
         uses: ./__BUILDER_CHECKOUT_DIR__/.github/actions/generate-attestations
         with:
           slsa-layout-file: "${{ needs.build.outputs.slsa-outputs-name }}"
-          predicate-file: "${{ needs.generate-build-definition.outputs.build-definition-name }}"
+          predicate-file: "predicate-${{ needs.rng.outputs.value }}"
+          predicate-type: "https://slsa.dev/provenance/v1.0?draft"
           output-folder: "attestations-${{ needs.rng.outputs.value }}"
 
       - name: Upload unsigned intoto attestations file for pull request
