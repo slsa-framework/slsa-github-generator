@@ -1,5 +1,5 @@
-name: "Create SLSA predicate"
-description: "Creates a SLSA predicate given a BuildDefinition."
+name: "Create docker-based SLSA predicate"
+description: "Creates a docker-based SLSA predicate given a BuildDefinition."
 inputs:
   build-definition:
     description: 'A JSON file describing the SLSA BuildDefinition'

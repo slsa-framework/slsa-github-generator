@@ -1,5 +1,5 @@
 {
-  "name": "create-predicate",
+  "name": "create-docker_based-predicate",
   "version": "0.0.0",
   "private": true,
   "description": "GitHub action to create a SLSA predicate given a build definition.",
