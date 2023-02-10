@@ -158,6 +158,7 @@ func main() {
 	// Log to help troubleshooting.
 	fmt.Printf("repository:%s\n", repository)
 	fmt.Printf("ref:%s\n", ref)
+	fmt.Printf("workflow:%s\n", workflow)
 
 	// Output of the Action.
 	github.SetOutput("repository", repository)

@@ -63,9 +63,11 @@ jobs:
     env:
       REPO: "${{ steps.detect-workflow.outputs.repository }}"
       REF: "${{ steps.detect-workflow.outputs.ref }}"
+      WORKFLOW: "${{ steps.detect-workflow.outputs.workflow }}"
     run: |
       echo $REPO
       echo $REF
+      echo $WORKFLOW
 ```
 
 In the example above, `REPO` and `REF` will be equal to the repository and ref
@@ -73,7 +75,8 @@ from the user workflow's call to the reusable workflow.
 
 ## Outputs
 
-| Name         | Description                                                           |
-| ------------ | --------------------------------------------------------------------- |
-| `repository` | The repository of the reusable workflow (`{owner}/{repository name}`) |
-| `ref`        | The ref (branch, tag, or commit SHA) specified by the user.           |
+| Name         | Description                                                                    |
+| ------------ | ------------------------------------------------------------------------------ |
+| `repository` | The repository of the reusable workflow (`{owner}/{repository name}`)          |
+| `ref`        | The ref (branch, tag, or commit SHA) specified by the user.                    |
+| `workflow`   | The workflow path, relative to the `repository` (`.github/workflows/test.yml`) |
