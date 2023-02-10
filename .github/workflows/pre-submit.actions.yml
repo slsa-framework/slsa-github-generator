@@ -24,6 +24,7 @@ jobs:
           - .github/actions/privacy-check
           - .github/actions/generate-attestations
           - .github/actions/sign-attestations
+          - .github/actions/create-docker_based-predicate
           - ./actions/delegator/setup-token
           - .github/actions/verify-token
     steps:
