@@ -320,6 +320,12 @@ function createPredicate(rawTokenObj, toolURI, currentRun) {
     var _a;
     const { env } = process;
     const callerRepo = createURI(env.GITHUB_REPOSITORY || "", env.GITHUB_REF || "");
+    const sourceRef = {
+        uri: callerRepo,
+        digest: {
+            sha1: env.GITHUB_SHA || "",
+        },
+    };
     const payload = github.context;
     const predicate = {
         buildDefinition: {
@@ -329,14 +335,7 @@ function createPredicate(rawTokenObj, toolURI, currentRun) {
                 workflowPath: currentRun.path,
                 // We only use source here because the source contained the source
                 // repository and the build configuration.
-                source: {
-                    artifact: {
-                        uri: callerRepo,
-                        digest: {
-                            sha1: env.GITHUB_SHA || "",
-                        },
-                    },
-                },
+                source: sourceRef,
             },
             systemParameters: {
                 GITHUB_EVENT_NAME: payload.eventName,

@@ -130,6 +130,13 @@ export function createPredicate(
     env.GITHUB_REF || ""
   );
 
+  const sourceRef: ArtifactReference = {
+    uri: callerRepo,
+    digest: {
+      sha1: env.GITHUB_SHA || "",
+    },
+  };
+
   const payload = github.context;
   const predicate: SLSAv1Predicate = {
     buildDefinition: {
@@ -139,14 +146,7 @@ export function createPredicate(
         workflowPath: currentRun.path,
         // We only use source here because the source contained the source
         // repository and the build configuration.
-        source: {
-          artifact: {
-            uri: callerRepo,
-            digest: {
-              sha1: env.GITHUB_SHA || "",
-            },
-          },
-        },
+        source: sourceRef,
       },
       systemParameters: {
         GITHUB_EVENT_NAME: payload.eventName,
