@@ -8,7 +8,7 @@ require (
 	github.com/go-openapi/swag v0.22.3
 	github.com/google/go-cmp v0.5.9
 	github.com/google/go-github/v50 v50.0.0
-	github.com/in-toto/in-toto-golang v0.6.1-0.20230210144241-46b7827f7c66
+	github.com/in-toto/in-toto-golang 82bb771212f4
 	github.com/pelletier/go-toml v1.9.5
 	github.com/secure-systems-lab/go-securesystemslib v0.4.0
 	github.com/sigstore/cosign v1.13.1
