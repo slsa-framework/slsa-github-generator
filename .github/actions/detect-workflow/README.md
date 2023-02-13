@@ -70,8 +70,9 @@ jobs:
       echo $WORKFLOW
 ```
 
-In the example above, `REPO` and `REF` will be equal to the repository and ref
-from the user workflow's call to the reusable workflow.
+In the example above, `REPO`, `WORKFLOW` and `REF` will be equal to the
+repository, workflow path, and ref from the user workflow's call to the
+reusable workflow.
 
 ## Outputs
 
