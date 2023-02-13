@@ -1,7 +1,7 @@
 name: schedule create-docker_based-predicate
 
 # This workflow requires `id-token: write` permissions to determine the
-# builder identity. 
+# builder identity.
 
 on:
   # Daily run.
