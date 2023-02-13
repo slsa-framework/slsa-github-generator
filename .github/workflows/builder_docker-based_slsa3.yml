@@ -102,6 +102,7 @@ jobs:
     outputs:
       repository: ${{ steps.detect.outputs.repository }}
       ref: ${{ steps.detect.outputs.ref }}
+      workflow: ${{ steps.detect.outputs.workflow }}
     runs-on: ubuntu-latest
     permissions:
       id-token: write # Needed to detect the current reusable repository and ref.
