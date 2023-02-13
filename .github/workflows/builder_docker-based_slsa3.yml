@@ -357,8 +357,8 @@ jobs:
         with:
           build-definition: "${{ needs.generate-build-definition.outputs.build-definition-name }}"
           binary-sha256: "${{ needs.generate-builder.outputs.builder-binary-sha256 }}"
-          binary-uri: "git+https://github.com/${{ needs.detect-env.outputs.repository }}@refs/heads/${{ needs.detect-env.outputs.ref }}"
-          builder-id: "https://github.com/${{ needs.detect-env.outputs.repository }}/${{ needs.detect-env.outputs.workflow }}@refs/heads/${{ needs.detect-env.outputs.ref }}"
+          binary-uri: "git+https://github.com/${{ needs.detect-env.outputs.repository }}@${{ needs.detect-env.outputs.ref }}"
+          builder-id: "https://github.com/${{ needs.detect-env.outputs.repository }}/${{ needs.detect-env.outputs.workflow }}@${{ needs.detect-env.outputs.ref }}"
           output-file: "predicate-${{ needs.rng.outputs.value }}"
 
       ###################################################################
