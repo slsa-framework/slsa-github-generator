@@ -10,13 +10,13 @@
     },
     {
       "matchManagers": ["dockerfile"],
-      "includePackageNames": ["golang"],
+      "matchPackageNames": ["golang"],
       "matchUpdateTypes": ["minor", "patch"],
       "groupName": "golang"
     },
     {
       "matchManagers": ["gomod"],
-      "includePackageNames": ["go"],
+      "matchPackageNames": ["go"],
       "matchUpdateTypes": ["minor", "patch"],
       "groupName": "golang"
     },
