@@ -10,14 +10,20 @@
     },
     {
       "matchManagers": ["dockerfile"],
-      "excludePackageNames": ["golang"],
-      "matchUpdateTypes": ["patch"],
-      "groupName": "go"
+      "includePackageNames": ["golang"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "golang"
+    },
+    {
+      "matchManagers": ["gomod"],
+      "includePackageNames": ["go"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "golang"
     },
     {
       "matchManagers": ["gomod"],
       "excludePackageNames": ["go"],
-      "matchUpdateTypes": ["patch"],
+      "matchUpdateTypes": ["minor", "patch"],
       "groupName": "go"
     },
     {
