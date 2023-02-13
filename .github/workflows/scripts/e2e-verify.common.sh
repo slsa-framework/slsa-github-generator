@@ -69,7 +69,7 @@ e2e_verify_common_all_v1() {
 e2e_verify_common_buildDefinition_v1() {
     # This does not include buildType since it is not common to all.
     e2e_verify_predicate_v1_buildDefinition_externalParameters_workflowPath "$1" "$(e2e_this_file_full_path)"
-    e2e_verify_predicate_v1_buildDefinition_externalParameters_source "$1" "{\"artifact\":{\"uri\":\"git+https://github.com/$GITHUB_REPOSITORY@$GITHUB_REF\",\"digest\":{\"sha1\":\"$GITHUB_SHA\"}}}"
+    e2e_verify_predicate_v1_buildDefinition_externalParameters_source "$1" "{\"uri\":\"git+https://github.com/$GITHUB_REPOSITORY@$GITHUB_REF\",\"digest\":{\"sha1\":\"$GITHUB_SHA\"}}"
     e2e_verify_predicate_v1_buildDefinition_systemParameters "$1" "GITHUB_EVENT_NAME" "$GITHUB_EVENT_NAME"
     e2e_verify_predicate_v1_buildDefinition_systemParameters "$1" "GITHUB_JOB" "$GITHUB_JOB"
     e2e_verify_predicate_v1_buildDefinition_systemParameters "$1" "GITHUB_REF" "$GITHUB_REF"
