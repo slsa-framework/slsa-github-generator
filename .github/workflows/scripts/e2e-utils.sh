@@ -92,6 +92,10 @@ e2e_verify_predicate_v1_buildDefinition_buildType() {
     _e2e_verify_query "$1" "$2" '.buildDefinition.buildType'
 }
 
+e2e_verify_predicate_v1_buildDefinition_resolvedDependencies() {
+    _e2e_verify_query "$1" "$2" '.buildDefinition.resolvedDependencies'
+}
+
 e2e_verify_predicate_v1_buildDefinition_systemParameters() {
     _e2e_verify_query "$1" "$3" '.buildDefinition.systemParameters.'"$2"
 }
