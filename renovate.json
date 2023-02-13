@@ -9,6 +9,12 @@
       "groupName": "github-actions"
     },
     {
+      "matchManagers": ["dockerfile"],
+      "excludePackageNames": ["golang"],
+      "matchUpdateTypes": ["patch"],
+      "groupName": "go"
+    },
+    {
       "matchManagers": ["gomod"],
       "excludePackageNames": ["go"],
       "matchUpdateTypes": ["patch"],
