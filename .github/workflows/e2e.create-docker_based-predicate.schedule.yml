@@ -40,3 +40,32 @@ jobs:
       - run: ./.github/workflows/scripts/schedule.actions/verify-docker_based-predicate.sh
         env:
           PREDICATE: predicate.json
+
+  if-succeed:
+    needs: [sign-attestations]
+    runs-on: ubuntu-latest
+    # We use `== 'failure'` instead of ` != 'success'` because we want to ignore skipped jobs, if there are any.
+    if: github.event_name != 'workflow_dispatch' && needs.sign-attestations.result != 'failure'
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # v3.3.0
+        with:
+          repository: slsa-framework/example-package
+          ref: main
+      - run: ./.github/workflows/scripts/e2e-report-success.sh
+
+  if-failed:
+    needs: [sign-attestations]
+    runs-on: ubuntu-latest
+    if: always() && github.event_name != 'workflow_dispatch' && needs.sign-attestations.result == 'failure'
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # v3.3.0
+        with:
+          repository: slsa-framework/example-package
+          ref: main
+      - run: ./.github/workflows/scripts/e2e-report-failure.sh
