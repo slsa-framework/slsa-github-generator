@@ -1,0 +1,42 @@
+name: schedule create-docker_based-predicate
+
+# This workflow requires `id-token: write` permissions to determine the
+# builder identity. 
+
+on:
+  # Daily run.
+  schedule:
+    - cron: "0 4 * * *"
+  workflow_dispatch:
+
+permissions: read-all
+
+env:
+  GH_TOKEN: ${{ github.token }}
+  ISSUE_REPOSITORY: ${{ github.repository }}
+
+jobs:
+  predicate:
+    outputs:
+      repository: ${{ steps.detect.outputs.repository }}
+      ref: ${{ steps.detect.outputs.ref }}
+      workflow: ${{ steps.detect.outputs.workflow }}
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write # Needed to detect the current reusable repository and ref.
+    steps:
+      - name: Detect the builder ref
+        id: detect
+        uses: slsa-framework/slsa-github-generator/.github/actions/detect-workflow@main
+      - name: Create predicate
+        id: predicate
+        uses: ./.github/actions/create-docker_based-predicate
+        with:
+          build-definition: "internal/builders/docker/testdata/build-definition.json"
+          binary-sha256: "46b3ce0fbb2998880c5518225b41ddf49fc0850b9b9a25e1ac944bc587c03ea7"
+          binary-uri: "git+https://github.com/${{ needs.detect-env.outputs.repository }}@${{ needs.detect-env.outputs.ref }}"
+          builder-id: "https://github.com/${{ needs.detect-env.outputs.repository }}/${{ needs.detect-env.outputs.workflow }}@${{ needs.detect-env.outputs.ref }}"
+          output-file: "predicate.json"
+      - run: ./.github/workflows/scripts/schedule.actions/verify-docker_based-predicate.sh
+        env:
+          PREDICATE: predicate.json
