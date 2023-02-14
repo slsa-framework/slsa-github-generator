@@ -1,8 +1,8 @@
 {
   "name": "sign-attestations",
   "version": "0.0.1",
-  "description": "",
-  "main": "src/main.ts",
+  "description": "Signs in-toto attestations with Sigstore signing",
+  "main": "lib/main.js",
   "scripts": {
     "ci": "npm ci",
     "build": "tsc",
