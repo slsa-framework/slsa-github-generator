@@ -327,7 +327,8 @@ func (c *GitClient) verifyOrFetchRepo() error {
 func (c *GitClient) verifyRefAndCommit() (bool, error) {
 	checkCmds := []*exec.Cmd{exec.Command("git", "rev-parse", "--verify", "HEAD")}
 	if c.sourceRef != nil {
-		checkCmds = append(checkCmds, exec.Command("git", "show-ref", "--hash", "--verify", *c.sourceRef))
+		sourceRef := *c.sourceRef
+		checkCmds = append(checkCmds, exec.Command("git", "show-ref", "--hash", "--verify", sourceRef))
 	}
 
 	for _, cmd := range checkCmds {
