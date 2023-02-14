@@ -86,8 +86,9 @@ We ask that all suspected vulnerabilities be privately and responsibly
 disclosed via the [private disclosure process](#reporting-a-vulnerability)
 outlined above.
 
-Fixes may be developed and tested by the [Security Team](#security-team) in
-private repositories if deemed necessary.
+Fixes may be developed and tested by the [Security Team](#security-team) in a
+[temporary private fork](https://docs.github.com/en/code-security/security-advisories/repository-security-advisories/collaborating-in-a-temporary-private-fork-to-resolve-a-repository-security-vulnerability)
+that are private from the general public if deemed necessary.
 
 ### Public Disclosure
 
