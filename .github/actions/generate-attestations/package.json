@@ -15,8 +15,7 @@
   },
   "dependencies": {
     "@actions/core": "^1.10.0",
-    "@actions/github": "^5.1.1",
-    "sigstore": "^1.0.0"
+    "@actions/github": "^5.1.1"
   },
   "keywords": [],
   "author": "",
