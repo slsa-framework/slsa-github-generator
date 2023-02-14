@@ -232,6 +232,7 @@ func runDockerRun(db *DockerBuild) error {
 // Git repository.
 type GitClient struct {
 	sourceRepo    *string
+	sourceRef     *string
 	sourceDigest  *Digest
 	checkoutInfo  *RepoCheckoutInfo
 	logFiles      []string
@@ -258,8 +259,23 @@ func newGitClient(config *DockerBuildConfig, depth int) (*GitClient, error) {
 		return nil, fmt.Errorf("unsupported scheme: %v", parsed.Scheme)
 	}
 
+	// Retrieve the ref if a tag is added to the repository.
+	var sourceRef *string
+	refParts := strings.Split(repo, "@")
+	switch len(refParts) {
+	case 2:
+		// A source reference was provided.
+		sourceRef = &refParts[1]
+		repo = strings.TrimSuffix(repo, "@"+refParts[1])
+	case 1:
+		// No source reference was provided.
+	default:
+		return nil, fmt.Errorf("invalid source repository format: %s", repo)
+	}
+
 	return &GitClient{
 		sourceRepo:    &repo,
+		sourceRef:     sourceRef,
 		sourceDigest:  &config.SourceDigest,
 		forceCheckout: config.ForceCheckout,
 		depth:         depth,
@@ -291,7 +307,7 @@ func (c *GitClient) verifyOrFetchRepo() error {
 	if c.sourceDigest.Alg != "sha1" {
 		return fmt.Errorf("git commit digest must be a sha1 digest")
 	}
-	repoIsCheckedOut, err := c.verifyCommit()
+	repoIsCheckedOut, err := c.verifyRefAndCommit()
 	if err != nil && !c.forceCheckout {
 		return err
 	}
@@ -303,21 +319,30 @@ func (c *GitClient) verifyOrFetchRepo() error {
 	return nil
 }
 
-// verifyCommit checks that the current working directory is the root of a Git
-// repository at the given commit hash. Returns an error if the working
-// directory is a Git repository at a different commit.
-func (c *GitClient) verifyCommit() (bool, error) {
-	cmd := exec.Command("git", "rev-parse", "--verify", "HEAD")
-	lastCommitIDBytes, err := cmd.Output()
-	if err != nil {
-		// The current working directory is not a git repo.
-		return false, nil
+// verifyRefAndCommit checks that the current working directory is the root of a Git
+// repository at the given commit hash. If a source ref is also specified, verifies
+// that the ref resolves to the given commit hash.
+// Returns an error if the working directory is a Git repository at a different commit
+// or ref.
+func (c *GitClient) verifyRefAndCommit() (bool, error) {
+	checkCmds := []*exec.Cmd{exec.Command("git", "rev-parse", "--verify", "HEAD")}
+	if c.sourceRef != nil {
+		sourceRef := *c.sourceRef
+		checkCmds = append(checkCmds, exec.Command("git", "show-ref", "--hash", "--verify", sourceRef))
 	}
-	lastCommitID := strings.TrimSpace(string(lastCommitIDBytes))
 
-	if lastCommitID != c.sourceDigest.Value {
-		return false, errors.Errorf(&errGitCommitMismatch{},
-			"the repo is already checked out at a different commit (%q)", lastCommitID)
+	for _, cmd := range checkCmds {
+		lastCommitIDBytes, err := cmd.Output()
+		if err != nil {
+			// The current working directory is not a git repo.
+			return false, nil
+		}
+		lastCommitID := strings.TrimSpace(string(lastCommitIDBytes))
+
+		if lastCommitID != c.sourceDigest.Value {
+			return false, errors.Errorf(&errGitCommitMismatch{},
+				"the repo is already checked out at a different commit (%q)", lastCommitID)
+		}
 	}
 
 	return true, nil
@@ -439,6 +464,11 @@ func (c *GitClient) checkoutGitCommit() error {
 	if err := cmd.Wait(); err != nil {
 		return fmt.Errorf("failed to complete the command: %v; see %q for logs, and %q for errors",
 			err, files[0], files[1])
+	}
+
+	ok, err := c.verifyRefAndCommit()
+	if err != nil || !ok {
+		return fmt.Errorf("failed to verify ref and commit: %v", err)
 	}
 
 	return nil
