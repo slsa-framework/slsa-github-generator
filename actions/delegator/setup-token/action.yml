@@ -1,6 +1,6 @@
 name: setup token
 
-description: "setup token"
+description: "Create a SLSA token for the delegated workflow"
 
 inputs:
   slsa-workflow-recipient:

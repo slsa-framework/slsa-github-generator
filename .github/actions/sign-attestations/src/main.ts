@@ -1,12 +1,11 @@
 import * as core from "@actions/core";
 import * as fs from "fs";
-import * as sigstore from "sigstore";
+import { sigstore } from "sigstore";
 import * as path from "path";
 
 const signOptions = {
   oidcClientID: "sigstore",
   oidcIssuer: "https://oauth2.sigstore.dev/auth",
-  rekorBaseURL: sigstore.sigstore.DEFAULT_REKOR_BASE_URL,
 };
 
 // Detect directory traversal for input file.
@@ -49,11 +48,7 @@ async function run(): Promise<void> {
       if (stat.isFile()) {
         core.debug(`Signing ${fpath}...`);
         const buffer = fs.readFileSync(fpath);
-        const bundle = await sigstore.sigstore.signAttestation(
-          buffer,
-          payloadType,
-          signOptions
-        );
+        const bundle = await sigstore.attest(buffer, payloadType, signOptions);
         const bundleStr = JSON.stringify(bundle);
         // We detect path traversal for safeOutputFolder, so this should be safe.
         const outputPath = path.join(
