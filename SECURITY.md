@@ -29,9 +29,8 @@ The following versions are currently supported and receive security updates.
 
 | Version | Supported          |
 | ------- | ------------------ |
-| 1.2.x   | :white_check_mark: |
-| 1.1.x   | :x:                |
-| 0.0.x   | :x:                |
+| 1.4.x   | :white_check_mark: |
+| <=1.2.x | :x:                |
 
 ## Reporting a Vulnerability
 
