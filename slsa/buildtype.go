@@ -53,9 +53,9 @@ type BuildType interface {
 
 // GithubActionsBuild is a basic build type for builders running in GitHub Actions.
 type GithubActionsBuild struct {
-	subject []intoto.Subject
 	Context github.WorkflowContext
 	Clients ClientProvider
+	subject []intoto.Subject
 }
 
 // WorkflowParameters contains parameters given to the workflow invocation.
@@ -66,10 +66,10 @@ type WorkflowParameters struct {
 
 // NewGithubActionsBuild returns a new GithubActionsBuild that uses the
 // GitHub context to generate information.
-func NewGithubActionsBuild(s []intoto.Subject, c github.WorkflowContext) *GithubActionsBuild {
+func NewGithubActionsBuild(s []intoto.Subject, c *github.WorkflowContext) *GithubActionsBuild {
 	return &GithubActionsBuild{
 		subject: s,
-		Context: c,
+		Context: *c,
 		Clients: &DefaultClientProvider{},
 	}
 }
@@ -85,7 +85,7 @@ func (b *GithubActionsBuild) BuildConfig(context.Context) (interface{}, error) {
 	return nil, nil
 }
 
-func addEnvKeyString(m map[string]interface{}, k string, v string) {
+func addEnvKeyString(m map[string]interface{}, k, v string) {
 	// Always record the value, even if it's empty. Let
 	// the consumer/verifier decide how to interpret their meaning.
 	m[k] = v

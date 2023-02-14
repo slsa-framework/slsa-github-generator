@@ -1,0 +1,90 @@
+name: schedule verify-token
+
+on:
+  # Daily run.
+  schedule:
+    - cron: "0 4 * * *"
+  workflow_dispatch:
+
+permissions: read-all
+
+env:
+  GH_TOKEN: ${{ github.token }}
+  ISSUE_REPOSITORY: ${{ github.repository }}
+
+jobs:
+  verify-token:
+    permissions:
+      contents: read
+      id-token: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # v3.3.0
+      - id: setup
+        uses: ./actions/delegator/setup-token
+        with:
+          slsa-workflow-recipient: "delegator_generic_slsa3.yml"
+          slsa-rekor-log-public: true
+          slsa-runner-label: "ubuntu-latest"
+          slsa-build-action-path: "./actions/build-artifacts-composite"
+          slsa-workflow-inputs: '{"name1":"value1","name2":"value2","private-repository":true}'
+      - id: verify
+        uses: ./.github/actions/verify-token
+        with:
+          slsa-unverified-token: ${{ steps.setup.outputs.slsa-token }}
+          slsa-workflow-recipient: "delegator_generic_slsa3.yml"
+          output-predicate: predicate.json
+      - run: ./.github/workflows/scripts/schedule.actions/verify-token.sh
+        env:
+          VERIFIED_TOKEN: ${{ steps.verify.outputs.slsa-verified-token }}
+          TOOL_REPOSITORY: ${{ steps.verify.outputs.tool-repository }}
+          TOOL_REF: ${{ steps.verify.outputs.tool-ref }}
+          PREDICATE: predicate.json
+      - id: verify-mismatch-recipient
+        uses: ./.github/actions/verify-token
+        continue-on-error: true
+        with:
+          slsa-unverified-token: ${{ steps.verify.outputs.slsa-verified-token }}
+          slsa-workflow-recipient: "elegator_generic_slsa3.yml"
+          output-predicate: mismatch-recipient-predicate.json
+      - id: verify-mismatch-token
+        uses: ./.github/actions/verify-token
+        continue-on-error: true
+        with:
+          slsa-unverified-token: aGVsbG8K
+          slsa-workflow-recipient: "delegator_generic_slsa3.yml"
+          output-predicate: mismatch-token-predicate.json
+      - env:
+          SUCCESS: ${{ steps.verify-mismatch-recipient.outcome == 'failure' && steps.verify-mismatch-token.outcome == 'failure' }}
+        run: |
+          [ "$SUCCESS" == "true" ]
+      # TODO(1419): Add more tests that manipulate the token.
+
+  if-succeed:
+    needs: [verify-token]
+    runs-on: ubuntu-latest
+    # We use `== 'failure'` instead of ` != 'success'` because we want to ignore skipped jobs, if there are any.
+    if: github.event_name != 'workflow_dispatch' && needs.verify-token.result != 'failure'
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # v3.3.0
+        with:
+          repository: slsa-framework/example-package
+          ref: main
+      - run: ./.github/workflows/scripts/e2e-report-success.sh
+
+  if-failed:
+    needs: [verify-token]
+    runs-on: ubuntu-latest
+    if: always() && github.event_name != 'workflow_dispatch' && needs.verify-token.result == 'failure'
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # v3.3.0
+        with:
+          repository: slsa-framework/example-package
+          ref: main
+      - run: ./.github/workflows/scripts/e2e-report-failure.sh

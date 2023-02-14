@@ -34,7 +34,9 @@ import (
 )
 
 // attestCmd returns the 'attest' command.
-func attestCmd(provider slsa.ClientProvider, check func(error), signer signing.Signer, tlog signing.TransparencyLog) *cobra.Command {
+func attestCmd(provider slsa.ClientProvider, check func(error),
+	signer signing.Signer, tlog signing.TransparencyLog,
+) *cobra.Command {
 	var attPath string
 	var subjects string
 
@@ -75,26 +77,22 @@ run in the context of a Github Actions workflow.`,
 			ctx := context.Background()
 
 			b := common.GenericBuild{
-				GithubActionsBuild: slsa.NewGithubActionsBuild(parsedSubjects, ghContext),
+				GithubActionsBuild: slsa.NewGithubActionsBuild(parsedSubjects, &ghContext),
 				BuildTypeURI:       provenanceOnlyBuildType,
 			}
 			if provider != nil {
 				b.WithClients(provider)
-			} else {
+			} else if utils.IsPresubmitTests() {
 				// TODO(github.com/slsa-framework/slsa-github-generator/issues/124): Remove
-				if utils.IsPresubmitTests() {
-					b.WithClients(&slsa.NilClientProvider{})
-				}
+				b.WithClients(&slsa.NilClientProvider{})
 			}
 
 			g := slsa.NewHostedActionsGenerator(&b)
 			if provider != nil {
 				g.WithClients(provider)
-			} else {
+			} else if utils.IsPresubmitTests() {
 				// TODO(github.com/slsa-framework/slsa-github-generator/issues/124): Remove
-				if utils.IsPresubmitTests() {
-					g.WithClients(&slsa.NilClientProvider{})
-				}
+				g.WithClients(&slsa.NilClientProvider{})
 			}
 
 			p, err := g.Generate(ctx)
@@ -125,13 +123,19 @@ run in the context of a Github Actions workflow.`,
 			check(err)
 
 			// Print the provenance name and sha256 so it can be used by the workflow.
-			github.SetOutput("provenance-name", attPath)
-			github.SetOutput("provenance-sha256", fmt.Sprintf("%x", sha256.Sum256(attBytes)))
+			check(github.SetOutput("provenance-name", attPath))
+			check(github.SetOutput("provenance-sha256", fmt.Sprintf("%x", sha256.Sum256(attBytes))))
 		},
 	}
 
-	c.Flags().StringVarP(&attPath, "signature", "g", "", "Path to write the signed provenance.")
-	c.Flags().StringVarP(&subjects, "subjects", "s", "", "Formatted list of subjects in the same format as sha256sum (base64 encoded).")
+	c.Flags().StringVarP(
+		&attPath, "signature", "g", "",
+		"Path to write the signed provenance.",
+	)
+	c.Flags().StringVarP(
+		&subjects, "subjects", "s", "",
+		"Formatted list of subjects in the same format as sha256sum (base64 encoded).",
+	)
 
 	return c
 }

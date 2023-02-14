@@ -15,6 +15,7 @@
 package pkg
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -23,6 +24,41 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 )
+
+func errEnvVariableNameEmptyFunc(t *testing.T, got error) {
+	want := &errEnvVariableNameEmpty{}
+	if !errors.As(got, &want) {
+		t.Fatalf("unexpected error: %v", cmp.Diff(got, want, cmpopts.EquateErrors()))
+	}
+}
+
+func errUnsupportedArgumentsFunc(t *testing.T, got error) {
+	want := &errUnsupportedArguments{}
+	if !errors.As(got, &want) {
+		t.Fatalf("unexpected error: %v", cmp.Diff(got, want, cmpopts.EquateErrors()))
+	}
+}
+
+func errInvalidEnvArgumentFunc(t *testing.T, got error) {
+	want := &errInvalidEnvArgument{}
+	if !errors.As(got, &want) {
+		t.Fatalf("unexpected error: %v", cmp.Diff(got, want, cmpopts.EquateErrors()))
+	}
+}
+
+func errEnvVariableNameNotAllowedFunc(t *testing.T, got error) {
+	want := &errEnvVariableNameNotAllowed{}
+	if !errors.As(got, &want) {
+		t.Fatalf("unexpected error: %v", cmp.Diff(got, want, cmpopts.EquateErrors()))
+	}
+}
+
+func errInvalidFilenameFunc(t *testing.T, got error) {
+	want := &errInvalidFilename{}
+	if !errors.As(got, &want) {
+		t.Fatalf("unexpected error: %v", cmp.Diff(got, want, cmpopts.EquateErrors()))
+	}
+}
 
 func Test_isAllowedEnvVariable(t *testing.T) {
 	t.Parallel()
@@ -70,19 +106,19 @@ func Test_getOutputBinaryPath(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
-		name     string
-		path     string
-		expected error
+		err  func(*testing.T, error)
+		name string
+		path string
 	}{
 		{
-			name:     "empty output",
-			path:     "",
-			expected: errorInvalidFilename,
+			name: "empty output",
+			path: "",
+			err:  errInvalidFilenameFunc,
 		},
 		{
-			name:     "not absolute",
-			path:     "./some/path/to/binary",
-			expected: errorInvalidFilename,
+			name: "not absolute",
+			path: "./some/path/to/binary",
+			err:  errInvalidFilenameFunc,
 		},
 		{
 			name: "absolute path",
@@ -95,8 +131,8 @@ func Test_getOutputBinaryPath(t *testing.T) {
 			t.Parallel()
 
 			r, err := getOutputBinaryPath(tt.path)
-			if !errCmp(err, tt.expected) {
-				t.Errorf(cmp.Diff(err, tt.expected))
+			if tt.err != nil {
+				tt.err(t, err)
 			}
 
 			if err != nil {
@@ -104,7 +140,7 @@ func Test_getOutputBinaryPath(t *testing.T) {
 			}
 
 			if !cmp.Equal(r, tt.path) {
-				t.Errorf(cmp.Diff(r, tt.expected))
+				t.Errorf(cmp.Diff(r, tt.path))
 			}
 		})
 	}
@@ -113,48 +149,28 @@ func Test_getOutputBinaryPath(t *testing.T) {
 func Test_isAllowedArg(t *testing.T) {
 	t.Parallel()
 
-	var tests []struct {
+	type test struct {
 		name     string
 		argument string
 		expected bool
 	}
 
+	var tests []test
+
 	for k := range allowedBuildArgs {
-		tests = append(tests, struct {
-			name     string
-			argument string
-			expected bool
-		}{
+		tests = append(tests, test{
 			name:     fmt.Sprintf("%s argument", k),
 			argument: k,
 			expected: true,
-		})
-
-		tests = append(tests, struct {
-			name     string
-			argument string
-			expected bool
-		}{
+		}, test{
 			name:     fmt.Sprintf("%sbla argument", k),
 			argument: fmt.Sprintf("%sbla", k),
 			expected: true,
-		})
-
-		tests = append(tests, struct {
-			name     string
-			argument string
-			expected bool
-		}{
+		}, test{
 			name:     fmt.Sprintf("bla %s argument", k),
 			argument: fmt.Sprintf("bla%s", k),
 			expected: false,
-		})
-
-		tests = append(tests, struct {
-			name     string
-			argument string
-			expected bool
-		}{
+		}, test{
 			name:     fmt.Sprintf("space %s argument", k),
 			argument: fmt.Sprintf(" %s", k),
 			expected: false,
@@ -185,7 +201,7 @@ func Test_generateOutputFilename(t *testing.T) {
 		envs     map[string]string
 		argEnv   string
 		expected struct {
-			err error
+			err func(*testing.T, error)
 			fn  string
 		}
 	}{
@@ -193,40 +209,40 @@ func Test_generateOutputFilename(t *testing.T) {
 			name:     "invalid filename",
 			filename: "../filename",
 			expected: struct {
-				err error
+				err func(*testing.T, error)
 				fn  string
 			}{
-				err: errorInvalidFilename,
+				err: errInvalidFilenameFunc,
 			},
 		},
 		{
 			name:     "valid filename",
 			filename: "",
 			expected: struct {
-				err error
+				err func(*testing.T, error)
 				fn  string
 			}{
-				err: errorInvalidFilename,
+				err: errInvalidFilenameFunc,
 			},
 		},
 		{
 			name:     "filename arch",
 			filename: "name-{{ .Arch }}",
 			expected: struct {
-				err error
+				err func(*testing.T, error)
 				fn  string
 			}{
-				err: errorEnvVariableNameEmpty,
+				err: errEnvVariableNameEmptyFunc,
 			},
 		},
 		{
 			name:     "filename os",
 			filename: "name-{{ .Os }}",
 			expected: struct {
-				err error
+				err func(*testing.T, error)
 				fn  string
 			}{
-				err: errorEnvVariableNameEmpty,
+				err: errEnvVariableNameEmptyFunc,
 			},
 		},
 		{
@@ -234,29 +250,29 @@ func Test_generateOutputFilename(t *testing.T) {
 			filename: "Name-AB^",
 			goarch:   "amd64",
 			expected: struct {
-				err error
+				err func(*testing.T, error)
 				fn  string
 			}{
-				err: errorInvalidFilename,
+				err: errInvalidFilenameFunc,
 			},
 		},
 		{
 			filename: "filename invalid letter $",
 			expected: struct {
-				err error
+				err func(*testing.T, error)
 				fn  string
 			}{
-				err: errorInvalidFilename,
+				err: errInvalidFilenameFunc,
 			},
 		},
 		{
 			name:     "filename os",
 			filename: "name-{{ .Os }}",
 			expected: struct {
-				err error
+				err func(*testing.T, error)
 				fn  string
 			}{
-				err: errorEnvVariableNameEmpty,
+				err: errEnvVariableNameEmptyFunc,
 			},
 		},
 		{
@@ -264,7 +280,7 @@ func Test_generateOutputFilename(t *testing.T) {
 			filename: "name-{{ .Os }}",
 			goos:     "linux",
 			expected: struct {
-				err error
+				err func(*testing.T, error)
 				fn  string
 			}{
 				err: nil,
@@ -276,7 +292,7 @@ func Test_generateOutputFilename(t *testing.T) {
 			filename: "name-{{ .Arch }}",
 			goarch:   "amd64",
 			expected: struct {
-				err error
+				err func(*testing.T, error)
 				fn  string
 			}{
 				err: nil,
@@ -288,7 +304,7 @@ func Test_generateOutputFilename(t *testing.T) {
 			filename: "Name-{{ .Arch }}",
 			goarch:   "amd64",
 			expected: struct {
-				err error
+				err func(*testing.T, error)
 				fn  string
 			}{
 				err: nil,
@@ -301,7 +317,7 @@ func Test_generateOutputFilename(t *testing.T) {
 			goarch:   "amd64",
 			goos:     "linux",
 			expected: struct {
-				err error
+				err func(*testing.T, error)
 				fn  string
 			}{
 				err: nil,
@@ -313,10 +329,10 @@ func Test_generateOutputFilename(t *testing.T) {
 			filename: "name-{{ .Arch }}",
 			goarch:   "something/../../",
 			expected: struct {
-				err error
+				err func(*testing.T, error)
 				fn  string
 			}{
-				err: errorInvalidFilename,
+				err: errInvalidFilenameFunc,
 			},
 		},
 		{
@@ -324,10 +340,10 @@ func Test_generateOutputFilename(t *testing.T) {
 			filename: "name-{{ .Bla }}",
 			goarch:   "something/../../",
 			expected: struct {
-				err error
+				err func(*testing.T, error)
 				fn  string
 			}{
-				err: errorInvalidEnvArgument,
+				err: errInvalidEnvArgumentFunc,
 			},
 		},
 		{
@@ -339,7 +355,7 @@ func Test_generateOutputFilename(t *testing.T) {
 				"GITHUB_REF_NAME": "v1.2.3",
 			},
 			expected: struct {
-				err error
+				err func(*testing.T, error)
 				fn  string
 			}{
 				err: nil,
@@ -355,7 +371,7 @@ func Test_generateOutputFilename(t *testing.T) {
 				"GITHUB_REF_NAME": "v1.2.3",
 			},
 			expected: struct {
-				err error
+				err func(*testing.T, error)
 				fn  string
 			}{
 				err: nil,
@@ -371,7 +387,7 @@ func Test_generateOutputFilename(t *testing.T) {
 				"GITHUB_REF_NAME": "",
 			},
 			expected: struct {
-				err error
+				err func(*testing.T, error)
 				fn  string
 			}{
 				err: nil,
@@ -387,10 +403,10 @@ func Test_generateOutputFilename(t *testing.T) {
 				"GITHUB_REF_NAME": "v1.2.3",
 			},
 			expected: struct {
-				err error
+				err func(*testing.T, error)
 				fn  string
 			}{
-				err: errorInvalidFilename,
+				err: errInvalidFilenameFunc,
 			},
 		},
 		{
@@ -399,7 +415,7 @@ func Test_generateOutputFilename(t *testing.T) {
 			goarch:   "amd64",
 			goos:     "linux",
 			expected: struct {
-				err error
+				err func(*testing.T, error)
 				fn  string
 			}{
 				err: nil,
@@ -416,7 +432,7 @@ func Test_generateOutputFilename(t *testing.T) {
 			},
 			argEnv: "VAR1:var1, VAR2:var2",
 			expected: struct {
-				err error
+				err func(*testing.T, error)
 				fn  string
 			}{
 				err: nil,
@@ -460,8 +476,8 @@ func Test_generateOutputFilename(t *testing.T) {
 			}
 
 			fn, err := b.generateOutputFilename()
-			if !errCmp(err, tt.expected.err) {
-				t.Errorf(cmp.Diff(err, tt.expected.err))
+			if tt.expected.err != nil {
+				tt.expected.err(t, err)
 			}
 
 			// Unset env variables, so that they don't
@@ -485,95 +501,95 @@ func Test_SetArgEnvVariables(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
-		name     string
-		argEnv   string
 		expected struct {
-			err error
 			env map[string]string
+			err func(*testing.T, error)
 		}
+		name   string
+		argEnv string
 	}{
 		{
 			name:   "valid arg envs",
 			argEnv: "VAR1:value1, VAR2:value2",
 			expected: struct {
-				err error
 				env map[string]string
+				err func(*testing.T, error)
 			}{
-				err: nil,
 				env: map[string]string{"VAR1": "value1", "VAR2": "value2"},
+				err: nil,
 			},
 		},
 		{
 			name:   "empty arg envs",
 			argEnv: "",
 			expected: struct {
-				err error
 				env map[string]string
+				err func(*testing.T, error)
 			}{
-				err: nil,
 				env: map[string]string{},
+				err: nil,
 			},
 		},
 		{
 			name:   "valid arg envs not space",
 			argEnv: "VAR1:value1,VAR2:value2",
 			expected: struct {
-				err error
 				env map[string]string
+				err func(*testing.T, error)
 			}{
-				err: nil,
 				env: map[string]string{"VAR1": "value1", "VAR2": "value2"},
+				err: nil,
 			},
 		},
 		{
 			name:   "invalid arg empty 2 values",
 			argEnv: "VAR1:value1,",
 			expected: struct {
-				err error
 				env map[string]string
+				err func(*testing.T, error)
 			}{
-				err: errorInvalidEnvArgument,
+				err: errInvalidEnvArgumentFunc,
 			},
 		},
 		{
 			name:   "invalid arg empty 3 values",
 			argEnv: "VAR1:value1,, VAR3:value3",
 			expected: struct {
-				err error
 				env map[string]string
+				err func(*testing.T, error)
 			}{
-				err: errorInvalidEnvArgument,
+				err: errInvalidEnvArgumentFunc,
 			},
 		},
 		{
 			name:   "invalid arg uses equal",
 			argEnv: "VAR1=value1",
 			expected: struct {
-				err error
 				env map[string]string
+				err func(*testing.T, error)
 			}{
-				err: errorInvalidEnvArgument,
+				err: errInvalidEnvArgumentFunc,
 			},
 		},
 		{
 			name:   "valid single arg",
 			argEnv: "VAR1:value1",
 			expected: struct {
-				err error
 				env map[string]string
+				err func(*testing.T, error)
 			}{
-				err: nil,
 				env: map[string]string{"VAR1": "value1"},
+				err: nil,
 			},
 		},
 		{
 			name:   "invalid valid single arg with empty",
 			argEnv: "VAR1:value1:",
 			expected: struct {
-				err error
 				env map[string]string
+				err func(*testing.T, error)
 			}{
-				err: errorInvalidEnvArgument,
+				err: errInvalidEnvArgumentFunc,
 			},
 		},
 	}
@@ -593,8 +609,8 @@ func Test_SetArgEnvVariables(t *testing.T) {
 			b := GoBuildNew("go compiler", c)
 
 			err = b.SetArgEnvVariables(tt.argEnv)
-			if !errCmp(err, tt.expected.err) {
-				t.Errorf(cmp.Diff(err, tt.expected.err))
+			if tt.expected.err != nil {
+				tt.expected.err(t, err)
 			}
 
 			if err != nil {
@@ -618,7 +634,7 @@ func Test_generateEnvVariables(t *testing.T) {
 		goarch   string
 		env      []string
 		expected struct {
-			err   error
+			err   func(*testing.T, error)
 			flags []string
 		}
 	}{
@@ -627,7 +643,7 @@ func Test_generateEnvVariables(t *testing.T) {
 			goos:   "linux",
 			goarch: "x86",
 			expected: struct {
-				err   error
+				err   func(*testing.T, error)
 				flags []string
 			}{
 				flags: []string{"GOOS=linux", "GOARCH=x86"},
@@ -638,22 +654,22 @@ func Test_generateEnvVariables(t *testing.T) {
 			name:   "empty goos",
 			goarch: "x86",
 			expected: struct {
-				err   error
+				err   func(*testing.T, error)
 				flags []string
 			}{
 				flags: []string{},
-				err:   errorEnvVariableNameEmpty,
+				err:   errEnvVariableNameEmptyFunc,
 			},
 		},
 		{
 			name: "empty goarch",
 			goos: "windows",
 			expected: struct {
-				err   error
+				err   func(*testing.T, error)
 				flags []string
 			}{
 				flags: []string{},
-				err:   errorEnvVariableNameEmpty,
+				err:   errEnvVariableNameEmptyFunc,
 			},
 		},
 		{
@@ -662,10 +678,10 @@ func Test_generateEnvVariables(t *testing.T) {
 			goarch: "amd64",
 			env:    []string{"VAR1=value1", "VAR2=value2"},
 			expected: struct {
-				err   error
+				err   func(*testing.T, error)
 				flags []string
 			}{
-				err: errorEnvVariableNameNotAllowed,
+				err: errEnvVariableNameNotAllowedFunc,
 			},
 		},
 		{
@@ -674,7 +690,7 @@ func Test_generateEnvVariables(t *testing.T) {
 			goarch: "amd64",
 			env:    []string{"GOVAR1=value1", "GOVAR2=value2", "CGO_VAR1=val1", "CGO_VAR2=val2"},
 			expected: struct {
-				err   error
+				err   func(*testing.T, error)
 				flags []string
 			}{
 				flags: []string{
@@ -704,16 +720,15 @@ func Test_generateEnvVariables(t *testing.T) {
 			}
 			b := GoBuildNew("go compiler", c)
 
-			flags, err := b.generateEnvVariables()
+			flags, err := b.generateCommandEnvVariables()
 
-			if !errCmp(err, tt.expected.err) {
-				t.Errorf(cmp.Diff(err, tt.expected.err))
+			if tt.expected.err != nil {
+				tt.expected.err(t, err)
 			}
 			if err != nil {
 				return
 			}
-			// Note: generated env variables contain the process's env variables too.
-			expectedFlags := append(os.Environ(), tt.expected.flags...)
+			expectedFlags := tt.expected.flags
 			sorted := cmpopts.SortSlices(func(a, b string) bool { return a < b })
 			if !cmp.Equal(flags, expectedFlags, sorted) {
 				t.Errorf(cmp.Diff(flags, expectedFlags))
@@ -727,12 +742,12 @@ func Test_generateLdflags(t *testing.T) {
 	// t.Parallel()
 
 	tests := []struct {
+		githubEnv  map[string]string
 		name       string
 		argEnv     string
-		inldflags  []string
-		githubEnv  map[string]string
-		err        error
 		outldflags string
+		err        func(*testing.T, error)
+		inldflags  []string
 	}{
 		{
 			name:       "version ldflags",
@@ -780,19 +795,19 @@ func Test_generateLdflags(t *testing.T) {
 			name:      "undefined env variable",
 			argEnv:    "VAR2:value2",
 			inldflags: []string{"{{ .Env.VAR1 }}-name-{{ .Env.VAR1 }}"},
-			err:       errorEnvVariableNameEmpty,
+			err:       errEnvVariableNameEmptyFunc,
 		},
 		{
 			name:      "undefined env variable 1",
 			argEnv:    "VAR2:value2",
 			inldflags: []string{"{{ .Env.VAR2 }}-name-{{ .Env.VAR1 }}"},
-			err:       errorEnvVariableNameEmpty,
+			err:       errEnvVariableNameEmptyFunc,
 		},
 		{
 			name:      "empty env variable",
 			argEnv:    "",
 			inldflags: []string{"{{ .Env.VAR1 }}-name-{{ .Env.VAR1 }}"},
-			err:       errorEnvVariableNameEmpty,
+			err:       errEnvVariableNameEmptyFunc,
 		},
 		{
 			name:   "several ldflags",
@@ -814,7 +829,8 @@ func Test_generateLdflags(t *testing.T) {
 				"start-{{ .Env.VAR3 }}-name-{{ .Env.VAR1 }}-end",
 				"start-{{ .Env.VAR3 }}-name-{{ .Env.VAR2 }}-end",
 			},
-			outldflags: "start-value1-name-value2-end start-value1-name-value3-end start-value3-name-value1-end start-value3-name-value2-end",
+			outldflags: "start-value1-name-value2-end start-value1-name-value3-end " +
+				"start-value3-name-value1-end start-value3-name-value2-end",
 		},
 		{
 			name:   "several ldflags and tag",
@@ -828,7 +844,8 @@ func Test_generateLdflags(t *testing.T) {
 				"{{ .Env.VAR3 }}-name-{{ .Env.VAR1 }}-{{ .Tag }}-{{ .Tag }}",
 				"{{ .Env.VAR3 }}-name-{{ .Env.VAR2 }}-{{ .Tag }}-end",
 			},
-			outldflags: "start-value1-name-value2-v1.2.3-end value1-name-value3 value3-name-value1-v1.2.3-v1.2.3 value3-name-value2-v1.2.3-end",
+			outldflags: "start-value1-name-value2-v1.2.3-end value1-name-value3 " +
+				"value3-name-value1-v1.2.3-v1.2.3 value3-name-value2-v1.2.3-end",
 		},
 		{
 			name:   "several ldflags and Arch and Os",
@@ -880,8 +897,8 @@ func Test_generateLdflags(t *testing.T) {
 				os.Unsetenv(k)
 			}
 
-			if !errCmp(err, tt.err) {
-				t.Errorf(cmp.Diff(err, tt.err))
+			if tt.err != nil {
+				tt.err(t, err)
 			}
 			if err != nil {
 				return
@@ -898,19 +915,19 @@ func Test_generateFlags(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
-		name     string
-		flags    []string
-		expected error
+		name  string
+		err   func(*testing.T, error)
+		flags []string
 	}{
 		{
-			name:     "valid flags",
-			flags:    []string{"-race", "-x"},
-			expected: nil,
+			name:  "valid flags",
+			flags: []string{"-race", "-x"},
+			err:   nil,
 		},
 		{
-			name:     "invalid -mod flags",
-			flags:    []string{"-mod=whatever", "-x"},
-			expected: errorUnsupportedArguments,
+			name:  "invalid -mod flags",
+			flags: []string{"-mod=whatever", "-x"},
+			err:   errUnsupportedArgumentsFunc,
 		},
 		{
 			name: "invalid random flags",
@@ -921,7 +938,7 @@ func Test_generateFlags(t *testing.T) {
 				"-gcflags", "-ldflags", "-linkshared",
 				"-tags", "-trimpath", "bla",
 			},
-			expected: errorUnsupportedArguments,
+			err: errUnsupportedArgumentsFunc,
 		},
 		{
 			name: "valid all flags",
@@ -932,7 +949,7 @@ func Test_generateFlags(t *testing.T) {
 				"-gcflags", "-ldflags", "-linkshared",
 				"-tags", "-trimpath",
 			},
-			expected: nil,
+			err: nil,
 		},
 	}
 
@@ -954,8 +971,8 @@ func Test_generateFlags(t *testing.T) {
 			flags, err := b.generateFlags()
 			expectedFlags := append([]string{"gocompiler", "build", "-mod=vendor"}, tt.flags...)
 
-			if !errCmp(err, tt.expected) {
-				t.Errorf(cmp.Diff(err, tt.expected))
+			if tt.err != nil {
+				tt.err(t, err)
 			}
 			if err != nil {
 				return
@@ -1011,7 +1028,7 @@ func Test_generateCommand(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			cfgs := []goReleaserConfigFile{
+			cfgs := []*goReleaserConfigFile{
 				{
 					Version: 1,
 					Flags:   tt.flags,
@@ -1024,14 +1041,15 @@ func Test_generateCommand(t *testing.T) {
 			}
 
 			for _, cfg := range cfgs {
-				c, err := fromConfig(&cfg)
+				c, err := fromConfig(cfg)
 				if err != nil {
 					t.Errorf("fromConfig: %v", err)
 				}
 				b := GoBuildNew("gocompiler", c)
 
 				command := b.generateCommand(tt.flags, "out-binary")
-				expectedCommand := append(tt.flags, "-o", "out-binary")
+				expectedCommand := tt.flags
+				expectedCommand = append(expectedCommand, "-o", "out-binary")
 				if cfg.Main != nil {
 					expectedCommand = append(expectedCommand, *cfg.Main)
 				}
@@ -1052,18 +1070,18 @@ func asPointer(s string) *string {
 func TestGoBuild_Run(t *testing.T) {
 	type fields struct {
 		cfg    *GoReleaserConfig
-		goc    string
 		argEnv map[string]string
+		goc    string
 	}
 	type args struct {
 		dry bool
 	}
 	tests := []struct {
 		name    string
+		err     func(*testing.T, error)
 		fields  fields
 		args    args
 		wantErr bool
-		err     error
 	}{
 		{
 			name: "dry run valid flags",
@@ -1116,7 +1134,7 @@ func TestGoBuild_Run(t *testing.T) {
 				dry: true,
 			},
 			wantErr: true,
-			err:     errorInvalidFilename,
+			err:     errInvalidFilenameFunc,
 		},
 		{
 			name: "dry run - invalid flags",
@@ -1158,9 +1176,9 @@ func TestGoBuild_Run(t *testing.T) {
 			}
 			if tt.err != nil {
 				if err == nil {
-					t.Errorf("Run() error = nil, wantErr %v", tt.err)
-				} else if !errCmp(err, tt.err) {
-					t.Errorf("Run() error = %v, wantErr %v %v", err, tt.err, cmp.Diff(err, tt.err))
+					t.Errorf("Run() error = nil, but wanted error")
+				} else if tt.err != nil {
+					tt.err(t, err)
 				}
 			}
 		})

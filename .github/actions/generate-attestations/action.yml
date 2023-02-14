@@ -1,0 +1,18 @@
+name: 'Generate Attestations'
+description: 'Generates in-toto attestations based on a SLSA output layout and a predicate'
+inputs:
+  slsa-layout-file:
+    description: 'A JSON file describing the SLSA output layout with attestation filename keys and the generated subjects (and digests)'
+    required: true
+  predicate-type:
+    description: 'A URI defining the type of the predicate, for e.g. https://slsa.dev/provenance/v0.2'
+    required: true
+  predicate-file:
+    description: 'A JSON file describing the SLSA predicate to attach to the subjects'
+    required: true
+  output-folder:
+    description: 'Output folder to place attestations'
+    required: true
+runs:
+  using: 'node16'
+  main: 'dist/index.js'

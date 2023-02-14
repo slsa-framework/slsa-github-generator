@@ -20,12 +20,12 @@ import (
 
 type jsonToken struct {
 	Issuer            string   `json:"iss"`
-	Audience          []string `json:"aud"`
-	Expiry            int64    `json:"exp"`
 	JobWorkflowRef    string   `json:"job_workflow_ref"`
 	RepositoryID      string   `json:"repository_id"`
 	RepositoryOwnerID string   `json:"repository_owner_id"`
 	ActorID           string   `json:"actor_id"`
+	Audience          []string `json:"aud"`
+	Expiry            int64    `json:"exp"`
 }
 
 // testKeySet is an oidc.KeySet that can be used in tests.

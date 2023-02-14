@@ -15,7 +15,6 @@
 package pkg
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -23,16 +22,8 @@ import (
 
 	"gopkg.in/yaml.v3"
 
+	"github.com/slsa-framework/slsa-github-generator/internal/errors"
 	"github.com/slsa-framework/slsa-github-generator/internal/utils"
-)
-
-var (
-	// ErrorInvalidEnvironmentVariable is an invalid environment variable.
-	ErrorInvalidEnvironmentVariable = errors.New("invalid environment variable")
-	// ErrorUnsupportedVersion is non-supported version.
-	ErrorUnsupportedVersion = errors.New("version not supported")
-	// ErrorInvalidDirectory is an invalid directory.
-	ErrorInvalidDirectory = errors.New("invalid directory")
 )
 
 var supportedVersions = map[int]bool{
@@ -40,26 +31,42 @@ var supportedVersions = map[int]bool{
 }
 
 type goReleaserConfigFile struct {
+	Main    *string  `yaml:"main"`
+	Dir     *string  `yaml:"dir"`
 	Goos    string   `yaml:"goos"`
 	Goarch  string   `yaml:"goarch"`
+	Binary  string   `yaml:"binary"`
 	Env     []string `yaml:"env"`
 	Flags   []string `yaml:"flags"`
 	Ldflags []string `yaml:"ldflags"`
-	Binary  string   `yaml:"binary"`
 	Version int      `yaml:"version"`
-	Main    *string  `yaml:"main"`
-	Dir     *string  `yaml:"dir"`
 }
 
+// GoReleaserConfig tracks configuration for goreleaser.
 type GoReleaserConfig struct {
-	Goos    string
-	Goarch  string
+	Env     map[string]string
 	Main    *string
 	Dir     *string
-	Env     map[string]string
+	Goos    string
+	Goarch  string
+	Binary  string
 	Flags   []string
 	Ldflags []string
-	Binary  string
+}
+
+// ErrUnsupportedVersion indicates an unsupported Go builder version.
+type ErrUnsupportedVersion struct {
+	errors.WrappableError
+}
+
+// ErrInvalidDirectory indicates an invalid directory.
+type ErrInvalidDirectory struct {
+	errors.WrappableError
+}
+
+// ErrInvalidEnvironmentVariable indicates  an invalid environment variable.
+type ErrInvalidEnvironmentVariable struct {
+	errors.WrappableError
 }
 
 func configFromString(b []byte) (*GoReleaserConfig, error) {
@@ -71,17 +78,23 @@ func configFromString(b []byte) (*GoReleaserConfig, error) {
 	return fromConfig(&cf)
 }
 
-func ConfigFromFile(pathfn string) (*GoReleaserConfig, error) {
-	if err := validatePath(pathfn); err != nil {
-		return nil, err
+// ConfigFromFile reads the file located at path and builds a GoReleaserConfig
+// from it.
+func ConfigFromFile(path string) (*GoReleaserConfig, error) {
+	if err := validatePath(path); err != nil {
+		return nil, fmt.Errorf("%q: %w", path, err)
 	}
 
-	cfg, err := os.ReadFile(filepath.Clean(pathfn))
+	cfg, err := os.ReadFile(filepath.Clean(path))
 	if err != nil {
-		return nil, fmt.Errorf("os.ReadFile: %w", err)
+		return nil, fmt.Errorf("%q: os.ReadFile: %w", path, err)
 	}
 
-	return configFromString(cfg)
+	c, err := configFromString(cfg)
+	if err != nil {
+		return nil, fmt.Errorf("%q: %w", path, err)
+	}
+	return c, nil
 }
 
 func fromConfig(cf *goReleaserConfigFile) (*GoReleaserConfig, error) {
@@ -142,13 +155,12 @@ func validateMain(cf *goReleaserConfigFile) error {
 }
 
 func convertPathError(e error, msg string) error {
-	// TODO(https://github.com/slsa-framework/slsa-github-generator/issues/599): use same error types.
 	if e != nil {
 		var errInternal *utils.ErrInternal
 		var errPath *utils.ErrInvalidPath
 		if errors.As(e, &errInternal) ||
 			errors.As(e, &errPath) {
-			return ErrorInvalidDirectory
+			return &ErrInvalidDirectory{}
 		}
 		return fmt.Errorf("%s: %w", msg, e)
 	}
@@ -158,7 +170,7 @@ func convertPathError(e error, msg string) error {
 func validateVersion(cf *goReleaserConfigFile) error {
 	_, exists := supportedVersions[cf.Version]
 	if !exists {
-		return fmt.Errorf("%w:%d", ErrorUnsupportedVersion, cf.Version)
+		return errors.Errorf(&ErrUnsupportedVersion{}, "version '%d' not supported", cf.Version)
 	}
 
 	return nil
@@ -169,7 +181,7 @@ func (r *GoReleaserConfig) setEnvs(cf *goReleaserConfigFile) error {
 	for _, e := range cf.Env {
 		name, value, present := strings.Cut(e, "=")
 		if !present {
-			return fmt.Errorf("%w: %s", ErrorInvalidEnvironmentVariable, e)
+			return errors.Errorf(&ErrInvalidEnvironmentVariable{}, "'%s' contains no '='", e)
 		}
 		m[name] = value
 	}

@@ -33,15 +33,15 @@ func TestHostedActionsProvenance(t *testing.T) {
 	now := time.Date(2022, 4, 14, 12, 24, 0, 0, time.UTC)
 
 	testCases := []struct {
-		name     string
 		b        BuildType
 		token    *github.OIDCToken
 		expected *intoto.ProvenanceStatement
+		name     string
 	}{
 		{
 			name: "empty",
 			b: &TestBuild{
-				GithubActionsBuild: NewGithubActionsBuild(nil, github.WorkflowContext{}).WithClients(&NilClientProvider{}),
+				GithubActionsBuild: NewGithubActionsBuild(nil, &github.WorkflowContext{}).WithClients(&NilClientProvider{}),
 			},
 			token: &github.OIDCToken{
 				Audience: []string{""},
@@ -80,7 +80,7 @@ func TestHostedActionsProvenance(t *testing.T) {
 		{
 			name: "invocation env",
 			b: &TestBuild{
-				GithubActionsBuild: NewGithubActionsBuild(nil, github.WorkflowContext{
+				GithubActionsBuild: NewGithubActionsBuild(nil, &github.WorkflowContext{
 					RunID:      "12345",
 					RunAttempt: "1",
 					EventName:  "pull_request",

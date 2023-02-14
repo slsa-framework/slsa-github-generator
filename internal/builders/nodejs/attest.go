@@ -22,7 +22,9 @@ import (
 )
 
 // attestCmd runs the 'attest' command.
-func attestCmd(provider slsa.ClientProvider, check func(error), signer signing.Signer, tlog signing.TransparencyLog) *cobra.Command {
+func attestCmd(provider slsa.ClientProvider, check func(error),
+	signer signing.Signer, tlog signing.TransparencyLog,
+) *cobra.Command {
 	c := &cobra.Command{
 		Use:   "attest",
 		Short: "Run attest command",

@@ -1,0 +1,38 @@
+name: Verify a token
+
+description: 'Verify a token'
+
+inputs:
+  slsa-workflow-recipient:
+    description: 'The audience of the token'
+    type: string
+    required: true
+
+  slsa-unverified-token:
+    description: 'The token to verify'
+    type: string
+    required: true
+
+  token:
+    description: "The GitHub Actions token."
+    required: false
+    default: ${{ github.token }}
+
+  output-predicate:
+    description: 'The filename to place the output SLSA predicate based on the verified token'
+    type: string
+    required: true
+
+outputs:
+  slsa-verified-token:
+    description: "Verified SLSA token."
+
+  tool-repository:
+    description: "The tool repository taken from the signing certificate."
+
+  tool-ref:
+    description: "The tool repository ref taken from the signing certificate."
+
+runs:
+  using: 'node16'
+  main: 'dist/index.js'

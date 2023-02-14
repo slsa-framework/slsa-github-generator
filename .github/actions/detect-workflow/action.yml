@@ -21,6 +21,9 @@ outputs:
   ref:
     description: The current workflow reference
     value: ${{ steps.detect.outputs.ref }}
+  workflow:
+    description: The path to the workflow relative to the repository, for example ".github/workflows/example.yml"
+    value: ${{ steps.detect.outputs.workflow }}
 runs:
   using: "docker"
   image: "Dockerfile"
