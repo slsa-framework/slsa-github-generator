@@ -205,7 +205,7 @@ jobs:
           set -euo pipefail
 
           REF="@${GITHUB_REF}"
-          if [[ "${GITHUB_EVENT_NAME}" == "workflow_dispatch" ]]; then
+          if [[ "${GITHUB_EVENT_NAME}" == "pull_request" ]]; then
             REF=""
           fi
 
@@ -285,7 +285,7 @@ jobs:
           set -euo pipefail
 
           REF="@${GITHUB_REF}"
-          if [[ "${GITHUB_EVENT_NAME}" == "workflow_dispatch" ]]; then
+          if [[ "${GITHUB_EVENT_NAME}" == "pull_request" ]]; then
             REF=""
           fi
 
