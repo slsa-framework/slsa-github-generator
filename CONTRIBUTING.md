@@ -101,10 +101,10 @@ We prefer the use of the following programming languages:
 - [TypeScript](https://www.typescriptlang.org/) - For GitHub actions.
 - [Bash](https://www.gnu.org/software/bash/) - For scripts in GitHub actions and workflows.
 
-We do not have a strict rule that proscribes the use of specific language use.
-However, any PRs that intruduce a new language should include justification for
-adding the new language as well as a plan for adding tooling that introduces the
-necessary tooling and testing infrastructure.
+We do not have a strict rule that proscribes the use of a specific language.
+However, any PRs that introduce a new language should include justification for
+adding the new language as well as a plan for adding the necessary tooling and
+testing infrastructure.
 
 We will generally reject PRs that introduce the use of memory-unsafe
 languages or use of existing languages in memory-unsafe ways (e.g. the Go
@@ -129,6 +129,12 @@ unit tests locally using `make`. This requires that the Go runtime be installed.
 
 ```
 make unit-test
+```
+
+Tests for GitHub Actions created with Typescript require [Jest](https://jestjs.io).
+
+```
+make ts-test
 ```
 
 ### End-to-End (e2e) Tests

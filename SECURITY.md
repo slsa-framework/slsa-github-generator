@@ -144,7 +144,7 @@ We aim to fix issues discovered by analysis tools as quickly as possible. We
 prefer to add these tools to "pre-submit" checks on PRs so that issues are
 never added to the code in the first place.
 
-In general, we follow the following security-concious practices during
+In general, we observe the following security-conscious practices during
 development (This is not an exhaustive list).
 
 - All PRs are reviewed by at least one [CODEOWNER](./CODEOWNERS).
@@ -164,7 +164,7 @@ development (This is not an exhaustive list).
 The Security Team is responsible for the overall security of the
 project and for reviewing reported vulnerabilities. Each member is familiar
 with designing secure software, security issues related to CI/CD, GitHub
-actions and build provenance.
+Actions and build provenance.
 
 <!-- NOTE: Team membership should be synced with CODEOWNERS for SECURITY.md -->
 
