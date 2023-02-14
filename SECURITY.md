@@ -4,6 +4,7 @@ This document includes information about the vulnerability reporting, patch,
 release, and disclosure processes, as well as general security posture.
 
 <!-- markdown-toc --bullets="-" -i SECURITY.md -->
+
 <!-- toc -->
 
 - [Supported Versions](#supported-versions)

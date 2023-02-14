@@ -11,6 +11,7 @@ base. Feel free to browse the [open issues](https://github.com/slsa-framework/sl
 is welcome!
 
 <!-- markdown-toc --bullets="-" -i CONTRIBUTING.md -->
+
 <!-- toc -->
 
 - [Prerequisites](#prerequisites)
@@ -130,7 +131,7 @@ unit tests locally using `make`. This requires that the Go runtime be installed.
 make unit-test
 ```
 
-#### End-to-End (e2e) Tests
+### End-to-End (e2e) Tests
 
 This project has a number of End-to-End tests that are scheduled to run daily.
 These tests are located in the
