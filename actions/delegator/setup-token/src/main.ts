@@ -13,13 +13,12 @@ limitations under the License.
 
 import * as github from "@actions/github";
 import * as core from "@actions/core";
-import * as sigstore from "sigstore";
+import { sigstore } from "sigstore";
 import * as process from "process";
 
 const signOptions = {
   oidcClientID: "sigstore",
   oidcIssuer: "https://oauth2.sigstore.dev/auth",
-  rekorBaseURL: sigstore.sigstore.DEFAULT_REKOR_BASE_URL,
 };
 
 async function run(): Promise<void> {
@@ -101,7 +100,7 @@ async function run(): Promise<void> {
     if (eventName === "pull_request") {
       bundleStr = "PLACEHOLDER_SIGNATURE";
     } else {
-      const bundle = await sigstore.sigstore.sign(
+      const bundle = await sigstore.sign(
         Buffer.from(unsignedB64Token),
         signOptions
       );

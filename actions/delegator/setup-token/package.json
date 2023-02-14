@@ -1,7 +1,7 @@
 {
   "name": "setup-token",
   "version": "1.0.0",
-  "description": "",
+  "description": "Create a SLSA token for the delegated workflow",
   "main": "lib/main.js",
   "scripts": {
     "ci": "npm ci",
