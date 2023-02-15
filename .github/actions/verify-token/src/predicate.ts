@@ -19,9 +19,6 @@ import type { Endpoints } from "@octokit/types";
 const DELEGATOR_BUILD_TYPE =
   "https://github.com/slsa-framework/slsa-github-generator/delegator-generic@v0";
 
-type ApiWorkflowRun =
-  Endpoints["GET /repos/{owner}/{repo}/actions/runs/{run_id}"]["response"]["data"];
-
 interface Builder {
   id: string;
   version?: string;
@@ -118,10 +115,21 @@ export interface githubObj {
   actor: string;
 }
 
+function getWorkflowPath(repoName: string, workflowRef: string): string {
+  // GITHUB_WORKFlOW_REF contains the repository name in the path. We will trim
+  // it out.
+  let ref = (workflowRef || "").trim();
+  const repoPrefix = (repoName || "").trim() + "/";
+  if (ref.indexOf(repoPrefix) == 0) {
+    ref = ref.substring(repoPrefix.length);
+  }
+  // Strip off the ref from the workflow path.
+  return (ref || "").split("@", 1)[0];
+}
+
 export function createPredicate(
   rawTokenObj: rawTokenInterface,
-  toolURI: string,
-  currentRun: ApiWorkflowRun
+  toolURI: string
 ): SLSAv1Predicate {
   const { env } = process;
 
@@ -137,33 +145,33 @@ export function createPredicate(
     },
   };
 
-  const payload = github.context;
   const predicate: SLSAv1Predicate = {
     buildDefinition: {
       buildType: DELEGATOR_BUILD_TYPE,
       externalParameters: {
         // NOTE: This is equivalent to the v0.2 entryPoint.
-        workflowPath: currentRun.path,
+        workflowPath: getWorkflowPath(
+          env.GITHUB_REPOSITORY,
+          env.GITHUB_WORKFLOW_REF
+        ),
         // We only use source here because the source contained the source
         // repository and the build configuration.
         source: sourceRef,
       },
       systemParameters: {
-        GITHUB_EVENT_NAME: payload.eventName,
-        GITHUB_JOB: payload.job,
-        GITHUB_REF: payload.ref,
+        GITHUB_EVENT_NAME: env.GITHUB_EVENT_NAME || "",
+        GITHUB_JOB: env.GITHUB_JOB || "",
+        GITHUB_REF: env.GITHUB_REF || "",
         GITHUB_REF_TYPE: env.GITHUB_REF_TYPE || "",
         GITHUB_REPOSITORY: env.GITHUB_REPOSITORY || "",
         GITHUB_RUN_ATTEMPT: env.GITHUB_RUN_ATTEMPT || "",
-        GITHUB_RUN_ID: payload.runId,
-        GITHUB_RUN_NUMBER: payload.runNumber,
-        GITHUB_SHA: payload.sha,
-        GITHUB_WORKFLOW: payload.workflow,
-        GITHUB_ACTOR_ID: String(currentRun.actor?.id || ""),
-        GITHUB_REPOSITORY_ID: String(currentRun.repository.id || ""),
-        GITHUB_REPOSITORY_OWNER_ID: String(
-          currentRun.repository.owner.id || ""
-        ),
+        GITHUB_RUN_ID: env.GITHUB_RUN_ID || "",
+        GITHUB_RUN_NUMBER: env.GITHUB_RUN_NUMBER || "",
+        GITHUB_SHA: env.GITHUB_SHA || "",
+        GITHUB_WORKFLOW: env.GITHUB_WORKFLOW || "",
+        GITHUB_ACTOR_ID: env.GITHUB_ACTOR_ID || "",
+        GITHUB_REPOSITORY_ID: env.GITHUB_REPOSITORY_ID || "",
+        GITHUB_REPOSITORY_OWNER_ID: env.GITHUB_REPOSITORY_OWNER_ID || "",
         GITHUB_WORKFLOW_REF: env.GITHUB_WORKFLOW_REF || "",
         GITHUB_WORKFLOW_SHA: env.GITHUB_WORKFLOW_SHA || "",
         IMAGE_OS: env.ImageOS || "",
@@ -180,7 +188,7 @@ export function createPredicate(
         id: toolURI,
       },
       metadata: {
-        invocationId: `https://github.com/${currentRun.repository.full_name}/actions/runs/${currentRun.id}/attempts/${currentRun.run_attempt}`,
+        invocationId: `https://github.com/${env.GITHUB_REPOSITORY}/actions/runs/${payload.runId}/attempts/${currentRun.run_attempt}`,
       },
     },
   };

@@ -130,13 +130,7 @@ async function run(): Promise<void> {
     const ownerRepo = getEnv("GITHUB_REPOSITORY");
     const [owner, repo] = ownerRepo.split("/");
 
-    const { data: current_run } = await octokit.rest.actions.getWorkflowRun({
-      owner,
-      repo,
-      run_id: Number(process.env.GITHUB_RUN_ID),
-    });
-
-    const predicate = createPredicate(rawTokenObj, toolURI, current_run);
+    const predicate = createPredicate(rawTokenObj, toolURI);
     fs.writeFileSync(safeOutput, JSON.stringify(predicate), {
       flag: "ax",
       mode: 0o600,
