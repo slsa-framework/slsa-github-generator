@@ -40,7 +40,7 @@ if [[ "$results" != "" ]]; then
     exit 1
 fi
 
-if [[ "$RELEASE_TAG" =~ .*-rc[0-9]*$ ]]; then
+if [[ "$RELEASE_TAG" =~ .*-rc\.[0-9]*$ ]]; then
     # don't check documentation for release candidates
     exit 0
 fi
