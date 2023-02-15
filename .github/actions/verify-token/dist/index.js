@@ -343,7 +343,7 @@ function createPredicate(rawTokenObj, toolURI, currentRun) {
                 workflow: {
                     ref: env.GITHUB_REF,
                     repository: env.GITHUB_REPOSITORY,
-                    // TODO(#1643): exrtact path from GITHUB_WORKFLOW_REF.
+                    // TODO(#1643): extract path from GITHUB_WORKFLOW_REF.
                     path: currentRun.path,
                 },
                 // We only use source here because the source contained the source
