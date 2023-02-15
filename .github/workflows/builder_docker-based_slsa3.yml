@@ -335,10 +335,11 @@ jobs:
 
       - name: Upload output artifacts
         id: upload-artifacts
-        uses: ./__BUILDER_CHECKOUT_DIR__/.github/actions/secure-upload-artifact
+        uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
         with:
           name: ${{ env.BUILD_OUTPUTS_FOLDER }}
           path: /tmp/build-outputs-${{ needs.rng.outputs.value }}
+          if-no-files-found: error
 
   ###################################################################
   #                                                                 #

@@ -109,7 +109,7 @@ func BuildCmd(check func(error)) *cobra.Command {
 		"Required - Path to store a JSON-encoded array of subjects of the generated artifacts.")
 	cmd.Flags().StringVar(&outputFolder, "output-folder", "",
 		"Required - Path to a folder to store the generated artifacts. MUST be under /tmp.")
-	cmd.MarkFlagRequired("output-folder")
+	check(cmd.MarkFlagRequired("output-folder"))
 
 	return cmd
 }

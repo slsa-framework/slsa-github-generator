@@ -545,6 +545,9 @@ func inspectAndWriteArtifacts(pattern, outputFolder, root string) ([]intoto.Subj
 
 		// Write output file to output folder
 		relPath, err := filepath.Rel(root, path)
+		if err != nil {
+			return nil, err
+		}
 		w, err := utils.CreateNewFileUnderDirectory(relPath, outputFolder, os.O_WRONLY)
 		if err != nil {
 			return nil, fmt.Errorf("creating new output file: %v", err)
