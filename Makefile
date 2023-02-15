@@ -85,9 +85,11 @@ shellcheck: ## Runs the shellcheck linter.
 
 .PHONY: eslint
 eslint: ## Runs the eslint linter.
-	make -C .github/actions/compute-sha256 lint
-	make -C .github/actions/privacy-check lint
-	make -C .github/actions/generate-attestations lint
+	@set -e;\
+		PATHS=$$(find .github/actions/ actions/ -not -path '*/node_modules/*' -name package.json | xargs dirname); \
+		for path in $$PATHS; do \
+			make -C $$path lint; \
+		done
 
 .PHONY: yamllint
 yamllint: ## Runs the yamllint linter.
