@@ -11,10 +11,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-import * as github from "@actions/github";
 import * as process from "process";
 import * as fs from "fs";
-import type { Endpoints } from "@octokit/types";
 
 const DELEGATOR_BUILD_TYPE =
   "https://github.com/slsa-framework/slsa-github-generator/delegator-generic@v0";
@@ -118,9 +116,9 @@ export interface githubObj {
 function getWorkflowPath(repoName: string, workflowRef: string): string {
   // GITHUB_WORKFlOW_REF contains the repository name in the path. We will trim
   // it out.
-  let ref = (workflowRef || "").trim();
-  const repoPrefix = (repoName || "").trim() + "/";
-  if (ref.indexOf(repoPrefix) == 0) {
+  let ref = workflowRef.trim();
+  const repoPrefix = `${repoName.trim()}/`;
+  if (ref.startsWith(repoPrefix)) {
     ref = ref.substring(repoPrefix.length);
   }
   // Strip off the ref from the workflow path.
@@ -151,8 +149,8 @@ export function createPredicate(
       externalParameters: {
         // NOTE: This is equivalent to the v0.2 entryPoint.
         workflowPath: getWorkflowPath(
-          env.GITHUB_REPOSITORY,
-          env.GITHUB_WORKFLOW_REF
+          env.GITHUB_REPOSITORY || "",
+          env.GITHUB_WORKFLOW_REF || ""
         ),
         // We only use source here because the source contained the source
         // repository and the build configuration.
@@ -188,7 +186,7 @@ export function createPredicate(
         id: toolURI,
       },
       metadata: {
-        invocationId: `https://github.com/${env.GITHUB_REPOSITORY}/actions/runs/${payload.runId}/attempts/${currentRun.run_attempt}`,
+        invocationId: `https://github.com/${env.GITHUB_REPOSITORY}/actions/runs/${env.GITHUB_RUN_ID}/attempts/${env.GITHUB_RUN_ATTEMPT}`,
       },
     },
   };
@@ -205,7 +203,7 @@ export function createPredicate(
   // Add workflow inputs to top-level externalParameters.
   if (env.GITHUB_EVENT_NAME === "workflow_dispatch") {
     predicate.buildDefinition.externalParameters.inputs =
-      payload.payload.inputs;
+      rawTokenObj.tool.inputs;
   }
 
   return predicate;

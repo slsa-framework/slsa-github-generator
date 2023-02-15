@@ -12,7 +12,6 @@ limitations under the License.
 */
 
 import * as core from "@actions/core";
-import * as github from "@actions/github";
 import * as sigstore from "sigstore";
 import * as process from "process";
 import * as fs from "fs";
@@ -126,9 +125,6 @@ async function run(): Promise<void> {
     if (!token) {
       throw new Error("token not provided");
     }
-    const octokit = github.getOctokit(token);
-    const ownerRepo = getEnv("GITHUB_REPOSITORY");
-    const [owner, repo] = ownerRepo.split("/");
 
     const predicate = createPredicate(rawTokenObj, toolURI);
     fs.writeFileSync(safeOutput, JSON.stringify(predicate), {
