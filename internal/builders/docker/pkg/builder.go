@@ -39,6 +39,7 @@ import (
 	slsa1 "github.com/in-toto/in-toto-golang/in_toto/slsa_provenance/v1.0"
 
 	"github.com/slsa-framework/slsa-github-generator/internal/errors"
+	"github.com/slsa-framework/slsa-github-generator/internal/utils"
 )
 
 // errGitCommitMismatch indicates that the repo is checked out at an unexpected commit hash.
@@ -165,11 +166,11 @@ func (b *Builder) SetUpBuildState() (*DockerBuild, error) {
 
 // BuildArtifacts builds the artifacts based on the user-provided inputs, and
 // returns the names and SHA256 digests of the generated artifacts.
-func (db *DockerBuild) BuildArtifacts() ([]intoto.Subject, error) {
+func (db *DockerBuild) BuildArtifacts(outputFolder string) ([]intoto.Subject, error) {
 	if err := runDockerRun(db); err != nil {
 		return nil, fmt.Errorf("running `docker run` failed: %v", err)
 	}
-	return inspectArtifacts(db.buildConfig.ArtifactPath)
+	return inspectAndWriteArtifacts(db.buildConfig.ArtifactPath, outputFolder, db.RepoInfo.RepoRoot)
 }
 
 func runDockerRun(db *DockerBuild) error {
@@ -485,8 +486,9 @@ func checkExistingFiles(pattern string) error {
 
 // Finds all files matching the given pattern, measures the SHA256 digest of
 // each file, and returns filenames and digests as an array of intoto.Subject.
+// This also writes the output to a configured output folder.
 // Precondition: The pattern is a relative file path pattern.
-func inspectArtifacts(pattern string) ([]intoto.Subject, error) {
+func inspectAndWriteArtifacts(pattern, outputFolder, root string) ([]intoto.Subject, error) {
 	matches, err := filepath.Glob(pattern)
 	// The only possible error is ErrBadPattern.
 	if err != nil {
@@ -499,11 +501,27 @@ func inspectArtifacts(pattern string) ([]intoto.Subject, error) {
 
 	var subjects []intoto.Subject
 	for _, path := range matches {
-		subject, err := toIntotoSubject(path)
+		data, err := os.ReadFile(path)
+		if err != nil {
+			return nil, fmt.Errorf("couldn't read file %q: %v", path, err)
+		}
+
+		// Write intoto subjects to output
+		subject, err := toIntotoSubject(data, path)
 		if err != nil {
 			return nil, err
 		}
 		subjects = append(subjects, *subject)
+
+		// Write output file to output folder
+		relPath, err := filepath.Rel(root, path)
+		w, err := utils.CreateNewFileUnderDirectory(relPath, outputFolder, os.O_WRONLY)
+		if err != nil {
+			return nil, fmt.Errorf("creating new output file: %v", err)
+		}
+		if _, err := w.Write(data); err != nil {
+			return nil, fmt.Errorf("writing output file: %v", err)
+		}
 	}
 
 	return subjects, nil
@@ -511,12 +529,7 @@ func inspectArtifacts(pattern string) ([]intoto.Subject, error) {
 
 // Reads the file in the given path and returns its name and digest wrapped in
 // an intoto.Subject.
-func toIntotoSubject(filePath string) (*intoto.Subject, error) {
-	data, err := os.ReadFile(filePath)
-	if err != nil {
-		return nil, fmt.Errorf("couldn't read file %q: %v", filePath, err)
-	}
-
+func toIntotoSubject(data []byte, filePath string) (*intoto.Subject, error) {
 	sum256 := sha256.Sum256(data)
 	digest := hex.EncodeToString(sum256[:])
 	name := filepath.Base(filePath)

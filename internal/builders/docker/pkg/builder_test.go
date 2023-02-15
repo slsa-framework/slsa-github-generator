@@ -115,7 +115,8 @@ func Test_GitClient_fetchSourcesFromGitRepo(t *testing.T) {
 func Test_inspectArtifacts(t *testing.T) {
 	// Note: If the files in ../testdata/ change, this test must be updated.
 	pattern := "../testdata/*"
-	got, err := inspectArtifacts(pattern)
+	out := t.TempDir()
+	got, err := inspectAndWriteArtifacts(pattern, out, "..")
 	if err != nil {
 		t.Fatalf("failed to inspect artifacts: %v", err)
 	}
@@ -128,8 +129,12 @@ func Test_inspectArtifacts(t *testing.T) {
 		Name:   "config.toml",
 		Digest: map[string]string{"sha256": "975a0582b8c9607f3f20a6b8cfef01b25823e68c5c3658e6e1ccaaced2a3255d"},
 	}
+	s3 := intoto.Subject{
+		Name:   "wildcard-config.toml",
+		Digest: map[string]string{"sha256": "d9b8670f1b9616db95b0dc84cbc68062c691ef31bb9240d82753de0739c59194"},
+	}
 
-	want := []intoto.Subject{s1, s2}
+	want := []intoto.Subject{s1, s2, s3}
 
 	if diff := cmp.Diff(got, want); diff != "" {
 		t.Errorf(diff)

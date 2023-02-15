@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 
 	"github.com/spf13/cobra"
 
@@ -53,7 +54,7 @@ func DryRunCmd(check func(error)) *cobra.Command {
 			// Remove any temporary files that were fetched during the setup.
 			defer db.RepoInfo.Cleanup()
 
-			check(writeToFile(*db.CreateBuildDefinition(), w))
+			check(writeJSONToFile(*db.CreateBuildDefinition(), w))
 		},
 	}
 
@@ -69,11 +70,15 @@ func DryRunCmd(check func(error)) *cobra.Command {
 func BuildCmd(check func(error)) *cobra.Command {
 	inputOptions := &pkg.InputOptions{}
 	var subjectsPath string
+	var outputFolder string
 
 	cmd := &cobra.Command{
 		Use:   "build [FLAGS]",
 		Short: "Builds the artifacts using the build config, source repo, and the builder image.",
 		Run: func(cmd *cobra.Command, args []string) {
+			absoluteOutputFolder, err := filepath.Abs(outputFolder)
+			check(err)
+
 			w, err := utils.CreateNewFileUnderCurrentDirectory(subjectsPath, os.O_WRONLY)
 			check(err)
 			config, err := pkg.NewDockerBuildConfig(inputOptions)
@@ -87,20 +92,24 @@ func BuildCmd(check func(error)) *cobra.Command {
 			// Remove any temporary files that were generated during the setup.
 			defer db.RepoInfo.Cleanup()
 
-			artifacts, err := db.BuildArtifacts()
+			// Build artifacts and write them to the output folder.
+			artifacts, err := db.BuildArtifacts(absoluteOutputFolder)
 			check(err)
-			check(writeToFile(artifacts, w))
+			check(writeJSONToFile(artifacts, w))
 		},
 	}
 
 	inputOptions.AddFlags(cmd)
 	cmd.Flags().StringVarP(&subjectsPath, "subjects-path", "o", "",
 		"Required - Path to store a JSON-encoded array of subjects of the generated artifacts.")
+	cmd.Flags().StringVar(&outputFolder, "output-folder", "",
+		"Required - Path to a folder to store the generated artifacts.")
+	cmd.MarkFlagRequired("output-folder")
 
 	return cmd
 }
 
-func writeToFile[T any](obj T, w io.Writer) error {
+func writeJSONToFile[T any](obj T, w io.Writer) error {
 	bytes, err := json.Marshal(obj)
 	if err != nil {
 		return fmt.Errorf("marshaling the object failed: %w", err)

@@ -23,8 +23,11 @@ env:
   # Builder.
   BUILDER_BINARY: slsa-builder-docker-linux-amd64 # Name of the binary in the release assets.
   BUILDER_DIR: internal/builders/docker # Source directory if we compile the builder.
-  # Outputs folder.
-  OUTPUT_FOLDER: outputs
+  # SLSA outputs folder.
+  OUTPUT_FOLDER: slsa-outputs
+  # Build outputs folder.
+  BUILD_OUTPUTS_FOLDER: build-outputs
+
 
 defaults:
   run:
@@ -242,7 +245,6 @@ jobs:
       # The digest of the SLSA subject outputs file for secure download.
       slsa-outputs-sha256: ${{ steps.upload.outputs.sha256 }}
     needs: [rng, detect-env, generate-builder]
-    # TODO: Replace with builder binary
     steps:
       - name: Checkout builder repository
         uses: slsa-framework/slsa-github-generator/.github/actions/secure-builder-checkout@main
@@ -275,6 +277,7 @@ jobs:
           BUILDER_IMAGE: ${{ inputs.builder-image }}
           BUILDER_DIGEST: ${{ inputs.builder-digest }}
           CONFIG_PATH: ${{ inputs.config-path }}
+          RNG: $${{ needs.rng.outputs.value }}
 
         run: |
           set -euo pipefail
@@ -286,20 +289,22 @@ jobs:
             --builder-image "${BUILDER_IMAGE}@${BUILDER_DIGEST}" \
             --git-commit-digest "sha1:${GITHUB_SHA}" \
             --source-repo "git+https://github.com/${GITHUB_REPOSITORY}" \
-            --subjects-path subjects.json
+            --subjects-path subjects.json \
+            --output-folder /tmp/build-outputs-${RNG}
           "${GITHUB_WORKSPACE}/${BUILDER_BINARY}" build \
             --build-config-path "${CONFIG_PATH}" \
             --builder-image "${BUILDER_IMAGE}@${BUILDER_DIGEST}" \
             --git-commit-digest "sha1:${GITHUB_SHA}" \
             --source-repo "git+https://github.com/${GITHUB_REPOSITORY}" \
-            --subjects-path subjects.json
+            --subjects-path subjects.json \
+            --output-folder /tmp/build-outputs-${RNG}
 
           cat <<EOF >DATA
           {
             "version": 1,
              "attestations": [
               {
-                "name": "attestation1.intoto",
+                "name": "attestation.intoto",
                 "subjects": []
               }
             ]
@@ -317,6 +322,14 @@ jobs:
         with:
           name: "${{ steps.build.outputs.slsa-outputs-name }}-${{ needs.rng.outputs.value }}"
           path: "${{ steps.build.outputs.slsa-outputs-name }}"
+
+      - name: Upload output artifacts
+        id: upload-artifacts
+        uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
+        with:
+          name: ${{ env.BUILD_OUTPUTS_FOLDER }}
+          path: /tmp/build-outputs-$${{ needs.rng.outputs.value }}
+          if-no-files-found: error
 
   ###################################################################
   #                                                                 #
