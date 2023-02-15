@@ -91,8 +91,8 @@ that are private from the general public if deemed necessary.
 
 ### Public Disclosure
 
-Vulnerabilities are disclosed publicly as GitHub
-[Security Advisories](https://github.com/slsa-framework/slsa-github-generator/security/advisories).
+Vulnerabilities are disclosed publicly as GitHub [Security
+Advisories](https://github.com/slsa-framework/slsa-github-generator/security/advisories).
 
 A public disclosure date is negotiated by the [Security Team](#security-team)
 and the bug submitter. We prefer to fully disclose the bug as soon as possible
@@ -126,7 +126,8 @@ this announcement should be actionable, and include any mitigating steps users
 can take prior to upgrading to a fixed version.
 
 Fixes will be applied in patch releases to all [supported
-versions](#supported-versions).
+versions](#supported-versions) and all fixed vulnerabilities will be noted in
+the [CHANGELOG](./CHANGELOG.md).
 
 ### Severity
 
