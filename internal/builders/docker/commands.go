@@ -23,6 +23,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -76,8 +77,12 @@ func BuildCmd(check func(error)) *cobra.Command {
 		Use:   "build [FLAGS]",
 		Short: "Builds the artifacts using the build config, source repo, and the builder image.",
 		Run: func(cmd *cobra.Command, args []string) {
+			// Validate that the output folder is a /tmp subfolder.
 			absoluteOutputFolder, err := filepath.Abs(outputFolder)
 			check(err)
+			if !strings.HasPrefix(filepath.Dir(absoluteOutputFolder), "/tmp") {
+				check(fmt.Errorf("output folder must be in /tmp: %s", absoluteOutputFolder))
+			}
 
 			w, err := utils.CreateNewFileUnderCurrentDirectory(subjectsPath, os.O_WRONLY)
 			check(err)
@@ -103,7 +108,7 @@ func BuildCmd(check func(error)) *cobra.Command {
 	cmd.Flags().StringVarP(&subjectsPath, "subjects-path", "o", "",
 		"Required - Path to store a JSON-encoded array of subjects of the generated artifacts.")
 	cmd.Flags().StringVar(&outputFolder, "output-folder", "",
-		"Required - Path to a folder to store the generated artifacts.")
+		"Required - Path to a folder to store the generated artifacts. MUST be under /tmp.")
 	cmd.MarkFlagRequired("output-folder")
 
 	return cmd

@@ -277,7 +277,7 @@ jobs:
           BUILDER_IMAGE: ${{ inputs.builder-image }}
           BUILDER_DIGEST: ${{ inputs.builder-digest }}
           CONFIG_PATH: ${{ inputs.config-path }}
-          RNG: $${{ needs.rng.outputs.value }}
+          RNG: ${{ needs.rng.outputs.value }}
 
         run: |
           set -euo pipefail
@@ -325,11 +325,10 @@ jobs:
 
       - name: Upload output artifacts
         id: upload-artifacts
-        uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
+        uses: ./__BUILDER_CHECKOUT_DIR__/.github/actions/secure-upload-artifact
         with:
           name: ${{ env.BUILD_OUTPUTS_FOLDER }}
-          path: /tmp/build-outputs-$${{ needs.rng.outputs.value }}
-          if-no-files-found: error
+          path: /tmp/build-outputs-${{ needs.rng.outputs.value }}
 
   ###################################################################
   #                                                                 #
