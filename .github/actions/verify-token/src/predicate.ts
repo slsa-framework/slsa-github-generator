@@ -10,7 +10,6 @@ WIHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-
 import * as github from "@actions/github";
 import * as process from "process";
 import * as fs from "fs";
@@ -138,12 +137,25 @@ export function createPredicate(
   };
 
   const payload = github.context;
+  // NOTE: see example at https://github.com/slsa-framework/slsa/blob/main/docs/github-actions-workflow/examples/v0.1/example.json.
   const predicate: SLSAv1Predicate = {
     buildDefinition: {
       buildType: DELEGATOR_BUILD_TYPE,
       externalParameters: {
+        // Inputs to the TRW, which define the interface of the builder for the
+        // BYOB framework.
+        // TODO(#1575): mask inputs.
+        inputs: rawTokenObj.tool.inputs,
+        // Variables are always empty for BYOB / builders.
+        // TODO(#1555): add support for generators.
+        vars: {},
         // NOTE: This is equivalent to the v0.2 entryPoint.
-        workflowPath: currentRun.path,
+        workflow: {
+          ref: env.GITHUB_REF,
+          repository: env.GITHUB_REPOSITORY,
+          // TODO(#1643): exrtact path from GITHUB_WORKFLOW_REF.
+          path: currentRun.path,
+        },
         // We only use source here because the source contained the source
         // repository and the build configuration.
         source: sourceRef,
@@ -192,12 +204,6 @@ export function createPredicate(
       fs.readFileSync(env.GITHUB_EVENT_PATH).toString()
     );
     predicate.buildDefinition.systemParameters.GITHUB_EVENT_PAYLOAD = ghEvent;
-  }
-
-  // Add workflow inputs to top-level externalParameters.
-  if (env.GITHUB_EVENT_NAME === "workflow_dispatch") {
-    predicate.buildDefinition.externalParameters.inputs =
-      payload.payload.inputs;
   }
 
   return predicate;
