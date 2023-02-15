@@ -20,5 +20,5 @@ jobs:
     with:
       builder-image: "bash"
       builder-digest: "sha256:9e2ba52487d945504d250de186cb4fe2e3ba023ed2921dd6ac8b97ed43e76af9"
-      config-path: "internal/builders/docker/testdata/config.toml"
+      config-path: "internal/builders/docker/testdata/wildcard-config.toml"
       compile-builder: true
