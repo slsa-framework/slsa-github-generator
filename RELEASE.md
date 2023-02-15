@@ -418,7 +418,7 @@ For each of the GHA builders, you will need to:
    For example:
 
    ```yaml
-   uses: slsa-framework/slsa-github-generator/.github/workflows/builder_go_slsa3.yml@$BUILDER_TAG
+   uses: slsa-framework/slsa-github-generator/.github/workflows/builder_go_slsa3.yml@<BUILDER_TAG>
    ```
 
    Next run the [verifier-e2e.all.workflow_dispatch.main.all.slsa3.yml](https://github.com/slsa-framework/example-package/actions/workflows/verifier-e2e.all.workflow_dispatch.main.all.slsa3.yml). This will dispatch the workflow and create provenance for the workflow dispatch event, and then trigger subsequent runs on the following fixed release tags.
