@@ -16,6 +16,7 @@ package pkg
 
 import (
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -109,6 +110,52 @@ func Test_GitClient_fetchSourcesFromGitRepo(t *testing.T) {
 	// Recover the original test state.
 	if err := os.Chdir(cwd); err != nil {
 		t.Errorf("couldn't change directory to %q: %v", cwd, err)
+	}
+}
+
+func Test_GitClient_sourceWithRef(t *testing.T) {
+	// This tests that specifying a source repository with a ref resolves
+	// to a valid GitClient source repository
+
+	config := &DockerBuildConfig{
+		// Use a small repo for test
+		SourceRepo: "git+https://github.com/project-oak/transparent-release@refs/heads/main",
+		// The digest value does not matter for the test
+		SourceDigest:    Digest{Alg: "sha1", Value: "does-no-matter"},
+		BuildConfigPath: "internal/builders/docker/testdata/config.toml",
+		ForceCheckout:   false,
+		// BuilderImage field is not relevant, so it is omitted
+	}
+	gc, err := newGitClient(config, 1)
+	if err != nil {
+		t.Fatalf("Could not create GitClient: %v", err)
+	}
+
+	// We expect that the sourceRef is set to refs/heads/main
+	if gc.sourceRef == nil || *gc.sourceRef != "refs/heads/main" {
+		t.Errorf("expected sourceRef to be refs/heads/main, got %s", *gc.sourceRef)
+	}
+}
+
+func Test_GitClient_invalidSourceRef(t *testing.T) {
+	// This tests that specifying a source repository with a ref resolves
+	// to a valid GitClient source repository
+
+	config := &DockerBuildConfig{
+		// Use a small repo for test
+		SourceRepo: "git+https://github.com/project-oak/transparent-release@refs/heads/main@invalid",
+		// The digest value does not matter for the test
+		SourceDigest:    Digest{Alg: "sha1", Value: "does-no-matter"},
+		BuildConfigPath: "internal/builders/docker/testdata/config.toml",
+		ForceCheckout:   false,
+		// BuilderImage field is not relevant, so it is omitted
+	}
+	_, err := newGitClient(config, 1)
+	if err == nil {
+		t.Fatalf("expected error creating GitClient")
+	}
+	if !strings.Contains(err.Error(), "invalid source repository format") {
+		t.Fatalf("expected invalid source ref error creating GitClient, got %s", err)
 	}
 }
 

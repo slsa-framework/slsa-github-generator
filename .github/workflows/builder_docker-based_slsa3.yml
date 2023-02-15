@@ -207,6 +207,11 @@ jobs:
         run: |
           set -euo pipefail
 
+          REF="@${GITHUB_REF}"
+          if [[ "${GITHUB_EVENT_NAME}" == "pull_request" ]]; then
+            REF=""
+          fi
+
           # Note: this outputs information about resolved arguments, etc.
           # the values are trusted because the compiler is not invoked.
           echo "${GITHUB_WORKSPACE}/${BUILDER_BINARY}" dry-run \
@@ -214,13 +219,13 @@ jobs:
             --build-definition-path build-definition.json \
             --builder-image "${BUILDER_IMAGE}@${BUILDER_DIGEST}" \
             --git-commit-digest "sha1:${GITHUB_SHA}" \
-            --source-repo "git+https://github.com/${GITHUB_REPOSITORY}"
+            --source-repo "git+https://github.com/${GITHUB_REPOSITORY}${REF}"
           "${GITHUB_WORKSPACE}/${BUILDER_BINARY}" dry-run \
             --build-config-path "${CONFIG_PATH}" \
             --build-definition-path build-definition.json \
             --builder-image "${BUILDER_IMAGE}@${BUILDER_DIGEST}" \
             --git-commit-digest "sha1:${GITHUB_SHA}" \
-            --source-repo "git+https://github.com/${GITHUB_REPOSITORY}"
+            --source-repo "git+https://github.com/${GITHUB_REPOSITORY}${REF}"
 
           echo "build-definition-name=build-definition.json" >> $GITHUB_OUTPUT
 
@@ -282,20 +287,25 @@ jobs:
         run: |
           set -euo pipefail
 
+          REF="@${GITHUB_REF}"
+          if [[ "${GITHUB_EVENT_NAME}" == "pull_request" ]]; then
+            REF=""
+          fi
+
           # Note: this outputs information about resolved arguments, etc.
           # the values are trusted because the compiler is not invoked.
           echo "${GITHUB_WORKSPACE}/${BUILDER_BINARY}" build \
             --build-config-path "${CONFIG_PATH}" \
             --builder-image "${BUILDER_IMAGE}@${BUILDER_DIGEST}" \
             --git-commit-digest "sha1:${GITHUB_SHA}" \
-            --source-repo "git+https://github.com/${GITHUB_REPOSITORY}" \
+            --source-repo "git+https://github.com/${GITHUB_REPOSITORY}${REF}" \
             --subjects-path subjects.json \
             --output-folder /tmp/build-outputs-${RNG}
           "${GITHUB_WORKSPACE}/${BUILDER_BINARY}" build \
             --build-config-path "${CONFIG_PATH}" \
             --builder-image "${BUILDER_IMAGE}@${BUILDER_DIGEST}" \
             --git-commit-digest "sha1:${GITHUB_SHA}" \
-            --source-repo "git+https://github.com/${GITHUB_REPOSITORY}" \
+            --source-repo "git+https://github.com/${GITHUB_REPOSITORY}${REF}" \
             --subjects-path subjects.json \
             --output-folder /tmp/build-outputs-${RNG}
 
