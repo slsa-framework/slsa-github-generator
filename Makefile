@@ -94,4 +94,4 @@ yamllint: ## Runs the yamllint linter.
 		if [ "$(OUTPUT_FORMAT)" == "github" ]; then \
 			extraargs="-f github"; \
 		fi; \
-		yamllint -c .yamllint.yaml . $$extraargs
+		yamllint --strict -c .yamllint.yaml . $$extraargs
