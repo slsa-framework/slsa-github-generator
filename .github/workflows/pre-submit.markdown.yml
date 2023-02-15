@@ -21,7 +21,7 @@ jobs:
         with:
           node-version: 16
       - name: Install markdown-toc
-        run: npm install markdown-toc
+        run: npm install -g markdown-toc
       - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # v3.3.0
       - name: markdown-toc
         run: ./.github/workflows/scripts/pre-submit.markdown/markdown-toc.sh
