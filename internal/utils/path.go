@@ -46,12 +46,25 @@ func PathIsUnderCurrentDirectory(path string) error {
 	if err != nil {
 		return errors.Errorf(&ErrInternal{}, "filepath.Abs(): %w", err)
 	}
+	return checkPathUnderDir(p, wd)
+}
 
-	if !strings.HasPrefix(p, wd+"/") &&
-		wd != p {
-		return errors.Errorf(&ErrInvalidPath{}, "invalid path: %q", path)
+// PathIsUnderDirectory checks to see if path is under the absolute
+// directory specified.
+func PathIsUnderDirectory(path, absoluteDir string) error {
+	p, err := filepath.Abs(filepath.Join(absoluteDir, path))
+	if err != nil {
+		return errors.Errorf(&ErrInternal{}, "filepath.Abs(): %w", err)
 	}
 
+	return checkPathUnderDir(p, absoluteDir)
+}
+
+func checkPathUnderDir(p, dir string) error {
+	if !strings.HasPrefix(p, dir+"/") &&
+		dir != p {
+		return errors.Errorf(&ErrInvalidPath{}, "invalid path: %q", p)
+	}
 	return nil
 }
 
@@ -82,6 +95,34 @@ func CreateNewFileUnderCurrentDirectory(path string, flag int) (io.Writer, error
 
 	// Ensure we never overwrite an existing file.
 	fp, err := os.OpenFile(filepath.Clean(path), flag|os.O_CREATE|os.O_EXCL, 0o600)
+	if err != nil {
+		return nil, errors.Errorf(&ErrInternal{}, "os.OpenFile(): %v", err)
+	}
+
+	return fp, nil
+}
+
+// CreateNewFileUnderDirectory create a new file under the current directory
+// and fails if the file already exists. The file is always created with the pemisisons
+// `0o600`. Ensures that the path does not exit out of the given directory.
+func CreateNewFileUnderDirectory(path, dir string, flag int) (io.Writer, error) {
+	if path == "-" {
+		return os.Stdout, nil
+	}
+
+	if err := PathIsUnderDirectory(path, dir); err != nil {
+		return nil, err
+	}
+
+	// Create the directory if it does not exist
+	fullPath := filepath.Join(dir, path)
+	err := os.MkdirAll(filepath.Dir(fullPath), 0o755)
+	if err != nil {
+		return nil, errors.Errorf(&ErrInternal{}, "os.MkdirAll(): %v", err)
+	}
+
+	// Ensure we never overwrite an existing file.
+	fp, err := os.OpenFile(filepath.Clean(fullPath), flag|os.O_CREATE|os.O_EXCL, 0o600)
 	if err != nil {
 		return nil, errors.Errorf(&ErrInternal{}, "os.OpenFile(): %v", err)
 	}
