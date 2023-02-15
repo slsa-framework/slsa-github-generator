@@ -118,11 +118,12 @@ damaging.
 ### Security Releases
 
 Once a fix is available it will be released and announced via the project on
-GitHub and in the OpenSSF #slsa-tooling slack channel. Security releases will
-announced and clearly marked as a security release and include information on
-which vulnerabilities were fixed. As much as possible this announcement should
-be actionable, and include any mitigating steps users can take prior to
-upgrading to a fixed version.
+GitHub and in the [OpenSSF #slsa-tooling slack
+channel](https://slack.com/app_redirect?team=T019QHUBYQ3&channel=slsa-tooling).
+Security releases will announced and clearly marked as a security release and
+include information on which vulnerabilities were fixed. As much as possible
+this announcement should be actionable, and include any mitigating steps users
+can take prior to upgrading to a fixed version.
 
 Fixes will be applied in patch releases to all [supported
 versions](#supported-versions).
