@@ -36,15 +36,33 @@ import (
 	"strings"
 
 	intoto "github.com/in-toto/in-toto-golang/in_toto"
+	slsa1 "github.com/in-toto/in-toto-golang/in_toto/slsa_provenance/v1.0"
+
+	"github.com/slsa-framework/slsa-github-generator/internal/errors"
 )
+
+// errGitCommitMismatch indicates that the repo is checked out at an unexpected commit hash.
+type errGitCommitMismatch struct {
+	errors.WrappableError
+}
+
+// errGitFetch indicates an error when cloning a Git repo.
+type errGitFetch struct {
+	errors.WrappableError
+}
+
+// errGitCheckout indicates an error when checking out a given commit hash.
+type errGitCheckout struct {
+	errors.WrappableError
+}
 
 // DockerBuild represents a state in the process of building the artifacts
 // where the source repository is checked out and the config file is loaded and
 // parsed, and we are ready for running the `docker run` command.
 type DockerBuild struct {
-	BuildDefinition *BuildDefinition
-	BuildConfig     *BuildConfig
-	RepoInfo        *RepoCheckoutInfo
+	config      *DockerBuildConfig
+	buildConfig *BuildConfig
+	RepoInfo    *RepoCheckoutInfo
 }
 
 // RepoCheckoutInfo contains info about the location of a locally checked out
@@ -69,48 +87,47 @@ type Builder struct {
 
 // NewBuilderWithGitFetcher creates a new Builder that fetches the sources
 // from a Git repository.
-func NewBuilderWithGitFetcher(config DockerBuildConfig, forceCheckout bool) (*Builder, error) {
-	gc, err := newGitClient(&config, forceCheckout, 0 /* depth */)
+func NewBuilderWithGitFetcher(config *DockerBuildConfig) (*Builder, error) {
+	gc, err := newGitClient(config, 0 /* depth */)
 	if err != nil {
 		return nil, fmt.Errorf("could not create builder: %v", err)
 	}
 
 	return &Builder{
 		repoFetcher: gc,
-		config:      config,
+		config:      *config,
 	}, nil
 }
 
-// CreateBuildDefinition creates a BuildDefinition from the given DockerBuildConfig.
-func CreateBuildDefinition(config *DockerBuildConfig) *BuildDefinition {
-	artifacts := make(map[string]ArtifactReference)
-	artifacts[SourceKey] = sourceArtifact(config)
-	artifacts[BuilderImageKey] = builderImage(config)
-
-	ep := ParameterCollection{
-		Artifacts: artifacts,
-		Values:    map[string]string{ConfigFileKey: config.BuildConfigPath},
+// CreateBuildDefinition creates a BuildDefinition from the DockerBuildConfig
+// and BuildConfig in this DockerBuild.
+func (db *DockerBuild) CreateBuildDefinition() *slsa1.ProvenanceBuildDefinition {
+	ep := DockerBasedExternalParmaters{
+		Source:       sourceArtifact(db.config),
+		BuilderImage: builderImage(db.config),
+		ConfigPath:   db.config.BuildConfigPath,
+		Config:       *db.buildConfig,
 	}
 
 	// Currently we don't have any SystemParameters or ResolvedDependencies.
 	// So these fields are left empty.
-	return &BuildDefinition{
+	return &slsa1.ProvenanceBuildDefinition{
 		BuildType:          DockerBasedBuildType,
 		ExternalParameters: ep,
 	}
 }
 
 // sourceArtifact returns the source repo and its digest as an instance of ArtifactReference.
-func sourceArtifact(config *DockerBuildConfig) ArtifactReference {
-	return ArtifactReference{
+func sourceArtifact(config *DockerBuildConfig) slsa1.ArtifactReference {
+	return slsa1.ArtifactReference{
 		URI:    config.SourceRepo,
 		Digest: config.SourceDigest.ToMap(),
 	}
 }
 
 // builderImage returns the builder image as an instance of ArtifactReference.
-func builderImage(config *DockerBuildConfig) ArtifactReference {
-	return ArtifactReference{
+func builderImage(config *DockerBuildConfig) slsa1.ArtifactReference {
+	return slsa1.ArtifactReference{
 		URI:    config.BuilderImage.ToString(),
 		Digest: config.BuilderImage.Digest.ToMap(),
 	}
@@ -139,20 +156,20 @@ func (b *Builder) SetUpBuildState() (*DockerBuild, error) {
 	}
 
 	db := &DockerBuild{
-		BuildDefinition: CreateBuildDefinition(&b.config),
-		BuildConfig:     bc,
-		RepoInfo:        repoInfo,
+		config:      &b.config,
+		buildConfig: bc,
+		RepoInfo:    repoInfo,
 	}
 	return db, nil
 }
 
-// BuildArtifact builds the artifacts based on the user-provided inputs, and
+// BuildArtifacts builds the artifacts based on the user-provided inputs, and
 // returns the names and SHA256 digests of the generated artifacts.
-func (db *DockerBuild) BuildArtifact() ([]intoto.Subject, error) {
+func (db *DockerBuild) BuildArtifacts() ([]intoto.Subject, error) {
 	if err := runDockerRun(db); err != nil {
 		return nil, fmt.Errorf("running `docker run` failed: %v", err)
 	}
-	return inspectArtifacts(db.BuildConfig.ArtifactPath)
+	return inspectArtifacts(db.buildConfig.ArtifactPath)
 }
 
 func runDockerRun(db *DockerBuild) error {
@@ -170,11 +187,17 @@ func runDockerRun(db *DockerBuild) error {
 		"--rm",
 	}
 
+	buildDef := db.CreateBuildDefinition()
+	dockerEp, ok := buildDef.ExternalParameters.(DockerBasedExternalParmaters)
+	if !ok {
+		return fmt.Errorf("expected docker-based external parameters")
+	}
+
 	var args []string
 	args = append(args, "run")
 	args = append(args, defaultDockerRunFlags...)
-	args = append(args, db.BuildDefinition.ExternalParameters.Artifacts[BuilderImageKey].URI)
-	args = append(args, db.BuildConfig.Command...)
+	args = append(args, dockerEp.BuilderImage.URI)
+	args = append(args, db.buildConfig.Command...)
 	cmd := exec.Command("docker", args...)
 
 	log.Printf("Running command: %q.", cmd.String())
@@ -209,6 +232,7 @@ func runDockerRun(db *DockerBuild) error {
 // Git repository.
 type GitClient struct {
 	sourceRepo    *string
+	sourceRef     *string
 	sourceDigest  *Digest
 	checkoutInfo  *RepoCheckoutInfo
 	logFiles      []string
@@ -217,7 +241,7 @@ type GitClient struct {
 	depth         int
 }
 
-func newGitClient(config *DockerBuildConfig, forceCheckout bool, depth int) (*GitClient, error) {
+func newGitClient(config *DockerBuildConfig, depth int) (*GitClient, error) {
 	repo := config.SourceRepo
 	parsed, err := url.Parse(repo)
 	if err != nil {
@@ -235,10 +259,25 @@ func newGitClient(config *DockerBuildConfig, forceCheckout bool, depth int) (*Gi
 		return nil, fmt.Errorf("unsupported scheme: %v", parsed.Scheme)
 	}
 
+	// Retrieve the ref if a tag is added to the repository.
+	var sourceRef *string
+	refParts := strings.Split(repo, "@")
+	switch len(refParts) {
+	case 2:
+		// A source reference was provided.
+		sourceRef = &refParts[1]
+		repo = strings.TrimSuffix(repo, "@"+refParts[1])
+	case 1:
+		// No source reference was provided.
+	default:
+		return nil, fmt.Errorf("invalid source repository format: %s", repo)
+	}
+
 	return &GitClient{
 		sourceRepo:    &repo,
+		sourceRef:     sourceRef,
 		sourceDigest:  &config.SourceDigest,
-		forceCheckout: forceCheckout,
+		forceCheckout: config.ForceCheckout,
 		depth:         depth,
 		checkoutInfo:  &RepoCheckoutInfo{},
 	}, nil
@@ -268,7 +307,7 @@ func (c *GitClient) verifyOrFetchRepo() error {
 	if c.sourceDigest.Alg != "sha1" {
 		return fmt.Errorf("git commit digest must be a sha1 digest")
 	}
-	repoIsCheckedOut, err := c.verifyCommit()
+	repoIsCheckedOut, err := c.verifyRefAndCommit()
 	if err != nil && !c.forceCheckout {
 		return err
 	}
@@ -280,20 +319,30 @@ func (c *GitClient) verifyOrFetchRepo() error {
 	return nil
 }
 
-// verifyCommit checks that the current working directory is the root of a Git
-// repository at the given commit hash. Returns an error if the working
-// directory is a Git repository at a different commit.
-func (c *GitClient) verifyCommit() (bool, error) {
-	cmd := exec.Command("git", "rev-parse", "--verify", "HEAD")
-	lastCommitIDBytes, err := cmd.Output()
-	if err != nil {
-		// The current working directory is not a git repo.
-		return false, nil
+// verifyRefAndCommit checks that the current working directory is the root of a Git
+// repository at the given commit hash. If a source ref is also specified, verifies
+// that the ref resolves to the given commit hash.
+// Returns an error if the working directory is a Git repository at a different commit
+// or ref.
+func (c *GitClient) verifyRefAndCommit() (bool, error) {
+	checkCmds := []*exec.Cmd{exec.Command("git", "rev-parse", "--verify", "HEAD")}
+	if c.sourceRef != nil {
+		sourceRef := *c.sourceRef
+		checkCmds = append(checkCmds, exec.Command("git", "show-ref", "--hash", "--verify", sourceRef))
 	}
-	lastCommitID := strings.TrimSpace(string(lastCommitIDBytes))
 
-	if lastCommitID != c.sourceDigest.Value {
-		return false, fmt.Errorf("the repo is already checked out at a different commit (%q)", lastCommitID)
+	for _, cmd := range checkCmds {
+		lastCommitIDBytes, err := cmd.Output()
+		if err != nil {
+			// The current working directory is not a git repo.
+			return false, nil
+		}
+		lastCommitID := strings.TrimSpace(string(lastCommitIDBytes))
+
+		if lastCommitID != c.sourceDigest.Value {
+			return false, errors.Errorf(&errGitCommitMismatch{},
+				"the repo is already checked out at a different commit (%q)", lastCommitID)
+		}
 	}
 
 	return true, nil
@@ -324,7 +373,7 @@ func (c *GitClient) fetchSourcesFromGitRepo() error {
 
 	// Clone the repo.
 	if err = c.cloneGitRepo(); err != nil {
-		return fmt.Errorf("couldn't clone the Git repo: %v", err)
+		return errors.Errorf(&errGitFetch{}, "couldn't clone the Git repo: %w", err)
 	}
 
 	// Change directory to the root of the cloned repo.
@@ -340,7 +389,7 @@ func (c *GitClient) fetchSourcesFromGitRepo() error {
 
 	// Checkout the commit.
 	if err = c.checkoutGitCommit(); err != nil {
-		return fmt.Errorf("couldn't checkout the Git commit: %v", err)
+		return errors.Errorf(&errGitCheckout{}, "couldn't checkout the Git commit: %w", err)
 	}
 
 	c.checkoutInfo.RepoRoot = cwd
@@ -351,8 +400,10 @@ func (c *GitClient) fetchSourcesFromGitRepo() error {
 // Clones a Git repo from the URI in this GitClient, up to the depth given in
 // this GitClient. If depth is 0 or negative, the entire repo is cloned.
 func (c *GitClient) cloneGitRepo() error {
+	//#nosec G204 -- Input from user config file.
 	cmd := exec.Command("git", "clone", *c.sourceRepo)
 	if c.depth > 0 {
+		//#nosec G204 -- Input from user config file.
 		cmd = exec.Command("git", "clone", "--depth", fmt.Sprintf("%d", c.depth), *c.sourceRepo)
 	}
 	log.Printf("Cloning the repo from %s...", *c.sourceRepo)
@@ -387,6 +438,7 @@ func (c *GitClient) cloneGitRepo() error {
 }
 
 func (c *GitClient) checkoutGitCommit() error {
+	//#nosec G204 -- Input from user config file.
 	cmd := exec.Command("git", "checkout", c.sourceDigest.Value)
 
 	stdout, err := cmd.StdoutPipe()
@@ -412,6 +464,11 @@ func (c *GitClient) checkoutGitCommit() error {
 	if err := cmd.Wait(); err != nil {
 		return fmt.Errorf("failed to complete the command: %v; see %q for logs, and %q for errors",
 			err, files[0], files[1])
+	}
+
+	ok, err := c.verifyRefAndCommit()
+	if err != nil || !ok {
+		return fmt.Errorf("failed to verify ref and commit: %v", err)
 	}
 
 	return nil
@@ -484,15 +541,15 @@ func inspectArtifacts(pattern string) ([]intoto.Subject, error) {
 
 // Reads the file in the given path and returns its name and digest wrapped in
 // an intoto.Subject.
-func toIntotoSubject(path string) (*intoto.Subject, error) {
-	data, err := os.ReadFile(path)
+func toIntotoSubject(filePath string) (*intoto.Subject, error) {
+	data, err := os.ReadFile(filePath)
 	if err != nil {
-		return nil, fmt.Errorf("couldn't read file %q: %v", path, err)
+		return nil, fmt.Errorf("couldn't read file %q: %v", filePath, err)
 	}
 
 	sum256 := sha256.Sum256(data)
 	digest := hex.EncodeToString(sum256[:])
-	name := filepath.Base(path)
+	name := filepath.Base(filePath)
 	subject := &intoto.Subject{
 		Name:   name,
 		Digest: map[string]string{"sha256": digest},
@@ -506,7 +563,7 @@ func (info *RepoCheckoutInfo) Cleanup() {
 	// Some files are generated by the build toolchain (e.g., cargo), and cannot
 	// be removed. We still want to remove all other files to avoid taking up
 	// too much space, particularly when running locally.
-	if len(info.RepoRoot) == 0 {
+	if info.RepoRoot == "" {
 		return
 	}
 	if err := os.RemoveAll(info.RepoRoot); err != nil {

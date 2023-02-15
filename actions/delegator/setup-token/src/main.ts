@@ -13,28 +13,27 @@ limitations under the License.
 
 import * as github from "@actions/github";
 import * as core from "@actions/core";
-import * as sigstore from "sigstore";
+import { sigstore } from "sigstore";
 import * as process from "process";
 
 const signOptions = {
   oidcClientID: "sigstore",
   oidcIssuer: "https://oauth2.sigstore.dev/auth",
-  rekorBaseURL: sigstore.sigstore.DEFAULT_REKOR_BASE_URL,
 };
 
 async function run(): Promise<void> {
   try {
     /* Test locally:
         $ env INPUT_SLSA-WORKFLOW-RECIPIENT="laurentsimon/slsa-delegated-tool" \
-        INPUT_SLSA-PRIVATE-REPOSITORY=true \
+        INPUT_SLSA-REKOR-LOG-PUBLIC=true \
         INPUT_SLSA-RUNNER-LABEL="ubuntu-latest" \
         INPUT_SLSA-BUILD-ACTION-PATH="./actions/build-artifacts-composite" \
-        INPUT_SLSA-WORKFLOW-INPUTS="{\"name1\":\"value1\",\"name2\":\"value2\",\"private-repository\":true}" \
+        INPUT_SLSA-WORKFLOW-INPUTS="{\"name1\":\"value1\",\"name2\":\"value2\"}" \
         nodejs ./dist/index.js
     */
 
     const workflowRecipient = core.getInput("slsa-workflow-recipient");
-    const privateRepository = core.getInput("slsa-private-repository");
+    const rekorLogPublic = core.getInput("slsa-rekor-log-public");
     const runnerLabel = core.getInput("slsa-runner-label");
     const buildArtifactsActionPath = core.getInput("slsa-build-action-path");
     // The workflow inputs are represented as a JSON object theselves.
@@ -57,7 +56,7 @@ async function run(): Promise<void> {
       version: 1,
       context: "SLSA delegator framework",
       builder: {
-        private_repository: privateRepository,
+        rekor_log_public: rekorLogPublic,
         runner_label: runnerLabel,
         audience: workflowRecipient,
       },
@@ -101,7 +100,7 @@ async function run(): Promise<void> {
     if (eventName === "pull_request") {
       bundleStr = "PLACEHOLDER_SIGNATURE";
     } else {
-      const bundle = await sigstore.sigstore.sign(
+      const bundle = await sigstore.sign(
         Buffer.from(unsignedB64Token),
         signOptions
       );

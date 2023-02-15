@@ -15,13 +15,15 @@
 package pkg
 
 import (
-	"fmt"
 	"os"
 	"strings"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 	intoto "github.com/in-toto/in-toto-golang/in_toto"
+
+	"github.com/slsa-framework/slsa-github-generator/internal/errors"
 )
 
 func Test_CreateBuildDefinition(t *testing.T) {
@@ -35,7 +37,15 @@ func Test_CreateBuildDefinition(t *testing.T) {
 		BuildConfigPath: "internal/builders/docker/testdata/config.toml",
 	}
 
-	got := CreateBuildDefinition(config)
+	db := &DockerBuild{
+		config: config,
+		buildConfig: &BuildConfig{
+			Command:      []string{"cp", "internal/builders/docker/testdata/config.toml", "config.toml"},
+			ArtifactPath: "config.toml",
+		},
+	}
+
+	got := db.CreateBuildDefinition()
 
 	want, err := loadBuildDefinitionFromFile("../testdata/build-definition.json")
 	if err != nil {
@@ -54,15 +64,16 @@ func Test_GitClient_verifyOrFetchRepo(t *testing.T) {
 		// The digest value does not matter for the test
 		SourceDigest:    Digest{Alg: "sha1", Value: "does-not-matter"},
 		BuildConfigPath: "internal/builders/docker/testdata/config.toml",
+		ForceCheckout:   false,
 		// BuilderImage field is not relevant, so it is omitted
 	}
-	gc, err := newGitClient(config, false, 1)
+	gc, err := newGitClient(config, 1)
 	if err != nil {
 		t.Fatalf("Could create GitClient: %v", err)
 	}
 
-	// We expect it to fail at verify commit
-	want := "the repo is already checked out at a different commit"
+	// We expect it to fail at verifyCommit
+	want := &errGitCommitMismatch{}
 	err = gc.verifyOrFetchRepo()
 	checkError(t, err, want)
 }
@@ -81,15 +92,16 @@ func Test_GitClient_fetchSourcesFromGitRepo(t *testing.T) {
 		// The digest value does not matter for the test
 		SourceDigest:    Digest{Alg: "sha1", Value: "does-no-matter"},
 		BuildConfigPath: "internal/builders/docker/testdata/config.toml",
+		ForceCheckout:   false,
 		// BuilderImage field is not relevant, so it is omitted
 	}
-	gc, err := newGitClient(config, false, 1)
+	gc, err := newGitClient(config, 1)
 	if err != nil {
 		t.Fatalf("Could not create GitClient: %v", err)
 	}
 
 	// We expect the checkout to fail
-	want := "couldn't checkout the Git commit"
+	want := &errGitCheckout{}
 	err = gc.fetchSourcesFromGitRepo()
 	checkError(t, err, want)
 
@@ -98,6 +110,52 @@ func Test_GitClient_fetchSourcesFromGitRepo(t *testing.T) {
 	// Recover the original test state.
 	if err := os.Chdir(cwd); err != nil {
 		t.Errorf("couldn't change directory to %q: %v", cwd, err)
+	}
+}
+
+func Test_GitClient_sourceWithRef(t *testing.T) {
+	// This tests that specifying a source repository with a ref resolves
+	// to a valid GitClient source repository
+
+	config := &DockerBuildConfig{
+		// Use a small repo for test
+		SourceRepo: "git+https://github.com/project-oak/transparent-release@refs/heads/main",
+		// The digest value does not matter for the test
+		SourceDigest:    Digest{Alg: "sha1", Value: "does-no-matter"},
+		BuildConfigPath: "internal/builders/docker/testdata/config.toml",
+		ForceCheckout:   false,
+		// BuilderImage field is not relevant, so it is omitted
+	}
+	gc, err := newGitClient(config, 1)
+	if err != nil {
+		t.Fatalf("Could not create GitClient: %v", err)
+	}
+
+	// We expect that the sourceRef is set to refs/heads/main
+	if gc.sourceRef == nil || *gc.sourceRef != "refs/heads/main" {
+		t.Errorf("expected sourceRef to be refs/heads/main, got %s", *gc.sourceRef)
+	}
+}
+
+func Test_GitClient_invalidSourceRef(t *testing.T) {
+	// This tests that specifying a source repository with a ref resolves
+	// to a valid GitClient source repository
+
+	config := &DockerBuildConfig{
+		// Use a small repo for test
+		SourceRepo: "git+https://github.com/project-oak/transparent-release@refs/heads/main@invalid",
+		// The digest value does not matter for the test
+		SourceDigest:    Digest{Alg: "sha1", Value: "does-no-matter"},
+		BuildConfigPath: "internal/builders/docker/testdata/config.toml",
+		ForceCheckout:   false,
+		// BuilderImage field is not relevant, so it is omitted
+	}
+	_, err := newGitClient(config, 1)
+	if err == nil {
+		t.Fatalf("expected error creating GitClient")
+	}
+	if !strings.Contains(err.Error(), "invalid source repository format") {
+		t.Fatalf("expected invalid source ref error creating GitClient, got %s", err)
 	}
 }
 
@@ -111,7 +169,7 @@ func Test_inspectArtifacts(t *testing.T) {
 
 	s1 := intoto.Subject{
 		Name:   "build-definition.json",
-		Digest: map[string]string{"sha256": "f139aef0c32000161fa71052276697fa8acbecaa2fd68f5c20f1a5ca95458e13"},
+		Digest: map[string]string{"sha256": "1a60da949ad34d060ac2650bc4d7cba287cb7d2ffda4e8f4a65459c77801e2d5"},
 	}
 	s2 := intoto.Subject{
 		Name:   "config.toml",
@@ -157,13 +215,8 @@ func Test_Builder_SetUpBuildState(t *testing.T) {
 	}
 }
 
-// TODO(#1478): Use custom error types, and check errors based on their type.
-func checkError(t *testing.T, err error, want string) {
-	if err == nil {
-		t.Errorf("expected error, got nil")
-	}
-	got := fmt.Sprintf("%v", err)
-	if !strings.Contains(got, want) {
-		t.Errorf("unexpected error message: got (%q) does not contain want (%q)", got, want)
+func checkError[T error](t *testing.T, got error, want T) {
+	if !errors.As(got, &want) {
+		t.Errorf("unexpected error: %v", cmp.Diff(got, want, cmpopts.EquateErrors()))
 	}
 }

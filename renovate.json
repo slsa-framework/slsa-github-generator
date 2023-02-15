@@ -1,14 +1,24 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": [
-    "config:base", 
-    ":gitSignOff"
-  ],
+  "extends": ["config:base", ":gitSignOff"],
   "schedule": ["every weekend"],
+  "postUpdateOptions": ["gomodTidy", "gomodUpdateImportPaths"],
   "packageRules": [
     {
       "matchManagers": ["github-actions"],
       "groupName": "github-actions"
+    },
+    {
+      "matchManagers": ["dockerfile"],
+      "matchPackageNames": ["golang"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "golang"
+    },
+    {
+      "matchManagers": ["gomod"],
+      "matchPackageNames": ["go"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "golang"
     },
     {
       "matchManagers": ["gomod"],

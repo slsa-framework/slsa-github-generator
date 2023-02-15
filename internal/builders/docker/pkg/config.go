@@ -94,6 +94,7 @@ func NewDockerBuildConfig(io *InputOptions) (*DockerBuildConfig, error) {
 		SourceDigest:    *sourceRepoDigest,
 		BuilderImage:    *dockerImage,
 		BuildConfigPath: io.BuildConfigPath,
+		ForceCheckout:   io.ForceCheckout,
 	}, nil
 }
 

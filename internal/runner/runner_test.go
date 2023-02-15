@@ -89,8 +89,7 @@ func TestCommandRunner_StepEnv(t *testing.T) {
 		t.Fatalf("unexpected command: %v", diff)
 	}
 
-	sorted := cmpopts.SortSlices(func(a, b string) bool { return a < b })
-	if diff := cmp.Diff(steps[0].Env, []string{"TEST=fuga"}, sorted); diff != "" {
+	if diff := cmp.Diff(steps[0].Env, []string{"TEST=fuga"}); diff != "" {
 		t.Fatalf("unexpected env: %v", diff)
 	}
 
@@ -146,8 +145,7 @@ func TestCommandRunner_RunnerEnv(t *testing.T) {
 		t.Fatalf("unexpected command: %v", diff)
 	}
 
-	sorted := cmpopts.SortSlices(func(a, b string) bool { return a < b })
-	if diff := cmp.Diff(steps[0].Env, []string{"RUNNER=hoge", "STEP=fuga"}, sorted); diff != "" {
+	if diff := cmp.Diff(steps[0].Env, []string{"RUNNER=hoge", "STEP=fuga"}); diff != "" {
 		t.Fatalf("unexpected env: %v", diff)
 	}
 

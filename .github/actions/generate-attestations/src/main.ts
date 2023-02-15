@@ -6,10 +6,19 @@ import { resolvePathInput } from "./utils";
 
 export function run(): void {
   try {
+    /*
+    Test:
+      env INPUT_SLSA-LAYOUT-FILE=layout.json \
+      INPUT_PREDICATE-TYPE=https://slsa.dev/provenance/v1.0?draft \
+      INPUT_PREDICATE-FILE=predicate.json \
+      INPUT_OUTPUT-FOLDER=out-folder \
+      GITHUB_WORKSPACE=$PWD \
+      nodejs ./dist/index.js
+    */
     const wd = process.env[`GITHUB_WORKSPACE`] || "";
 
     // SLSA subjects layout file.
-    const slsaOutputs = core.getInput("slsa-outputs-file");
+    const slsaOutputs = core.getInput("slsa-layout-file");
     const safeSlsaOutputs = resolvePathInput(slsaOutputs, wd);
     core.debug(`Using SLSA output file at ${safeSlsaOutputs}!`);
 

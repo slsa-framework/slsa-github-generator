@@ -99,7 +99,7 @@ func GenerateProvenance(name, digest, command, envs, workingDir string,
 					"sha256": digest,
 				},
 			},
-		}, gh),
+		}, &gh),
 		buildConfig: buildConfig{
 			Version: buildConfigVersion,
 			Steps: []step{
@@ -125,11 +125,9 @@ func GenerateProvenance(name, digest, command, envs, workingDir string,
 	// Pre-submit tests don't have access to write OIDC token.
 	if provider != nil {
 		b.WithClients(provider)
-	} else {
+	} else if utils.IsPresubmitTests() {
 		// TODO(github.com/slsa-framework/slsa-github-generator/issues/124): Remove
-		if utils.IsPresubmitTests() {
-			b.GithubActionsBuild.WithClients(&slsa.NilClientProvider{})
-		}
+		b.GithubActionsBuild.WithClients(&slsa.NilClientProvider{})
 	}
 
 	ctx := context.Background()
@@ -137,11 +135,9 @@ func GenerateProvenance(name, digest, command, envs, workingDir string,
 	// Pre-submit tests don't have access to write OIDC token.
 	if provider != nil {
 		g.WithClients(provider)
-	} else {
+	} else if utils.IsPresubmitTests() {
 		// TODO(github.com/slsa-framework/slsa-github-generator/issues/124): Remove
-		if utils.IsPresubmitTests() {
-			g.WithClients(&slsa.NilClientProvider{})
-		}
+		g.WithClients(&slsa.NilClientProvider{})
 	}
 	p, err := g.Generate(ctx)
 	if err != nil {
@@ -154,7 +150,10 @@ func GenerateProvenance(name, digest, command, envs, workingDir string,
 	//
 	// NOTE: map is a reference so modifying invEnv modifies
 	// p.Predicate.Invocation.Environment.
-	invEnv := p.Predicate.Invocation.Environment.(map[string]interface{})
+	invEnv, ok := p.Predicate.Invocation.Environment.(map[string]interface{})
+	if !ok {
+		panic(fmt.Sprintf("converting %T to map[string]interface{}", p.Predicate.Invocation.Environment))
+	}
 	invEnv["arch"] = os.Getenv("RUNNER_ARCH")
 	invEnv["os"] = os.Getenv("ImageOS")
 

@@ -24,11 +24,9 @@ linters:
     # Some linters have been removed because of the go 1.18 issues.
     # https://github.com/golangci/golangci-lint/issues/2649
     - asciicheck
-    - deadcode
     - depguard
     - dogsled
-    # TODO(github.com/slsa-framework/slsa-github-generator/issues/450): enable errcheck
-    # - errcheck
+    - errcheck
     # TODO(github.com/slsa-framework/slsa-github-generator/issues/450): enable errorlint
     # - errorlint
     - exhaustive
@@ -38,8 +36,7 @@ linters:
     - gochecknoinits
     - gocognit
     - goconst
-    # TODO(github.com/slsa-framework/slsa-github-generator/issues/450): enable gocritic
-    # - gocritic
+    - gocritic
     - gocyclo
     - godot
     # TODO(github.com/slsa-framework/slsa-github-generator/issues/450): enable godox
@@ -52,8 +49,7 @@ linters:
     - goimports
     - gomodguard
     - goprintffuncname
-    # TODO(github.com/slsa-framework/slsa-github-generator/issues/450): enable gosec
-    # - gosec
+    - gosec
     - gosimple
     - govet
     - ineffassign
@@ -76,7 +72,6 @@ linters:
     - typecheck
     - unconvert
     - unused
-    - varcheck
     - whitespace
     # TODO(github.com/slsa-framework/slsa-github-generator/issues/450): enable thelper
     # - wrapcheck
@@ -84,6 +79,10 @@ linters-settings:
   errcheck:
     check-type-assertions: true
     check-blank: true
+  gocognit:
+    # Minimal code complexity to report
+    # Increased beyond default to support table-driven tests.
+    min-complexity: 35
   govet:
     enable:
       - fieldalignment

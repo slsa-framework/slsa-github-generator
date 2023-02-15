@@ -1,6 +1,6 @@
 name: setup token
 
-description: 'setup token'
+description: "Create a SLSA token for the delegated workflow"
 
 inputs:
   slsa-workflow-recipient:
@@ -11,7 +11,7 @@ inputs:
     type: string
     required: true
 
-  slsa-private-repository:
+  slsa-rekor-log-public:
     description: "If true, private repositories can post to the public transparency log."
     required: false
     type: boolean
@@ -47,5 +47,5 @@ outputs:
     description: "SLSA token"
 
 runs:
-  using: 'node16'
-  main: 'dist/index.js'
+  using: "node16"
+  main: "dist/index.js"

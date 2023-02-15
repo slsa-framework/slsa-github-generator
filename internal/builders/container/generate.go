@@ -45,27 +45,23 @@ that it is being run in the context of a Github Actions workflow.`,
 
 			b := common.GenericBuild{
 				// NOTE: Subjects are nil because we are only writing the predicate.
-				GithubActionsBuild: slsa.NewGithubActionsBuild(nil, ghContext),
+				GithubActionsBuild: slsa.NewGithubActionsBuild(nil, &ghContext),
 				BuildTypeURI:       containerBuildType,
 			}
 
 			if provider != nil {
 				b.WithClients(provider)
-			} else {
+			} else if utils.IsPresubmitTests() {
 				// TODO(github.com/slsa-framework/slsa-github-generator/issues/124): Remove
-				if utils.IsPresubmitTests() {
-					b.WithClients(&slsa.NilClientProvider{})
-				}
+				b.WithClients(&slsa.NilClientProvider{})
 			}
 
 			g := slsa.NewHostedActionsGenerator(&b)
 			if provider != nil {
 				g.WithClients(provider)
-			} else {
+			} else if utils.IsPresubmitTests() {
 				// TODO(github.com/slsa-framework/slsa-github-generator/issues/124): Remove
-				if utils.IsPresubmitTests() {
-					g.WithClients(&slsa.NilClientProvider{})
-				}
+				g.WithClients(&slsa.NilClientProvider{})
 			}
 
 			p, err := g.Generate(ctx)
