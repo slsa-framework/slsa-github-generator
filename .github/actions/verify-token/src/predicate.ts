@@ -112,16 +112,22 @@ export interface githubObj {
   actor: string;
 }
 
-function getWorkflowPath(repoName: string, workflowRef: string): string {
-  // GITHUB_WORKFlOW_REF contains the repository name in the path. We will trim
+// getWorkflowPath returns the workflow's path from the workflow_ref.
+export function getWorkflowPath(): string {
+  // GITHUB_WORKFLOW_REF contains the repository name in the path. We will trim
   // it out.
-  let ref = workflowRef.trim();
-  const repoPrefix = `${repoName.trim()}/`;
-  if (ref.startsWith(repoPrefix)) {
-    ref = ref.substring(repoPrefix.length);
+  // e.g. 'octocat/hello-world/.github/workflows/my-workflow.yml@refs/heads/my_branch'
+  let ref = (process.env.GITHUB_WORKFLOW_REF || "").trim();
+  let repo = (process.env.GITHUB_REPOSITORY || "").trim();
+  const repoPrefix = `${repo}/`;
+  if (!ref.startsWith(repoPrefix)) {
+    throw new Error(
+      `expected workflow ref '${ref}' to start with repository name '${repo}'.`
+    );
   }
-  // Strip off the ref from the workflow path.
-  return (ref || "").split("@", 1)[0];
+
+  // Strip off the repo name and git ref from the workflow path.
+  return ref.substring(repoPrefix.length).split("@", 1)[0];
 }
 
 export function createPredicate(
@@ -158,10 +164,7 @@ export function createPredicate(
         workflow: {
           ref: env.GITHUB_REF || "",
           repository: env.GITHUB_REPOSITORY || "",
-          path: getWorkflowPath(
-            env.GITHUB_REPOSITORY || "",
-            env.GITHUB_WORKFLOW_REF || ""
-          ),
+          path: getWorkflowPath(),
         },
         // We only use source here because the source contained the source
         // repository and the build configuration.

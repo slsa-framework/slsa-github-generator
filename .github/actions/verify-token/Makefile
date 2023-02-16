@@ -36,6 +36,10 @@ clean:
 ## Testing
 #####################################################################
 
+.PHONY: unit-test
+unit-test: node_modules/.installed ## Runs all unit tests.
+	npm run test
+
 .PHONY: lint
 lint: node_modules/.installed ## Runs eslint.
 	npm run lint
