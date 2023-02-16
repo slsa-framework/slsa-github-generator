@@ -117,8 +117,8 @@ export function getWorkflowPath(): string {
   // GITHUB_WORKFLOW_REF contains the repository name in the path. We will trim
   // it out.
   // e.g. 'octocat/hello-world/.github/workflows/my-workflow.yml@refs/heads/my_branch'
-  let ref = (process.env.GITHUB_WORKFLOW_REF || "").trim();
-  let repo = (process.env.GITHUB_REPOSITORY || "").trim();
+  const ref = (process.env.GITHUB_WORKFLOW_REF || "").trim();
+  const repo = (process.env.GITHUB_REPOSITORY || "").trim();
   const repoPrefix = `${repo}/`;
   if (!ref.startsWith(repoPrefix)) {
     throw new Error(
