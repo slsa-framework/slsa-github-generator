@@ -13,104 +13,10 @@ limitations under the License.
 import * as process from "process";
 import * as fs from "fs";
 
+import { rawTokenInterface, ArtifactReference, SLSAv1Predicate } from "./types";
+
 const DELEGATOR_BUILD_TYPE =
   "https://github.com/slsa-framework/slsa-github-generator/delegator-generic@v0";
-
-interface Builder {
-  id: string;
-  version?: string;
-  builderDependencies?: ArtifactReference[];
-}
-
-interface DigestSet {
-  [key: string]: string;
-}
-
-interface Metadata {
-  invocationId?: string;
-  startedOn?: Date;
-  finishedOn?: Date;
-}
-
-interface ArtifactReference {
-  uri: string;
-  digest: DigestSet;
-  localName?: string;
-  downloadLocation?: string;
-  mediaType?: string;
-}
-
-interface BuildDefinition {
-  // buildType is a TypeURI that unambiguously indicates the type of this message and how to initiate the build.
-  buildType: string;
-
-  // externalParameters is the set of top-level external inputs to the build.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  externalParameters: any;
-
-  // systemParameters describes parameters of the build environment provided by the `builder`.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  systemParameters?: any;
-
-  // resolvedDependencies are dependencies needed at build time.
-  resolvedDependencies?: ArtifactReference[];
-}
-
-interface RunDetails {
-  builder: Builder;
-
-  metadata: Metadata;
-
-  byproducts?: ArtifactReference[];
-}
-
-interface SLSAv1Predicate {
-  // buildDefinition describes the inputs to the build.
-  buildDefinition: BuildDefinition;
-
-  // runDetails includes details specific to this particular execution of the build.
-  runDetails: RunDetails;
-}
-
-export interface rawTokenInterface {
-  version: number;
-  context: string;
-  builder: {
-    private_repository: boolean;
-    runner_label: string;
-    audience: string;
-  };
-  github: githubObj;
-  tool: {
-    actions: {
-      build_artifacts: {
-        path: string;
-      };
-    };
-    // NOTE: reusable workflows only support inputs of type
-    // boolean, number, or string.
-    // https://docs.github.com/en/actions/using-workflows/reusing-workflows#passing-inputs-and-secrets-to-a-reusable-workflow.
-    inputs: Map<string, string | number | boolean>;
-  };
-}
-
-export interface githubObj {
-  event_name: string;
-  run_attempt: string;
-  run_id: string;
-  run_number: string;
-  workflow: string;
-  sha: string;
-  repository: string;
-  repository_owner: string;
-  // TODO(#1411): Record if these become available.
-  // repository_id: string;
-  // repository_owner_id: string;
-  // actor_id: string;
-  ref: string;
-  ref_type: string;
-  actor: string;
-}
 
 // getWorkflowPath returns the workflow's path from the workflow_ref.
 export function getWorkflowPath(): string {

@@ -16,7 +16,14 @@ import * as sigstore from "sigstore";
 import * as process from "process";
 import * as fs from "fs";
 import * as child_process from "child_process";
-import { githubObj, rawTokenInterface, createPredicate } from "./predicate";
+import {
+  validateField,
+  validateFieldAnyOf,
+  validateFieldNonEmpty,
+  validateGitHubFields,
+} from "./validate";
+import { createPredicate } from "./predicate";
+import { githubObj, rawTokenInterface } from "./types";
 import { getEnv, resolvePathInput } from "./utils";
 
 async function run(): Promise<void> {
@@ -107,7 +114,7 @@ async function run(): Promise<void> {
     validateGitHubFields(rawTokenObj.github);
 
     // Validate the build Action is not empty.
-    validateNonEmptyField(
+    validateFieldNonEmpty(
       "tool.actions.build_artifacts.path",
       rawTokenObj.tool.actions.build_artifacts.path
     );
@@ -222,72 +229,6 @@ function extractIdentifyFromSAN(URI: string): [string, string] {
   }
   const repo = `${parts2[0]}/${parts2[1]}`;
   return [repo, ref];
-}
-
-function validateGitHubFields(gho: githubObj): void {
-  validateField(
-    "github.event_name",
-    gho.event_name,
-    process.env.GITHUB_EVENT_NAME
-  );
-  validateField(
-    "github.run_attempt",
-    gho.run_attempt,
-    process.env.GITHUB_RUN_ATTEMPT
-  );
-  validateField("github.run_id", gho.run_id, process.env.GITHUB_RUN_ID);
-  validateField(
-    "github.run_number",
-    gho.run_number,
-    process.env.GITHUB_RUN_NUMBER
-  );
-  validateField("github.workflow", gho.workflow, process.env.GITHUB_WORKFLOW);
-  validateField("github.sha", gho.sha, process.env.GITHUB_SHA);
-  validateField(
-    "github.repository",
-    gho.repository,
-    process.env.GITHUB_REPOSITORY
-  );
-  validateField(
-    "github.repository_owner",
-    gho.repository_owner,
-    process.env.GITHUB_REPOSITORY_OWNER
-  );
-  validateField("github.ref", gho.ref, process.env.GITHUB_REF);
-  validateField("github.ref_type", gho.ref_type, process.env.GITHUB_REF_TYPE);
-  validateField("github.actor", gho.actor, process.env.GITHUB_ACTOR);
-  // TODO(#1411): Record if these become available.
-  // repository_id: process.env.GITHUB_REPOSITORY_ID,
-  // repository_owner_id: process.env.GITHUB_REPOSITORY_OWNER_ID,
-  // repository_actor_id: process.env.GITHUB_ACTOR_ID,
-}
-
-function validateFieldAnyOf<T>(name: string, actual: T, expected: T[]): void {
-  for (const value of expected) {
-    if (actual === value) {
-      // Found a match.
-      return;
-    }
-  }
-  throw new Error(
-    `mismatch ${name}: got '${actual}', expected one of '${expected.join(
-      ","
-    )}'.`
-  );
-}
-
-function validateField<T>(name: string, actual: T, expected: T): void {
-  if (actual !== expected) {
-    throw new Error(
-      `mismatch ${name}: got '${actual}', expected '${expected}'.`
-    );
-  }
-}
-
-function validateNonEmptyField(name: string, actual: string): void {
-  if (actual === "") {
-    throw new Error(`empty ${name}, expected non-empty value.`);
-  }
 }
 
 run();
