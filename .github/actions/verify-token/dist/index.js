@@ -266,18 +266,6 @@ run();
 
 "use strict";
 
-/*
-Copyright 2023 SLSA Authors
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-    https://www.apache.org/licenses/LICENSE-2.0
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WIHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     var desc = Object.getOwnPropertyDescriptor(m, k);
@@ -303,6 +291,18 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.createPredicate = void 0;
+/*
+Copyright 2023 SLSA Authors
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+    https://www.apache.org/licenses/LICENSE-2.0
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WIHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
 const process = __importStar(__nccwpck_require__(7282));
 const fs = __importStar(__nccwpck_require__(7147));
 const DELEGATOR_BUILD_TYPE = "https://github.com/slsa-framework/slsa-github-generator/delegator-generic@v0";
@@ -326,12 +326,24 @@ function createPredicate(rawTokenObj, toolURI) {
             sha1: env.GITHUB_SHA || "",
         },
     };
+    // NOTE: see example at https://github.com/slsa-framework/slsa/blob/main/docs/github-actions-workflow/examples/v0.1/example.json.
     const predicate = {
         buildDefinition: {
             buildType: DELEGATOR_BUILD_TYPE,
             externalParameters: {
+                // Inputs to the TRW, which define the interface of the builder for the
+                // BYOB framework.
+                // TODO(#1575): mask inputs.
+                inputs: rawTokenObj.tool.inputs,
+                // Variables are always empty for BYOB / builders.
+                // TODO(#1555): add support for generators.
+                vars: {},
                 // NOTE: This is equivalent to the v0.2 entryPoint.
-                workflowPath: getWorkflowPath(env.GITHUB_REPOSITORY || "", env.GITHUB_WORKFLOW_REF || ""),
+                workflow: {
+                    ref: env.GITHUB_REF || "",
+                    repository: env.GITHUB_REPOSITORY || "",
+                    path: getWorkflowPath(env.GITHUB_REPOSITORY || "", env.GITHUB_WORKFLOW_REF || ""),
+                },
                 // We only use source here because the source contained the source
                 // repository and the build configuration.
                 source: sourceRef,
@@ -375,11 +387,6 @@ function createPredicate(rawTokenObj, toolURI) {
     if (env.GITHUB_EVENT_PATH) {
         const ghEvent = JSON.parse(fs.readFileSync(env.GITHUB_EVENT_PATH).toString());
         predicate.buildDefinition.systemParameters.GITHUB_EVENT_PAYLOAD = ghEvent;
-    }
-    // Add workflow inputs to top-level externalParameters.
-    if (env.GITHUB_EVENT_NAME === "workflow_dispatch") {
-        predicate.buildDefinition.externalParameters.inputs =
-            rawTokenObj.tool.inputs;
     }
     return predicate;
 }
@@ -11874,6 +11881,7 @@ const statusCodeCacheableByDefault = new Set([
     206,
     300,
     301,
+    308,
     404,
     405,
     410,
@@ -11946,10 +11954,10 @@ function parseCacheControl(header) {
 
     // TODO: When there is more than one value present for a given directive (e.g., two Expires header fields, multiple Cache-Control: max-age directives),
     // the directive's value is considered invalid. Caches are encouraged to consider responses that have invalid freshness information to be stale
-    const parts = header.trim().split(/\s*,\s*/); // TODO: lame parsing
+    const parts = header.trim().split(/,/);
     for (const part of parts) {
-        const [k, v] = part.split(/\s*=\s*/, 2);
-        cc[k] = v === undefined ? true : v.replace(/^"|"$/g, ''); // TODO: lame unquoting
+        const [k, v] = part.split(/=/, 2);
+        cc[k.trim()] = v === undefined ? true : v.trim().replace(/^"|"$/g, '');
     }
 
     return cc;

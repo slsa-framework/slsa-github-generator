@@ -16,6 +16,7 @@ package utils
 
 import (
 	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -212,6 +213,80 @@ func Test_CreateNewFileUnderCurrentDirectory(t *testing.T) {
 			}
 
 			_, err = CreateNewFileUnderCurrentDirectory(tt.path, os.O_WRONLY)
+			if (err == nil && tt.expected != nil) ||
+				(err != nil && tt.expected == nil) {
+				t.Fatalf("unexpected error: %v", cmp.Diff(err, tt.expected, cmpopts.EquateErrors()))
+			}
+
+			if err != nil && !errors.As(err, &tt.expected) {
+				t.Fatalf("unexpected error: %v", cmp.Diff(err, tt.expected, cmpopts.EquateErrors()))
+			}
+		})
+	}
+}
+
+func Test_PathIsUnderDirectory(t *testing.T) {
+	tests := []struct {
+		expected error
+		name     string
+		path     string
+		dir      string
+	}{
+		{
+			name:     "valid same path",
+			path:     "./",
+			dir:      "./",
+			expected: nil,
+		},
+		{
+			name:     "valid path no slash",
+			path:     "./some/valid/path",
+			dir:      ".",
+			expected: nil,
+		},
+		{
+			name:     "valid path with slash",
+			path:     "./some/valid/path/",
+			dir:      ".",
+			expected: nil,
+		},
+		{
+			name:     "valid path with no dot",
+			path:     "some/valid/path/",
+			dir:      "some/valid/",
+			expected: nil,
+		},
+		{
+			name: "some valid path",
+			path: "../utils/some/valid/path",
+			dir:  "../utils",
+		},
+		{
+			name:     "parent invalid path",
+			path:     "../invalid/path",
+			dir:      ".",
+			expected: &ErrInvalidPath{},
+		},
+		{
+			name: "some valid fullpath",
+			path: "/some/invalid/fullpath",
+			dir:  "/some",
+		},
+	}
+	for _, tt := range tests {
+		tt := tt // Re-initializing variable so it is not changed while executing the closure below
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			wd, err := os.Getwd()
+			if err != nil {
+				t.Fatal(err)
+			}
+			d, err := filepath.Abs(filepath.Join(wd, tt.dir))
+			if err != nil {
+				t.Fatal(err)
+			}
+			err = PathIsUnderDirectory(tt.path, d)
 			if (err == nil && tt.expected != nil) ||
 				(err != nil && tt.expected == nil) {
 				t.Fatalf("unexpected error: %v", cmp.Diff(err, tt.expected, cmpopts.EquateErrors()))
