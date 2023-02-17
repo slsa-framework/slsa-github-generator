@@ -28,15 +28,10 @@ export function getWorkflowPath(obj: githubObj): string {
   // GITHUB_WORKFLOW_REF contains the repository name in the path. We will trim
   // it out.
   // e.g. 'octocat/hello-world/.github/workflows/my-workflow.yml@refs/heads/my_branch'
-  const repoPrefix = `${obj.repository}/`;
-  if (!obj.workflow_ref.startsWith(repoPrefix)) {
-    throw new Error(
-      `expected workflow ref '${obj.workflow_ref}' to start with repository name '${obj.repository}'.`
-    );
-  }
-
   // Strip off the repo name and git ref from the workflow path.
-  return obj.workflow_ref.substring(repoPrefix.length).split("@", 1)[0];
+  return obj.workflow_ref
+    .substring(`${obj.repository}/`.length)
+    .split("@", 1)[0];
 }
 
 export function createPredicate(

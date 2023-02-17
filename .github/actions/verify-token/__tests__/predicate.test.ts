@@ -56,30 +56,4 @@ describe("getWorkflowPath", () => {
     const path = getWorkflowPath(obj);
     expect(path).toEqual(".github/workflows/my-workflow.yml");
   });
-
-  it("fails if workflow ref does not start with repository", () => {
-    const obj: githubObj = {
-      actor: "",
-      actor_id: "",
-      event_name: "",
-      event_path: "",
-      job: "",
-      ref: "",
-      ref_type: "",
-      repository: "octocat/hello-world",
-      repository_id: "",
-      repository_owner: "",
-      repository_owner_id: "",
-      run_attempt: "",
-      run_id: "",
-      run_number: "",
-      sha: "",
-      workflow_ref: ".github/workflows/my-workflow.yml@refs/heads/my_branch",
-      workflow_sha: "",
-    };
-
-    expect(() => {
-      const path = getWorkflowPath(obj);
-    }).toThrow();
-  });
 });

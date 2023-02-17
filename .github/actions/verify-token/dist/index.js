@@ -274,12 +274,10 @@ function getWorkflowPath(obj) {
     // GITHUB_WORKFLOW_REF contains the repository name in the path. We will trim
     // it out.
     // e.g. 'octocat/hello-world/.github/workflows/my-workflow.yml@refs/heads/my_branch'
-    const repoPrefix = `${obj.repository}/`;
-    if (!obj.workflow_ref.startsWith(repoPrefix)) {
-        throw new Error(`expected workflow ref '${obj.workflow_ref}' to start with repository name '${obj.repository}'.`);
-    }
     // Strip off the repo name and git ref from the workflow path.
-    return obj.workflow_ref.substring(repoPrefix.length).split("@", 1)[0];
+    return obj.workflow_ref
+        .substring(`${obj.repository}/`.length)
+        .split("@", 1)[0];
 }
 exports.getWorkflowPath = getWorkflowPath;
 function createPredicate(rawTokenObj, toolURI) {
@@ -445,7 +443,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.validateFieldNonEmpty = exports.validateField = exports.validateFieldAnyOf = exports.validateGitHubFields = void 0;
+exports.validateFieldNonEmpty = exports.validateFieldStartsWith = exports.validateField = exports.validateFieldAnyOf = exports.validateGitHubFields = void 0;
 function validateGitHubFields(gho) {
     // actor
     validateFieldNonEmpty("github.actor", gho.actor);
@@ -495,6 +493,7 @@ function validateGitHubFields(gho) {
     // workflow_ref
     validateFieldNonEmpty("github.workflow_ref", gho.workflow_ref);
     validateField("github.workflow_ref", gho.workflow_ref, process.env.GITHUB_WORKFLOW_REF);
+    validateFieldStartsWith("github.workflow_ref", gho.workflow_ref, `${process.env.GITHUB_REPOSITORY}/`);
     // workflow_sha
     validateFieldNonEmpty("github.workflow_sha", gho.workflow_sha);
     validateField("github.workflow_sha", gho.workflow_sha, process.env.GITHUB_WORKFLOW_SHA);
@@ -516,6 +515,12 @@ function validateField(name, actual, expected) {
     }
 }
 exports.validateField = validateField;
+function validateFieldStartsWith(name, actual, prefix) {
+    if (!actual.startsWith(prefix)) {
+        throw new Error(`invalid ${name}: expected '${actual}' to start with '${prefix}'.`);
+    }
+}
+exports.validateFieldStartsWith = validateFieldStartsWith;
 function validateFieldNonEmpty(name, actual) {
     if (actual === "" || actual === null || actual === undefined) {
         throw new Error(`empty ${name}, expected non-empty value.`);

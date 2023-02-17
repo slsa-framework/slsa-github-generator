@@ -113,6 +113,11 @@ export function validateGitHubFields(gho: githubObj): void {
     gho.workflow_ref,
     process.env.GITHUB_WORKFLOW_REF
   );
+  validateFieldStartsWith(
+    "github.workflow_ref",
+    gho.workflow_ref,
+    `${process.env.GITHUB_REPOSITORY}/`
+  );
 
   // workflow_sha
   validateFieldNonEmpty("github.workflow_sha", gho.workflow_sha);
@@ -145,6 +150,18 @@ export function validateField<T>(name: string, actual: T, expected: T): void {
   if (actual !== expected) {
     throw new Error(
       `mismatch ${name}: got '${actual}', expected '${expected}'.`
+    );
+  }
+}
+
+export function validateFieldStartsWith(
+  name: string,
+  actual: string,
+  prefix: string
+): void {
+  if (!actual.startsWith(prefix)) {
+    throw new Error(
+      `invalid ${name}: expected '${actual}' to start with '${prefix}'.`
     );
   }
 }
