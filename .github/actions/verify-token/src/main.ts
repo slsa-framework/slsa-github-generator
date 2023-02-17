@@ -13,7 +13,6 @@ limitations under the License.
 
 import * as core from "@actions/core";
 import * as sigstore from "sigstore";
-import * as process from "process";
 import * as fs from "fs";
 import * as child_process from "child_process";
 import {
@@ -23,7 +22,7 @@ import {
   validateGitHubFields,
 } from "./validate";
 import { createPredicate } from "./predicate";
-import { githubObj, rawTokenInterface } from "./types";
+import { rawTokenInterface } from "./types";
 import { getEnv, resolvePathInput } from "./utils";
 
 async function run(): Promise<void> {
