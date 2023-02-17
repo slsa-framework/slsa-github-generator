@@ -53,9 +53,9 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core = __importStar(__nccwpck_require__(2186));
 const sigstore = __importStar(__nccwpck_require__(9149));
-const process = __importStar(__nccwpck_require__(7282));
 const fs = __importStar(__nccwpck_require__(7147));
 const child_process = __importStar(__nccwpck_require__(2081));
+const validate_1 = __nccwpck_require__(1997);
 const predicate_1 = __nccwpck_require__(5464);
 const utils_1 = __nccwpck_require__(918);
 function run() {
@@ -116,17 +116,17 @@ function run() {
             const rawTokenStr = rawToken.toString();
             const rawTokenObj = JSON.parse(rawTokenStr);
             // Verify the version.
-            validateField("version", rawTokenObj.version, 1);
+            (0, validate_1.validateField)("version", rawTokenObj.version, 1);
             // Verify the context of the signature.
-            validateField("context", rawTokenObj.context, "SLSA delegator framework");
+            (0, validate_1.validateField)("context", rawTokenObj.context, "SLSA delegator framework");
             // Verify the intended recipient.
-            validateField("builder.audience", rawTokenObj.builder.audience, workflowRecipient);
+            (0, validate_1.validateField)("builder.audience", rawTokenObj.builder.audience, workflowRecipient);
             // Verify the runner label.
-            validateFieldAnyOf("builder.runner_label", rawTokenObj.builder.runner_label, ["ubuntu-latest"]);
+            (0, validate_1.validateFieldAnyOf)("builder.runner_label", rawTokenObj.builder.runner_label, ["ubuntu-latest"]);
             // Verify the GitHub event information.
-            validateGitHubFields(rawTokenObj.github);
+            (0, validate_1.validateGitHubFields)(rawTokenObj.github);
             // Validate the build Action is not empty.
-            validateNonEmptyField("tool.actions.build_artifacts.path", rawTokenObj.tool.actions.build_artifacts.path);
+            (0, validate_1.validateFieldNonEmpty)("tool.actions.build_artifacts.path", rawTokenObj.tool.actions.build_artifacts.path);
             // No validation needed for the builder inputs.
             // They may be empty.
             // Extract certificate information.
@@ -220,42 +220,6 @@ function extractIdentifyFromSAN(URI) {
     const repo = `${parts2[0]}/${parts2[1]}`;
     return [repo, ref];
 }
-function validateGitHubFields(gho) {
-    validateField("github.event_name", gho.event_name, process.env.GITHUB_EVENT_NAME);
-    validateField("github.run_attempt", gho.run_attempt, process.env.GITHUB_RUN_ATTEMPT);
-    validateField("github.run_id", gho.run_id, process.env.GITHUB_RUN_ID);
-    validateField("github.run_number", gho.run_number, process.env.GITHUB_RUN_NUMBER);
-    validateField("github.workflow", gho.workflow, process.env.GITHUB_WORKFLOW);
-    validateField("github.sha", gho.sha, process.env.GITHUB_SHA);
-    validateField("github.repository", gho.repository, process.env.GITHUB_REPOSITORY);
-    validateField("github.repository_owner", gho.repository_owner, process.env.GITHUB_REPOSITORY_OWNER);
-    validateField("github.ref", gho.ref, process.env.GITHUB_REF);
-    validateField("github.ref_type", gho.ref_type, process.env.GITHUB_REF_TYPE);
-    validateField("github.actor", gho.actor, process.env.GITHUB_ACTOR);
-    // TODO(#1411): Record if these become available.
-    // repository_id: process.env.GITHUB_REPOSITORY_ID,
-    // repository_owner_id: process.env.GITHUB_REPOSITORY_OWNER_ID,
-    // repository_actor_id: process.env.GITHUB_ACTOR_ID,
-}
-function validateFieldAnyOf(name, actual, expected) {
-    for (const value of expected) {
-        if (actual === value) {
-            // Found a match.
-            return;
-        }
-    }
-    throw new Error(`mismatch ${name}: got '${actual}', expected one of '${expected.join(",")}'.`);
-}
-function validateField(name, actual, expected) {
-    if (actual !== expected) {
-        throw new Error(`mismatch ${name}: got '${actual}', expected '${expected}'.`);
-    }
-}
-function validateNonEmptyField(name, actual) {
-    if (actual === "") {
-        throw new Error(`empty ${name}, expected non-empty value.`);
-    }
-}
 run();
 
 
@@ -266,6 +230,18 @@ run();
 
 "use strict";
 
+/*
+Copyright 2023 SLSA Authors
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+    https://www.apache.org/licenses/LICENSE-2.0
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WIHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     var desc = Object.getOwnPropertyDescriptor(m, k);
@@ -291,43 +267,27 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.createPredicate = exports.getWorkflowPath = void 0;
-/*
-Copyright 2023 SLSA Authors
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-    https://www.apache.org/licenses/LICENSE-2.0
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WIHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
-const process = __importStar(__nccwpck_require__(7282));
 const fs = __importStar(__nccwpck_require__(7147));
 const DELEGATOR_BUILD_TYPE = "https://github.com/slsa-framework/slsa-github-generator/delegator-generic@v0";
 // getWorkflowPath returns the workflow's path from the workflow_ref.
-function getWorkflowPath() {
+function getWorkflowPath(obj) {
     // GITHUB_WORKFLOW_REF contains the repository name in the path. We will trim
     // it out.
     // e.g. 'octocat/hello-world/.github/workflows/my-workflow.yml@refs/heads/my_branch'
-    const ref = (process.env.GITHUB_WORKFLOW_REF || "").trim();
-    const repo = (process.env.GITHUB_REPOSITORY || "").trim();
-    const repoPrefix = `${repo}/`;
-    if (!ref.startsWith(repoPrefix)) {
-        throw new Error(`expected workflow ref '${ref}' to start with repository name '${repo}'.`);
+    const repoPrefix = `${obj.repository}/`;
+    if (!obj.workflow_ref.startsWith(repoPrefix)) {
+        throw new Error(`expected workflow ref '${obj.workflow_ref}' to start with repository name '${obj.repository}'.`);
     }
     // Strip off the repo name and git ref from the workflow path.
-    return ref.substring(repoPrefix.length).split("@", 1)[0];
+    return obj.workflow_ref.substring(repoPrefix.length).split("@", 1)[0];
 }
 exports.getWorkflowPath = getWorkflowPath;
 function createPredicate(rawTokenObj, toolURI) {
-    const { env } = process;
-    const callerRepo = createURI(env.GITHUB_REPOSITORY || "", env.GITHUB_REF || "");
+    const callerRepo = createURI(rawTokenObj.github.repository, rawTokenObj.github.ref);
     const sourceRef = {
         uri: callerRepo,
         digest: {
-            sha1: env.GITHUB_SHA || "",
+            sha1: rawTokenObj.github.sha,
         },
     };
     // NOTE: see example at https://github.com/slsa-framework/slsa/blob/main/docs/github-actions-workflow/examples/v0.1/example.json.
@@ -344,35 +304,36 @@ function createPredicate(rawTokenObj, toolURI) {
                 vars: {},
                 // NOTE: This is equivalent to the v0.2 entryPoint.
                 workflow: {
-                    ref: env.GITHUB_REF || "",
-                    repository: env.GITHUB_REPOSITORY || "",
-                    path: getWorkflowPath(),
+                    ref: rawTokenObj.github.ref,
+                    repository: rawTokenObj.github.repository,
+                    path: getWorkflowPath(rawTokenObj.github),
                 },
                 // We only use source here because the source contained the source
                 // repository and the build configuration.
                 source: sourceRef,
             },
             systemParameters: {
-                GITHUB_EVENT_NAME: env.GITHUB_EVENT_NAME || "",
-                GITHUB_JOB: env.GITHUB_JOB || "",
-                GITHUB_REF: env.GITHUB_REF || "",
-                GITHUB_REF_TYPE: env.GITHUB_REF_TYPE || "",
-                GITHUB_REPOSITORY: env.GITHUB_REPOSITORY || "",
-                GITHUB_RUN_ATTEMPT: env.GITHUB_RUN_ATTEMPT || "",
-                GITHUB_RUN_ID: env.GITHUB_RUN_ID || "",
-                GITHUB_RUN_NUMBER: env.GITHUB_RUN_NUMBER || "",
-                GITHUB_SHA: env.GITHUB_SHA || "",
-                GITHUB_WORKFLOW: env.GITHUB_WORKFLOW || "",
-                GITHUB_ACTOR_ID: env.GITHUB_ACTOR_ID || "",
-                GITHUB_REPOSITORY_ID: env.GITHUB_REPOSITORY_ID || "",
-                GITHUB_REPOSITORY_OWNER_ID: env.GITHUB_REPOSITORY_OWNER_ID || "",
-                GITHUB_WORKFLOW_REF: env.GITHUB_WORKFLOW_REF || "",
-                GITHUB_WORKFLOW_SHA: env.GITHUB_WORKFLOW_SHA || "",
-                IMAGE_OS: env.ImageOS || "",
-                IMAGE_VERSION: env.ImageVersion || "",
-                RUNNER_ARCH: env.RUNNER_ARCH || "",
-                RUNNER_NAME: env.RUNNER_NAME || "",
-                RUNNER_OS: env.RUNNER_OS || "",
+                GITHUB_ACTOR: rawTokenObj.github.actor,
+                GITHUB_ACTOR_ID: rawTokenObj.github.actor_id,
+                GITHUB_EVENT_NAME: rawTokenObj.github.event_name,
+                GITHUB_JOB: rawTokenObj.github.job,
+                GITHUB_REF: rawTokenObj.github.ref,
+                GITHUB_REF_TYPE: rawTokenObj.github.ref_type,
+                GITHUB_REPOSITORY: rawTokenObj.github.repository,
+                GITHUB_REPOSITORY_ID: rawTokenObj.github.repository_id,
+                GITHUB_REPOSITORY_OWNER: rawTokenObj.github.repository_owner,
+                GITHUB_REPOSITORY_OWNER_ID: rawTokenObj.github.repository_owner_id,
+                GITHUB_RUN_ATTEMPT: rawTokenObj.github.run_attempt,
+                GITHUB_RUN_ID: rawTokenObj.github.run_id,
+                GITHUB_RUN_NUMBER: rawTokenObj.github.run_number,
+                GITHUB_SHA: rawTokenObj.github.sha,
+                GITHUB_WORKFLOW_REF: rawTokenObj.github.workflow_ref,
+                GITHUB_WORKFLOW_SHA: rawTokenObj.github.workflow_sha,
+                IMAGE_OS: rawTokenObj.image.os,
+                IMAGE_VERSION: rawTokenObj.image.version,
+                RUNNER_ARCH: rawTokenObj.runner.arch,
+                RUNNER_NAME: rawTokenObj.runner.name,
+                RUNNER_OS: rawTokenObj.runner.os,
             },
         },
         runDetails: {
@@ -382,14 +343,15 @@ function createPredicate(rawTokenObj, toolURI) {
                 id: toolURI,
             },
             metadata: {
-                invocationId: `https://github.com/${env.GITHUB_REPOSITORY}/actions/runs/${env.GITHUB_RUN_ID}/attempts/${env.GITHUB_RUN_ATTEMPT}`,
+                invocationId: `https://github.com/${rawTokenObj.github.repository}/actions/runs/${rawTokenObj.github.run_id}/attempts/${rawTokenObj.github.run_attempt}`,
             },
         },
     };
     // Put GitHub event payload into systemParameters.
     // TODO(github.com/slsa-framework/slsa-github-generator/issues/1575): Redact sensitive information.
-    if (env.GITHUB_EVENT_PATH) {
-        const ghEvent = JSON.parse(fs.readFileSync(env.GITHUB_EVENT_PATH).toString());
+    if (rawTokenObj.github.event_path) {
+        // NOTE: event_path has been validated as the same as env.GITHUB_EVENT_PATH
+        const ghEvent = JSON.parse(fs.readFileSync(rawTokenObj.github.event_path).toString());
         predicate.buildDefinition.systemParameters.GITHUB_EVENT_PAYLOAD = ghEvent;
     }
     return predicate;
@@ -461,6 +423,105 @@ function resolvePathInput(untrustedInput, wd) {
     return safeJoin;
 }
 exports.resolvePathInput = resolvePathInput;
+
+
+/***/ }),
+
+/***/ 1997:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+/*
+Copyright 2022 SLSA Authors
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+    https://www.apache.org/licenses/LICENSE-2.0
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WIHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.validateFieldNonEmpty = exports.validateField = exports.validateFieldAnyOf = exports.validateGitHubFields = void 0;
+function validateGitHubFields(gho) {
+    // actor
+    validateFieldNonEmpty("github.actor", gho.actor);
+    validateField("github.actor", gho.actor, process.env.GITHUB_ACTOR);
+    // actor_id
+    validateFieldNonEmpty("github.actor_id", gho.actor_id);
+    validateField("github.actor_id", gho.actor_id, process.env.GITHUB_ACTOR_ID);
+    // event_name
+    validateFieldNonEmpty("github.event_name", gho.event_name);
+    validateField("github.event_name", gho.event_name, process.env.GITHUB_EVENT_NAME);
+    // event_path
+    validateFieldNonEmpty("github.event_path", gho.event_path);
+    validateField("github.event_path", gho.event_path, process.env.GITHUB_EVENT_PATH);
+    // job
+    validateFieldNonEmpty("github.job", gho.job);
+    validateField("github.job", gho.job, process.env.GITHUB_JOB);
+    // ref
+    validateFieldNonEmpty("github.ref", gho.ref);
+    validateField("github.ref", gho.ref, process.env.GITHUB_REF);
+    // ref_type
+    validateFieldNonEmpty("github.ref_type", gho.ref_type);
+    validateField("github.ref_type", gho.ref_type, process.env.GITHUB_REF_TYPE);
+    // repository
+    validateFieldNonEmpty("github.repository", gho.repository);
+    validateField("github.repository", gho.repository, process.env.GITHUB_REPOSITORY);
+    // repository_id
+    validateFieldNonEmpty("github.repository_id", gho.repository_id);
+    validateField("github.repository_id", gho.repository_id, process.env.GITHUB_REPOSITORY_ID);
+    // repository_owner
+    validateFieldNonEmpty("github.repository_owner", gho.repository_owner);
+    validateField("github.repository_owner", gho.repository_owner, process.env.GITHUB_REPOSITORY_OWNER);
+    // repository_owner_id
+    validateFieldNonEmpty("github.repository_owner_id", gho.repository_owner_id);
+    validateField("github.repository_owner_id", gho.repository_owner_id, process.env.GITHUB_REPOSITORY_OWNER_ID);
+    // run_attempt
+    validateFieldNonEmpty("github.run_attempt", gho.run_attempt);
+    validateField("github.run_attempt", gho.run_attempt, process.env.GITHUB_RUN_ATTEMPT);
+    // run_id
+    validateFieldNonEmpty("github.run_id", gho.run_id);
+    validateField("github.run_id", gho.run_id, process.env.GITHUB_RUN_ID);
+    // run_number
+    validateFieldNonEmpty("github.run_number", gho.run_number);
+    validateField("github.run_number", gho.run_number, process.env.GITHUB_RUN_NUMBER);
+    // sha
+    validateFieldNonEmpty("github.sha", gho.sha);
+    validateField("github.sha", gho.sha, process.env.GITHUB_SHA);
+    // workflow_ref
+    validateFieldNonEmpty("github.workflow_ref", gho.workflow_ref);
+    validateField("github.workflow_ref", gho.workflow_ref, process.env.GITHUB_WORKFLOW_REF);
+    // workflow_sha
+    validateFieldNonEmpty("github.workflow_sha", gho.workflow_sha);
+    validateField("github.workflow_sha", gho.workflow_sha, process.env.GITHUB_WORKFLOW_SHA);
+}
+exports.validateGitHubFields = validateGitHubFields;
+function validateFieldAnyOf(name, actual, expected) {
+    for (const value of expected) {
+        if (actual === value) {
+            // Found a match.
+            return;
+        }
+    }
+    throw new Error(`mismatch ${name}: got '${actual}', expected one of '${expected.join(",")}'.`);
+}
+exports.validateFieldAnyOf = validateFieldAnyOf;
+function validateField(name, actual, expected) {
+    if (actual !== expected) {
+        throw new Error(`mismatch ${name}: got '${actual}', expected '${expected}'.`);
+    }
+}
+exports.validateField = validateField;
+function validateFieldNonEmpty(name, actual) {
+    if (actual === "" || actual === null || actual === undefined) {
+        throw new Error(`empty ${name}, expected non-empty value.`);
+    }
+}
+exports.validateFieldNonEmpty = validateFieldNonEmpty;
 
 
 /***/ }),
