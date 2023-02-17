@@ -30,6 +30,18 @@ export function validateGitHubFields(gho: githubObj): void {
     process.env.GITHUB_EVENT_NAME
   );
 
+  // event_path
+  validateFieldNonEmpty("github.event_path", gho.event_path);
+  validateField(
+    "github.event_path",
+    gho.event_path,
+    process.env.GITHUB_EVENT_PATH
+  );
+
+  // job
+  validateFieldNonEmpty("github.job", gho.job);
+  validateField("github.job", gho.job, process.env.GITHUB_JOB);
+
   // ref
   validateFieldNonEmpty("github.ref", gho.ref);
   validateField("github.ref", gho.ref, process.env.GITHUB_REF);
@@ -94,9 +106,21 @@ export function validateGitHubFields(gho: githubObj): void {
   validateFieldNonEmpty("github.sha", gho.sha);
   validateField("github.sha", gho.sha, process.env.GITHUB_SHA);
 
-  // workflow
-  validateFieldNonEmpty("github.workflow", gho.workflow);
-  validateField("github.workflow", gho.workflow, process.env.GITHUB_WORKFLOW);
+  // workflow_ref
+  validateFieldNonEmpty("github.workflow_ref", gho.workflow_ref);
+  validateField(
+    "github.workflow_ref",
+    gho.workflow_ref,
+    process.env.GITHUB_WORKFLOW_REF
+  );
+
+  // workflow_sha
+  validateFieldNonEmpty("github.workflow_sha", gho.workflow_sha);
+  validateField(
+    "github.workflow_sha",
+    gho.workflow_sha,
+    process.env.GITHUB_WORKFLOW_SHA
+  );
 }
 
 export function validateFieldAnyOf<T>(

@@ -115,6 +115,8 @@ describe("validateGitHubFields", () => {
     process.env.GITHUB_ACTOR = "asraa";
     process.env.GITHUB_ACTOR_ID = "123";
     process.env.GITHUB_EVENT_NAME = "workflow_dispatch";
+    process.env.GITHUB_EVENT_PATH = "/path/to/event.json";
+    process.env.GITHUB_JOB = "234";
     process.env.GITHUB_REF = "refs/heads/mybranch";
     process.env.GITHUB_REF_TYPE = "branch";
     process.env.GITHUB_REPOSITORY = "ianlewis/byob-test";
@@ -125,12 +127,16 @@ describe("validateGitHubFields", () => {
     process.env.GITHUB_RUN_ID = "123456789";
     process.env.GITHUB_RUN_NUMBER = "1";
     process.env.GITHUB_SHA = "deadbeef";
-    process.env.GITHUB_WORKFLOW = ".github/workflow/myworkflow.yml";
+    process.env.GITHUB_WORKFLOW_REF =
+      "ianlewis/byob-test/.github/workflows/my-workflow.yml@refs/heads/my_branch";
+    process.env.GITHUB_WORKFLOW_SHA = "deadbeef";
 
     const obj: githubObj = {
       actor: "asraa",
       actor_id: "123",
       event_name: "workflow_dispatch",
+      event_path: "/path/to/event.json",
+      job: "234",
       ref: "refs/heads/mybranch",
       ref_type: "branch",
       repository: "ianlewis/byob-test",
@@ -141,7 +147,9 @@ describe("validateGitHubFields", () => {
       run_id: "123456789",
       run_number: "1",
       sha: "deadbeef",
-      workflow: ".github/workflow/myworkflow.yml",
+      workflow_ref:
+        "ianlewis/byob-test/.github/workflows/my-workflow.yml@refs/heads/my_branch",
+      workflow_sha: "deadbeef",
     };
     validateGitHubFields(obj);
   });
@@ -150,6 +158,8 @@ describe("validateGitHubFields", () => {
     process.env.GITHUB_ACTOR = "asraa";
     process.env.GITHUB_ACTOR_ID = "123";
     process.env.GITHUB_EVENT_NAME = "workflow_dispatch";
+    process.env.GITHUB_EVENT_PATH = "/path/to/event.json";
+    process.env.GITHUB_JOB = "234";
     process.env.GITHUB_REF = "refs/heads/mybranch";
     process.env.GITHUB_REF_TYPE = "branch";
     process.env.GITHUB_REPOSITORY = "ianlewis/byob-test";
@@ -160,12 +170,16 @@ describe("validateGitHubFields", () => {
     process.env.GITHUB_RUN_ID = "123456789";
     process.env.GITHUB_RUN_NUMBER = "1";
     process.env.GITHUB_SHA = "deadbeef";
-    process.env.GITHUB_WORKFLOW = ".github/workflow/myworkflow.yml";
+    process.env.GITHUB_WORKFLOW_REF =
+      "ianlewis/byob-test/.github/workflows/my-workflow.yml@refs/heads/my_branch";
+    process.env.GITHUB_WORKFLOW_SHA = "deadbeef";
 
     const obj: githubObj = {
       actor: "asraa",
       actor_id: "123",
       event_name: "workflow_dispatch",
+      event_path: "/path/to/event.json",
+      job: "234",
       ref: "refs/heads/mybranch",
       ref_type: "branch",
       repository: "ianlewis/byob-test",
@@ -176,7 +190,9 @@ describe("validateGitHubFields", () => {
       run_id: "123456789",
       run_number: "1",
       sha: "deadbeef",
-      workflow: ".github/workflow/myworkflow.yml",
+      workflow_ref:
+        "ianlewis/byob-test/.github/workflows/my-workflow.yml@refs/heads/my_branch",
+      workflow_sha: "deadbeef",
     };
     expect(() => {
       validateGitHubFields(obj);
@@ -187,6 +203,8 @@ describe("validateGitHubFields", () => {
     process.env.GITHUB_ACTOR = "asraa";
     process.env.GITHUB_ACTOR_ID = "123";
     process.env.GITHUB_EVENT_NAME = "workflow_dispatch";
+    process.env.GITHUB_EVENT_PATH = "/path/to/event.json";
+    process.env.GITHUB_JOB = "234";
     process.env.GITHUB_REF = "refs/heads/mybranch";
     process.env.GITHUB_REF_TYPE = "branch";
     process.env.GITHUB_REPOSITORY = "ianlewis/byob-test";
@@ -198,11 +216,16 @@ describe("validateGitHubFields", () => {
     process.env.GITHUB_RUN_NUMBER = "1";
     process.env.GITHUB_SHA = "deadbeef";
     process.env.GITHUB_WORKFLOW = ".github/workflow/myworkflow.yml";
+    process.env.GITHUB_WORKFLOW_REF =
+      "ianlewis/byob-test/.github/workflows/my-workflow.yml@refs/heads/my_branch";
+    process.env.GITHUB_WORKFLOW_SHA = "deadbeef";
 
     const obj: githubObj = {
       actor: "asraa",
       actor_id: "123",
       event_name: "workflow_dispatch",
+      event_path: "/path/to/event.json",
+      job: "234",
       ref: "refs/heads/mybranch",
       ref_type: "branch",
       repository: "asraa/byob-test", // NOTE: Not equal
@@ -213,7 +236,9 @@ describe("validateGitHubFields", () => {
       run_id: "123456789",
       run_number: "1",
       sha: "deadbeef",
-      workflow: ".github/workflow/myworkflow.yml",
+      workflow_ref:
+        "ianlewis/byob-test/.github/workflows/my-workflow.yml@refs/heads/my_branch",
+      workflow_sha: "deadbeef",
     };
     expect(() => {
       validateGitHubFields(obj);

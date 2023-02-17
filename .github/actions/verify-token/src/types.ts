@@ -15,17 +15,31 @@ export interface githubObj {
   actor: string;
   actor_id: string;
   event_name: string;
+  event_path: string;
+  job: string;
   ref: string;
   ref_type: string;
   repository: string;
-  repository_owner: string;
   repository_id: string;
+  repository_owner: string;
   repository_owner_id: string;
   run_attempt: string;
   run_id: string;
   run_number: string;
   sha: string;
-  workflow: string;
+  workflow_ref: string;
+  workflow_sha: string;
+}
+
+export interface imageObj {
+  os: string;
+  version: string;
+}
+
+export interface runnerObj {
+  arch: string;
+  name: string;
+  os: string;
 }
 
 export interface Builder {
@@ -93,6 +107,8 @@ export interface rawTokenInterface {
     audience: string;
   };
   github: githubObj;
+  runner: runnerObj;
+  image: imageObj;
   tool: {
     actions: {
       build_artifacts: {

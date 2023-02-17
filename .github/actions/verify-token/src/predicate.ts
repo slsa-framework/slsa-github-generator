@@ -13,44 +13,45 @@ limitations under the License.
 import * as process from "process";
 import * as fs from "fs";
 
-import { rawTokenInterface, ArtifactReference, SLSAv1Predicate } from "./types";
+import {
+  githubObj,
+  rawTokenInterface,
+  ArtifactReference,
+  SLSAv1Predicate,
+} from "./types";
 
 const DELEGATOR_BUILD_TYPE =
   "https://github.com/slsa-framework/slsa-github-generator/delegator-generic@v0";
 
 // getWorkflowPath returns the workflow's path from the workflow_ref.
-export function getWorkflowPath(): string {
+export function getWorkflowPath(obj: githubObj): string {
   // GITHUB_WORKFLOW_REF contains the repository name in the path. We will trim
   // it out.
   // e.g. 'octocat/hello-world/.github/workflows/my-workflow.yml@refs/heads/my_branch'
-  const ref = (process.env.GITHUB_WORKFLOW_REF || "").trim();
-  const repo = (process.env.GITHUB_REPOSITORY || "").trim();
-  const repoPrefix = `${repo}/`;
-  if (!ref.startsWith(repoPrefix)) {
+  const repoPrefix = `${obj.repository}/`;
+  if (!obj.workflow_ref.startsWith(repoPrefix)) {
     throw new Error(
-      `expected workflow ref '${ref}' to start with repository name '${repo}'.`
+      `expected workflow ref '${obj.workflow_ref}' to start with repository name '${obj.repository}'.`
     );
   }
 
   // Strip off the repo name and git ref from the workflow path.
-  return ref.substring(repoPrefix.length).split("@", 1)[0];
+  return obj.workflow_ref.substring(repoPrefix.length).split("@", 1)[0];
 }
 
 export function createPredicate(
   rawTokenObj: rawTokenInterface,
   toolURI: string
 ): SLSAv1Predicate {
-  const { env } = process;
-
   const callerRepo: string = createURI(
-    env.GITHUB_REPOSITORY || "",
-    env.GITHUB_REF || ""
+    rawTokenObj.github.repository,
+    rawTokenObj.github.ref
   );
 
   const sourceRef: ArtifactReference = {
     uri: callerRepo,
     digest: {
-      sha1: env.GITHUB_SHA || "",
+      sha1: rawTokenObj.github.sha,
     },
   };
 
@@ -68,35 +69,38 @@ export function createPredicate(
         vars: {},
         // NOTE: This is equivalent to the v0.2 entryPoint.
         workflow: {
-          ref: env.GITHUB_REF || "",
-          repository: env.GITHUB_REPOSITORY || "",
-          path: getWorkflowPath(),
+          ref: rawTokenObj.github.ref,
+          repository: rawTokenObj.github.repository,
+          path: getWorkflowPath(rawTokenObj.github),
         },
         // We only use source here because the source contained the source
         // repository and the build configuration.
         source: sourceRef,
       },
       systemParameters: {
-        GITHUB_EVENT_NAME: env.GITHUB_EVENT_NAME || "",
-        GITHUB_JOB: env.GITHUB_JOB || "",
-        GITHUB_REF: env.GITHUB_REF || "",
-        GITHUB_REF_TYPE: env.GITHUB_REF_TYPE || "",
-        GITHUB_REPOSITORY: env.GITHUB_REPOSITORY || "",
-        GITHUB_RUN_ATTEMPT: env.GITHUB_RUN_ATTEMPT || "",
-        GITHUB_RUN_ID: env.GITHUB_RUN_ID || "",
-        GITHUB_RUN_NUMBER: env.GITHUB_RUN_NUMBER || "",
-        GITHUB_SHA: env.GITHUB_SHA || "",
-        GITHUB_WORKFLOW: env.GITHUB_WORKFLOW || "",
-        GITHUB_ACTOR_ID: env.GITHUB_ACTOR_ID || "",
-        GITHUB_REPOSITORY_ID: env.GITHUB_REPOSITORY_ID || "",
-        GITHUB_REPOSITORY_OWNER_ID: env.GITHUB_REPOSITORY_OWNER_ID || "",
-        GITHUB_WORKFLOW_REF: env.GITHUB_WORKFLOW_REF || "",
-        GITHUB_WORKFLOW_SHA: env.GITHUB_WORKFLOW_SHA || "",
-        IMAGE_OS: env.ImageOS || "",
-        IMAGE_VERSION: env.ImageVersion || "",
-        RUNNER_ARCH: env.RUNNER_ARCH || "",
-        RUNNER_NAME: env.RUNNER_NAME || "",
-        RUNNER_OS: env.RUNNER_OS || "",
+        GITHUB_ACTOR: rawTokenObj.github.actor,
+        GITHUB_ACTOR_ID: rawTokenObj.github.actor_id,
+        GITHUB_EVENT_NAME: rawTokenObj.github.event_name,
+        GITHUB_JOB: rawTokenObj.github.job,
+        GITHUB_REF: rawTokenObj.github.ref,
+        GITHUB_REF_TYPE: rawTokenObj.github.ref_type,
+        GITHUB_REPOSITORY: rawTokenObj.github.repository,
+        GITHUB_REPOSITORY_ID: rawTokenObj.github.repository_id,
+        GITHUB_REPOSITORY_OWNER: rawTokenObj.github.repository_owner,
+        GITHUB_REPOSITORY_OWNER_ID: rawTokenObj.github.repository_owner_id,
+        GITHUB_RUN_ATTEMPT: rawTokenObj.github.run_attempt,
+        GITHUB_RUN_ID: rawTokenObj.github.run_id,
+        GITHUB_RUN_NUMBER: rawTokenObj.github.run_number,
+        GITHUB_SHA: rawTokenObj.github.sha,
+        GITHUB_WORKFLOW_REF: rawTokenObj.github.workflow_ref,
+        GITHUB_WORKFLOW_SHA: rawTokenObj.github.workflow_sha,
+
+        IMAGE_OS: rawTokenObj.image.os,
+        IMAGE_VERSION: rawTokenObj.image.version,
+
+        RUNNER_ARCH: rawTokenObj.runner.arch,
+        RUNNER_NAME: rawTokenObj.runner.name,
+        RUNNER_OS: rawTokenObj.runner.os,
       },
     },
     runDetails: {
@@ -106,16 +110,17 @@ export function createPredicate(
         id: toolURI,
       },
       metadata: {
-        invocationId: `https://github.com/${env.GITHUB_REPOSITORY}/actions/runs/${env.GITHUB_RUN_ID}/attempts/${env.GITHUB_RUN_ATTEMPT}`,
+        invocationId: `https://github.com/${rawTokenObj.github.repository}/actions/runs/${rawTokenObj.github.run_id}/attempts/${rawTokenObj.github.run_attempt}`,
       },
     },
   };
 
   // Put GitHub event payload into systemParameters.
   // TODO(github.com/slsa-framework/slsa-github-generator/issues/1575): Redact sensitive information.
-  if (env.GITHUB_EVENT_PATH) {
+  if (rawTokenObj.github.event_path) {
+    // NOTE: event_path has been validated as the same as env.GITHUB_EVENT_PATH
     const ghEvent = JSON.parse(
-      fs.readFileSync(env.GITHUB_EVENT_PATH).toString()
+      fs.readFileSync(rawTokenObj.github.event_path).toString()
     );
     predicate.buildDefinition.systemParameters.GITHUB_EVENT_PAYLOAD = ghEvent;
   }
