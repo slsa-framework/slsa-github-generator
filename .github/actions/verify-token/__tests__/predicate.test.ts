@@ -39,9 +39,8 @@ describe("getWorkflowPath", () => {
       ".github/workflows/my-workflow.yml@ref/heads/my_branch";
     process.env.GITHUB_REPOSITORY = "octocat/hello-world";
 
-    try {
+    expect(() => {
       const path = getWorkflowPath();
-      fail("expected error");
-    } catch (e) {}
+    }).toThrow();
   });
 });
