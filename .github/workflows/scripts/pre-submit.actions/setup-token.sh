@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-source "./.github/workflows/scripts/e2e-assert.sh"
+source "./.github/workflows/scripts/e2e-utils.sh"
 
 # NOTE: this is a pre-submit, so the signature is not generated and there is
 # just a place holder for it.
