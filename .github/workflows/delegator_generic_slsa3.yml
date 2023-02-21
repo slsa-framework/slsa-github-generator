@@ -91,7 +91,9 @@ jobs:
     steps:
       - name: Verify token with test action
         id: verify
-        uses: slsa-framework/slsa-github-generator/.github/actions/verify-token@main
+        # FIXME
+        # uses: slsa-framework/slsa-github-generator/.github/actions/verify-token@main
+        uses: ianlewis/slsa-github-generator/.github/actions/verify-token@npm-private-beta-workflow
         with:
           slsa-workflow-recipient: "delegator_generic_slsa3.yml"
           slsa-unverified-token: ${{ inputs.slsa-token }}
@@ -160,7 +162,6 @@ jobs:
           # Print for debugging
           echo "ACTION_PATH=$ACTION_PATH"
           tree
-
 
       - name: Checkout the project repository
         uses: slsa-framework/slsa-github-generator/.github/actions/secure-project-checkout@main
