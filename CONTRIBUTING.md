@@ -95,7 +95,7 @@ Some Node.js projects require Jest as a testing framework.
 
 - [Install Jest](https://jestjs.io/docs/getting-started)
 
-tnThis project also uses several linters in order to maintain code quality. If you
+This project also uses several linters in order to maintain code quality. If you
 wish to run these linters locally, follow the instructions for each of these to
 install them on your development machine.
 
