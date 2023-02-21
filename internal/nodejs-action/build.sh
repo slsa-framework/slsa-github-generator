@@ -34,3 +34,10 @@ for script in $run_scripts; do
     npm run "$script"
     echo
 done
+
+echo "** Running 'npm pack' **"
+pack_json=$(npm pack --json | jq -c)
+echo "pack_json=$pack_json" >>"$GITHUB_OUTPUT"
+
+filename=$(echo "$pack_json" | jq -r '.[0].filename')
+echo "filename=$filename" >>"$GITHUB_OUTPUT"

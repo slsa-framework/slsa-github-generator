@@ -41,27 +41,18 @@ runs:
         # NOTE: cache-dependency-path needs to be validated to be a subdirectory of GITHUB_WORKSPACE.
         # cache-dependency-path:
 
-    - id: run-scripts
+    - id: build
       env:
         UNTRUSTED_DIRECTORY: ${{ fromJson(inputs.slsa-workflow-inputs).directory }}
         UNTRUSTED_RUN_SCRIPTS: ${{ fromJson(inputs.slsa-workflow-inputs).run-scripts }}
       shell: bash
       run: |
-        ./../__TOOL_ACTION_DIR__/run-scripts.sh
-
-    - id: pack
-      shell: bash
-      run: |
-        pack_json=$(npm pack --json | jq -c)
-        echo "pack_json=$pack_json" >> $GITHUB_OUTPUT
-
-        filename=$(echo $pack_json | jq -r '.[0].filename')
-        echo "filename=$filename" >> $GITHUB_OUTPUT
+        ./../__TOOL_ACTION_DIR__/build.sh
 
     - uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
       with:
         name: package.tgz
-        path: ${{ steps.pack.outputs.filename }}
+        path: ${{ steps.build.outputs.filename }}
         if-no-files-found: error
         retention-days: 5
 
