@@ -30,9 +30,10 @@ runs:
 
     - id: run-scripts
       env:
+        UNTRUSTED_DIRECTORY: ${{ fromJson(inputs.slsa-workflow-inputs).directory }}
         UNTRUSTED_RUN_SCRIPTS: ${{ fromJson(inputs.slsa-workflow-inputs).run-scripts }}
       run: |
-        ./../__TOOL_ACTION_DIR__/run-scripts.sh "${UNTRUSTED_RUN_SCRIPTS}"
+        ./../__TOOL_ACTION_DIR__/run-scripts.sh
 
     - id: pack
       run: |

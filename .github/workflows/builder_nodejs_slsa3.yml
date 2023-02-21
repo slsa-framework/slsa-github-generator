@@ -11,6 +11,12 @@ on:
         type: boolean
         default: false
 
+      directory:
+        description: "Sub-directory where package.json is located. Must be under the workspace."
+        required: false
+        type: string
+        default: "."
+
       node-version:
         description: "Version Spec of the version to use. Examples: 12.x, 10.15.1, >=10.15.0."
         required: false
