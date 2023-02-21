@@ -107,7 +107,9 @@ jobs:
       #   run: |
       #     echo "download from $SLSA_ATTESTATION_DOWNLOAD_NAME"
 
-      # FIXME: Publish to npm. Note that we need to upload our own bundle to npm.
+      # TODO(#888): Publish to GitHub release.
+
+      # TODO(#1669): Publish to npm. Note that we need to upload our own bundle to npm.
       # - name: Publish to npm registry
       #   run: |
       #     npm publish # ...
