@@ -1,8 +1,13 @@
 {
   "name": "verify-token",
   "version": "1.0.0",
-  "description": "",
-  "main": "lib/main.js",
+  "description": "Verify the SLSA token and generate a SLSA predicate",
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "files": [
+    "/dist",
+    "/store"
+  ],
   "scripts": {
     "ci": "npm ci",
     "build": "tsc",
