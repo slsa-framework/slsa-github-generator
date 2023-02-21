@@ -12,6 +12,16 @@ inputs:
     type: string
     required: true
 
+  slsa-workflow-secret1:
+    description: "secret1 is unused"
+    type: string
+    required: false
+
+  slsa-workflow-secret2:
+    description: "secret2 is unused"
+    type: string
+    required: false
+
 runs:
   using: "composite"
   steps:
