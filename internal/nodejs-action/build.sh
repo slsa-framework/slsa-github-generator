@@ -21,9 +21,9 @@ if [[ "${UNTRUSTED_REALPATH}" != "${GITHUB_WORKSPACE_REALPATH}" ]] && [[ ${UNTRU
     exit 1
 fi
 # Directory was validated. Explicitly trust it.
-DIRECTORY="${UNTRUSTED_DIRECTORY}"
+directory="${UNTRUSTED_DIRECTORY}"
 
-cd "${DIRECTORY}"
+cd "${directory}"
 
 echo "** Running 'npm ci' **"
 npm ci
@@ -41,4 +41,5 @@ jq <pack.json
 echo "pack_json=$pack_json" >>"$GITHUB_OUTPUT"
 
 filename=$(echo "$pack_json" | jq -r '.[0].filename')
-echo "filename=$filename" >>"$GITHUB_OUTPUT"
+resolved_filename=$(realpath -e "$directory/$filename")
+echo "filename=$resolved_filename" >>"$GITHUB_OUTPUT"
