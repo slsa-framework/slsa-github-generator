@@ -20,6 +20,10 @@ if [[ "${UNTRUSTED_REALPATH}" != "${GITHUB_WORKSPACE_REALPATH}" ]] && [[ ${UNTRU
     echo "${UNTRUSTED_DIRECTORY} not a sub-directory of ${GITHUB_WORKSPACE}"
     exit 1
 fi
+# Directory was validated. Explicitly trust it.
+DIRECTORY="${UNTRUSTED_DIRECTORY}"
+
+cd "${DIRECTORY}"
 
 echo "** Running 'npm ci' **"
 npm ci
