@@ -32,10 +32,12 @@ runs:
       env:
         UNTRUSTED_DIRECTORY: ${{ fromJson(inputs.slsa-workflow-inputs).directory }}
         UNTRUSTED_RUN_SCRIPTS: ${{ fromJson(inputs.slsa-workflow-inputs).run-scripts }}
+      shell: bash
       run: |
         ./../__TOOL_ACTION_DIR__/run-scripts.sh
 
     - id: pack
+      shell: bash
       run: |
         pack_json=$(npm pack --json | jq -c)
         echo "pack_json=$pack_json" >> $GITHUB_OUTPUT
