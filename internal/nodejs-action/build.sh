@@ -38,6 +38,7 @@ done
 echo "** Running 'npm pack' **"
 pack_json=$(npm pack --json | tee pack.json | jq -c)
 jq <pack.json
+ls -lh .
 echo "pack_json=$pack_json" >>"$GITHUB_OUTPUT"
 
 filename=$(echo "$pack_json" | jq -r '.[0].filename')
