@@ -41,6 +41,12 @@ runs:
         # NOTE: cache-dependency-path needs to be validated to be a subdirectory of GITHUB_WORKSPACE.
         # cache-dependency-path:
 
+    # NOTE: the default npm lists incorrect filenames in the output of 'npm pack --json'. This is fixed in later versions.
+    - id: update-npm
+      shell: bash
+      run: |
+        npm install -g npm@9.5.0
+
     - id: build
       env:
         UNTRUSTED_DIRECTORY: ${{ fromJson(inputs.slsa-workflow-inputs).directory }}
