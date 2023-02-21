@@ -71,7 +71,7 @@ runs:
       id: generate-layout
       env:
         SLSA_OUTPUTS_ARTIFACTS_FILE: ${{ inputs.slsa-layout-file }}
-        PACK_JSON: ${{ steps.pack.outputs.shasum }}
+        PACK_JSON: ${{ steps.build.outputs.pack_json }}
       shell: bash
       run: |
         ./../__TOOL_ACTION_DIR__/generate-layout.sh | tee "$SLSA_OUTPUTS_ARTIFACTS_FILE"
