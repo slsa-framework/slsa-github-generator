@@ -285,4 +285,4 @@ Here we explain how SLSA requirements can be achieved:
 
 ### Source-level provenance
 
-Review provenance can be added as an additional isolated job within the reusable workflow. We can add review information for all commits since the last release, for example. One format to use is [this one](https://docs.google.com/document/d/10B-8R3NIGvcPuoIhqb-p18oOe78m6SiiukfE7NyvnYQ/preview). 
+Review provenance can be added as an additional isolated job within the reusable workflow. We can add review information for all commits since the last release, for example. One format to use is [this one](https://docs.google.com/document/d/10B-8R3NIGvcPuoIhqb-p18oOe78m6SiiukfE7NyvnYQ/preview).

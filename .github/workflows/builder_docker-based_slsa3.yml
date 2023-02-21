@@ -23,8 +23,9 @@ env:
   # Builder.
   BUILDER_BINARY: slsa-builder-docker-linux-amd64 # Name of the binary in the release assets.
   BUILDER_DIR: internal/builders/docker # Source directory if we compile the builder.
-  # Outputs folder.
-  OUTPUT_FOLDER: outputs
+  # SLSA outputs folder.
+  OUTPUT_FOLDER: slsa-outputs
+
 
 defaults:
   run:
@@ -85,6 +86,13 @@ on:
         # TODO: Secrets and Authentication options for the builder-image.
         #      * registry-username
         #      * registry-password
+    outputs:
+      build-outputs-name:
+        description: "The name of the folder where the generated artifacts are uploaded to the artifact registry."
+        value: ${{ jobs.build.outputs.build-outputs-name }}
+      provenance-name:
+        description: "The artifact name of the signed provenance. (A file with the intoto.sigstore extension)."
+        value: ${{ jobs.provenance.outputs.provenance-name }}
 
 jobs:
   rng:
@@ -246,8 +254,9 @@ jobs:
       slsa-outputs-name: ${{ steps.build.outputs.slsa-outputs-name }}
       # The digest of the SLSA subject outputs file for secure download.
       slsa-outputs-sha256: ${{ steps.upload.outputs.sha256 }}
+      # The build outputs
+      build-outputs-name: ${{ steps.build.outputs.build-outputs-name }}
     needs: [rng, detect-env, generate-builder]
-    # TODO: Replace with builder binary
     steps:
       - name: Checkout builder repository
         uses: slsa-framework/slsa-github-generator/.github/actions/secure-builder-checkout@v1.5.0-rc.0
@@ -280,6 +289,7 @@ jobs:
           BUILDER_IMAGE: ${{ inputs.builder-image }}
           BUILDER_DIGEST: ${{ inputs.builder-digest }}
           CONFIG_PATH: ${{ inputs.config-path }}
+          RNG: ${{ needs.rng.outputs.value }}
 
         run: |
           set -euo pipefail
@@ -296,20 +306,22 @@ jobs:
             --builder-image "${BUILDER_IMAGE}@${BUILDER_DIGEST}" \
             --git-commit-digest "sha1:${GITHUB_SHA}" \
             --source-repo "git+https://github.com/${GITHUB_REPOSITORY}${REF}" \
-            --subjects-path subjects.json
+            --subjects-path subjects.json \
+            --output-folder /tmp/build-outputs-${RNG}
           "${GITHUB_WORKSPACE}/${BUILDER_BINARY}" build \
             --build-config-path "${CONFIG_PATH}" \
             --builder-image "${BUILDER_IMAGE}@${BUILDER_DIGEST}" \
             --git-commit-digest "sha1:${GITHUB_SHA}" \
             --source-repo "git+https://github.com/${GITHUB_REPOSITORY}${REF}" \
-            --subjects-path subjects.json
+            --subjects-path subjects.json \
+            --output-folder /tmp/build-outputs-${RNG}
 
           cat <<EOF >DATA
           {
             "version": 1,
              "attestations": [
               {
-                "name": "attestation1.intoto",
+                "name": "attestation.intoto",
                 "subjects": []
               }
             ]
@@ -318,8 +330,9 @@ jobs:
 
           cat DATA > output-template.json
 
-          jq --argjson subjects "$(<subjects.json)" '.attestations[0].subjects += $subjects' output-template.json > "${GITHUB_WORKSPACE}"/slsa-outputs.json
-          echo "slsa-outputs-name=slsa-outputs.json" >> $GITHUB_OUTPUT
+          jq --argjson subjects "$(<subjects.json)" '.attestations[0].subjects += $subjects' output-template.json > "${GITHUB_WORKSPACE}"/slsa-layout.json
+          echo "slsa-outputs-name=slsa-layout.json" >> $GITHUB_OUTPUT
+          echo "build-outputs-name=build-outputs-${RNG}" >> $GITHUB_OUTPUT
 
       - name: Upload the SLSA outputs file
         id: upload
@@ -327,6 +340,16 @@ jobs:
         with:
           name: "${{ steps.build.outputs.slsa-outputs-name }}-${{ needs.rng.outputs.value }}"
           path: "${{ steps.build.outputs.slsa-outputs-name }}"
+
+      - name: Upload output artifacts
+        # TODO(https://github.com/slsa-framework/slsa-github-generator/issues/1655): Use a
+        # secure upload or verify this against the SLSA layout file.
+        id: upload-artifacts
+        uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
+        with:
+          name: ${{ steps.build.outputs.build-outputs-name }}
+          path: /tmp/build-outputs-${{ needs.rng.outputs.value }}
+          if-no-files-found: error
 
   ###################################################################
   #                                                                 #
@@ -341,7 +364,7 @@ jobs:
       contents: read  # Needed to check out the repository.
       actions: read # Needed to read workflow info.
     outputs:
-      provenance: ${{ steps.sign.outputs.output-name }}
+      provenance-name: "${{ env.OUTPUT_FOLDER }}-${{ needs.rng.outputs.value }}"
     steps:
       - name: Checkout builder repository
         uses: slsa-framework/slsa-github-generator/.github/actions/secure-builder-checkout@v1.5.0-rc.0
@@ -409,13 +432,13 @@ jobs:
         uses: ./__BUILDER_CHECKOUT_DIR__/.github/actions/sign-attestations
         with:
           attestations: "attestations-${{ needs.rng.outputs.value }}"
-          output-folder: "${{ env.OUTPUT_FOLDER }}"
+          output-folder: "${{ env.OUTPUT_FOLDER }}-${{ needs.rng.outputs.value }}"
 
       - name: Upload the signed attestations
         id: upload
         if: ${{ github.event_name != 'pull_request' }}
         uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
         with:
-          name: "${{ env.OUTPUT_FOLDER }}"
-          path: "${{ env.OUTPUT_FOLDER }}"
+          name: "${{ env.OUTPUT_FOLDER }}-${{ needs.rng.outputs.value }}"
+          path: "${{ env.OUTPUT_FOLDER }}-${{ needs.rng.outputs.value }}"
           if-no-files-found: error
