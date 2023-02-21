@@ -26,6 +26,11 @@ on:
         required: false
         type: string
 
+      run-scripts:
+        description: "An ordered list of scripts from the package.json file to run (space separated). Example value: 'script1 script2'"
+        required: false
+        type: string
+
       scope:
         description: "Optional scope for authenticating against scoped registries. Will fall back to the repository owner when using the GitHub Packages registry (https://npm.pkg.github.com/)."
         required: false
@@ -69,10 +74,6 @@ jobs:
     uses: slsa-framework/slsa-github-generator/.github/workflows/delegator_generic_slsa3.yml@main
     with:
       slsa-token: ${{ needs.slsa-setup.outputs.slsa-token }}
-    # TODO: Set secrets if necessary.
-    # secrets:
-    #   secret1: ${{ secrets.github-token }}
-    #   secret2: ${{ secrets.mysecret }}
 
   slsa-publish:
     needs: [slsa-run]
@@ -92,11 +93,11 @@ jobs:
           name: "package.tgz"
 
       # TODO(github.com/ianlewis/slsa-byob-template/issues/10): verify the attestation before upload.
-      - name: Verify attestations
-        env:
-          SLSA_ATTESTATION_DOWNLOAD_NAME: ${{ needs.slsa-run.outputs.attestations-download-name }}
-        run: |
-          echo "download from $SLSA_ATTESTATION_DOWNLOAD_NAME"
+      # - name: Verify attestations
+      #   env:
+      #     SLSA_ATTESTATION_DOWNLOAD_NAME: ${{ needs.slsa-run.outputs.attestations-download-name }}
+      #   run: |
+      #     echo "download from $SLSA_ATTESTATION_DOWNLOAD_NAME"
 
       # FIXME: Publish to npm. Note that we need to upload our own bundle to npm.
       # - name: Publish to npm registry
