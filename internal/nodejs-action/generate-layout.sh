@@ -2,11 +2,11 @@
 
 set -euo pipefail
 
-package_id=$(echo "${PACK_JSON}" | jq '.[0].id')
-digest=$(echo "${PACK_JSON}" | jq '.[0].shasum')
+package_id=$(echo "${PACK_JSON}" | jq -r '.[0].id')
+digest=$(echo "${PACK_JSON}" | jq -r '.[0].shasum')
 
 # NOTE: the name of the attestation should be configurable.
-cat <<EOF | jq
+cat <<EOF | jq | tee "$SLSA_OUTPUTS_ARTIFACTS_FILE"
 {
   "version": 1,
   "attestations":

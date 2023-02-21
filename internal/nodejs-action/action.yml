@@ -74,4 +74,4 @@ runs:
         PACK_JSON: ${{ steps.build.outputs.pack_json }}
       shell: bash
       run: |
-        ./../__TOOL_ACTION_DIR__/generate-layout.sh | tee "$SLSA_OUTPUTS_ARTIFACTS_FILE"
+        ./../__TOOL_ACTION_DIR__/generate-layout.sh
