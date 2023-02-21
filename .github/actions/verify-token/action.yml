@@ -35,4 +35,5 @@ outputs:
 
 runs:
   using: "node16"
+  # TODO (#1646): revert workaround
   main: "dist/dist/index.js"
