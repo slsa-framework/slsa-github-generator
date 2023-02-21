@@ -1,0 +1,58 @@
+name: SLSA3 Builder internal wrapper
+description: SLSA3 Builder internal wrapper
+
+inputs:
+  slsa-workflow-inputs:
+    description: "All the inputs formatted as a JSON map"
+    type: string
+    required: true
+
+  slsa-layout-file:
+    description: "Location to store the layout content"
+    type: string
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    # NOTE: the repository is already cloned by the caller, so there's no need to
+    # checkout ourselves.
+
+    - name: Setup Node
+      uses: actions/setup-node@v3
+      with:
+        always-auth: ${{ fromJson(inputs.slsa-workflow-inputs).always-auth }}
+        node-version: ${{ fromJson(inputs.slsa-workflow-inputs).node-version }}
+        node-version-file: ${{ fromJson(inputs.slsa-workflow-inputs).node-version-file }}
+        registry-url: ${{ fromJson(inputs.slsa-workflow-inputs).registry-url }}
+        scope: ${{ fromJson(inputs.slsa-workflow-inputs).scope }}
+        cache: npm
+
+    - id: pack
+      run: |
+        pack_json=$(npm pack --json | jq -c)
+        echo "pack_json=$pack_json" >> $GITHUB_OUTPUT
+
+        filename=$(echo $pack_json | jq -r '.[0].filename')
+        echo "filename=$filename" >> $GITHUB_OUTPUT
+
+    - uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
+      with:
+        name: package.tgz
+        path: ${{ steps.pack.outputs.filename }}
+        if-no-files-found: error
+        retention-days: 5
+
+    # NOTE: Here we create a JSON file that describes the attestations we want
+    #       to create. Each attestation will be created as a separate file,
+    #       each with the subjects specified. This allows complicated release
+    #       pipelines that output many artifacts to organize the attestations
+    #       for those artifacts in a flexible way.
+    - name: Generate layout file
+      id: generate-layout
+      env:
+        SLSA_OUTPUTS_ARTIFACTS_FILE: ${{ inputs.slsa-layout-file }}
+        PACK_JSON: ${{ steps.pack.outputs.shasum }}
+      shell: bash
+      run: |
+        ./../__TOOL_ACTION_DIR__/generate-layout.sh | tee "$SLSA_OUTPUTS_ARTIFACTS_FILE"
