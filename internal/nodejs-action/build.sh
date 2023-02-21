@@ -42,5 +42,6 @@ ls -lh .
 echo "pack_json=$pack_json" >>"$GITHUB_OUTPUT"
 
 filename=$(echo "$pack_json" | jq -r '.[0].filename')
-resolved_filename=$(realpath -e "$directory/$filename")
+# NOTE: Get the absolute path of the file since we could be in a subdirectory.
+resolved_filename=$(realpath -e "$filename")
 echo "filename=$resolved_filename" >>"$GITHUB_OUTPUT"
