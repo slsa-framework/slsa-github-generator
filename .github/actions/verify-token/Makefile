@@ -28,6 +28,9 @@ action: node_modules/.installed ## Builds the action.
 .PHONY: package
 package: node_modules/.installed ## Builds the distribution package.
 	npm run all
+	# TODO(https://github.com/slsa-framework/slsa-github-generator/issues/1646): revert workaround
+	mkdir -p dist/dist
+	mv dist/*.* dist/dist
 
 .PHONY: clean
 clean:
