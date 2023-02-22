@@ -25,6 +25,7 @@ package pkg
 import (
 	"crypto/sha256"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"io"
 	"log"
@@ -103,7 +104,7 @@ func NewBuilderWithGitFetcher(config *DockerBuildConfig) (*Builder, error) {
 // CreateBuildDefinition creates a BuildDefinition from the DockerBuildConfig
 // and BuildConfig in this DockerBuild.
 func (db *DockerBuild) CreateBuildDefinition() *slsa1.ProvenanceBuildDefinition {
-	ep := DockerBasedExternalParmaters{
+	ep := DockerBasedExternalParameters{
 		Source:       sourceArtifact(db.config),
 		BuilderImage: builderImage(db.config),
 		ConfigPath:   db.config.BuildConfigPath,
@@ -189,7 +190,7 @@ func runDockerRun(db *DockerBuild) error {
 	}
 
 	buildDef := db.CreateBuildDefinition()
-	dockerEp, ok := buildDef.ExternalParameters.(DockerBasedExternalParmaters)
+	dockerEp, ok := buildDef.ExternalParameters.(DockerBasedExternalParameters)
 	if !ok {
 		return fmt.Errorf("expected docker-based external parameters")
 	}
@@ -516,7 +517,7 @@ func checkExistingFiles(pattern string) error {
 
 // Finds all files matching the given pattern, measures the SHA256 digest of
 // each file, and returns filenames and digests as an array of intoto.Subject.
-// This also writes the output to a configured output folder.
+// This also writes the output to a configured output folder, if provided.
 // Precondition: The pattern is a relative file path pattern.
 func inspectAndWriteArtifacts(pattern, outputFolder, root string) ([]intoto.Subject, error) {
 	matches, err := filepath.Glob(pattern)
@@ -543,17 +544,19 @@ func inspectAndWriteArtifacts(pattern, outputFolder, root string) ([]intoto.Subj
 		}
 		subjects = append(subjects, *subject)
 
-		// Write output file to output folder
-		relPath, err := filepath.Rel(root, path)
-		if err != nil {
-			return nil, err
-		}
-		w, err := utils.CreateNewFileUnderDirectory(relPath, outputFolder, os.O_WRONLY)
-		if err != nil {
-			return nil, fmt.Errorf("creating new output file: %v", err)
-		}
-		if _, err := w.Write(data); err != nil {
-			return nil, fmt.Errorf("writing output file: %v", err)
+		if outputFolder != "" {
+			// Write output file to output folder
+			relPath, err := filepath.Rel(root, path)
+			if err != nil {
+				return nil, err
+			}
+			w, err := utils.CreateNewFileUnderDirectory(relPath, outputFolder, os.O_WRONLY)
+			if err != nil {
+				return nil, fmt.Errorf("creating new output file: %v", err)
+			}
+			if _, err := w.Write(data); err != nil {
+				return nil, fmt.Errorf("writing output file: %v", err)
+			}
 		}
 	}
 
@@ -585,4 +588,70 @@ func (info *RepoCheckoutInfo) Cleanup() {
 	if err := os.RemoveAll(info.RepoRoot); err != nil {
 		log.Printf("failed to remove the temp files: %v", err)
 	}
+}
+
+// ProvenanceStatementSLSA1 is a convenience class to facilitate parsing a
+// JSON document to a SLSAv1 provenance object.
+type ProvenanceStatementSLSA1 struct {
+	intoto.StatementHeader
+	Predicate slsa1.ProvenancePredicate `json:"predicate"`
+}
+
+// ParseProvenance parses a byte array into an instance of ProvenanceStatementSLSA1.
+func ParseProvenance(bytes []byte) (*ProvenanceStatementSLSA1, error) {
+	var statement ProvenanceStatementSLSA1
+	if err := json.Unmarshal(bytes, &statement); err != nil {
+		return nil, fmt.Errorf("could not unmarshal the provenance file:\n%v", err)
+	}
+
+	// ExternalParameters is an interface in slsa1.ProvenancePredicate, so we
+	// marshal and unmarshal it as an instance of DockerBasedExternalParameters
+	// to be able to use the actual type.
+	var ep DockerBasedExternalParameters
+	b, err := json.Marshal(statement.Predicate.BuildDefinition.ExternalParameters)
+	if err != nil {
+		return nil, fmt.Errorf("could not marshal map into JSON bytes: %v", err)
+	}
+
+	if err = json.Unmarshal(b, &ep); err != nil {
+		return nil, fmt.Errorf("could not unmarshal JSON bytes into a BuildConfig: %v", err)
+	}
+
+	statement.Predicate.BuildDefinition.ExternalParameters = ep
+
+	return &statement, nil
+}
+
+// ToDockerBuildConfig creates an instance of DockerBuildConfig using the
+// external parameters in this provenance.
+func (p *ProvenanceStatementSLSA1) ToDockerBuildConfig(forceCheckout bool) (*DockerBuildConfig, error) {
+	ep, ok := p.Predicate.BuildDefinition.ExternalParameters.(DockerBasedExternalParameters)
+	if !ok {
+		return nil, fmt.Errorf("failed to cast ExternalParameters to DockerBasedExternalParameters")
+	}
+
+	di, err := validateDockerImage(ep.BuilderImage.URI)
+	if err != nil {
+		return nil, fmt.Errorf("validating Docker image URI: %v", err)
+	}
+	if di.Digest.Value != ep.BuilderImage.Digest[di.Digest.Alg] {
+		return nil, fmt.Errorf("invalid Docker image digest")
+	}
+
+	val, ok := ep.Source.Digest["sha1"]
+	if !ok {
+		return nil, fmt.Errorf("missing sha1 digest for source")
+	}
+	sd := Digest{
+		Alg:   "sha1",
+		Value: val,
+	}
+
+	return &DockerBuildConfig{
+		SourceRepo:      ep.Source.URI,
+		SourceDigest:    sd,
+		BuilderImage:    *di,
+		BuildConfigPath: ep.ConfigPath,
+		ForceCheckout:   forceCheckout,
+	}, nil
 }

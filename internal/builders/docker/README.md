@@ -18,7 +18,7 @@ command. The following is an example, which assumes you are running the code in
 ```bash
 go run *.go  dry-run \
   --build-config-path internal/builders/docker/testdata/config.toml \
-  --builder-image bash@sha256:9e2ba52487d \
+  --builder-image bash@sha256:9e2ba52487d945504d250de186cb4fe2e3ba023ed2921dd6ac8b97ed43e76af9 \
   --git-commit-digest sha1:cf5804b5c6f1a4b2a0b03401a487dfdfbe3a5f00 \
   --source-repo git+https://github.com/slsa-framework/slsa-github-generator \
   --build-definition-path bd.json \
@@ -47,4 +47,18 @@ go run *.go build \
 ```
 
 If the build is successful, this command will generate `subjects.json`
-containing a JSON-encoded list of generated artifacts and their SHA256 digests. It also writes all artifacts to the `output-folder`.
+containing a JSON-encoded list of generated artifacts and their SHA256 digests.
+It also writes all artifacts to the `output-folder`.
+
+## The `verify` command
+
+The `verify` subcommand takes the path to a SLSAv1.0 provenance and verifies it,
+by rebuilding the artifacts using the build definition in the provenance, and
+checking that the resulting artifacts have the same names and subjects as the
+ones in the provenance subject.
+
+Here is an example:
+
+```bash
+go run *.go verify --provenance-path testdata/slsa1-provenance.json
+```
