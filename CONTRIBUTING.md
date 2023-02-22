@@ -45,7 +45,7 @@ issues. Please let us know if you are willing to work on the issue and how you
 can contribute.
 
 - For new developers and contributors, please see issues labeled
-  [good-first-issue]. These issues should require minimal background knowledge
+  [good first issue]. These issues should require minimal background knowledge
   to contribute.
 - For slightly more involved changes that may require some background knowledge,
   please see issues labeled [help wanted]
