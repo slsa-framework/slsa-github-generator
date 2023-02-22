@@ -25,10 +25,6 @@ directory="${UNTRUSTED_DIRECTORY}"
 
 cd "${directory}"
 
-echo "** Running 'npm ci' **"
-npm ci
-echo
-
 for script in $run_scripts; do
     echo "** Running 'npm run $script' **"
     npm run "$script"
