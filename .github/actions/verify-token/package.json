@@ -1,16 +1,22 @@
 {
   "name": "verify-token",
   "version": "1.0.0",
-  "description": "",
-  "main": "lib/main.js",
+  "description": "Verify the SLSA token and generate a SLSA predicate",
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "files": [
+    "/dist",
+    "/store"
+  ],
   "scripts": {
     "ci": "npm ci",
     "build": "tsc",
     "format": "prettier --write '**/*.ts'",
     "format-check": "prettier --check '**/*.ts'",
-    "package": "ncc build --source-map",
+    "//": "TODO (#1646): revert workaround",
+    "package": "ncc build -o dist/dist --source-map",
     "lint": "eslint --max-warnings 0 src/**/*.ts",
-    "all": "npm ci && npm run format && npm run lint && npm run build && npm run package",
+    "all": "npm run format && npm run lint && npm run build && npm run package",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
