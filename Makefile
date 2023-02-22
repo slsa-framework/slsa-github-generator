@@ -17,6 +17,10 @@ help: ## Shows all targets and help from the Makefile (this message).
 			} \
 		}'
 
+node_modules/.installed: package.json package-lock.json
+	npm ci
+	touch node_modules/.installed
+
 ## Testing
 #####################################################################
 
@@ -41,7 +45,11 @@ ts-test: ## Run TypeScript tests.
 #####################################################################
 
 .PHONY: lint
-lint: golangci-lint shellcheck eslint yamllint ## Run all linters.
+lint: markdownlint golangci-lint shellcheck eslint yamllint ## Run all linters.
+
+.PHONY: markdownlint
+markdownlint: node_modules/.installed ## Runs the markdownlint linter.
+	npm run lint
 
 .PHONY: golangci-lint
 golangci-lint: ## Runs the golangci-lint linter.
