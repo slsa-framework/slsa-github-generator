@@ -27,10 +27,8 @@ action: node_modules/.installed ## Builds the action.
 
 .PHONY: package
 package: node_modules/.installed ## Builds the distribution package.
-	npm run all
-	# TODO (#1646): revert workaround
-	mkdir -p dist/dist
-	mv dist/*.* dist/dist
+	npm run build
+	npm run package
 
 .PHONY: clean
 clean:
@@ -41,4 +39,5 @@ clean:
 
 .PHONY: lint
 lint: node_modules/.installed ## Runs eslint.
+	npm run format-check
 	npm run lint
