@@ -28,7 +28,7 @@ go run *.go  dry-run \
 The output of this is a JSON document stored in `bd.json`.
 
 ## The `build` subcommand
- 
+
 The `build` subcommand takes more or less the same inputs as the `dry-run`
 subcommand, but actually builds the artifacts. To successfully run this
 command, you need to have [rootless Docker installed](https://docs.docker.com/engine/security/rootless/).

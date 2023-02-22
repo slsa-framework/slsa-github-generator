@@ -172,7 +172,6 @@ It's easy to generate binaries for multiple platforms. To accomplish this, we ca
       # ... your other stuff here.
 ```
 
-
 ### Workflow Inputs
 
 The builder workflow [slsa-framework/slsa-github-generator/.github/workflows/builder_go_slsa3.yml](https://github.com/slsa-framework/slsa-github-generator/blob/main/.github/workflows/builder_go_slsa3.yml) accepts the following inputs:

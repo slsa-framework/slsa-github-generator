@@ -323,7 +323,7 @@ End-to-end tests run daily in [github.com/slsa-framework/example-package/.github
 
    If it does not, delete the release, fix the bug and re-start the release process at the top of this page.
 
-### Finalize release candidate.
+### Finalize release candidate
 
 Remove the "This is an un-finalized pre-release." note from the release description.
 
@@ -431,7 +431,7 @@ For each of the GHA builders, you will need to:
 
 2. Move these files to `./cli/slsa-verifier/testdata/gha_$BUILDER_TYPE/$BUILDER_TAG/`. Send a pull request to merge the changes into the verifier's repository. The pre-submits will validate that the verifier is able to verify provenance from the `$BUILDER_TAG` builder.
 
-### Finish the release.
+### Finish the release
 
 1. Remove the "This is an un-finalized release." note from the release description.
 1. Un-tick the `This is a pre-release` option.

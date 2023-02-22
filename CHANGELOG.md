@@ -126,7 +126,7 @@ https://github.com/slsa-framework/slsa-github-generator/compare/v1.2.2...v1.4.0
 
 # v1.4.0-rc.2
 
-\*_This is a pre-release. It is not meant for general consumption. The following is the proposed release notes for the official release. _
+\*_This is a pre-release. It is not meant for general consumption. The following is the proposed release notes for the official release._
 
 ## What's Changed
 
