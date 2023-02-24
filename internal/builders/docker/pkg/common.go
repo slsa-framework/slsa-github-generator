@@ -37,9 +37,9 @@ const (
 	CommandKey = "command"
 )
 
-// DockerBasedExternalParmaters is a representation of the top level inputs to a
+// DockerBasedExternalParameters is a representation of the top level inputs to a
 // docker-based build.
-type DockerBasedExternalParmaters struct {
+type DockerBasedExternalParameters struct {
 	// The source GitHub repo
 	Source slsa1.ArtifactReference `json:"source"`
 

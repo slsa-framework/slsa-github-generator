@@ -41,6 +41,7 @@ For more information on SLSA, visit https://slsa.dev`,
 	}
 	cmd.AddCommand(DryRunCmd(checkExit))
 	cmd.AddCommand(BuildCmd(checkExit))
+	cmd.AddCommand(VerifyCmd(checkExit))
 	return cmd
 }
 

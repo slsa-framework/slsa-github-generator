@@ -161,7 +161,6 @@ jobs:
           echo "ACTION_PATH=$ACTION_PATH"
           tree
 
-
       - name: Checkout the project repository
         uses: slsa-framework/slsa-github-generator/.github/actions/secure-project-checkout@v1.5.0-rc.0
 
