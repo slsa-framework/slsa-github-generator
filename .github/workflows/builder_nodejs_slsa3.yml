@@ -60,14 +60,13 @@ jobs:
     steps:
       - name: Generate the token
         id: generate
-        # TODO(github.com/ianlewis/slsa-byob-template/issues/11): Update version once released.
         uses: slsa-framework/slsa-github-generator/actions/delegator/setup-token@main
         with:
           slsa-workflow-recipient: "delegator_generic_slsa3.yml"
           slsa-rekor-log-public: ${{ inputs.rekor-log-public }}
           slsa-runner-label: "ubuntu-latest"
           slsa-build-action-path: "./internal/nodejs-action"
-          # TODO(https://github.com/slsa-framework/slsa-github-generator/issues/1575): mask sensitive fields.
+          # TODO(#1575): mask sensitive fields.
           slsa-workflow-inputs: ${{ toJson(inputs) }}
 
   slsa-run:
@@ -98,7 +97,7 @@ jobs:
         with:
           name: "package.tgz"
 
-      # TODO(github.com/ianlewis/slsa-byob-template/issues/10): verify the attestation before upload.
+      # TODO(#1680): verify the attestation before upload.
       # - name: Verify attestations
       #   env:
       #     SLSA_ATTESTATION_DOWNLOAD_NAME: ${{ needs.slsa-run.outputs.attestations-download-name }}
