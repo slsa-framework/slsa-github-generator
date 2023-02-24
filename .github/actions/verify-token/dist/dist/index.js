@@ -311,7 +311,6 @@ function createPredicate(rawTokenObj, toolURI) {
                 source: sourceRef,
             },
             systemParameters: {
-                GITHUB_ACTOR: rawTokenObj.github.actor,
                 GITHUB_ACTOR_ID: rawTokenObj.github.actor_id,
                 GITHUB_EVENT_NAME: rawTokenObj.github.event_name,
                 GITHUB_JOB: rawTokenObj.github.job,
@@ -319,7 +318,6 @@ function createPredicate(rawTokenObj, toolURI) {
                 GITHUB_REF_TYPE: rawTokenObj.github.ref_type,
                 GITHUB_REPOSITORY: rawTokenObj.github.repository,
                 GITHUB_REPOSITORY_ID: rawTokenObj.github.repository_id,
-                GITHUB_REPOSITORY_OWNER: rawTokenObj.github.repository_owner,
                 GITHUB_REPOSITORY_OWNER_ID: rawTokenObj.github.repository_owner_id,
                 GITHUB_RUN_ATTEMPT: rawTokenObj.github.run_attempt,
                 GITHUB_RUN_ID: rawTokenObj.github.run_id,
@@ -445,57 +443,36 @@ limitations under the License.
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.validateFieldNonEmpty = exports.validateFieldStartsWith = exports.validateField = exports.validateFieldAnyOf = exports.validateGitHubFields = void 0;
 function validateGitHubFields(gho) {
-    // actor
-    validateFieldNonEmpty("github.actor", gho.actor);
-    validateField("github.actor", gho.actor, process.env.GITHUB_ACTOR);
     // actor_id
-    validateFieldNonEmpty("github.actor_id", gho.actor_id);
     validateField("github.actor_id", gho.actor_id, process.env.GITHUB_ACTOR_ID);
     // event_name
-    validateFieldNonEmpty("github.event_name", gho.event_name);
     validateField("github.event_name", gho.event_name, process.env.GITHUB_EVENT_NAME);
     // event_path
-    validateFieldNonEmpty("github.event_path", gho.event_path);
     validateField("github.event_path", gho.event_path, process.env.GITHUB_EVENT_PATH);
     // job
-    validateFieldNonEmpty("github.job", gho.job);
     validateField("github.job", gho.job, process.env.GITHUB_JOB);
     // ref
-    validateFieldNonEmpty("github.ref", gho.ref);
     validateField("github.ref", gho.ref, process.env.GITHUB_REF);
     // ref_type
-    validateFieldNonEmpty("github.ref_type", gho.ref_type);
     validateField("github.ref_type", gho.ref_type, process.env.GITHUB_REF_TYPE);
     // repository
-    validateFieldNonEmpty("github.repository", gho.repository);
     validateField("github.repository", gho.repository, process.env.GITHUB_REPOSITORY);
     // repository_id
-    validateFieldNonEmpty("github.repository_id", gho.repository_id);
     validateField("github.repository_id", gho.repository_id, process.env.GITHUB_REPOSITORY_ID);
-    // repository_owner
-    validateFieldNonEmpty("github.repository_owner", gho.repository_owner);
-    validateField("github.repository_owner", gho.repository_owner, process.env.GITHUB_REPOSITORY_OWNER);
     // repository_owner_id
-    validateFieldNonEmpty("github.repository_owner_id", gho.repository_owner_id);
     validateField("github.repository_owner_id", gho.repository_owner_id, process.env.GITHUB_REPOSITORY_OWNER_ID);
     // run_attempt
-    validateFieldNonEmpty("github.run_attempt", gho.run_attempt);
     validateField("github.run_attempt", gho.run_attempt, process.env.GITHUB_RUN_ATTEMPT);
     // run_id
-    validateFieldNonEmpty("github.run_id", gho.run_id);
     validateField("github.run_id", gho.run_id, process.env.GITHUB_RUN_ID);
     // run_number
-    validateFieldNonEmpty("github.run_number", gho.run_number);
     validateField("github.run_number", gho.run_number, process.env.GITHUB_RUN_NUMBER);
     // sha
-    validateFieldNonEmpty("github.sha", gho.sha);
     validateField("github.sha", gho.sha, process.env.GITHUB_SHA);
     // workflow_ref
-    validateFieldNonEmpty("github.workflow_ref", gho.workflow_ref);
     validateField("github.workflow_ref", gho.workflow_ref, process.env.GITHUB_WORKFLOW_REF);
     validateFieldStartsWith("github.workflow_ref", gho.workflow_ref, `${process.env.GITHUB_REPOSITORY}/`);
     // workflow_sha
-    validateFieldNonEmpty("github.workflow_sha", gho.workflow_sha);
     validateField("github.workflow_sha", gho.workflow_sha, process.env.GITHUB_WORKFLOW_SHA);
 }
 exports.validateGitHubFields = validateGitHubFields;
@@ -509,9 +486,20 @@ function validateFieldAnyOf(name, actual, expected) {
     throw new Error(`mismatch ${name}: got '${actual}', expected one of '${expected.join(",")}'.`);
 }
 exports.validateFieldAnyOf = validateFieldAnyOf;
+/**
+ * validateField validates that the value of the named field matches the
+ * expected value and is non-empty.
+ * @param name - the name of the value
+ * @param actual - the actual value of the field
+ * @param expected - the expected value of the field
+ * @throws Error - if actual and expected don't match or are empty.
+ */
 function validateField(name, actual, expected) {
     if (actual !== expected) {
         throw new Error(`mismatch ${name}: got '${actual}', expected '${expected}'.`);
+    }
+    if (!actual) {
+        throw new Error(`empty ${name}, expected non-empty value.`);
     }
 }
 exports.validateField = validateField;
@@ -521,8 +509,15 @@ function validateFieldStartsWith(name, actual, prefix) {
     }
 }
 exports.validateFieldStartsWith = validateFieldStartsWith;
+/**
+ * validateFieldNonEmpty validates that the value of the named field is not
+ * empty.
+ * @param name - the name of the value
+ * @param actual - the actual value of the field
+ * @throws Error - if actual is empty.
+ */
 function validateFieldNonEmpty(name, actual) {
-    if (actual === "" || actual === null || actual === undefined) {
+    if (!actual) {
         throw new Error(`empty ${name}, expected non-empty value.`);
     }
 }

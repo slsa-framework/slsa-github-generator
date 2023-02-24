@@ -96,7 +96,6 @@ function run() {
                     audience: workflowRecipient,
                 },
                 github: {
-                    actor: process.env.GITHUB_ACTOR,
                     actor_id: process.env.GITHUB_ACTOR_ID,
                     event_name: process.env.GITHUB_EVENT_NAME,
                     job: process.env.GITHUB_JOB,
@@ -104,7 +103,6 @@ function run() {
                     ref_type: process.env.GITHUB_REF_TYPE,
                     repository: process.env.GITHUB_REPOSITORY,
                     repository_id: process.env.GITHUB_REPOSITORY_ID,
-                    repository_owner: process.env.GITHUB_REPOSITORY_OWNER,
                     repository_owner_id: process.env.GITHUB_REPOSITORY_OWNER_ID,
                     run_attempt: process.env.GITHUB_RUN_ATTEMPT,
                     run_id: process.env.GITHUB_RUN_ID,

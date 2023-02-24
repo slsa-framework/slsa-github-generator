@@ -45,7 +45,7 @@ issues. Please let us know if you are willing to work on the issue and how you
 can contribute.
 
 - For new developers and contributors, please see issues labeled
-  [good-first-issue]. These issues should require minimal background knowledge
+  [good first issue]. These issues should require minimal background knowledge
   to contribute.
 - For slightly more involved changes that may require some background knowledge,
   please see issues labeled [help wanted]
@@ -262,7 +262,7 @@ Communication about bugs, usage, and new feature development is also done on
 [GitHub issues](https://github.com/slsa-framework/slsa-github-generator/issues).
 
 [code of conduct]: https://github.com/slsa-framework/governance/blob/main/8._Code_of_Conduct.md
-[conventional commits]: https://www.conventionalcommits.org/en/v1.0.0/)
+[conventional commits]: https://www.conventionalcommits.org/en/v1.0.0/
 [developer certificate of origin]: https://developercertificate.org/
 [license]: ./LICENSE
 [good first issue]: https://github.com/slsa-framework/slsa-github-generator/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22

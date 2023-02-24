@@ -46,6 +46,20 @@ describe("validateField", () => {
       validateField("foo", "null", null);
     }).toThrow();
   });
+
+  it("does not validate equal empty values", () => {
+    expect(() => {
+      validateField("foo", "", "");
+    }).toThrow();
+
+    expect(() => {
+      validateField("foo", undefined, undefined);
+    }).toThrow();
+
+    expect(() => {
+      validateField("foo", null, null);
+    }).toThrow();
+  });
 });
 
 describe("validateFieldAnyOf", () => {
@@ -112,7 +126,6 @@ describe("validateGitHubFields", () => {
   });
 
   it("validates from githubObj", () => {
-    process.env.GITHUB_ACTOR = "asraa";
     process.env.GITHUB_ACTOR_ID = "123";
     process.env.GITHUB_EVENT_NAME = "workflow_dispatch";
     process.env.GITHUB_EVENT_PATH = "/path/to/event.json";
@@ -121,7 +134,6 @@ describe("validateGitHubFields", () => {
     process.env.GITHUB_REF_TYPE = "branch";
     process.env.GITHUB_REPOSITORY = "ianlewis/byob-test";
     process.env.GITHUB_REPOSITORY_ID = "456";
-    process.env.GITHUB_REPOSITORY_OWNER = "ianlewis";
     process.env.GITHUB_REPOSITORY_OWNER_ID = "789";
     process.env.GITHUB_RUN_ATTEMPT = "1";
     process.env.GITHUB_RUN_ID = "123456789";
@@ -132,7 +144,6 @@ describe("validateGitHubFields", () => {
     process.env.GITHUB_WORKFLOW_SHA = "deadbeef";
 
     const obj: githubObj = {
-      actor: "asraa",
       actor_id: "123",
       event_name: "workflow_dispatch",
       event_path: "/path/to/event.json",
@@ -141,7 +152,6 @@ describe("validateGitHubFields", () => {
       ref_type: "branch",
       repository: "ianlewis/byob-test",
       repository_id: "456",
-      repository_owner: "ianlewis",
       repository_owner_id: "789",
       run_attempt: "1",
       run_id: "123456789",
@@ -155,7 +165,6 @@ describe("validateGitHubFields", () => {
   });
 
   it("does not validate githubObj with empty fields", () => {
-    process.env.GITHUB_ACTOR = "asraa";
     process.env.GITHUB_ACTOR_ID = "123";
     process.env.GITHUB_EVENT_NAME = "workflow_dispatch";
     process.env.GITHUB_EVENT_PATH = "/path/to/event.json";
@@ -164,7 +173,6 @@ describe("validateGitHubFields", () => {
     process.env.GITHUB_REF_TYPE = "branch";
     process.env.GITHUB_REPOSITORY = "ianlewis/byob-test";
     process.env.GITHUB_REPOSITORY_ID = "";
-    process.env.GITHUB_REPOSITORY_OWNER = "ianlewis";
     process.env.GITHUB_REPOSITORY_OWNER_ID = "789";
     process.env.GITHUB_RUN_ATTEMPT = "1";
     process.env.GITHUB_RUN_ID = "123456789";
@@ -175,7 +183,6 @@ describe("validateGitHubFields", () => {
     process.env.GITHUB_WORKFLOW_SHA = "deadbeef";
 
     const obj: githubObj = {
-      actor: "asraa",
       actor_id: "123",
       event_name: "workflow_dispatch",
       event_path: "/path/to/event.json",
@@ -184,7 +191,6 @@ describe("validateGitHubFields", () => {
       ref_type: "branch",
       repository: "ianlewis/byob-test",
       repository_id: "", // NOTE: Empty
-      repository_owner: "ianlewis",
       repository_owner_id: "789",
       run_attempt: "1",
       run_id: "123456789",
@@ -200,7 +206,6 @@ describe("validateGitHubFields", () => {
   });
 
   it("does not validate githubObj with unequal fields", () => {
-    process.env.GITHUB_ACTOR = "asraa";
     process.env.GITHUB_ACTOR_ID = "123";
     process.env.GITHUB_EVENT_NAME = "workflow_dispatch";
     process.env.GITHUB_EVENT_PATH = "/path/to/event.json";
@@ -209,7 +214,6 @@ describe("validateGitHubFields", () => {
     process.env.GITHUB_REF_TYPE = "branch";
     process.env.GITHUB_REPOSITORY = "ianlewis/byob-test";
     process.env.GITHUB_REPOSITORY_ID = "456";
-    process.env.GITHUB_REPOSITORY_OWNER = "ianlewis";
     process.env.GITHUB_REPOSITORY_OWNER_ID = "789";
     process.env.GITHUB_RUN_ATTEMPT = "1";
     process.env.GITHUB_RUN_ID = "123456789";
@@ -221,7 +225,6 @@ describe("validateGitHubFields", () => {
     process.env.GITHUB_WORKFLOW_SHA = "deadbeef";
 
     const obj: githubObj = {
-      actor: "asraa",
       actor_id: "123",
       event_name: "workflow_dispatch",
       event_path: "/path/to/event.json",
@@ -230,7 +233,6 @@ describe("validateGitHubFields", () => {
       ref_type: "branch",
       repository: "asraa/byob-test", // NOTE: Not equal
       repository_id: "456",
-      repository_owner: "ianlewis",
       repository_owner_id: "789",
       run_attempt: "1",
       run_id: "123456789",

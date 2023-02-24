@@ -25,6 +25,8 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/spf13/cobra"
 
 	"github.com/slsa-framework/slsa-github-generator/internal/builders/docker/pkg"
@@ -112,6 +114,70 @@ func BuildCmd(check func(error)) *cobra.Command {
 	check(cmd.MarkFlagRequired("output-folder"))
 
 	return cmd
+}
+
+// VerifyCmd returns a new *cobra.Command that takes a provenance file, and
+// verifies it by running the build steps and comparing the generated artifacts
+// to the subject of the provenance file.
+func VerifyCmd(check func(error)) *cobra.Command {
+	var provenancePath string
+
+	cmd := &cobra.Command{
+		Use:   "verify [FLAGS]",
+		Short: "Verifies as SLSLv1.0 provenance.",
+		Run: func(cmd *cobra.Command, args []string) {
+			err := verifyProvenance(provenancePath)
+			check(err)
+		},
+	}
+
+	cmd.Flags().StringVarP(&provenancePath, "provenance-path", "o", "",
+		"Required - Path to the input provenance file.")
+
+	return cmd
+}
+
+func verifyProvenance(provenancePath string) error {
+	bytes, err := os.ReadFile(provenancePath)
+	if err != nil {
+		return fmt.Errorf("reading provenance file: %w", err)
+	}
+
+	provenance, err := pkg.ParseProvenance(bytes)
+	if err != nil {
+		return fmt.Errorf("parsing provenance file: %w", err)
+	}
+
+	config, err := provenance.ToDockerBuildConfig(true)
+	if err != nil {
+		return fmt.Errorf("creating DockerBuildConfig from provenance: %w", err)
+	}
+
+	builder, err := pkg.NewBuilderWithGitFetcher(config)
+	if err != nil {
+		return fmt.Errorf("creating BuilderWithGitFetcher: %w", err)
+	}
+
+	db, err := builder.SetUpBuildState()
+	if err != nil {
+		return fmt.Errorf("setting up the build state: %w", err)
+	}
+	// Remove any temporary files that were fetched during the setup.
+	defer db.RepoInfo.Cleanup()
+
+	// Build artifacts and get their digests.
+	artifacts, err := db.BuildArtifacts("")
+	if err != nil {
+		return fmt.Errorf("building the artifacts: %w", err)
+	}
+
+	less := func(a, b string) bool { return a < b }
+	diff := cmp.Diff(artifacts, provenance.Subject, cmpopts.SortSlices(less))
+	if diff != "" {
+		return fmt.Errorf("comparing the subjects artifacts: %w", err)
+	}
+
+	return nil
 }
 
 func writeJSONToFile[T any](obj T, w io.Writer) error {

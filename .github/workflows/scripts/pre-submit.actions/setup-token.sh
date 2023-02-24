@@ -25,7 +25,6 @@ _e2e_verify_query "$decoded_token" "./actions/build-artifacts-composite" '.tool.
 _e2e_verify_query "$decoded_token" '{"name1":"value1","name2":"value2","private-repository":true}' '.tool.inputs'
 
 # GitHub's information.
-_e2e_verify_query "$decoded_token" "$GITHUB_ACTOR" '.github.actor'
 _e2e_verify_query "$decoded_token" "$GITHUB_ACTOR_ID" '.github.actor_id'
 _e2e_verify_query "$decoded_token" "$GITHUB_EVENT_NAME" '.github.event_name'
 _e2e_verify_query "$decoded_token" "$GITHUB_JOB" '.github.job'
@@ -33,7 +32,6 @@ _e2e_verify_query "$decoded_token" "$GITHUB_REF" '.github.ref'
 _e2e_verify_query "$decoded_token" "$GITHUB_REF_TYPE" '.github.ref_type'
 _e2e_verify_query "$decoded_token" "$GITHUB_REPOSITORY" '.github.repository'
 _e2e_verify_query "$decoded_token" "$GITHUB_REPOSITORY_ID" '.github.repository_id'
-_e2e_verify_query "$decoded_token" "$GITHUB_REPOSITORY_OWNER" '.github.repository_owner'
 _e2e_verify_query "$decoded_token" "$GITHUB_REPOSITORY_OWNER_ID" '.github.repository_owner_id'
 _e2e_verify_query "$decoded_token" "$GITHUB_RUN_ATTEMPT" '.github.run_attempt'
 _e2e_verify_query "$decoded_token" "$GITHUB_RUN_ID" '.github.run_id'

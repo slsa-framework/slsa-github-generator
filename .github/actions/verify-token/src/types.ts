@@ -12,7 +12,6 @@ limitations under the License.
 */
 
 export interface githubObj {
-  actor: string;
   actor_id: string;
   event_name: string;
   event_path: string;
@@ -21,7 +20,6 @@ export interface githubObj {
   ref_type: string;
   repository: string;
   repository_id: string;
-  repository_owner: string;
   repository_owner_id: string;
   run_attempt: string;
   run_id: string;
