@@ -15,3 +15,4 @@ rules:
     allowed-values: ["true", "false"]
     # Allow Github Actions keys like 'on'
     check-keys: false
+  comments-indentation: false

@@ -26,8 +26,8 @@ action: node_modules/.installed ## Builds the action.
 	npm run build
 
 .PHONY: package
-package: node_modules/.installed ## Builds the distribution package.
-	npm run all
+package: action ## Builds the distribution package.
+	npm run package
 
 .PHONY: clean
 clean:
@@ -36,6 +36,11 @@ clean:
 ## Testing
 #####################################################################
 
+.PHONY: unit-test
+unit-test: node_modules/.installed ## Runs all unit tests.
+	npm run test
+
 .PHONY: lint
 lint: node_modules/.installed ## Runs eslint.
+	npm run format-check
 	npm run lint
