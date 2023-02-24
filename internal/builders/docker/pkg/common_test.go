@@ -32,8 +32,8 @@ func Test_BuildDefinition(t *testing.T) {
 	}
 
 	wantSource := slsa1.ArtifactReference{
-		URI:    "git+https://github.com/project-oak/transparent-release",
-		Digest: map[string]string{"sha1": "9b5f98310dbbad675834474fa68c37d880687cb9"},
+		URI:    "git+https://github.com/slsa-framework/slsa-github-generator",
+		Digest: map[string]string{"sha1": "cf5804b5c6f1a4b2a0b03401a487dfdfbe3a5f00"},
 	}
 
 	wantBuilderImage := slsa1.ArtifactReference{
@@ -43,7 +43,7 @@ func Test_BuildDefinition(t *testing.T) {
 
 	want := &slsa1.ProvenanceBuildDefinition{
 		BuildType: "https://slsa.dev/container-based-build/v0.1?draft",
-		ExternalParameters: DockerBasedExternalParmaters{
+		ExternalParameters: DockerBasedExternalParameters{
 			Source:       wantSource,
 			BuilderImage: wantBuilderImage,
 			ConfigPath:   "internal/builders/docker/testdata/config.toml",
@@ -89,7 +89,7 @@ func loadBuildDefinitionFromFile(path string) (*slsa1.ProvenanceBuildDefinition,
 		return nil, fmt.Errorf("could not marshal the external params in %q: %w", path, err)
 	}
 
-	var dockerEp DockerBasedExternalParmaters
+	var dockerEp DockerBasedExternalParameters
 	if err := json.Unmarshal(epBytes, &dockerEp); err != nil {
 		return nil, fmt.Errorf("could not unmarshal the JSON file in %q as a DockerBasedExternalParameters: %w", path, err)
 	}
