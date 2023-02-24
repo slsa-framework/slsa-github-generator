@@ -133,7 +133,9 @@ export function validateField<T>(name: string, actual: T, expected: T): void {
       `mismatch ${name}: got '${actual}', expected '${expected}'.`
     );
   }
-  validateFieldNonEmpty(name, actual);
+  if (!actual) {
+    throw new Error(`empty ${name}, expected non-empty value.`);
+  }
 }
 
 export function validateFieldStartsWith(
@@ -155,7 +157,7 @@ export function validateFieldStartsWith(
  * @param actual - the actual value of the field
  * @throws Error - if actual is empty.
  */
-export function validateFieldNonEmpty(name: string, actual: any): void {
+export function validateFieldNonEmpty(name: string, actual: string): void {
   if (!actual) {
     throw new Error(`empty ${name}, expected non-empty value.`);
   }

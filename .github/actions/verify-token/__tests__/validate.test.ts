@@ -110,14 +110,6 @@ describe("validateFieldNonEmpty", () => {
     expect(() => {
       validateFieldNonEmpty("foo", "");
     }).toThrow();
-
-    expect(() => {
-      validateFieldNonEmpty("foo", undefined);
-    }).toThrow();
-
-    expect(() => {
-      validateFieldNonEmpty("foo", null);
-    }).toThrow();
   });
 });
 

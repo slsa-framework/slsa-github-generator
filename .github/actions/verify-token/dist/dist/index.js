@@ -498,7 +498,9 @@ function validateField(name, actual, expected) {
     if (actual !== expected) {
         throw new Error(`mismatch ${name}: got '${actual}', expected '${expected}'.`);
     }
-    validateFieldNonEmpty(name, actual);
+    if (!actual) {
+        throw new Error(`empty ${name}, expected non-empty value.`);
+    }
 }
 exports.validateField = validateField;
 function validateFieldStartsWith(name, actual, prefix) {
