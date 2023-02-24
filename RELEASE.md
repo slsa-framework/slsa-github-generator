@@ -31,6 +31,7 @@ This is a document to describe the release process for the slsa-github-generator
   - [Reference Actions at main](#reference-actions-at-main)
   - [Update verifier](#update-verifier)
   - [Finish the release.](#finish-the-release)
+  - [Update SECURITY.md](#update-securitymd)
   - [Update the starter workflows](#update-the-starter-workflows)
   - [Announce](#announce)
 
