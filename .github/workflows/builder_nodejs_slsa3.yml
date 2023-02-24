@@ -75,7 +75,7 @@ jobs:
       id-token: write # For signing.
       contents: write # For asset uploads.
       packages: write # For publishing to GitHub packages.
-    uses: slsa-framework/slsa-github-generator/.github/workflows/delegator_generic_slsa3.yml@main
+    uses: slsa-framework/slsa-github-generator/.github/workflows/delegator_generic_slsa3.yml@v1.5.0-rc.0
     with:
       slsa-token: ${{ needs.slsa-setup.outputs.slsa-token }}
 
