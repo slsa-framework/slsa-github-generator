@@ -74,7 +74,6 @@ jobs:
     permissions:
       id-token: write # For signing.
       contents: write # For asset uploads.
-      # actions: read # For the entrypoint.
       packages: write # For publishing to GitHub packages.
     uses: slsa-framework/slsa-github-generator/.github/workflows/delegator_generic_slsa3.yml@main
     with:
