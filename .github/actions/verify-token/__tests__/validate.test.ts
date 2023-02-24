@@ -46,6 +46,20 @@ describe("validateField", () => {
       validateField("foo", "null", null);
     }).toThrow();
   });
+
+  it("does not validate equal empty values", () => {
+    expect(() => {
+      validateField("foo", "", "");
+    }).toThrow();
+
+    expect(() => {
+      validateField("foo", undefined, undefined);
+    }).toThrow();
+
+    expect(() => {
+      validateField("foo", null, null);
+    }).toThrow();
+  });
 });
 
 describe("validateFieldAnyOf", () => {
@@ -95,6 +109,14 @@ describe("validateFieldNonEmpty", () => {
   it("does not validate empty value", () => {
     expect(() => {
       validateFieldNonEmpty("foo", "");
+    }).toThrow();
+
+    expect(() => {
+      validateFieldNonEmpty("foo", undefined);
+    }).toThrow();
+
+    expect(() => {
+      validateFieldNonEmpty("foo", null);
     }).toThrow();
   });
 });
