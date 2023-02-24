@@ -28,8 +28,8 @@ import (
 
 func Test_CreateBuildDefinition(t *testing.T) {
 	config := &DockerBuildConfig{
-		SourceRepo:   "git+https://github.com/project-oak/transparent-release",
-		SourceDigest: Digest{Alg: "sha1", Value: "9b5f98310dbbad675834474fa68c37d880687cb9"},
+		SourceRepo:   "git+https://github.com/slsa-framework/slsa-github-generator",
+		SourceDigest: Digest{Alg: "sha1", Value: "cf5804b5c6f1a4b2a0b03401a487dfdfbe3a5f00"},
 		BuilderImage: DockerImage{
 			Name:   "bash",
 			Digest: Digest{Alg: "sha256", Value: "9e2ba52487d945504d250de186cb4fe2e3ba023ed2921dd6ac8b97ed43e76af9"},
@@ -170,18 +170,24 @@ func Test_inspectArtifacts(t *testing.T) {
 
 	s1 := intoto.Subject{
 		Name:   "build-definition.json",
-		Digest: map[string]string{"sha256": "1a60da949ad34d060ac2650bc4d7cba287cb7d2ffda4e8f4a65459c77801e2d5"},
+		Digest: map[string]string{"sha256": "fbe3d5448f3e43b20368c223eda70ecbf41bbe6e5956ee81b5d490c1753ea118"},
 	}
 	s2 := intoto.Subject{
 		Name:   "config.toml",
 		Digest: map[string]string{"sha256": "975a0582b8c9607f3f20a6b8cfef01b25823e68c5c3658e6e1ccaaced2a3255d"},
 	}
+
 	s3 := intoto.Subject{
+		Name:   "slsa1-provenance.json",
+		Digest: map[string]string{"sha256": "d40de4149c9ad41d2fdcba44ddb2be1760eb4fbb01644f7ddf9ed0a424d7ed44"},
+	}
+
+	s4 := intoto.Subject{
 		Name:   "wildcard-config.toml",
 		Digest: map[string]string{"sha256": "d9b8670f1b9616db95b0dc84cbc68062c691ef31bb9240d82753de0739c59194"},
 	}
 
-	want := []intoto.Subject{s1, s2, s3}
+	want := []intoto.Subject{s1, s2, s3, s4}
 
 	if diff := cmp.Diff(got, want); diff != "" {
 		t.Errorf(diff)
@@ -197,7 +203,7 @@ func (testFetcher) Fetch() (*RepoCheckoutInfo, error) {
 func Test_Builder_SetUpBuildState(t *testing.T) {
 	config := DockerBuildConfig{
 		SourceRepo:   "git+https://github.com/project-oak/transparent-release",
-		SourceDigest: Digest{Alg: "sha1", Value: "9b5f98310dbbad675834474fa68c37d880687cb9"},
+		SourceDigest: Digest{Alg: "sha1", Value: "cf5804b5c6f1a4b2a0b03401a487dfdfbe3a5f00"},
 		BuilderImage: DockerImage{
 			Name:   "bash",
 			Digest: Digest{Alg: "sha256", Value: "9e2ba52487d945504d250de186cb4fe2e3ba023ed2921dd6ac8b97ed43e76af9"},
@@ -218,6 +224,61 @@ func Test_Builder_SetUpBuildState(t *testing.T) {
 	if db == nil {
 		t.Error("db is null")
 	}
+}
+
+func Test_ParseProvenance(t *testing.T) {
+	provenance := loadProvenance(t)
+	got := &provenance.Predicate.BuildDefinition
+
+	want, err := loadBuildDefinitionFromFile("../testdata/build-definition.json")
+	if err != nil {
+		t.Fatalf("%v", err)
+	}
+
+	if diff := cmp.Diff(got, want); diff != "" {
+		t.Errorf(diff)
+	}
+}
+
+func Test_ProvenanceStatementSLSA1_ToDockerBuildConfig(t *testing.T) {
+	provenance := loadProvenance(t)
+	got, err := provenance.ToDockerBuildConfig(true)
+	if err != nil {
+		t.Fatalf("%v", err)
+	}
+
+	want := &DockerBuildConfig{
+		SourceRepo: "git+https://github.com/slsa-framework/slsa-github-generator",
+		SourceDigest: Digest{
+			Alg:   "sha1",
+			Value: "cf5804b5c6f1a4b2a0b03401a487dfdfbe3a5f00",
+		},
+		BuilderImage: DockerImage{
+			Name: "bash",
+			Digest: Digest{
+				Alg:   "sha256",
+				Value: "9e2ba52487d945504d250de186cb4fe2e3ba023ed2921dd6ac8b97ed43e76af9",
+			},
+		},
+		BuildConfigPath: "internal/builders/docker/testdata/config.toml",
+		ForceCheckout:   true,
+	}
+	if diff := cmp.Diff(got, want); diff != "" {
+		t.Errorf(diff)
+	}
+}
+
+func loadProvenance(t *testing.T) ProvenanceStatementSLSA1 {
+	bytes, err := os.ReadFile("../testdata/slsa1-provenance.json")
+	if err != nil {
+		t.Fatalf("Reading the provenance file: %v", err)
+	}
+
+	provenance, err := ParseProvenance(bytes)
+	if err != nil {
+		t.Fatalf("Parsing the provenance file: %v", err)
+	}
+	return *provenance
 }
 
 func checkError[T error](t *testing.T, got error, want T) {
