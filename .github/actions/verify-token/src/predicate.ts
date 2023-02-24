@@ -73,7 +73,6 @@ export function createPredicate(
         source: sourceRef,
       },
       systemParameters: {
-        GITHUB_ACTOR: rawTokenObj.github.actor,
         GITHUB_ACTOR_ID: rawTokenObj.github.actor_id,
         GITHUB_EVENT_NAME: rawTokenObj.github.event_name,
         GITHUB_JOB: rawTokenObj.github.job,
@@ -81,7 +80,6 @@ export function createPredicate(
         GITHUB_REF_TYPE: rawTokenObj.github.ref_type,
         GITHUB_REPOSITORY: rawTokenObj.github.repository,
         GITHUB_REPOSITORY_ID: rawTokenObj.github.repository_id,
-        GITHUB_REPOSITORY_OWNER: rawTokenObj.github.repository_owner,
         GITHUB_REPOSITORY_OWNER_ID: rawTokenObj.github.repository_owner_id,
         GITHUB_RUN_ATTEMPT: rawTokenObj.github.run_attempt,
         GITHUB_RUN_ID: rawTokenObj.github.run_id,

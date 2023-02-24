@@ -14,10 +14,6 @@ limitations under the License.
 import { githubObj } from "../src/types";
 
 export function validateGitHubFields(gho: githubObj): void {
-  // actor
-  validateFieldNonEmpty("github.actor", gho.actor);
-  validateField("github.actor", gho.actor, process.env.GITHUB_ACTOR);
-
   // actor_id
   validateFieldNonEmpty("github.actor_id", gho.actor_id);
   validateField("github.actor_id", gho.actor_id, process.env.GITHUB_ACTOR_ID);
@@ -64,14 +60,6 @@ export function validateGitHubFields(gho: githubObj): void {
     "github.repository_id",
     gho.repository_id,
     process.env.GITHUB_REPOSITORY_ID
-  );
-
-  // repository_owner
-  validateFieldNonEmpty("github.repository_owner", gho.repository_owner);
-  validateField(
-    "github.repository_owner",
-    gho.repository_owner,
-    process.env.GITHUB_REPOSITORY_OWNER
   );
 
   // repository_owner_id

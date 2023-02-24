@@ -8,7 +8,6 @@ import { githubObj } from "../src/types";
 describe("getWorkflowPath", () => {
   it("extracts path from workflow ref", () => {
     const obj: githubObj = {
-      actor: "",
       actor_id: "",
       event_name: "",
       event_path: "",
@@ -17,7 +16,6 @@ describe("getWorkflowPath", () => {
       ref_type: "",
       repository: "octocat/hello-world",
       repository_id: "",
-      repository_owner: "",
       repository_owner_id: "",
       run_attempt: "",
       run_id: "",
@@ -34,7 +32,6 @@ describe("getWorkflowPath", () => {
 
   it("extracts path from workflow ref without git ref", () => {
     const obj: githubObj = {
-      actor: "",
       actor_id: "",
       event_name: "",
       event_path: "",
@@ -43,7 +40,6 @@ describe("getWorkflowPath", () => {
       ref_type: "",
       repository: "octocat/hello-world",
       repository_id: "",
-      repository_owner: "",
       repository_owner_id: "",
       run_attempt: "",
       run_id: "",
