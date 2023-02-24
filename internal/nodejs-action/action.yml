@@ -36,7 +36,7 @@ runs:
         node-version-file: ${{ fromJson(inputs.slsa-workflow-inputs).node-version-file }}
         registry-url: ${{ fromJson(inputs.slsa-workflow-inputs).registry-url }}
         scope: ${{ fromJson(inputs.slsa-workflow-inputs).scope }}
-        # TODO: cache dependencies.
+        # TODO(#1679): cache dependencies.
         # cache: npm
         # NOTE: cache-dependency-path needs to be validated to be a subdirectory of GITHUB_WORKSPACE.
         # cache-dependency-path:
