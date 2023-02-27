@@ -21,7 +21,7 @@ This is a document to describe the release process for the slsa-github-generator
     - [Adversarial Go builder](#adversarial-go-builder)
     - [Adversarial generic generator](#adversarial-generic-generator)
     - [Adversarial container generator](#adversarial-container-generator)
-  - [Finalize release candidate.](#finalize-release-candidate)
+  - [Finalize release candidate](#finalize-release-candidate)
   - [Code Freeze](#code-freeze)
 - [Finalize release](#finalize-release)
   - [Update CHANGELOG](#update-changelog-1)
@@ -30,7 +30,7 @@ This is a document to describe the release process for the slsa-github-generator
   - [Final adversarial tests](#final-adversarial-tests)
   - [Reference Actions at main](#reference-actions-at-main)
   - [Update verifier](#update-verifier)
-  - [Finish the release.](#finish-the-release)
+  - [Finish the release](#finish-the-release)
   - [Update the starter workflows](#update-the-starter-workflows)
   - [Announce](#announce)
 
