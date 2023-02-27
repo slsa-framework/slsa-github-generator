@@ -1,5 +1,5 @@
 SHELL := /bin/bash
-OUTPUT_FORMAT = $(shell if [ "${GITHUB_ACTIONS}" == "true" ]; then echo "github"; else echo ""; fi)
+OUTPUT_FORMAT ?= $(shell if [ "${GITHUB_ACTIONS}" == "true" ]; then echo "github"; else echo ""; fi)
 
 .PHONY: help
 help: ## Shows all targets and help from the Makefile (this message).
@@ -52,7 +52,18 @@ lint: markdownlint golangci-lint shellcheck eslint yamllint ## Run all linters.
 
 .PHONY: markdownlint
 markdownlint: node_modules/.installed ## Runs the markdownlint linter.
-	npm run lint
+	@set -e;
+		if [ "$(OUTPUT_FORMAT)" == "github" ]; then \
+			./node_modules/.bin/markdownlint --dot --json . 2>&1 | jq -c '.[]' | while IFS="" read -r p || [ -n "$$p" ]; do \
+				FILE=$$(echo "$$p" | jq -c -r '.fileName // empty'); \
+				LINE=$$(echo "$$p" | jq -c -r '.lineNumber // empty'); \
+				ENDLINE=$${LINE}; \
+				MESSAGE=$$(echo "$$p" | jq -c -r '.ruleNames[0] + "/" + .ruleNames[1] + " " + .ruleDescription + " [" + .errorDetail + "]"'); \
+				echo "::error file=$${FILE},line=$${LINE},endLine=$${ENDLINE}::$${MESSAGE}"; \
+			done; \
+		else \
+			npm run lint; \
+		fi
 
 .PHONY: golangci-lint
 golangci-lint: ## Runs the golangci-lint linter.
