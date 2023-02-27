@@ -120,19 +120,19 @@ jobs:
 A reusable workflow itself can contain multiple jobs: so we can define a trusted builder that itself uses different VMs to 1) compile the project and 2) generate the SLSA provenance - both using (trusted) GitHub-hosted runners. We still need to pass data around between jobs via [GitHub artifacts](https://docs.github.com/en/actions/using-workflows/storing-workflow-data-as-artifacts). All jobs in a workflow can upload artifacts and possibly tamper with those used by the trusted builder. So we protect their integrity via hashes. We can safely exchange hashes between the jobs because there's a [trusted channel](https://docs.github.com/en/actions/using-jobs/defining-outputs-for-jobs) to pass them between jobs of the same workflow using namespaces that identify the exact job that generated it. (Of course, we could use this mechanism for exchanging the resulting binaries, but we don't do that because there are size limitations to this special trusted channel).
 
 ```mermaid
-flowchart LR;
-  source[<b>Source repository</b><br/><br/>.slsa-goreleaser.yml<br/><br/><br/>User workflow];
+flowchart LR
+  source[<b>Source repository</b><br/><br/>.slsa-goreleaser.yml<br/><br/><br/>User workflow]
   build[Build]
   generate[Generate provenance]
-  artifact[Artifact]
 
-  subgraph RW[Trusted builder<br/>reusable workflow]
-    direction TB
+  subgraph RW["<b>Trusted builder (reusable workflow)</b>"]
     build-->generate
   end
 
-  source-->build
-  generate-->artifact
+  subgraph A["<b>Artifacts</b>"]
+    binary
+    provenance[Signed provenance]
+  end
 ```
 
 ```text
