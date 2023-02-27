@@ -9,6 +9,10 @@ MD007:
 # MD013/line-length - Line length
 MD013: false
 
+# TODO(#): Re-enable duplicate heading checks.
+# MD024/no-duplicate-heading - Disable for now.
+MD024: false
+
 # MD025/single-title/single-h1 - Multiple top-level headings
 MD025:
   # Disable checking of YAML frontmatter.
