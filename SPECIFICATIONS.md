@@ -121,7 +121,9 @@ A reusable workflow itself can contain multiple jobs: so we can define a trusted
 
 ```mermaid
 flowchart LR;
-  source[Source repository];
+  source[Source repository
+
+-----------------];
 ```
 
 ```text
