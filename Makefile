@@ -38,8 +38,11 @@ go-test: ## Run Go unit tests.
 .PHONY: ts-test
 ts-test: ## Run TypeScript tests.
 	# Run unit tests for the generate-attestations action.
-	make -C .github/actions/generate-attestations/ unit-test
-
+	@set -e;\
+		PATHS=$$(find .github/actions/ actions/ -not -path '*/node_modules/*' -name __tests__ -type d | xargs dirname); \
+		for path in $$PATHS; do \
+			make -C $$path unit-test; \
+		done
 
 ## Linters
 #####################################################################
@@ -94,7 +97,7 @@ shellcheck: ## Runs the shellcheck linter.
 .PHONY: eslint
 eslint: ## Runs the eslint linter.
 	@set -e;\
-		PATHS=$$(find .github/actions/ actions/ -not -path '*/node_modules/*' -name package.json | xargs dirname); \
+		PATHS=$$(find .github/actions/ actions/ -not -path '*/node_modules/*' -name package.json -type f | xargs dirname); \
 		for path in $$PATHS; do \
 			make -C $$path lint; \
 		done

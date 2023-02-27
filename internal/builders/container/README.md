@@ -72,7 +72,7 @@ provenance:
     id-token: write # for creating OIDC tokens for signing.
     packages: write # for uploading attestations.
   if: startsWith(github.ref, 'refs/tags/')
-  uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v1.4.0
+  uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v1.5.0-rc.0
   with:
     image: ${{ needs.build.outputs.image }}
     digest: ${{ needs.build.outputs.digest }}
@@ -143,7 +143,7 @@ jobs:
       id-token: write # for creating OIDC tokens for signing.
       packages: write # for uploading attestations.
     if: startsWith(github.ref, 'refs/tags/')
-    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v1.4.0
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v1.5.0-rc.0
     with:
       image: ${{ needs.build.outputs.image }}
       digest: ${{ needs.build.outputs.digest }}
@@ -216,10 +216,10 @@ Inputs:
 
 Secrets:
 
-| Name                | Description                                                                                                            |
-| ------------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| `registry-username` | Username to log in the container registry. Either `registry-username` input or `registry-username` secret is required. |
-| `registry-password` | **(Required)** Password to log in the container registry.                                                              |
+| Name                | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `registry-username` | Username to log in the container registry. Either `registry-username` input or `registry-username` secret is required. This should only be used for high entropy values such as AWS Access Key as described [here](https://github.com/docker/login-action#aws-elastic-container-registry-ecr). Normal username values could match other input values and cause them to be ignored by GitHub Actions and causing your build to fail. In those cases, use the `registry-username` input instead. |
+| `registry-password` | **(Required)** Password to log in the container registry.                                                                                                                                                                                                                                                                                                                                                                                                                                      |
 
 ### Workflow Outputs
 
@@ -367,7 +367,7 @@ provenance:
     # contents: read
     packages: write
   if: startsWith(github.ref, 'refs/tags/')
-  uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v1.4.0
+  uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v1.5.0-rc.0
   with:
     image: ${{ needs.build.outputs.image }}
     digest: ${{ needs.build.outputs.digest }}
@@ -432,7 +432,7 @@ jobs:
       # contents: read
       packages: write
     if: startsWith(github.ref, 'refs/tags/')
-    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v1.4.0
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v1.5.0-rc.0
     with:
       image: ${{ needs.build.outputs.image }}
       digest: ${{ needs.build.outputs.digest }}

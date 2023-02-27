@@ -165,7 +165,7 @@ It's easy to generate binaries for multiple platforms. To accomplish this, we ca
         arch:
           - amd64
           - arm64
-    uses: slsa-framework/slsa-github-generator/.github/workflows/builder_go_slsa3.yml@v1.4.0
+    uses: slsa-framework/slsa-github-generator/.github/workflows/builder_go_slsa3.yml@v1.5.0-rc.0
     with:
       go-version: 1.19
       config-file: .slsa-goreleaser/${{matrix.os}}-${{matrix.arch}}.yml
@@ -229,7 +229,7 @@ jobs:
       contents: write # To upload assets to release.
       actions: read # To read the workflow path.
     needs: args
-    uses: slsa-framework/slsa-github-generator/.github/workflows/builder_go_slsa3.yml@v1.4.0
+    uses: slsa-framework/slsa-github-generator/.github/workflows/builder_go_slsa3.yml@v1.5.0-rc.0
     with:
       go-version: 1.17
       # Optional: only needed if using ldflags.
@@ -398,5 +398,5 @@ the latest release. Make sure you continue to reference the workflow using a
 release tag in order to allow verification by `slsa-verifier`.
 
 ```yaml
-uses: slsa-framework/slsa-github-generator/.github/workflows/builder_go_slsa3.yml@v1.4.0
+uses: slsa-framework/slsa-github-generator/.github/workflows/builder_go_slsa3.yml@v1.5.0-rc.0
 ```
