@@ -121,11 +121,11 @@ A reusable workflow itself can contain multiple jobs: so we can define a trusted
 
 ```mermaid
 flowchart LR
-  source[<b>Source repository</b><br/><br/>.slsa-goreleaser.yml<br/><br/><br/>User workflow]
+  source[<b>Source repository</b><br/><br/>.slsa-goreleaser.yml<br/>user-workflow.yml]
   build[Build]
   generate[Generate provenance]
 
-  subgraph RW["<b>Trusted builder (reusable workflow)</b>"]
+  subgraph RW["<b>Trusted builder<br/>(reusable workflow)</b>"]
     build-->generate
   end
 
