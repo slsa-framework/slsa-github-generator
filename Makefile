@@ -54,13 +54,16 @@ lint: markdownlint golangci-lint shellcheck eslint yamllint ## Run all linters.
 markdownlint: node_modules/.installed ## Runs the markdownlint linter.
 	@set -e;\
 		if [ "$(OUTPUT_FORMAT)" == "github" ]; then \
-			./node_modules/.bin/markdownlint --dot --json . 2>&1 | jq -c '.[]' | while IFS="" read -r p || [ -n "$$p" ]; do \
+			exit_code=0; \
+			while IFS="" read -r p || [ -n "$$p" ]; do \
 				FILE=$$(echo "$$p" | jq -c -r '.fileName // empty'); \
 				LINE=$$(echo "$$p" | jq -c -r '.lineNumber // empty'); \
 				ENDLINE=$${LINE}; \
 				MESSAGE=$$(echo "$$p" | jq -c -r '.ruleNames[0] + "/" + .ruleNames[1] + " " + .ruleDescription + " [Detail: \"" + .errorDetail + "\", Context: \"" + .errorContext + "\"]"'); \
+				exit_code=1; \
 				echo "::error file=$${FILE},line=$${LINE},endLine=$${ENDLINE}::$${MESSAGE}"; \
-			done; \
+			done <<< $$(./node_modules/.bin/markdownlint --dot --json . 2>&1 | jq -c '.[]'); \
+			exit "$${exit_code}"; \
 		else \
 			npm run lint; \
 		fi
@@ -79,9 +82,10 @@ SHELLCHECK_ARGS = --severity=style --external-sources
 .PHONY: shellcheck
 shellcheck: ## Runs the shellcheck linter.
 	@set -e;\
-		FILES=$$(find . -type f -not -iwholename '*/.git/*' -not -iwholename '*/vendor/*' -not -iwholename '*/node_modules/*' -exec bash -c 'file "$$1" | cut -d':' -f2 | grep --quiet shell' _ {} \; -print); \
+		files=$$(find . -type f -not -iwholename '*/.git/*' -not -iwholename '*/vendor/*' -not -iwholename '*/node_modules/*' -exec bash -c 'file "$$1" | cut -d':' -f2 | grep --quiet shell' _ {} \; -print); \
 		if [ "$(OUTPUT_FORMAT)" == "github" ]; then \
-			echo -n $$FILES | xargs shellcheck -f json $(SHELLCHECK_ARGS) | jq -c '.[]' | while IFS="" read -r p || [ -n "$$p" ]; do \
+			exit_code=0; \
+			while IFS="" read -r p || [ -n "$$p" ]; do \
 				LEVEL=$$(echo "$$p" | jq -c '.level // empty' | tr -d '"'); \
 				FILE=$$(echo "$$p" | jq -c '.file // empty' | tr -d '"'); \
 				LINE=$$(echo "$$p" | jq -c '.line // empty' | tr -d '"'); \
@@ -89,6 +93,7 @@ shellcheck: ## Runs the shellcheck linter.
 				COL=$$(echo "$$p" | jq -c '.column // empty' | tr -d '"'); \
 				ENDCOL=$$(echo "$$p" | jq -c '.endColumn // empty' | tr -d '"'); \
 				MESSAGE=$$(echo "$$p" | jq -c '.message // empty' | tr -d '"'); \
+				exit_code=1; \
 				case $$LEVEL in \
 				"info") \
 					echo "::notice file=$${FILE},line=$${LINE},endLine=$${ENDLINE},col=$${COL},endColumn=$${ENDCOL}::$${MESSAGE}"; \
@@ -100,9 +105,10 @@ shellcheck: ## Runs the shellcheck linter.
 					echo "::error file=$${FILE},line=$${LINE},endLine=$${ENDLINE},col=$${COL},endColumn=$${ENDCOL}::$${MESSAGE}"; \
 					;; \
 				esac; \
-			done; \
+			done <<< $$(echo -n "$$files" | xargs shellcheck -f json $(SHELLCHECK_ARGS) | jq -c '.[]'); \
+			exit "$${exit_code}"; \
 		else \
-			echo -n $$FILES | xargs shellcheck $(SHELLCHECK_ARGS); \
+			echo -n "$$files" | xargs shellcheck $(SHELLCHECK_ARGS); \
 		fi
 
 .PHONY: eslint
