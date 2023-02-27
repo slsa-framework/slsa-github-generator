@@ -2,7 +2,7 @@
 
 <!-- toc -->
 
-- [Next Release](#next-release)
+- [v1.5.0](#v150)
   - [Summary of changes](#summary-of-changes)
     - [Go builder](#go-builder)
       - [New Features](#new-features)
@@ -61,7 +61,7 @@
 
 <!-- tocstop -->
 
-# Next Release
+# v1.5.0
 
 <!-- Information on the next release will be added here. -->
 
@@ -71,27 +71,27 @@
 
 #### New Features
 
-- A new [`upload-tag-name`](https://github.com/slsa-framework/slsa-github-generator/blob/main/internal/builders/generic/README.md#workflow-inputs) input was added to allow users to specify the tag name for the release when `upload-assets` is set to `true`.
-- The environment variables included in provenance output were changed to include only those variables that are specified by the user in the [slsa-goreleaser.yml configuration file](https://github.com/slsa-framework/slsa-github-generator/tree/main/internal/builders/go#configuration-file) in order to improve reproducibility. See [#822](https://github.com/slsa-framework/slsa-github-generator/issues/822) for more information and background.
+- A new [`upload-tag-name`](https://github.com/slsa-framework/slsa-github-generator/blob/v1.5.0/internal/builders/generic/README.md#workflow-inputs) input was added to allow users to specify the tag name for the release when `upload-assets` is set to `true`.
+- The environment variables included in provenance output were changed to include only those variables that are specified by the user in the [slsa-goreleaser.yml configuration file](https://github.com/slsa-framework/slsa-github-generator/tree/v1.5.0/internal/builders/go#configuration-file) in order to improve reproducibility. See [#822](https://github.com/slsa-framework/slsa-github-generator/issues/822) for more information and background.
 
 ### Generic generator
 
 #### New Features
 
-- A new boolean [`continue-on-error`](https://github.com/slsa-framework/slsa-github-generator/blob/main/internal/builders/generic/README.md#workflow-inputs) input was added which, when set to `true`, prevents the workflow from failing when a step fails. If set to true, the result of the reusable workflow will be return in the [`outcome`](https://github.com/slsa-framework/slsa-github-generator/blob/main/internal/builders/generic/README.md#workflow-outputs) output.
-- A new [`upload-tag-name`](https://github.com/slsa-framework/slsa-github-generator/blob/main/internal/builders/generic/README.md#workflow-inputs) input was added to allow users to specify the tag name for the release when `upload-assets` is set to `true`.
+- A new boolean [`continue-on-error`](https://github.com/slsa-framework/slsa-github-generator/blob/v1.5.0/internal/builders/generic/README.md#workflow-inputs) input was added which, when set to `true`, prevents the workflow from failing when a step fails. If set to true, the result of the reusable workflow will be return in the [`outcome`](https://github.com/slsa-framework/slsa-github-generator/blob/v1.5.0/internal/builders/generic/README.md#workflow-outputs) output.
+- A new [`upload-tag-name`](https://github.com/slsa-framework/slsa-github-generator/blob/v1.5.0/internal/builders/generic/README.md#workflow-inputs) input was added to allow users to specify the tag name for the release when `upload-assets` is set to `true`.
 
 ### Container generator
 
 #### New Features
 
-- A new boolean [`continue-on-error`](https://github.com/slsa-framework/slsa-github-generator/blob/main/internal/builders/container/README.md#workflow-inputs) input was added which, when set to `true`, prevents the workflow from failing when a step fails. If set to true, the result of the reusable workflow will be return in the [`outcome`](https://github.com/slsa-framework/slsa-github-generator/blob/main/internal/builders/container/README.md#workflow-outputs) output.
-- A new [`repository-username`](https://github.com/slsa-framework/slsa-github-generator/blob/main/internal/builders/container/README.md#workflow-inputs) secret input was added to allow users to pass their repository username that is stored in a [Github Actions encrypted secret](https://docs.github.com/en/actions/security-guides/encrypted-secrets). This secret input should only be used for high-entropy registry username values such as AWS Access Key.
-- Support was added for authenticating with [Google Artifact Registry](https://cloud.google.com/artifact-registry) and [Google Container Registry](https://cloud.google.com/container-registry) using [Workload Identity Federation](https://cloud.google.com/iam/docs/workload-identity-federation). Users can use this new feature by using the [`gcp-workload-identity-provider` and `gcp-service-account` inputs](https://github.com/slsa-framework/slsa-github-generator/blob/main/internal/builders/container/README.md#workflow-inputs)
+- A new boolean [`continue-on-error`](https://github.com/slsa-framework/slsa-github-generator/blob/v1.5.0/internal/builders/container/README.md#workflow-inputs) input was added which, when set to `true`, prevents the workflow from failing when a step fails. If set to true, the result of the reusable workflow will be return in the [`outcome`](https://github.com/slsa-framework/slsa-github-generator/blob/v1.5.0/internal/builders/container/README.md#workflow-outputs) output.
+- A new [`repository-username`](https://github.com/slsa-framework/slsa-github-generator/blob/v1.5.0/internal/builders/container/README.md#workflow-inputs) secret input was added to allow users to pass their repository username that is stored in a [Github Actions encrypted secret](https://docs.github.com/en/actions/security-guides/encrypted-secrets). This secret input should only be used for high-entropy registry username values such as AWS Access Key.
+- Support was added for authenticating with [Google Artifact Registry](https://cloud.google.com/artifact-registry) and [Google Container Registry](https://cloud.google.com/container-registry) using [Workload Identity Federation](https://cloud.google.com/iam/docs/workload-identity-federation). Users can use this new feature by using the [`gcp-workload-identity-provider` and `gcp-service-account` inputs](https://github.com/slsa-framework/slsa-github-generator/blob/v1.5.0/internal/builders/container/README.md#workflow-inputs)
 
 ## Changelog since v1.4.0
 
-https://github.com/slsa-framework/slsa-github-generator/compare/v1.4.0...main
+https://github.com/slsa-framework/slsa-github-generator/compare/v1.4.0...v1.5.0
 
 # v1.4.0
 
