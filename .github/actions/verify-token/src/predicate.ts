@@ -11,6 +11,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+import * as github from "@actions/github";
 import * as fs from "fs";
 
 import {
@@ -34,10 +35,11 @@ export function getWorkflowPath(obj: githubObj): string {
     .split("@", 1)[0];
 }
 
-export function createPredicate(
+export async function createPredicate(
   rawTokenObj: rawTokenInterface,
-  toolURI: string
-): SLSAv1Predicate {
+  toolURI: string,
+  token: string
+): Promise<SLSAv1Predicate> {
   const callerRepo: string = createURI(
     rawTokenObj.github.repository,
     rawTokenObj.github.ref
@@ -49,6 +51,17 @@ export function createPredicate(
       sha1: rawTokenObj.github.sha,
     },
   };
+
+  // NOTE: We get the triggering_actor_id from the workflow run via the API.
+  // We can trust this value as we have validated the run_id (as much as we can
+  // trust the GitHub API on GitHub Actions anyway).
+  const octokit = github.getOctokit(token);
+  const [owner, repo] = rawTokenObj.github.repository.split("/");
+  const { data: current_run } = await octokit.rest.actions.getWorkflowRun({
+    owner,
+    repo,
+    run_id: Number(rawTokenObj.github.run_id),
+  });
 
   // NOTE: see example at https://github.com/slsa-framework/slsa/blob/main/docs/github-actions-workflow/examples/v0.1/example.json.
   const predicate: SLSAv1Predicate = {
@@ -85,6 +98,13 @@ export function createPredicate(
         GITHUB_RUN_ID: rawTokenObj.github.run_id,
         GITHUB_RUN_NUMBER: rawTokenObj.github.run_number,
         GITHUB_SHA: rawTokenObj.github.sha,
+        // NOTE: the triggering_actor should be returned by the API but the
+        // TypeScript type indicates that it could be undefined. If that is
+        // the case, then we'll fall back to the actor_id.
+        GITHUB_TRIGGERING_ACTOR_ID:
+          (current_run.triggering_actor &&
+            String(current_run.triggering_actor.id)) ||
+          rawTokenObj.github.actor_id,
         GITHUB_WORKFLOW_REF: rawTokenObj.github.workflow_ref,
         GITHUB_WORKFLOW_SHA: rawTokenObj.github.workflow_sha,
 
