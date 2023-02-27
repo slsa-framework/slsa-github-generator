@@ -130,9 +130,14 @@ flowchart LR
   end
 
   subgraph A["<b>Artifacts</b>"]
+    direction TB
     binary
     provenance[Signed provenance]
   end
+
+  source-->build
+  generate-->binary
+  generate-->provenance
 ```
 
 ```text
