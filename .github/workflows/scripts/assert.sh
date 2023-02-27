@@ -21,8 +21,6 @@
 
 # Note: from https://github.com/torokmark/assert.sh/blob/main/assert.sh.
 
-FOO=bar
-
 if command -v tput &>/dev/null && tty -s; then
     RED=$(tput setaf 1)
     GREEN=$(tput setaf 2)
