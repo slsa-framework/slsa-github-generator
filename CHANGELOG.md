@@ -226,7 +226,7 @@ https://github.com/slsa-framework/slsa-github-generator/compare/v1.2.1...v1.2.2
 
 This release fixes an error that occurs on the "Generate Builder" step for various workflows.
 
-```
+```text
 FAILED: SLSA verification failed: could not find a matching valid signature entry
 ```
 
@@ -240,13 +240,13 @@ This release changes the [`buildType`](https://slsa.dev/provenance/v0.2#buildTyp
 
 The previous value was:
 
-```
+```json
 "buildType": "https://github.com/slsa-framework/slsa-github-generator@v1",
 ```
 
 The new value is:
 
-```
+```json
 "buildType": "https://github.com/slsa-framework/slsa-github-generator/generic@v1",
 ```
 

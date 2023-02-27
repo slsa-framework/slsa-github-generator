@@ -134,7 +134,7 @@ Some example test repos:
 Local commands that can be used for development are defined in the
 [`Makefile`](./Makefile). You can list the available targets by running `make`.
 
-```
+```shell
 make
 ```
 
@@ -212,13 +212,13 @@ Unit tests are run as pre-submit tests in the
 [`pre-submit.units.yml`](.github/workflows/pre-submit.units.yml) file. You can run
 unit tests locally using `make`. This requires that the Go runtime be installed.
 
-```
+```shell
 make unit-test
 ```
 
 Tests for GitHub Actions created with Typescript require [Jest](https://jestjs.io).
 
-```
+```shell
 make ts-test
 ```
 
@@ -236,7 +236,7 @@ for more information about e2e tests.
 
 You can run all linters using `make`.
 
-```
+```shell
 make lint
 ```
 
