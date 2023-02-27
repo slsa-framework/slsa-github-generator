@@ -52,13 +52,13 @@ lint: markdownlint golangci-lint shellcheck eslint yamllint ## Run all linters.
 
 .PHONY: markdownlint
 markdownlint: node_modules/.installed ## Runs the markdownlint linter.
-	@set -e;
+	@set -e;\
 		if [ "$(OUTPUT_FORMAT)" == "github" ]; then \
 			./node_modules/.bin/markdownlint --dot --json . 2>&1 | jq -c '.[]' | while IFS="" read -r p || [ -n "$$p" ]; do \
 				FILE=$$(echo "$$p" | jq -c -r '.fileName // empty'); \
 				LINE=$$(echo "$$p" | jq -c -r '.lineNumber // empty'); \
 				ENDLINE=$${LINE}; \
-				MESSAGE=$$(echo "$$p" | jq -c -r '.ruleNames[0] + "/" + .ruleNames[1] + " " + .ruleDescription + " [" + .errorDetail + "]"'); \
+				MESSAGE=$$(echo "$$p" | jq -c -r '.ruleNames[0] + "/" + .ruleNames[1] + " " + .ruleDescription + " [Detail: \"" + .errorDetail + "\", Context: \"" + .errorContext + "\"]"'); \
 				echo "::error file=$${FILE},line=$${LINE},endLine=$${ENDLINE}::$${MESSAGE}"; \
 			done; \
 		else \
