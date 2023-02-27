@@ -51,14 +51,6 @@ async function run(): Promise<void> {
     const payload = JSON.stringify(github.context.payload, undefined, 2);
     core.debug(`The event payload: ${payload}`);
 
-    // Get the workflow run via the API so that we can get the
-    // triggering_actor_id.
-    const { data: current_run } = await octokit.rest.actions.getWorkflowRun({
-      owner,
-      repo,
-      run_id: Number(process.env.GITHUB_RUN_ID),
-    });
-
     // Construct an unsigned SLSA token.
     const unsignedSlsaToken = {
       version: 1,
@@ -81,7 +73,6 @@ async function run(): Promise<void> {
         run_id: process.env.GITHUB_RUN_ID,
         run_number: process.env.GITHUB_RUN_NUMBER,
         sha: process.env.GITHUB_SHA,
-        triggering_actor_id: current_run.triggering_actor.id,
         workflow_ref: process.env.GITHUB_WORKFLOW_REF,
         workflow_sha: process.env.GITHUB_WORKFLOW_SHA,
       },
