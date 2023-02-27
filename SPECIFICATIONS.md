@@ -121,14 +121,14 @@ A reusable workflow itself can contain multiple jobs: so we can define a trusted
 
 ```mermaid
 graph TD;
-  [source][Source repository
+  source[Source repository
 -----------------
 
 .slsa-goreleaser.yml
 
 
 
-User workflow]
+User workflow];
 ```
 
 ```text
