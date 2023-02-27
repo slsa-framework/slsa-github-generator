@@ -126,8 +126,12 @@ flowchart LR;
   generate[Generate provenance]
   artifact[Artifact]
 
+  subgraph TB[Trusted builder<br/>(reusable workflow)]
+    direction TB
+    build-->generate
+  end
+
   source-->build
-  build-->generate
   generate-->artifact
 ```
 
