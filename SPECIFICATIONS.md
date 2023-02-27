@@ -119,7 +119,7 @@ jobs:
 
 A reusable workflow itself can contain multiple jobs: so we can define a trusted builder that itself uses different VMs to 1) compile the project and 2) generate the SLSA provenance - both using (trusted) GitHub-hosted runners. We still need to pass data around between jobs via [GitHub artifacts](https://docs.github.com/en/actions/using-workflows/storing-workflow-data-as-artifacts). All jobs in a workflow can upload artifacts and possibly tamper with those used by the trusted builder. So we protect their integrity via hashes. We can safely exchange hashes between the jobs because there's a [trusted channel](https://docs.github.com/en/actions/using-jobs/defining-outputs-for-jobs) to pass them between jobs of the same workflow using namespaces that identify the exact job that generated it. (Of course, we could use this mechanism for exchanging the resulting binaries, but we don't do that because there are size limitations to this special trusted channel).
 
-```
+```text
                     ┌──────────────────────┐         ┌───────────────────────────────┐
                     │                      │         │                               │
                     │  Source repository   │         │       Trusted builder         │
@@ -234,7 +234,7 @@ Given an artifact and a signed provenance, we perform the following steps:
 
 3. **Extract the builder identity from the signing certificate**: Extract certificate information (see [here](https://github.com/sigstore/fulcio/blob/c74e2cfb763dd32def5dc921ff49f579fa262d96/docs/oid-info.md#136141572641--fulcio) for extension OIDs). Verify that the signing certificate’s subject name (job_workflow_ref) is the trusted builder ID at a trusted hash (calling repository SHA in the diagram below). This verifies authenticity of the provenance and guarantees the provenance was correctly populated.
 
-<img src="images/cert.svg" width="70%" height="70%">
+   <img src="images/cert.svg" width="70%" height="70%">
 
 4. **Verify the provenance attestation against a policy, as usual**: Parse the authenticated provenance and match the subject digest inside the provenance with the artifact digest. Additionally verify builder ID, configSource, and other properties according to policy.
 
