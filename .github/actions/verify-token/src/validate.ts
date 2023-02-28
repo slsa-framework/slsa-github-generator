@@ -31,9 +31,6 @@ export function validateGitHubFields(gho: githubObj): void {
     process.env.GITHUB_EVENT_PATH
   );
 
-  // job
-  validateField("github.job", gho.job, process.env.GITHUB_JOB);
-
   // ref
   validateField("github.ref", gho.ref, process.env.GITHUB_REF);
 
