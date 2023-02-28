@@ -477,8 +477,6 @@ function validateGitHubFields(gho) {
     validateField("github.event_name", gho.event_name, process.env.GITHUB_EVENT_NAME);
     // event_path
     validateField("github.event_path", gho.event_path, process.env.GITHUB_EVENT_PATH);
-    // job
-    validateField("github.job", gho.job, process.env.GITHUB_JOB);
     // ref
     validateField("github.ref", gho.ref, process.env.GITHUB_REF);
     // ref_type
