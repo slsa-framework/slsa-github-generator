@@ -132,7 +132,7 @@ async function run(): Promise<void> {
       throw new Error("token not provided");
     }
 
-    const predicate = createPredicate(rawTokenObj, toolURI);
+    const predicate = await createPredicate(rawTokenObj, toolURI, token);
     fs.writeFileSync(safeOutput, JSON.stringify(predicate), {
       flag: "ax",
       mode: 0o600,
