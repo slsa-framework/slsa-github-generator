@@ -1,0 +1,21 @@
+name: "Detect Workflow"
+description: "GitHub action to detect the referenced reusable workflow."
+inputs:
+  token:
+    description: "The GitHub Actions token."
+    required: false
+    default: ${{ github.token }}
+outputs:
+  repository:
+    description: The current workflow repository, format org/repository
+    value: ${{ steps.detect.outputs.repository }}
+  ref:
+    description: The current workflow reference
+    value: ${{ steps.detect.outputs.ref }}
+  workflow:
+    description: The path to the workflow relative to the repository, for example ".github/workflows/example.yml"
+    value: ${{ steps.detect.outputs.workflow }}
+
+runs:
+  using: node16
+  main: "dist/index.js"

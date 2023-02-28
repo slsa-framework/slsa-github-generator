@@ -1,0 +1,34 @@
+{
+  "name": "detect-workflow-js",
+  "version": "0.0.0",
+  "private": true,
+  "description": "GitHub action to detect the referenced reusable workflow.",
+  "main": "lib/main.js",
+  "scripts": {
+    "build": "tsc",
+    "format": "prettier --write '**/*.ts'",
+    "format-check": "prettier --check '**/*.ts'",
+    "package": "ncc build --source-map",
+    "lint": "eslint --max-warnings 0 src/**/*.ts",
+    "all": "npm run format && npm run lint && npm run build && npm run package"
+  },
+  "keywords": [
+    "actions",
+    "node",
+    "setup"
+  ],
+  "devDependencies": {
+    "@types/node": "18.14.2",
+    "@typescript-eslint/eslint-plugin": "5.54.0",
+    "@typescript-eslint/parser": "5.54.0",
+    "@vercel/ncc": "0.36.1",
+    "eslint": "8.35.0",
+    "eslint-plugin-github": "4.6.1",
+    "prettier": "2.8.4",
+    "typescript": "4.9.5"
+  },
+  "dependencies": {
+    "@actions/core": "1.10.0",
+    "@actions/github": "5.1.1"
+  }
+}
