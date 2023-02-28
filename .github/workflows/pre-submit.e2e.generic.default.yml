@@ -3,6 +3,7 @@ name: pre-submit e2e generic default
 on:
   pull_request:
     branches: [main]
+  merge_group:
   workflow_dispatch:
 
 permissions: read-all
@@ -99,7 +100,7 @@ jobs:
           PROVENANCE: ${{ needs.build-continue-invalid-subjects.outputs.provenance-name }}
           OUTCOME: ${{ needs.build-continue-invalid-subjects.outputs.outcome }}
         run: |
-           [ "$OUTCOME" == "failure" ]
+          [ "$OUTCOME" == "failure" ]
 
-           # Note: we don't call ./.github/workflows/scripts/pre-submit.e2e.generic.default.sh
-           # because the provenance generation failed, so there is no provenance generated.
+          # Note: we don't call ./.github/workflows/scripts/pre-submit.e2e.generic.default.sh
+          # because the provenance generation failed, so there is no provenance generated.
