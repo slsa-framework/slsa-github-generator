@@ -212,7 +212,7 @@ jobs:
           set -euo pipefail
 
           REF="@${GITHUB_REF}"
-          if [[ "${GITHUB_EVENT_NAME}" == "pull_request" ]] || [[ "${GITHUB_EVENT_NAME}" == "merge_group" ]]; then
+          if [[ "${GITHUB_EVENT_NAME}" == "pull_request" ]]; then
             REF=""
           fi
 
@@ -294,7 +294,7 @@ jobs:
           set -euo pipefail
 
           REF="@${GITHUB_REF}"
-          if [[ "${GITHUB_EVENT_NAME}" == "pull_request" ]] || [[ "${GITHUB_EVENT_NAME}" == "merge_group" ]]; then
+          if [[ "${GITHUB_EVENT_NAME}" == "pull_request" ]]; then
             REF=""
           fi
 
@@ -414,7 +414,7 @@ jobs:
           output-folder: "attestations-${{ needs.rng.outputs.value }}"
 
       - name: Upload unsigned intoto attestations file for pull request
-        if: ${{ github.event_name == 'pull_request' || github.event_name == 'merge_group' }}
+        if: ${{ github.event_name == 'pull_request' }}
         uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
         with:
           name: "${{ env.OUTPUT_FOLDER }}"
@@ -426,7 +426,7 @@ jobs:
       ###################################################################
 
       - name: Sign attestations
-        if: ${{ github.event_name != 'pull_request' && github.event_name != 'merge_group' }}
+        if: ${{ github.event_name != 'pull_request' }}
         id: sign
         uses: ./__BUILDER_CHECKOUT_DIR__/.github/actions/sign-attestations
         with:
@@ -435,7 +435,7 @@ jobs:
 
       - name: Upload the signed attestations
         id: upload
-        if: ${{ github.event_name != 'pull_request' && github.event_name != 'merge_group' }}
+        if: ${{ github.event_name != 'pull_request' }}
         uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
         with:
           name: "${{ env.OUTPUT_FOLDER }}-${{ needs.rng.outputs.value }}"
