@@ -80,8 +80,8 @@ _e2e_verify_query() {
     e2e_assert_eq "${name}" "${expected}" "${query} should be ${expected}"
 }
 
-e2e_verify_predicate_v1_buildDefinition_externalParameters_workflowPath() {
-    _e2e_verify_query "$1" "$2" '.buildDefinition.externalParameters.workflowPath'
+e2e_verify_predicate_v1_buildDefinition_externalParameters_workflow_path() {
+    _e2e_verify_query "$1" "$2" '.buildDefinition.externalParameters.workflow.path'
 }
 
 e2e_verify_predicate_v1_buildDefinition_externalParameters_source() {

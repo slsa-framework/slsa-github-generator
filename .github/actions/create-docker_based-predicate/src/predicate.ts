@@ -2,7 +2,7 @@
 // Share this code with BYO predicate definitions.
 
 import type { Endpoints } from "@octokit/types";
-import { addGitHubSystemParameters, getInvocationID } from "./github";
+import { addGitHubParameters, getInvocationID } from "./github";
 
 export type ApiWorkflowRun =
   Endpoints["GET /repos/{owner}/{repo}/actions/runs/{run_id}"]["response"]["data"];
@@ -83,9 +83,9 @@ export function generatePredicate(
   // Add the builder binary to the resolved dependencies.
   pred.buildDefinition.resolvedDependencies = [binaryRef];
 
-  // Update the systemParameters with the GH context, including workflow
+  // Update the parameters with the GH context, including workflow
   // inputs.
-  pred = addGitHubSystemParameters(pred, currentRun);
+  pred = addGitHubParameters(pred, currentRun);
 
   return pred;
 }
