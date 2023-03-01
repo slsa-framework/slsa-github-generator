@@ -1,6 +1,13 @@
 name: Lint
 
-on: [pull_request]
+on:
+  push:
+    branches: [main, "*"]
+  pull_request:
+    # The branches below must be a subset of the branches above
+    branches: [main]
+  merge_group:
+  workflow_dispatch:
 
 permissions:
   # Needed to check out the repo.
