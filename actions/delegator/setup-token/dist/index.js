@@ -136,7 +136,6 @@ function run() {
             core.info(`unsignedToken: ${unsignedToken}`);
             core.info(`unsignedB64Token: ${unsignedB64Token}`);
             // Sign and prepare the base64 bundle.
-            const eventName = process.env.GITHUB_EVENT_NAME || "";
             const bundle = yield sigstore_1.sigstore.sign(Buffer.from(unsignedB64Token), signOptions);
             const bundleStr = JSON.stringify(bundle);
             const bundleB64 = Buffer.from(bundleStr).toString("base64");
