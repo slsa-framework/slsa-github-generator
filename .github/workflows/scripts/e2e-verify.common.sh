@@ -99,3 +99,31 @@ e2e_verify_common_runDetails_v1() {
     # This does not include the builder ID since it is not common to all.
     e2e_verify_predicate_v1_runDetails_metadata_invocationId "$1" "https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID/attempts/$GITHUB_RUN_ATTEMPT"
 }
+
+# Verifies the content of a decoded slsa token.
+e2e_verify_decoded_token() {
+    local decoded_token="$1"
+
+    # Non-GitHub's information.
+    _e2e_verify_query "$decoded_token" "delegator_generic_slsa3.yml" '.builder.audience'
+    _e2e_verify_query "$decoded_token" "ubuntu-latest" '.builder.runner_label'
+    _e2e_verify_query "$decoded_token" "true" '.builder.rekor_log_public'
+    _e2e_verify_query "$decoded_token" "./actions/build-artifacts-composite" '.tool.actions.build_artifacts.path'
+    _e2e_verify_query "$decoded_token" '{"name1":"value1","name2":"value2","private-repository":true}' '.tool.inputs'
+
+    # GitHub's information.
+    _e2e_verify_query "$decoded_token" "$GITHUB_ACTOR_ID" '.github.actor_id'
+    _e2e_verify_query "$decoded_token" "$GITHUB_EVENT_NAME" '.github.event_name'
+    _e2e_verify_query "$decoded_token" "$GITHUB_JOB" '.github.job'
+    _e2e_verify_query "$decoded_token" "$GITHUB_REF" '.github.ref'
+    _e2e_verify_query "$decoded_token" "$GITHUB_REF_TYPE" '.github.ref_type'
+    _e2e_verify_query "$decoded_token" "$GITHUB_REPOSITORY" '.github.repository'
+    _e2e_verify_query "$decoded_token" "$GITHUB_REPOSITORY_ID" '.github.repository_id'
+    _e2e_verify_query "$decoded_token" "$GITHUB_REPOSITORY_OWNER_ID" '.github.repository_owner_id'
+    _e2e_verify_query "$decoded_token" "$GITHUB_RUN_ATTEMPT" '.github.run_attempt'
+    _e2e_verify_query "$decoded_token" "$GITHUB_RUN_ID" '.github.run_id'
+    _e2e_verify_query "$decoded_token" "$GITHUB_RUN_NUMBER" '.github.run_number'
+    _e2e_verify_query "$decoded_token" "$GITHUB_SHA" '.github.sha'
+    _e2e_verify_query "$decoded_token" "$GITHUB_WORKFLOW_REF" '.github.workflow_ref'
+    _e2e_verify_query "$decoded_token" "$GITHUB_WORKFLOW_SHA" '.github.workflow_sha'
+}
