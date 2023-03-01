@@ -1,6 +1,125 @@
 require('./sourcemap-register.js');/******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
+/***/ 2955:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.detectWorkflowFromContext = exports.detectWorkflowFromOIDC = exports.decodeToken = void 0;
+const github = __importStar(__nccwpck_require__(5438));
+const core = __importStar(__nccwpck_require__(2186));
+function decodeToken(federatedToken) {
+    const tokenPayload = federatedToken.split(".")[1];
+    const bufferObj = Buffer.from(tokenPayload, "base64");
+    const decoded = JSON.parse(bufferObj.toString("utf8"));
+    return decoded;
+}
+exports.decodeToken = decodeToken;
+function detectWorkflowFromOIDC(aud) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const id_token = yield core.getIDToken(aud);
+        const decoded = decodeToken(id_token);
+        if (!decoded.aud || decoded.aud !== aud) {
+            return Promise.reject(Error("invalid audience from OIDC token."));
+        }
+        // Use job_workflow_ref to extract the outputs.
+        const jobWorkflowRef = decoded.job_workflow_ref;
+        if (!jobWorkflowRef) {
+            return Promise.reject(Error("job_workflow_ref missing from OIDC token."));
+        }
+        const [workflowPath, workflowRef] = jobWorkflowRef.split("@", 2);
+        const [workflowOwner, workflowRepo, ...workflowArray] = workflowPath.split("/");
+        const repository = [workflowOwner, workflowRepo].join("/");
+        const workflow = workflowArray.join("/");
+        return [repository, workflowRef, workflow];
+    });
+}
+exports.detectWorkflowFromOIDC = detectWorkflowFromOIDC;
+function detectWorkflowFromContext(repoName, token) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const [owner, repo] = repoName.split("/");
+        const octokit = github.getOctokit(token);
+        const res = yield octokit.rest.actions.getWorkflowRun({
+            owner,
+            repo,
+            run_id: Number(process.env.GITHUB_RUN_ID),
+        });
+        const workflowData = res.data;
+        core.info(`abc ${JSON.stringify(workflowData)}`);
+        if (!workflowData.referenced_workflows) {
+            return Promise.reject(Error(`No reusable workflows detected ${JSON.stringify(workflowData)}.`));
+        }
+        // Filter referenced_workflows for slsa-github-generator repositories,
+        // on any fork.
+        // TODO(https://github.com/actions/runner/issues/2417): When
+        // GITHUB_JOB_WORKFLOW_SHA becomes fully functional, the OIDC token
+        // detection can be removed and we can identify the current reusable workflow
+        // through the sha of a referenced workflow, fully supporting all triggers
+        // without the repository filter.
+        let [repository, ref, workflow] = ["", "", ""];
+        for (const reusableWorkflow of workflowData.referenced_workflows) {
+            const workflowPath = reusableWorkflow.path.split("@", 1);
+            const [workflowOwner, workflowRepo, ...workflowArray] = workflowPath[0].split("/");
+            const tmpRepository = [workflowOwner, workflowRepo].join("/");
+            const tmpRef = reusableWorkflow.ref || "";
+            const tmpWorkflow = workflowArray.join("/");
+            if (workflowRepo === "slsa-github-generator") {
+                // If there are multiple invocations of reusable workflows in
+                // a single caller workflow, ensure that the repositories and refs are
+                // the same.
+                if (repository !== "" && repository !== tmpRepository) {
+                    return Promise.reject(Error("Unexpected mismatch of repositories"));
+                }
+                if (ref !== "" && ref !== tmpRef) {
+                    return Promise.reject(Error("Unexpected mismatch of reference"));
+                }
+                repository = tmpRepository;
+                ref = tmpRef;
+                workflow = tmpWorkflow;
+            }
+        }
+        return [repository, ref, workflow];
+    });
+}
+exports.detectWorkflowFromContext = detectWorkflowFromContext;
+
+
+/***/ }),
+
 /***/ 3109:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
@@ -42,83 +161,44 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-const github = __importStar(__nccwpck_require__(5438));
 const core = __importStar(__nccwpck_require__(2186));
 const path_1 = __importDefault(__nccwpck_require__(1017));
-function decodeToken(federatedToken) {
-    const tokenPayload = federatedToken.split(".")[1];
-    const bufferObj = Buffer.from(tokenPayload, "base64");
-    const decoded = JSON.parse(bufferObj.toString("utf8"));
-    return decoded;
-}
+const detect_1 = __nccwpck_require__(2955);
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
         /* Test locally. Requires a GitHub token:
               $ env INPUT_TOKEN="$(gh auth token)" \
-              GITHUB_RUN_ID="4289844197" \
-              GITHUB_REPOSITORY="konstruktoid/ansible-role-dns" \
+              GITHUB_RUN_ID="4303658979" \
+              GITHUB_REPOSITORY="project-oak/oak" \
               nodejs ./dist/index.js
           */
         const token = core.getInput("token");
-        const octokit = github.getOctokit(token);
         const repoName = process.env.GITHUB_REPOSITORY;
         if (!repoName) {
             core.setFailed("No repository detected.");
             return;
         }
         // Set outputs.
-        let repository = "";
-        let ref = "";
-        let workflow = "";
+        let [repository, ref, workflow] = ["", "", ""];
         try {
-            // Use the OIDC token when available.
-            const aud = path_1.default.join(repoName, "detect-workflow-js");
-            const id_token = yield core.getIDToken(aud);
-            const decoded = decodeToken(id_token);
-            if (!decoded.aud || decoded.aud !== aud) {
-                core.setFailed("invalid audience from OIDC token.");
-                return;
+            if (process.env.ACTIONS_ID_TOKEN_REQUEST_URL &&
+                process.env.ACTIONS_ID_TOKEN_REQUEST_TOKEN) {
+                // Use the OIDC token when available.
+                const aud = path_1.default.join(repoName, "detect-workflow-js");
+                [repository, ref, workflow] = yield (0, detect_1.detectWorkflowFromOIDC)(aud);
             }
-            // Use job_workflow_ref to extract the outputs.
-            const jobWorkflowRef = decoded.job_workflow_ref;
-            if (!jobWorkflowRef) {
-                core.setFailed("job_workflow_ref missing from OIDC token.");
-                return;
+            else {
+                // Otherwise, try to use the referenced workflows from the current workflow run.
+                core.info("Failed to retrieve OIDC token. This may be due to missing id-token: write permissions.");
+                [repository, ref, workflow] = yield (0, detect_1.detectWorkflowFromContext)(repoName, token);
             }
-            const [workflowPath, workflowRef] = jobWorkflowRef.split("@", 2);
-            const [workflowOwner, workflowRepo, ...workflowArray] = workflowPath.split("/");
-            repository = [workflowOwner, workflowRepo].join("/");
-            ref = workflowRef;
-            workflow = workflowArray.join("/");
         }
-        catch (_a) {
-            // Otherwise, try to use the referenced workflows from the current workflow run.
-            core.info("Failed to retrieve OIDC token. This may be due to missing permissions.");
-            const [owner, repo] = repoName.split("/");
-            const res = yield octokit.rest.actions.getWorkflowRun({
-                owner,
-                repo,
-                run_id: Number(process.env.GITHUB_RUN_ID),
-            });
-            const workflowData = res.data;
-            if (!workflowData.referenced_workflows) {
-                core.setFailed("No reusable workflows detected.");
-                return;
+        catch (error) {
+            if (error instanceof Error) {
+                core.setFailed(error.message);
             }
-            // There is only one referenced reusable workflow, this must be it.
-            // Otherwise, there are multiple reusable workflows referenced in the caller
-            // workflow and we cannot yet determine which is the current one.
-            // TODO(https://github.com/actions/runner/issues/2417): When
-            // GITHUB_JOB_WORKFLOW_SHA becomes fully functional, the OIDC token
-            // above can be removed and we can match the current reusable workflow
-            // through the sha of a referenced workflow, fully supporting all triggers.
-            if (workflowData.referenced_workflows.length === 1) {
-                const reusableWorkflow = workflowData.referenced_workflows[0];
-                const workflowPath = reusableWorkflow.path.split("@", 1);
-                const [workflowOwner, workflowRepo, ...workflowArray] = workflowPath[0].split("/");
-                repository = [workflowOwner, workflowRepo].join("/");
-                ref = reusableWorkflow.ref || "";
-                workflow = workflowArray.join("/");
+            else {
+                core.setFailed(`Unexpected error: ${error}`);
             }
         }
         if (!repository) {
