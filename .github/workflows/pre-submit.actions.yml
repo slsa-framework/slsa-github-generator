@@ -3,6 +3,7 @@ name: pre-submit actions
 on:
   pull_request:
     branches: [main]
+  merge_group:
   workflow_dispatch:
 
 permissions: read-all

@@ -31,6 +31,7 @@ This is a document to describe the release process for the slsa-github-generator
   - [Reference Actions at main](#reference-actions-at-main)
   - [Update verifier](#update-verifier)
   - [Finish the release.](#finish-the-release)
+  - [Update SECURITY.md](#update-securitymd)
   - [Update the starter workflows](#update-the-starter-workflows)
   - [Announce](#announce)
 
@@ -435,6 +436,11 @@ For each of the GHA builders, you will need to:
 
 1. Remove the "This is an un-finalized release." note from the release description.
 1. Un-tick the `This is a pre-release` option.
+1. If it's the latest release, tick the `Set as the latest release` option.
+
+### Update SECURITY.md
+
+Update the `Supported Versions` section in [SECURITY.md](./SECURITY.md).
 
 ### Update the starter workflows
 
