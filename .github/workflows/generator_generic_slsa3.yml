@@ -203,7 +203,7 @@ jobs:
           echo "outcome=$([ "$SUCCESS" == "true" ] && echo "success" || echo "failure")" >> $GITHUB_OUTPUT
 
   # upload-assets uploads provenance to the release
-  # if `upload-assets` is true.
+  # if github.ref is a tag and `upload-assets` is true.
   upload-assets:
     outputs:
       outcome: ${{ steps.final.outputs.outcome }}
@@ -212,7 +212,7 @@ jobs:
     needs: [detect-env, generator]
     permissions:
       contents: write # Needed to write artifacts to a release.
-    if: inputs.upload-assets == true
+    if: startsWith(github.ref, 'refs/tags/') && inputs.upload-assets
     steps:
       - name: Checkout builder repository
         id: checkout-builder
@@ -234,7 +234,7 @@ jobs:
 
       - name: Upload provenance new tag
         uses: softprops/action-gh-release@de2c0eb89ae2a093876385947365aca7b0e5f844 # v0.1.15
-        if: startsWith(github.ref, 'refs/tags/') && inputs.upload-tag-name == ''
+        if: inputs.upload-tag-name == ''
         id: release-new-tags
         with:
           files: |
@@ -263,6 +263,7 @@ jobs:
           elif [[ -n "$RELEASE_ID_TAG_NAME" ]]; then
             id="$RELEASE_ID_TAG_NAME"
           else
+            # This should never happen (unless previous steps fail).
             echo "internal error"
             exit 1
           fi
