@@ -101,22 +101,6 @@ jobs:
           echo "Got output: $OUTPUT"
           [[ "$OUTPUT" != "" ]]
 
-  setup-token:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # v3.3.0
-      - id: setup
-        uses: ./actions/delegator/setup-token
-        with:
-          slsa-workflow-recipient: "delegator_generic_slsa3.yml"
-          slsa-rekor-log-public: true
-          slsa-runner-label: "ubuntu-latest"
-          slsa-build-action-path: "./actions/build-artifacts-composite"
-          slsa-workflow-inputs: '{"name1":"value1","name2":"value2","private-repository":true}'
-      - env:
-          SLSA_TOKEN: ${{ steps.setup.outputs.slsa-token }}
-        run: ./.github/workflows/scripts/pre-submit.actions/setup-token.sh
-
   references:
     runs-on: ubuntu-latest
     steps:
