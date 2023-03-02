@@ -1257,6 +1257,21 @@ jobs:
 
 ## Known Issues
 
+### 'internal error' when using using `upload-assets`
+
+**Affected versions:** v1.5.0
+
+When setting `upload-assets` to `true` when the trigger occurred on a git ref
+that is a not a tag (e.g. a push to a branch), the workflow would fail with
+`'internal error'` if `upload-tag-name` input was not specified.
+
+Prior to 1.5.0 `upload-assets` was ignored if a tag name could not be determined
+by the git ref.
+
+See issue
+[#1702](https://github.com/slsa-framework/slsa-github-generator/issues/1702) for
+more details.
+
 ### error updating to TUF remote mirror: tuf: invalid key
 
 **Affected versions:** v1.2.x
