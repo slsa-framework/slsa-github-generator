@@ -1268,6 +1268,19 @@ that is a not a tag (e.g. a push to a branch), the workflow would fail with
 Prior to 1.5.0 `upload-assets` was ignored if a tag name could not be determined
 by the git ref.
 
+Please set the following to `upload-assets`:
+
+```yaml
+upload-assets: ${{ startsWith(github.ref, 'refs/tags/') }}
+```
+
+or specify a value for `upload-tag-name`:
+
+```yaml
+upload-assets: true
+upload-tag-name: "v1.0.0"
+```
+
 See issue
 [#1702](https://github.com/slsa-framework/slsa-github-generator/issues/1702) for
 more details.
