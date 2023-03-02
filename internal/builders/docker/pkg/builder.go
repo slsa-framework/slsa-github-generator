@@ -546,7 +546,11 @@ func inspectAndWriteArtifacts(pattern, outputFolder, root string) ([]intoto.Subj
 
 		if outputFolder != "" {
 			// Write output file to output folder
-			relPath, err := filepath.Rel(root, path)
+			absPath, err := filepath.Abs(path)
+			if err != nil {
+				return nil, err
+			}
+			relPath, err := filepath.Rel(root, absPath)
 			if err != nil {
 				return nil, err
 			}
