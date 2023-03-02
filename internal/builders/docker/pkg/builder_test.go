@@ -210,7 +210,11 @@ func Test_inspectArtifactsNoRoot(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer os.Chdir(wd)
+	t.Cleanup(func() {
+		if err := os.Chdir(wd); err != nil {
+			t.Fatal(err)
+		}
+	})
 	if err := os.Chdir(".."); err != nil {
 		t.Fatal(err)
 	}
