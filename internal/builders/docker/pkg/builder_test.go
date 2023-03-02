@@ -16,6 +16,7 @@ package pkg
 
 import (
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -163,7 +164,12 @@ func Test_inspectArtifacts(t *testing.T) {
 	// Note: If the files in ../testdata/ change, this test must be updated.
 	pattern := "../testdata/*"
 	out := t.TempDir()
-	got, err := inspectAndWriteArtifacts(pattern, out, "..")
+	wd, err := os.Getwd()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	got, err := inspectAndWriteArtifacts(pattern, out, filepath.Dir(wd))
 	if err != nil {
 		t.Fatalf("failed to inspect artifacts: %v", err)
 	}
