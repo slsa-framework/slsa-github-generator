@@ -55,26 +55,16 @@ on:
         description: >
           Path to a configuration file relative to the root of the repository
           containing a command that the builder image should be invoked with and
-          optionally, docker options and environment variables.
+          the path to the output artifacts.
         required: true
         type: string
-      builder-output-path:
-        description: >
-          Path to the builder's output artifact(s) relative to the root of the Git
-          repository.
-          Users may specify a single artifact or use a shell-style wildcard
-          pattern to match multiple artifacts.
-          Defaults to the sub-folder output/.
-        required: false
-        type: string
-        default: "output/**"
       compile-builder:
         description: "Build the builder from source. This increases build time by ~2m."
         required: false
         type: boolean
         default: false
-      private-repository:
-        description: "If true, private repositories can post to the public transparency log."
+      rekor-log-public:
+        description: "In case of a private GitHub repository, allow publication of your repository name on the public Rekor log"
         required: false
         type: boolean
         default: false
@@ -116,7 +106,7 @@ jobs:
     steps:
       - name: Detect the builder ref
         id: detect
-        uses: slsa-framework/slsa-github-generator/.github/actions/detect-workflow@main
+        uses: slsa-framework/slsa-github-generator/.github/actions/detect-workflow-js@main
 
   ###################################################################
   #                                                                 #
@@ -162,7 +152,7 @@ jobs:
           binary: "${{ env.BUILDER_BINARY }}"
           compile-builder: "${{ inputs.compile-builder }}"
           directory: "${{ env.BUILDER_DIR }}"
-          allow-private-repository: ${{ inputs.private-repository }}
+          allow-private-repository: ${{ inputs.rekor-log-public }}
 
       - name: Upload builder
         uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2

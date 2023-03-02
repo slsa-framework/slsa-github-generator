@@ -1,7 +1,7 @@
 require('./sourcemap-register.js');/******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
-/***/ 5928:
+/***/ 2955:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
@@ -39,90 +39,83 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.getInvocationID = exports.getWorkflowInputs = exports.addGitHubParameters = exports.getWorkflowRun = void 0;
-const fs = __importStar(__nccwpck_require__(7147));
-const process = __importStar(__nccwpck_require__(7282));
+exports.detectWorkflowFromContext = exports.detectWorkflowFromOIDC = exports.decodeToken = void 0;
 const github = __importStar(__nccwpck_require__(5438));
-// getWorkflowRun retrieves the current WorkflowRun given the repository (owner/repo)
-// and run ID.
-function getWorkflowRun(repository, run_id, token) {
+const core = __importStar(__nccwpck_require__(2186));
+function decodeToken(federatedToken) {
+    const tokenPayload = federatedToken.split(".")[1];
+    const bufferObj = Buffer.from(tokenPayload, "base64");
+    const decoded = JSON.parse(bufferObj.toString("utf8"));
+    return decoded;
+}
+exports.decodeToken = decodeToken;
+function detectWorkflowFromOIDC(aud) {
     return __awaiter(this, void 0, void 0, function* () {
+        const id_token = yield core.getIDToken(aud);
+        const decoded = decodeToken(id_token);
+        if (!decoded.aud || decoded.aud !== aud) {
+            return Promise.reject(Error("invalid audience from OIDC token."));
+        }
+        // Use job_workflow_ref to extract the outputs.
+        const jobWorkflowRef = decoded.job_workflow_ref;
+        if (!jobWorkflowRef) {
+            return Promise.reject(Error("job_workflow_ref missing from OIDC token."));
+        }
+        const [workflowPath, workflowRef] = jobWorkflowRef.split("@", 2);
+        const [workflowOwner, workflowRepo, ...workflowArray] = workflowPath.split("/");
+        const repository = [workflowOwner, workflowRepo].join("/");
+        const workflow = workflowArray.join("/");
+        return [repository, workflowRef, workflow];
+    });
+}
+exports.detectWorkflowFromOIDC = detectWorkflowFromOIDC;
+function detectWorkflowFromContext(repoName, token) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const [owner, repo] = repoName.split("/");
         const octokit = github.getOctokit(token);
-        const [owner, repo] = repository.split("/");
         const res = yield octokit.rest.actions.getWorkflowRun({
             owner,
             repo,
             run_id: Number(process.env.GITHUB_RUN_ID),
         });
-        return res.data;
+        const workflowData = res.data;
+        core.info(`abc ${JSON.stringify(workflowData)}`);
+        if (!workflowData.referenced_workflows) {
+            return Promise.reject(Error(`No reusable workflows detected ${JSON.stringify(workflowData)}.`));
+        }
+        // Filter referenced_workflows for slsa-github-generator repositories,
+        // on any fork.
+        // TODO(https://github.com/actions/runner/issues/2417): When
+        // GITHUB_JOB_WORKFLOW_SHA becomes fully functional, the OIDC token
+        // detection can be removed and we can identify the current reusable workflow
+        // through the sha of a referenced workflow, fully supporting all triggers
+        // without the repository filter.
+        let [repository, ref, workflow] = ["", "", ""];
+        for (const reusableWorkflow of workflowData.referenced_workflows) {
+            const workflowPath = reusableWorkflow.path.split("@", 1);
+            const [workflowOwner, workflowRepo, ...workflowArray] = workflowPath[0].split("/");
+            const tmpRepository = [workflowOwner, workflowRepo].join("/");
+            const tmpRef = reusableWorkflow.ref || "";
+            const tmpWorkflow = workflowArray.join("/");
+            if (workflowRepo === "slsa-github-generator") {
+                // If there are multiple invocations of reusable workflows in
+                // a single caller workflow, ensure that the repositories and refs are
+                // the same.
+                if (repository !== "" && repository !== tmpRepository) {
+                    return Promise.reject(Error("Unexpected mismatch of repositories"));
+                }
+                if (ref !== "" && ref !== tmpRef) {
+                    return Promise.reject(Error("Unexpected mismatch of reference"));
+                }
+                repository = tmpRepository;
+                ref = tmpRef;
+                workflow = tmpWorkflow;
+            }
+        }
+        return [repository, ref, workflow];
     });
 }
-exports.getWorkflowRun = getWorkflowRun;
-// addGitHubParameters adds trusted GitHub context to system paramters
-// and external parameters.
-function addGitHubParameters(predicate, currentRun) {
-    var _a;
-    const { env } = process;
-    const ctx = github.context;
-    if (!predicate.buildDefinition.systemParameters) {
-        predicate.buildDefinition.systemParameters = {};
-    }
-    const systemParams = predicate.buildDefinition.systemParameters;
-    // Put GitHub context and env vars into systemParameters.
-    systemParams.GITHUB_EVENT_NAME = ctx.eventName;
-    systemParams.GITHUB_JOB = ctx.job;
-    systemParams.GITHUB_REF = ctx.ref;
-    systemParams.GITHUB_REF_TYPE = env.GITHUB_REF_TYPE || "";
-    systemParams.GITHUB_REPOSITORY = env.GITHUB_REPOSITORY || "";
-    systemParams.GITHUB_RUN_ATTEMPT = env.GITHUB_RUN_ATTEMPT || "";
-    systemParams.GITHUB_RUN_ID = ctx.runId;
-    systemParams.GITHUB_RUN_NUMBER = ctx.runNumber;
-    systemParams.GITHUB_SHA = ctx.sha;
-    systemParams.GITHUB_WORKFLOW = ctx.workflow;
-    systemParams.GITHUB_WORKFLOW_REF = env.GITHUB_WORKFLOW_REF || "";
-    systemParams.GITHUB_WORKFLOW_SHA = env.GITHUB_WORKFLOW_SHA || "";
-    systemParams.IMAGE_OS = env.ImageOS || "";
-    systemParams.IMAGE_VERSION = env.ImageVersion || "";
-    systemParams.RUNNER_ARCH = env.RUNNER_ARCH || "";
-    systemParams.RUNNER_NAME = env.RUNNER_NAME || "";
-    systemParams.RUNNER_OS = env.RUNNER_OS || "";
-    systemParams.GITHUB_ACTOR_ID = String(((_a = currentRun.actor) === null || _a === void 0 ? void 0 : _a.id) || "");
-    systemParams.GITHUB_REPOSITORY_ID = String(currentRun.repository.id || "");
-    systemParams.GITHUB_REPOSITORY_OWNER_ID = String(currentRun.repository.owner.id || "");
-    // Put GitHub event payload into systemParameters.
-    // TODO(github.com/slsa-framework/slsa-github-generator/issues/1575): Redact sensitive information.
-    if (env.GITHUB_EVENT_PATH) {
-        const ghEvent = JSON.parse(fs.readFileSync(env.GITHUB_EVENT_PATH).toString());
-        systemParams.GITHUB_EVENT_PAYLOAD = ghEvent;
-    }
-    predicate.buildDefinition.systemParameters = systemParams;
-    if (!env.GITHUB_WORKFLOW_REF) {
-        throw new Error("missing GITHUB_WORKFLOW_REF");
-    }
-    const [workflowPath, workflowRef] = env.GITHUB_WORKFLOW_REF.split("@", 2);
-    const [, , ...path] = workflowPath.split("/");
-    predicate.buildDefinition.externalParameters.workflow = {
-        ref: workflowRef,
-        repository: env.GITHUB_REPOSITORY || "",
-        path: path.join("/"),
-    };
-    return predicate;
-}
-exports.addGitHubParameters = addGitHubParameters;
-// getWorkflowInputs gets the workflow runs' inputs (only populated on workflow dispatch).
-function getWorkflowInputs() {
-    const { env } = process;
-    if (env.GITHUB_EVENT_NAME === "workflow_dispatch") {
-        return github.context.payload.inputs;
-    }
-    return null;
-}
-exports.getWorkflowInputs = getWorkflowInputs;
-// getInvocationID returns the URI describing the globally unique invocation ID.
-function getInvocationID(currentRun) {
-    return `https://github.com/${currentRun.repository.full_name}/actions/runs/${currentRun.id}/attempts/${currentRun.run_attempt}`;
-}
-exports.getInvocationID = getInvocationID;
+exports.detectWorkflowFromContext = detectWorkflowFromContext;
 
 
 /***/ }),
@@ -164,77 +157,41 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core = __importStar(__nccwpck_require__(2186));
-const predicate_1 = __nccwpck_require__(5464);
-const gh = __importStar(__nccwpck_require__(5928));
-const utils = __importStar(__nccwpck_require__(918));
-const fs = __importStar(__nccwpck_require__(7147));
+const path_1 = __importDefault(__nccwpck_require__(1017));
+const detect_1 = __nccwpck_require__(2955);
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
+        /* Test locally. Requires a GitHub token:
+              $ env INPUT_TOKEN="$(gh auth token)" \
+              GITHUB_RUN_ID="4303658979" \
+              GITHUB_REPOSITORY="project-oak/oak" \
+              nodejs ./dist/index.js
+          */
+        const token = core.getInput("token");
+        const repoName = process.env.GITHUB_REPOSITORY;
+        if (!repoName) {
+            core.setFailed("No repository detected.");
+            return;
+        }
+        // Set outputs.
+        let [repository, ref, workflow] = ["", "", ""];
         try {
-            /* Test locally. Requires a GitHub token:
-                $ env INPUT_BUILD-DEFINITION="testdata/build_definition.json" \
-                INPUT_OUTPUT-FILE="predicate.json" \
-                INPUT_BINARY-SHA256="0982432e54df5f3eb6b25c6c1ae77a45c242ad5a81a485c1fc225ae5ac472be3" \
-                INPUT_BINARY-URI="git+https://github.com/asraa/slsa-github-generator@refs/heads/refs/heads/main" \
-                INPUT_TOKEN="$(gh auth token)" \
-                INPUT_BUILDER-ID="https://github.com/asraa/slsa-github-generator/.github/workflows/builder_docker-baed_slsa3.yml@refs/tags/v0.0.1" \
-                GITHUB_EVENT_NAME="workflow_dispatch" \
-                GITHUB_RUN_ATTEMPT="1" \
-                GITHUB_RUN_ID="4128571590" \
-                GITHUB_RUN_NUMBER="38" \
-                GITHUB_WORKFLOW="pre-submit e2e docker-based default" \
-                GITHUB_WORKFLOW_REF="asraa/slsa-github-generator/.github/workflows/pre-submit.e2e.docker-based.default.yml@refs/heads/main" \
-                GITHUB_SHA="97f1bfd54b02d1c7b632da907676a7d30d2efc02" \
-                GITHUB_REPOSITORY="asraa/slsa-github-generator" \
-                GITHUB_REPOSITORY_ID="479129389" \
-                GITHUB_REPOSITORY_OWNER="asraa" \
-                GITHUB_REPOSITORY_OWNER_ID="5194569" \
-                GITHUB_ACTOR_ID="5194569" \
-                GITHUB_REF="refs/heads/main" \
-                GITHUB_BASE_REF="" \
-                GITHUB_REF_TYPE="branch" \
-                GITHUB_ACTOR="asraa" \
-                GITHUB_WORKSPACE="$(pwd)" \
-                nodejs ./dist/index.js
-            */
-            const wd = utils.getEnv("GITHUB_WORKSPACE");
-            const bdPath = core.getInput("build-definition");
-            const outputFile = core.getInput("output-file");
-            const binaryDigest = core.getInput("binary-sha256");
-            const binaryURI = core.getInput("binary-uri");
-            const jobWorkflowRef = core.getInput("builder-id");
-            const token = core.getInput("token");
-            if (!token) {
-                throw new Error("token not provided");
+            if (process.env.ACTIONS_ID_TOKEN_REQUEST_URL &&
+                process.env.ACTIONS_ID_TOKEN_REQUEST_TOKEN) {
+                // Use the OIDC token when available.
+                const aud = path_1.default.join(repoName, "detect-workflow-js");
+                [repository, ref, workflow] = yield (0, detect_1.detectWorkflowFromOIDC)(aud);
             }
-            const safeBdPath = utils.resolvePathInput(bdPath, wd);
-            // TODO(#1513): Use a common utility to harden file writes.
-            if (!fs.existsSync(safeBdPath)) {
-                throw new Error("build-definition file does not exist");
+            else {
+                // Otherwise, try to use the referenced workflows from the current workflow run.
+                core.info("Failed to retrieve OIDC token. This may be due to missing id-token: write permissions.");
+                [repository, ref, workflow] = yield (0, detect_1.detectWorkflowFromContext)(repoName, token);
             }
-            // Read SLSA build definition
-            const buffer = fs.readFileSync(safeBdPath);
-            const bd = JSON.parse(buffer.toString());
-            // Get builder binary artifact reference.
-            const builderBinaryRef = {
-                uri: binaryURI,
-                digest: {
-                    sha256: binaryDigest,
-                },
-            };
-            // Generate the predicate.
-            const ownerRepo = utils.getEnv("GITHUB_REPOSITORY");
-            const currentWorkflowRun = yield gh.getWorkflowRun(ownerRepo, Number(process.env.GITHUB_RUN_ID), token);
-            const predicate = (0, predicate_1.generatePredicate)(bd, builderBinaryRef, jobWorkflowRef, currentWorkflowRun);
-            // Write output predicate
-            const safeOutput = utils.resolvePathInput(outputFile, wd);
-            fs.writeFileSync(safeOutput, JSON.stringify(predicate), {
-                flag: "ax",
-                mode: 0o600,
-            });
-            core.debug(`Wrote predicate to ${safeOutput}`);
         }
         catch (error) {
             if (error instanceof Error) {
@@ -244,98 +201,24 @@ function run() {
                 core.setFailed(`Unexpected error: ${error}`);
             }
         }
+        if (!repository) {
+            core.setFailed("No repository detected.");
+            return;
+        }
+        if (!ref) {
+            core.setFailed("No ref detected.");
+            return;
+        }
+        if (!workflow) {
+            core.setFailed("No workflow detected.");
+            return;
+        }
+        core.setOutput("repository", repository);
+        core.setOutput("ref", ref);
+        core.setOutput("workflow", workflow);
     });
 }
 run();
-
-
-/***/ }),
-
-/***/ 5464:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-// TODO(https://github.com/slsa-framework/slsa-github-generator/issues/1470):
-// Share this code with BYO predicate definitions.
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.generatePredicate = void 0;
-const github_1 = __nccwpck_require__(5928);
-function generatePredicate(bd, binaryRef, jobWorkflowRef, currentRun) {
-    let pred = {
-        buildDefinition: bd,
-        runDetails: {
-            builder: {
-                id: jobWorkflowRef,
-            },
-            metadata: {
-                invocationId: (0, github_1.getInvocationID)(currentRun),
-            },
-        },
-    };
-    // Add the builder binary to the resolved dependencies.
-    pred.buildDefinition.resolvedDependencies = [binaryRef];
-    // Update the parameters with the GH context, including workflow
-    // inputs.
-    pred = (0, github_1.addGitHubParameters)(pred, currentRun);
-    return pred;
-}
-exports.generatePredicate = generatePredicate;
-
-
-/***/ }),
-
-/***/ 918:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.resolvePathInput = exports.getEnv = void 0;
-const path_1 = __importDefault(__nccwpck_require__(1017));
-const process = __importStar(__nccwpck_require__(7282));
-function getEnv(name) {
-    const res = process.env[name];
-    if (!res) {
-        throw new Error(`missing env: ${name}`);
-    }
-    return String(res);
-}
-exports.getEnv = getEnv;
-function resolvePathInput(untrustedInput, wd) {
-    const safeJoin = path_1.default.resolve(path_1.default.join(wd, untrustedInput));
-    if (!(safeJoin + path_1.default.sep).startsWith(wd + path_1.default.sep)) {
-        throw Error(`unsafe path ${safeJoin}`);
-    }
-    return safeJoin;
-}
-exports.resolvePathInput = resolvePathInput;
 
 
 /***/ }),
@@ -10013,14 +9896,6 @@ module.exports = require("os");
 
 "use strict";
 module.exports = require("path");
-
-/***/ }),
-
-/***/ 7282:
-/***/ ((module) => {
-
-"use strict";
-module.exports = require("process");
 
 /***/ }),
 
