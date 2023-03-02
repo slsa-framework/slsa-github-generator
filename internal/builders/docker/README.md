@@ -31,6 +31,7 @@ type that provides the full details on the build process.
   - [Configuration File](#configuration-file)
   - [Workflow Inputs](#workflow-inputs)
   - [Workflow Example](#workflow-example)
+  - [Workflow Outputs](#workflow-outputs)
   - [Provenance Format](#provenance-format)
   - [Provenance Example](#provenance-example)
 - [Command line tool](#command-line-tool)
