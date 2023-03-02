@@ -19,6 +19,7 @@ async function run(): Promise<void> {
         GITHUB_RUN_ID="4128571590" \
         GITHUB_RUN_NUMBER="38" \
         GITHUB_WORKFLOW="pre-submit e2e docker-based default" \
+        GITHUB_WORKFLOW_REF="asraa/slsa-github-generator/.github/workflows/pre-submit.e2e.docker-based.default.yml@refs/heads/main" \
         GITHUB_SHA="97f1bfd54b02d1c7b632da907676a7d30d2efc02" \
         GITHUB_REPOSITORY="asraa/slsa-github-generator" \
         GITHUB_REPOSITORY_ID="479129389" \

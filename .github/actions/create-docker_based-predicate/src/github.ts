@@ -21,8 +21,9 @@ export async function getWorkflowRun(
   return res.data;
 }
 
-// addGitHubSystemParameters adds trusted GitHub context to system paramters.
-export function addGitHubSystemParameters(
+// addGitHubParameters adds trusted GitHub context to system paramters
+// and external parameters.
+export function addGitHubParameters(
   predicate: types.SLSAv1Predicate,
   currentRun: ApiWorkflowRun
 ): types.SLSAv1Predicate {
@@ -68,6 +69,18 @@ export function addGitHubSystemParameters(
   }
 
   predicate.buildDefinition.systemParameters = systemParams;
+
+  if (!env.GITHUB_WORKFLOW_REF) {
+    throw new Error("missing GITHUB_WORKFLOW_REF");
+  }
+  const [workflowPath, workflowRef] = env.GITHUB_WORKFLOW_REF.split("@", 2);
+  const [, , ...path] = workflowPath.split("/");
+
+  predicate.buildDefinition.externalParameters.workflow = {
+    ref: workflowRef,
+    repository: env.GITHUB_REPOSITORY || "",
+    path: path.join("/"),
+  };
 
   return predicate;
 }

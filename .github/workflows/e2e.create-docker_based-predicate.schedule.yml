@@ -42,10 +42,10 @@ jobs:
           PREDICATE: predicate.json
 
   if-succeed:
-    needs: [sign-attestations]
+    needs: [predicate]
     runs-on: ubuntu-latest
     # We use `== 'failure'` instead of ` != 'success'` because we want to ignore skipped jobs, if there are any.
-    if: github.event_name != 'workflow_dispatch' && needs.sign-attestations.result != 'failure'
+    if: github.event_name != 'workflow_dispatch' && needs.predicate.result != 'failure'
     permissions:
       contents: read
       issues: write
@@ -57,9 +57,9 @@ jobs:
       - run: ./.github/workflows/scripts/e2e-report-success.sh
 
   if-failed:
-    needs: [sign-attestations]
+    needs: [predicate]
     runs-on: ubuntu-latest
-    if: always() && github.event_name != 'workflow_dispatch' && needs.sign-attestations.result == 'failure'
+    if: always() && github.event_name != 'workflow_dispatch' && needs.predicate.result == 'failure'
     permissions:
       contents: read
       issues: write

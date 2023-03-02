@@ -39,7 +39,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.getInvocationID = exports.getWorkflowInputs = exports.addGitHubSystemParameters = exports.getWorkflowRun = void 0;
+exports.getInvocationID = exports.getWorkflowInputs = exports.addGitHubParameters = exports.getWorkflowRun = void 0;
 const fs = __importStar(__nccwpck_require__(7147));
 const process = __importStar(__nccwpck_require__(7282));
 const github = __importStar(__nccwpck_require__(5438));
@@ -58,8 +58,9 @@ function getWorkflowRun(repository, run_id, token) {
     });
 }
 exports.getWorkflowRun = getWorkflowRun;
-// addGitHubSystemParameters adds trusted GitHub context to system paramters.
-function addGitHubSystemParameters(predicate, currentRun) {
+// addGitHubParameters adds trusted GitHub context to system paramters
+// and external parameters.
+function addGitHubParameters(predicate, currentRun) {
     var _a;
     const { env } = process;
     const ctx = github.context;
@@ -95,9 +96,19 @@ function addGitHubSystemParameters(predicate, currentRun) {
         systemParams.GITHUB_EVENT_PAYLOAD = ghEvent;
     }
     predicate.buildDefinition.systemParameters = systemParams;
+    if (!env.GITHUB_WORKFLOW_REF) {
+        throw new Error("missing GITHUB_WORKFLOW_REF");
+    }
+    const [workflowPath, workflowRef] = env.GITHUB_WORKFLOW_REF.split("@", 2);
+    const [, , ...path] = workflowPath.split("/");
+    predicate.buildDefinition.externalParameters.workflow = {
+        ref: workflowRef,
+        repository: env.GITHUB_REPOSITORY || "",
+        path: path.join("/"),
+    };
     return predicate;
 }
-exports.addGitHubSystemParameters = addGitHubSystemParameters;
+exports.addGitHubParameters = addGitHubParameters;
 // getWorkflowInputs gets the workflow runs' inputs (only populated on workflow dispatch).
 function getWorkflowInputs() {
     const { env } = process;
@@ -174,6 +185,7 @@ function run() {
                 GITHUB_RUN_ID="4128571590" \
                 GITHUB_RUN_NUMBER="38" \
                 GITHUB_WORKFLOW="pre-submit e2e docker-based default" \
+                GITHUB_WORKFLOW_REF="asraa/slsa-github-generator/.github/workflows/pre-submit.e2e.docker-based.default.yml@refs/heads/main" \
                 GITHUB_SHA="97f1bfd54b02d1c7b632da907676a7d30d2efc02" \
                 GITHUB_REPOSITORY="asraa/slsa-github-generator" \
                 GITHUB_REPOSITORY_ID="479129389" \
@@ -263,9 +275,9 @@ function generatePredicate(bd, binaryRef, jobWorkflowRef, currentRun) {
     };
     // Add the builder binary to the resolved dependencies.
     pred.buildDefinition.resolvedDependencies = [binaryRef];
-    // Update the systemParameters with the GH context, including workflow
+    // Update the parameters with the GH context, including workflow
     // inputs.
-    pred = (0, github_1.addGitHubSystemParameters)(pred, currentRun);
+    pred = (0, github_1.addGitHubParameters)(pred, currentRun);
     return pred;
 }
 exports.generatePredicate = generatePredicate;
