@@ -244,3 +244,15 @@ jobs:
         with:
           name: "${{ needs.rng.outputs.value }}-slsa-attestations"
           path: "${{ needs.rng.outputs.value }}-slsa-attestations"
+
+  # cleanup deletes internal artifacts used by the delegator workflow
+  cleanup:
+    runs-on: ubuntu-latest
+    needs: [generate-provenance]
+    steps:
+      - uses: geekyeggo/delete-artifact@54ab544f12cdb7b71613a16a2b5a37a9ade990af # v2.0.0
+        with:
+          name: "${{ needs.rng.outputs.value }}-${{ env.SLSA_PREDICATE_FILE }}"
+      - uses: geekyeggo/delete-artifact@54ab544f12cdb7b71613a16a2b5a37a9ade990af # v2.0.0
+        with:
+          name: "${{ needs.rng.outputs.value }}-${{ env.SLSA_ARTIFACTS_FILE }}"
