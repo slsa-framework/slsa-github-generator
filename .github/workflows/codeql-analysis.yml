@@ -25,6 +25,7 @@ on:
     paths-ignore:
       - "**/*.yml"
       - "**/*.md"
+  merge_group:
   schedule:
     - cron: "21 0 * * 2"
 

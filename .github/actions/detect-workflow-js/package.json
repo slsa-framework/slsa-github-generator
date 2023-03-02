@@ -1,8 +1,8 @@
 {
-  "name": "create-docker_based-predicate",
+  "name": "detect-workflow-js",
   "version": "0.0.0",
   "private": true,
-  "description": "GitHub action to create a SLSA predicate given a build definition.",
+  "description": "GitHub action to detect the referenced reusable workflow.",
   "main": "lib/main.js",
   "scripts": {
     "build": "tsc",
@@ -10,7 +10,8 @@
     "format-check": "prettier --check '**/*.ts'",
     "package": "ncc build --source-map",
     "lint": "eslint --max-warnings 0 src/**/*.ts",
-    "all": "npm run format && npm run lint && npm run build && npm run package"
+    "test": "jest",
+    "all": "npm run format && npm run lint && npm run build && npm run test && npm run package"
   },
   "keywords": [
     "actions",
@@ -18,7 +19,7 @@
     "setup"
   ],
   "devDependencies": {
-    "@types/make-fetch-happen": "^10.0.1",
+    "@types/jest": "^29.2.4",
     "@types/node": "18.14.2",
     "@typescript-eslint/eslint-plugin": "5.54.0",
     "@typescript-eslint/parser": "5.54.0",
@@ -26,6 +27,7 @@
     "eslint": "8.35.0",
     "eslint-plugin-github": "4.6.1",
     "prettier": "2.8.4",
+    "ts-jest": "^29.0.3",
     "typescript": "4.9.5"
   },
   "dependencies": {
