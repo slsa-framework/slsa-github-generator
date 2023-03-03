@@ -68,19 +68,23 @@ on:
         required: false
         type: boolean
         default: false
-        # TODO: Options for requesting and verifying provenance of builder image
-        # This will use slsa-verifier and slsa-verifier option.
-        #      * request-builder-verification
-
+      provenance-name:
+        description: The artifact name of the signed provenance. The file must have the .intoto extension. Defaults to <filename>.intoto for single artifact or multiple.intoto.jsonl for multiple artifacts.
+        required: false
+        type: string
         # TODO: Secrets and Authentication options for the builder-image.
         #      * registry-username
         #      * registry-password
     outputs:
       build-outputs-name:
-        description: "The name of the folder where the generated artifacts are uploaded to the artifact registry."
+        description: "The name of the artifact where the generated artifacts are uploaded to the artifact registry."
         value: ${{ jobs.build.outputs.build-outputs-name }}
-      provenance-name:
-        description: "The artifact name of the signed provenance. (A file with the intoto.sigstore extension)."
+      attestations-download-name:
+        description: >
+          Name of the artifact to download all the attestations.
+
+          When run on a `pull_request` trigger, attestations are not signed and have an ".intoto" extension.
+          When run on other triggers, attestations are signed and have an "intoto.sigstore" extension.
         value: ${{ jobs.provenance.outputs.provenance-name }}
 
 jobs:
@@ -279,7 +283,7 @@ jobs:
           BUILDER_DIGEST: ${{ inputs.builder-digest }}
           CONFIG_PATH: ${{ inputs.config-path }}
           RNG: ${{ needs.rng.outputs.value }}
-
+          PROVENANCE_NAME: ${{ inputs.provenance-name }}
         run: |
           set -euo pipefail
 
@@ -305,12 +309,29 @@ jobs:
             --subjects-path subjects.json \
             --output-folder /tmp/build-outputs-${RNG}
 
+          # Construct attestation filename.
+          FILENAME=${PROVENANCE_NAME}
+          length=$(jq length subjects.json)
+          if [[ -z "${FILENAME}" ]]; then
+            if [[ "$length" == "1" ]]; then
+              FILENAME=$(jq -r '.[0].name' subjects.json).intoto
+            else
+              FILENAME=multiple.intoto
+            fi
+          fi
+
+          # Validate the filename extension
+          if [[ "${FILENAME}" != *.intoto ]]; then
+            echo "expected provenance-name ${FILENAME} to have .intoto extension"
+            exit 1
+          fi
+
           cat <<EOF >DATA
           {
             "version": 1,
              "attestations": [
               {
-                "name": "attestation.intoto",
+                "name": "${FILENAME}",
                 "subjects": []
               }
             ]
@@ -407,7 +428,7 @@ jobs:
         if: ${{ github.event_name == 'pull_request' }}
         uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
         with:
-          name: "${{ env.OUTPUT_FOLDER }}"
+          name: "${{ env.OUTPUT_FOLDER }}-${{ needs.rng.outputs.value }}"
           path: "attestations-${{ needs.rng.outputs.value }}"
           if-no-files-found: error
 

@@ -31,6 +31,7 @@ type that provides the full details on the build process.
   - [Configuration File](#configuration-file)
   - [Workflow Inputs](#workflow-inputs)
   - [Workflow Example](#workflow-example)
+  - [Workflow Outputs](#workflow-outputs)
   - [Provenance Format](#provenance-format)
   - [Provenance Example](#provenance-example)
 - [Command line tool](#command-line-tool)
@@ -169,6 +170,7 @@ Inputs:
 | `builder-digest`                         | **(Required)** The OCI image digest of the builder-image. The image digest of the form '<algorithm>:<digest>' (e.g. 'sha256:abcdef...')                                                                                                                                                                      |
 | `config-path`              | **(Required)** Path to a configuration file relative to the root of the repository containing the command that the builder image should be invoked with and the path to the output artifacts. See [Configuration File](#configuration-file).                                                                                                                                                                  |
 | `compile-builder`              | Whether to build the builder from source. This increases build time by ~2m.<br>Default: `false`.                                                                                                                                                                                      |
+| `provenance-name`             | The artifact name of the signed provenance. The file must have the `.intoto` extension.<br>Defaults to `<filename>.intoto` for single artifact or `multiple.intoto.jsonl` for multiple artifacts.                                    |
 | `rekor-log-public`             | Set to true to opt-in to posting to the public transparency log. Will generate an error if false for private repositories. This input has no effect for public repositories. See [Private Repositories](#private-repositories).<br>Default: `false`                                     |
 
 ### Workflow Example
@@ -199,6 +201,16 @@ jobs:
       builder-digest: "sha256:9e2ba52487d945504d250de186cb4fe2e3ba023ed2921dd6ac8b97ed43e76af9"
       config-path: ".github/configs-docker/config.toml"
 ```
+
+### Workflow Outputs
+
+The [container-based
+workflow](https://github.com/slsa-framework/slsa-github-generator/blob/main/.github/workflows/builder_docker-based_slsa3.yml) produces the following outputs:
+
+| Name               | Description                                                                            |
+| ------------------ | -------------------------------------------------------------------------------------- |
+| `build-outputs-name`  | The name of the artifact where the generated artifacts are uploaded to the artifact registry.       |
+| `attestations-download-name`          | Name of the artifact to download all the attestations. When run on a `pull_request` trigger, attestations are not signed and have an `.intoto` extension. When run on other triggers, attestations are signed and have an `.intoto.sigstore` extension. |
 
 ### Provenance Format
 
