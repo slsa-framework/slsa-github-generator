@@ -84,7 +84,7 @@ on:
           Name of the artifact to download all the attestations.
 
           When run on a `pull_request` trigger, attestations are not signed and have an ".intoto" extension.
-          When run on other trggers, attestations are signed and have an "intoto.sigstore" extension.
+          When run on other triggers, attestations are signed and have an "intoto.sigstore" extension.
         value: ${{ jobs.provenance.outputs.provenance-name }}
 
 jobs:
