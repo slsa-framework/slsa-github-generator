@@ -79,8 +79,12 @@ on:
       build-outputs-name:
         description: "The name of the artifact where the generated artifacts are uploaded to the artifact registry."
         value: ${{ jobs.build.outputs.build-outputs-name }}
-      provenance-name:
-        description: "The name of the artifact where the generated provenance are uploaded to the artifact registry."
+      attestations-download-name:
+        description: >
+          Name of the artifact to download all the attestations.
+
+          When run on a `pull_request` trigger, attestations are not signed and have an ".intoto" extension.
+          When run on other trggers, attestations are signed and have an "intoto.sigstore" extension.
         value: ${{ jobs.provenance.outputs.provenance-name }}
 
 jobs:

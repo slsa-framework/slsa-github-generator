@@ -210,7 +210,7 @@ workflow](https://github.com/slsa-framework/slsa-github-generator/blob/main/.git
 | Name               | Description                                                                            |
 | ------------------ | -------------------------------------------------------------------------------------- |
 | `build-outputs-name`  | The name of the artifact where the generated artifacts are uploaded to the artifact registry.       |
-| `provenance-name`          | The name of the artifact where the generated provenance are uploaded to the artifact registry. |
+| `attestations-download-name`          | Name of the artifact to download all the attestations. When run on a `pull_request` trigger, attestations are not signed and have an `.intoto` extension. When run on other trggers, attestations are signed and have an `.intoto.sigstore` extension. |
 
 ### Provenance Format
 
