@@ -452,3 +452,27 @@ jobs:
           name: "${{ env.OUTPUT_FOLDER }}-${{ needs.rng.outputs.value }}"
           path: "${{ env.OUTPUT_FOLDER }}-${{ needs.rng.outputs.value }}"
           if-no-files-found: error
+
+  ###################################################################
+  #                                                                 #
+  #                          Cleanup                                #
+  #                                                                 #
+  ###################################################################
+  cleanup:
+    # Deletes internal artifacts
+    runs-on: ubuntu-latest
+    needs: [generate-build-definition, build, provenance]
+    env:
+      BUILD_DEFINITION_NAME: ${{ needs.generate-build-definition.outputs.build-definition-name }}
+      SLSA_OUTPUTS_NAME: ${{ needs.build.outputs.slsa-outputs-name }}
+    steps:
+      - uses: geekyeggo/delete-artifact@54ab544f12cdb7b71613a16a2b5a37a9ade990af # v2.0.0
+        with:
+          name: "${{ env.BUILD_DEFINITION_NAME }}-*"
+          useGlob: true
+      - uses: geekyeggo/delete-artifact@54ab544f12cdb7b71613a16a2b5a37a9ade990af # v2.0.0
+        with:
+          name: "${{ env.SLSA_OUTPUTS_NAME }}-*"
+      - uses: geekyeggo/delete-artifact@54ab544f12cdb7b71613a16a2b5a37a9ade990af # v2.0.0
+        with:
+          name: "${{ env.BUILDER_BINARY }}-*"
