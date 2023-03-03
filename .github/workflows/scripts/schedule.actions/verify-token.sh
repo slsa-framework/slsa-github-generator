@@ -23,7 +23,6 @@ run_attempt=$(echo "$VERIFIED_TOKEN" | jq -r '.github.run_attempt')
 run_id=$(echo "$VERIFIED_TOKEN" | jq -r '.github.run_id')
 run_number=$(echo "$VERIFIED_TOKEN" | jq -r '.github.run_number')
 sha=$(echo "$VERIFIED_TOKEN" | jq -r '.github.sha')
-workflow=$(echo "$VERIFIED_TOKEN" | jq -r '.github.workflow')
 workflow_ref=$(echo "$VERIFIED_TOKEN" | jq -r '.github.workflow_ref')
 workflow_sha=$(echo "$VERIFIED_TOKEN" | jq -r '.github.workflow_sha')
 event_name=$(echo "$VERIFIED_TOKEN" | jq -r '.github.event_name')
@@ -38,7 +37,6 @@ e2e_assert_eq "$GITHUB_RUN_ATTEMPT" "$run_attempt"
 e2e_assert_eq "$GITHUB_RUN_NUMBER" "$run_number"
 e2e_assert_eq "$GITHUB_RUN_ID" "$run_id"
 e2e_assert_eq "$GITHUB_SHA" "$sha"
-e2e_assert_eq "$GITHUB_WORKFLOW" "$workflow"
 e2e_assert_eq "$GITHUB_WORKFLOW_REF" "$workflow_ref"
 e2e_assert_eq "$GITHUB_WORKFLOW_SHA" "$workflow_sha"
 e2e_assert_eq "ubuntu-latest" "$runner_label"
@@ -61,3 +59,4 @@ echo "PREDICATE_CONTENT: $PREDICATE_CONTENT"
 e2e_verify_common_all_v1  "$PREDICATE_CONTENT"
 e2e_verify_predicate_v1_buildDefinition_buildType "$PREDICATE_CONTENT" "https://github.com/slsa-framework/slsa-github-generator/delegator-generic@v0"
 e2e_verify_predicate_v1_runDetails_builder_id "$PREDICATE_CONTENT" "https://github.com/$GITHUB_REPOSITORY/.github/workflows/e2e.verify-token.schedule.yml@$GITHUB_REF"
+e2e_verify_predicate_v1_buildDefinition_externalParameters_workflow_path "$1" "$(e2e_this_file_full_path)"

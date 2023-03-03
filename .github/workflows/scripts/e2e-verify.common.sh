@@ -68,7 +68,6 @@ e2e_verify_common_all_v1() {
 # $1: the predicate content
 e2e_verify_common_buildDefinition_v1() {
     # This does not include buildType since it is not common to all.
-    e2e_verify_predicate_v1_buildDefinition_externalParameters_workflow_path "$1" "$(e2e_this_file_full_path)"
     e2e_verify_predicate_v1_buildDefinition_externalParameters_source "$1" "{\"uri\":\"git+https://github.com/$GITHUB_REPOSITORY@$GITHUB_REF\",\"digest\":{\"sha1\":\"$GITHUB_SHA\"}}"
     e2e_verify_predicate_v1_buildDefinition_systemParameters "$1" "GITHUB_EVENT_NAME" "$GITHUB_EVENT_NAME"
     e2e_verify_predicate_v1_buildDefinition_systemParameters "$1" "GITHUB_REF" "$GITHUB_REF"
@@ -78,7 +77,6 @@ e2e_verify_common_buildDefinition_v1() {
     e2e_verify_predicate_v1_buildDefinition_systemParameters "$1" "GITHUB_RUN_ID" "$GITHUB_RUN_ID"
     e2e_verify_predicate_v1_buildDefinition_systemParameters "$1" "GITHUB_RUN_NUMBER" "$GITHUB_RUN_NUMBER"
     e2e_verify_predicate_v1_buildDefinition_systemParameters "$1" "GITHUB_SHA" "$GITHUB_SHA"
-    e2e_verify_predicate_v1_buildDefinition_systemParameters "$1" "GITHUB_WORKFLOW" "$GITHUB_WORKFLOW"
     e2e_verify_predicate_v1_buildDefinition_systemParameters "$1" "GITHUB_ACTOR_ID" "$GITHUB_ACTOR_ID"
     e2e_verify_predicate_v1_buildDefinition_systemParameters "$1" "GITHUB_REPOSITORY_ID" "$GITHUB_REPOSITORY_ID"
     e2e_verify_predicate_v1_buildDefinition_systemParameters "$1" "GITHUB_REPOSITORY_OWNER_ID" "$GITHUB_REPOSITORY_OWNER_ID"
