@@ -252,7 +252,7 @@ jobs:
     steps:
       - uses: geekyeggo/delete-artifact@54ab544f12cdb7b71613a16a2b5a37a9ade990af # v2.0.0
         with:
-          name: "${{ needs.rng.outputs.value }}-${{ env.SLSA_PREDICATE_FILE }}"
+          name: "*-${{ env.SLSA_PREDICATE_FILE }}"
       - uses: geekyeggo/delete-artifact@54ab544f12cdb7b71613a16a2b5a37a9ade990af # v2.0.0
         with:
-          name: "${{ needs.rng.outputs.value }}-${{ env.SLSA_ARTIFACTS_FILE }}"
+          name: "*-${{ env.SLSA_ARTIFACTS_FILE }}"

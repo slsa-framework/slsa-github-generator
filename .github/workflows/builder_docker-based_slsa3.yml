@@ -462,13 +462,17 @@ jobs:
     # Deletes internal artifacts
     runs-on: ubuntu-latest
     needs: [provenance]
+    env:
+      BUILD_DEFINITION_NAME: ${{ steps.generate.outputs.build-definition-name }}
+      SLSA_OUTPUTS_NAME: ${{ steps.build.outputs.slsa-outputs-name }}
     steps:
       - uses: geekyeggo/delete-artifact@54ab544f12cdb7b71613a16a2b5a37a9ade990af # v2.0.0
         with:
-          name: "${{ steps.generate.outputs.build-definition-name }}-${{ needs.rng.outputs.value }}"
+          name: "${{ env.BUILD_DEFINITION_NAME }}-*"
+          useGlob: true
       - uses: geekyeggo/delete-artifact@54ab544f12cdb7b71613a16a2b5a37a9ade990af # v2.0.0
         with:
-          name: "${{ steps.build.outputs.slsa-outputs-name }}-${{ needs.rng.outputs.value }}"
+          name: "${{ env.SLSA_OUTPUTS_NAME }}-*"
       - uses: geekyeggo/delete-artifact@54ab544f12cdb7b71613a16a2b5a37a9ade990af # v2.0.0
         with:
-          name: "${{ env.BUILDER_BINARY }}-${{ needs.rng.outputs.value }}"
+          name: "${{ env.BUILDER_BINARY }}-*"
