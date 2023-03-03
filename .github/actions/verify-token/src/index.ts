@@ -20,6 +20,7 @@ import {
   validateFieldAnyOf,
   validateFieldNonEmpty,
   validateGitHubFields,
+  validateAndMaskInputs,
 } from "./validate";
 import { createPredicate } from "./predicate";
 import { rawTokenInterface } from "./types";
@@ -30,7 +31,7 @@ async function run(): Promise<void> {
     /* Test locally. Requires a GitHub token:
         $ env INPUT_SLSA-WORKFLOW-RECIPIENT="delegator_generic_slsa3.yml" \
         INPUT_SLSA-UNVERIFIED-TOKEN="$(cat testdata/slsa-token)" \
-        INPUT_TOKEN="$(gh auth token)" \
+        INPUT_TOKEN="$(echo $GH_TOKEN)" \
         INPUT_OUTPUT-PREDICATE="predicate.json" \
         GITHUB_EVENT_NAME="workflow_dispatch" \
         GITHUB_RUN_ATTEMPT="1" \
@@ -48,7 +49,7 @@ async function run(): Promise<void> {
         GITHUB_REF_TYPE="branch" \
         GITHUB_ACTOR="laurentsimon" \
         GITHUB_WORKSPACE="$(pwd)" \
-        nodejs ./dist/index.js
+        nodejs ./dist/dist/index.js
     */
 
     const workflowRecipient = core.getInput("slsa-workflow-recipient");
@@ -118,8 +119,17 @@ async function run(): Promise<void> {
       rawTokenObj.tool.actions.build_artifacts.path
     );
 
+    // Validate the masked inputs and update the token.
+    const rawMaskedTokenObj = validateAndMaskInputs(rawTokenObj);
+    core.debug(
+      `masked inputs: ${JSON.stringify(
+        Object.fromEntries(rawMaskedTokenObj.tool.inputs)
+      )}`
+    );
+
     // No validation needed for the builder inputs.
     // They may be empty.
+    // TODO(#1737): keep only TRW inputs.
 
     // Extract certificate information.
     const [toolURI, toolRepository, toolRef] = parseCertificateIdentity(bundle);
@@ -127,12 +137,17 @@ async function run(): Promise<void> {
     core.debug(`slsa-verified-token: ${rawTokenStr}`);
 
     // Now generate the SLSA predicate using the verified token and the GH context.
-    const token = core.getInput("token");
-    if (!token) {
-      throw new Error("token not provided");
+    const ghToken = core.getInput("token");
+    if (!ghToken) {
+      throw new Error("ghToken not provided");
     }
 
-    const predicate = await createPredicate(rawTokenObj, toolURI, token);
+    // NOTE: we create the predicate using the token with masked inputs.
+    const predicate = await createPredicate(
+      rawMaskedTokenObj,
+      toolURI,
+      ghToken
+    );
     fs.writeFileSync(safeOutput, JSON.stringify(predicate), {
       flag: "ax",
       mode: 0o600,
@@ -142,6 +157,8 @@ async function run(): Promise<void> {
 
     core.setOutput("tool-repository", toolRepository);
     core.setOutput("tool-ref", toolRef);
+    // NOTE: we output the token with unmasked inputs because the inputs
+    // are needed by the wrapper Action.
     core.setOutput("slsa-verified-token", rawTokenStr);
   } catch (error) {
     if (error instanceof Error) {

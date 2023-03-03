@@ -67,13 +67,15 @@ function run() {
                 INPUT_SLSA-REKOR-LOG-PUBLIC=true \
                 INPUT_SLSA-RUNNER-LABEL="ubuntu-latest" \
                 INPUT_SLSA-BUILD-ACTION-PATH="./actions/build-artifacts-composite" \
-                INPUT_SLSA-WORKFLOW-INPUTS="{\"name1\":\"value1\",\"name2\":\"value2\"}" \
+                INPUT_SLSA-WORKFLOW-INPUTS="{\"name1\":\"value1\",\"name2\":\"value2\",\"name3\":\"value3\",\"name4\":\"value4\"}" \
+                INPUT_SLSA-WORKFLOW-INPUTS-MASK="name2, name4" \
                 nodejs ./dist/index.js
             */
             const workflowRecipient = core.getInput("slsa-workflow-recipient");
             const rekorLogPublic = core.getInput("slsa-rekor-log-public");
             const runnerLabel = core.getInput("slsa-runner-label");
             const buildArtifactsActionPath = core.getInput("slsa-build-action-path");
+            const workflowsInputsMask = core.getInput("slsa-workflow-inputs-mask");
             // The workflow inputs are represented as a JSON object theselves.
             const workflowsInputsText = core.getInput("slsa-workflow-inputs");
             // Log the inputs for troubleshooting.
@@ -83,6 +85,11 @@ function run() {
             const workflowInputsMap = new Map(Object.entries(workflowInputs));
             for (const [key, value] of workflowInputsMap) {
                 core.info(` ${key}: ${value}`);
+            }
+            const workflowMaskedInputs = getMaskedInputs(workflowsInputsMask);
+            core.info(`maskedInputs: `);
+            for (const value of workflowMaskedInputs) {
+                core.info(` ${value}`);
             }
             const payload = JSON.stringify(github.context.payload, undefined, 2);
             core.debug(`The event payload: ${payload}`);
@@ -128,6 +135,7 @@ function run() {
                         },
                     },
                     inputs: workflowInputs,
+                    masked_inputs: workflowMaskedInputs,
                 },
             };
             // Prepare the base64 unsigned token.
@@ -158,6 +166,14 @@ function run() {
             }
         }
     });
+}
+function getMaskedInputs(inputsStr) {
+    let ret = [];
+    const inputArr = inputsStr.split(",");
+    for (const input of inputArr) {
+        ret.push(input.trim());
+    }
+    return ret;
 }
 run();
 
@@ -14375,6 +14391,7 @@ const statusCodeCacheableByDefault = new Set([
     206,
     300,
     301,
+    308,
     404,
     405,
     410,
@@ -14447,10 +14464,10 @@ function parseCacheControl(header) {
 
     // TODO: When there is more than one value present for a given directive (e.g., two Expires header fields, multiple Cache-Control: max-age directives),
     // the directive's value is considered invalid. Caches are encouraged to consider responses that have invalid freshness information to be stale
-    const parts = header.trim().split(/\s*,\s*/); // TODO: lame parsing
+    const parts = header.trim().split(/,/);
     for (const part of parts) {
-        const [k, v] = part.split(/\s*=\s*/, 2);
-        cc[k] = v === undefined ? true : v.replace(/^"|"$/g, ''); // TODO: lame unquoting
+        const [k, v] = part.split(/=/, 2);
+        cc[k.trim()] = v === undefined ? true : v.trim().replace(/^"|"$/g, '');
     }
 
     return cc;

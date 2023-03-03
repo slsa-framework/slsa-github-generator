@@ -28,7 +28,8 @@ async function run(): Promise<void> {
         INPUT_SLSA-REKOR-LOG-PUBLIC=true \
         INPUT_SLSA-RUNNER-LABEL="ubuntu-latest" \
         INPUT_SLSA-BUILD-ACTION-PATH="./actions/build-artifacts-composite" \
-        INPUT_SLSA-WORKFLOW-INPUTS="{\"name1\":\"value1\",\"name2\":\"value2\"}" \
+        INPUT_SLSA-WORKFLOW-INPUTS="{\"name1\":\"value1\",\"name2\":\"value2\",\"name3\":\"value3\",\"name4\":\"value4\"}" \
+        INPUT_SLSA-WORKFLOW-INPUTS-MASK="name2, name4" \
         nodejs ./dist/index.js
     */
 
@@ -36,6 +37,7 @@ async function run(): Promise<void> {
     const rekorLogPublic = core.getInput("slsa-rekor-log-public");
     const runnerLabel = core.getInput("slsa-runner-label");
     const buildArtifactsActionPath = core.getInput("slsa-build-action-path");
+    const workflowsInputsMask = core.getInput("slsa-workflow-inputs-mask");
     // The workflow inputs are represented as a JSON object theselves.
     const workflowsInputsText = core.getInput("slsa-workflow-inputs");
 
@@ -46,6 +48,12 @@ async function run(): Promise<void> {
     const workflowInputsMap = new Map(Object.entries(workflowInputs));
     for (const [key, value] of workflowInputsMap) {
       core.info(` ${key}: ${value}`);
+    }
+
+    const workflowMaskedInputs = getMaskedInputs(workflowsInputsMask)
+    core.info(`maskedInputs: `);
+    for (const value of workflowMaskedInputs) {
+      core.info(` ${value}`);
     }
 
     const payload = JSON.stringify(github.context.payload, undefined, 2);
@@ -93,6 +101,7 @@ async function run(): Promise<void> {
           },
         },
         inputs: workflowInputs,
+        masked_inputs: workflowMaskedInputs,
       },
     };
 
@@ -128,6 +137,17 @@ async function run(): Promise<void> {
       core.setFailed(`Unexpected error: ${error}`);
     }
   }
+}
+
+function getMaskedInputs(
+  inputsStr: string,
+): Array<string> {
+  let ret: Array<string> = [];
+  const inputArr = inputsStr.split(",");
+  for (const input of inputArr) {
+    ret.push(input.trim())
+  }
+  return ret
 }
 
 run();

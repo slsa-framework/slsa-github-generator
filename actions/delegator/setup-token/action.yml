@@ -41,6 +41,16 @@ inputs:
       Note: The TRW is the reusable workflow calling this Action.
     type: string
     required: true
+  
+  slsa-workflow-inputs-mask:
+    description: >
+      A comma-seperated list of input names to mask in the provenance.
+      This field shoudl be used for fields that have low-entropy value
+      but that shoudl be kept private. Fields to apply masking to may be
+      usernames, emails or other PIIs.
+
+    type: string
+    required: true
 
 outputs:
   slsa-token:
