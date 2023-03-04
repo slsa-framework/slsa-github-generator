@@ -41,7 +41,7 @@ inputs:
       Note: The TRW is the reusable workflow calling this Action.
     type: string
     required: true
-  
+
   slsa-workflow-inputs-mask:
     description: >
       A comma-seperated list of input names to mask in the provenance.

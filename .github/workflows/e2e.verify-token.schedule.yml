@@ -27,7 +27,9 @@ jobs:
           slsa-rekor-log-public: true
           slsa-runner-label: "ubuntu-latest"
           slsa-build-action-path: "./actions/build-artifacts-composite"
-          slsa-workflow-inputs: '{"name1":"value1","name2":"value2","name3":"value3","name4":"value4","name5":"value5","name6":"value6","private-repository":true}'
+          slsa-workflow-inputs: '{"name1":"value1","name2":"value2","name3":"value3","name4":"","name5":"value5","name6":"value6","private-repository":true}'
+          # name4 has empty value and won't be obfuscated even though it's in the list.
+          # The Action should trim the spaces automatically.
           slsa-workflow-inputs-mask: name2, name4,name6
       - env:
           SLSA_TOKEN: ${{ steps.setup.outputs.slsa-token }}
@@ -72,7 +74,7 @@ jobs:
           slsa-rekor-log-public: true
           slsa-runner-label: "ubuntu-latest"
           slsa-build-action-path: "./actions/build-artifacts-composite"
-          slsa-workflow-inputs: '{"name1":"value1","name2":"value2","name3":"value3","name4":"value4","name5":"value5","name6":"value6","private-repository":true}'
+          slsa-workflow-inputs: '{"name1":"value1","name2":"value2","name3":"value3","name4":"","name5":"value5","name6":"value6","private-repository":true}'
           slsa-workflow-inputs-mask: name2, name4,name7 # name7 does not exist so it should trigger an error.
       - env:
           SUCCESS: ${{ steps.verify-mismatch-recipient.outcome == 'failure' && steps.verify-mismatch-token.outcome == 'failure' && steps.setup-invalid-mask.outcome == 'failure' }}
