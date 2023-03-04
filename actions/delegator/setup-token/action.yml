@@ -44,10 +44,12 @@ inputs:
 
   slsa-workflow-inputs-mask:
     description: >
-      A comma-seperated list of input names to mask in the provenance.
+      A comma-separated list of input fields to mask in the provenance.
       It should be used for fields that have low-entropy values
       but that required to be kept private. use this option to mask
       usernames, emails or other PIIs.
+
+      Example: field1, field2, field3
 
     type: string
     required: true
