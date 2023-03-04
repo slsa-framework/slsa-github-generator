@@ -125,7 +125,6 @@ async function run(): Promise<void> {
     const bundleB64 = Buffer.from(bundleStr).toString("base64");
     core.info(`bundleStr: ${bundleStr}`);
     core.info(`bundleB64: ${bundleB64}`);
-
     // Output the signed token.
     core.info(`slsa-token: ${bundleB64}.${unsignedB64Token}`);
     core.setOutput("slsa-token", `${bundleB64}.${unsignedB64Token}`);
