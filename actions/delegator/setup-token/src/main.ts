@@ -50,7 +50,7 @@ async function run(): Promise<void> {
       core.info(` ${key}: ${value}`);
     }
 
-    const workflowMaskedInputs = getMaskedInputs(workflowsInputsMask)
+    const workflowMaskedInputs = getMaskedInputs(workflowsInputsMask);
     core.info(`maskedInputs: `);
     for (const value of workflowMaskedInputs) {
       core.info(` ${value}`);
@@ -116,16 +116,15 @@ async function run(): Promise<void> {
       Buffer.from(unsignedB64Token),
       signOptions
     );
+
+    // Verify just to double check.
+    // NOTE: this is an offline verification.
+    await sigstore.verify(bundle, Buffer.from(unsignedB64Token));
     const bundleStr = JSON.stringify(bundle);
 
     const bundleB64 = Buffer.from(bundleStr).toString("base64");
     core.info(`bundleStr: ${bundleStr}`);
     core.info(`bundleB64: ${bundleB64}`);
-
-    // Verify just to double check.
-    // NOTE: this is an offline verification.
-    // TODO(https://github.com/sigstore/sigstore-js/issues/215): Re-enable when fixed.
-    // await sigstore.sigstore.verify(bundle, Buffer.from(unsignedB64Token));
 
     // Output the signed token.
     core.info(`slsa-token: ${bundleB64}.${unsignedB64Token}`);
@@ -139,15 +138,13 @@ async function run(): Promise<void> {
   }
 }
 
-function getMaskedInputs(
-  inputsStr: string,
-): Array<string> {
-  let ret: Array<string> = [];
+function getMaskedInputs(inputsStr: string): string[] {
+  const ret = [];
   const inputArr = inputsStr.split(",");
   for (const input of inputArr) {
-    ret.push(input.trim())
+    ret.push(input.trim());
   }
-  return ret
+  return ret;
 }
 
 run();

@@ -149,10 +149,6 @@ function run() {
             const bundleB64 = Buffer.from(bundleStr).toString("base64");
             core.info(`bundleStr: ${bundleStr}`);
             core.info(`bundleB64: ${bundleB64}`);
-            // Verify just to double check.
-            // NOTE: this is an offline verification.
-            // TODO(https://github.com/sigstore/sigstore-js/issues/215): Re-enable when fixed.
-            // await sigstore.sigstore.verify(bundle, Buffer.from(unsignedB64Token));
             // Output the signed token.
             core.info(`slsa-token: ${bundleB64}.${unsignedB64Token}`);
             core.setOutput("slsa-token", `${bundleB64}.${unsignedB64Token}`);
@@ -168,7 +164,7 @@ function run() {
     });
 }
 function getMaskedInputs(inputsStr) {
-    let ret = [];
+    const ret = [];
     const inputArr = inputsStr.split(",");
     for (const input of inputArr) {
         ret.push(input.trim());
