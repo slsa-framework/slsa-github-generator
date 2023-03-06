@@ -40,8 +40,9 @@ jobs:
           fi
           # When calling this action from a caller workflow, this will be
           # the caller workflow.
-          if [[ "${WORKFLOW}" != "${GITHUB_WORKFLOW}" ]]; then
-            echo "expected ${GITHUB_WORKFLOW}, got ${WORKFLOW}"
+          workflow=$(echo "${GITHUB_WORKFLOW_REF}" | cut -d '@' -f1 | cut -d '/' -f3-)
+          if [[ "${WORKFLOW}" != "${workflow}" ]]; then
+            echo "expected ${workflow}, got ${WORKFLOW}"
             exit 1
           fi
 
