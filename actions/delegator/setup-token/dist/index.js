@@ -145,6 +145,10 @@ function run() {
             core.info(`unsignedB64Token: ${unsignedB64Token}`);
             // Sign and prepare the base64 bundle.
             const bundle = yield sigstore_1.sigstore.sign(Buffer.from(unsignedB64Token), signOptions);
+            // Verify just to double check.
+            // NOTE: this is an offline verification.
+            // TODO(#1668): re-enable verification.
+            // await sigstore.verify(bundle, Buffer.from(unsignedB64Token));
             const bundleStr = JSON.stringify(bundle);
             const bundleB64 = Buffer.from(bundleStr).toString("base64");
             core.info(`bundleStr: ${bundleStr}`);
