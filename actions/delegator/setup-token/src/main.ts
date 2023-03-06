@@ -76,7 +76,6 @@ async function run(): Promise<void> {
         sha: process.env.GITHUB_SHA,
         workflow_ref: process.env.GITHUB_WORKFLOW_REF,
         workflow_sha: process.env.GITHUB_WORKFLOW_SHA,
-        workflow: process.env.GITHUB_WORKFLOW,
       },
       image: {
         os: process.env.ImageOS,

@@ -545,10 +545,17 @@ func inspectAndWriteArtifacts(pattern, outputFolder, root string) ([]intoto.Subj
 		subjects = append(subjects, *subject)
 
 		if outputFolder != "" {
-			// Write output file to output folder
+			// Write output file to output folder using the path relative to the root
+			// of the source repository.
+			if root != "" {
+				path, err = filepath.Abs(path)
+				if err != nil {
+					return nil, err
+				}
+			}
 			relPath, err := filepath.Rel(root, path)
 			if err != nil {
-				return nil, err
+				return nil, fmt.Errorf("Root %s Path %s: %w", root, path, err)
 			}
 			w, err := utils.CreateNewFileUnderDirectory(relPath, outputFolder, os.O_WRONLY)
 			if err != nil {
