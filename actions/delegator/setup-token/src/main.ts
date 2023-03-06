@@ -103,17 +103,11 @@ async function run(): Promise<void> {
     core.info(`unsignedB64Token: ${unsignedB64Token}`);
 
     // Sign and prepare the base64 bundle.
-    const eventName = process.env.GITHUB_EVENT_NAME || "";
-    let bundleStr = "";
-    if (eventName === "pull_request") {
-      bundleStr = "PLACEHOLDER_SIGNATURE";
-    } else {
-      const bundle = await sigstore.sign(
-        Buffer.from(unsignedB64Token),
-        signOptions
-      );
-      bundleStr = JSON.stringify(bundle);
-    }
+    const bundle = await sigstore.sign(
+      Buffer.from(unsignedB64Token),
+      signOptions
+    );
+    const bundleStr = JSON.stringify(bundle);
 
     const bundleB64 = Buffer.from(bundleStr).toString("base64");
     core.info(`bundleStr: ${bundleStr}`);
