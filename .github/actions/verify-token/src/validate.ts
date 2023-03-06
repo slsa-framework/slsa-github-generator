@@ -103,12 +103,20 @@ export function validateAndMaskInputs(
 ): rawTokenInterface {
   const ret = Object.create(token);
   const maskedMapInputs = new Map(Object.entries(token.tool.inputs));
+
   for (const key of token.tool.masked_inputs) {
     if (!maskedMapInputs.has(key)) {
       throw new Error(`input ${key} does not exist in the input map`);
     }
-    // Ignore empty string.
+    // Ignore empty keys.
     if (key === undefined || key.trim().length === 0) {
+      continue;
+    }
+    const value = maskedMapInputs.get(key);
+    // boolean and numbers have default values
+    // so we only check for empty string values.
+    const s = value as string;
+    if (s === undefined || s.length === 0) {
       continue;
     }
     // NOTE: This mask is the same used by GitHub for encrypted secrets and masked values.

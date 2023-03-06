@@ -64,7 +64,7 @@ function run() {
             /* Test locally. Requires a GitHub token:
                 $ env INPUT_SLSA-WORKFLOW-RECIPIENT="delegator_generic_slsa3.yml" \
                 INPUT_SLSA-UNVERIFIED-TOKEN="$(cat testdata/slsa-token)" \
-                INPUT_TOKEN="$(echo $GH_TOKEN)" \
+                INPUT_TOKEN="$(echo $GITHUB_TOKEN)" \
                 INPUT_OUTPUT-PREDICATE="predicate.json" \
                 GITHUB_EVENT_NAME="workflow_dispatch" \
                 GITHUB_RUN_ATTEMPT="1" \
@@ -322,7 +322,7 @@ function createPredicate(rawTokenObj, toolURI, token) {
                 buildType: DELEGATOR_BUILD_TYPE,
                 externalParameters: {
                     // Inputs to the TRW, which define the interface of the builder for the
-                    // BYOB framework. Some of these values may be masked by the caller.
+                    // BYOB framework. Some of these values may be masked by the TRW.
                     inputs: rawTokenObj.tool.inputs,
                     // Variables are always empty for BYOB / builders.
                     // TODO(#1555): add support for generators.
@@ -515,8 +515,15 @@ function validateAndMaskInputs(token) {
         if (!maskedMapInputs.has(key)) {
             throw new Error(`input ${key} does not exist in the input map`);
         }
-        // Ignore empty string.
+        // Ignore empty keys.
         if (key === undefined || key.trim().length === 0) {
+            continue;
+        }
+        const value = maskedMapInputs.get(key);
+        // boolean and numbers have default values
+        // so we only check for empty string values.
+        const s = value;
+        if (s === undefined || s.length === 0) {
             continue;
         }
         // NOTE: This mask is the same used by GitHub for encrypted secrets and masked values.

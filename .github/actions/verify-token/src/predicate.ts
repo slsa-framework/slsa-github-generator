@@ -69,7 +69,7 @@ export async function createPredicate(
       buildType: DELEGATOR_BUILD_TYPE,
       externalParameters: {
         // Inputs to the TRW, which define the interface of the builder for the
-        // BYOB framework. Some of these values may be masked by the caller.
+        // BYOB framework. Some of these values may be masked by the TRW.
         inputs: rawTokenObj.tool.inputs,
         // Variables are always empty for BYOB / builders.
         // TODO(#1555): add support for generators.
