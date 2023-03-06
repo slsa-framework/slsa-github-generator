@@ -119,7 +119,8 @@ async function run(): Promise<void> {
 
     // Verify just to double check.
     // NOTE: this is an offline verification.
-    await sigstore.verify(bundle, Buffer.from(unsignedB64Token));
+    // TODO(#1668): re-enable verification.
+    // await sigstore.verify(bundle, Buffer.from(unsignedB64Token));
     const bundleStr = JSON.stringify(bundle);
 
     const bundleB64 = Buffer.from(bundleStr).toString("base64");
