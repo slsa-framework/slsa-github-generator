@@ -73,14 +73,6 @@ export function addGitHubParameters(
   if (!env.GITHUB_WORKFLOW_REF) {
     throw new Error("missing GITHUB_WORKFLOW_REF");
   }
-  const [workflowPath, workflowRef] = env.GITHUB_WORKFLOW_REF.split("@", 2);
-  const [, , ...path] = workflowPath.split("/");
-
-  predicate.buildDefinition.externalParameters.workflow = {
-    ref: workflowRef,
-    repository: env.GITHUB_REPOSITORY || "",
-    path: path.join("/"),
-  };
 
   return predicate;
 }
