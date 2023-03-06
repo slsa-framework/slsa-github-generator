@@ -15,4 +15,4 @@ e2e_verify_predicate_v1_buildDefinition_buildType "$PREDICATE_CONTENT" "https://
 e2e_verify_predicate_v1_runDetails_builder_id "$PREDICATE_CONTENT" "https://github.com/$GITHUB_REPOSITORY/.github/workflows/e2e.create-docker_based-predicate.schedule.yml@$GITHUB_REF"
 
 # Verify resolved dependencies.
-e2e_verify_predicate_v1_buildDefinition_resolvedDependencies "$PREDICATE_CONTENT" "[{\"uri\": \"git+https://github.com/$GITHUB_REPOSITORY@$GITHUB_REF\",\"digest\": {\"sha256\": \"46b3ce0fbb2998880c5518225b41ddf49fc0850b9b9a25e1ac944bc587c03ea7\"}}]"
+e2e_verify_predicate_v1_buildDefinition_resolvedDependencies "$PREDICATE_CONTENT" "[{\"uri\":\"git+https://github.com/$GITHUB_REPOSITORY@$GITHUB_REF\",\"digest\":{\"sha256\":\"46b3ce0fbb2998880c5518225b41ddf49fc0850b9b9a25e1ac944bc587c03ea7\"}}]"
