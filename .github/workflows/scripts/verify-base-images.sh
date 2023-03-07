@@ -35,7 +35,7 @@ find . \( ! -name vendor -o -prune \) \( ! -name node_modules -o -prune \) -type
         # verify distroless base images.
         if [[ "${image_name}" == gcr.io/distroless/* ]]; then
             # verify the image signature.
-            cosign verify --key .github/workflows/scripts/distroless.pub "$image_full"
+            cosign verify "$image_full" --certificate-oidc-issuer https://accounts.google.com --certificate-identity keyless@distroless.iam.gserviceaccount.com
         else
             # All other base images should be signed using Docker Content Trust.
             if ! (DOCKER_CONTENT_TRUST=1 docker trust inspect "${image_name}:${image_tag}" | jq -r ".[].SignedTags | .[] | select(.SignedTag == \"${image_tag}\") | .Digest" | grep "${image_sha}"); then
