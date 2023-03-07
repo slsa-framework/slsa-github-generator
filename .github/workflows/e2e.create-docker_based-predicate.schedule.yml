@@ -39,7 +39,7 @@ jobs:
         id: predicate
         uses: ./.github/actions/create-docker_based-predicate
         with:
-          build-definition: "internal/builders/docker/testdata/build-definition.json"
+          build-definition: "build-definition.json"
           binary-sha256: "46b3ce0fbb2998880c5518225b41ddf49fc0850b9b9a25e1ac944bc587c03ea7"
           binary-uri: "git+https://github.com/${{ steps.detect.outputs.repository }}@${{ steps.detect.outputs.ref }}"
           builder-id: "https://github.com/${{ steps.detect.outputs.repository }}/${{ steps.detect.outputs.workflow }}@${{ steps.detect.outputs.ref }}"
