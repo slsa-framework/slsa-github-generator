@@ -64,7 +64,7 @@ function run() {
             /* Test locally. Requires a GitHub token:
                 $ env INPUT_SLSA-WORKFLOW-RECIPIENT="delegator_generic_slsa3.yml" \
                 INPUT_SLSA-UNVERIFIED-TOKEN="$(cat testdata/slsa-token)" \
-                INPUT_TOKEN="$(echo $GITHUB_TOKEN)" \
+                INPUT_TOKEN="$(gh auth token)" \
                 INPUT_OUTPUT-PREDICATE="predicate.json" \
                 GITHUB_EVENT_NAME="workflow_dispatch" \
                 GITHUB_RUN_ATTEMPT="1" \
