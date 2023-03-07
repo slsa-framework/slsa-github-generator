@@ -147,6 +147,8 @@ jobs:
 
       - id: cosign-install
         uses: sigstore/cosign-installer@c3667d99424e7e6047999fb6246c0da843953c65 # v3.0.1
+        with:
+          cosign-release: v2.0.0
         continue-on-error: true
 
       - name: Login
