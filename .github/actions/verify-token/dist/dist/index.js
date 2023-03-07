@@ -82,7 +82,7 @@ function run() {
                 GITHUB_REF_TYPE="branch" \
                 GITHUB_ACTOR="laurentsimon" \
                 GITHUB_WORKSPACE="$(pwd)" \
-                nodejs ./dist/index.js
+                nodejs ./dist/dist/index.js
             */
             const workflowRecipient = core.getInput("slsa-workflow-recipient");
             const unverifiedToken = core.getInput("slsa-unverified-token");
@@ -127,17 +127,22 @@ function run() {
             (0, validate_1.validateGitHubFields)(rawTokenObj.github);
             // Validate the build Action is not empty.
             (0, validate_1.validateFieldNonEmpty)("tool.actions.build_artifacts.path", rawTokenObj.tool.actions.build_artifacts.path);
+            // Validate the masked inputs and update the token.
+            const rawMaskedTokenObj = (0, validate_1.validateAndMaskInputs)(rawTokenObj);
+            core.debug(`masked inputs: ${JSON.stringify(Object.fromEntries(rawMaskedTokenObj.tool.inputs))}`);
             // No validation needed for the builder inputs.
             // They may be empty.
+            // TODO(#1737): keep only TRW inputs.
             // Extract certificate information.
             const [toolURI, toolRepository, toolRef] = parseCertificateIdentity(bundle);
             core.debug(`slsa-verified-token: ${rawTokenStr}`);
             // Now generate the SLSA predicate using the verified token and the GH context.
-            const token = core.getInput("token");
-            if (!token) {
+            const ghToken = core.getInput("token");
+            if (!ghToken) {
                 throw new Error("token not provided");
             }
-            const predicate = yield (0, predicate_1.createPredicate)(rawTokenObj, toolURI, token);
+            // NOTE: we create the predicate using the token with masked inputs.
+            const predicate = yield (0, predicate_1.createPredicate)(rawMaskedTokenObj, toolURI, ghToken);
             fs.writeFileSync(safeOutput, JSON.stringify(predicate), {
                 flag: "ax",
                 mode: 0o600,
@@ -146,6 +151,8 @@ function run() {
             core.debug(`Wrote predicate to ${safeOutput}`);
             core.setOutput("tool-repository", toolRepository);
             core.setOutput("tool-ref", toolRef);
+            // NOTE: we output the token with unmasked inputs because the inputs
+            // are needed by the wrapper Action.
             core.setOutput("slsa-verified-token", rawTokenStr);
         }
         catch (error) {
@@ -315,8 +322,7 @@ function createPredicate(rawTokenObj, toolURI, token) {
                 buildType: DELEGATOR_BUILD_TYPE,
                 externalParameters: {
                     // Inputs to the TRW, which define the interface of the builder for the
-                    // BYOB framework.
-                    // TODO(#1575): mask inputs.
+                    // BYOB framework. Some of these values may be masked by the TRW.
                     inputs: rawTokenObj.tool.inputs,
                     // Variables are always empty for BYOB / builders.
                     // TODO(#1555): add support for generators.
@@ -469,7 +475,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.validateFieldNonEmpty = exports.validateFieldStartsWith = exports.validateField = exports.validateFieldAnyOf = exports.validateGitHubFields = void 0;
+exports.validateFieldNonEmpty = exports.validateFieldStartsWith = exports.validateField = exports.validateFieldAnyOf = exports.validateAndMaskInputs = exports.validateGitHubFields = void 0;
 function validateGitHubFields(gho) {
     // actor_id
     validateField("github.actor_id", gho.actor_id, process.env.GITHUB_ACTOR_ID);
@@ -502,6 +508,24 @@ function validateGitHubFields(gho) {
     validateField("github.workflow_sha", gho.workflow_sha, process.env.GITHUB_WORKFLOW_SHA);
 }
 exports.validateGitHubFields = validateGitHubFields;
+function validateAndMaskInputs(token) {
+    const ret = Object.create(token);
+    const maskedMapInputs = new Map(Object.entries(token.tool.inputs));
+    for (const key of token.tool.masked_inputs) {
+        if (!maskedMapInputs.has(key)) {
+            throw new Error(`input ${key} does not exist in the input map`);
+        }
+        // verify non-empty keys.
+        if (key === undefined || key.trim().length === 0) {
+            throw new Error("empty key in the input map");
+        }
+        // NOTE: This mask is the same used by GitHub for encrypted secrets and masked values.
+        maskedMapInputs.set(key, "***");
+    }
+    ret.tool.inputs = maskedMapInputs;
+    return ret;
+}
+exports.validateAndMaskInputs = validateAndMaskInputs;
 function validateFieldAnyOf(name, actual, expected) {
     for (const value of expected) {
         if (actual === value) {

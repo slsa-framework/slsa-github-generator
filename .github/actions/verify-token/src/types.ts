@@ -117,5 +117,7 @@ export interface rawTokenInterface {
     // boolean, number, or string.
     // https://docs.github.com/en/actions/using-workflows/reusing-workflows#passing-inputs-and-secrets-to-a-reusable-workflow.
     inputs: Map<string, string | number | boolean>;
+    // masked_inputs is a list of input names who's value should be masked in the provenance.
+    masked_inputs: string[];
   };
 }
