@@ -139,7 +139,7 @@ function run() {
             // Now generate the SLSA predicate using the verified token and the GH context.
             const ghToken = core.getInput("token");
             if (!ghToken) {
-                throw new Error("ghToken not provided");
+                throw new Error("token not provided");
             }
             // NOTE: we create the predicate using the token with masked inputs.
             const predicate = yield (0, predicate_1.createPredicate)(rawMaskedTokenObj, toolURI, ghToken);
@@ -515,16 +515,9 @@ function validateAndMaskInputs(token) {
         if (!maskedMapInputs.has(key)) {
             throw new Error(`input ${key} does not exist in the input map`);
         }
-        // Ignore empty keys.
+        // verify non-empty keys.
         if (key === undefined || key.trim().length === 0) {
-            continue;
-        }
-        const value = maskedMapInputs.get(key);
-        // boolean and numbers have default values
-        // so we only check for empty string values.
-        const s = value;
-        if (s === undefined || s.length === 0) {
-            continue;
+            throw new Error("empty key in the input map");
         }
         // NOTE: This mask is the same used by GitHub for encrypted secrets and masked values.
         maskedMapInputs.set(key, "***");

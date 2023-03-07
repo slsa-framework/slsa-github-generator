@@ -168,7 +168,7 @@ describe("validateAndMaskInputs", () => {
       new Map<string, string | number | boolean>([
         ["name1", "value1"],
         ["name2", "***"],
-        ["name3", ""],
+        ["name3", "***"],
         ["name4", "***"],
       ])
     );
