@@ -108,16 +108,9 @@ export function validateAndMaskInputs(
     if (!maskedMapInputs.has(key)) {
       throw new Error(`input ${key} does not exist in the input map`);
     }
-    // Ignore empty keys.
+    // verify non-empty keys.
     if (key === undefined || key.trim().length === 0) {
-      continue;
-    }
-    const value = maskedMapInputs.get(key);
-    // boolean and numbers have default values
-    // so we only check for empty string values.
-    const s = value as string;
-    if (s === undefined || s.length === 0) {
-      continue;
+      throw new Error("empty key in the input map");
     }
     // NOTE: This mask is the same used by GitHub for encrypted secrets and masked values.
     maskedMapInputs.set(key, "***");

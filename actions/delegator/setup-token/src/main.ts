@@ -37,7 +37,7 @@ async function run(): Promise<void> {
     const rekorLogPublic = core.getInput("slsa-rekor-log-public");
     const runnerLabel = core.getInput("slsa-runner-label");
     const buildArtifactsActionPath = core.getInput("slsa-build-action-path");
-    const workflowsInputsMask = core.getInput("slsa-workflow-inputs-mask");
+    const workflowsInputsMask = core.getInput("slsa-workflow-masked-inputs");
     // The workflow inputs are represented as a JSON object theselves.
     const workflowsInputsText = core.getInput("slsa-workflow-inputs");
 

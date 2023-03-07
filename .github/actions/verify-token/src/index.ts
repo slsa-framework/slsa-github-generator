@@ -139,7 +139,7 @@ async function run(): Promise<void> {
     // Now generate the SLSA predicate using the verified token and the GH context.
     const ghToken = core.getInput("token");
     if (!ghToken) {
-      throw new Error("ghToken not provided");
+      throw new Error("token not provided");
     }
 
     // NOTE: we create the predicate using the token with masked inputs.

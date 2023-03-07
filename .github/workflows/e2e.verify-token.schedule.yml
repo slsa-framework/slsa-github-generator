@@ -30,7 +30,7 @@ jobs:
           slsa-workflow-inputs: '{"name1":"value1","name2":"value2","name3":"value3","name4":"","name5":"value5","name6":"value6","private-repository":true}'
           # name4 has empty value and won't be obfuscated even though it's in the list.
           # The Action should trim the spaces automatically.
-          slsa-workflow-inputs-mask: name2, name4,name6
+          slsa-workflow-masked-inputs: name2, name4,name6
       - env:
           SLSA_TOKEN: ${{ steps.setup.outputs.slsa-token }}
         run: ./.github/workflows/scripts/schedule.actions/setup-token.sh }}
@@ -60,12 +60,6 @@ jobs:
           slsa-unverified-token: aGVsbG8K
           slsa-workflow-recipient: "delegator_generic_slsa3.yml"
           output-predicate: mismatch-token-predicate.json
-      - id: verify
-        uses: ./.github/actions/verify-token
-        with:
-          slsa-unverified-token: ${{ steps.setup.outputs.slsa-token }}
-          slsa-workflow-recipient: "delegator_generic_slsa3.yml"
-          output-predicate: predicate.json
       - id: setup-invalid-mask
         uses: ./actions/delegator/setup-token
         continue-on-error: true
