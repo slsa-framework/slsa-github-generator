@@ -28,18 +28,21 @@ jobs:
           slsa-runner-label: "ubuntu-latest"
           slsa-build-action-path: "./actions/build-artifacts-composite"
           slsa-workflow-inputs: '{"name1":"value1","name2":"value2","private-repository":true}'
+      - env:
+          SLSA_TOKEN: ${{ steps.setup.outputs.slsa-token }}
+        run: ./.github/workflows/scripts/schedule.actions/setup-token.sh }}
       - id: verify
         uses: ./.github/actions/verify-token
         with:
           slsa-unverified-token: ${{ steps.setup.outputs.slsa-token }}
           slsa-workflow-recipient: "delegator_generic_slsa3.yml"
           output-predicate: predicate.json
-      - run: ./.github/workflows/scripts/schedule.actions/verify-token.sh
-        env:
+      - env:
           VERIFIED_TOKEN: ${{ steps.verify.outputs.slsa-verified-token }}
           TOOL_REPOSITORY: ${{ steps.verify.outputs.tool-repository }}
           TOOL_REF: ${{ steps.verify.outputs.tool-ref }}
           PREDICATE: predicate.json
+        run: ./.github/workflows/scripts/schedule.actions/verify-token.sh
       - id: verify-mismatch-recipient
         uses: ./.github/actions/verify-token
         continue-on-error: true
