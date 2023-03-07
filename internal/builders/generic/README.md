@@ -15,31 +15,37 @@ project simply generates provenance as a separate step in an existing workflow.
 
 ---
 
-- [Generation of SLSA3+ provenance for arbitrary projects](#generation-of-slsa3-provenance-for-arbitrary-projects)
-  - [Benefits of Provenance](#benefits-of-provenance)
-  - [Generating Provenance](#generating-provenance)
-    - [Getting Started](#getting-started)
-    - [Referencing the SLSA generator](#referencing-the-slsa-generator)
-    - [Private Repositories](#private-repositories)
-    - [Supported Triggers](#supported-triggers)
-    - [Workflow Inputs](#workflow-inputs)
-    - [Workflow Outputs](#workflow-outputs)
-    - [Provenance Format](#provenance-format)
-    - [Provenance Example](#provenance-example)
-  - [Integration With Other Build Systems](#integration-with-other-build-systems)
-    - [Provenance for GoReleaser](#provenance-for-goreleaser)
-    - [Provenance for Bazel](#provenance-for-bazel)
-    - [Provenance for Java](#provenance-for-java)
-      - [Maven](#maven)
-      - [Gradle](#gradle)
-    - [Provenance for Rust](#provenance-for-rust)
-    - [Provenance for Haskell](#provenance-for-haskell)
-    - [Provenance for Python](#provenance-for-python)
-  - [Provenance for matrix strategy builds](#provenance-for-matrix-strategy-builds)
-    - [A single provenance attestation for all artifacts](#a-single-provenance-attestation-for-all-artifacts)
-    - [A different attestation for each iteration](#a-different-attestation-for-each-iteration)
-  - [Known Issues](#known-issues)
-    - [error updating to TUF remote mirror: tuf: invalid key](#error-updating-to-tuf-remote-mirror-tuf-invalid-key)
+<!-- markdown-toc --bullets="-" -i README.md -->
+
+<!-- toc -->
+
+- [Benefits of Provenance](#benefits-of-provenance)
+- [Generating Provenance](#generating-provenance)
+  - [Getting Started](#getting-started)
+  - [Referencing the SLSA generator](#referencing-the-slsa-generator)
+  - [Private Repositories](#private-repositories)
+  - [Supported Triggers](#supported-triggers)
+  - [Workflow Inputs](#workflow-inputs)
+  - [Workflow Outputs](#workflow-outputs)
+  - [Provenance Format](#provenance-format)
+  - [Provenance Example](#provenance-example)
+- [Integration With Other Build Systems](#integration-with-other-build-systems)
+  - [Provenance for GoReleaser](#provenance-for-goreleaser)
+  - [Provenance for Bazel](#provenance-for-bazel)
+  - [Provenance for Java](#provenance-for-java)
+    - [Maven](#maven)
+    - [Gradle](#gradle)
+  - [Provenance for Rust](#provenance-for-rust)
+  - [Provenance for Haskell](#provenance-for-haskell)
+  - [Provenance for Python](#provenance-for-python)
+- [Provenance for matrix strategy builds](#provenance-for-matrix-strategy-builds)
+  - [A single provenance attestation for all artifacts](#a-single-provenance-attestation-for-all-artifacts)
+  - [A different attestation for each iteration](#a-different-attestation-for-each-iteration)
+- [Known Issues](#known-issues)
+  - ['internal error' when using using `upload-assets`](#internal-error-when-using-using-upload-assets)
+  - [error updating to TUF remote mirror: tuf: invalid key](#error-updating-to-tuf-remote-mirror-tuf-invalid-key)
+
+<!-- tocstop -->
 
 ---
 
@@ -226,7 +232,7 @@ The [generic workflow](https://github.com/slsa-framework/slsa-github-generator/b
 | -------------------- | -------- | ----------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `base64-subjects`    | yes      |                                                                                                 | Artifact(s) for which to generate provenance, formatted the same as the output of sha256sum (SHA256 NAME\n[...]) and base64 encoded. The encoded value should decode to, for example: `90f3f7d6c862883ab9d856563a81ea6466eb1123b55bff11198b4ed0030cac86 foo.zip` |
 | `upload-assets`      | no       | false                                                                                           | If true provenance is uploaded to a GitHub release for new tags.                                                                                                                                                                                                 |
-| `upload-tag-name`    | no       |                                         | If specified and `upload-assets` is set to true, the provenance will be uploaded to a Github release identified by the tag-name regardless of the triggering event.
+| `upload-tag-name`    | no       |                                                                                                 | If specified and `upload-assets` is set to true, the provenance will be uploaded to a Github release identified by the tag-name regardless of the triggering event.                                                                                              |
 | `provenance-name`    | no       | "(subject name).intoto.jsonl" if a single subject. "multiple.intoto.json" if multiple subjects. | The artifact name of the signed provenance. The file must have the `intoto.jsonl` extension.                                                                                                                                                                     |
 | `attestation-name`   | no       | "(subject name).intoto.jsonl" if a single subject. "multiple.intoto.json" if multiple subjects. | The artifact name of the signed provenance. The file must have the `intoto.jsonl` extension. DEPRECATED: use `provenance-name` instead.                                                                                                                          |
 | `private-repository` | no       | false                                                                                           | Set to true to opt-in to posting to the public transparency log. Will generate an error if false for private repositories. This input has no effect for public repositories. See [Private Repositories](#private-repositories).                                  |

@@ -4,18 +4,25 @@ This document explains how to use the builder for [Go](https://go.dev/) projects
 
 ---
 
-- [Generation of provenance](#generation)
+<!-- markdown-toc --bullets="-" -i README.md -->
+
+<!-- toc -->
+
+- [Generation](#generation)
   - [Referencing the SLSA builder](#referencing-the-slsa-builder)
   - [Private Repositories](#private-repositories)
   - [Supported Triggers](#supported-triggers)
   - [Configuration File](#configuration-file)
-  - [Migration from GoReleaser](#migration-from-GoReleaser)
+  - [Migration from GoReleaser](#migration-from-goreleaser)
   - [Multi-platform builds](#multi-platform-builds)
   - [Workflow Inputs](#workflow-inputs)
   - [Workflow Example](#workflow-example)
   - [Provenance Example](#provenance-example)
   - [BuildConfig Format](#buildconfig-format)
-  - [Known Issues](#known-issues)
+- [Known Issues](#known-issues)
+  - [error updating to TUF remote mirror: tuf: invalid key](#error-updating-to-tuf-remote-mirror-tuf-invalid-key)
+
+<!-- tocstop -->
 
 ---
 
@@ -172,7 +179,6 @@ It's easy to generate binaries for multiple platforms. To accomplish this, we ca
       # ... your other stuff here.
 ```
 
-
 ### Workflow Inputs
 
 The builder workflow [slsa-framework/slsa-github-generator/.github/workflows/builder_go_slsa3.yml](https://github.com/slsa-framework/slsa-github-generator/blob/main/.github/workflows/builder_go_slsa3.yml) accepts the following inputs:
@@ -183,7 +189,7 @@ The builder workflow [slsa-framework/slsa-github-generator/.github/workflows/bui
 | `evaluated-envs`     | no       | empty value                             | A list of environment variables, seperated by `,`: `VAR1: value, VAR2: value`. This is typically used to pass dynamically-generated values, such as `ldflags`. Note that only environment variables with names starting with `CGO_` or `GO` are accepted. |
 | `go-version`         | yes      |                                         | The go version for your project. This value is passed, unchanged, to the [actions/setup-go](https://github.com/actions/setup-go) action when setting up the environment                                                                                   |
 | `upload-assets`      | no       | true on new tags                        | Whether to upload assets to a GitHub release or not.                                                                                                                                                                                                      |
-| `upload-tag-name`    | no       |                                         | If specified and `upload-assets` is set to true, the provenance will be uploaded to a Github release identified by the tag-name regardless of the triggering event.
+| `upload-tag-name`    | no       |                                         | If specified and `upload-assets` is set to true, the provenance will be uploaded to a Github release identified by the tag-name regardless of the triggering event.                                                                                       |
 | `private-repository` | no       | false                                   | Set to true to opt-in to posting to the public transparency log. Will generate an error if false for private repositories. This input has no effect for public repositories. See [Private Repositories](#private-repositories).                           |
 
 ### Workflow Example
