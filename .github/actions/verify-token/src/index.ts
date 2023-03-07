@@ -20,6 +20,7 @@ import {
   validateFieldAnyOf,
   validateFieldNonEmpty,
   validateGitHubFields,
+  validateAndMaskInputs,
 } from "./validate";
 import { createPredicate } from "./predicate";
 import { rawTokenInterface } from "./types";
@@ -48,7 +49,7 @@ async function run(): Promise<void> {
         GITHUB_REF_TYPE="branch" \
         GITHUB_ACTOR="laurentsimon" \
         GITHUB_WORKSPACE="$(pwd)" \
-        nodejs ./dist/index.js
+        nodejs ./dist/dist/index.js
     */
 
     const workflowRecipient = core.getInput("slsa-workflow-recipient");
@@ -118,8 +119,17 @@ async function run(): Promise<void> {
       rawTokenObj.tool.actions.build_artifacts.path
     );
 
+    // Validate the masked inputs and update the token.
+    const rawMaskedTokenObj = validateAndMaskInputs(rawTokenObj);
+    core.debug(
+      `masked inputs: ${JSON.stringify(
+        Object.fromEntries(rawMaskedTokenObj.tool.inputs)
+      )}`
+    );
+
     // No validation needed for the builder inputs.
     // They may be empty.
+    // TODO(#1737): keep only TRW inputs.
 
     // Extract certificate information.
     const [toolURI, toolRepository, toolRef] = parseCertificateIdentity(bundle);
@@ -127,12 +137,17 @@ async function run(): Promise<void> {
     core.debug(`slsa-verified-token: ${rawTokenStr}`);
 
     // Now generate the SLSA predicate using the verified token and the GH context.
-    const token = core.getInput("token");
-    if (!token) {
+    const ghToken = core.getInput("token");
+    if (!ghToken) {
       throw new Error("token not provided");
     }
 
-    const predicate = await createPredicate(rawTokenObj, toolURI, token);
+    // NOTE: we create the predicate using the token with masked inputs.
+    const predicate = await createPredicate(
+      rawMaskedTokenObj,
+      toolURI,
+      ghToken
+    );
     fs.writeFileSync(safeOutput, JSON.stringify(predicate), {
       flag: "ax",
       mode: 0o600,
@@ -142,6 +157,8 @@ async function run(): Promise<void> {
 
     core.setOutput("tool-repository", toolRepository);
     core.setOutput("tool-ref", toolRef);
+    // NOTE: we output the token with unmasked inputs because the inputs
+    // are needed by the wrapper Action.
     core.setOutput("slsa-verified-token", rawTokenStr);
   } catch (error) {
     if (error instanceof Error) {

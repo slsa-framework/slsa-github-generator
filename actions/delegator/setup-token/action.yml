@@ -42,6 +42,18 @@ inputs:
     type: string
     required: true
 
+  slsa-workflow-inputs-mask:
+    description: >
+      A comma-separated list of input fields to mask in the provenance.
+      It should be used for fields that have low-entropy values
+      but need to be kept private. The masking will replace
+      the value of the fields with '***'. Use this option to mask
+      usernames, emails or other PII inputs.
+
+      Example: field1, field2, field3
+    type: string
+    required: true
+
 outputs:
   slsa-token:
     description: "SLSA token"

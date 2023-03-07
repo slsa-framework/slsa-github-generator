@@ -11,7 +11,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-import { githubObj } from "../src/types";
+import { githubObj, rawTokenInterface } from "../src/types";
 
 export function validateGitHubFields(gho: githubObj): void {
   // actor_id
@@ -96,6 +96,27 @@ export function validateGitHubFields(gho: githubObj): void {
     gho.workflow_sha,
     process.env.GITHUB_WORKFLOW_SHA
   );
+}
+
+export function validateAndMaskInputs(
+  token: rawTokenInterface
+): rawTokenInterface {
+  const ret = Object.create(token);
+  const maskedMapInputs = new Map(Object.entries(token.tool.inputs));
+
+  for (const key of token.tool.masked_inputs) {
+    if (!maskedMapInputs.has(key)) {
+      throw new Error(`input ${key} does not exist in the input map`);
+    }
+    // verify non-empty keys.
+    if (key === undefined || key.trim().length === 0) {
+      throw new Error("empty key in the input map");
+    }
+    // NOTE: This mask is the same used by GitHub for encrypted secrets and masked values.
+    maskedMapInputs.set(key, "***");
+  }
+  ret.tool.inputs = maskedMapInputs;
+  return ret;
 }
 
 export function validateFieldAnyOf<T>(
