@@ -207,7 +207,7 @@ jobs:
 
           COSIGN_EXPERIMENTAL=1 cosign attest --predicate="$predicate_name" \
             --type slsaprovenance \
-            --force \
+            --yes \
             "${UNTRUSTED_IMAGE}@${UNTRUSTED_DIGEST}"
 
       - name: Final outcome
