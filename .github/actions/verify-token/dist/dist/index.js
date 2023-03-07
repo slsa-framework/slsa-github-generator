@@ -2517,6 +2517,10 @@ function checkBypass(reqUrl) {
     if (!reqUrl.hostname) {
         return false;
     }
+    const reqHost = reqUrl.hostname;
+    if (isLoopbackAddress(reqHost)) {
+        return true;
+    }
     const noProxy = process.env['no_proxy'] || process.env['NO_PROXY'] || '';
     if (!noProxy) {
         return false;
@@ -2542,13 +2546,24 @@ function checkBypass(reqUrl) {
         .split(',')
         .map(x => x.trim().toUpperCase())
         .filter(x => x)) {
-        if (upperReqHosts.some(x => x === upperNoProxyItem)) {
+        if (upperNoProxyItem === '*' ||
+            upperReqHosts.some(x => x === upperNoProxyItem ||
+                x.endsWith(`.${upperNoProxyItem}`) ||
+                (upperNoProxyItem.startsWith('.') &&
+                    x.endsWith(`${upperNoProxyItem}`)))) {
             return true;
         }
     }
     return false;
 }
 exports.checkBypass = checkBypass;
+function isLoopbackAddress(host) {
+    const hostLower = host.toLowerCase();
+    return (hostLower === 'localhost' ||
+        hostLower.startsWith('127.') ||
+        hostLower.startsWith('[::1]') ||
+        hostLower.startsWith('[0:0:0:0:0:0:0:1]'));
+}
 //# sourceMappingURL=proxy.js.map
 
 /***/ }),
@@ -5774,6 +5789,2023 @@ exports["default"] = once;
 
 /***/ }),
 
+/***/ 159:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Signed = exports.isMetadataKind = exports.MetadataKind = void 0;
+const util_1 = __importDefault(__nccwpck_require__(3837));
+const error_1 = __nccwpck_require__(8448);
+const utils_1 = __nccwpck_require__(5688);
+const SPECIFICATION_VERSION = ['1', '0', '31'];
+var MetadataKind;
+(function (MetadataKind) {
+    MetadataKind["Root"] = "root";
+    MetadataKind["Timestamp"] = "timestamp";
+    MetadataKind["Snapshot"] = "snapshot";
+    MetadataKind["Targets"] = "targets";
+})(MetadataKind = exports.MetadataKind || (exports.MetadataKind = {}));
+function isMetadataKind(value) {
+    return (typeof value === 'string' &&
+        Object.values(MetadataKind).includes(value));
+}
+exports.isMetadataKind = isMetadataKind;
+/***
+ * A base class for the signed part of TUF metadata.
+ *
+ * Objects with base class Signed are usually included in a ``Metadata`` object
+ * on the signed attribute. This class provides attributes and methods that
+ * are common for all TUF metadata types (roles).
+ */
+class Signed {
+    constructor(options) {
+        this.specVersion = options.specVersion || SPECIFICATION_VERSION.join('.');
+        const specList = this.specVersion.split('.');
+        if (!(specList.length === 2 || specList.length === 3) ||
+            !specList.every((item) => isNumeric(item))) {
+            throw new error_1.ValueError('Failed to parse specVersion');
+        }
+        // major version must match
+        if (specList[0] != SPECIFICATION_VERSION[0]) {
+            throw new error_1.ValueError('Unsupported specVersion');
+        }
+        this.expires = options.expires || new Date().toISOString();
+        this.version = options.version || 1;
+        this.unrecognizedFields = options.unrecognizedFields || {};
+    }
+    equals(other) {
+        if (!(other instanceof Signed)) {
+            return false;
+        }
+        return (this.specVersion === other.specVersion &&
+            this.expires === other.expires &&
+            this.version === other.version &&
+            util_1.default.isDeepStrictEqual(this.unrecognizedFields, other.unrecognizedFields));
+    }
+    isExpired(referenceTime) {
+        if (!referenceTime) {
+            referenceTime = new Date();
+        }
+        return referenceTime >= new Date(this.expires);
+    }
+    static commonFieldsFromJSON(data) {
+        const { spec_version, expires, version, ...rest } = data;
+        if (utils_1.guard.isDefined(spec_version) && !(typeof spec_version === 'string')) {
+            throw new TypeError('spec_version must be a string');
+        }
+        if (utils_1.guard.isDefined(expires) && !(typeof expires === 'string')) {
+            throw new TypeError('expires must be a string');
+        }
+        if (utils_1.guard.isDefined(version) && !(typeof version === 'number')) {
+            throw new TypeError('version must be a number');
+        }
+        return {
+            specVersion: spec_version,
+            expires,
+            version,
+            unrecognizedFields: rest,
+        };
+    }
+}
+exports.Signed = Signed;
+function isNumeric(str) {
+    return !isNaN(Number(str));
+}
+
+
+/***/ }),
+
+/***/ 1662:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Delegations = void 0;
+const util_1 = __importDefault(__nccwpck_require__(3837));
+const error_1 = __nccwpck_require__(8448);
+const key_1 = __nccwpck_require__(6697);
+const role_1 = __nccwpck_require__(9393);
+const utils_1 = __nccwpck_require__(5688);
+/**
+ * A container object storing information about all delegations.
+ *
+ * Targets roles that are trusted to provide signed metadata files
+ * describing targets with designated pathnames and/or further delegations.
+ */
+class Delegations {
+    constructor(options) {
+        this.keys = options.keys;
+        this.unrecognizedFields = options.unrecognizedFields || {};
+        if (options.roles) {
+            if (Object.keys(options.roles).some((roleName) => role_1.TOP_LEVEL_ROLE_NAMES.includes(roleName))) {
+                throw new error_1.ValueError('Delegated role name conflicts with top-level role name');
+            }
+        }
+        this.succinctRoles = options.succinctRoles;
+        this.roles = options.roles;
+    }
+    equals(other) {
+        if (!(other instanceof Delegations)) {
+            return false;
+        }
+        return (util_1.default.isDeepStrictEqual(this.keys, other.keys) &&
+            util_1.default.isDeepStrictEqual(this.roles, other.roles) &&
+            util_1.default.isDeepStrictEqual(this.unrecognizedFields, other.unrecognizedFields) &&
+            util_1.default.isDeepStrictEqual(this.succinctRoles, other.succinctRoles));
+    }
+    *rolesForTarget(targetPath) {
+        if (this.roles) {
+            for (const role of Object.values(this.roles)) {
+                if (role.isDelegatedPath(targetPath)) {
+                    yield { role: role.name, terminating: role.terminating };
+                }
+            }
+        }
+        else if (this.succinctRoles) {
+            yield {
+                role: this.succinctRoles.getRoleForTarget(targetPath),
+                terminating: true,
+            };
+        }
+    }
+    toJSON() {
+        const json = {
+            keys: keysToJSON(this.keys),
+            ...this.unrecognizedFields,
+        };
+        if (this.roles) {
+            json.roles = rolesToJSON(this.roles);
+        }
+        else if (this.succinctRoles) {
+            json.succinct_roles = this.succinctRoles.toJSON();
+        }
+        return json;
+    }
+    static fromJSON(data) {
+        const { keys, roles, succinct_roles, ...unrecognizedFields } = data;
+        let succinctRoles;
+        if (utils_1.guard.isObject(succinct_roles)) {
+            succinctRoles = role_1.SuccinctRoles.fromJSON(succinct_roles);
+        }
+        return new Delegations({
+            keys: keysFromJSON(keys),
+            roles: rolesFromJSON(roles),
+            unrecognizedFields,
+            succinctRoles,
+        });
+    }
+}
+exports.Delegations = Delegations;
+function keysToJSON(keys) {
+    return Object.entries(keys).reduce((acc, [keyId, key]) => ({
+        ...acc,
+        [keyId]: key.toJSON(),
+    }), {});
+}
+function rolesToJSON(roles) {
+    return Object.values(roles).map((role) => role.toJSON());
+}
+function keysFromJSON(data) {
+    if (!utils_1.guard.isObjectRecord(data)) {
+        throw new TypeError('keys is malformed');
+    }
+    return Object.entries(data).reduce((acc, [keyID, keyData]) => ({
+        ...acc,
+        [keyID]: key_1.Key.fromJSON(keyID, keyData),
+    }), {});
+}
+function rolesFromJSON(data) {
+    let roleMap;
+    if (utils_1.guard.isDefined(data)) {
+        if (!utils_1.guard.isObjectArray(data)) {
+            throw new TypeError('roles is malformed');
+        }
+        roleMap = data.reduce((acc, role) => {
+            const delegatedRole = role_1.DelegatedRole.fromJSON(role);
+            return {
+                ...acc,
+                [delegatedRole.name]: delegatedRole,
+            };
+        }, {});
+    }
+    return roleMap;
+}
+
+
+/***/ }),
+
+/***/ 8448:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.UnsupportedAlgorithmError = exports.CryptoError = exports.LengthOrHashMismatchError = exports.UnsignedMetadataError = exports.RepositoryError = exports.ValueError = void 0;
+// An error about insufficient values
+class ValueError extends Error {
+}
+exports.ValueError = ValueError;
+// An error with a repository's state, such as a missing file.
+// It covers all exceptions that come from the repository side when
+// looking from the perspective of users of metadata API or ngclient.
+class RepositoryError extends Error {
+}
+exports.RepositoryError = RepositoryError;
+// An error about metadata object with insufficient threshold of signatures.
+class UnsignedMetadataError extends RepositoryError {
+}
+exports.UnsignedMetadataError = UnsignedMetadataError;
+// An error while checking the length and hash values of an object.
+class LengthOrHashMismatchError extends RepositoryError {
+}
+exports.LengthOrHashMismatchError = LengthOrHashMismatchError;
+class CryptoError extends Error {
+}
+exports.CryptoError = CryptoError;
+class UnsupportedAlgorithmError extends CryptoError {
+}
+exports.UnsupportedAlgorithmError = UnsupportedAlgorithmError;
+
+
+/***/ }),
+
+/***/ 1923:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.TargetFile = exports.MetaFile = void 0;
+const crypto_1 = __importDefault(__nccwpck_require__(6113));
+const util_1 = __importDefault(__nccwpck_require__(3837));
+const error_1 = __nccwpck_require__(8448);
+const utils_1 = __nccwpck_require__(5688);
+// A container with information about a particular metadata file.
+//
+// This class is used for Timestamp and Snapshot metadata.
+class MetaFile {
+    constructor(opts) {
+        if (opts.version <= 0) {
+            throw new error_1.ValueError('Metafile version must be at least 1');
+        }
+        if (opts.length !== undefined) {
+            validateLength(opts.length);
+        }
+        this.version = opts.version;
+        this.length = opts.length;
+        this.hashes = opts.hashes;
+        this.unrecognizedFields = opts.unrecognizedFields || {};
+    }
+    equals(other) {
+        if (!(other instanceof MetaFile)) {
+            return false;
+        }
+        return (this.version === other.version &&
+            this.length === other.length &&
+            util_1.default.isDeepStrictEqual(this.hashes, other.hashes) &&
+            util_1.default.isDeepStrictEqual(this.unrecognizedFields, other.unrecognizedFields));
+    }
+    verify(data) {
+        // Verifies that the given data matches the expected length.
+        if (this.length !== undefined) {
+            if (data.length !== this.length) {
+                throw new error_1.LengthOrHashMismatchError(`Expected length ${this.length} but got ${data.length}`);
+            }
+        }
+        // Verifies that the given data matches the supplied hashes.
+        if (this.hashes) {
+            Object.entries(this.hashes).forEach(([key, value]) => {
+                let hash;
+                try {
+                    hash = crypto_1.default.createHash(key);
+                }
+                catch (e) {
+                    throw new error_1.LengthOrHashMismatchError(`Hash algorithm ${key} not supported`);
+                }
+                const observedHash = hash.update(data).digest('hex');
+                if (observedHash !== value) {
+                    throw new error_1.LengthOrHashMismatchError(`Expected hash ${value} but got ${observedHash}`);
+                }
+            });
+        }
+    }
+    toJSON() {
+        const json = {
+            version: this.version,
+            ...this.unrecognizedFields,
+        };
+        if (this.length !== undefined) {
+            json.length = this.length;
+        }
+        if (this.hashes) {
+            json.hashes = this.hashes;
+        }
+        return json;
+    }
+    static fromJSON(data) {
+        const { version, length, hashes, ...rest } = data;
+        if (typeof version !== 'number') {
+            throw new TypeError('version must be a number');
+        }
+        if (utils_1.guard.isDefined(length) && typeof length !== 'number') {
+            throw new TypeError('length must be a number');
+        }
+        if (utils_1.guard.isDefined(hashes) && !utils_1.guard.isStringRecord(hashes)) {
+            throw new TypeError('hashes must be string keys and values');
+        }
+        return new MetaFile({
+            version,
+            length,
+            hashes,
+            unrecognizedFields: rest,
+        });
+    }
+}
+exports.MetaFile = MetaFile;
+// Container for info about a particular target file.
+//
+// This class is used for Target metadata.
+class TargetFile {
+    constructor(opts) {
+        validateLength(opts.length);
+        this.length = opts.length;
+        this.path = opts.path;
+        this.hashes = opts.hashes;
+        this.unrecognizedFields = opts.unrecognizedFields || {};
+    }
+    get custom() {
+        const custom = this.unrecognizedFields['custom'];
+        if (!custom || Array.isArray(custom) || !(typeof custom === 'object')) {
+            return {};
+        }
+        return custom;
+    }
+    equals(other) {
+        if (!(other instanceof TargetFile)) {
+            return false;
+        }
+        return (this.length === other.length &&
+            this.path === other.path &&
+            util_1.default.isDeepStrictEqual(this.hashes, other.hashes) &&
+            util_1.default.isDeepStrictEqual(this.unrecognizedFields, other.unrecognizedFields));
+    }
+    async verify(stream) {
+        let observedLength = 0;
+        // Create a digest for each hash algorithm
+        const digests = Object.keys(this.hashes).reduce((acc, key) => {
+            try {
+                acc[key] = crypto_1.default.createHash(key);
+            }
+            catch (e) {
+                throw new error_1.LengthOrHashMismatchError(`Hash algorithm ${key} not supported`);
+            }
+            return acc;
+        }, {});
+        // Read stream chunk by chunk
+        for await (const chunk of stream) {
+            // Keep running tally of stream length
+            observedLength += chunk.length;
+            // Append chunk to each digest
+            Object.values(digests).forEach((digest) => {
+                digest.update(chunk);
+            });
+        }
+        // Verify length matches expected value
+        if (observedLength !== this.length) {
+            throw new error_1.LengthOrHashMismatchError(`Expected length ${this.length} but got ${observedLength}`);
+        }
+        // Verify each digest matches expected value
+        Object.entries(digests).forEach(([key, value]) => {
+            const expected = this.hashes[key];
+            const actual = value.digest('hex');
+            if (actual !== expected) {
+                throw new error_1.LengthOrHashMismatchError(`Expected hash ${expected} but got ${actual}`);
+            }
+        });
+    }
+    toJSON() {
+        return {
+            length: this.length,
+            hashes: this.hashes,
+            ...this.unrecognizedFields,
+        };
+    }
+    static fromJSON(path, data) {
+        const { length, hashes, ...rest } = data;
+        if (typeof length !== 'number') {
+            throw new TypeError('length must be a number');
+        }
+        if (!utils_1.guard.isStringRecord(hashes)) {
+            throw new TypeError('hashes must have string keys and values');
+        }
+        return new TargetFile({
+            length,
+            path,
+            hashes,
+            unrecognizedFields: rest,
+        });
+    }
+}
+exports.TargetFile = TargetFile;
+// Check that supplied length if valid
+function validateLength(length) {
+    if (length < 0) {
+        throw new error_1.ValueError('Length must be at least 0');
+    }
+}
+
+
+/***/ }),
+
+/***/ 5833:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Timestamp = exports.Targets = exports.Snapshot = exports.Signature = exports.Root = exports.Metadata = exports.Key = exports.TargetFile = exports.MetaFile = exports.ValueError = exports.MetadataKind = void 0;
+var base_1 = __nccwpck_require__(159);
+Object.defineProperty(exports, "MetadataKind", ({ enumerable: true, get: function () { return base_1.MetadataKind; } }));
+var error_1 = __nccwpck_require__(8448);
+Object.defineProperty(exports, "ValueError", ({ enumerable: true, get: function () { return error_1.ValueError; } }));
+var file_1 = __nccwpck_require__(1923);
+Object.defineProperty(exports, "MetaFile", ({ enumerable: true, get: function () { return file_1.MetaFile; } }));
+Object.defineProperty(exports, "TargetFile", ({ enumerable: true, get: function () { return file_1.TargetFile; } }));
+var key_1 = __nccwpck_require__(6697);
+Object.defineProperty(exports, "Key", ({ enumerable: true, get: function () { return key_1.Key; } }));
+var metadata_1 = __nccwpck_require__(1593);
+Object.defineProperty(exports, "Metadata", ({ enumerable: true, get: function () { return metadata_1.Metadata; } }));
+var root_1 = __nccwpck_require__(9392);
+Object.defineProperty(exports, "Root", ({ enumerable: true, get: function () { return root_1.Root; } }));
+var signature_1 = __nccwpck_require__(4222);
+Object.defineProperty(exports, "Signature", ({ enumerable: true, get: function () { return signature_1.Signature; } }));
+var snapshot_1 = __nccwpck_require__(2326);
+Object.defineProperty(exports, "Snapshot", ({ enumerable: true, get: function () { return snapshot_1.Snapshot; } }));
+var targets_1 = __nccwpck_require__(5799);
+Object.defineProperty(exports, "Targets", ({ enumerable: true, get: function () { return targets_1.Targets; } }));
+var timestamp_1 = __nccwpck_require__(4042);
+Object.defineProperty(exports, "Timestamp", ({ enumerable: true, get: function () { return timestamp_1.Timestamp; } }));
+
+
+/***/ }),
+
+/***/ 6697:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Key = void 0;
+const util_1 = __importDefault(__nccwpck_require__(3837));
+const error_1 = __nccwpck_require__(8448);
+const utils_1 = __nccwpck_require__(5688);
+const key_1 = __nccwpck_require__(8725);
+// A container class representing the public portion of a Key.
+class Key {
+    constructor(options) {
+        const { keyID, keyType, scheme, keyVal, unrecognizedFields } = options;
+        this.keyID = keyID;
+        this.keyType = keyType;
+        this.scheme = scheme;
+        this.keyVal = keyVal;
+        this.unrecognizedFields = unrecognizedFields || {};
+    }
+    // Verifies the that the metadata.signatures contains a signature made with
+    // this key and is correctly signed.
+    verifySignature(metadata) {
+        const signature = metadata.signatures[this.keyID];
+        if (!signature)
+            throw new error_1.UnsignedMetadataError('no signature for key found in metadata');
+        if (!this.keyVal.public)
+            throw new error_1.UnsignedMetadataError('no public key found');
+        const publicKey = (0, key_1.getPublicKey)({
+            keyType: this.keyType,
+            scheme: this.scheme,
+            keyVal: this.keyVal.public,
+        });
+        const signedData = metadata.signed.toJSON();
+        try {
+            if (!utils_1.crypto.verifySignature(signedData, publicKey, signature.sig)) {
+                throw new error_1.UnsignedMetadataError(`failed to verify ${this.keyID} signature`);
+            }
+        }
+        catch (error) {
+            if (error instanceof error_1.UnsignedMetadataError) {
+                throw error;
+            }
+            throw new error_1.UnsignedMetadataError(`failed to verify ${this.keyID} signature`);
+        }
+    }
+    equals(other) {
+        if (!(other instanceof Key)) {
+            return false;
+        }
+        return (this.keyID === other.keyID &&
+            this.keyType === other.keyType &&
+            this.scheme === other.scheme &&
+            util_1.default.isDeepStrictEqual(this.keyVal, other.keyVal) &&
+            util_1.default.isDeepStrictEqual(this.unrecognizedFields, other.unrecognizedFields));
+    }
+    toJSON() {
+        return {
+            keytype: this.keyType,
+            scheme: this.scheme,
+            keyval: this.keyVal,
+            ...this.unrecognizedFields,
+        };
+    }
+    static fromJSON(keyID, data) {
+        const { keytype, scheme, keyval, ...rest } = data;
+        if (typeof keytype !== 'string') {
+            throw new TypeError('keytype must be a string');
+        }
+        if (typeof scheme !== 'string') {
+            throw new TypeError('scheme must be a string');
+        }
+        if (!utils_1.guard.isStringRecord(keyval)) {
+            throw new TypeError('keyval must be a string record');
+        }
+        return new Key({
+            keyID,
+            keyType: keytype,
+            scheme,
+            keyVal: keyval,
+            unrecognizedFields: rest,
+        });
+    }
+}
+exports.Key = Key;
+
+
+/***/ }),
+
+/***/ 1593:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Metadata = void 0;
+const util_1 = __importDefault(__nccwpck_require__(3837));
+const base_1 = __nccwpck_require__(159);
+const error_1 = __nccwpck_require__(8448);
+const root_1 = __nccwpck_require__(9392);
+const signature_1 = __nccwpck_require__(4222);
+const snapshot_1 = __nccwpck_require__(2326);
+const targets_1 = __nccwpck_require__(5799);
+const timestamp_1 = __nccwpck_require__(4042);
+const utils_1 = __nccwpck_require__(5688);
+const json_1 = __nccwpck_require__(5428);
+/***
+ * A container for signed TUF metadata.
+ *
+ * Provides methods to convert to and from json, read and write to and
+ * from JSON and to create and verify metadata signatures.
+ *
+ * ``Metadata[T]`` is a generic container type where T can be any one type of
+ * [``Root``, ``Timestamp``, ``Snapshot``, ``Targets``]. The purpose of this
+ * is to allow static type checking of the signed attribute in code using
+ * Metadata::
+ *
+ * root_md = Metadata[Root].fromJSON("root.json")
+ * # root_md type is now Metadata[Root]. This means signed and its
+ * # attributes like consistent_snapshot are now statically typed and the
+ * # types can be verified by static type checkers and shown by IDEs
+ *
+ * Using a type constraint is not required but not doing so means T is not a
+ * specific type so static typing cannot happen. Note that the type constraint
+ * ``[Root]`` is not validated at runtime (as pure annotations are not available
+ * then).
+ *
+ * Apart from ``expires`` all of the arguments to the inner constructors have
+ * reasonable default values for new metadata.
+ */
+class Metadata {
+    constructor(signed, signatures, unrecognizedFields) {
+        this.signed = signed;
+        this.signatures = signatures || {};
+        this.unrecognizedFields = unrecognizedFields || {};
+    }
+    sign(signer, append = true) {
+        const bytes = (0, json_1.canonicalize)(this.signed.toJSON());
+        const signature = signer(bytes);
+        if (!append) {
+            this.signatures = {};
+        }
+        this.signatures[signature.keyID] = signature;
+    }
+    verifyDelegate(delegatedRole, delegatedMetadata) {
+        let role;
+        let keys = {};
+        switch (this.signed.type) {
+            case base_1.MetadataKind.Root:
+                keys = this.signed.keys;
+                role = this.signed.roles[delegatedRole];
+                break;
+            case base_1.MetadataKind.Targets:
+                if (!this.signed.delegations) {
+                    throw new error_1.ValueError(`No delegations found for ${delegatedRole}`);
+                }
+                keys = this.signed.delegations.keys;
+                if (this.signed.delegations.roles) {
+                    role = this.signed.delegations.roles[delegatedRole];
+                }
+                else if (this.signed.delegations.succinctRoles) {
+                    if (this.signed.delegations.succinctRoles.isDelegatedRole(delegatedRole)) {
+                        role = this.signed.delegations.succinctRoles;
+                    }
+                }
+                break;
+            default:
+                throw new TypeError('invalid metadata type');
+        }
+        if (!role) {
+            throw new error_1.ValueError(`no delegation found for ${delegatedRole}`);
+        }
+        const signingKeys = new Set();
+        role.keyIDs.forEach((keyID) => {
+            const key = keys[keyID];
+            // If we dont' have the key, continue checking other keys
+            if (!key) {
+                return;
+            }
+            try {
+                key.verifySignature(delegatedMetadata);
+                signingKeys.add(key.keyID);
+            }
+            catch (error) {
+                // continue
+            }
+        });
+        if (signingKeys.size < role.threshold) {
+            throw new error_1.UnsignedMetadataError(`${delegatedRole} was signed by ${signingKeys.size}/${role.threshold} keys`);
+        }
+    }
+    equals(other) {
+        if (!(other instanceof Metadata)) {
+            return false;
+        }
+        return (this.signed.equals(other.signed) &&
+            util_1.default.isDeepStrictEqual(this.signatures, other.signatures) &&
+            util_1.default.isDeepStrictEqual(this.unrecognizedFields, other.unrecognizedFields));
+    }
+    toJSON() {
+        const signatures = Object.values(this.signatures).map((signature) => {
+            return signature.toJSON();
+        });
+        return {
+            signatures,
+            signed: this.signed.toJSON(),
+            ...this.unrecognizedFields,
+        };
+    }
+    static fromJSON(type, data) {
+        const { signed, signatures, ...rest } = data;
+        if (!utils_1.guard.isDefined(signed) || !utils_1.guard.isObject(signed)) {
+            throw new TypeError('signed is not defined');
+        }
+        if (type !== signed._type) {
+            throw new error_1.ValueError(`expected '${type}', got ${signed['_type']}`);
+        }
+        let signedObj;
+        switch (type) {
+            case base_1.MetadataKind.Root:
+                signedObj = root_1.Root.fromJSON(signed);
+                break;
+            case base_1.MetadataKind.Timestamp:
+                signedObj = timestamp_1.Timestamp.fromJSON(signed);
+                break;
+            case base_1.MetadataKind.Snapshot:
+                signedObj = snapshot_1.Snapshot.fromJSON(signed);
+                break;
+            case base_1.MetadataKind.Targets:
+                signedObj = targets_1.Targets.fromJSON(signed);
+                break;
+            default:
+                throw new TypeError('invalid metadata type');
+        }
+        const sigMap = signaturesFromJSON(signatures);
+        return new Metadata(signedObj, sigMap, rest);
+    }
+}
+exports.Metadata = Metadata;
+function signaturesFromJSON(data) {
+    if (!utils_1.guard.isObjectArray(data)) {
+        throw new TypeError('signatures is not an array');
+    }
+    return data.reduce((acc, sigData) => {
+        const signature = signature_1.Signature.fromJSON(sigData);
+        return { ...acc, [signature.keyID]: signature };
+    }, {});
+}
+
+
+/***/ }),
+
+/***/ 9393:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.SuccinctRoles = exports.DelegatedRole = exports.Role = exports.TOP_LEVEL_ROLE_NAMES = void 0;
+const crypto_1 = __importDefault(__nccwpck_require__(6113));
+const minimatch_1 = __importDefault(__nccwpck_require__(153));
+const util_1 = __importDefault(__nccwpck_require__(3837));
+const error_1 = __nccwpck_require__(8448);
+const utils_1 = __nccwpck_require__(5688);
+exports.TOP_LEVEL_ROLE_NAMES = [
+    'root',
+    'targets',
+    'snapshot',
+    'timestamp',
+];
+/**
+ * Container that defines which keys are required to sign roles metadata.
+ *
+ * Role defines how many keys are required to successfully sign the roles
+ * metadata, and which keys are accepted.
+ */
+class Role {
+    constructor(options) {
+        const { keyIDs, threshold, unrecognizedFields } = options;
+        if (hasDuplicates(keyIDs)) {
+            throw new error_1.ValueError('duplicate key IDs found');
+        }
+        if (threshold < 1) {
+            throw new error_1.ValueError('threshold must be at least 1');
+        }
+        this.keyIDs = keyIDs;
+        this.threshold = threshold;
+        this.unrecognizedFields = unrecognizedFields || {};
+    }
+    equals(other) {
+        if (!(other instanceof Role)) {
+            return false;
+        }
+        return (this.threshold === other.threshold &&
+            util_1.default.isDeepStrictEqual(this.keyIDs, other.keyIDs) &&
+            util_1.default.isDeepStrictEqual(this.unrecognizedFields, other.unrecognizedFields));
+    }
+    toJSON() {
+        return {
+            keyids: this.keyIDs,
+            threshold: this.threshold,
+            ...this.unrecognizedFields,
+        };
+    }
+    static fromJSON(data) {
+        const { keyids, threshold, ...rest } = data;
+        if (!utils_1.guard.isStringArray(keyids)) {
+            throw new TypeError('keyids must be an array');
+        }
+        if (typeof threshold !== 'number') {
+            throw new TypeError('threshold must be a number');
+        }
+        return new Role({
+            keyIDs: keyids,
+            threshold,
+            unrecognizedFields: rest,
+        });
+    }
+}
+exports.Role = Role;
+function hasDuplicates(array) {
+    return new Set(array).size !== array.length;
+}
+/**
+ * A container with information about a delegated role.
+ *
+ * A delegation can happen in two ways:
+ *   - ``paths`` is set: delegates targets matching any path pattern in ``paths``
+ *   - ``pathHashPrefixes`` is set: delegates targets whose target path hash
+ *      starts with any of the prefixes in ``pathHashPrefixes``
+ *
+ *   ``paths`` and ``pathHashPrefixes`` are mutually exclusive: both cannot be
+ *   set, at least one of them must be set.
+ */
+class DelegatedRole extends Role {
+    constructor(opts) {
+        super(opts);
+        const { name, terminating, paths, pathHashPrefixes } = opts;
+        this.name = name;
+        this.terminating = terminating;
+        if (opts.paths && opts.pathHashPrefixes) {
+            throw new error_1.ValueError('paths and pathHashPrefixes are mutually exclusive');
+        }
+        this.paths = paths;
+        this.pathHashPrefixes = pathHashPrefixes;
+    }
+    equals(other) {
+        if (!(other instanceof DelegatedRole)) {
+            return false;
+        }
+        return (super.equals(other) &&
+            this.name === other.name &&
+            this.terminating === other.terminating &&
+            util_1.default.isDeepStrictEqual(this.paths, other.paths) &&
+            util_1.default.isDeepStrictEqual(this.pathHashPrefixes, other.pathHashPrefixes));
+    }
+    isDelegatedPath(targetFilepath) {
+        if (this.paths) {
+            return this.paths.some((pathPattern) => isTargetInPathPattern(targetFilepath, pathPattern));
+        }
+        if (this.pathHashPrefixes) {
+            const hasher = crypto_1.default.createHash('sha256');
+            const pathHash = hasher.update(targetFilepath).digest('hex');
+            return this.pathHashPrefixes.some((pathHashPrefix) => pathHash.startsWith(pathHashPrefix));
+        }
+        return false;
+    }
+    toJSON() {
+        const json = {
+            ...super.toJSON(),
+            name: this.name,
+            terminating: this.terminating,
+        };
+        if (this.paths) {
+            json.paths = this.paths;
+        }
+        if (this.pathHashPrefixes) {
+            json.path_hash_prefixes = this.pathHashPrefixes;
+        }
+        return json;
+    }
+    static fromJSON(data) {
+        const { keyids, threshold, name, terminating, paths, path_hash_prefixes, ...rest } = data;
+        if (!utils_1.guard.isStringArray(keyids)) {
+            throw new TypeError('keyids must be an array of strings');
+        }
+        if (typeof threshold !== 'number') {
+            throw new TypeError('threshold must be a number');
+        }
+        if (typeof name !== 'string') {
+            throw new TypeError('name must be a string');
+        }
+        if (typeof terminating !== 'boolean') {
+            throw new TypeError('terminating must be a boolean');
+        }
+        if (utils_1.guard.isDefined(paths) && !utils_1.guard.isStringArray(paths)) {
+            throw new TypeError('paths must be an array of strings');
+        }
+        if (utils_1.guard.isDefined(path_hash_prefixes) &&
+            !utils_1.guard.isStringArray(path_hash_prefixes)) {
+            throw new TypeError('path_hash_prefixes must be an array of strings');
+        }
+        return new DelegatedRole({
+            keyIDs: keyids,
+            threshold,
+            name,
+            terminating,
+            paths,
+            pathHashPrefixes: path_hash_prefixes,
+            unrecognizedFields: rest,
+        });
+    }
+}
+exports.DelegatedRole = DelegatedRole;
+// JS version of Ruby's Array#zip
+const zip = (a, b) => a.map((k, i) => [k, b[i]]);
+function isTargetInPathPattern(target, pattern) {
+    const targetParts = target.split('/');
+    const patternParts = pattern.split('/');
+    if (patternParts.length != targetParts.length) {
+        return false;
+    }
+    return zip(targetParts, patternParts).every(([targetPart, patternPart]) => (0, minimatch_1.default)(targetPart, patternPart));
+}
+/**
+ * Succinctly defines a hash bin delegation graph.
+ *
+ * A ``SuccinctRoles`` object describes a delegation graph that covers all
+ * targets, distributing them uniformly over the delegated roles (i.e. bins)
+ * in the graph.
+ *
+ * The total number of bins is 2 to the power of the passed ``bit_length``.
+ *
+ * Bin names are the concatenation of the passed ``name_prefix`` and a
+ * zero-padded hex representation of the bin index separated by a hyphen.
+ *
+ * The passed ``keyids`` and ``threshold`` is used for each bin, and each bin
+ * is 'terminating'.
+ *
+ * For details: https://github.com/theupdateframework/taps/blob/master/tap15.md
+ */
+class SuccinctRoles extends Role {
+    constructor(opts) {
+        super(opts);
+        const { bitLength, namePrefix } = opts;
+        if (bitLength <= 0 || bitLength > 32) {
+            throw new error_1.ValueError('bitLength must be between 1 and 32');
+        }
+        this.bitLength = bitLength;
+        this.namePrefix = namePrefix;
+        // Calculate the suffix_len value based on the total number of bins in
+        // hex. If bit_length = 10 then number_of_bins = 1024 or bin names will
+        // have a suffix between "000" and "3ff" in hex and suffix_len will be 3
+        // meaning the third bin will have a suffix of "003".
+        this.numberOfBins = Math.pow(2, bitLength);
+        // suffix_len is calculated based on "number_of_bins - 1" as the name
+        // of the last bin contains the number "number_of_bins -1" as a suffix.
+        this.suffixLen = (this.numberOfBins - 1).toString(16).length;
+    }
+    equals(other) {
+        if (!(other instanceof SuccinctRoles)) {
+            return false;
+        }
+        return (super.equals(other) &&
+            this.bitLength === other.bitLength &&
+            this.namePrefix === other.namePrefix);
+    }
+    /***
+     * Calculates the name of the delegated role responsible for 'target_filepath'.
+     *
+     * The target at path ''target_filepath' is assigned to a bin by casting
+     * the left-most 'bit_length' of bits of the file path hash digest to
+     * int, using it as bin index between 0 and '2**bit_length - 1'.
+     *
+     * Args:
+     *  target_filepath: URL path to a target file, relative to a base
+     *  targets URL.
+     */
+    getRoleForTarget(targetFilepath) {
+        const hasher = crypto_1.default.createHash('sha256');
+        const hasherBuffer = hasher.update(targetFilepath).digest();
+        // can't ever need more than 4 bytes (32 bits).
+        const hashBytes = hasherBuffer.subarray(0, 4);
+        // Right shift hash bytes, so that we only have the leftmost
+        // bit_length bits that we care about.
+        const shiftValue = 32 - this.bitLength;
+        const binNumber = hashBytes.readUInt32BE() >>> shiftValue;
+        // Add zero padding if necessary and cast to hex the suffix.
+        const suffix = binNumber.toString(16).padStart(this.suffixLen, '0');
+        return `${this.namePrefix}-${suffix}`;
+    }
+    *getRoles() {
+        for (let i = 0; i < this.numberOfBins; i++) {
+            const suffix = i.toString(16).padStart(this.suffixLen, '0');
+            yield `${this.namePrefix}-${suffix}`;
+        }
+    }
+    /***
+     * Determines whether the given ``role_name`` is in one of
+     * the delegated roles that ``SuccinctRoles`` represents.
+     *
+     * Args:
+     *  role_name: The name of the role to check against.
+     */
+    isDelegatedRole(roleName) {
+        const desiredPrefix = this.namePrefix + '-';
+        if (!roleName.startsWith(desiredPrefix)) {
+            return false;
+        }
+        const suffix = roleName.slice(desiredPrefix.length, roleName.length);
+        if (suffix.length != this.suffixLen) {
+            return false;
+        }
+        // make sure the suffix is a hex string
+        if (!suffix.match(/^[0-9a-fA-F]+$/)) {
+            return false;
+        }
+        const num = parseInt(suffix, 16);
+        return 0 <= num && num < this.numberOfBins;
+    }
+    toJSON() {
+        const json = {
+            ...super.toJSON(),
+            bit_length: this.bitLength,
+            name_prefix: this.namePrefix,
+        };
+        return json;
+    }
+    static fromJSON(data) {
+        const { keyids, threshold, bit_length, name_prefix, ...rest } = data;
+        if (!utils_1.guard.isStringArray(keyids)) {
+            throw new TypeError('keyids must be an array of strings');
+        }
+        if (typeof threshold !== 'number') {
+            throw new TypeError('threshold must be a number');
+        }
+        if (typeof bit_length !== 'number') {
+            throw new TypeError('bit_length must be a number');
+        }
+        if (typeof name_prefix !== 'string') {
+            throw new TypeError('name_prefix must be a string');
+        }
+        return new SuccinctRoles({
+            keyIDs: keyids,
+            threshold,
+            bitLength: bit_length,
+            namePrefix: name_prefix,
+            unrecognizedFields: rest,
+        });
+    }
+}
+exports.SuccinctRoles = SuccinctRoles;
+
+
+/***/ }),
+
+/***/ 9392:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Root = void 0;
+const util_1 = __importDefault(__nccwpck_require__(3837));
+const base_1 = __nccwpck_require__(159);
+const error_1 = __nccwpck_require__(8448);
+const key_1 = __nccwpck_require__(6697);
+const role_1 = __nccwpck_require__(9393);
+const utils_1 = __nccwpck_require__(5688);
+/**
+ * A container for the signed part of root metadata.
+ *
+ * The top-level role and metadata file signed by the root keys.
+ * This role specifies trusted keys for all other top-level roles, which may further delegate trust.
+ */
+class Root extends base_1.Signed {
+    constructor(options) {
+        super(options);
+        this.type = base_1.MetadataKind.Root;
+        this.keys = options.keys || {};
+        this.consistentSnapshot = options.consistentSnapshot ?? true;
+        if (!options.roles) {
+            this.roles = role_1.TOP_LEVEL_ROLE_NAMES.reduce((acc, role) => ({
+                ...acc,
+                [role]: new role_1.Role({ keyIDs: [], threshold: 1 }),
+            }), {});
+        }
+        else {
+            const roleNames = new Set(Object.keys(options.roles));
+            if (!role_1.TOP_LEVEL_ROLE_NAMES.every((role) => roleNames.has(role))) {
+                throw new error_1.ValueError('missing top-level role');
+            }
+            this.roles = options.roles;
+        }
+    }
+    addKey(key, role) {
+        if (!this.roles[role]) {
+            throw new error_1.ValueError(`role ${role} does not exist`);
+        }
+        if (!this.roles[role].keyIDs.includes(key.keyID)) {
+            this.roles[role].keyIDs.push(key.keyID);
+        }
+        this.keys[key.keyID] = key;
+    }
+    equals(other) {
+        if (!(other instanceof Root)) {
+            return false;
+        }
+        return (super.equals(other) &&
+            this.consistentSnapshot === other.consistentSnapshot &&
+            util_1.default.isDeepStrictEqual(this.keys, other.keys) &&
+            util_1.default.isDeepStrictEqual(this.roles, other.roles));
+    }
+    toJSON() {
+        return {
+            _type: this.type,
+            spec_version: this.specVersion,
+            version: this.version,
+            expires: this.expires,
+            keys: keysToJSON(this.keys),
+            roles: rolesToJSON(this.roles),
+            consistent_snapshot: this.consistentSnapshot,
+            ...this.unrecognizedFields,
+        };
+    }
+    static fromJSON(data) {
+        const { unrecognizedFields, ...commonFields } = base_1.Signed.commonFieldsFromJSON(data);
+        const { keys, roles, consistent_snapshot, ...rest } = unrecognizedFields;
+        if (typeof consistent_snapshot !== 'boolean') {
+            throw new TypeError('consistent_snapshot must be a boolean');
+        }
+        return new Root({
+            ...commonFields,
+            keys: keysFromJSON(keys),
+            roles: rolesFromJSON(roles),
+            consistentSnapshot: consistent_snapshot,
+            unrecognizedFields: rest,
+        });
+    }
+}
+exports.Root = Root;
+function keysToJSON(keys) {
+    return Object.entries(keys).reduce((acc, [keyID, key]) => ({ ...acc, [keyID]: key.toJSON() }), {});
+}
+function rolesToJSON(roles) {
+    return Object.entries(roles).reduce((acc, [roleName, role]) => ({ ...acc, [roleName]: role.toJSON() }), {});
+}
+function keysFromJSON(data) {
+    let keys;
+    if (utils_1.guard.isDefined(data)) {
+        if (!utils_1.guard.isObjectRecord(data)) {
+            throw new TypeError('keys must be an object');
+        }
+        keys = Object.entries(data).reduce((acc, [keyID, keyData]) => ({
+            ...acc,
+            [keyID]: key_1.Key.fromJSON(keyID, keyData),
+        }), {});
+    }
+    return keys;
+}
+function rolesFromJSON(data) {
+    let roles;
+    if (utils_1.guard.isDefined(data)) {
+        if (!utils_1.guard.isObjectRecord(data)) {
+            throw new TypeError('roles must be an object');
+        }
+        roles = Object.entries(data).reduce((acc, [roleName, roleData]) => ({
+            ...acc,
+            [roleName]: role_1.Role.fromJSON(roleData),
+        }), {});
+    }
+    return roles;
+}
+
+
+/***/ }),
+
+/***/ 4222:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Signature = void 0;
+/**
+ * A container class containing information about a signature.
+ *
+ * Contains a signature and the keyid uniquely identifying the key used
+ * to generate the signature.
+ *
+ * Provide a `fromJSON` method to create a Signature from a JSON object.
+ */
+class Signature {
+    constructor(options) {
+        const { keyID, sig } = options;
+        this.keyID = keyID;
+        this.sig = sig;
+    }
+    toJSON() {
+        return {
+            keyid: this.keyID,
+            sig: this.sig,
+        };
+    }
+    static fromJSON(data) {
+        const { keyid, sig } = data;
+        if (typeof keyid !== 'string') {
+            throw new TypeError('keyid must be a string');
+        }
+        if (typeof sig !== 'string') {
+            throw new TypeError('sig must be a string');
+        }
+        return new Signature({
+            keyID: keyid,
+            sig: sig,
+        });
+    }
+}
+exports.Signature = Signature;
+
+
+/***/ }),
+
+/***/ 2326:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Snapshot = void 0;
+const util_1 = __importDefault(__nccwpck_require__(3837));
+const base_1 = __nccwpck_require__(159);
+const file_1 = __nccwpck_require__(1923);
+const utils_1 = __nccwpck_require__(5688);
+/**
+ * A container for the signed part of snapshot metadata.
+ *
+ * Snapshot contains information about all target Metadata files.
+ * A top-level role that specifies the latest versions of all targets metadata files,
+ * and hence the latest versions of all targets (including any dependencies between them) on the repository.
+ */
+class Snapshot extends base_1.Signed {
+    constructor(opts) {
+        super(opts);
+        this.type = base_1.MetadataKind.Snapshot;
+        this.meta = opts.meta || { 'targets.json': new file_1.MetaFile({ version: 1 }) };
+    }
+    equals(other) {
+        if (!(other instanceof Snapshot)) {
+            return false;
+        }
+        return super.equals(other) && util_1.default.isDeepStrictEqual(this.meta, other.meta);
+    }
+    toJSON() {
+        return {
+            _type: this.type,
+            meta: metaToJSON(this.meta),
+            spec_version: this.specVersion,
+            version: this.version,
+            expires: this.expires,
+            ...this.unrecognizedFields,
+        };
+    }
+    static fromJSON(data) {
+        const { unrecognizedFields, ...commonFields } = base_1.Signed.commonFieldsFromJSON(data);
+        const { meta, ...rest } = unrecognizedFields;
+        return new Snapshot({
+            ...commonFields,
+            meta: metaFromJSON(meta),
+            unrecognizedFields: rest,
+        });
+    }
+}
+exports.Snapshot = Snapshot;
+function metaToJSON(meta) {
+    return Object.entries(meta).reduce((acc, [path, metadata]) => ({
+        ...acc,
+        [path]: metadata.toJSON(),
+    }), {});
+}
+function metaFromJSON(data) {
+    let meta;
+    if (utils_1.guard.isDefined(data)) {
+        if (!utils_1.guard.isObjectRecord(data)) {
+            throw new TypeError('meta field is malformed');
+        }
+        else {
+            meta = Object.entries(data).reduce((acc, [path, metadata]) => ({
+                ...acc,
+                [path]: file_1.MetaFile.fromJSON(metadata),
+            }), {});
+        }
+    }
+    return meta;
+}
+
+
+/***/ }),
+
+/***/ 5799:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Targets = void 0;
+const util_1 = __importDefault(__nccwpck_require__(3837));
+const base_1 = __nccwpck_require__(159);
+const delegations_1 = __nccwpck_require__(1662);
+const file_1 = __nccwpck_require__(1923);
+const utils_1 = __nccwpck_require__(5688);
+// Container for the signed part of targets metadata.
+//
+// Targets contains verifying information about target files and also delegates
+// responsible to other Targets roles.
+class Targets extends base_1.Signed {
+    constructor(options) {
+        super(options);
+        this.type = base_1.MetadataKind.Targets;
+        this.targets = options.targets || {};
+        this.delegations = options.delegations;
+    }
+    addTarget(target) {
+        this.targets[target.path] = target;
+    }
+    equals(other) {
+        if (!(other instanceof Targets)) {
+            return false;
+        }
+        return (super.equals(other) &&
+            util_1.default.isDeepStrictEqual(this.targets, other.targets) &&
+            util_1.default.isDeepStrictEqual(this.delegations, other.delegations));
+    }
+    toJSON() {
+        const json = {
+            _type: this.type,
+            spec_version: this.specVersion,
+            version: this.version,
+            expires: this.expires,
+            targets: targetsToJSON(this.targets),
+            ...this.unrecognizedFields,
+        };
+        if (this.delegations) {
+            json.delegations = this.delegations.toJSON();
+        }
+        return json;
+    }
+    static fromJSON(data) {
+        const { unrecognizedFields, ...commonFields } = base_1.Signed.commonFieldsFromJSON(data);
+        const { targets, delegations, ...rest } = unrecognizedFields;
+        return new Targets({
+            ...commonFields,
+            targets: targetsFromJSON(targets),
+            delegations: delegationsFromJSON(delegations),
+            unrecognizedFields: rest,
+        });
+    }
+}
+exports.Targets = Targets;
+function targetsToJSON(targets) {
+    return Object.entries(targets).reduce((acc, [path, target]) => ({
+        ...acc,
+        [path]: target.toJSON(),
+    }), {});
+}
+function targetsFromJSON(data) {
+    let targets;
+    if (utils_1.guard.isDefined(data)) {
+        if (!utils_1.guard.isObjectRecord(data)) {
+            throw new TypeError('targets must be an object');
+        }
+        else {
+            targets = Object.entries(data).reduce((acc, [path, target]) => ({
+                ...acc,
+                [path]: file_1.TargetFile.fromJSON(path, target),
+            }), {});
+        }
+    }
+    return targets;
+}
+function delegationsFromJSON(data) {
+    let delegations;
+    if (utils_1.guard.isDefined(data)) {
+        if (!utils_1.guard.isObject(data)) {
+            throw new TypeError('delegations must be an object');
+        }
+        else {
+            delegations = delegations_1.Delegations.fromJSON(data);
+        }
+    }
+    return delegations;
+}
+
+
+/***/ }),
+
+/***/ 4042:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Timestamp = void 0;
+const base_1 = __nccwpck_require__(159);
+const file_1 = __nccwpck_require__(1923);
+const utils_1 = __nccwpck_require__(5688);
+/**
+ * A container for the signed part of timestamp metadata.
+ *
+ * A top-level that specifies the latest version of the snapshot role metadata file,
+ * and hence the latest versions of all metadata and targets on the repository.
+ */
+class Timestamp extends base_1.Signed {
+    constructor(options) {
+        super(options);
+        this.type = base_1.MetadataKind.Timestamp;
+        this.snapshotMeta = options.snapshotMeta || new file_1.MetaFile({ version: 1 });
+    }
+    equals(other) {
+        if (!(other instanceof Timestamp)) {
+            return false;
+        }
+        return super.equals(other) && this.snapshotMeta.equals(other.snapshotMeta);
+    }
+    toJSON() {
+        return {
+            _type: this.type,
+            spec_version: this.specVersion,
+            version: this.version,
+            expires: this.expires,
+            meta: { 'snapshot.json': this.snapshotMeta.toJSON() },
+            ...this.unrecognizedFields,
+        };
+    }
+    static fromJSON(data) {
+        const { unrecognizedFields, ...commonFields } = base_1.Signed.commonFieldsFromJSON(data);
+        const { meta, ...rest } = unrecognizedFields;
+        return new Timestamp({
+            ...commonFields,
+            snapshotMeta: snapshotMetaFromJSON(meta),
+            unrecognizedFields: rest,
+        });
+    }
+}
+exports.Timestamp = Timestamp;
+function snapshotMetaFromJSON(data) {
+    let snapshotMeta;
+    if (utils_1.guard.isDefined(data)) {
+        const snapshotData = data['snapshot.json'];
+        if (!utils_1.guard.isDefined(snapshotData) || !utils_1.guard.isObject(snapshotData)) {
+            throw new TypeError('missing snapshot.json in meta');
+        }
+        else {
+            snapshotMeta = file_1.MetaFile.fromJSON(snapshotData);
+        }
+    }
+    return snapshotMeta;
+}
+
+
+/***/ }),
+
+/***/ 7106:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.isObjectRecord = exports.isStringRecord = exports.isObjectArray = exports.isStringArray = exports.isObject = exports.isDefined = void 0;
+function isDefined(val) {
+    return val !== undefined;
+}
+exports.isDefined = isDefined;
+function isObject(value) {
+    return typeof value === 'object' && value !== null;
+}
+exports.isObject = isObject;
+function isStringArray(value) {
+    return Array.isArray(value) && value.every((v) => typeof v === 'string');
+}
+exports.isStringArray = isStringArray;
+function isObjectArray(value) {
+    return Array.isArray(value) && value.every(isObject);
+}
+exports.isObjectArray = isObjectArray;
+function isStringRecord(value) {
+    return (typeof value === 'object' &&
+        value !== null &&
+        Object.keys(value).every((k) => typeof k === 'string') &&
+        Object.values(value).every((v) => typeof v === 'string'));
+}
+exports.isStringRecord = isStringRecord;
+function isObjectRecord(value) {
+    return (typeof value === 'object' &&
+        value !== null &&
+        Object.keys(value).every((k) => typeof k === 'string') &&
+        Object.values(value).every((v) => typeof v === 'object' && v !== null));
+}
+exports.isObjectRecord = isObjectRecord;
+
+
+/***/ }),
+
+/***/ 5688:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.crypto = exports.guard = void 0;
+exports.guard = __importStar(__nccwpck_require__(7106));
+exports.crypto = __importStar(__nccwpck_require__(8430));
+
+
+/***/ }),
+
+/***/ 5428:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.canonicalize = void 0;
+const QUOTATION_MARK = Buffer.from('"');
+const COMMA = Buffer.from(',');
+const COLON = Buffer.from(':');
+const LEFT_SQUARE_BRACKET = Buffer.from('[');
+const RIGHT_SQUARE_BRACKET = Buffer.from(']');
+const LEFT_CURLY_BRACKET = Buffer.from('{');
+const RIGHT_CURLY_BRACKET = Buffer.from('}');
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function canonicalize(object) {
+    let buffer = Buffer.from('');
+    if (object === null || typeof object !== 'object' || object.toJSON != null) {
+        // Primitives or toJSONable objects
+        if (typeof object === 'string') {
+            buffer = Buffer.concat([
+                buffer,
+                QUOTATION_MARK,
+                Buffer.from(object),
+                QUOTATION_MARK,
+            ]);
+        }
+        else {
+            buffer = Buffer.concat([buffer, Buffer.from(JSON.stringify(object))]);
+        }
+    }
+    else if (Array.isArray(object)) {
+        // Array - maintain element order
+        buffer = Buffer.concat([buffer, LEFT_SQUARE_BRACKET]);
+        let first = true;
+        object.forEach((element) => {
+            if (!first) {
+                buffer = Buffer.concat([buffer, COMMA]);
+            }
+            first = false;
+            // recursive call
+            buffer = Buffer.concat([buffer, canonicalize(element)]);
+        });
+        buffer = Buffer.concat([buffer, RIGHT_SQUARE_BRACKET]);
+    }
+    else {
+        // Object - Sort properties before serializing
+        buffer = Buffer.concat([buffer, LEFT_CURLY_BRACKET]);
+        let first = true;
+        Object.keys(object)
+            .sort()
+            .forEach((property) => {
+            if (!first) {
+                buffer = Buffer.concat([buffer, COMMA]);
+            }
+            first = false;
+            buffer = Buffer.concat([buffer, Buffer.from(JSON.stringify(property))]);
+            buffer = Buffer.concat([buffer, COLON]);
+            // recursive call
+            buffer = Buffer.concat([buffer, canonicalize(object[property])]);
+        });
+        buffer = Buffer.concat([buffer, RIGHT_CURLY_BRACKET]);
+    }
+    return buffer;
+}
+exports.canonicalize = canonicalize;
+
+
+/***/ }),
+
+/***/ 8725:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.getPublicKey = void 0;
+const crypto_1 = __importDefault(__nccwpck_require__(6113));
+const error_1 = __nccwpck_require__(8448);
+const oid_1 = __nccwpck_require__(8680);
+const ASN1_TAG_SEQUENCE = 0x30;
+const ANS1_TAG_BIT_STRING = 0x03;
+const NULL_BYTE = 0x00;
+const OID_EDDSA = '1.3.101.112';
+const OID_EC_PUBLIC_KEY = '1.2.840.10045.2.1';
+const OID_EC_CURVE_P256V1 = '1.2.840.10045.3.1.7';
+const PEM_HEADER = '-----BEGIN PUBLIC KEY-----';
+function getPublicKey(keyInfo) {
+    switch (keyInfo.keyType) {
+        case 'rsa':
+            return getRSAPublicKey(keyInfo);
+        case 'ed25519':
+            return getED25519PublicKey(keyInfo);
+        case 'ecdsa':
+        case 'ecdsa-sha2-nistp256':
+        case 'ecdsa-sha2-nistp384':
+            return getECDCSAPublicKey(keyInfo);
+        default:
+            throw new error_1.UnsupportedAlgorithmError(`Unsupported key type: ${keyInfo.keyType}`);
+    }
+}
+exports.getPublicKey = getPublicKey;
+function getRSAPublicKey(keyInfo) {
+    // Only support PEM-encoded RSA keys
+    if (!keyInfo.keyVal.startsWith(PEM_HEADER)) {
+        throw new error_1.CryptoError('Invalid key format');
+    }
+    const key = crypto_1.default.createPublicKey(keyInfo.keyVal);
+    switch (keyInfo.scheme) {
+        case 'rsassa-pss-sha256':
+            return {
+                key: key,
+                padding: crypto_1.default.constants.RSA_PKCS1_PSS_PADDING,
+            };
+        default:
+            throw new error_1.UnsupportedAlgorithmError(`Unsupported RSA scheme: ${keyInfo.scheme}`);
+    }
+}
+function getED25519PublicKey(keyInfo) {
+    let key;
+    // If key is already PEM-encoded we can just parse it
+    if (keyInfo.keyVal.startsWith(PEM_HEADER)) {
+        key = crypto_1.default.createPublicKey(keyInfo.keyVal);
+    }
+    else {
+        // If key is not PEM-encoded it had better be hex
+        if (!isHex(keyInfo.keyVal)) {
+            throw new error_1.CryptoError('Invalid key format');
+        }
+        key = crypto_1.default.createPublicKey({
+            key: ed25519.hexToDER(keyInfo.keyVal),
+            format: 'der',
+            type: 'spki',
+        });
+    }
+    return { key };
+}
+function getECDCSAPublicKey(keyInfo) {
+    let key;
+    // If key is already PEM-encoded we can just parse it
+    if (keyInfo.keyVal.startsWith(PEM_HEADER)) {
+        key = crypto_1.default.createPublicKey(keyInfo.keyVal);
+    }
+    else {
+        // If key is not PEM-encoded it had better be hex
+        if (!isHex(keyInfo.keyVal)) {
+            throw new error_1.CryptoError('Invalid key format');
+        }
+        key = crypto_1.default.createPublicKey({
+            key: ecdsa.hexToDER(keyInfo.keyVal),
+            format: 'der',
+            type: 'spki',
+        });
+    }
+    return { key };
+}
+const ed25519 = {
+    // Translates a hex key into a crypto KeyObject
+    // https://keygen.sh/blog/how-to-use-hexadecimal-ed25519-keys-in-node/
+    hexToDER: (hex) => {
+        const key = Buffer.from(hex, 'hex');
+        const oid = (0, oid_1.encodeOIDString)(OID_EDDSA);
+        // Create a byte sequence containing the OID and key
+        const elements = Buffer.concat([
+            Buffer.concat([
+                Buffer.from([ASN1_TAG_SEQUENCE]),
+                Buffer.from([oid.length]),
+                oid,
+            ]),
+            Buffer.concat([
+                Buffer.from([ANS1_TAG_BIT_STRING]),
+                Buffer.from([key.length + 1]),
+                Buffer.from([NULL_BYTE]),
+                key,
+            ]),
+        ]);
+        // Wrap up by creating a sequence of elements
+        const der = Buffer.concat([
+            Buffer.from([ASN1_TAG_SEQUENCE]),
+            Buffer.from([elements.length]),
+            elements,
+        ]);
+        return der;
+    },
+};
+const ecdsa = {
+    hexToDER: (hex) => {
+        const key = Buffer.from(hex, 'hex');
+        const bitString = Buffer.concat([
+            Buffer.from([ANS1_TAG_BIT_STRING]),
+            Buffer.from([key.length + 1]),
+            Buffer.from([NULL_BYTE]),
+            key,
+        ]);
+        const oids = Buffer.concat([
+            (0, oid_1.encodeOIDString)(OID_EC_PUBLIC_KEY),
+            (0, oid_1.encodeOIDString)(OID_EC_CURVE_P256V1),
+        ]);
+        const oidSequence = Buffer.concat([
+            Buffer.from([ASN1_TAG_SEQUENCE]),
+            Buffer.from([oids.length]),
+            oids,
+        ]);
+        // Wrap up by creating a sequence of elements
+        const der = Buffer.concat([
+            Buffer.from([ASN1_TAG_SEQUENCE]),
+            Buffer.from([oidSequence.length + bitString.length]),
+            oidSequence,
+            bitString,
+        ]);
+        return der;
+    },
+};
+const isHex = (key) => /^[0-9a-fA-F]+$/.test(key);
+
+
+/***/ }),
+
+/***/ 8680:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.encodeOIDString = void 0;
+const ANS1_TAG_OID = 0x06;
+function encodeOIDString(oid) {
+    const parts = oid.split('.');
+    // The first two subidentifiers are encoded into the first byte
+    const first = parseInt(parts[0], 10) * 40 + parseInt(parts[1], 10);
+    const rest = [];
+    parts.slice(2).forEach((part) => {
+        const bytes = encodeVariableLengthInteger(parseInt(part, 10));
+        rest.push(...bytes);
+    });
+    const der = Buffer.from([first, ...rest]);
+    return Buffer.from([ANS1_TAG_OID, der.length, ...der]);
+}
+exports.encodeOIDString = encodeOIDString;
+function encodeVariableLengthInteger(value) {
+    const bytes = [];
+    let mask = 0x00;
+    while (value > 0) {
+        bytes.unshift((value & 0x7f) | mask);
+        value >>= 7;
+        mask = 0x80;
+    }
+    return bytes;
+}
+
+
+/***/ }),
+
+/***/ 8430:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.verifySignature = void 0;
+const crypto_1 = __importDefault(__nccwpck_require__(6113));
+const json_1 = __nccwpck_require__(5428);
+const verifySignature = (metaDataSignedData, key, signature) => {
+    const canonicalData = (0, json_1.canonicalize)(metaDataSignedData) || '';
+    return crypto_1.default.verify(undefined, canonicalData, key, Buffer.from(signature, 'hex'));
+};
+exports.verifySignature = verifySignature;
+
+
+/***/ }),
+
+/***/ 4515:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+var balanced = __nccwpck_require__(9417);
+
+module.exports = expandTop;
+
+var escSlash = '\0SLASH'+Math.random()+'\0';
+var escOpen = '\0OPEN'+Math.random()+'\0';
+var escClose = '\0CLOSE'+Math.random()+'\0';
+var escComma = '\0COMMA'+Math.random()+'\0';
+var escPeriod = '\0PERIOD'+Math.random()+'\0';
+
+function numeric(str) {
+  return parseInt(str, 10) == str
+    ? parseInt(str, 10)
+    : str.charCodeAt(0);
+}
+
+function escapeBraces(str) {
+  return str.split('\\\\').join(escSlash)
+            .split('\\{').join(escOpen)
+            .split('\\}').join(escClose)
+            .split('\\,').join(escComma)
+            .split('\\.').join(escPeriod);
+}
+
+function unescapeBraces(str) {
+  return str.split(escSlash).join('\\')
+            .split(escOpen).join('{')
+            .split(escClose).join('}')
+            .split(escComma).join(',')
+            .split(escPeriod).join('.');
+}
+
+
+// Basically just str.split(","), but handling cases
+// where we have nested braced sections, which should be
+// treated as individual members, like {a,{b,c},d}
+function parseCommaParts(str) {
+  if (!str)
+    return [''];
+
+  var parts = [];
+  var m = balanced('{', '}', str);
+
+  if (!m)
+    return str.split(',');
+
+  var pre = m.pre;
+  var body = m.body;
+  var post = m.post;
+  var p = pre.split(',');
+
+  p[p.length-1] += '{' + body + '}';
+  var postParts = parseCommaParts(post);
+  if (post.length) {
+    p[p.length-1] += postParts.shift();
+    p.push.apply(p, postParts);
+  }
+
+  parts.push.apply(parts, p);
+
+  return parts;
+}
+
+function expandTop(str) {
+  if (!str)
+    return [];
+
+  // I don't know why Bash 4.3 does this, but it does.
+  // Anything starting with {} will have the first two bytes preserved
+  // but *only* at the top level, so {},a}b will not expand to anything,
+  // but a{},b}c will be expanded to [a}c,abc].
+  // One could argue that this is a bug in Bash, but since the goal of
+  // this module is to match Bash's rules, we escape a leading {}
+  if (str.substr(0, 2) === '{}') {
+    str = '\\{\\}' + str.substr(2);
+  }
+
+  return expand(escapeBraces(str), true).map(unescapeBraces);
+}
+
+function embrace(str) {
+  return '{' + str + '}';
+}
+function isPadded(el) {
+  return /^-?0\d/.test(el);
+}
+
+function lte(i, y) {
+  return i <= y;
+}
+function gte(i, y) {
+  return i >= y;
+}
+
+function expand(str, isTop) {
+  var expansions = [];
+
+  var m = balanced('{', '}', str);
+  if (!m) return [str];
+
+  // no need to expand pre, since it is guaranteed to be free of brace-sets
+  var pre = m.pre;
+  var post = m.post.length
+    ? expand(m.post, false)
+    : [''];
+
+  if (/\$$/.test(m.pre)) {    
+    for (var k = 0; k < post.length; k++) {
+      var expansion = pre+ '{' + m.body + '}' + post[k];
+      expansions.push(expansion);
+    }
+  } else {
+    var isNumericSequence = /^-?\d+\.\.-?\d+(?:\.\.-?\d+)?$/.test(m.body);
+    var isAlphaSequence = /^[a-zA-Z]\.\.[a-zA-Z](?:\.\.-?\d+)?$/.test(m.body);
+    var isSequence = isNumericSequence || isAlphaSequence;
+    var isOptions = m.body.indexOf(',') >= 0;
+    if (!isSequence && !isOptions) {
+      // {a},b}
+      if (m.post.match(/,.*\}/)) {
+        str = m.pre + '{' + m.body + escClose + m.post;
+        return expand(str);
+      }
+      return [str];
+    }
+
+    var n;
+    if (isSequence) {
+      n = m.body.split(/\.\./);
+    } else {
+      n = parseCommaParts(m.body);
+      if (n.length === 1) {
+        // x{{a,b}}y ==> x{a}y x{b}y
+        n = expand(n[0], false).map(embrace);
+        if (n.length === 1) {
+          return post.map(function(p) {
+            return m.pre + n[0] + p;
+          });
+        }
+      }
+    }
+
+    // at this point, n is the parts, and we know it's not a comma set
+    // with a single entry.
+    var N;
+
+    if (isSequence) {
+      var x = numeric(n[0]);
+      var y = numeric(n[1]);
+      var width = Math.max(n[0].length, n[1].length)
+      var incr = n.length == 3
+        ? Math.abs(numeric(n[2]))
+        : 1;
+      var test = lte;
+      var reverse = y < x;
+      if (reverse) {
+        incr *= -1;
+        test = gte;
+      }
+      var pad = n.some(isPadded);
+
+      N = [];
+
+      for (var i = x; test(i, y); i += incr) {
+        var c;
+        if (isAlphaSequence) {
+          c = String.fromCharCode(i);
+          if (c === '\\')
+            c = '';
+        } else {
+          c = String(i);
+          if (pad) {
+            var need = width - c.length;
+            if (need > 0) {
+              var z = new Array(need + 1).join('0');
+              if (i < 0)
+                c = '-' + z + c.slice(1);
+              else
+                c = z + c;
+            }
+          }
+        }
+        N.push(c);
+      }
+    } else {
+      N = [];
+
+      for (var j = 0; j < n.length; j++) {
+        N.push.apply(N, expand(n[j], false));
+      }
+    }
+
+    for (var j = 0; j < N.length; j++) {
+      for (var k = 0; k < post.length; k++) {
+        var expansion = pre + N[j] + post[k];
+        if (!isTop || isSequence || expansion)
+          expansions.push(expansion);
+      }
+    }
+  }
+
+  return expansions;
+}
+
+
+
+/***/ }),
+
 /***/ 9690:
 /***/ (function(module, __unused_webpack_exports, __nccwpck_require__) {
 
@@ -7817,7 +9849,7 @@ module.exports.verify.lastRun = verify.lastRun
 "use strict";
 
 
-const LRU = __nccwpck_require__(738)
+const LRU = __nccwpck_require__(4458)
 
 const MEMOIZED = new LRU({
   max: 500,
@@ -8678,6 +10710,12 @@ function setopts (self, pattern, options) {
     pattern = "**/" + pattern
   }
 
+  self.windowsPathsNoEscape = !!options.windowsPathsNoEscape ||
+    options.allowWindowsEscape === false
+  if (self.windowsPathsNoEscape) {
+    pattern = pattern.replace(/\\/g, '/')
+  }
+
   self.silent = !!options.silent
   self.pattern = pattern
   self.strict = options.strict !== false
@@ -8733,8 +10771,6 @@ function setopts (self, pattern, options) {
   // Note that they are not supported in Glob itself anyway.
   options.nonegate = true
   options.nocomment = true
-  // always treat \ in patterns as escapes, not path separators
-  options.allowWindowsEscape = true
 
   self.minimatch = new Minimatch(pattern, options)
   self.options = self.minimatch.options
@@ -10153,1031 +12189,6 @@ GlobSync.prototype._makeAbs = function (f) {
 
 /***/ }),
 
-/***/ 738:
-/***/ ((module) => {
-
-const perf =
-  typeof performance === 'object' &&
-  performance &&
-  typeof performance.now === 'function'
-    ? performance
-    : Date
-
-const hasAbortController = typeof AbortController === 'function'
-
-// minimal backwards-compatibility polyfill
-// this doesn't have nearly all the checks and whatnot that
-// actual AbortController/Signal has, but it's enough for
-// our purposes, and if used properly, behaves the same.
-const AC = hasAbortController
-  ? AbortController
-  : class AbortController {
-      constructor() {
-        this.signal = new AS()
-      }
-      abort() {
-        this.signal.dispatchEvent('abort')
-      }
-    }
-
-const hasAbortSignal = typeof AbortSignal === 'function'
-// Some polyfills put this on the AC class, not global
-const hasACAbortSignal = typeof AC.AbortSignal === 'function'
-const AS = hasAbortSignal
-  ? AbortSignal
-  : hasACAbortSignal
-  ? AC.AbortController
-  : class AbortSignal {
-      constructor() {
-        this.aborted = false
-        this._listeners = []
-      }
-      dispatchEvent(type) {
-        if (type === 'abort') {
-          this.aborted = true
-          const e = { type, target: this }
-          this.onabort(e)
-          this._listeners.forEach(f => f(e), this)
-        }
-      }
-      onabort() {}
-      addEventListener(ev, fn) {
-        if (ev === 'abort') {
-          this._listeners.push(fn)
-        }
-      }
-      removeEventListener(ev, fn) {
-        if (ev === 'abort') {
-          this._listeners = this._listeners.filter(f => f !== fn)
-        }
-      }
-    }
-
-const warned = new Set()
-const deprecatedOption = (opt, instead) => {
-  const code = `LRU_CACHE_OPTION_${opt}`
-  if (shouldWarn(code)) {
-    warn(code, `${opt} option`, `options.${instead}`, LRUCache)
-  }
-}
-const deprecatedMethod = (method, instead) => {
-  const code = `LRU_CACHE_METHOD_${method}`
-  if (shouldWarn(code)) {
-    const { prototype } = LRUCache
-    const { get } = Object.getOwnPropertyDescriptor(prototype, method)
-    warn(code, `${method} method`, `cache.${instead}()`, get)
-  }
-}
-const deprecatedProperty = (field, instead) => {
-  const code = `LRU_CACHE_PROPERTY_${field}`
-  if (shouldWarn(code)) {
-    const { prototype } = LRUCache
-    const { get } = Object.getOwnPropertyDescriptor(prototype, field)
-    warn(code, `${field} property`, `cache.${instead}`, get)
-  }
-}
-
-const emitWarning = (...a) => {
-  typeof process === 'object' &&
-  process &&
-  typeof process.emitWarning === 'function'
-    ? process.emitWarning(...a)
-    : console.error(...a)
-}
-
-const shouldWarn = code => !warned.has(code)
-
-const warn = (code, what, instead, fn) => {
-  warned.add(code)
-  const msg = `The ${what} is deprecated. Please use ${instead} instead.`
-  emitWarning(msg, 'DeprecationWarning', code, fn)
-}
-
-const isPosInt = n => n && n === Math.floor(n) && n > 0 && isFinite(n)
-
-/* istanbul ignore next - This is a little bit ridiculous, tbh.
- * The maximum array length is 2^32-1 or thereabouts on most JS impls.
- * And well before that point, you're caching the entire world, I mean,
- * that's ~32GB of just integers for the next/prev links, plus whatever
- * else to hold that many keys and values.  Just filling the memory with
- * zeroes at init time is brutal when you get that big.
- * But why not be complete?
- * Maybe in the future, these limits will have expanded. */
-const getUintArray = max =>
-  !isPosInt(max)
-    ? null
-    : max <= Math.pow(2, 8)
-    ? Uint8Array
-    : max <= Math.pow(2, 16)
-    ? Uint16Array
-    : max <= Math.pow(2, 32)
-    ? Uint32Array
-    : max <= Number.MAX_SAFE_INTEGER
-    ? ZeroArray
-    : null
-
-class ZeroArray extends Array {
-  constructor(size) {
-    super(size)
-    this.fill(0)
-  }
-}
-
-class Stack {
-  constructor(max) {
-    if (max === 0) {
-      return []
-    }
-    const UintArray = getUintArray(max)
-    this.heap = new UintArray(max)
-    this.length = 0
-  }
-  push(n) {
-    this.heap[this.length++] = n
-  }
-  pop() {
-    return this.heap[--this.length]
-  }
-}
-
-class LRUCache {
-  constructor(options = {}) {
-    const {
-      max = 0,
-      ttl,
-      ttlResolution = 1,
-      ttlAutopurge,
-      updateAgeOnGet,
-      updateAgeOnHas,
-      allowStale,
-      dispose,
-      disposeAfter,
-      noDisposeOnSet,
-      noUpdateTTL,
-      maxSize = 0,
-      maxEntrySize = 0,
-      sizeCalculation,
-      fetchMethod,
-      fetchContext,
-      noDeleteOnFetchRejection,
-      noDeleteOnStaleGet,
-    } = options
-
-    // deprecated options, don't trigger a warning for getting them if
-    // the thing being passed in is another LRUCache we're copying.
-    const { length, maxAge, stale } =
-      options instanceof LRUCache ? {} : options
-
-    if (max !== 0 && !isPosInt(max)) {
-      throw new TypeError('max option must be a nonnegative integer')
-    }
-
-    const UintArray = max ? getUintArray(max) : Array
-    if (!UintArray) {
-      throw new Error('invalid max value: ' + max)
-    }
-
-    this.max = max
-    this.maxSize = maxSize
-    this.maxEntrySize = maxEntrySize || this.maxSize
-    this.sizeCalculation = sizeCalculation || length
-    if (this.sizeCalculation) {
-      if (!this.maxSize && !this.maxEntrySize) {
-        throw new TypeError(
-          'cannot set sizeCalculation without setting maxSize or maxEntrySize'
-        )
-      }
-      if (typeof this.sizeCalculation !== 'function') {
-        throw new TypeError('sizeCalculation set to non-function')
-      }
-    }
-
-    this.fetchMethod = fetchMethod || null
-    if (this.fetchMethod && typeof this.fetchMethod !== 'function') {
-      throw new TypeError(
-        'fetchMethod must be a function if specified'
-      )
-    }
-
-    this.fetchContext = fetchContext
-    if (!this.fetchMethod && fetchContext !== undefined) {
-      throw new TypeError(
-        'cannot set fetchContext without fetchMethod'
-      )
-    }
-
-    this.keyMap = new Map()
-    this.keyList = new Array(max).fill(null)
-    this.valList = new Array(max).fill(null)
-    this.next = new UintArray(max)
-    this.prev = new UintArray(max)
-    this.head = 0
-    this.tail = 0
-    this.free = new Stack(max)
-    this.initialFill = 1
-    this.size = 0
-
-    if (typeof dispose === 'function') {
-      this.dispose = dispose
-    }
-    if (typeof disposeAfter === 'function') {
-      this.disposeAfter = disposeAfter
-      this.disposed = []
-    } else {
-      this.disposeAfter = null
-      this.disposed = null
-    }
-    this.noDisposeOnSet = !!noDisposeOnSet
-    this.noUpdateTTL = !!noUpdateTTL
-    this.noDeleteOnFetchRejection = !!noDeleteOnFetchRejection
-
-    // NB: maxEntrySize is set to maxSize if it's set
-    if (this.maxEntrySize !== 0) {
-      if (this.maxSize !== 0) {
-        if (!isPosInt(this.maxSize)) {
-          throw new TypeError(
-            'maxSize must be a positive integer if specified'
-          )
-        }
-      }
-      if (!isPosInt(this.maxEntrySize)) {
-        throw new TypeError(
-          'maxEntrySize must be a positive integer if specified'
-        )
-      }
-      this.initializeSizeTracking()
-    }
-
-    this.allowStale = !!allowStale || !!stale
-    this.noDeleteOnStaleGet = !!noDeleteOnStaleGet
-    this.updateAgeOnGet = !!updateAgeOnGet
-    this.updateAgeOnHas = !!updateAgeOnHas
-    this.ttlResolution =
-      isPosInt(ttlResolution) || ttlResolution === 0
-        ? ttlResolution
-        : 1
-    this.ttlAutopurge = !!ttlAutopurge
-    this.ttl = ttl || maxAge || 0
-    if (this.ttl) {
-      if (!isPosInt(this.ttl)) {
-        throw new TypeError(
-          'ttl must be a positive integer if specified'
-        )
-      }
-      this.initializeTTLTracking()
-    }
-
-    // do not allow completely unbounded caches
-    if (this.max === 0 && this.ttl === 0 && this.maxSize === 0) {
-      throw new TypeError(
-        'At least one of max, maxSize, or ttl is required'
-      )
-    }
-    if (!this.ttlAutopurge && !this.max && !this.maxSize) {
-      const code = 'LRU_CACHE_UNBOUNDED'
-      if (shouldWarn(code)) {
-        warned.add(code)
-        const msg =
-          'TTL caching without ttlAutopurge, max, or maxSize can ' +
-          'result in unbounded memory consumption.'
-        emitWarning(msg, 'UnboundedCacheWarning', code, LRUCache)
-      }
-    }
-
-    if (stale) {
-      deprecatedOption('stale', 'allowStale')
-    }
-    if (maxAge) {
-      deprecatedOption('maxAge', 'ttl')
-    }
-    if (length) {
-      deprecatedOption('length', 'sizeCalculation')
-    }
-  }
-
-  getRemainingTTL(key) {
-    return this.has(key, { updateAgeOnHas: false }) ? Infinity : 0
-  }
-
-  initializeTTLTracking() {
-    this.ttls = new ZeroArray(this.max)
-    this.starts = new ZeroArray(this.max)
-
-    this.setItemTTL = (index, ttl, start = perf.now()) => {
-      this.starts[index] = ttl !== 0 ? start : 0
-      this.ttls[index] = ttl
-      if (ttl !== 0 && this.ttlAutopurge) {
-        const t = setTimeout(() => {
-          if (this.isStale(index)) {
-            this.delete(this.keyList[index])
-          }
-        }, ttl + 1)
-        /* istanbul ignore else - unref() not supported on all platforms */
-        if (t.unref) {
-          t.unref()
-        }
-      }
-    }
-
-    this.updateItemAge = index => {
-      this.starts[index] = this.ttls[index] !== 0 ? perf.now() : 0
-    }
-
-    // debounce calls to perf.now() to 1s so we're not hitting
-    // that costly call repeatedly.
-    let cachedNow = 0
-    const getNow = () => {
-      const n = perf.now()
-      if (this.ttlResolution > 0) {
-        cachedNow = n
-        const t = setTimeout(
-          () => (cachedNow = 0),
-          this.ttlResolution
-        )
-        /* istanbul ignore else - not available on all platforms */
-        if (t.unref) {
-          t.unref()
-        }
-      }
-      return n
-    }
-
-    this.getRemainingTTL = key => {
-      const index = this.keyMap.get(key)
-      if (index === undefined) {
-        return 0
-      }
-      return this.ttls[index] === 0 || this.starts[index] === 0
-        ? Infinity
-        : this.starts[index] +
-            this.ttls[index] -
-            (cachedNow || getNow())
-    }
-
-    this.isStale = index => {
-      return (
-        this.ttls[index] !== 0 &&
-        this.starts[index] !== 0 &&
-        (cachedNow || getNow()) - this.starts[index] >
-          this.ttls[index]
-      )
-    }
-  }
-  updateItemAge(index) {}
-  setItemTTL(index, ttl, start) {}
-  isStale(index) {
-    return false
-  }
-
-  initializeSizeTracking() {
-    this.calculatedSize = 0
-    this.sizes = new ZeroArray(this.max)
-    this.removeItemSize = index => {
-      this.calculatedSize -= this.sizes[index]
-      this.sizes[index] = 0
-    }
-    this.requireSize = (k, v, size, sizeCalculation) => {
-      // provisionally accept background fetches.
-      // actual value size will be checked when they return.
-      if (this.isBackgroundFetch(v)) {
-        return 0
-      }
-      if (!isPosInt(size)) {
-        if (sizeCalculation) {
-          if (typeof sizeCalculation !== 'function') {
-            throw new TypeError('sizeCalculation must be a function')
-          }
-          size = sizeCalculation(v, k)
-          if (!isPosInt(size)) {
-            throw new TypeError(
-              'sizeCalculation return invalid (expect positive integer)'
-            )
-          }
-        } else {
-          throw new TypeError(
-            'invalid size value (must be positive integer)'
-          )
-        }
-      }
-      return size
-    }
-    this.addItemSize = (index, size) => {
-      this.sizes[index] = size
-      if (this.maxSize) {
-        const maxSize = this.maxSize - this.sizes[index]
-        while (this.calculatedSize > maxSize) {
-          this.evict(true)
-        }
-      }
-      this.calculatedSize += this.sizes[index]
-    }
-  }
-  removeItemSize(index) {}
-  addItemSize(index, size) {}
-  requireSize(k, v, size, sizeCalculation) {
-    if (size || sizeCalculation) {
-      throw new TypeError(
-        'cannot set size without setting maxSize or maxEntrySize on cache'
-      )
-    }
-  }
-
-  *indexes({ allowStale = this.allowStale } = {}) {
-    if (this.size) {
-      for (let i = this.tail; true; ) {
-        if (!this.isValidIndex(i)) {
-          break
-        }
-        if (allowStale || !this.isStale(i)) {
-          yield i
-        }
-        if (i === this.head) {
-          break
-        } else {
-          i = this.prev[i]
-        }
-      }
-    }
-  }
-
-  *rindexes({ allowStale = this.allowStale } = {}) {
-    if (this.size) {
-      for (let i = this.head; true; ) {
-        if (!this.isValidIndex(i)) {
-          break
-        }
-        if (allowStale || !this.isStale(i)) {
-          yield i
-        }
-        if (i === this.tail) {
-          break
-        } else {
-          i = this.next[i]
-        }
-      }
-    }
-  }
-
-  isValidIndex(index) {
-    return this.keyMap.get(this.keyList[index]) === index
-  }
-
-  *entries() {
-    for (const i of this.indexes()) {
-      yield [this.keyList[i], this.valList[i]]
-    }
-  }
-  *rentries() {
-    for (const i of this.rindexes()) {
-      yield [this.keyList[i], this.valList[i]]
-    }
-  }
-
-  *keys() {
-    for (const i of this.indexes()) {
-      yield this.keyList[i]
-    }
-  }
-  *rkeys() {
-    for (const i of this.rindexes()) {
-      yield this.keyList[i]
-    }
-  }
-
-  *values() {
-    for (const i of this.indexes()) {
-      yield this.valList[i]
-    }
-  }
-  *rvalues() {
-    for (const i of this.rindexes()) {
-      yield this.valList[i]
-    }
-  }
-
-  [Symbol.iterator]() {
-    return this.entries()
-  }
-
-  find(fn, getOptions = {}) {
-    for (const i of this.indexes()) {
-      if (fn(this.valList[i], this.keyList[i], this)) {
-        return this.get(this.keyList[i], getOptions)
-      }
-    }
-  }
-
-  forEach(fn, thisp = this) {
-    for (const i of this.indexes()) {
-      fn.call(thisp, this.valList[i], this.keyList[i], this)
-    }
-  }
-
-  rforEach(fn, thisp = this) {
-    for (const i of this.rindexes()) {
-      fn.call(thisp, this.valList[i], this.keyList[i], this)
-    }
-  }
-
-  get prune() {
-    deprecatedMethod('prune', 'purgeStale')
-    return this.purgeStale
-  }
-
-  purgeStale() {
-    let deleted = false
-    for (const i of this.rindexes({ allowStale: true })) {
-      if (this.isStale(i)) {
-        this.delete(this.keyList[i])
-        deleted = true
-      }
-    }
-    return deleted
-  }
-
-  dump() {
-    const arr = []
-    for (const i of this.indexes({ allowStale: true })) {
-      const key = this.keyList[i]
-      const v = this.valList[i]
-      const value = this.isBackgroundFetch(v)
-        ? v.__staleWhileFetching
-        : v
-      const entry = { value }
-      if (this.ttls) {
-        entry.ttl = this.ttls[i]
-        // always dump the start relative to a portable timestamp
-        // it's ok for this to be a bit slow, it's a rare operation.
-        const age = perf.now() - this.starts[i]
-        entry.start = Math.floor(Date.now() - age)
-      }
-      if (this.sizes) {
-        entry.size = this.sizes[i]
-      }
-      arr.unshift([key, entry])
-    }
-    return arr
-  }
-
-  load(arr) {
-    this.clear()
-    for (const [key, entry] of arr) {
-      if (entry.start) {
-        // entry.start is a portable timestamp, but we may be using
-        // node's performance.now(), so calculate the offset.
-        // it's ok for this to be a bit slow, it's a rare operation.
-        const age = Date.now() - entry.start
-        entry.start = perf.now() - age
-      }
-      this.set(key, entry.value, entry)
-    }
-  }
-
-  dispose(v, k, reason) {}
-
-  set(
-    k,
-    v,
-    {
-      ttl = this.ttl,
-      start,
-      noDisposeOnSet = this.noDisposeOnSet,
-      size = 0,
-      sizeCalculation = this.sizeCalculation,
-      noUpdateTTL = this.noUpdateTTL,
-    } = {}
-  ) {
-    size = this.requireSize(k, v, size, sizeCalculation)
-    // if the item doesn't fit, don't do anything
-    // NB: maxEntrySize set to maxSize by default
-    if (this.maxEntrySize && size > this.maxEntrySize) {
-      // have to delete, in case a background fetch is there already.
-      // in non-async cases, this is a no-op
-      this.delete(k)
-      return this
-    }
-    let index = this.size === 0 ? undefined : this.keyMap.get(k)
-    if (index === undefined) {
-      // addition
-      index = this.newIndex()
-      this.keyList[index] = k
-      this.valList[index] = v
-      this.keyMap.set(k, index)
-      this.next[this.tail] = index
-      this.prev[index] = this.tail
-      this.tail = index
-      this.size++
-      this.addItemSize(index, size)
-      noUpdateTTL = false
-    } else {
-      // update
-      const oldVal = this.valList[index]
-      if (v !== oldVal) {
-        if (this.isBackgroundFetch(oldVal)) {
-          oldVal.__abortController.abort()
-        } else {
-          if (!noDisposeOnSet) {
-            this.dispose(oldVal, k, 'set')
-            if (this.disposeAfter) {
-              this.disposed.push([oldVal, k, 'set'])
-            }
-          }
-        }
-        this.removeItemSize(index)
-        this.valList[index] = v
-        this.addItemSize(index, size)
-      }
-      this.moveToTail(index)
-    }
-    if (ttl !== 0 && this.ttl === 0 && !this.ttls) {
-      this.initializeTTLTracking()
-    }
-    if (!noUpdateTTL) {
-      this.setItemTTL(index, ttl, start)
-    }
-    if (this.disposeAfter) {
-      while (this.disposed.length) {
-        this.disposeAfter(...this.disposed.shift())
-      }
-    }
-    return this
-  }
-
-  newIndex() {
-    if (this.size === 0) {
-      return this.tail
-    }
-    if (this.size === this.max && this.max !== 0) {
-      return this.evict(false)
-    }
-    if (this.free.length !== 0) {
-      return this.free.pop()
-    }
-    // initial fill, just keep writing down the list
-    return this.initialFill++
-  }
-
-  pop() {
-    if (this.size) {
-      const val = this.valList[this.head]
-      this.evict(true)
-      return val
-    }
-  }
-
-  evict(free) {
-    const head = this.head
-    const k = this.keyList[head]
-    const v = this.valList[head]
-    if (this.isBackgroundFetch(v)) {
-      v.__abortController.abort()
-    } else {
-      this.dispose(v, k, 'evict')
-      if (this.disposeAfter) {
-        this.disposed.push([v, k, 'evict'])
-      }
-    }
-    this.removeItemSize(head)
-    // if we aren't about to use the index, then null these out
-    if (free) {
-      this.keyList[head] = null
-      this.valList[head] = null
-      this.free.push(head)
-    }
-    this.head = this.next[head]
-    this.keyMap.delete(k)
-    this.size--
-    return head
-  }
-
-  has(k, { updateAgeOnHas = this.updateAgeOnHas } = {}) {
-    const index = this.keyMap.get(k)
-    if (index !== undefined) {
-      if (!this.isStale(index)) {
-        if (updateAgeOnHas) {
-          this.updateItemAge(index)
-        }
-        return true
-      }
-    }
-    return false
-  }
-
-  // like get(), but without any LRU updating or TTL expiration
-  peek(k, { allowStale = this.allowStale } = {}) {
-    const index = this.keyMap.get(k)
-    if (index !== undefined && (allowStale || !this.isStale(index))) {
-      const v = this.valList[index]
-      // either stale and allowed, or forcing a refresh of non-stale value
-      return this.isBackgroundFetch(v) ? v.__staleWhileFetching : v
-    }
-  }
-
-  backgroundFetch(k, index, options, context) {
-    const v = index === undefined ? undefined : this.valList[index]
-    if (this.isBackgroundFetch(v)) {
-      return v
-    }
-    const ac = new AC()
-    const fetchOpts = {
-      signal: ac.signal,
-      options,
-      context,
-    }
-    const cb = v => {
-      if (!ac.signal.aborted) {
-        this.set(k, v, fetchOpts.options)
-      }
-      return v
-    }
-    const eb = er => {
-      if (this.valList[index] === p) {
-        const del =
-          !options.noDeleteOnFetchRejection ||
-          p.__staleWhileFetching === undefined
-        if (del) {
-          this.delete(k)
-        } else {
-          // still replace the *promise* with the stale value,
-          // since we are done with the promise at this point.
-          this.valList[index] = p.__staleWhileFetching
-        }
-      }
-      if (p.__returned === p) {
-        throw er
-      }
-    }
-    const pcall = res => res(this.fetchMethod(k, v, fetchOpts))
-    const p = new Promise(pcall).then(cb, eb)
-    p.__abortController = ac
-    p.__staleWhileFetching = v
-    p.__returned = null
-    if (index === undefined) {
-      this.set(k, p, fetchOpts.options)
-      index = this.keyMap.get(k)
-    } else {
-      this.valList[index] = p
-    }
-    return p
-  }
-
-  isBackgroundFetch(p) {
-    return (
-      p &&
-      typeof p === 'object' &&
-      typeof p.then === 'function' &&
-      Object.prototype.hasOwnProperty.call(
-        p,
-        '__staleWhileFetching'
-      ) &&
-      Object.prototype.hasOwnProperty.call(p, '__returned') &&
-      (p.__returned === p || p.__returned === null)
-    )
-  }
-
-  // this takes the union of get() and set() opts, because it does both
-  async fetch(
-    k,
-    {
-      // get options
-      allowStale = this.allowStale,
-      updateAgeOnGet = this.updateAgeOnGet,
-      noDeleteOnStaleGet = this.noDeleteOnStaleGet,
-      // set options
-      ttl = this.ttl,
-      noDisposeOnSet = this.noDisposeOnSet,
-      size = 0,
-      sizeCalculation = this.sizeCalculation,
-      noUpdateTTL = this.noUpdateTTL,
-      // fetch exclusive options
-      noDeleteOnFetchRejection = this.noDeleteOnFetchRejection,
-      fetchContext = this.fetchContext,
-      forceRefresh = false,
-    } = {}
-  ) {
-    if (!this.fetchMethod) {
-      return this.get(k, {
-        allowStale,
-        updateAgeOnGet,
-        noDeleteOnStaleGet,
-      })
-    }
-
-    const options = {
-      allowStale,
-      updateAgeOnGet,
-      noDeleteOnStaleGet,
-      ttl,
-      noDisposeOnSet,
-      size,
-      sizeCalculation,
-      noUpdateTTL,
-      noDeleteOnFetchRejection,
-    }
-
-    let index = this.keyMap.get(k)
-    if (index === undefined) {
-      const p = this.backgroundFetch(k, index, options, fetchContext)
-      return (p.__returned = p)
-    } else {
-      // in cache, maybe already fetching
-      const v = this.valList[index]
-      if (this.isBackgroundFetch(v)) {
-        return allowStale && v.__staleWhileFetching !== undefined
-          ? v.__staleWhileFetching
-          : (v.__returned = v)
-      }
-
-      // if we force a refresh, that means do NOT serve the cached value,
-      // unless we are already in the process of refreshing the cache.
-      if (!forceRefresh && !this.isStale(index)) {
-        this.moveToTail(index)
-        if (updateAgeOnGet) {
-          this.updateItemAge(index)
-        }
-        return v
-      }
-
-      // ok, it is stale or a forced refresh, and not already fetching.
-      // refresh the cache.
-      const p = this.backgroundFetch(k, index, options, fetchContext)
-      return allowStale && p.__staleWhileFetching !== undefined
-        ? p.__staleWhileFetching
-        : (p.__returned = p)
-    }
-  }
-
-  get(
-    k,
-    {
-      allowStale = this.allowStale,
-      updateAgeOnGet = this.updateAgeOnGet,
-      noDeleteOnStaleGet = this.noDeleteOnStaleGet,
-    } = {}
-  ) {
-    const index = this.keyMap.get(k)
-    if (index !== undefined) {
-      const value = this.valList[index]
-      const fetching = this.isBackgroundFetch(value)
-      if (this.isStale(index)) {
-        // delete only if not an in-flight background fetch
-        if (!fetching) {
-          if (!noDeleteOnStaleGet) {
-            this.delete(k)
-          }
-          return allowStale ? value : undefined
-        } else {
-          return allowStale ? value.__staleWhileFetching : undefined
-        }
-      } else {
-        // if we're currently fetching it, we don't actually have it yet
-        // it's not stale, which means this isn't a staleWhileRefetching,
-        // so we just return undefined
-        if (fetching) {
-          return undefined
-        }
-        this.moveToTail(index)
-        if (updateAgeOnGet) {
-          this.updateItemAge(index)
-        }
-        return value
-      }
-    }
-  }
-
-  connect(p, n) {
-    this.prev[n] = p
-    this.next[p] = n
-  }
-
-  moveToTail(index) {
-    // if tail already, nothing to do
-    // if head, move head to next[index]
-    // else
-    //   move next[prev[index]] to next[index] (head has no prev)
-    //   move prev[next[index]] to prev[index]
-    // prev[index] = tail
-    // next[tail] = index
-    // tail = index
-    if (index !== this.tail) {
-      if (index === this.head) {
-        this.head = this.next[index]
-      } else {
-        this.connect(this.prev[index], this.next[index])
-      }
-      this.connect(this.tail, index)
-      this.tail = index
-    }
-  }
-
-  get del() {
-    deprecatedMethod('del', 'delete')
-    return this.delete
-  }
-
-  delete(k) {
-    let deleted = false
-    if (this.size !== 0) {
-      const index = this.keyMap.get(k)
-      if (index !== undefined) {
-        deleted = true
-        if (this.size === 1) {
-          this.clear()
-        } else {
-          this.removeItemSize(index)
-          const v = this.valList[index]
-          if (this.isBackgroundFetch(v)) {
-            v.__abortController.abort()
-          } else {
-            this.dispose(v, k, 'delete')
-            if (this.disposeAfter) {
-              this.disposed.push([v, k, 'delete'])
-            }
-          }
-          this.keyMap.delete(k)
-          this.keyList[index] = null
-          this.valList[index] = null
-          if (index === this.tail) {
-            this.tail = this.prev[index]
-          } else if (index === this.head) {
-            this.head = this.next[index]
-          } else {
-            this.next[this.prev[index]] = this.next[index]
-            this.prev[this.next[index]] = this.prev[index]
-          }
-          this.size--
-          this.free.push(index)
-        }
-      }
-    }
-    if (this.disposed) {
-      while (this.disposed.length) {
-        this.disposeAfter(...this.disposed.shift())
-      }
-    }
-    return deleted
-  }
-
-  clear() {
-    for (const index of this.rindexes({ allowStale: true })) {
-      const v = this.valList[index]
-      if (this.isBackgroundFetch(v)) {
-        v.__abortController.abort()
-      } else {
-        const k = this.keyList[index]
-        this.dispose(v, k, 'delete')
-        if (this.disposeAfter) {
-          this.disposed.push([v, k, 'delete'])
-        }
-      }
-    }
-
-    this.keyMap.clear()
-    this.valList.fill(null)
-    this.keyList.fill(null)
-    if (this.ttls) {
-      this.ttls.fill(0)
-      this.starts.fill(0)
-    }
-    if (this.sizes) {
-      this.sizes.fill(0)
-    }
-    this.head = 0
-    this.tail = 0
-    this.initialFill = 1
-    this.free.length = 0
-    this.calculatedSize = 0
-    this.size = 0
-    if (this.disposed) {
-      while (this.disposed.length) {
-        this.disposeAfter(...this.disposed.shift())
-      }
-    }
-  }
-
-  get reset() {
-    deprecatedMethod('reset', 'clear')
-    return this.clear
-  }
-
-  get length() {
-    deprecatedProperty('length', 'size')
-    return this.size
-  }
-
-  static get AbortController() {
-    return AC
-  }
-  static get AbortSignal() {
-    return AS
-  }
-}
-
-module.exports = LRUCache
-
-
-/***/ }),
-
 /***/ 7531:
 /***/ ((module) => {
 
@@ -11621,7 +12632,7 @@ class Minimatch {
     if (pattern === '') return ''
 
     let re = ''
-    let hasMagic = !!options.nocase
+    let hasMagic = false
     let escaping = false
     // ? => one single character
     const patternListStack = []
@@ -11634,11 +12645,23 @@ class Minimatch {
     let pl
     let sp
     // . and .. never match anything that doesn't start with .,
-    // even when options.dot is set.
-    const patternStart = pattern.charAt(0) === '.' ? '' // anything
-    // not (start or / followed by . or .. followed by / or end)
-    : options.dot ? '(?!(?:^|\\\/)\\.{1,2}(?:$|\\\/))'
-    : '(?!\\.)'
+    // even when options.dot is set.  However, if the pattern
+    // starts with ., then traversal patterns can match.
+    let dotTravAllowed = pattern.charAt(0) === '.'
+    let dotFileAllowed = options.dot || dotTravAllowed
+    const patternStart = () =>
+      dotTravAllowed
+        ? ''
+        : dotFileAllowed
+        ? '(?!(?:^|\\/)\\.{1,2}(?:$|\\/))'
+        : '(?!\\.)'
+    const subPatternStart = (p) =>
+      p.charAt(0) === '.'
+        ? ''
+        : options.dot
+        ? '(?!(?:^|\\/)\\.{1,2}(?:$|\\/))'
+        : '(?!\\.)'
+
 
     const clearStateChar = () => {
       if (stateChar) {
@@ -11727,7 +12750,7 @@ class Minimatch {
           if (options.noext) clearStateChar()
         continue
 
-        case '(':
+        case '(': {
           if (inClass) {
             re += '('
             continue
@@ -11738,46 +12761,64 @@ class Minimatch {
             continue
           }
 
-          patternListStack.push({
+          const plEntry = {
             type: stateChar,
             start: i - 1,
             reStart: re.length,
             open: plTypes[stateChar].open,
-            close: plTypes[stateChar].close
-          })
-          // negation is (?:(?!js)[^/]*)
-          re += stateChar === '!' ? '(?:(?!(?:' : '(?:'
+            close: plTypes[stateChar].close,
+          }
+          this.debug(this.pattern, '\t', plEntry)
+          patternListStack.push(plEntry)
+          // negation is (?:(?!(?:js)(?:<rest>))[^/]*)
+          re += plEntry.open
+          // next entry starts with a dot maybe?
+          if (plEntry.start === 0 && plEntry.type !== '!') {
+            dotTravAllowed = true
+            re += subPatternStart(pattern.slice(i + 1))
+          }
           this.debug('plType %j %j', stateChar, re)
           stateChar = false
-        continue
+          continue
+        }
 
-        case ')':
-          if (inClass || !patternListStack.length) {
+        case ')': {
+          const plEntry = patternListStack[patternListStack.length - 1]
+          if (inClass || !plEntry) {
             re += '\\)'
             continue
           }
+          patternListStack.pop()
 
+          // closing an extglob
           clearStateChar()
           hasMagic = true
-          pl = patternListStack.pop()
+          pl = plEntry
           // negation is (?:(?!js)[^/]*)
           // The others are (?:<pattern>)<type>
           re += pl.close
           if (pl.type === '!') {
-            negativeLists.push(pl)
+            negativeLists.push(Object.assign(pl, { reEnd: re.length }))
           }
-          pl.reEnd = re.length
-        continue
+          continue
+        }
 
-        case '|':
-          if (inClass || !patternListStack.length) {
+        case '|': {
+          const plEntry = patternListStack[patternListStack.length - 1]
+          if (inClass || !plEntry) {
             re += '\\|'
             continue
           }
 
           clearStateChar()
           re += '|'
-        continue
+          // next subpattern can start with a dot?
+          if (plEntry.start === 0 && plEntry.type !== '!') {
+            dotTravAllowed = true
+            re += subPatternStart(pattern.slice(i + 1))
+          }
+          continue
+        }
 
         // these are mostly the same in regexp and glob
         case '[':
@@ -11916,14 +12957,16 @@ class Minimatch {
       // Handle nested stuff like *(*.js|!(*.json)), where open parens
       // mean that we should *not* include the ) in the bit that is considered
       // "after" the negated section.
-      const openParensBefore = nlBefore.split('(').length - 1
+      const closeParensBefore = nlBefore.split(')').length
+      const openParensBefore = nlBefore.split('(').length - closeParensBefore
       let cleanAfter = nlAfter
       for (let i = 0; i < openParensBefore; i++) {
         cleanAfter = cleanAfter.replace(/\)[+*?]?/, '')
       }
       nlAfter = cleanAfter
 
-      const dollar = nlAfter === '' && isSub !== SUBPARSE ? '$' : ''
+      const dollar = nlAfter === '' && isSub !== SUBPARSE ? '(?:$|\\/)' : ''
+
       re = nlBefore + nlFirst + nlAfter + dollar + nlLast
     }
 
@@ -11935,12 +12978,17 @@ class Minimatch {
     }
 
     if (addPatternStart) {
-      re = patternStart + re
+      re = patternStart() + re
     }
 
     // parsing just a piece of a larger pattern.
     if (isSub === SUBPARSE) {
       return [re, hasMagic]
+    }
+
+    // if it's nocase, and the lcase/uppercase don't match, it's magic
+    if (options.nocase && !hasMagic) {
+      hasMagic = pattern.toUpperCase() !== pattern.toLowerCase()
     }
 
     // skip the regexp for non-magical patterns
@@ -13000,7 +14048,7 @@ formatters.O = function (v) {
 
 /*!
  * depd
- * Copyright(c) 2014-2017 Douglas Christopher Wilson
+ * Copyright(c) 2014-2018 Douglas Christopher Wilson
  * MIT Licensed
  */
 
@@ -13008,8 +14056,6 @@ formatters.O = function (v) {
  * Module dependencies.
  */
 
-var callSiteToString = (__nccwpck_require__(9829).callSiteToString)
-var eventListenerCount = (__nccwpck_require__(9829).eventListenerCount)
 var relative = (__nccwpck_require__(1017).relative)
 
 /**
@@ -13092,7 +14138,7 @@ function createStackString (stack) {
   }
 
   for (var i = 0; i < stack.length; i++) {
-    str += '\n    at ' + callSiteToString(stack[i])
+    str += '\n    at ' + stack[i].toString()
   }
 
   return str
@@ -13129,11 +14175,30 @@ function depd (namespace) {
 }
 
 /**
+ * Determine if event emitter has listeners of a given type.
+ *
+ * The way to do this check is done three different ways in Node.js >= 0.8
+ * so this consolidates them into a minimal set using instance methods.
+ *
+ * @param {EventEmitter} emitter
+ * @param {string} type
+ * @returns {boolean}
+ * @private
+ */
+
+function eehaslisteners (emitter, type) {
+  var count = typeof emitter.listenerCount !== 'function'
+    ? emitter.listeners(type).length
+    : emitter.listenerCount(type)
+
+  return count > 0
+}
+
+/**
  * Determine if namespace is ignored.
  */
 
 function isignored (namespace) {
-  /* istanbul ignore next: tested in a child processs */
   if (process.noDeprecation) {
     // --no-deprecation support
     return true
@@ -13150,7 +14215,6 @@ function isignored (namespace) {
  */
 
 function istraced (namespace) {
-  /* istanbul ignore next: tested in a child processs */
   if (process.traceDeprecation) {
     // --trace-deprecation support
     return true
@@ -13167,7 +14231,7 @@ function istraced (namespace) {
  */
 
 function log (message, site) {
-  var haslisteners = eventListenerCount(process, 'deprecation') !== 0
+  var haslisteners = eehaslisteners(process, 'deprecation')
 
   // abort early if no destination
   if (!haslisteners && this._ignored) {
@@ -13310,7 +14374,7 @@ function formatPlain (msg, caller, stack) {
   // add stack trace
   if (this._traced) {
     for (var i = 0; i < stack.length; i++) {
-      formatted += '\n    at ' + callSiteToString(stack[i])
+      formatted += '\n    at ' + stack[i].toString()
     }
 
     return formatted
@@ -13335,7 +14399,7 @@ function formatColor (msg, caller, stack) {
   // add stack trace
   if (this._traced) {
     for (var i = 0; i < stack.length; i++) {
-      formatted += '\n    \x1b[36mat ' + callSiteToString(stack[i]) + '\x1b[39m' // cyan
+      formatted += '\n    \x1b[36mat ' + stack[i].toString() + '\x1b[39m' // cyan
     }
 
     return formatted
@@ -13400,18 +14464,18 @@ function wrapfunction (fn, message) {
   }
 
   var args = createArgumentsString(fn.length)
-  var deprecate = this // eslint-disable-line no-unused-vars
   var stack = getStack()
   var site = callSiteLocation(stack[1])
 
   site.name = fn.name
 
-   // eslint-disable-next-line no-eval
-  var deprecatedfn = eval('(function (' + args + ') {\n' +
+  // eslint-disable-next-line no-new-func
+  var deprecatedfn = new Function('fn', 'log', 'deprecate', 'message', 'site',
     '"use strict"\n' +
+    'return function (' + args + ') {' +
     'log.call(deprecate, message, site)\n' +
     'return fn.apply(this, arguments)\n' +
-    '})')
+    '}')(fn, log, this, message, site)
 
   return deprecatedfn
 }
@@ -13519,234 +14583,6 @@ function DeprecationError (namespace, message, stack) {
   })
 
   return error
-}
-
-
-/***/ }),
-
-/***/ 5554:
-/***/ ((module) => {
-
-"use strict";
-/*!
- * depd
- * Copyright(c) 2014 Douglas Christopher Wilson
- * MIT Licensed
- */
-
-
-
-/**
- * Module exports.
- */
-
-module.exports = callSiteToString
-
-/**
- * Format a CallSite file location to a string.
- */
-
-function callSiteFileLocation (callSite) {
-  var fileName
-  var fileLocation = ''
-
-  if (callSite.isNative()) {
-    fileLocation = 'native'
-  } else if (callSite.isEval()) {
-    fileName = callSite.getScriptNameOrSourceURL()
-    if (!fileName) {
-      fileLocation = callSite.getEvalOrigin()
-    }
-  } else {
-    fileName = callSite.getFileName()
-  }
-
-  if (fileName) {
-    fileLocation += fileName
-
-    var lineNumber = callSite.getLineNumber()
-    if (lineNumber != null) {
-      fileLocation += ':' + lineNumber
-
-      var columnNumber = callSite.getColumnNumber()
-      if (columnNumber) {
-        fileLocation += ':' + columnNumber
-      }
-    }
-  }
-
-  return fileLocation || 'unknown source'
-}
-
-/**
- * Format a CallSite to a string.
- */
-
-function callSiteToString (callSite) {
-  var addSuffix = true
-  var fileLocation = callSiteFileLocation(callSite)
-  var functionName = callSite.getFunctionName()
-  var isConstructor = callSite.isConstructor()
-  var isMethodCall = !(callSite.isToplevel() || isConstructor)
-  var line = ''
-
-  if (isMethodCall) {
-    var methodName = callSite.getMethodName()
-    var typeName = getConstructorName(callSite)
-
-    if (functionName) {
-      if (typeName && functionName.indexOf(typeName) !== 0) {
-        line += typeName + '.'
-      }
-
-      line += functionName
-
-      if (methodName && functionName.lastIndexOf('.' + methodName) !== functionName.length - methodName.length - 1) {
-        line += ' [as ' + methodName + ']'
-      }
-    } else {
-      line += typeName + '.' + (methodName || '<anonymous>')
-    }
-  } else if (isConstructor) {
-    line += 'new ' + (functionName || '<anonymous>')
-  } else if (functionName) {
-    line += functionName
-  } else {
-    addSuffix = false
-    line += fileLocation
-  }
-
-  if (addSuffix) {
-    line += ' (' + fileLocation + ')'
-  }
-
-  return line
-}
-
-/**
- * Get constructor name of reviver.
- */
-
-function getConstructorName (obj) {
-  var receiver = obj.receiver
-  return (receiver.constructor && receiver.constructor.name) || null
-}
-
-
-/***/ }),
-
-/***/ 2078:
-/***/ ((module) => {
-
-"use strict";
-/*!
- * depd
- * Copyright(c) 2015 Douglas Christopher Wilson
- * MIT Licensed
- */
-
-
-
-/**
- * Module exports.
- * @public
- */
-
-module.exports = eventListenerCount
-
-/**
- * Get the count of listeners on an event emitter of a specific type.
- */
-
-function eventListenerCount (emitter, type) {
-  return emitter.listeners(type).length
-}
-
-
-/***/ }),
-
-/***/ 9829:
-/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
-
-"use strict";
-/*!
- * depd
- * Copyright(c) 2014-2015 Douglas Christopher Wilson
- * MIT Licensed
- */
-
-
-
-/**
- * Module dependencies.
- * @private
- */
-
-var EventEmitter = (__nccwpck_require__(2361).EventEmitter)
-
-/**
- * Module exports.
- * @public
- */
-
-lazyProperty(module.exports, 'callSiteToString', function callSiteToString () {
-  var limit = Error.stackTraceLimit
-  var obj = {}
-  var prep = Error.prepareStackTrace
-
-  function prepareObjectStackTrace (obj, stack) {
-    return stack
-  }
-
-  Error.prepareStackTrace = prepareObjectStackTrace
-  Error.stackTraceLimit = 2
-
-  // capture the stack
-  Error.captureStackTrace(obj)
-
-  // slice the stack
-  var stack = obj.stack.slice()
-
-  Error.prepareStackTrace = prep
-  Error.stackTraceLimit = limit
-
-  return stack[0].toString ? toString : __nccwpck_require__(5554)
-})
-
-lazyProperty(module.exports, 'eventListenerCount', function eventListenerCount () {
-  return EventEmitter.listenerCount || __nccwpck_require__(2078)
-})
-
-/**
- * Define a lazy property.
- */
-
-function lazyProperty (obj, prop, getter) {
-  function get () {
-    var val = getter()
-
-    Object.defineProperty(obj, prop, {
-      configurable: true,
-      enumerable: true,
-      value: val
-    })
-
-    return val
-  }
-
-  Object.defineProperty(obj, prop, {
-    configurable: true,
-    enumerable: true,
-    get: get
-  })
-}
-
-/**
- * Call toString() on the obj
- */
-
-function toString (obj) {
-  return obj.toString()
 }
 
 
@@ -14222,7 +15058,9 @@ class WriteStream extends EE {
     } else {
       this[_fd] = fd
       this.emit('open', fd)
-      this[_flush]()
+      if (!this[_writing]) {
+        this[_flush]()
+      }
     }
   }
 
@@ -19681,354 +20519,12 @@ exports.isPlainObject = isPlainObject;
 
 /***/ }),
 
-/***/ 7129:
-/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
-
-"use strict";
-
-
-// A linked list to keep track of recently-used-ness
-const Yallist = __nccwpck_require__(665)
-
-const MAX = Symbol('max')
-const LENGTH = Symbol('length')
-const LENGTH_CALCULATOR = Symbol('lengthCalculator')
-const ALLOW_STALE = Symbol('allowStale')
-const MAX_AGE = Symbol('maxAge')
-const DISPOSE = Symbol('dispose')
-const NO_DISPOSE_ON_SET = Symbol('noDisposeOnSet')
-const LRU_LIST = Symbol('lruList')
-const CACHE = Symbol('cache')
-const UPDATE_AGE_ON_GET = Symbol('updateAgeOnGet')
-
-const naiveLength = () => 1
-
-// lruList is a yallist where the head is the youngest
-// item, and the tail is the oldest.  the list contains the Hit
-// objects as the entries.
-// Each Hit object has a reference to its Yallist.Node.  This
-// never changes.
-//
-// cache is a Map (or PseudoMap) that matches the keys to
-// the Yallist.Node object.
-class LRUCache {
-  constructor (options) {
-    if (typeof options === 'number')
-      options = { max: options }
-
-    if (!options)
-      options = {}
-
-    if (options.max && (typeof options.max !== 'number' || options.max < 0))
-      throw new TypeError('max must be a non-negative number')
-    // Kind of weird to have a default max of Infinity, but oh well.
-    const max = this[MAX] = options.max || Infinity
-
-    const lc = options.length || naiveLength
-    this[LENGTH_CALCULATOR] = (typeof lc !== 'function') ? naiveLength : lc
-    this[ALLOW_STALE] = options.stale || false
-    if (options.maxAge && typeof options.maxAge !== 'number')
-      throw new TypeError('maxAge must be a number')
-    this[MAX_AGE] = options.maxAge || 0
-    this[DISPOSE] = options.dispose
-    this[NO_DISPOSE_ON_SET] = options.noDisposeOnSet || false
-    this[UPDATE_AGE_ON_GET] = options.updateAgeOnGet || false
-    this.reset()
-  }
-
-  // resize the cache when the max changes.
-  set max (mL) {
-    if (typeof mL !== 'number' || mL < 0)
-      throw new TypeError('max must be a non-negative number')
-
-    this[MAX] = mL || Infinity
-    trim(this)
-  }
-  get max () {
-    return this[MAX]
-  }
-
-  set allowStale (allowStale) {
-    this[ALLOW_STALE] = !!allowStale
-  }
-  get allowStale () {
-    return this[ALLOW_STALE]
-  }
-
-  set maxAge (mA) {
-    if (typeof mA !== 'number')
-      throw new TypeError('maxAge must be a non-negative number')
-
-    this[MAX_AGE] = mA
-    trim(this)
-  }
-  get maxAge () {
-    return this[MAX_AGE]
-  }
-
-  // resize the cache when the lengthCalculator changes.
-  set lengthCalculator (lC) {
-    if (typeof lC !== 'function')
-      lC = naiveLength
-
-    if (lC !== this[LENGTH_CALCULATOR]) {
-      this[LENGTH_CALCULATOR] = lC
-      this[LENGTH] = 0
-      this[LRU_LIST].forEach(hit => {
-        hit.length = this[LENGTH_CALCULATOR](hit.value, hit.key)
-        this[LENGTH] += hit.length
-      })
-    }
-    trim(this)
-  }
-  get lengthCalculator () { return this[LENGTH_CALCULATOR] }
-
-  get length () { return this[LENGTH] }
-  get itemCount () { return this[LRU_LIST].length }
-
-  rforEach (fn, thisp) {
-    thisp = thisp || this
-    for (let walker = this[LRU_LIST].tail; walker !== null;) {
-      const prev = walker.prev
-      forEachStep(this, fn, walker, thisp)
-      walker = prev
-    }
-  }
-
-  forEach (fn, thisp) {
-    thisp = thisp || this
-    for (let walker = this[LRU_LIST].head; walker !== null;) {
-      const next = walker.next
-      forEachStep(this, fn, walker, thisp)
-      walker = next
-    }
-  }
-
-  keys () {
-    return this[LRU_LIST].toArray().map(k => k.key)
-  }
-
-  values () {
-    return this[LRU_LIST].toArray().map(k => k.value)
-  }
-
-  reset () {
-    if (this[DISPOSE] &&
-        this[LRU_LIST] &&
-        this[LRU_LIST].length) {
-      this[LRU_LIST].forEach(hit => this[DISPOSE](hit.key, hit.value))
-    }
-
-    this[CACHE] = new Map() // hash of items by key
-    this[LRU_LIST] = new Yallist() // list of items in order of use recency
-    this[LENGTH] = 0 // length of items in the list
-  }
-
-  dump () {
-    return this[LRU_LIST].map(hit =>
-      isStale(this, hit) ? false : {
-        k: hit.key,
-        v: hit.value,
-        e: hit.now + (hit.maxAge || 0)
-      }).toArray().filter(h => h)
-  }
-
-  dumpLru () {
-    return this[LRU_LIST]
-  }
-
-  set (key, value, maxAge) {
-    maxAge = maxAge || this[MAX_AGE]
-
-    if (maxAge && typeof maxAge !== 'number')
-      throw new TypeError('maxAge must be a number')
-
-    const now = maxAge ? Date.now() : 0
-    const len = this[LENGTH_CALCULATOR](value, key)
-
-    if (this[CACHE].has(key)) {
-      if (len > this[MAX]) {
-        del(this, this[CACHE].get(key))
-        return false
-      }
-
-      const node = this[CACHE].get(key)
-      const item = node.value
-
-      // dispose of the old one before overwriting
-      // split out into 2 ifs for better coverage tracking
-      if (this[DISPOSE]) {
-        if (!this[NO_DISPOSE_ON_SET])
-          this[DISPOSE](key, item.value)
-      }
-
-      item.now = now
-      item.maxAge = maxAge
-      item.value = value
-      this[LENGTH] += len - item.length
-      item.length = len
-      this.get(key)
-      trim(this)
-      return true
-    }
-
-    const hit = new Entry(key, value, len, now, maxAge)
-
-    // oversized objects fall out of cache automatically.
-    if (hit.length > this[MAX]) {
-      if (this[DISPOSE])
-        this[DISPOSE](key, value)
-
-      return false
-    }
-
-    this[LENGTH] += hit.length
-    this[LRU_LIST].unshift(hit)
-    this[CACHE].set(key, this[LRU_LIST].head)
-    trim(this)
-    return true
-  }
-
-  has (key) {
-    if (!this[CACHE].has(key)) return false
-    const hit = this[CACHE].get(key).value
-    return !isStale(this, hit)
-  }
-
-  get (key) {
-    return get(this, key, true)
-  }
-
-  peek (key) {
-    return get(this, key, false)
-  }
-
-  pop () {
-    const node = this[LRU_LIST].tail
-    if (!node)
-      return null
-
-    del(this, node)
-    return node.value
-  }
-
-  del (key) {
-    del(this, this[CACHE].get(key))
-  }
-
-  load (arr) {
-    // reset the cache
-    this.reset()
-
-    const now = Date.now()
-    // A previous serialized cache has the most recent items first
-    for (let l = arr.length - 1; l >= 0; l--) {
-      const hit = arr[l]
-      const expiresAt = hit.e || 0
-      if (expiresAt === 0)
-        // the item was created without expiration in a non aged cache
-        this.set(hit.k, hit.v)
-      else {
-        const maxAge = expiresAt - now
-        // dont add already expired items
-        if (maxAge > 0) {
-          this.set(hit.k, hit.v, maxAge)
-        }
-      }
-    }
-  }
-
-  prune () {
-    this[CACHE].forEach((value, key) => get(this, key, false))
-  }
-}
-
-const get = (self, key, doUse) => {
-  const node = self[CACHE].get(key)
-  if (node) {
-    const hit = node.value
-    if (isStale(self, hit)) {
-      del(self, node)
-      if (!self[ALLOW_STALE])
-        return undefined
-    } else {
-      if (doUse) {
-        if (self[UPDATE_AGE_ON_GET])
-          node.value.now = Date.now()
-        self[LRU_LIST].unshiftNode(node)
-      }
-    }
-    return hit.value
-  }
-}
-
-const isStale = (self, hit) => {
-  if (!hit || (!hit.maxAge && !self[MAX_AGE]))
-    return false
-
-  const diff = Date.now() - hit.now
-  return hit.maxAge ? diff > hit.maxAge
-    : self[MAX_AGE] && (diff > self[MAX_AGE])
-}
-
-const trim = self => {
-  if (self[LENGTH] > self[MAX]) {
-    for (let walker = self[LRU_LIST].tail;
-      self[LENGTH] > self[MAX] && walker !== null;) {
-      // We know that we're about to delete this one, and also
-      // what the next least recently used key will be, so just
-      // go ahead and set it now.
-      const prev = walker.prev
-      del(self, walker)
-      walker = prev
-    }
-  }
-}
-
-const del = (self, node) => {
-  if (node) {
-    const hit = node.value
-    if (self[DISPOSE])
-      self[DISPOSE](hit.key, hit.value)
-
-    self[LENGTH] -= hit.length
-    self[CACHE].delete(hit.key)
-    self[LRU_LIST].removeNode(node)
-  }
-}
-
-class Entry {
-  constructor (key, value, length, now, maxAge) {
-    this.key = key
-    this.value = value
-    this.length = length
-    this.now = now
-    this.maxAge = maxAge || 0
-  }
-}
-
-const forEachStep = (self, fn, node, thisp) => {
-  let hit = node.value
-  if (isStale(self, hit)) {
-    del(self, node)
-    if (!self[ALLOW_STALE])
-      hit = undefined
-  }
-  if (hit)
-    fn.call(thisp, hit.value, hit.key, self)
-}
-
-module.exports = LRUCache
-
-
-/***/ }),
-
 /***/ 7959:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
 
-const LRU = __nccwpck_require__(9888)
+const LRU = __nccwpck_require__(8187)
 const url = __nccwpck_require__(7310)
 const isLambda = __nccwpck_require__(4468)
 const dns = __nccwpck_require__(3779)
@@ -20965,7 +21461,7 @@ module.exports = CachePolicy
 /***/ 3779:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
-const LRUCache = __nccwpck_require__(9888)
+const LRUCache = __nccwpck_require__(8187)
 const dns = __nccwpck_require__(9523)
 
 const defaultOptions = exports.defaultOptions = {
@@ -21424,1031 +21920,6 @@ const remoteFetch = (request, options) => {
 }
 
 module.exports = remoteFetch
-
-
-/***/ }),
-
-/***/ 9888:
-/***/ ((module) => {
-
-const perf =
-  typeof performance === 'object' &&
-  performance &&
-  typeof performance.now === 'function'
-    ? performance
-    : Date
-
-const hasAbortController = typeof AbortController === 'function'
-
-// minimal backwards-compatibility polyfill
-// this doesn't have nearly all the checks and whatnot that
-// actual AbortController/Signal has, but it's enough for
-// our purposes, and if used properly, behaves the same.
-const AC = hasAbortController
-  ? AbortController
-  : class AbortController {
-      constructor() {
-        this.signal = new AS()
-      }
-      abort() {
-        this.signal.dispatchEvent('abort')
-      }
-    }
-
-const hasAbortSignal = typeof AbortSignal === 'function'
-// Some polyfills put this on the AC class, not global
-const hasACAbortSignal = typeof AC.AbortSignal === 'function'
-const AS = hasAbortSignal
-  ? AbortSignal
-  : hasACAbortSignal
-  ? AC.AbortController
-  : class AbortSignal {
-      constructor() {
-        this.aborted = false
-        this._listeners = []
-      }
-      dispatchEvent(type) {
-        if (type === 'abort') {
-          this.aborted = true
-          const e = { type, target: this }
-          this.onabort(e)
-          this._listeners.forEach(f => f(e), this)
-        }
-      }
-      onabort() {}
-      addEventListener(ev, fn) {
-        if (ev === 'abort') {
-          this._listeners.push(fn)
-        }
-      }
-      removeEventListener(ev, fn) {
-        if (ev === 'abort') {
-          this._listeners = this._listeners.filter(f => f !== fn)
-        }
-      }
-    }
-
-const warned = new Set()
-const deprecatedOption = (opt, instead) => {
-  const code = `LRU_CACHE_OPTION_${opt}`
-  if (shouldWarn(code)) {
-    warn(code, `${opt} option`, `options.${instead}`, LRUCache)
-  }
-}
-const deprecatedMethod = (method, instead) => {
-  const code = `LRU_CACHE_METHOD_${method}`
-  if (shouldWarn(code)) {
-    const { prototype } = LRUCache
-    const { get } = Object.getOwnPropertyDescriptor(prototype, method)
-    warn(code, `${method} method`, `cache.${instead}()`, get)
-  }
-}
-const deprecatedProperty = (field, instead) => {
-  const code = `LRU_CACHE_PROPERTY_${field}`
-  if (shouldWarn(code)) {
-    const { prototype } = LRUCache
-    const { get } = Object.getOwnPropertyDescriptor(prototype, field)
-    warn(code, `${field} property`, `cache.${instead}`, get)
-  }
-}
-
-const emitWarning = (...a) => {
-  typeof process === 'object' &&
-  process &&
-  typeof process.emitWarning === 'function'
-    ? process.emitWarning(...a)
-    : console.error(...a)
-}
-
-const shouldWarn = code => !warned.has(code)
-
-const warn = (code, what, instead, fn) => {
-  warned.add(code)
-  const msg = `The ${what} is deprecated. Please use ${instead} instead.`
-  emitWarning(msg, 'DeprecationWarning', code, fn)
-}
-
-const isPosInt = n => n && n === Math.floor(n) && n > 0 && isFinite(n)
-
-/* istanbul ignore next - This is a little bit ridiculous, tbh.
- * The maximum array length is 2^32-1 or thereabouts on most JS impls.
- * And well before that point, you're caching the entire world, I mean,
- * that's ~32GB of just integers for the next/prev links, plus whatever
- * else to hold that many keys and values.  Just filling the memory with
- * zeroes at init time is brutal when you get that big.
- * But why not be complete?
- * Maybe in the future, these limits will have expanded. */
-const getUintArray = max =>
-  !isPosInt(max)
-    ? null
-    : max <= Math.pow(2, 8)
-    ? Uint8Array
-    : max <= Math.pow(2, 16)
-    ? Uint16Array
-    : max <= Math.pow(2, 32)
-    ? Uint32Array
-    : max <= Number.MAX_SAFE_INTEGER
-    ? ZeroArray
-    : null
-
-class ZeroArray extends Array {
-  constructor(size) {
-    super(size)
-    this.fill(0)
-  }
-}
-
-class Stack {
-  constructor(max) {
-    if (max === 0) {
-      return []
-    }
-    const UintArray = getUintArray(max)
-    this.heap = new UintArray(max)
-    this.length = 0
-  }
-  push(n) {
-    this.heap[this.length++] = n
-  }
-  pop() {
-    return this.heap[--this.length]
-  }
-}
-
-class LRUCache {
-  constructor(options = {}) {
-    const {
-      max = 0,
-      ttl,
-      ttlResolution = 1,
-      ttlAutopurge,
-      updateAgeOnGet,
-      updateAgeOnHas,
-      allowStale,
-      dispose,
-      disposeAfter,
-      noDisposeOnSet,
-      noUpdateTTL,
-      maxSize = 0,
-      maxEntrySize = 0,
-      sizeCalculation,
-      fetchMethod,
-      fetchContext,
-      noDeleteOnFetchRejection,
-      noDeleteOnStaleGet,
-    } = options
-
-    // deprecated options, don't trigger a warning for getting them if
-    // the thing being passed in is another LRUCache we're copying.
-    const { length, maxAge, stale } =
-      options instanceof LRUCache ? {} : options
-
-    if (max !== 0 && !isPosInt(max)) {
-      throw new TypeError('max option must be a nonnegative integer')
-    }
-
-    const UintArray = max ? getUintArray(max) : Array
-    if (!UintArray) {
-      throw new Error('invalid max value: ' + max)
-    }
-
-    this.max = max
-    this.maxSize = maxSize
-    this.maxEntrySize = maxEntrySize || this.maxSize
-    this.sizeCalculation = sizeCalculation || length
-    if (this.sizeCalculation) {
-      if (!this.maxSize && !this.maxEntrySize) {
-        throw new TypeError(
-          'cannot set sizeCalculation without setting maxSize or maxEntrySize'
-        )
-      }
-      if (typeof this.sizeCalculation !== 'function') {
-        throw new TypeError('sizeCalculation set to non-function')
-      }
-    }
-
-    this.fetchMethod = fetchMethod || null
-    if (this.fetchMethod && typeof this.fetchMethod !== 'function') {
-      throw new TypeError(
-        'fetchMethod must be a function if specified'
-      )
-    }
-
-    this.fetchContext = fetchContext
-    if (!this.fetchMethod && fetchContext !== undefined) {
-      throw new TypeError(
-        'cannot set fetchContext without fetchMethod'
-      )
-    }
-
-    this.keyMap = new Map()
-    this.keyList = new Array(max).fill(null)
-    this.valList = new Array(max).fill(null)
-    this.next = new UintArray(max)
-    this.prev = new UintArray(max)
-    this.head = 0
-    this.tail = 0
-    this.free = new Stack(max)
-    this.initialFill = 1
-    this.size = 0
-
-    if (typeof dispose === 'function') {
-      this.dispose = dispose
-    }
-    if (typeof disposeAfter === 'function') {
-      this.disposeAfter = disposeAfter
-      this.disposed = []
-    } else {
-      this.disposeAfter = null
-      this.disposed = null
-    }
-    this.noDisposeOnSet = !!noDisposeOnSet
-    this.noUpdateTTL = !!noUpdateTTL
-    this.noDeleteOnFetchRejection = !!noDeleteOnFetchRejection
-
-    // NB: maxEntrySize is set to maxSize if it's set
-    if (this.maxEntrySize !== 0) {
-      if (this.maxSize !== 0) {
-        if (!isPosInt(this.maxSize)) {
-          throw new TypeError(
-            'maxSize must be a positive integer if specified'
-          )
-        }
-      }
-      if (!isPosInt(this.maxEntrySize)) {
-        throw new TypeError(
-          'maxEntrySize must be a positive integer if specified'
-        )
-      }
-      this.initializeSizeTracking()
-    }
-
-    this.allowStale = !!allowStale || !!stale
-    this.noDeleteOnStaleGet = !!noDeleteOnStaleGet
-    this.updateAgeOnGet = !!updateAgeOnGet
-    this.updateAgeOnHas = !!updateAgeOnHas
-    this.ttlResolution =
-      isPosInt(ttlResolution) || ttlResolution === 0
-        ? ttlResolution
-        : 1
-    this.ttlAutopurge = !!ttlAutopurge
-    this.ttl = ttl || maxAge || 0
-    if (this.ttl) {
-      if (!isPosInt(this.ttl)) {
-        throw new TypeError(
-          'ttl must be a positive integer if specified'
-        )
-      }
-      this.initializeTTLTracking()
-    }
-
-    // do not allow completely unbounded caches
-    if (this.max === 0 && this.ttl === 0 && this.maxSize === 0) {
-      throw new TypeError(
-        'At least one of max, maxSize, or ttl is required'
-      )
-    }
-    if (!this.ttlAutopurge && !this.max && !this.maxSize) {
-      const code = 'LRU_CACHE_UNBOUNDED'
-      if (shouldWarn(code)) {
-        warned.add(code)
-        const msg =
-          'TTL caching without ttlAutopurge, max, or maxSize can ' +
-          'result in unbounded memory consumption.'
-        emitWarning(msg, 'UnboundedCacheWarning', code, LRUCache)
-      }
-    }
-
-    if (stale) {
-      deprecatedOption('stale', 'allowStale')
-    }
-    if (maxAge) {
-      deprecatedOption('maxAge', 'ttl')
-    }
-    if (length) {
-      deprecatedOption('length', 'sizeCalculation')
-    }
-  }
-
-  getRemainingTTL(key) {
-    return this.has(key, { updateAgeOnHas: false }) ? Infinity : 0
-  }
-
-  initializeTTLTracking() {
-    this.ttls = new ZeroArray(this.max)
-    this.starts = new ZeroArray(this.max)
-
-    this.setItemTTL = (index, ttl, start = perf.now()) => {
-      this.starts[index] = ttl !== 0 ? start : 0
-      this.ttls[index] = ttl
-      if (ttl !== 0 && this.ttlAutopurge) {
-        const t = setTimeout(() => {
-          if (this.isStale(index)) {
-            this.delete(this.keyList[index])
-          }
-        }, ttl + 1)
-        /* istanbul ignore else - unref() not supported on all platforms */
-        if (t.unref) {
-          t.unref()
-        }
-      }
-    }
-
-    this.updateItemAge = index => {
-      this.starts[index] = this.ttls[index] !== 0 ? perf.now() : 0
-    }
-
-    // debounce calls to perf.now() to 1s so we're not hitting
-    // that costly call repeatedly.
-    let cachedNow = 0
-    const getNow = () => {
-      const n = perf.now()
-      if (this.ttlResolution > 0) {
-        cachedNow = n
-        const t = setTimeout(
-          () => (cachedNow = 0),
-          this.ttlResolution
-        )
-        /* istanbul ignore else - not available on all platforms */
-        if (t.unref) {
-          t.unref()
-        }
-      }
-      return n
-    }
-
-    this.getRemainingTTL = key => {
-      const index = this.keyMap.get(key)
-      if (index === undefined) {
-        return 0
-      }
-      return this.ttls[index] === 0 || this.starts[index] === 0
-        ? Infinity
-        : this.starts[index] +
-            this.ttls[index] -
-            (cachedNow || getNow())
-    }
-
-    this.isStale = index => {
-      return (
-        this.ttls[index] !== 0 &&
-        this.starts[index] !== 0 &&
-        (cachedNow || getNow()) - this.starts[index] >
-          this.ttls[index]
-      )
-    }
-  }
-  updateItemAge(index) {}
-  setItemTTL(index, ttl, start) {}
-  isStale(index) {
-    return false
-  }
-
-  initializeSizeTracking() {
-    this.calculatedSize = 0
-    this.sizes = new ZeroArray(this.max)
-    this.removeItemSize = index => {
-      this.calculatedSize -= this.sizes[index]
-      this.sizes[index] = 0
-    }
-    this.requireSize = (k, v, size, sizeCalculation) => {
-      // provisionally accept background fetches.
-      // actual value size will be checked when they return.
-      if (this.isBackgroundFetch(v)) {
-        return 0
-      }
-      if (!isPosInt(size)) {
-        if (sizeCalculation) {
-          if (typeof sizeCalculation !== 'function') {
-            throw new TypeError('sizeCalculation must be a function')
-          }
-          size = sizeCalculation(v, k)
-          if (!isPosInt(size)) {
-            throw new TypeError(
-              'sizeCalculation return invalid (expect positive integer)'
-            )
-          }
-        } else {
-          throw new TypeError(
-            'invalid size value (must be positive integer)'
-          )
-        }
-      }
-      return size
-    }
-    this.addItemSize = (index, size) => {
-      this.sizes[index] = size
-      if (this.maxSize) {
-        const maxSize = this.maxSize - this.sizes[index]
-        while (this.calculatedSize > maxSize) {
-          this.evict(true)
-        }
-      }
-      this.calculatedSize += this.sizes[index]
-    }
-  }
-  removeItemSize(index) {}
-  addItemSize(index, size) {}
-  requireSize(k, v, size, sizeCalculation) {
-    if (size || sizeCalculation) {
-      throw new TypeError(
-        'cannot set size without setting maxSize or maxEntrySize on cache'
-      )
-    }
-  }
-
-  *indexes({ allowStale = this.allowStale } = {}) {
-    if (this.size) {
-      for (let i = this.tail; true; ) {
-        if (!this.isValidIndex(i)) {
-          break
-        }
-        if (allowStale || !this.isStale(i)) {
-          yield i
-        }
-        if (i === this.head) {
-          break
-        } else {
-          i = this.prev[i]
-        }
-      }
-    }
-  }
-
-  *rindexes({ allowStale = this.allowStale } = {}) {
-    if (this.size) {
-      for (let i = this.head; true; ) {
-        if (!this.isValidIndex(i)) {
-          break
-        }
-        if (allowStale || !this.isStale(i)) {
-          yield i
-        }
-        if (i === this.tail) {
-          break
-        } else {
-          i = this.next[i]
-        }
-      }
-    }
-  }
-
-  isValidIndex(index) {
-    return this.keyMap.get(this.keyList[index]) === index
-  }
-
-  *entries() {
-    for (const i of this.indexes()) {
-      yield [this.keyList[i], this.valList[i]]
-    }
-  }
-  *rentries() {
-    for (const i of this.rindexes()) {
-      yield [this.keyList[i], this.valList[i]]
-    }
-  }
-
-  *keys() {
-    for (const i of this.indexes()) {
-      yield this.keyList[i]
-    }
-  }
-  *rkeys() {
-    for (const i of this.rindexes()) {
-      yield this.keyList[i]
-    }
-  }
-
-  *values() {
-    for (const i of this.indexes()) {
-      yield this.valList[i]
-    }
-  }
-  *rvalues() {
-    for (const i of this.rindexes()) {
-      yield this.valList[i]
-    }
-  }
-
-  [Symbol.iterator]() {
-    return this.entries()
-  }
-
-  find(fn, getOptions = {}) {
-    for (const i of this.indexes()) {
-      if (fn(this.valList[i], this.keyList[i], this)) {
-        return this.get(this.keyList[i], getOptions)
-      }
-    }
-  }
-
-  forEach(fn, thisp = this) {
-    for (const i of this.indexes()) {
-      fn.call(thisp, this.valList[i], this.keyList[i], this)
-    }
-  }
-
-  rforEach(fn, thisp = this) {
-    for (const i of this.rindexes()) {
-      fn.call(thisp, this.valList[i], this.keyList[i], this)
-    }
-  }
-
-  get prune() {
-    deprecatedMethod('prune', 'purgeStale')
-    return this.purgeStale
-  }
-
-  purgeStale() {
-    let deleted = false
-    for (const i of this.rindexes({ allowStale: true })) {
-      if (this.isStale(i)) {
-        this.delete(this.keyList[i])
-        deleted = true
-      }
-    }
-    return deleted
-  }
-
-  dump() {
-    const arr = []
-    for (const i of this.indexes({ allowStale: true })) {
-      const key = this.keyList[i]
-      const v = this.valList[i]
-      const value = this.isBackgroundFetch(v)
-        ? v.__staleWhileFetching
-        : v
-      const entry = { value }
-      if (this.ttls) {
-        entry.ttl = this.ttls[i]
-        // always dump the start relative to a portable timestamp
-        // it's ok for this to be a bit slow, it's a rare operation.
-        const age = perf.now() - this.starts[i]
-        entry.start = Math.floor(Date.now() - age)
-      }
-      if (this.sizes) {
-        entry.size = this.sizes[i]
-      }
-      arr.unshift([key, entry])
-    }
-    return arr
-  }
-
-  load(arr) {
-    this.clear()
-    for (const [key, entry] of arr) {
-      if (entry.start) {
-        // entry.start is a portable timestamp, but we may be using
-        // node's performance.now(), so calculate the offset.
-        // it's ok for this to be a bit slow, it's a rare operation.
-        const age = Date.now() - entry.start
-        entry.start = perf.now() - age
-      }
-      this.set(key, entry.value, entry)
-    }
-  }
-
-  dispose(v, k, reason) {}
-
-  set(
-    k,
-    v,
-    {
-      ttl = this.ttl,
-      start,
-      noDisposeOnSet = this.noDisposeOnSet,
-      size = 0,
-      sizeCalculation = this.sizeCalculation,
-      noUpdateTTL = this.noUpdateTTL,
-    } = {}
-  ) {
-    size = this.requireSize(k, v, size, sizeCalculation)
-    // if the item doesn't fit, don't do anything
-    // NB: maxEntrySize set to maxSize by default
-    if (this.maxEntrySize && size > this.maxEntrySize) {
-      // have to delete, in case a background fetch is there already.
-      // in non-async cases, this is a no-op
-      this.delete(k)
-      return this
-    }
-    let index = this.size === 0 ? undefined : this.keyMap.get(k)
-    if (index === undefined) {
-      // addition
-      index = this.newIndex()
-      this.keyList[index] = k
-      this.valList[index] = v
-      this.keyMap.set(k, index)
-      this.next[this.tail] = index
-      this.prev[index] = this.tail
-      this.tail = index
-      this.size++
-      this.addItemSize(index, size)
-      noUpdateTTL = false
-    } else {
-      // update
-      const oldVal = this.valList[index]
-      if (v !== oldVal) {
-        if (this.isBackgroundFetch(oldVal)) {
-          oldVal.__abortController.abort()
-        } else {
-          if (!noDisposeOnSet) {
-            this.dispose(oldVal, k, 'set')
-            if (this.disposeAfter) {
-              this.disposed.push([oldVal, k, 'set'])
-            }
-          }
-        }
-        this.removeItemSize(index)
-        this.valList[index] = v
-        this.addItemSize(index, size)
-      }
-      this.moveToTail(index)
-    }
-    if (ttl !== 0 && this.ttl === 0 && !this.ttls) {
-      this.initializeTTLTracking()
-    }
-    if (!noUpdateTTL) {
-      this.setItemTTL(index, ttl, start)
-    }
-    if (this.disposeAfter) {
-      while (this.disposed.length) {
-        this.disposeAfter(...this.disposed.shift())
-      }
-    }
-    return this
-  }
-
-  newIndex() {
-    if (this.size === 0) {
-      return this.tail
-    }
-    if (this.size === this.max && this.max !== 0) {
-      return this.evict(false)
-    }
-    if (this.free.length !== 0) {
-      return this.free.pop()
-    }
-    // initial fill, just keep writing down the list
-    return this.initialFill++
-  }
-
-  pop() {
-    if (this.size) {
-      const val = this.valList[this.head]
-      this.evict(true)
-      return val
-    }
-  }
-
-  evict(free) {
-    const head = this.head
-    const k = this.keyList[head]
-    const v = this.valList[head]
-    if (this.isBackgroundFetch(v)) {
-      v.__abortController.abort()
-    } else {
-      this.dispose(v, k, 'evict')
-      if (this.disposeAfter) {
-        this.disposed.push([v, k, 'evict'])
-      }
-    }
-    this.removeItemSize(head)
-    // if we aren't about to use the index, then null these out
-    if (free) {
-      this.keyList[head] = null
-      this.valList[head] = null
-      this.free.push(head)
-    }
-    this.head = this.next[head]
-    this.keyMap.delete(k)
-    this.size--
-    return head
-  }
-
-  has(k, { updateAgeOnHas = this.updateAgeOnHas } = {}) {
-    const index = this.keyMap.get(k)
-    if (index !== undefined) {
-      if (!this.isStale(index)) {
-        if (updateAgeOnHas) {
-          this.updateItemAge(index)
-        }
-        return true
-      }
-    }
-    return false
-  }
-
-  // like get(), but without any LRU updating or TTL expiration
-  peek(k, { allowStale = this.allowStale } = {}) {
-    const index = this.keyMap.get(k)
-    if (index !== undefined && (allowStale || !this.isStale(index))) {
-      const v = this.valList[index]
-      // either stale and allowed, or forcing a refresh of non-stale value
-      return this.isBackgroundFetch(v) ? v.__staleWhileFetching : v
-    }
-  }
-
-  backgroundFetch(k, index, options, context) {
-    const v = index === undefined ? undefined : this.valList[index]
-    if (this.isBackgroundFetch(v)) {
-      return v
-    }
-    const ac = new AC()
-    const fetchOpts = {
-      signal: ac.signal,
-      options,
-      context,
-    }
-    const cb = v => {
-      if (!ac.signal.aborted) {
-        this.set(k, v, fetchOpts.options)
-      }
-      return v
-    }
-    const eb = er => {
-      if (this.valList[index] === p) {
-        const del =
-          !options.noDeleteOnFetchRejection ||
-          p.__staleWhileFetching === undefined
-        if (del) {
-          this.delete(k)
-        } else {
-          // still replace the *promise* with the stale value,
-          // since we are done with the promise at this point.
-          this.valList[index] = p.__staleWhileFetching
-        }
-      }
-      if (p.__returned === p) {
-        throw er
-      }
-    }
-    const pcall = res => res(this.fetchMethod(k, v, fetchOpts))
-    const p = new Promise(pcall).then(cb, eb)
-    p.__abortController = ac
-    p.__staleWhileFetching = v
-    p.__returned = null
-    if (index === undefined) {
-      this.set(k, p, fetchOpts.options)
-      index = this.keyMap.get(k)
-    } else {
-      this.valList[index] = p
-    }
-    return p
-  }
-
-  isBackgroundFetch(p) {
-    return (
-      p &&
-      typeof p === 'object' &&
-      typeof p.then === 'function' &&
-      Object.prototype.hasOwnProperty.call(
-        p,
-        '__staleWhileFetching'
-      ) &&
-      Object.prototype.hasOwnProperty.call(p, '__returned') &&
-      (p.__returned === p || p.__returned === null)
-    )
-  }
-
-  // this takes the union of get() and set() opts, because it does both
-  async fetch(
-    k,
-    {
-      // get options
-      allowStale = this.allowStale,
-      updateAgeOnGet = this.updateAgeOnGet,
-      noDeleteOnStaleGet = this.noDeleteOnStaleGet,
-      // set options
-      ttl = this.ttl,
-      noDisposeOnSet = this.noDisposeOnSet,
-      size = 0,
-      sizeCalculation = this.sizeCalculation,
-      noUpdateTTL = this.noUpdateTTL,
-      // fetch exclusive options
-      noDeleteOnFetchRejection = this.noDeleteOnFetchRejection,
-      fetchContext = this.fetchContext,
-      forceRefresh = false,
-    } = {}
-  ) {
-    if (!this.fetchMethod) {
-      return this.get(k, {
-        allowStale,
-        updateAgeOnGet,
-        noDeleteOnStaleGet,
-      })
-    }
-
-    const options = {
-      allowStale,
-      updateAgeOnGet,
-      noDeleteOnStaleGet,
-      ttl,
-      noDisposeOnSet,
-      size,
-      sizeCalculation,
-      noUpdateTTL,
-      noDeleteOnFetchRejection,
-    }
-
-    let index = this.keyMap.get(k)
-    if (index === undefined) {
-      const p = this.backgroundFetch(k, index, options, fetchContext)
-      return (p.__returned = p)
-    } else {
-      // in cache, maybe already fetching
-      const v = this.valList[index]
-      if (this.isBackgroundFetch(v)) {
-        return allowStale && v.__staleWhileFetching !== undefined
-          ? v.__staleWhileFetching
-          : (v.__returned = v)
-      }
-
-      // if we force a refresh, that means do NOT serve the cached value,
-      // unless we are already in the process of refreshing the cache.
-      if (!forceRefresh && !this.isStale(index)) {
-        this.moveToTail(index)
-        if (updateAgeOnGet) {
-          this.updateItemAge(index)
-        }
-        return v
-      }
-
-      // ok, it is stale or a forced refresh, and not already fetching.
-      // refresh the cache.
-      const p = this.backgroundFetch(k, index, options, fetchContext)
-      return allowStale && p.__staleWhileFetching !== undefined
-        ? p.__staleWhileFetching
-        : (p.__returned = p)
-    }
-  }
-
-  get(
-    k,
-    {
-      allowStale = this.allowStale,
-      updateAgeOnGet = this.updateAgeOnGet,
-      noDeleteOnStaleGet = this.noDeleteOnStaleGet,
-    } = {}
-  ) {
-    const index = this.keyMap.get(k)
-    if (index !== undefined) {
-      const value = this.valList[index]
-      const fetching = this.isBackgroundFetch(value)
-      if (this.isStale(index)) {
-        // delete only if not an in-flight background fetch
-        if (!fetching) {
-          if (!noDeleteOnStaleGet) {
-            this.delete(k)
-          }
-          return allowStale ? value : undefined
-        } else {
-          return allowStale ? value.__staleWhileFetching : undefined
-        }
-      } else {
-        // if we're currently fetching it, we don't actually have it yet
-        // it's not stale, which means this isn't a staleWhileRefetching,
-        // so we just return undefined
-        if (fetching) {
-          return undefined
-        }
-        this.moveToTail(index)
-        if (updateAgeOnGet) {
-          this.updateItemAge(index)
-        }
-        return value
-      }
-    }
-  }
-
-  connect(p, n) {
-    this.prev[n] = p
-    this.next[p] = n
-  }
-
-  moveToTail(index) {
-    // if tail already, nothing to do
-    // if head, move head to next[index]
-    // else
-    //   move next[prev[index]] to next[index] (head has no prev)
-    //   move prev[next[index]] to prev[index]
-    // prev[index] = tail
-    // next[tail] = index
-    // tail = index
-    if (index !== this.tail) {
-      if (index === this.head) {
-        this.head = this.next[index]
-      } else {
-        this.connect(this.prev[index], this.next[index])
-      }
-      this.connect(this.tail, index)
-      this.tail = index
-    }
-  }
-
-  get del() {
-    deprecatedMethod('del', 'delete')
-    return this.delete
-  }
-
-  delete(k) {
-    let deleted = false
-    if (this.size !== 0) {
-      const index = this.keyMap.get(k)
-      if (index !== undefined) {
-        deleted = true
-        if (this.size === 1) {
-          this.clear()
-        } else {
-          this.removeItemSize(index)
-          const v = this.valList[index]
-          if (this.isBackgroundFetch(v)) {
-            v.__abortController.abort()
-          } else {
-            this.dispose(v, k, 'delete')
-            if (this.disposeAfter) {
-              this.disposed.push([v, k, 'delete'])
-            }
-          }
-          this.keyMap.delete(k)
-          this.keyList[index] = null
-          this.valList[index] = null
-          if (index === this.tail) {
-            this.tail = this.prev[index]
-          } else if (index === this.head) {
-            this.head = this.next[index]
-          } else {
-            this.next[this.prev[index]] = this.next[index]
-            this.prev[this.next[index]] = this.prev[index]
-          }
-          this.size--
-          this.free.push(index)
-        }
-      }
-    }
-    if (this.disposed) {
-      while (this.disposed.length) {
-        this.disposeAfter(...this.disposed.shift())
-      }
-    }
-    return deleted
-  }
-
-  clear() {
-    for (const index of this.rindexes({ allowStale: true })) {
-      const v = this.valList[index]
-      if (this.isBackgroundFetch(v)) {
-        v.__abortController.abort()
-      } else {
-        const k = this.keyList[index]
-        this.dispose(v, k, 'delete')
-        if (this.disposeAfter) {
-          this.disposed.push([v, k, 'delete'])
-        }
-      }
-    }
-
-    this.keyMap.clear()
-    this.valList.fill(null)
-    this.keyList.fill(null)
-    if (this.ttls) {
-      this.ttls.fill(0)
-      this.starts.fill(0)
-    }
-    if (this.sizes) {
-      this.sizes.fill(0)
-    }
-    this.head = 0
-    this.tail = 0
-    this.initialFill = 1
-    this.free.length = 0
-    this.calculatedSize = 0
-    this.size = 0
-    if (this.disposed) {
-      while (this.disposed.length) {
-        this.disposeAfter(...this.disposed.shift())
-      }
-    }
-  }
-
-  get reset() {
-    deprecatedMethod('reset', 'clear')
-    return this.clear
-  }
-
-  get length() {
-    deprecatedProperty('length', 'size')
-    return this.size
-  }
-
-  static get AbortController() {
-    return AC
-  }
-  static get AbortSignal() {
-    return AS
-  }
-}
-
-module.exports = LRUCache
 
 
 /***/ }),
@@ -26982,13 +26453,17 @@ module.exports = class Minipass extends Stream {
 
 "use strict";
 
-const proc = typeof process === 'object' && process ? process : {
-  stdout: null,
-  stderr: null,
-}
+const proc =
+  typeof process === 'object' && process
+    ? process
+    : {
+        stdout: null,
+        stderr: null,
+      }
 const EE = __nccwpck_require__(2361)
 const Stream = __nccwpck_require__(2781)
-const SD = (__nccwpck_require__(1576).StringDecoder)
+const stringdecoder = __nccwpck_require__(1576)
+const SD = stringdecoder.StringDecoder
 
 const EOF = Symbol('EOF')
 const MAYBE_EMIT_END = Symbol('maybeEmitEnd')
@@ -27010,85 +26485,85 @@ const BUFFERLENGTH = Symbol('bufferLength')
 const BUFFERPUSH = Symbol('bufferPush')
 const BUFFERSHIFT = Symbol('bufferShift')
 const OBJECTMODE = Symbol('objectMode')
+// internal event when stream is destroyed
 const DESTROYED = Symbol('destroyed')
+// internal event when stream has an error
+const ERROR = Symbol('error')
 const EMITDATA = Symbol('emitData')
 const EMITEND = Symbol('emitEnd')
 const EMITEND2 = Symbol('emitEnd2')
 const ASYNC = Symbol('async')
+const ABORT = Symbol('abort')
+const ABORTED = Symbol('aborted')
+const SIGNAL = Symbol('signal')
 
 const defer = fn => Promise.resolve().then(fn)
 
 // TODO remove when Node v8 support drops
-const doIter = global._MP_NO_ITERATOR_SYMBOLS_  !== '1'
-const ASYNCITERATOR = doIter && Symbol.asyncIterator
-  || Symbol('asyncIterator not implemented')
-const ITERATOR = doIter && Symbol.iterator
-  || Symbol('iterator not implemented')
+const doIter = global._MP_NO_ITERATOR_SYMBOLS_ !== '1'
+const ASYNCITERATOR =
+  (doIter && Symbol.asyncIterator) || Symbol('asyncIterator not implemented')
+const ITERATOR =
+  (doIter && Symbol.iterator) || Symbol('iterator not implemented')
 
 // events that mean 'the stream is over'
 // these are treated specially, and re-emitted
 // if they are listened for after emitting.
-const isEndish = ev =>
-  ev === 'end' ||
-  ev === 'finish' ||
-  ev === 'prefinish'
+const isEndish = ev => ev === 'end' || ev === 'finish' || ev === 'prefinish'
 
-const isArrayBuffer = b => b instanceof ArrayBuffer ||
-  typeof b === 'object' &&
-  b.constructor &&
-  b.constructor.name === 'ArrayBuffer' &&
-  b.byteLength >= 0
+const isArrayBuffer = b =>
+  b instanceof ArrayBuffer ||
+  (typeof b === 'object' &&
+    b.constructor &&
+    b.constructor.name === 'ArrayBuffer' &&
+    b.byteLength >= 0)
 
 const isArrayBufferView = b => !Buffer.isBuffer(b) && ArrayBuffer.isView(b)
 
 class Pipe {
-  constructor (src, dest, opts) {
+  constructor(src, dest, opts) {
     this.src = src
     this.dest = dest
     this.opts = opts
     this.ondrain = () => src[RESUME]()
     dest.on('drain', this.ondrain)
   }
-  unpipe () {
+  unpipe() {
     this.dest.removeListener('drain', this.ondrain)
   }
   // istanbul ignore next - only here for the prototype
-  proxyErrors () {}
-  end () {
+  proxyErrors() {}
+  end() {
     this.unpipe()
-    if (this.opts.end)
-      this.dest.end()
+    if (this.opts.end) this.dest.end()
   }
 }
 
 class PipeProxyErrors extends Pipe {
-  unpipe () {
+  unpipe() {
     this.src.removeListener('error', this.proxyErrors)
     super.unpipe()
   }
-  constructor (src, dest, opts) {
+  constructor(src, dest, opts) {
     super(src, dest, opts)
     this.proxyErrors = er => dest.emit('error', er)
     src.on('error', this.proxyErrors)
   }
 }
 
-module.exports = class Minipass extends Stream {
-  constructor (options) {
+class Minipass extends Stream {
+  constructor(options) {
     super()
     this[FLOWING] = false
     // whether we're explicitly paused
     this[PAUSED] = false
     this[PIPES] = []
     this[BUFFER] = []
-    this[OBJECTMODE] = options && options.objectMode || false
-    if (this[OBJECTMODE])
-      this[ENCODING] = null
-    else
-      this[ENCODING] = options && options.encoding || null
-    if (this[ENCODING] === 'buffer')
-      this[ENCODING] = null
-    this[ASYNC] = options && !!options.async || false
+    this[OBJECTMODE] = (options && options.objectMode) || false
+    if (this[OBJECTMODE]) this[ENCODING] = null
+    else this[ENCODING] = (options && options.encoding) || null
+    if (this[ENCODING] === 'buffer') this[ENCODING] = null
+    this[ASYNC] = (options && !!options.async) || false
     this[DECODER] = this[ENCODING] ? new SD(this[ENCODING]) : null
     this[EOF] = false
     this[EMITTED_END] = false
@@ -27105,17 +26580,31 @@ module.exports = class Minipass extends Stream {
     if (options && options.debugExposePipes === true) {
       Object.defineProperty(this, 'pipes', { get: () => this[PIPES] })
     }
+    this[SIGNAL] = options && options.signal
+    this[ABORTED] = false
+    if (this[SIGNAL]) {
+      this[SIGNAL].addEventListener('abort', () => this[ABORT]())
+      if (this[SIGNAL].aborted) {
+        this[ABORT]()
+      }
+    }
   }
 
-  get bufferLength () { return this[BUFFERLENGTH] }
+  get bufferLength() {
+    return this[BUFFERLENGTH]
+  }
 
-  get encoding () { return this[ENCODING] }
-  set encoding (enc) {
-    if (this[OBJECTMODE])
-      throw new Error('cannot set encoding in objectMode')
+  get encoding() {
+    return this[ENCODING]
+  }
+  set encoding(enc) {
+    if (this[OBJECTMODE]) throw new Error('cannot set encoding in objectMode')
 
-    if (this[ENCODING] && enc !== this[ENCODING] &&
-        (this[DECODER] && this[DECODER].lastNeed || this[BUFFERLENGTH]))
+    if (
+      this[ENCODING] &&
+      enc !== this[ENCODING] &&
+      ((this[DECODER] && this[DECODER].lastNeed) || this[BUFFERLENGTH])
+    )
       throw new Error('cannot change encoding')
 
     if (this[ENCODING] !== enc) {
@@ -27127,33 +26616,54 @@ module.exports = class Minipass extends Stream {
     this[ENCODING] = enc
   }
 
-  setEncoding (enc) {
+  setEncoding(enc) {
     this.encoding = enc
   }
 
-  get objectMode () { return this[OBJECTMODE] }
-  set objectMode (om) { this[OBJECTMODE] = this[OBJECTMODE] || !!om }
+  get objectMode() {
+    return this[OBJECTMODE]
+  }
+  set objectMode(om) {
+    this[OBJECTMODE] = this[OBJECTMODE] || !!om
+  }
 
-  get ['async'] () { return this[ASYNC] }
-  set ['async'] (a) { this[ASYNC] = this[ASYNC] || !!a }
+  get ['async']() {
+    return this[ASYNC]
+  }
+  set ['async'](a) {
+    this[ASYNC] = this[ASYNC] || !!a
+  }
 
-  write (chunk, encoding, cb) {
-    if (this[EOF])
-      throw new Error('write after end')
+  // drop everything and get out of the flow completely
+  [ABORT]() {
+    this[ABORTED] = true
+    this.emit('abort', this[SIGNAL].reason)
+    this.destroy(this[SIGNAL].reason)
+  }
+
+  get aborted() {
+    return this[ABORTED]
+  }
+  set aborted(_) {}
+
+  write(chunk, encoding, cb) {
+    if (this[ABORTED]) return false
+    if (this[EOF]) throw new Error('write after end')
 
     if (this[DESTROYED]) {
-      this.emit('error', Object.assign(
-        new Error('Cannot call write after a stream was destroyed'),
-        { code: 'ERR_STREAM_DESTROYED' }
-      ))
+      this.emit(
+        'error',
+        Object.assign(
+          new Error('Cannot call write after a stream was destroyed'),
+          { code: 'ERR_STREAM_DESTROYED' }
+        )
+      )
       return true
     }
 
-    if (typeof encoding === 'function')
-      cb = encoding, encoding = 'utf8'
+    if (typeof encoding === 'function') (cb = encoding), (encoding = 'utf8')
 
-    if (!encoding)
-      encoding = 'utf8'
+    if (!encoding) encoding = 'utf8'
 
     const fn = this[ASYNC] ? defer : f => f()
 
@@ -27164,8 +26674,7 @@ module.exports = class Minipass extends Stream {
     if (!this[OBJECTMODE] && !Buffer.isBuffer(chunk)) {
       if (isArrayBufferView(chunk))
         chunk = Buffer.from(chunk.buffer, chunk.byteOffset, chunk.byteLength)
-      else if (isArrayBuffer(chunk))
-        chunk = Buffer.from(chunk)
+      else if (isArrayBuffer(chunk)) chunk = Buffer.from(chunk)
       else if (typeof chunk !== 'string')
         // use the setter so we throw if we have encoding set
         this.objectMode = true
@@ -27175,19 +26684,14 @@ module.exports = class Minipass extends Stream {
     // this yields better performance, fewer checks later.
     if (this[OBJECTMODE]) {
       /* istanbul ignore if - maybe impossible? */
-      if (this.flowing && this[BUFFERLENGTH] !== 0)
-        this[FLUSH](true)
+      if (this.flowing && this[BUFFERLENGTH] !== 0) this[FLUSH](true)
 
-      if (this.flowing)
-        this.emit('data', chunk)
-      else
-        this[BUFFERPUSH](chunk)
+      if (this.flowing) this.emit('data', chunk)
+      else this[BUFFERPUSH](chunk)
 
-      if (this[BUFFERLENGTH] !== 0)
-        this.emit('readable')
+      if (this[BUFFERLENGTH] !== 0) this.emit('readable')
 
-      if (cb)
-        fn(cb)
+      if (cb) fn(cb)
 
       return this.flowing
     }
@@ -27195,18 +26699,18 @@ module.exports = class Minipass extends Stream {
     // at this point the chunk is a buffer or string
     // don't buffer it up or send it to the decoder
     if (!chunk.length) {
-      if (this[BUFFERLENGTH] !== 0)
-        this.emit('readable')
-      if (cb)
-        fn(cb)
+      if (this[BUFFERLENGTH] !== 0) this.emit('readable')
+      if (cb) fn(cb)
       return this.flowing
     }
 
     // fast-path writing strings of same encoding to a stream with
     // an empty buffer, skipping the buffer/decoder dance
-    if (typeof chunk === 'string' &&
-        // unless it is a string already ready for us to use
-        !(encoding === this[ENCODING] && !this[DECODER].lastNeed)) {
+    if (
+      typeof chunk === 'string' &&
+      // unless it is a string already ready for us to use
+      !(encoding === this[ENCODING] && !this[DECODER].lastNeed)
+    ) {
       chunk = Buffer.from(chunk, encoding)
     }
 
@@ -27214,40 +26718,31 @@ module.exports = class Minipass extends Stream {
       chunk = this[DECODER].write(chunk)
 
     // Note: flushing CAN potentially switch us into not-flowing mode
-    if (this.flowing && this[BUFFERLENGTH] !== 0)
-      this[FLUSH](true)
+    if (this.flowing && this[BUFFERLENGTH] !== 0) this[FLUSH](true)
 
-    if (this.flowing)
-      this.emit('data', chunk)
-    else
-      this[BUFFERPUSH](chunk)
+    if (this.flowing) this.emit('data', chunk)
+    else this[BUFFERPUSH](chunk)
 
-    if (this[BUFFERLENGTH] !== 0)
-      this.emit('readable')
+    if (this[BUFFERLENGTH] !== 0) this.emit('readable')
 
-    if (cb)
-      fn(cb)
+    if (cb) fn(cb)
 
     return this.flowing
   }
 
-  read (n) {
-    if (this[DESTROYED])
-      return null
+  read(n) {
+    if (this[DESTROYED]) return null
 
     if (this[BUFFERLENGTH] === 0 || n === 0 || n > this[BUFFERLENGTH]) {
       this[MAYBE_EMIT_END]()
       return null
     }
 
-    if (this[OBJECTMODE])
-      n = null
+    if (this[OBJECTMODE]) n = null
 
     if (this[BUFFER].length > 1 && !this[OBJECTMODE]) {
-      if (this.encoding)
-        this[BUFFER] = [this[BUFFER].join('')]
-      else
-        this[BUFFER] = [Buffer.concat(this[BUFFER], this[BUFFERLENGTH])]
+      if (this.encoding) this[BUFFER] = [this[BUFFER].join('')]
+      else this[BUFFER] = [Buffer.concat(this[BUFFER], this[BUFFERLENGTH])]
     }
 
     const ret = this[READ](n || null, this[BUFFER][0])
@@ -27255,9 +26750,8 @@ module.exports = class Minipass extends Stream {
     return ret
   }
 
-  [READ] (n, chunk) {
-    if (n === chunk.length || n === null)
-      this[BUFFERSHIFT]()
+  [READ](n, chunk) {
+    if (n === chunk.length || n === null) this[BUFFERSHIFT]()
     else {
       this[BUFFER][0] = chunk.slice(n)
       chunk = chunk.slice(0, n)
@@ -27266,21 +26760,16 @@ module.exports = class Minipass extends Stream {
 
     this.emit('data', chunk)
 
-    if (!this[BUFFER].length && !this[EOF])
-      this.emit('drain')
+    if (!this[BUFFER].length && !this[EOF]) this.emit('drain')
 
     return chunk
   }
 
-  end (chunk, encoding, cb) {
-    if (typeof chunk === 'function')
-      cb = chunk, chunk = null
-    if (typeof encoding === 'function')
-      cb = encoding, encoding = 'utf8'
-    if (chunk)
-      this.write(chunk, encoding)
-    if (cb)
-      this.once('end', cb)
+  end(chunk, encoding, cb) {
+    if (typeof chunk === 'function') (cb = chunk), (chunk = null)
+    if (typeof encoding === 'function') (cb = encoding), (encoding = 'utf8')
+    if (chunk) this.write(chunk, encoding)
+    if (cb) this.once('end', cb)
     this[EOF] = true
     this.writable = false
 
@@ -27288,106 +26777,92 @@ module.exports = class Minipass extends Stream {
     // even if we're not reading.
     // we'll re-emit if a new 'end' listener is added anyway.
     // This makes MP more suitable to write-only use cases.
-    if (this.flowing || !this[PAUSED])
-      this[MAYBE_EMIT_END]()
+    if (this.flowing || !this[PAUSED]) this[MAYBE_EMIT_END]()
     return this
   }
 
   // don't let the internal resume be overwritten
-  [RESUME] () {
-    if (this[DESTROYED])
-      return
+  [RESUME]() {
+    if (this[DESTROYED]) return
 
     this[PAUSED] = false
     this[FLOWING] = true
     this.emit('resume')
-    if (this[BUFFER].length)
-      this[FLUSH]()
-    else if (this[EOF])
-      this[MAYBE_EMIT_END]()
-    else
-      this.emit('drain')
+    if (this[BUFFER].length) this[FLUSH]()
+    else if (this[EOF]) this[MAYBE_EMIT_END]()
+    else this.emit('drain')
   }
 
-  resume () {
+  resume() {
     return this[RESUME]()
   }
 
-  pause () {
+  pause() {
     this[FLOWING] = false
     this[PAUSED] = true
   }
 
-  get destroyed () {
+  get destroyed() {
     return this[DESTROYED]
   }
 
-  get flowing () {
+  get flowing() {
     return this[FLOWING]
   }
 
-  get paused () {
+  get paused() {
     return this[PAUSED]
   }
 
-  [BUFFERPUSH] (chunk) {
-    if (this[OBJECTMODE])
-      this[BUFFERLENGTH] += 1
-    else
-      this[BUFFERLENGTH] += chunk.length
+  [BUFFERPUSH](chunk) {
+    if (this[OBJECTMODE]) this[BUFFERLENGTH] += 1
+    else this[BUFFERLENGTH] += chunk.length
     this[BUFFER].push(chunk)
   }
 
-  [BUFFERSHIFT] () {
-    if (this[BUFFER].length) {
-      if (this[OBJECTMODE])
-        this[BUFFERLENGTH] -= 1
-      else
-        this[BUFFERLENGTH] -= this[BUFFER][0].length
-    }
+  [BUFFERSHIFT]() {
+    if (this[OBJECTMODE]) this[BUFFERLENGTH] -= 1
+    else this[BUFFERLENGTH] -= this[BUFFER][0].length
     return this[BUFFER].shift()
   }
 
-  [FLUSH] (noDrain) {
-    do {} while (this[FLUSHCHUNK](this[BUFFERSHIFT]()))
+  [FLUSH](noDrain) {
+    do {} while (this[FLUSHCHUNK](this[BUFFERSHIFT]()) && this[BUFFER].length)
 
-    if (!noDrain && !this[BUFFER].length && !this[EOF])
-      this.emit('drain')
+    if (!noDrain && !this[BUFFER].length && !this[EOF]) this.emit('drain')
   }
 
-  [FLUSHCHUNK] (chunk) {
-    return chunk ? (this.emit('data', chunk), this.flowing) : false
+  [FLUSHCHUNK](chunk) {
+    this.emit('data', chunk)
+    return this.flowing
   }
 
-  pipe (dest, opts) {
-    if (this[DESTROYED])
-      return
+  pipe(dest, opts) {
+    if (this[DESTROYED]) return
 
     const ended = this[EMITTED_END]
     opts = opts || {}
-    if (dest === proc.stdout || dest === proc.stderr)
-      opts.end = false
-    else
-      opts.end = opts.end !== false
+    if (dest === proc.stdout || dest === proc.stderr) opts.end = false
+    else opts.end = opts.end !== false
     opts.proxyErrors = !!opts.proxyErrors
 
     // piping an ended stream ends immediately
     if (ended) {
-      if (opts.end)
-        dest.end()
+      if (opts.end) dest.end()
     } else {
-      this[PIPES].push(!opts.proxyErrors ? new Pipe(this, dest, opts)
-        : new PipeProxyErrors(this, dest, opts))
-      if (this[ASYNC])
-        defer(() => this[RESUME]())
-      else
-        this[RESUME]()
+      this[PIPES].push(
+        !opts.proxyErrors
+          ? new Pipe(this, dest, opts)
+          : new PipeProxyErrors(this, dest, opts)
+      )
+      if (this[ASYNC]) defer(() => this[RESUME]())
+      else this[RESUME]()
     }
 
     return dest
   }
 
-  unpipe (dest) {
+  unpipe(dest) {
     const p = this[PIPES].find(p => p.dest === dest)
     if (p) {
       this[PIPES].splice(this[PIPES].indexOf(p), 1)
@@ -27395,69 +26870,72 @@ module.exports = class Minipass extends Stream {
     }
   }
 
-  addListener (ev, fn) {
+  addListener(ev, fn) {
     return this.on(ev, fn)
   }
 
-  on (ev, fn) {
+  on(ev, fn) {
     const ret = super.on(ev, fn)
-    if (ev === 'data' && !this[PIPES].length && !this.flowing)
-      this[RESUME]()
+    if (ev === 'data' && !this[PIPES].length && !this.flowing) this[RESUME]()
     else if (ev === 'readable' && this[BUFFERLENGTH] !== 0)
       super.emit('readable')
     else if (isEndish(ev) && this[EMITTED_END]) {
       super.emit(ev)
       this.removeAllListeners(ev)
     } else if (ev === 'error' && this[EMITTED_ERROR]) {
-      if (this[ASYNC])
-        defer(() => fn.call(this, this[EMITTED_ERROR]))
-      else
-        fn.call(this, this[EMITTED_ERROR])
+      if (this[ASYNC]) defer(() => fn.call(this, this[EMITTED_ERROR]))
+      else fn.call(this, this[EMITTED_ERROR])
     }
     return ret
   }
 
-  get emittedEnd () {
+  get emittedEnd() {
     return this[EMITTED_END]
   }
 
-  [MAYBE_EMIT_END] () {
-    if (!this[EMITTING_END] &&
-        !this[EMITTED_END] &&
-        !this[DESTROYED] &&
-        this[BUFFER].length === 0 &&
-        this[EOF]) {
+  [MAYBE_EMIT_END]() {
+    if (
+      !this[EMITTING_END] &&
+      !this[EMITTED_END] &&
+      !this[DESTROYED] &&
+      this[BUFFER].length === 0 &&
+      this[EOF]
+    ) {
       this[EMITTING_END] = true
       this.emit('end')
       this.emit('prefinish')
       this.emit('finish')
-      if (this[CLOSED])
-        this.emit('close')
+      if (this[CLOSED]) this.emit('close')
       this[EMITTING_END] = false
     }
   }
 
-  emit (ev, data, ...extra) {
+  emit(ev, data, ...extra) {
     // error and close are only events allowed after calling destroy()
     if (ev !== 'error' && ev !== 'close' && ev !== DESTROYED && this[DESTROYED])
       return
     else if (ev === 'data') {
-      return !data ? false
-        : this[ASYNC] ? defer(() => this[EMITDATA](data))
+      return !this[OBJECTMODE] && !data
+        ? false
+        : this[ASYNC]
+        ? defer(() => this[EMITDATA](data))
         : this[EMITDATA](data)
     } else if (ev === 'end') {
       return this[EMITEND]()
     } else if (ev === 'close') {
       this[CLOSED] = true
       // don't emit close before 'end' and 'finish'
-      if (!this[EMITTED_END] && !this[DESTROYED])
-        return
+      if (!this[EMITTED_END] && !this[DESTROYED]) return
       const ret = super.emit('close')
       this.removeAllListeners('close')
       return ret
     } else if (ev === 'error') {
       this[EMITTED_ERROR] = data
-      const ret = super.emit('error', data)
+      super.emit(ERROR, data)
+      const ret =
+        !this[SIGNAL] || this.listeners('error').length
+          ? super.emit('error', data)
+          : false
       this[MAYBE_EMIT_END]()
       return ret
     } else if (ev === 'resume') {
@@ -27476,29 +26954,25 @@ module.exports = class Minipass extends Stream {
     return ret
   }
 
-  [EMITDATA] (data) {
+  [EMITDATA](data) {
     for (const p of this[PIPES]) {
-      if (p.dest.write(data) === false)
-        this.pause()
+      if (p.dest.write(data) === false) this.pause()
     }
     const ret = super.emit('data', data)
     this[MAYBE_EMIT_END]()
     return ret
   }
 
-  [EMITEND] () {
-    if (this[EMITTED_END])
-      return
+  [EMITEND]() {
+    if (this[EMITTED_END]) return
 
     this[EMITTED_END] = true
     this.readable = false
-    if (this[ASYNC])
-      defer(() => this[EMITEND2]())
-    else
-      this[EMITEND2]()
+    if (this[ASYNC]) defer(() => this[EMITEND2]())
+    else this[EMITEND2]()
   }
 
-  [EMITEND2] () {
+  [EMITEND2]() {
     if (this[DECODER]) {
       const data = this[DECODER].end()
       if (data) {
@@ -27518,33 +26992,34 @@ module.exports = class Minipass extends Stream {
   }
 
   // const all = await stream.collect()
-  collect () {
+  collect() {
     const buf = []
-    if (!this[OBJECTMODE])
-      buf.dataLength = 0
+    if (!this[OBJECTMODE]) buf.dataLength = 0
     // set the promise first, in case an error is raised
     // by triggering the flow here.
     const p = this.promise()
     this.on('data', c => {
       buf.push(c)
-      if (!this[OBJECTMODE])
-        buf.dataLength += c.length
+      if (!this[OBJECTMODE]) buf.dataLength += c.length
     })
     return p.then(() => buf)
   }
 
   // const data = await stream.concat()
-  concat () {
+  concat() {
     return this[OBJECTMODE]
       ? Promise.reject(new Error('cannot concat in objectMode'))
       : this.collect().then(buf =>
           this[OBJECTMODE]
             ? Promise.reject(new Error('cannot concat in objectMode'))
-            : this[ENCODING] ? buf.join('') : Buffer.concat(buf, buf.dataLength))
+            : this[ENCODING]
+            ? buf.join('')
+            : Buffer.concat(buf, buf.dataLength)
+        )
   }
 
   // stream.promise().then(() => done, er => emitted error)
-  promise () {
+  promise() {
     return new Promise((resolve, reject) => {
       this.on(DESTROYED, () => reject(new Error('stream destroyed')))
       this.on('error', er => reject(er))
@@ -27553,20 +27028,26 @@ module.exports = class Minipass extends Stream {
   }
 
   // for await (let chunk of stream)
-  [ASYNCITERATOR] () {
+  [ASYNCITERATOR]() {
+    let stopped = false
+    const stop = () => {
+      this.pause()
+      stopped = true
+      return Promise.resolve({ done: true })
+    }
     const next = () => {
+      if (stopped) return stop()
       const res = this.read()
-      if (res !== null)
-        return Promise.resolve({ done: false, value: res })
+      if (res !== null) return Promise.resolve({ done: false, value: res })
 
-      if (this[EOF])
-        return Promise.resolve({ done: true })
+      if (this[EOF]) return stop()
 
       let resolve = null
       let reject = null
       const onerr = er => {
         this.removeListener('data', ondata)
         this.removeListener('end', onend)
+        stop()
         reject(er)
       }
       const ondata = value => {
@@ -27578,6 +27059,7 @@ module.exports = class Minipass extends Stream {
       const onend = () => {
         this.removeListener('error', onerr)
         this.removeListener('data', ondata)
+        stop()
         resolve({ done: true })
       }
       const ondestroy = () => onerr(new Error('stream destroyed'))
@@ -27591,25 +27073,49 @@ module.exports = class Minipass extends Stream {
       })
     }
 
-    return { next }
+    return {
+      next,
+      throw: stop,
+      return: stop,
+      [ASYNCITERATOR]() {
+        return this
+      },
+    }
   }
 
   // for (let chunk of stream)
-  [ITERATOR] () {
-    const next = () => {
-      const value = this.read()
-      const done = value === null
-      return { value, done }
+  [ITERATOR]() {
+    let stopped = false
+    const stop = () => {
+      this.pause()
+      this.removeListener(ERROR, stop)
+      this.removeListener('end', stop)
+      stopped = true
+      return { done: true }
     }
-    return { next }
+
+    const next = () => {
+      if (stopped) return stop()
+      const value = this.read()
+      return value === null ? stop() : { value }
+    }
+    this.once('end', stop)
+    this.once(ERROR, stop)
+
+    return {
+      next,
+      throw: stop,
+      return: stop,
+      [ITERATOR]() {
+        return this
+      },
+    }
   }
 
-  destroy (er) {
+  destroy(er) {
     if (this[DESTROYED]) {
-      if (er)
-        this.emit('error', er)
-      else
-        this.emit(DESTROYED)
+      if (er) this.emit('error', er)
+      else this.emit(DESTROYED)
       return this
     }
 
@@ -27619,25 +27125,30 @@ module.exports = class Minipass extends Stream {
     this[BUFFER].length = 0
     this[BUFFERLENGTH] = 0
 
-    if (typeof this.close === 'function' && !this[CLOSED])
-      this.close()
+    if (typeof this.close === 'function' && !this[CLOSED]) this.close()
 
-    if (er)
-      this.emit('error', er)
-    else // if no error to emit, still reject pending promises
-      this.emit(DESTROYED)
+    if (er) this.emit('error', er)
+    // if no error to emit, still reject pending promises
+    else this.emit(DESTROYED)
 
     return this
   }
 
-  static isStream (s) {
-    return !!s && (s instanceof Minipass || s instanceof Stream ||
-      s instanceof EE && (
-        typeof s.pipe === 'function' || // readable
-        (typeof s.write === 'function' && typeof s.end === 'function') // writable
-      ))
+  static isStream(s) {
+    return (
+      !!s &&
+      (s instanceof Minipass ||
+        s instanceof Stream ||
+        (s instanceof EE &&
+          // readable
+          (typeof s.pipe === 'function' ||
+            // writable
+            (typeof s.write === 'function' && typeof s.end === 'function'))))
+    )
   }
 }
+
+module.exports = Minipass
 
 
 /***/ }),
@@ -31318,6 +30829,20 @@ const isDomainOrSubdomain = function isDomainOrSubdomain(destination, original) 
 };
 
 /**
+ * isSameProtocol reports whether the two provided URLs use the same protocol.
+ *
+ * Both domains must already be in canonical form.
+ * @param {string|URL} original
+ * @param {string|URL} destination
+ */
+const isSameProtocol = function isSameProtocol(destination, original) {
+	const orig = new URL$1(original).protocol;
+	const dest = new URL$1(destination).protocol;
+
+	return orig === dest;
+};
+
+/**
  * Fetch function
  *
  * @param   Mixed    url   Absolute url or Request instance
@@ -31348,7 +30873,7 @@ function fetch(url, opts) {
 			let error = new AbortError('The user aborted a request.');
 			reject(error);
 			if (request.body && request.body instanceof Stream.Readable) {
-				request.body.destroy(error);
+				destroyStream(request.body, error);
 			}
 			if (!response || !response.body) return;
 			response.body.emit('error', error);
@@ -31389,8 +30914,42 @@ function fetch(url, opts) {
 
 		req.on('error', function (err) {
 			reject(new FetchError(`request to ${request.url} failed, reason: ${err.message}`, 'system', err));
+
+			if (response && response.body) {
+				destroyStream(response.body, err);
+			}
+
 			finalize();
 		});
+
+		fixResponseChunkedTransferBadEnding(req, function (err) {
+			if (signal && signal.aborted) {
+				return;
+			}
+
+			if (response && response.body) {
+				destroyStream(response.body, err);
+			}
+		});
+
+		/* c8 ignore next 18 */
+		if (parseInt(process.version.substring(1)) < 14) {
+			// Before Node.js 14, pipeline() does not fully support async iterators and does not always
+			// properly handle when the socket close/end events are out of order.
+			req.on('socket', function (s) {
+				s.addListener('close', function (hadError) {
+					// if a data listener is still present we didn't end cleanly
+					const hasDataListener = s.listenerCount('data') > 0;
+
+					// if end happened before close but the socket didn't emit an error, do it now
+					if (response && hasDataListener && !hadError && !(signal && signal.aborted)) {
+						const err = new Error('Premature close');
+						err.code = 'ERR_STREAM_PREMATURE_CLOSE';
+						response.body.emit('error', err);
+					}
+				});
+			});
+		}
 
 		req.on('response', function (res) {
 			clearTimeout(reqTimeout);
@@ -31463,7 +31022,7 @@ function fetch(url, opts) {
 							size: request.size
 						};
 
-						if (!isDomainOrSubdomain(request.url, locationURL)) {
+						if (!isDomainOrSubdomain(request.url, locationURL) || !isSameProtocol(request.url, locationURL)) {
 							for (const name of ['authorization', 'www-authenticate', 'cookie', 'cookie2']) {
 								requestOpts.headers.delete(name);
 							}
@@ -31556,6 +31115,13 @@ function fetch(url, opts) {
 					response = new Response(body, response_options);
 					resolve(response);
 				});
+				raw.on('end', function () {
+					// some old IIS servers return zero-length OK deflate responses, so 'data' is never emitted.
+					if (!response) {
+						response = new Response(body, response_options);
+						resolve(response);
+					}
+				});
 				return;
 			}
 
@@ -31575,6 +31141,41 @@ function fetch(url, opts) {
 		writeToStream(req, request);
 	});
 }
+function fixResponseChunkedTransferBadEnding(request, errorCallback) {
+	let socket;
+
+	request.on('socket', function (s) {
+		socket = s;
+	});
+
+	request.on('response', function (response) {
+		const headers = response.headers;
+
+		if (headers['transfer-encoding'] === 'chunked' && !headers['content-length']) {
+			response.once('close', function (hadError) {
+				// if a data listener is still present we didn't end cleanly
+				const hasDataListener = socket.listenerCount('data') > 0;
+
+				if (hasDataListener && !hadError) {
+					const err = new Error('Premature close');
+					err.code = 'ERR_STREAM_PREMATURE_CLOSE';
+					errorCallback(err);
+				}
+			});
+		}
+	});
+}
+
+function destroyStream(stream, err) {
+	if (stream.destroy) {
+		stream.destroy(err);
+	} else {
+		// node < 8
+		stream.emit('error', err);
+		stream.end();
+	}
+}
+
 /**
  * Redirect code matching
  *
@@ -32545,7 +32146,7 @@ class Range {
 }
 module.exports = Range
 
-const LRU = __nccwpck_require__(7129)
+const LRU = __nccwpck_require__(1196)
 const cache = new LRU({ max: 1000 })
 
 const parseOptions = __nccwpck_require__(785)
@@ -33964,6 +33565,798 @@ createToken('STAR', '(<|>)?=?\\s*\\*')
 // >=0.0.0 is like a star
 createToken('GTE0', '^\\s*>=\\s*0\\.0\\.0\\s*$')
 createToken('GTE0PRE', '^\\s*>=\\s*0\\.0\\.0-0\\s*$')
+
+
+/***/ }),
+
+/***/ 1196:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+"use strict";
+
+
+// A linked list to keep track of recently-used-ness
+const Yallist = __nccwpck_require__(220)
+
+const MAX = Symbol('max')
+const LENGTH = Symbol('length')
+const LENGTH_CALCULATOR = Symbol('lengthCalculator')
+const ALLOW_STALE = Symbol('allowStale')
+const MAX_AGE = Symbol('maxAge')
+const DISPOSE = Symbol('dispose')
+const NO_DISPOSE_ON_SET = Symbol('noDisposeOnSet')
+const LRU_LIST = Symbol('lruList')
+const CACHE = Symbol('cache')
+const UPDATE_AGE_ON_GET = Symbol('updateAgeOnGet')
+
+const naiveLength = () => 1
+
+// lruList is a yallist where the head is the youngest
+// item, and the tail is the oldest.  the list contains the Hit
+// objects as the entries.
+// Each Hit object has a reference to its Yallist.Node.  This
+// never changes.
+//
+// cache is a Map (or PseudoMap) that matches the keys to
+// the Yallist.Node object.
+class LRUCache {
+  constructor (options) {
+    if (typeof options === 'number')
+      options = { max: options }
+
+    if (!options)
+      options = {}
+
+    if (options.max && (typeof options.max !== 'number' || options.max < 0))
+      throw new TypeError('max must be a non-negative number')
+    // Kind of weird to have a default max of Infinity, but oh well.
+    const max = this[MAX] = options.max || Infinity
+
+    const lc = options.length || naiveLength
+    this[LENGTH_CALCULATOR] = (typeof lc !== 'function') ? naiveLength : lc
+    this[ALLOW_STALE] = options.stale || false
+    if (options.maxAge && typeof options.maxAge !== 'number')
+      throw new TypeError('maxAge must be a number')
+    this[MAX_AGE] = options.maxAge || 0
+    this[DISPOSE] = options.dispose
+    this[NO_DISPOSE_ON_SET] = options.noDisposeOnSet || false
+    this[UPDATE_AGE_ON_GET] = options.updateAgeOnGet || false
+    this.reset()
+  }
+
+  // resize the cache when the max changes.
+  set max (mL) {
+    if (typeof mL !== 'number' || mL < 0)
+      throw new TypeError('max must be a non-negative number')
+
+    this[MAX] = mL || Infinity
+    trim(this)
+  }
+  get max () {
+    return this[MAX]
+  }
+
+  set allowStale (allowStale) {
+    this[ALLOW_STALE] = !!allowStale
+  }
+  get allowStale () {
+    return this[ALLOW_STALE]
+  }
+
+  set maxAge (mA) {
+    if (typeof mA !== 'number')
+      throw new TypeError('maxAge must be a non-negative number')
+
+    this[MAX_AGE] = mA
+    trim(this)
+  }
+  get maxAge () {
+    return this[MAX_AGE]
+  }
+
+  // resize the cache when the lengthCalculator changes.
+  set lengthCalculator (lC) {
+    if (typeof lC !== 'function')
+      lC = naiveLength
+
+    if (lC !== this[LENGTH_CALCULATOR]) {
+      this[LENGTH_CALCULATOR] = lC
+      this[LENGTH] = 0
+      this[LRU_LIST].forEach(hit => {
+        hit.length = this[LENGTH_CALCULATOR](hit.value, hit.key)
+        this[LENGTH] += hit.length
+      })
+    }
+    trim(this)
+  }
+  get lengthCalculator () { return this[LENGTH_CALCULATOR] }
+
+  get length () { return this[LENGTH] }
+  get itemCount () { return this[LRU_LIST].length }
+
+  rforEach (fn, thisp) {
+    thisp = thisp || this
+    for (let walker = this[LRU_LIST].tail; walker !== null;) {
+      const prev = walker.prev
+      forEachStep(this, fn, walker, thisp)
+      walker = prev
+    }
+  }
+
+  forEach (fn, thisp) {
+    thisp = thisp || this
+    for (let walker = this[LRU_LIST].head; walker !== null;) {
+      const next = walker.next
+      forEachStep(this, fn, walker, thisp)
+      walker = next
+    }
+  }
+
+  keys () {
+    return this[LRU_LIST].toArray().map(k => k.key)
+  }
+
+  values () {
+    return this[LRU_LIST].toArray().map(k => k.value)
+  }
+
+  reset () {
+    if (this[DISPOSE] &&
+        this[LRU_LIST] &&
+        this[LRU_LIST].length) {
+      this[LRU_LIST].forEach(hit => this[DISPOSE](hit.key, hit.value))
+    }
+
+    this[CACHE] = new Map() // hash of items by key
+    this[LRU_LIST] = new Yallist() // list of items in order of use recency
+    this[LENGTH] = 0 // length of items in the list
+  }
+
+  dump () {
+    return this[LRU_LIST].map(hit =>
+      isStale(this, hit) ? false : {
+        k: hit.key,
+        v: hit.value,
+        e: hit.now + (hit.maxAge || 0)
+      }).toArray().filter(h => h)
+  }
+
+  dumpLru () {
+    return this[LRU_LIST]
+  }
+
+  set (key, value, maxAge) {
+    maxAge = maxAge || this[MAX_AGE]
+
+    if (maxAge && typeof maxAge !== 'number')
+      throw new TypeError('maxAge must be a number')
+
+    const now = maxAge ? Date.now() : 0
+    const len = this[LENGTH_CALCULATOR](value, key)
+
+    if (this[CACHE].has(key)) {
+      if (len > this[MAX]) {
+        del(this, this[CACHE].get(key))
+        return false
+      }
+
+      const node = this[CACHE].get(key)
+      const item = node.value
+
+      // dispose of the old one before overwriting
+      // split out into 2 ifs for better coverage tracking
+      if (this[DISPOSE]) {
+        if (!this[NO_DISPOSE_ON_SET])
+          this[DISPOSE](key, item.value)
+      }
+
+      item.now = now
+      item.maxAge = maxAge
+      item.value = value
+      this[LENGTH] += len - item.length
+      item.length = len
+      this.get(key)
+      trim(this)
+      return true
+    }
+
+    const hit = new Entry(key, value, len, now, maxAge)
+
+    // oversized objects fall out of cache automatically.
+    if (hit.length > this[MAX]) {
+      if (this[DISPOSE])
+        this[DISPOSE](key, value)
+
+      return false
+    }
+
+    this[LENGTH] += hit.length
+    this[LRU_LIST].unshift(hit)
+    this[CACHE].set(key, this[LRU_LIST].head)
+    trim(this)
+    return true
+  }
+
+  has (key) {
+    if (!this[CACHE].has(key)) return false
+    const hit = this[CACHE].get(key).value
+    return !isStale(this, hit)
+  }
+
+  get (key) {
+    return get(this, key, true)
+  }
+
+  peek (key) {
+    return get(this, key, false)
+  }
+
+  pop () {
+    const node = this[LRU_LIST].tail
+    if (!node)
+      return null
+
+    del(this, node)
+    return node.value
+  }
+
+  del (key) {
+    del(this, this[CACHE].get(key))
+  }
+
+  load (arr) {
+    // reset the cache
+    this.reset()
+
+    const now = Date.now()
+    // A previous serialized cache has the most recent items first
+    for (let l = arr.length - 1; l >= 0; l--) {
+      const hit = arr[l]
+      const expiresAt = hit.e || 0
+      if (expiresAt === 0)
+        // the item was created without expiration in a non aged cache
+        this.set(hit.k, hit.v)
+      else {
+        const maxAge = expiresAt - now
+        // dont add already expired items
+        if (maxAge > 0) {
+          this.set(hit.k, hit.v, maxAge)
+        }
+      }
+    }
+  }
+
+  prune () {
+    this[CACHE].forEach((value, key) => get(this, key, false))
+  }
+}
+
+const get = (self, key, doUse) => {
+  const node = self[CACHE].get(key)
+  if (node) {
+    const hit = node.value
+    if (isStale(self, hit)) {
+      del(self, node)
+      if (!self[ALLOW_STALE])
+        return undefined
+    } else {
+      if (doUse) {
+        if (self[UPDATE_AGE_ON_GET])
+          node.value.now = Date.now()
+        self[LRU_LIST].unshiftNode(node)
+      }
+    }
+    return hit.value
+  }
+}
+
+const isStale = (self, hit) => {
+  if (!hit || (!hit.maxAge && !self[MAX_AGE]))
+    return false
+
+  const diff = Date.now() - hit.now
+  return hit.maxAge ? diff > hit.maxAge
+    : self[MAX_AGE] && (diff > self[MAX_AGE])
+}
+
+const trim = self => {
+  if (self[LENGTH] > self[MAX]) {
+    for (let walker = self[LRU_LIST].tail;
+      self[LENGTH] > self[MAX] && walker !== null;) {
+      // We know that we're about to delete this one, and also
+      // what the next least recently used key will be, so just
+      // go ahead and set it now.
+      const prev = walker.prev
+      del(self, walker)
+      walker = prev
+    }
+  }
+}
+
+const del = (self, node) => {
+  if (node) {
+    const hit = node.value
+    if (self[DISPOSE])
+      self[DISPOSE](hit.key, hit.value)
+
+    self[LENGTH] -= hit.length
+    self[CACHE].delete(hit.key)
+    self[LRU_LIST].removeNode(node)
+  }
+}
+
+class Entry {
+  constructor (key, value, length, now, maxAge) {
+    this.key = key
+    this.value = value
+    this.length = length
+    this.now = now
+    this.maxAge = maxAge || 0
+  }
+}
+
+const forEachStep = (self, fn, node, thisp) => {
+  let hit = node.value
+  if (isStale(self, hit)) {
+    del(self, node)
+    if (!self[ALLOW_STALE])
+      hit = undefined
+  }
+  if (hit)
+    fn.call(thisp, hit.value, hit.key, self)
+}
+
+module.exports = LRUCache
+
+
+/***/ }),
+
+/***/ 5327:
+/***/ ((module) => {
+
+"use strict";
+
+module.exports = function (Yallist) {
+  Yallist.prototype[Symbol.iterator] = function* () {
+    for (let walker = this.head; walker; walker = walker.next) {
+      yield walker.value
+    }
+  }
+}
+
+
+/***/ }),
+
+/***/ 220:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+"use strict";
+
+module.exports = Yallist
+
+Yallist.Node = Node
+Yallist.create = Yallist
+
+function Yallist (list) {
+  var self = this
+  if (!(self instanceof Yallist)) {
+    self = new Yallist()
+  }
+
+  self.tail = null
+  self.head = null
+  self.length = 0
+
+  if (list && typeof list.forEach === 'function') {
+    list.forEach(function (item) {
+      self.push(item)
+    })
+  } else if (arguments.length > 0) {
+    for (var i = 0, l = arguments.length; i < l; i++) {
+      self.push(arguments[i])
+    }
+  }
+
+  return self
+}
+
+Yallist.prototype.removeNode = function (node) {
+  if (node.list !== this) {
+    throw new Error('removing node which does not belong to this list')
+  }
+
+  var next = node.next
+  var prev = node.prev
+
+  if (next) {
+    next.prev = prev
+  }
+
+  if (prev) {
+    prev.next = next
+  }
+
+  if (node === this.head) {
+    this.head = next
+  }
+  if (node === this.tail) {
+    this.tail = prev
+  }
+
+  node.list.length--
+  node.next = null
+  node.prev = null
+  node.list = null
+
+  return next
+}
+
+Yallist.prototype.unshiftNode = function (node) {
+  if (node === this.head) {
+    return
+  }
+
+  if (node.list) {
+    node.list.removeNode(node)
+  }
+
+  var head = this.head
+  node.list = this
+  node.next = head
+  if (head) {
+    head.prev = node
+  }
+
+  this.head = node
+  if (!this.tail) {
+    this.tail = node
+  }
+  this.length++
+}
+
+Yallist.prototype.pushNode = function (node) {
+  if (node === this.tail) {
+    return
+  }
+
+  if (node.list) {
+    node.list.removeNode(node)
+  }
+
+  var tail = this.tail
+  node.list = this
+  node.prev = tail
+  if (tail) {
+    tail.next = node
+  }
+
+  this.tail = node
+  if (!this.head) {
+    this.head = node
+  }
+  this.length++
+}
+
+Yallist.prototype.push = function () {
+  for (var i = 0, l = arguments.length; i < l; i++) {
+    push(this, arguments[i])
+  }
+  return this.length
+}
+
+Yallist.prototype.unshift = function () {
+  for (var i = 0, l = arguments.length; i < l; i++) {
+    unshift(this, arguments[i])
+  }
+  return this.length
+}
+
+Yallist.prototype.pop = function () {
+  if (!this.tail) {
+    return undefined
+  }
+
+  var res = this.tail.value
+  this.tail = this.tail.prev
+  if (this.tail) {
+    this.tail.next = null
+  } else {
+    this.head = null
+  }
+  this.length--
+  return res
+}
+
+Yallist.prototype.shift = function () {
+  if (!this.head) {
+    return undefined
+  }
+
+  var res = this.head.value
+  this.head = this.head.next
+  if (this.head) {
+    this.head.prev = null
+  } else {
+    this.tail = null
+  }
+  this.length--
+  return res
+}
+
+Yallist.prototype.forEach = function (fn, thisp) {
+  thisp = thisp || this
+  for (var walker = this.head, i = 0; walker !== null; i++) {
+    fn.call(thisp, walker.value, i, this)
+    walker = walker.next
+  }
+}
+
+Yallist.prototype.forEachReverse = function (fn, thisp) {
+  thisp = thisp || this
+  for (var walker = this.tail, i = this.length - 1; walker !== null; i--) {
+    fn.call(thisp, walker.value, i, this)
+    walker = walker.prev
+  }
+}
+
+Yallist.prototype.get = function (n) {
+  for (var i = 0, walker = this.head; walker !== null && i < n; i++) {
+    // abort out of the list early if we hit a cycle
+    walker = walker.next
+  }
+  if (i === n && walker !== null) {
+    return walker.value
+  }
+}
+
+Yallist.prototype.getReverse = function (n) {
+  for (var i = 0, walker = this.tail; walker !== null && i < n; i++) {
+    // abort out of the list early if we hit a cycle
+    walker = walker.prev
+  }
+  if (i === n && walker !== null) {
+    return walker.value
+  }
+}
+
+Yallist.prototype.map = function (fn, thisp) {
+  thisp = thisp || this
+  var res = new Yallist()
+  for (var walker = this.head; walker !== null;) {
+    res.push(fn.call(thisp, walker.value, this))
+    walker = walker.next
+  }
+  return res
+}
+
+Yallist.prototype.mapReverse = function (fn, thisp) {
+  thisp = thisp || this
+  var res = new Yallist()
+  for (var walker = this.tail; walker !== null;) {
+    res.push(fn.call(thisp, walker.value, this))
+    walker = walker.prev
+  }
+  return res
+}
+
+Yallist.prototype.reduce = function (fn, initial) {
+  var acc
+  var walker = this.head
+  if (arguments.length > 1) {
+    acc = initial
+  } else if (this.head) {
+    walker = this.head.next
+    acc = this.head.value
+  } else {
+    throw new TypeError('Reduce of empty list with no initial value')
+  }
+
+  for (var i = 0; walker !== null; i++) {
+    acc = fn(acc, walker.value, i)
+    walker = walker.next
+  }
+
+  return acc
+}
+
+Yallist.prototype.reduceReverse = function (fn, initial) {
+  var acc
+  var walker = this.tail
+  if (arguments.length > 1) {
+    acc = initial
+  } else if (this.tail) {
+    walker = this.tail.prev
+    acc = this.tail.value
+  } else {
+    throw new TypeError('Reduce of empty list with no initial value')
+  }
+
+  for (var i = this.length - 1; walker !== null; i--) {
+    acc = fn(acc, walker.value, i)
+    walker = walker.prev
+  }
+
+  return acc
+}
+
+Yallist.prototype.toArray = function () {
+  var arr = new Array(this.length)
+  for (var i = 0, walker = this.head; walker !== null; i++) {
+    arr[i] = walker.value
+    walker = walker.next
+  }
+  return arr
+}
+
+Yallist.prototype.toArrayReverse = function () {
+  var arr = new Array(this.length)
+  for (var i = 0, walker = this.tail; walker !== null; i++) {
+    arr[i] = walker.value
+    walker = walker.prev
+  }
+  return arr
+}
+
+Yallist.prototype.slice = function (from, to) {
+  to = to || this.length
+  if (to < 0) {
+    to += this.length
+  }
+  from = from || 0
+  if (from < 0) {
+    from += this.length
+  }
+  var ret = new Yallist()
+  if (to < from || to < 0) {
+    return ret
+  }
+  if (from < 0) {
+    from = 0
+  }
+  if (to > this.length) {
+    to = this.length
+  }
+  for (var i = 0, walker = this.head; walker !== null && i < from; i++) {
+    walker = walker.next
+  }
+  for (; walker !== null && i < to; i++, walker = walker.next) {
+    ret.push(walker.value)
+  }
+  return ret
+}
+
+Yallist.prototype.sliceReverse = function (from, to) {
+  to = to || this.length
+  if (to < 0) {
+    to += this.length
+  }
+  from = from || 0
+  if (from < 0) {
+    from += this.length
+  }
+  var ret = new Yallist()
+  if (to < from || to < 0) {
+    return ret
+  }
+  if (from < 0) {
+    from = 0
+  }
+  if (to > this.length) {
+    to = this.length
+  }
+  for (var i = this.length, walker = this.tail; walker !== null && i > to; i--) {
+    walker = walker.prev
+  }
+  for (; walker !== null && i > from; i--, walker = walker.prev) {
+    ret.push(walker.value)
+  }
+  return ret
+}
+
+Yallist.prototype.splice = function (start, deleteCount, ...nodes) {
+  if (start > this.length) {
+    start = this.length - 1
+  }
+  if (start < 0) {
+    start = this.length + start;
+  }
+
+  for (var i = 0, walker = this.head; walker !== null && i < start; i++) {
+    walker = walker.next
+  }
+
+  var ret = []
+  for (var i = 0; walker && i < deleteCount; i++) {
+    ret.push(walker.value)
+    walker = this.removeNode(walker)
+  }
+  if (walker === null) {
+    walker = this.tail
+  }
+
+  if (walker !== this.head && walker !== this.tail) {
+    walker = walker.prev
+  }
+
+  for (var i = 0; i < nodes.length; i++) {
+    walker = insert(this, walker, nodes[i])
+  }
+  return ret;
+}
+
+Yallist.prototype.reverse = function () {
+  var head = this.head
+  var tail = this.tail
+  for (var walker = head; walker !== null; walker = walker.prev) {
+    var p = walker.prev
+    walker.prev = walker.next
+    walker.next = p
+  }
+  this.head = tail
+  this.tail = head
+  return this
+}
+
+function insert (self, node, value) {
+  var inserted = node === self.head ?
+    new Node(value, null, node, self) :
+    new Node(value, node, node.next, self)
+
+  if (inserted.next === null) {
+    self.tail = inserted
+  }
+  if (inserted.prev === null) {
+    self.head = inserted
+  }
+
+  self.length++
+
+  return inserted
+}
+
+function push (self, item) {
+  self.tail = new Node(item, self.tail, null, self)
+  if (!self.head) {
+    self.head = self.tail
+  }
+  self.length++
+}
+
+function unshift (self, item) {
+  self.head = new Node(item, null, self.head, self)
+  if (!self.tail) {
+    self.tail = self.head
+  }
+  self.length++
+}
+
+function Node (value, prev, next, list) {
+  if (!(this instanceof Node)) {
+    return new Node(value, prev, next, list)
+  }
+
+  this.list = list
+  this.value = value
+
+  if (prev) {
+    prev.next = this
+    this.prev = prev
+  } else {
+    this.prev = null
+  }
+
+  if (next) {
+    next.prev = this
+    this.next = next
+  } else {
+    this.next = null
+  }
+}
+
+try {
+  // add if support for Symbol.iterator is present
+  __nccwpck_require__(5327)(Yallist)
+} catch (er) {}
 
 
 /***/ }),
@@ -36327,7 +36720,7 @@ limitations under the License.
 const error_1 = __nccwpck_require__(6274);
 const sigstore = __importStar(__nccwpck_require__(8598));
 const body_1 = __nccwpck_require__(7878);
-const set_1 = __nccwpck_require__(6801);
+const set_1 = __nccwpck_require__(7129);
 // Verifies that the number of tlog entries that pass offline verification
 // is greater than or equal to the threshold specified in the options.
 function verifyTLogEntries(bundle, trustedRoot, options) {
@@ -36362,7 +36755,7 @@ function verifyTLogEntryOffline(entry, bundleContent, tlogs, signingCert) {
 
 /***/ }),
 
-/***/ 6801:
+/***/ 7129:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
@@ -43813,13 +44206,35 @@ module.exports.PROCESSING_OPTIONS = PROCESSING_OPTIONS;
 
 /***/ }),
 
+/***/ 9530:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.defaultConfig = void 0;
+exports.defaultConfig = {
+    maxRootRotations: 32,
+    maxDelegations: 32,
+    rootMaxLength: 512000,
+    timestampMaxLength: 16384,
+    snapshotMaxLength: 2000000,
+    targetsMaxLength: 5000000,
+    prefixTargetsWithHash: true,
+    fetchTimeout: 100000,
+    fetchRetries: 2,
+};
+
+
+/***/ }),
+
 /***/ 7040:
 /***/ ((__unused_webpack_module, exports) => {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.DownloadHTTPError = exports.DownloadLengthMismatchError = exports.DownloadError = exports.UnsupportedAlgorithmError = exports.CryptoError = exports.LengthOrHashMismatchError = exports.ExpiredMetadataError = exports.EqualVersionError = exports.BadVersionError = exports.UnsignedMetadataError = exports.RepositoryError = exports.PersistError = exports.RuntimeError = exports.ValueError = void 0;
+exports.DownloadHTTPError = exports.DownloadLengthMismatchError = exports.DownloadError = exports.ExpiredMetadataError = exports.EqualVersionError = exports.BadVersionError = exports.RepositoryError = exports.PersistError = exports.RuntimeError = exports.ValueError = void 0;
 // An error about insufficient values
 class ValueError extends Error {
 }
@@ -43836,10 +44251,6 @@ exports.PersistError = PersistError;
 class RepositoryError extends Error {
 }
 exports.RepositoryError = RepositoryError;
-// An error about metadata object with insufficient threshold of signatures.
-class UnsignedMetadataError extends RepositoryError {
-}
-exports.UnsignedMetadataError = UnsignedMetadataError;
 // An error for metadata that contains an invalid version number.
 class BadVersionError extends RepositoryError {
 }
@@ -43852,16 +44263,6 @@ exports.EqualVersionError = EqualVersionError;
 class ExpiredMetadataError extends RepositoryError {
 }
 exports.ExpiredMetadataError = ExpiredMetadataError;
-// An error while checking the length and hash values of an object.
-class LengthOrHashMismatchError extends RepositoryError {
-}
-exports.LengthOrHashMismatchError = LengthOrHashMismatchError;
-class CryptoError extends Error {
-}
-exports.CryptoError = CryptoError;
-class UnsupportedAlgorithmError extends CryptoError {
-}
-exports.UnsupportedAlgorithmError = UnsupportedAlgorithmError;
 //----- Download Errors -------------------------------------------------------
 // An error occurred while attempting to download a file.
 class DownloadError extends Error {
@@ -43892,7 +44293,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.Fetcher = exports.BaseFetcher = void 0;
+exports.DefaultFetcher = exports.BaseFetcher = void 0;
 const fs_1 = __importDefault(__nccwpck_require__(7147));
 const make_fetch_happen_1 = __importDefault(__nccwpck_require__(9525));
 const util_1 = __importDefault(__nccwpck_require__(3837));
@@ -43940,7 +44341,7 @@ class BaseFetcher {
     }
 }
 exports.BaseFetcher = BaseFetcher;
-class Fetcher extends BaseFetcher {
+class DefaultFetcher extends BaseFetcher {
     constructor(options = {}) {
         super();
         this.timeout = options.timeout;
@@ -43957,7 +44358,7 @@ class Fetcher extends BaseFetcher {
         return response.body;
     }
 }
-exports.Fetcher = Fetcher;
+exports.DefaultFetcher = DefaultFetcher;
 const writeBufferToStream = async (stream, buffer) => {
     return new Promise((resolve, reject) => {
         stream.write(buffer, (err) => {
@@ -43978,1394 +44379,13 @@ const writeBufferToStream = async (stream, buffer) => {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.Updater = exports.TargetFile = exports.BaseFetcher = void 0;
+exports.Updater = exports.BaseFetcher = exports.TargetFile = void 0;
+var models_1 = __nccwpck_require__(5833);
+Object.defineProperty(exports, "TargetFile", ({ enumerable: true, get: function () { return models_1.TargetFile; } }));
 var fetcher_1 = __nccwpck_require__(5991);
 Object.defineProperty(exports, "BaseFetcher", ({ enumerable: true, get: function () { return fetcher_1.BaseFetcher; } }));
-var file_1 = __nccwpck_require__(2277);
-Object.defineProperty(exports, "TargetFile", ({ enumerable: true, get: function () { return file_1.TargetFile; } }));
 var updater_1 = __nccwpck_require__(7977);
 Object.defineProperty(exports, "Updater", ({ enumerable: true, get: function () { return updater_1.Updater; } }));
-
-
-/***/ }),
-
-/***/ 2129:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.Signed = void 0;
-const util_1 = __importDefault(__nccwpck_require__(3837));
-const error_1 = __nccwpck_require__(7040);
-const utils_1 = __nccwpck_require__(4781);
-const SPECIFICATION_VERSION = ['1', '0', '31'];
-/***
- * A base class for the signed part of TUF metadata.
- *
- * Objects with base class Signed are usually included in a ``Metadata`` object
- * on the signed attribute. This class provides attributes and methods that
- * are common for all TUF metadata types (roles).
- */
-class Signed {
-    constructor(options) {
-        this.specVersion = options.specVersion || SPECIFICATION_VERSION.join('.');
-        const specList = this.specVersion.split('.');
-        if (!(specList.length === 2 || specList.length === 3) ||
-            !specList.every((item) => isNumeric(item))) {
-            throw new error_1.ValueError('Failed to parse specVersion');
-        }
-        // major version must match
-        if (specList[0] != SPECIFICATION_VERSION[0]) {
-            throw new error_1.ValueError('Unsupported specVersion');
-        }
-        this.expires = options.expires || new Date().toISOString();
-        this.version = options.version || 1;
-        this.unrecognizedFields = options.unrecognizedFields || {};
-    }
-    equals(other) {
-        if (!(other instanceof Signed)) {
-            return false;
-        }
-        return (this.specVersion === other.specVersion &&
-            this.expires === other.expires &&
-            this.version === other.version &&
-            util_1.default.isDeepStrictEqual(this.unrecognizedFields, other.unrecognizedFields));
-    }
-    isExpired(referenceTime) {
-        if (!referenceTime) {
-            referenceTime = new Date();
-        }
-        return referenceTime >= new Date(this.expires);
-    }
-    static commonFieldsFromJSON(data) {
-        const { spec_version, expires, version, ...rest } = data;
-        if (utils_1.guard.isDefined(spec_version) && !(typeof spec_version === 'string')) {
-            throw new TypeError('spec_version must be a string');
-        }
-        if (utils_1.guard.isDefined(expires) && !(typeof expires === 'string')) {
-            throw new TypeError('expires must be a string');
-        }
-        if (utils_1.guard.isDefined(version) && !(typeof version === 'number')) {
-            throw new TypeError('version must be a number');
-        }
-        return {
-            specVersion: spec_version,
-            expires,
-            version,
-            unrecognizedFields: rest,
-        };
-    }
-}
-exports.Signed = Signed;
-function isNumeric(str) {
-    return !isNaN(Number(str));
-}
-
-
-/***/ }),
-
-/***/ 1739:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.Delegations = void 0;
-const util_1 = __importDefault(__nccwpck_require__(3837));
-const error_1 = __nccwpck_require__(7040);
-const guard_1 = __nccwpck_require__(1858);
-const key_1 = __nccwpck_require__(5468);
-const role_1 = __nccwpck_require__(6912);
-/**
- * A container object storing information about all delegations.
- *
- * Targets roles that are trusted to provide signed metadata files
- * describing targets with designated pathnames and/or further delegations.
- */
-class Delegations {
-    constructor(options) {
-        this.keys = options.keys;
-        this.unrecognizedFields = options.unrecognizedFields || {};
-        if (options.roles) {
-            if (Object.keys(options.roles).some((roleName) => role_1.TOP_LEVEL_ROLE_NAMES.includes(roleName))) {
-                throw new error_1.ValueError('Delegated role name conflicts with top-level role name');
-            }
-        }
-        this.succinctRoles = options.succinctRoles;
-        this.roles = options.roles;
-    }
-    equals(other) {
-        if (!(other instanceof Delegations)) {
-            return false;
-        }
-        return (util_1.default.isDeepStrictEqual(this.keys, other.keys) &&
-            util_1.default.isDeepStrictEqual(this.roles, other.roles) &&
-            util_1.default.isDeepStrictEqual(this.unrecognizedFields, other.unrecognizedFields) &&
-            util_1.default.isDeepStrictEqual(this.succinctRoles, other.succinctRoles));
-    }
-    *rolesForTarget(targetPath) {
-        if (this.roles) {
-            for (const role of Object.values(this.roles)) {
-                if (role.isDelegatedPath(targetPath)) {
-                    yield { role: role.name, terminating: role.terminating };
-                }
-            }
-        }
-        else if (this.succinctRoles) {
-            yield {
-                role: this.succinctRoles.getRoleForTarget(targetPath),
-                terminating: true,
-            };
-        }
-    }
-    toJSON() {
-        const json = {
-            keys: keysToJSON(this.keys),
-            ...this.unrecognizedFields,
-        };
-        if (this.roles) {
-            json.roles = rolesToJSON(this.roles);
-        }
-        else if (this.succinctRoles) {
-            json.succinct_roles = this.succinctRoles.toJSON();
-        }
-        return json;
-    }
-    static fromJSON(data) {
-        const { keys, roles, succinct_roles, ...unrecognizedFields } = data;
-        let succinctRoles;
-        if ((0, guard_1.isObject)(succinct_roles)) {
-            succinctRoles = role_1.SuccinctRoles.fromJSON(succinct_roles);
-        }
-        return new Delegations({
-            keys: keysFromJSON(keys),
-            roles: rolesFromJSON(roles),
-            unrecognizedFields,
-            succinctRoles,
-        });
-    }
-}
-exports.Delegations = Delegations;
-function keysToJSON(keys) {
-    return Object.entries(keys).reduce((acc, [keyId, key]) => ({
-        ...acc,
-        [keyId]: key.toJSON(),
-    }), {});
-}
-function rolesToJSON(roles) {
-    return Object.values(roles).map((role) => role.toJSON());
-}
-function keysFromJSON(data) {
-    if (!(0, guard_1.isObjectRecord)(data)) {
-        throw new TypeError('keys is malformed');
-    }
-    return Object.entries(data).reduce((acc, [keyID, keyData]) => ({
-        ...acc,
-        [keyID]: key_1.Key.fromJSON(keyID, keyData),
-    }), {});
-}
-function rolesFromJSON(data) {
-    let roleMap;
-    if ((0, guard_1.isDefined)(data)) {
-        if (!(0, guard_1.isObjectArray)(data)) {
-            throw new TypeError('roles is malformed');
-        }
-        roleMap = data.reduce((acc, role) => {
-            const delegatedRole = role_1.DelegatedRole.fromJSON(role);
-            return {
-                ...acc,
-                [delegatedRole.name]: delegatedRole,
-            };
-        }, {});
-    }
-    return roleMap;
-}
-
-
-/***/ }),
-
-/***/ 2277:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.TargetFile = exports.MetaFile = void 0;
-const crypto_1 = __importDefault(__nccwpck_require__(6113));
-const util_1 = __importDefault(__nccwpck_require__(3837));
-const error_1 = __nccwpck_require__(7040);
-const guard_1 = __nccwpck_require__(1858);
-// A container with information about a particular metadata file.
-//
-// This class is used for Timestamp and Snapshot metadata.
-class MetaFile {
-    constructor(opts) {
-        if (opts.version <= 0) {
-            throw new error_1.ValueError('Metafile version must be at least 1');
-        }
-        if (opts.length !== undefined) {
-            validateLength(opts.length);
-        }
-        this.version = opts.version;
-        this.length = opts.length;
-        this.hashes = opts.hashes;
-        this.unrecognizedFields = opts.unrecognizedFields || {};
-    }
-    equals(other) {
-        if (!(other instanceof MetaFile)) {
-            return false;
-        }
-        return (this.version === other.version &&
-            this.length === other.length &&
-            util_1.default.isDeepStrictEqual(this.hashes, other.hashes) &&
-            util_1.default.isDeepStrictEqual(this.unrecognizedFields, other.unrecognizedFields));
-    }
-    verify(data) {
-        // Verifies that the given data matches the expected length.
-        if (this.length !== undefined) {
-            if (data.length !== this.length) {
-                throw new error_1.LengthOrHashMismatchError(`Expected length ${this.length} but got ${data.length}`);
-            }
-        }
-        // Verifies that the given data matches the supplied hashes.
-        if (this.hashes) {
-            Object.entries(this.hashes).forEach(([key, value]) => {
-                let hash;
-                try {
-                    hash = crypto_1.default.createHash(key);
-                }
-                catch (e) {
-                    throw new error_1.LengthOrHashMismatchError(`Hash algorithm ${key} not supported`);
-                }
-                const observedHash = hash.update(data).digest('hex');
-                if (observedHash !== value) {
-                    throw new error_1.LengthOrHashMismatchError(`Expected hash ${value} but got ${observedHash}`);
-                }
-            });
-        }
-    }
-    toJSON() {
-        const json = {
-            version: this.version,
-            ...this.unrecognizedFields,
-        };
-        if (this.length !== undefined) {
-            json.length = this.length;
-        }
-        if (this.hashes) {
-            json.hashes = this.hashes;
-        }
-        return json;
-    }
-    static fromJSON(data) {
-        const { version, length, hashes, ...rest } = data;
-        if (typeof version !== 'number') {
-            throw new TypeError('version must be a number');
-        }
-        if ((0, guard_1.isDefined)(length) && typeof length !== 'number') {
-            throw new TypeError('length must be a number');
-        }
-        if ((0, guard_1.isDefined)(hashes) && !(0, guard_1.isStringRecord)(hashes)) {
-            throw new TypeError('hashes must be string keys and values');
-        }
-        return new MetaFile({
-            version,
-            length,
-            hashes,
-            unrecognizedFields: rest,
-        });
-    }
-}
-exports.MetaFile = MetaFile;
-// Container for info about a particular target file.
-//
-// This class is used for Target metadata.
-class TargetFile {
-    constructor(opts) {
-        validateLength(opts.length);
-        this.length = opts.length;
-        this.path = opts.path;
-        this.hashes = opts.hashes;
-        this.unrecognizedFields = opts.unrecognizedFields || {};
-    }
-    get custom() {
-        const custom = this.unrecognizedFields['custom'];
-        if (!custom || Array.isArray(custom) || !(typeof custom === 'object')) {
-            return {};
-        }
-        return custom;
-    }
-    equals(other) {
-        if (!(other instanceof TargetFile)) {
-            return false;
-        }
-        return (this.length === other.length &&
-            this.path === other.path &&
-            util_1.default.isDeepStrictEqual(this.hashes, other.hashes) &&
-            util_1.default.isDeepStrictEqual(this.unrecognizedFields, other.unrecognizedFields));
-    }
-    async verify(stream) {
-        let observedLength = 0;
-        // Create a digest for each hash algorithm
-        const digests = Object.keys(this.hashes).reduce((acc, key) => {
-            try {
-                acc[key] = crypto_1.default.createHash(key);
-            }
-            catch (e) {
-                throw new error_1.LengthOrHashMismatchError(`Hash algorithm ${key} not supported`);
-            }
-            return acc;
-        }, {});
-        // Read stream chunk by chunk
-        for await (const chunk of stream) {
-            // Keep running tally of stream length
-            observedLength += chunk.length;
-            // Append chunk to each digest
-            Object.values(digests).forEach((digest) => {
-                digest.update(chunk);
-            });
-        }
-        // Verify length matches expected value
-        if (observedLength !== this.length) {
-            throw new error_1.LengthOrHashMismatchError(`Expected length ${this.length} but got ${observedLength}`);
-        }
-        // Verify each digest matches expected value
-        Object.entries(digests).forEach(([key, value]) => {
-            const expected = this.hashes[key];
-            const actual = value.digest('hex');
-            if (actual !== expected) {
-                throw new error_1.LengthOrHashMismatchError(`Expected hash ${expected} but got ${actual}`);
-            }
-        });
-    }
-    toJSON() {
-        return {
-            length: this.length,
-            hashes: this.hashes,
-            ...this.unrecognizedFields,
-        };
-    }
-    static fromJSON(path, data) {
-        const { length, hashes, ...rest } = data;
-        if (typeof length !== 'number') {
-            throw new TypeError('length must be a number');
-        }
-        if (!(0, guard_1.isStringRecord)(hashes)) {
-            throw new TypeError('hashes must have string keys and values');
-        }
-        return new TargetFile({
-            length,
-            path,
-            hashes,
-            unrecognizedFields: rest,
-        });
-    }
-}
-exports.TargetFile = TargetFile;
-// Check that supplied length if valid
-function validateLength(length) {
-    if (length < 0) {
-        throw new error_1.ValueError('Length must be at least 0');
-    }
-}
-
-
-/***/ }),
-
-/***/ 4885:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.Timestamp = exports.Targets = exports.Snapshot = exports.Root = exports.Metadata = void 0;
-var metadata_1 = __nccwpck_require__(9939);
-Object.defineProperty(exports, "Metadata", ({ enumerable: true, get: function () { return metadata_1.Metadata; } }));
-var root_1 = __nccwpck_require__(4653);
-Object.defineProperty(exports, "Root", ({ enumerable: true, get: function () { return root_1.Root; } }));
-var snapshot_1 = __nccwpck_require__(9378);
-Object.defineProperty(exports, "Snapshot", ({ enumerable: true, get: function () { return snapshot_1.Snapshot; } }));
-var targets_1 = __nccwpck_require__(9046);
-Object.defineProperty(exports, "Targets", ({ enumerable: true, get: function () { return targets_1.Targets; } }));
-var timestamp_1 = __nccwpck_require__(1713);
-Object.defineProperty(exports, "Timestamp", ({ enumerable: true, get: function () { return timestamp_1.Timestamp; } }));
-
-
-/***/ }),
-
-/***/ 5468:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.Key = void 0;
-const util_1 = __importDefault(__nccwpck_require__(3837));
-const error_1 = __nccwpck_require__(7040);
-const guard_1 = __nccwpck_require__(1858);
-const key_1 = __nccwpck_require__(6256);
-const signer = __importStar(__nccwpck_require__(2067));
-// A container class representing the public portion of a Key.
-class Key {
-    constructor(options) {
-        const { keyID, keyType, scheme, keyVal, unrecognizedFields } = options;
-        this.keyID = keyID;
-        this.keyType = keyType;
-        this.scheme = scheme;
-        this.keyVal = keyVal;
-        this.unrecognizedFields = unrecognizedFields || {};
-    }
-    // Verifies the that the metadata.signatures contains a signature made with
-    // this key and is correctly signed.
-    verifySignature(metadata) {
-        const signature = metadata.signatures[this.keyID];
-        if (!signature)
-            throw new error_1.UnsignedMetadataError('no signature for key found in metadata');
-        if (!this.keyVal.public)
-            throw new error_1.UnsignedMetadataError('no public key found');
-        const publicKey = (0, key_1.getPublicKey)({
-            keyType: this.keyType,
-            scheme: this.scheme,
-            keyVal: this.keyVal.public,
-        });
-        const signedData = metadata.signed.toJSON();
-        try {
-            if (!signer.verifySignature(signedData, publicKey, signature.sig)) {
-                throw new error_1.UnsignedMetadataError(`failed to verify ${this.keyID} signature`);
-            }
-        }
-        catch (error) {
-            if (error instanceof error_1.UnsignedMetadataError) {
-                throw error;
-            }
-            throw new error_1.UnsignedMetadataError(`failed to verify ${this.keyID} signature`);
-        }
-    }
-    equals(other) {
-        if (!(other instanceof Key)) {
-            return false;
-        }
-        return (this.keyID === other.keyID &&
-            this.keyType === other.keyType &&
-            this.scheme === other.scheme &&
-            util_1.default.isDeepStrictEqual(this.keyVal, other.keyVal) &&
-            util_1.default.isDeepStrictEqual(this.unrecognizedFields, other.unrecognizedFields));
-    }
-    toJSON() {
-        return {
-            keytype: this.keyType,
-            scheme: this.scheme,
-            keyval: this.keyVal,
-            ...this.unrecognizedFields,
-        };
-    }
-    static fromJSON(keyID, data) {
-        const { keytype, scheme, keyval, ...rest } = data;
-        if (typeof keytype !== 'string') {
-            throw new TypeError('keytype must be a string');
-        }
-        if (typeof scheme !== 'string') {
-            throw new TypeError('scheme must be a string');
-        }
-        if (!(0, guard_1.isStringRecord)(keyval)) {
-            throw new TypeError('keyval must be a string record');
-        }
-        return new Key({
-            keyID,
-            keyType: keytype,
-            scheme,
-            keyVal: keyval,
-            unrecognizedFields: rest,
-        });
-    }
-}
-exports.Key = Key;
-
-
-/***/ }),
-
-/***/ 9939:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.Metadata = void 0;
-const util_1 = __importDefault(__nccwpck_require__(3837));
-const error_1 = __nccwpck_require__(7040);
-const guard_1 = __nccwpck_require__(1858);
-const types_1 = __nccwpck_require__(9121);
-const root_1 = __nccwpck_require__(4653);
-const signature_1 = __nccwpck_require__(253);
-const snapshot_1 = __nccwpck_require__(9378);
-const targets_1 = __nccwpck_require__(9046);
-const timestamp_1 = __nccwpck_require__(1713);
-/***
- * A container for signed TUF metadata.
- *
- * Provides methods to convert to and from json, read and write to and
- * from JSON and to create and verify metadata signatures.
- *
- * ``Metadata[T]`` is a generic container type where T can be any one type of
- * [``Root``, ``Timestamp``, ``Snapshot``, ``Targets``]. The purpose of this
- * is to allow static type checking of the signed attribute in code using
- * Metadata::
- *
- * root_md = Metadata[Root].fromJSON("root.json")
- * # root_md type is now Metadata[Root]. This means signed and its
- * # attributes like consistent_snapshot are now statically typed and the
- * # types can be verified by static type checkers and shown by IDEs
- *
- * Using a type constraint is not required but not doing so means T is not a
- * specific type so static typing cannot happen. Note that the type constraint
- * ``[Root]`` is not validated at runtime (as pure annotations are not available
- * then).
- *
- * Apart from ``expires`` all of the arguments to the inner constructors have
- * reasonable default values for new metadata.
- */
-class Metadata {
-    constructor(signed, signatures, unrecognizedFields) {
-        this.signed = signed;
-        this.signatures = signatures || {};
-        this.unrecognizedFields = unrecognizedFields || {};
-    }
-    verifyDelegate(delegatedRole, delegatedMetadata) {
-        let role;
-        let keys = {};
-        switch (this.signed.type) {
-            case types_1.MetadataKind.Root:
-                keys = this.signed.keys;
-                role = this.signed.roles[delegatedRole];
-                break;
-            case types_1.MetadataKind.Targets:
-                if (!this.signed.delegations) {
-                    throw new error_1.ValueError(`No delegations found for ${delegatedRole}`);
-                }
-                keys = this.signed.delegations.keys;
-                if (this.signed.delegations.roles) {
-                    role = this.signed.delegations.roles[delegatedRole];
-                }
-                else if (this.signed.delegations.succinctRoles) {
-                    if (this.signed.delegations.succinctRoles.isDelegatedRole(delegatedRole)) {
-                        role = this.signed.delegations.succinctRoles;
-                    }
-                }
-                break;
-            default:
-                throw new TypeError('invalid metadata type');
-        }
-        if (!role) {
-            throw new error_1.ValueError(`no delegation found for ${delegatedRole}`);
-        }
-        const signingKeys = new Set();
-        role.keyIDs.forEach((keyID) => {
-            const key = keys[keyID];
-            // If we dont' have the key, continue checking other keys
-            if (!key) {
-                return;
-            }
-            try {
-                key.verifySignature(delegatedMetadata);
-                signingKeys.add(key.keyID);
-            }
-            catch (error) {
-                // continue
-            }
-        });
-        if (signingKeys.size < role.threshold) {
-            throw new error_1.UnsignedMetadataError(`${delegatedRole} was signed by ${signingKeys.size}/${role.threshold} keys`);
-        }
-    }
-    equals(other) {
-        if (!(other instanceof Metadata)) {
-            return false;
-        }
-        return (this.signed.equals(other.signed) &&
-            util_1.default.isDeepStrictEqual(this.signatures, other.signatures) &&
-            util_1.default.isDeepStrictEqual(this.unrecognizedFields, other.unrecognizedFields));
-    }
-    static fromJSON(type, data) {
-        const { signed, signatures, ...rest } = data;
-        if (!(0, guard_1.isDefined)(signed) || !(0, guard_1.isObject)(signed)) {
-            throw new TypeError('signed is not defined');
-        }
-        if (type !== signed._type) {
-            throw new error_1.ValueError(`expected '${type}', got ${signed['_type']}`);
-        }
-        let signedObj;
-        switch (type) {
-            case types_1.MetadataKind.Root:
-                signedObj = root_1.Root.fromJSON(signed);
-                break;
-            case types_1.MetadataKind.Timestamp:
-                signedObj = timestamp_1.Timestamp.fromJSON(signed);
-                break;
-            case types_1.MetadataKind.Snapshot:
-                signedObj = snapshot_1.Snapshot.fromJSON(signed);
-                break;
-            case types_1.MetadataKind.Targets:
-                signedObj = targets_1.Targets.fromJSON(signed);
-                break;
-            default:
-                throw new TypeError('invalid metadata type');
-        }
-        const sigMap = signaturesFromJSON(signatures);
-        return new Metadata(signedObj, sigMap, rest);
-    }
-}
-exports.Metadata = Metadata;
-function signaturesFromJSON(data) {
-    if (!(0, guard_1.isObjectArray)(data)) {
-        throw new TypeError('signatures is not an array');
-    }
-    return data.reduce((acc, sigData) => {
-        const signature = signature_1.Signature.fromJSON(sigData);
-        return { ...acc, [signature.keyID]: signature };
-    }, {});
-}
-
-
-/***/ }),
-
-/***/ 6912:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.SuccinctRoles = exports.DelegatedRole = exports.Role = exports.TOP_LEVEL_ROLE_NAMES = void 0;
-const crypto_1 = __importDefault(__nccwpck_require__(6113));
-const minimatch_1 = __importDefault(__nccwpck_require__(7259));
-const util_1 = __importDefault(__nccwpck_require__(3837));
-const error_1 = __nccwpck_require__(7040);
-const guard_1 = __nccwpck_require__(1858);
-exports.TOP_LEVEL_ROLE_NAMES = [
-    'root',
-    'targets',
-    'snapshot',
-    'timestamp',
-];
-/**
- * Container that defines which keys are required to sign roles metadata.
- *
- * Role defines how many keys are required to successfully sign the roles
- * metadata, and which keys are accepted.
- */
-class Role {
-    constructor(options) {
-        const { keyIDs, threshold, unrecognizedFields } = options;
-        if (hasDuplicates(keyIDs)) {
-            throw new error_1.ValueError('duplicate key IDs found');
-        }
-        if (threshold < 1) {
-            throw new error_1.ValueError('threshold must be at least 1');
-        }
-        this.keyIDs = keyIDs;
-        this.threshold = threshold;
-        this.unrecognizedFields = unrecognizedFields || {};
-    }
-    equals(other) {
-        if (!(other instanceof Role)) {
-            return false;
-        }
-        return (this.threshold === other.threshold &&
-            util_1.default.isDeepStrictEqual(this.keyIDs, other.keyIDs) &&
-            util_1.default.isDeepStrictEqual(this.unrecognizedFields, other.unrecognizedFields));
-    }
-    toJSON() {
-        return {
-            keyids: this.keyIDs,
-            threshold: this.threshold,
-            ...this.unrecognizedFields,
-        };
-    }
-    static fromJSON(data) {
-        const { keyids, threshold, ...rest } = data;
-        if (!(0, guard_1.isStringArray)(keyids)) {
-            throw new TypeError('keyids must be an array');
-        }
-        if (typeof threshold !== 'number') {
-            throw new TypeError('threshold must be a number');
-        }
-        return new Role({
-            keyIDs: keyids,
-            threshold,
-            unrecognizedFields: rest,
-        });
-    }
-}
-exports.Role = Role;
-function hasDuplicates(array) {
-    return new Set(array).size !== array.length;
-}
-/**
- * A container with information about a delegated role.
- *
- * A delegation can happen in two ways:
- *   - ``paths`` is set: delegates targets matching any path pattern in ``paths``
- *   - ``pathHashPrefixes`` is set: delegates targets whose target path hash
- *      starts with any of the prefixes in ``pathHashPrefixes``
- *
- *   ``paths`` and ``pathHashPrefixes`` are mutually exclusive: both cannot be
- *   set, at least one of them must be set.
- */
-class DelegatedRole extends Role {
-    constructor(opts) {
-        super(opts);
-        const { name, terminating, paths, pathHashPrefixes } = opts;
-        this.name = name;
-        this.terminating = terminating;
-        if (opts.paths && opts.pathHashPrefixes) {
-            throw new error_1.ValueError('paths and pathHashPrefixes are mutually exclusive');
-        }
-        this.paths = paths;
-        this.pathHashPrefixes = pathHashPrefixes;
-    }
-    equals(other) {
-        if (!(other instanceof DelegatedRole)) {
-            return false;
-        }
-        return (super.equals(other) &&
-            this.name === other.name &&
-            this.terminating === other.terminating &&
-            util_1.default.isDeepStrictEqual(this.paths, other.paths) &&
-            util_1.default.isDeepStrictEqual(this.pathHashPrefixes, other.pathHashPrefixes));
-    }
-    isDelegatedPath(targetFilepath) {
-        if (this.paths) {
-            return this.paths.some((pathPattern) => isTargetInPathPattern(targetFilepath, pathPattern));
-        }
-        if (this.pathHashPrefixes) {
-            const hasher = crypto_1.default.createHash('sha256');
-            const pathHash = hasher.update(targetFilepath).digest('hex');
-            return this.pathHashPrefixes.some((pathHashPrefix) => pathHash.startsWith(pathHashPrefix));
-        }
-        return false;
-    }
-    toJSON() {
-        const json = {
-            ...super.toJSON(),
-            name: this.name,
-            terminating: this.terminating,
-        };
-        if (this.paths) {
-            json.paths = this.paths;
-        }
-        if (this.pathHashPrefixes) {
-            json.path_hash_prefixes = this.pathHashPrefixes;
-        }
-        return json;
-    }
-    static fromJSON(data) {
-        const { keyids, threshold, name, terminating, paths, path_hash_prefixes, ...rest } = data;
-        if (!(0, guard_1.isStringArray)(keyids)) {
-            throw new TypeError('keyids must be an array of strings');
-        }
-        if (typeof threshold !== 'number') {
-            throw new TypeError('threshold must be a number');
-        }
-        if (typeof name !== 'string') {
-            throw new TypeError('name must be a string');
-        }
-        if (typeof terminating !== 'boolean') {
-            throw new TypeError('terminating must be a boolean');
-        }
-        if ((0, guard_1.isDefined)(paths) && !(0, guard_1.isStringArray)(paths)) {
-            throw new TypeError('paths must be an array of strings');
-        }
-        if ((0, guard_1.isDefined)(path_hash_prefixes) && !(0, guard_1.isStringArray)(path_hash_prefixes)) {
-            throw new TypeError('path_hash_prefixes must be an array of strings');
-        }
-        return new DelegatedRole({
-            keyIDs: keyids,
-            threshold,
-            name,
-            terminating,
-            paths,
-            pathHashPrefixes: path_hash_prefixes,
-            unrecognizedFields: rest,
-        });
-    }
-}
-exports.DelegatedRole = DelegatedRole;
-// JS version of Ruby's Array#zip
-const zip = (a, b) => a.map((k, i) => [k, b[i]]);
-function isTargetInPathPattern(target, pattern) {
-    const targetParts = target.split('/');
-    const patternParts = pattern.split('/');
-    if (patternParts.length != targetParts.length) {
-        return false;
-    }
-    return zip(targetParts, patternParts).every(([targetPart, patternPart]) => (0, minimatch_1.default)(targetPart, patternPart));
-}
-/**
- * Succinctly defines a hash bin delegation graph.
- *
- * A ``SuccinctRoles`` object describes a delegation graph that covers all
- * targets, distributing them uniformly over the delegated roles (i.e. bins)
- * in the graph.
- *
- * The total number of bins is 2 to the power of the passed ``bit_length``.
- *
- * Bin names are the concatenation of the passed ``name_prefix`` and a
- * zero-padded hex representation of the bin index separated by a hyphen.
- *
- * The passed ``keyids`` and ``threshold`` is used for each bin, and each bin
- * is 'terminating'.
- *
- * For details: https://github.com/theupdateframework/taps/blob/master/tap15.md
- */
-class SuccinctRoles extends Role {
-    constructor(opts) {
-        super(opts);
-        const { bitLength, namePrefix } = opts;
-        if (bitLength <= 0 || bitLength > 32) {
-            throw new error_1.ValueError('bitLength must be between 1 and 32');
-        }
-        this.bitLength = bitLength;
-        this.namePrefix = namePrefix;
-        // Calculate the suffix_len value based on the total number of bins in
-        // hex. If bit_length = 10 then number_of_bins = 1024 or bin names will
-        // have a suffix between "000" and "3ff" in hex and suffix_len will be 3
-        // meaning the third bin will have a suffix of "003".
-        this.numberOfBins = Math.pow(2, bitLength);
-        // suffix_len is calculated based on "number_of_bins - 1" as the name
-        // of the last bin contains the number "number_of_bins -1" as a suffix.
-        this.suffixLen = (this.numberOfBins - 1).toString(16).length;
-    }
-    equals(other) {
-        if (!(other instanceof SuccinctRoles)) {
-            return false;
-        }
-        return (super.equals(other) &&
-            this.bitLength === other.bitLength &&
-            this.namePrefix === other.namePrefix);
-    }
-    /***
-     * Calculates the name of the delegated role responsible for 'target_filepath'.
-     *
-     * The target at path ''target_filepath' is assigned to a bin by casting
-     * the left-most 'bit_length' of bits of the file path hash digest to
-     * int, using it as bin index between 0 and '2**bit_length - 1'.
-     *
-     * Args:
-     *  target_filepath: URL path to a target file, relative to a base
-     *  targets URL.
-     */
-    getRoleForTarget(targetFilepath) {
-        const hasher = crypto_1.default.createHash('sha256');
-        const hasherBuffer = hasher.update(targetFilepath).digest();
-        // can't ever need more than 4 bytes (32 bits).
-        const hashBytes = hasherBuffer.subarray(0, 4);
-        // Right shift hash bytes, so that we only have the leftmost
-        // bit_length bits that we care about.
-        const shiftValue = 32 - this.bitLength;
-        const binNumber = hashBytes.readUInt32BE() >>> shiftValue;
-        // Add zero padding if necessary and cast to hex the suffix.
-        const suffix = binNumber.toString(16).padStart(this.suffixLen, '0');
-        return `${this.namePrefix}-${suffix}`;
-    }
-    *getRoles() {
-        for (let i = 0; i < this.numberOfBins; i++) {
-            const suffix = i.toString(16).padStart(this.suffixLen, '0');
-            yield `${this.namePrefix}-${suffix}`;
-        }
-    }
-    /***
-     * Determines whether the given ``role_name`` is in one of
-     * the delegated roles that ``SuccinctRoles`` represents.
-     *
-     * Args:
-     *  role_name: The name of the role to check against.
-     */
-    isDelegatedRole(roleName) {
-        const desiredPrefix = this.namePrefix + '-';
-        if (!roleName.startsWith(desiredPrefix)) {
-            return false;
-        }
-        const suffix = roleName.slice(desiredPrefix.length, roleName.length);
-        if (suffix.length != this.suffixLen) {
-            return false;
-        }
-        // make sure the suffix is a hex string
-        if (!suffix.match(/^[0-9a-fA-F]+$/)) {
-            return false;
-        }
-        const num = parseInt(suffix, 16);
-        return 0 <= num && num < this.numberOfBins;
-    }
-    toJSON() {
-        const json = {
-            ...super.toJSON(),
-            bit_length: this.bitLength,
-            name_prefix: this.namePrefix,
-        };
-        return json;
-    }
-    static fromJSON(data) {
-        const { keyids, threshold, bit_length, name_prefix, ...rest } = data;
-        if (!(0, guard_1.isStringArray)(keyids)) {
-            throw new TypeError('keyids must be an array of strings');
-        }
-        if (typeof threshold !== 'number') {
-            throw new TypeError('threshold must be a number');
-        }
-        if (typeof bit_length !== 'number') {
-            throw new TypeError('bit_length must be a number');
-        }
-        if (typeof name_prefix !== 'string') {
-            throw new TypeError('name_prefix must be a string');
-        }
-        return new SuccinctRoles({
-            keyIDs: keyids,
-            threshold,
-            bitLength: bit_length,
-            namePrefix: name_prefix,
-            unrecognizedFields: rest,
-        });
-    }
-}
-exports.SuccinctRoles = SuccinctRoles;
-
-
-/***/ }),
-
-/***/ 4653:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.Root = void 0;
-const util_1 = __importDefault(__nccwpck_require__(3837));
-const error_1 = __nccwpck_require__(7040);
-const guard_1 = __nccwpck_require__(1858);
-const types_1 = __nccwpck_require__(9121);
-const base_1 = __nccwpck_require__(2129);
-const key_1 = __nccwpck_require__(5468);
-const role_1 = __nccwpck_require__(6912);
-/**
- * A container for the signed part of root metadata.
- *
- * The top-level role and metadata file signed by the root keys.
- * This role specifies trusted keys for all other top-level roles, which may further delegate trust.
- */
-class Root extends base_1.Signed {
-    constructor(options) {
-        super(options);
-        this.type = types_1.MetadataKind.Root;
-        this.keys = options.keys || {};
-        this.consistentSnapshot = options.consistentSnapshot ?? true;
-        if (!options.roles) {
-            this.roles = role_1.TOP_LEVEL_ROLE_NAMES.reduce((acc, role) => ({
-                ...acc,
-                [role]: new role_1.Role({ keyIDs: [], threshold: 1 }),
-            }), {});
-        }
-        else {
-            const roleNames = new Set(Object.keys(options.roles));
-            if (!role_1.TOP_LEVEL_ROLE_NAMES.every((role) => roleNames.has(role))) {
-                throw new error_1.ValueError('missing top-level role');
-            }
-            this.roles = options.roles;
-        }
-    }
-    equals(other) {
-        if (!(other instanceof Root)) {
-            return false;
-        }
-        return (super.equals(other) &&
-            this.consistentSnapshot === other.consistentSnapshot &&
-            util_1.default.isDeepStrictEqual(this.keys, other.keys) &&
-            util_1.default.isDeepStrictEqual(this.roles, other.roles));
-    }
-    toJSON() {
-        return {
-            spec_version: this.specVersion,
-            version: this.version,
-            expires: this.expires,
-            keys: keysToJSON(this.keys),
-            roles: rolesToJSON(this.roles),
-            consistent_snapshot: this.consistentSnapshot,
-            ...this.unrecognizedFields,
-        };
-    }
-    static fromJSON(data) {
-        const { unrecognizedFields, ...commonFields } = base_1.Signed.commonFieldsFromJSON(data);
-        const { keys, roles, consistent_snapshot, ...rest } = unrecognizedFields;
-        if (typeof consistent_snapshot !== 'boolean') {
-            throw new TypeError('consistent_snapshot must be a boolean');
-        }
-        return new Root({
-            ...commonFields,
-            keys: keysFromJSON(keys),
-            roles: rolesFromJSON(roles),
-            consistentSnapshot: consistent_snapshot,
-            unrecognizedFields: rest,
-        });
-    }
-}
-exports.Root = Root;
-function keysToJSON(keys) {
-    return Object.entries(keys).reduce((acc, [keyID, key]) => ({ ...acc, [keyID]: key.toJSON() }), {});
-}
-function rolesToJSON(roles) {
-    return Object.entries(roles).reduce((acc, [roleName, role]) => ({ ...acc, [roleName]: role.toJSON() }), {});
-}
-function keysFromJSON(data) {
-    let keys;
-    if ((0, guard_1.isDefined)(data)) {
-        if (!(0, guard_1.isObjectRecord)(data)) {
-            throw new TypeError('keys must be an object');
-        }
-        keys = Object.entries(data).reduce((acc, [keyID, keyData]) => ({
-            ...acc,
-            [keyID]: key_1.Key.fromJSON(keyID, keyData),
-        }), {});
-    }
-    return keys;
-}
-function rolesFromJSON(data) {
-    let roles;
-    if ((0, guard_1.isDefined)(data)) {
-        if (!(0, guard_1.isObjectRecord)(data)) {
-            throw new TypeError('roles must be an object');
-        }
-        roles = Object.entries(data).reduce((acc, [roleName, roleData]) => ({
-            ...acc,
-            [roleName]: role_1.Role.fromJSON(roleData),
-        }), {});
-    }
-    return roles;
-}
-
-
-/***/ }),
-
-/***/ 253:
-/***/ ((__unused_webpack_module, exports) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.Signature = void 0;
-/**
- * A container class containing information about a signature.
- *
- * Contains a signature and the keyid uniquely identifying the key used
- * to generate the signature.
- *
- * Provide a `fromJSON` method to create a Signature from a JSON object.
- */
-class Signature {
-    constructor(options) {
-        const { keyID, sig } = options;
-        this.keyID = keyID;
-        this.sig = sig;
-    }
-    static fromJSON(data) {
-        const { keyid, sig } = data;
-        if (typeof keyid !== 'string') {
-            throw new TypeError('keyid must be a string');
-        }
-        if (typeof sig !== 'string') {
-            throw new TypeError('sig must be a string');
-        }
-        return new Signature({
-            keyID: keyid,
-            sig: sig,
-        });
-    }
-}
-exports.Signature = Signature;
-
-
-/***/ }),
-
-/***/ 9378:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.Snapshot = void 0;
-const util_1 = __importDefault(__nccwpck_require__(3837));
-const guard_1 = __nccwpck_require__(1858);
-const types_1 = __nccwpck_require__(9121);
-const base_1 = __nccwpck_require__(2129);
-const file_1 = __nccwpck_require__(2277);
-/**
- * A container for the signed part of snapshot metadata.
- *
- * Snapshot contains information about all target Metadata files.
- * A top-level role that specifies the latest versions of all targets metadata files,
- * and hence the latest versions of all targets (including any dependencies between them) on the repository.
- */
-class Snapshot extends base_1.Signed {
-    constructor(opts) {
-        super(opts);
-        this.type = types_1.MetadataKind.Snapshot;
-        this.meta = opts.meta || { 'targets.json': new file_1.MetaFile({ version: 1 }) };
-    }
-    equals(other) {
-        if (!(other instanceof Snapshot)) {
-            return false;
-        }
-        return super.equals(other) && util_1.default.isDeepStrictEqual(this.meta, other.meta);
-    }
-    toJSON() {
-        return {
-            meta: metaToJSON(this.meta),
-            spec_version: this.specVersion,
-            version: this.version,
-            expires: this.expires,
-            ...this.unrecognizedFields,
-        };
-    }
-    static fromJSON(data) {
-        const { unrecognizedFields, ...commonFields } = base_1.Signed.commonFieldsFromJSON(data);
-        const { meta, ...rest } = unrecognizedFields;
-        return new Snapshot({
-            ...commonFields,
-            meta: metaFromJSON(meta),
-            unrecognizedFields: rest,
-        });
-    }
-}
-exports.Snapshot = Snapshot;
-function metaToJSON(meta) {
-    return Object.entries(meta).reduce((acc, [path, metadata]) => ({
-        ...acc,
-        [path]: metadata.toJSON(),
-    }), {});
-}
-function metaFromJSON(data) {
-    let meta;
-    if ((0, guard_1.isDefined)(data)) {
-        if (!(0, guard_1.isObjectRecord)(data)) {
-            throw new TypeError('meta field is malformed');
-        }
-        else {
-            meta = Object.entries(data).reduce((acc, [path, metadata]) => ({
-                ...acc,
-                [path]: file_1.MetaFile.fromJSON(metadata),
-            }), {});
-        }
-        return meta;
-    }
-}
-
-
-/***/ }),
-
-/***/ 9046:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.Targets = void 0;
-const util_1 = __importDefault(__nccwpck_require__(3837));
-const guard_1 = __nccwpck_require__(1858);
-const types_1 = __nccwpck_require__(9121);
-const base_1 = __nccwpck_require__(2129);
-const delegations_1 = __nccwpck_require__(1739);
-const file_1 = __nccwpck_require__(2277);
-// Container for the signed part of targets metadata.
-//
-// Targets contains verifying information about target files and also delegates
-// responsible to other Targets roles.
-class Targets extends base_1.Signed {
-    constructor(options) {
-        super(options);
-        this.type = types_1.MetadataKind.Targets;
-        this.targets = options.targets || {};
-        this.delegations = options.delegations;
-    }
-    equals(other) {
-        if (!(other instanceof Targets)) {
-            return false;
-        }
-        return (super.equals(other) &&
-            util_1.default.isDeepStrictEqual(this.targets, other.targets) &&
-            util_1.default.isDeepStrictEqual(this.delegations, other.delegations));
-    }
-    toJSON() {
-        const json = {
-            spec_version: this.specVersion,
-            version: this.version,
-            expires: this.expires,
-            targets: targetsToJSON(this.targets),
-            ...this.unrecognizedFields,
-        };
-        if (this.delegations) {
-            json.delegations = this.delegations.toJSON();
-        }
-        return json;
-    }
-    static fromJSON(data) {
-        const { unrecognizedFields, ...commonFields } = base_1.Signed.commonFieldsFromJSON(data);
-        const { targets, delegations, ...rest } = unrecognizedFields;
-        return new Targets({
-            ...commonFields,
-            targets: targetsFromJSON(targets),
-            delegations: delegationsFromJSON(delegations),
-            unrecognizedFields: rest,
-        });
-    }
-}
-exports.Targets = Targets;
-function targetsToJSON(targets) {
-    return Object.entries(targets).reduce((acc, [path, target]) => ({
-        ...acc,
-        [path]: target.toJSON(),
-    }), {});
-}
-function targetsFromJSON(data) {
-    let targets;
-    if ((0, guard_1.isDefined)(data)) {
-        if (!(0, guard_1.isObjectRecord)(data)) {
-            throw new TypeError('targets must be an object');
-        }
-        else {
-            targets = Object.entries(data).reduce((acc, [path, target]) => ({
-                ...acc,
-                [path]: file_1.TargetFile.fromJSON(path, target),
-            }), {});
-        }
-    }
-    return targets;
-}
-function delegationsFromJSON(data) {
-    let delegations;
-    if ((0, guard_1.isDefined)(data)) {
-        if (!(0, guard_1.isObject)(data)) {
-            throw new TypeError('delegations must be an object');
-        }
-        else {
-            delegations = delegations_1.Delegations.fromJSON(data);
-        }
-    }
-    return delegations;
-}
-
-
-/***/ }),
-
-/***/ 1713:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.Timestamp = void 0;
-const guard_1 = __nccwpck_require__(1858);
-const types_1 = __nccwpck_require__(9121);
-const base_1 = __nccwpck_require__(2129);
-const file_1 = __nccwpck_require__(2277);
-/**
- * A container for the signed part of timestamp metadata.
- *
- * A top-level that specifies the latest version of the snapshot role metadata file,
- * and hence the latest versions of all metadata and targets on the repository.
- */
-class Timestamp extends base_1.Signed {
-    constructor(options) {
-        super(options);
-        this.type = types_1.MetadataKind.Timestamp;
-        this.snapshotMeta = options.snapshotMeta || new file_1.MetaFile({ version: 1 });
-    }
-    equals(other) {
-        if (!(other instanceof Timestamp)) {
-            return false;
-        }
-        return super.equals(other) && this.snapshotMeta.equals(other.snapshotMeta);
-    }
-    toJSON() {
-        return {
-            spec_version: this.specVersion,
-            version: this.version,
-            expires: this.expires,
-            meta: { 'snapshot.json': this.snapshotMeta.toJSON() },
-            ...this.unrecognizedFields,
-        };
-    }
-    static fromJSON(data) {
-        const { unrecognizedFields, ...commonFields } = base_1.Signed.commonFieldsFromJSON(data);
-        const { meta, ...rest } = unrecognizedFields;
-        return new Timestamp({
-            ...commonFields,
-            snapshotMeta: snapshotMetaFromJSON(meta),
-            unrecognizedFields: rest,
-        });
-    }
-}
-exports.Timestamp = Timestamp;
-function snapshotMetaFromJSON(data) {
-    let snapshotMeta;
-    if ((0, guard_1.isDefined)(data)) {
-        const snapshotData = data['snapshot.json'];
-        if (!(0, guard_1.isDefined)(snapshotData) || !(0, guard_1.isObject)(snapshotData)) {
-            throw new TypeError('missing snapshot.json in meta');
-        }
-        else {
-            snapshotMeta = file_1.MetaFile.fromJSON(snapshotData);
-        }
-    }
-    return snapshotMeta;
-}
 
 
 /***/ }),
@@ -45377,9 +44397,8 @@ function snapshotMetaFromJSON(data) {
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.TrustedMetadataStore = void 0;
+const models_1 = __nccwpck_require__(5833);
 const error_1 = __nccwpck_require__(7040);
-const models_1 = __nccwpck_require__(4885);
-const types_1 = __nccwpck_require__(9121);
 class TrustedMetadataStore {
     constructor(rootData) {
         this.trustedSet = {};
@@ -45408,18 +44427,18 @@ class TrustedMetadataStore {
     }
     updateRoot(bytesBuffer) {
         const data = JSON.parse(bytesBuffer.toString('utf8'));
-        const newRoot = models_1.Metadata.fromJSON(types_1.MetadataKind.Root, data);
-        if (newRoot.signed.type != types_1.MetadataKind.Root) {
+        const newRoot = models_1.Metadata.fromJSON(models_1.MetadataKind.Root, data);
+        if (newRoot.signed.type != models_1.MetadataKind.Root) {
             throw new error_1.RepositoryError(`Expected 'root', got ${newRoot.signed.type}`);
         }
         // Client workflow 5.4: check for arbitrary software attack
-        this.root.verifyDelegate(types_1.MetadataKind.Root, newRoot);
+        this.root.verifyDelegate(models_1.MetadataKind.Root, newRoot);
         // Client workflow 5.5: check for rollback attack
         if (newRoot.signed.version != this.root.signed.version + 1) {
             throw new error_1.BadVersionError(`Expected version ${this.root.signed.version + 1}, got ${newRoot.signed.version}`);
         }
         // Check that new root is signed by self
-        newRoot.verifyDelegate(types_1.MetadataKind.Root, newRoot);
+        newRoot.verifyDelegate(models_1.MetadataKind.Root, newRoot);
         // Client workflow 5.7: set new root as trusted root
         this.trustedSet.root = newRoot;
         return newRoot;
@@ -45432,12 +44451,12 @@ class TrustedMetadataStore {
             throw new error_1.ExpiredMetadataError('Final root.json is expired');
         }
         const data = JSON.parse(bytesBuffer.toString('utf8'));
-        const newTimestamp = models_1.Metadata.fromJSON(types_1.MetadataKind.Timestamp, data);
-        if (newTimestamp.signed.type != types_1.MetadataKind.Timestamp) {
+        const newTimestamp = models_1.Metadata.fromJSON(models_1.MetadataKind.Timestamp, data);
+        if (newTimestamp.signed.type != models_1.MetadataKind.Timestamp) {
             throw new error_1.RepositoryError(`Expected 'timestamp', got ${newTimestamp.signed.type}`);
         }
         // Client workflow 5.4.2: check for arbitrary software attack
-        this.root.verifyDelegate(types_1.MetadataKind.Timestamp, newTimestamp);
+        this.root.verifyDelegate(models_1.MetadataKind.Timestamp, newTimestamp);
         if (this.timestamp) {
             // Prevent rolling back timestamp version
             // Client workflow 5.4.3.1: check for rollback attack
@@ -45480,12 +44499,12 @@ class TrustedMetadataStore {
             snapshotMeta.verify(bytesBuffer);
         }
         const data = JSON.parse(bytesBuffer.toString('utf8'));
-        const newSnapshot = models_1.Metadata.fromJSON(types_1.MetadataKind.Snapshot, data);
-        if (newSnapshot.signed.type != types_1.MetadataKind.Snapshot) {
+        const newSnapshot = models_1.Metadata.fromJSON(models_1.MetadataKind.Snapshot, data);
+        if (newSnapshot.signed.type != models_1.MetadataKind.Snapshot) {
             throw new error_1.RepositoryError(`Expected 'snapshot', got ${newSnapshot.signed.type}`);
         }
         // Client workflow 5.5.3: check for arbitrary software attack
-        this.root.verifyDelegate(types_1.MetadataKind.Snapshot, newSnapshot);
+        this.root.verifyDelegate(models_1.MetadataKind.Snapshot, newSnapshot);
         // version check against meta version (5.5.4) is deferred to allow old
         // snapshot to be used in rollback protection
         // Client workflow 5.5.5: check for rollback attack
@@ -45525,8 +44544,8 @@ class TrustedMetadataStore {
         // Client workflow 5.6.2: check against snapshot role's targets hash
         meta.verify(bytesBuffer);
         const data = JSON.parse(bytesBuffer.toString('utf8'));
-        const newDelegate = models_1.Metadata.fromJSON(types_1.MetadataKind.Targets, data);
-        if (newDelegate.signed.type != types_1.MetadataKind.Targets) {
+        const newDelegate = models_1.Metadata.fromJSON(models_1.MetadataKind.Targets, data);
+        if (newDelegate.signed.type != models_1.MetadataKind.Targets) {
             throw new error_1.RepositoryError(`Expected 'targets', got ${newDelegate.signed.type}`);
         }
         // Client workflow 5.6.3: check for arbitrary software attack
@@ -45546,11 +44565,11 @@ class TrustedMetadataStore {
     // Note that an expired initial root is still considered valid.
     loadTrustedRoot(bytesBuffer) {
         const data = JSON.parse(bytesBuffer.toString('utf8'));
-        const root = models_1.Metadata.fromJSON(types_1.MetadataKind.Root, data);
-        if (root.signed.type != types_1.MetadataKind.Root) {
+        const root = models_1.Metadata.fromJSON(models_1.MetadataKind.Root, data);
+        if (root.signed.type != models_1.MetadataKind.Root) {
             throw new error_1.RepositoryError(`Expected 'root', got ${root.signed.type}`);
         }
-        root.verifyDelegate(types_1.MetadataKind.Root, root);
+        root.verifyDelegate(models_1.MetadataKind.Root, root);
         this.trustedSet['root'] = root;
     }
     checkFinalTimestamp() {
@@ -45617,13 +44636,13 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Updater = void 0;
+const models_1 = __nccwpck_require__(5833);
 const fs = __importStar(__nccwpck_require__(7147));
 const path = __importStar(__nccwpck_require__(1017));
+const config_1 = __nccwpck_require__(9530);
 const error_1 = __nccwpck_require__(7040);
 const fetcher_1 = __nccwpck_require__(5991);
 const store_1 = __nccwpck_require__(7001);
-const config_1 = __nccwpck_require__(24);
-const types_1 = __nccwpck_require__(9121);
 class Updater {
     constructor(options) {
         const { metadataDir, metadataBaseUrl, targetDir, targetBaseUrl, fetcher, config, } = options;
@@ -45631,12 +44650,12 @@ class Updater {
         this.metadataBaseUrl = metadataBaseUrl;
         this.targetDir = targetDir;
         this.targetBaseUrl = targetBaseUrl;
-        const data = this.loadLocalMetadata(types_1.MetadataKind.Root);
+        const data = this.loadLocalMetadata(models_1.MetadataKind.Root);
         this.trustedSet = new store_1.TrustedMetadataStore(data);
         this.config = { ...config_1.defaultConfig, ...config };
         this.fetcher =
             fetcher ||
-                new fetcher_1.Fetcher({
+                new fetcher_1.DefaultFetcher({
                     timeout: this.config.fetchTimeout,
                     retries: this.config.fetchRetries,
                 });
@@ -45645,7 +44664,7 @@ class Updater {
         await this.loadRoot();
         await this.loadTimestamp();
         await this.loadSnapshot();
-        await this.loadTargets(types_1.MetadataKind.Targets, types_1.MetadataKind.Root);
+        await this.loadTargets(models_1.MetadataKind.Targets, models_1.MetadataKind.Root);
     }
     // Returns the TargetFile instance with information for the given target path.
     //
@@ -45716,7 +44735,7 @@ class Updater {
                 // Client workflow 5.3.4 - 5.4.7
                 this.trustedSet.updateRoot(bytesData);
                 // Client workflow 5.3.8: persist root metadata file
-                this.persistMetadata(types_1.MetadataKind.Root, bytesData);
+                this.persistMetadata(models_1.MetadataKind.Root, bytesData);
             }
             catch (error) {
                 break;
@@ -45728,7 +44747,7 @@ class Updater {
     async loadTimestamp() {
         // Load local and remote timestamp metadata
         try {
-            const data = this.loadLocalMetadata(types_1.MetadataKind.Timestamp);
+            const data = this.loadLocalMetadata(models_1.MetadataKind.Timestamp);
             this.trustedSet.updateTimestamp(data);
         }
         catch (error) {
@@ -45752,14 +44771,14 @@ class Updater {
             throw error;
         }
         // Client workflow 5.4.5: persist timestamp metadata
-        this.persistMetadata(types_1.MetadataKind.Timestamp, bytesData);
+        this.persistMetadata(models_1.MetadataKind.Timestamp, bytesData);
     }
     // Load local and remote snapshot metadata.
     // Client workflow 5.5: update snapshot role
     async loadSnapshot() {
         //Load local (and if needed remote) snapshot metadata
         try {
-            const data = this.loadLocalMetadata(types_1.MetadataKind.Snapshot);
+            const data = this.loadLocalMetadata(models_1.MetadataKind.Snapshot);
             this.trustedSet.updateSnapshot(data, true);
         }
         catch (error) {
@@ -45778,7 +44797,7 @@ class Updater {
                 // Client workflow 5.5.2 - 5.5.6
                 this.trustedSet.updateSnapshot(bytesData);
                 // Client workflow 5.5.7: persist snapshot metadata file
-                this.persistMetadata(types_1.MetadataKind.Snapshot, bytesData);
+                this.persistMetadata(models_1.MetadataKind.Snapshot, bytesData);
             }
             catch (error) {
                 throw new error_1.RuntimeError(`Unable to load snapshot metadata error ${error}`);
@@ -45829,8 +44848,8 @@ class Updater {
         // is needed to load and verify the delegated targets metadata.
         const delegationsToVisit = [
             {
-                roleName: types_1.MetadataKind.Targets,
-                parentRoleName: types_1.MetadataKind.Root,
+                roleName: models_1.MetadataKind.Targets,
+                parentRoleName: models_1.MetadataKind.Root,
             },
         ];
         const visitedRoleNames = new Set();
@@ -45901,391 +44920,6 @@ exports.Updater = Updater;
 
 /***/ }),
 
-/***/ 24:
-/***/ ((__unused_webpack_module, exports) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.defaultConfig = void 0;
-exports.defaultConfig = {
-    maxRootRotations: 32,
-    maxDelegations: 32,
-    rootMaxLength: 512000,
-    timestampMaxLength: 16384,
-    snapshotMaxLength: 2000000,
-    targetsMaxLength: 5000000,
-    prefixTargetsWithHash: true,
-    fetchTimeout: 100000,
-    fetchRetries: 2,
-};
-
-
-/***/ }),
-
-/***/ 1858:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.isMetadataKind = exports.isObjectRecord = exports.isStringRecord = exports.isObjectArray = exports.isStringArray = exports.isObject = exports.isDefined = void 0;
-const types_1 = __nccwpck_require__(9121);
-function isDefined(val) {
-    return val !== undefined;
-}
-exports.isDefined = isDefined;
-function isObject(value) {
-    return typeof value === 'object' && value !== null;
-}
-exports.isObject = isObject;
-function isStringArray(value) {
-    return Array.isArray(value) && value.every((v) => typeof v === 'string');
-}
-exports.isStringArray = isStringArray;
-function isObjectArray(value) {
-    return Array.isArray(value) && value.every(isObject);
-}
-exports.isObjectArray = isObjectArray;
-function isStringRecord(value) {
-    return (typeof value === 'object' &&
-        value !== null &&
-        Object.keys(value).every((k) => typeof k === 'string') &&
-        Object.values(value).every((v) => typeof v === 'string'));
-}
-exports.isStringRecord = isStringRecord;
-function isObjectRecord(value) {
-    return (typeof value === 'object' &&
-        value !== null &&
-        Object.keys(value).every((k) => typeof k === 'string') &&
-        Object.values(value).every((v) => typeof v === 'object' && v !== null));
-}
-exports.isObjectRecord = isObjectRecord;
-function isMetadataKind(value) {
-    return (typeof value === 'string' &&
-        Object.values(types_1.MetadataKind).includes(value));
-}
-exports.isMetadataKind = isMetadataKind;
-
-
-/***/ }),
-
-/***/ 4781:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.types = exports.signer = exports.json = exports.guard = exports.config = void 0;
-exports.config = __importStar(__nccwpck_require__(24));
-exports.guard = __importStar(__nccwpck_require__(1858));
-exports.json = __importStar(__nccwpck_require__(592));
-exports.signer = __importStar(__nccwpck_require__(2067));
-exports.types = __importStar(__nccwpck_require__(9121));
-
-
-/***/ }),
-
-/***/ 592:
-/***/ ((__unused_webpack_module, exports) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.canonicalize = void 0;
-const QUOTATION_MARK = Buffer.from('"');
-const COMMA = Buffer.from(',');
-const COLON = Buffer.from(':');
-const LEFT_SQUARE_BRACKET = Buffer.from('[');
-const RIGHT_SQUARE_BRACKET = Buffer.from(']');
-const LEFT_CURLY_BRACKET = Buffer.from('{');
-const RIGHT_CURLY_BRACKET = Buffer.from('}');
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function canonicalize(object) {
-    let buffer = Buffer.from('');
-    if (object === null || typeof object !== 'object' || object.toJSON != null) {
-        // Primitives or toJSONable objects
-        if (typeof object === 'string') {
-            buffer = Buffer.concat([
-                buffer,
-                QUOTATION_MARK,
-                Buffer.from(object),
-                QUOTATION_MARK,
-            ]);
-        }
-        else {
-            buffer = Buffer.concat([buffer, Buffer.from(JSON.stringify(object))]);
-        }
-    }
-    else if (Array.isArray(object)) {
-        // Array - maintain element order
-        buffer = Buffer.concat([buffer, LEFT_SQUARE_BRACKET]);
-        let first = true;
-        object.forEach((element) => {
-            if (!first) {
-                buffer = Buffer.concat([buffer, COMMA]);
-            }
-            first = false;
-            // recursive call
-            buffer = Buffer.concat([buffer, canonicalize(element)]);
-        });
-        buffer = Buffer.concat([buffer, RIGHT_SQUARE_BRACKET]);
-    }
-    else {
-        // Object - Sort properties before serializing
-        buffer = Buffer.concat([buffer, LEFT_CURLY_BRACKET]);
-        let first = true;
-        Object.keys(object)
-            .sort()
-            .forEach((property) => {
-            if (!first) {
-                buffer = Buffer.concat([buffer, COMMA]);
-            }
-            first = false;
-            buffer = Buffer.concat([buffer, Buffer.from(JSON.stringify(property))]);
-            buffer = Buffer.concat([buffer, COLON]);
-            // recursive call
-            buffer = Buffer.concat([buffer, canonicalize(object[property])]);
-        });
-        buffer = Buffer.concat([buffer, RIGHT_CURLY_BRACKET]);
-    }
-    return buffer;
-}
-exports.canonicalize = canonicalize;
-
-
-/***/ }),
-
-/***/ 6256:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.getPublicKey = void 0;
-const crypto_1 = __importDefault(__nccwpck_require__(6113));
-const error_1 = __nccwpck_require__(7040);
-const oid_1 = __nccwpck_require__(7724);
-const ASN1_TAG_SEQUENCE = 0x30;
-const ANS1_TAG_BIT_STRING = 0x03;
-const NULL_BYTE = 0x00;
-const OID_EDDSA = '1.3.101.112';
-const OID_EC_PUBLIC_KEY = '1.2.840.10045.2.1';
-const OID_EC_CURVE_P256V1 = '1.2.840.10045.3.1.7';
-const PEM_HEADER = '-----BEGIN PUBLIC KEY-----';
-function getPublicKey(keyInfo) {
-    switch (keyInfo.keyType) {
-        case 'rsa':
-            return getRSAPublicKey(keyInfo);
-        case 'ed25519':
-            return getED25519PublicKey(keyInfo);
-        case 'ecdsa':
-        case 'ecdsa-sha2-nistp256':
-        case 'ecdsa-sha2-nistp384':
-            return getECDCSAPublicKey(keyInfo);
-        default:
-            throw new error_1.UnsupportedAlgorithmError(`Unsupported key type: ${keyInfo.keyType}`);
-    }
-}
-exports.getPublicKey = getPublicKey;
-function getRSAPublicKey(keyInfo) {
-    // Only support PEM-encoded RSA keys
-    if (!keyInfo.keyVal.startsWith(PEM_HEADER)) {
-        throw new error_1.CryptoError('Invalid key format');
-    }
-    const key = crypto_1.default.createPublicKey(keyInfo.keyVal);
-    switch (keyInfo.scheme) {
-        case 'rsassa-pss-sha256':
-            return {
-                key: key,
-                padding: crypto_1.default.constants.RSA_PKCS1_PSS_PADDING,
-            };
-        default:
-            throw new error_1.UnsupportedAlgorithmError(`Unsupported RSA scheme: ${keyInfo.scheme}`);
-    }
-}
-function getED25519PublicKey(keyInfo) {
-    let key;
-    // If key is already PEM-encoded we can just parse it
-    if (keyInfo.keyVal.startsWith(PEM_HEADER)) {
-        key = crypto_1.default.createPublicKey(keyInfo.keyVal);
-    }
-    else {
-        // If key is not PEM-encoded it had better be hex
-        if (!isHex(keyInfo.keyVal)) {
-            throw new error_1.CryptoError('Invalid key format');
-        }
-        key = crypto_1.default.createPublicKey({
-            key: ed25519.hexToDER(keyInfo.keyVal),
-            format: 'der',
-            type: 'spki',
-        });
-    }
-    return { key };
-}
-function getECDCSAPublicKey(keyInfo) {
-    let key;
-    // If key is already PEM-encoded we can just parse it
-    if (keyInfo.keyVal.startsWith(PEM_HEADER)) {
-        key = crypto_1.default.createPublicKey(keyInfo.keyVal);
-    }
-    else {
-        // If key is not PEM-encoded it had better be hex
-        if (!isHex(keyInfo.keyVal)) {
-            throw new error_1.CryptoError('Invalid key format');
-        }
-        key = crypto_1.default.createPublicKey({
-            key: ecdsa.hexToDER(keyInfo.keyVal),
-            format: 'der',
-            type: 'spki',
-        });
-    }
-    return { key };
-}
-const ed25519 = {
-    // Translates a hex key into a crypto KeyObject
-    // https://keygen.sh/blog/how-to-use-hexadecimal-ed25519-keys-in-node/
-    hexToDER: (hex) => {
-        const key = Buffer.from(hex, 'hex');
-        const oid = (0, oid_1.encodeOIDString)(OID_EDDSA);
-        // Create a byte sequence containing the OID and key
-        const elements = Buffer.concat([
-            Buffer.concat([
-                Buffer.from([ASN1_TAG_SEQUENCE]),
-                Buffer.from([oid.length]),
-                oid,
-            ]),
-            Buffer.concat([
-                Buffer.from([ANS1_TAG_BIT_STRING]),
-                Buffer.from([key.length + 1]),
-                Buffer.from([NULL_BYTE]),
-                key,
-            ]),
-        ]);
-        // Wrap up by creating a sequence of elements
-        const der = Buffer.concat([
-            Buffer.from([ASN1_TAG_SEQUENCE]),
-            Buffer.from([elements.length]),
-            elements,
-        ]);
-        return der;
-    },
-};
-const ecdsa = {
-    hexToDER: (hex) => {
-        const key = Buffer.from(hex, 'hex');
-        const bitString = Buffer.concat([
-            Buffer.from([ANS1_TAG_BIT_STRING]),
-            Buffer.from([key.length + 1]),
-            Buffer.from([NULL_BYTE]),
-            key,
-        ]);
-        const oids = Buffer.concat([
-            (0, oid_1.encodeOIDString)(OID_EC_PUBLIC_KEY),
-            (0, oid_1.encodeOIDString)(OID_EC_CURVE_P256V1),
-        ]);
-        const oidSequence = Buffer.concat([
-            Buffer.from([ASN1_TAG_SEQUENCE]),
-            Buffer.from([oids.length]),
-            oids,
-        ]);
-        // Wrap up by creating a sequence of elements
-        const der = Buffer.concat([
-            Buffer.from([ASN1_TAG_SEQUENCE]),
-            Buffer.from([oidSequence.length + bitString.length]),
-            oidSequence,
-            bitString,
-        ]);
-        return der;
-    },
-};
-const isHex = (key) => /^[0-9a-fA-F]+$/.test(key);
-
-
-/***/ }),
-
-/***/ 7724:
-/***/ ((__unused_webpack_module, exports) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.encodeOIDString = void 0;
-const ANS1_TAG_OID = 0x06;
-function encodeOIDString(oid) {
-    const parts = oid.split('.');
-    // The first two subidentifiers are encoded into the first byte
-    const first = parseInt(parts[0], 10) * 40 + parseInt(parts[1], 10);
-    const rest = [];
-    parts.slice(2).forEach((part) => {
-        const bytes = encodeVariableLengthInteger(parseInt(part, 10));
-        rest.push(...bytes);
-    });
-    const der = Buffer.from([first, ...rest]);
-    return Buffer.from([ANS1_TAG_OID, der.length, ...der]);
-}
-exports.encodeOIDString = encodeOIDString;
-function encodeVariableLengthInteger(value) {
-    const bytes = [];
-    let mask = 0x00;
-    while (value > 0) {
-        bytes.unshift((value & 0x7f) | mask);
-        value >>= 7;
-        mask = 0x80;
-    }
-    return bytes;
-}
-
-
-/***/ }),
-
-/***/ 2067:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.verifySignature = void 0;
-const crypto_1 = __importDefault(__nccwpck_require__(6113));
-const json_1 = __nccwpck_require__(592);
-const verifySignature = (metaDataSignedData, key, signature) => {
-    const canonicalData = (0, json_1.canonicalize)(metaDataSignedData) || '';
-    return crypto_1.default.verify(undefined, canonicalData, key, Buffer.from(signature, 'hex'));
-};
-exports.verifySignature = verifySignature;
-
-
-/***/ }),
-
 /***/ 6400:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
@@ -46315,234 +44949,6 @@ const withTempDir = async (handler) => {
         await promises_1.default.rm(dir, { force: true, recursive: true, maxRetries: 3 });
     }
 };
-
-
-/***/ }),
-
-/***/ 9121:
-/***/ ((__unused_webpack_module, exports) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.MetadataKind = void 0;
-var MetadataKind;
-(function (MetadataKind) {
-    MetadataKind["Root"] = "root";
-    MetadataKind["Timestamp"] = "timestamp";
-    MetadataKind["Snapshot"] = "snapshot";
-    MetadataKind["Targets"] = "targets";
-})(MetadataKind = exports.MetadataKind || (exports.MetadataKind = {}));
-
-
-/***/ }),
-
-/***/ 6245:
-/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
-
-var balanced = __nccwpck_require__(9417);
-
-module.exports = expandTop;
-
-var escSlash = '\0SLASH'+Math.random()+'\0';
-var escOpen = '\0OPEN'+Math.random()+'\0';
-var escClose = '\0CLOSE'+Math.random()+'\0';
-var escComma = '\0COMMA'+Math.random()+'\0';
-var escPeriod = '\0PERIOD'+Math.random()+'\0';
-
-function numeric(str) {
-  return parseInt(str, 10) == str
-    ? parseInt(str, 10)
-    : str.charCodeAt(0);
-}
-
-function escapeBraces(str) {
-  return str.split('\\\\').join(escSlash)
-            .split('\\{').join(escOpen)
-            .split('\\}').join(escClose)
-            .split('\\,').join(escComma)
-            .split('\\.').join(escPeriod);
-}
-
-function unescapeBraces(str) {
-  return str.split(escSlash).join('\\')
-            .split(escOpen).join('{')
-            .split(escClose).join('}')
-            .split(escComma).join(',')
-            .split(escPeriod).join('.');
-}
-
-
-// Basically just str.split(","), but handling cases
-// where we have nested braced sections, which should be
-// treated as individual members, like {a,{b,c},d}
-function parseCommaParts(str) {
-  if (!str)
-    return [''];
-
-  var parts = [];
-  var m = balanced('{', '}', str);
-
-  if (!m)
-    return str.split(',');
-
-  var pre = m.pre;
-  var body = m.body;
-  var post = m.post;
-  var p = pre.split(',');
-
-  p[p.length-1] += '{' + body + '}';
-  var postParts = parseCommaParts(post);
-  if (post.length) {
-    p[p.length-1] += postParts.shift();
-    p.push.apply(p, postParts);
-  }
-
-  parts.push.apply(parts, p);
-
-  return parts;
-}
-
-function expandTop(str) {
-  if (!str)
-    return [];
-
-  // I don't know why Bash 4.3 does this, but it does.
-  // Anything starting with {} will have the first two bytes preserved
-  // but *only* at the top level, so {},a}b will not expand to anything,
-  // but a{},b}c will be expanded to [a}c,abc].
-  // One could argue that this is a bug in Bash, but since the goal of
-  // this module is to match Bash's rules, we escape a leading {}
-  if (str.substr(0, 2) === '{}') {
-    str = '\\{\\}' + str.substr(2);
-  }
-
-  return expand(escapeBraces(str), true).map(unescapeBraces);
-}
-
-function embrace(str) {
-  return '{' + str + '}';
-}
-function isPadded(el) {
-  return /^-?0\d/.test(el);
-}
-
-function lte(i, y) {
-  return i <= y;
-}
-function gte(i, y) {
-  return i >= y;
-}
-
-function expand(str, isTop) {
-  var expansions = [];
-
-  var m = balanced('{', '}', str);
-  if (!m) return [str];
-
-  // no need to expand pre, since it is guaranteed to be free of brace-sets
-  var pre = m.pre;
-  var post = m.post.length
-    ? expand(m.post, false)
-    : [''];
-
-  if (/\$$/.test(m.pre)) {    
-    for (var k = 0; k < post.length; k++) {
-      var expansion = pre+ '{' + m.body + '}' + post[k];
-      expansions.push(expansion);
-    }
-  } else {
-    var isNumericSequence = /^-?\d+\.\.-?\d+(?:\.\.-?\d+)?$/.test(m.body);
-    var isAlphaSequence = /^[a-zA-Z]\.\.[a-zA-Z](?:\.\.-?\d+)?$/.test(m.body);
-    var isSequence = isNumericSequence || isAlphaSequence;
-    var isOptions = m.body.indexOf(',') >= 0;
-    if (!isSequence && !isOptions) {
-      // {a},b}
-      if (m.post.match(/,.*\}/)) {
-        str = m.pre + '{' + m.body + escClose + m.post;
-        return expand(str);
-      }
-      return [str];
-    }
-
-    var n;
-    if (isSequence) {
-      n = m.body.split(/\.\./);
-    } else {
-      n = parseCommaParts(m.body);
-      if (n.length === 1) {
-        // x{{a,b}}y ==> x{a}y x{b}y
-        n = expand(n[0], false).map(embrace);
-        if (n.length === 1) {
-          return post.map(function(p) {
-            return m.pre + n[0] + p;
-          });
-        }
-      }
-    }
-
-    // at this point, n is the parts, and we know it's not a comma set
-    // with a single entry.
-    var N;
-
-    if (isSequence) {
-      var x = numeric(n[0]);
-      var y = numeric(n[1]);
-      var width = Math.max(n[0].length, n[1].length)
-      var incr = n.length == 3
-        ? Math.abs(numeric(n[2]))
-        : 1;
-      var test = lte;
-      var reverse = y < x;
-      if (reverse) {
-        incr *= -1;
-        test = gte;
-      }
-      var pad = n.some(isPadded);
-
-      N = [];
-
-      for (var i = x; test(i, y); i += incr) {
-        var c;
-        if (isAlphaSequence) {
-          c = String.fromCharCode(i);
-          if (c === '\\')
-            c = '';
-        } else {
-          c = String(i);
-          if (pad) {
-            var need = width - c.length;
-            if (need > 0) {
-              var z = new Array(need + 1).join('0');
-              if (i < 0)
-                c = '-' + z + c.slice(1);
-              else
-                c = z + c;
-            }
-          }
-        }
-        N.push(c);
-      }
-    } else {
-      N = [];
-
-      for (var j = 0; j < n.length; j++) {
-        N.push.apply(N, expand(n[j], false));
-      }
-    }
-
-    for (var j = 0; j < N.length; j++) {
-      for (var k = 0; k < post.length; k++) {
-        var expansion = pre + N[j] + post[k];
-        if (!isTop || isSequence || expansion)
-          expansions.push(expansion);
-      }
-    }
-  }
-
-  return expansions;
-}
-
 
 
 /***/ }),
@@ -49533,456 +47939,6 @@ function wrappy (fn, cb) {
 
 /***/ }),
 
-/***/ 4091:
-/***/ ((module) => {
-
-"use strict";
-
-module.exports = function (Yallist) {
-  Yallist.prototype[Symbol.iterator] = function* () {
-    for (let walker = this.head; walker; walker = walker.next) {
-      yield walker.value
-    }
-  }
-}
-
-
-/***/ }),
-
-/***/ 665:
-/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
-
-"use strict";
-
-module.exports = Yallist
-
-Yallist.Node = Node
-Yallist.create = Yallist
-
-function Yallist (list) {
-  var self = this
-  if (!(self instanceof Yallist)) {
-    self = new Yallist()
-  }
-
-  self.tail = null
-  self.head = null
-  self.length = 0
-
-  if (list && typeof list.forEach === 'function') {
-    list.forEach(function (item) {
-      self.push(item)
-    })
-  } else if (arguments.length > 0) {
-    for (var i = 0, l = arguments.length; i < l; i++) {
-      self.push(arguments[i])
-    }
-  }
-
-  return self
-}
-
-Yallist.prototype.removeNode = function (node) {
-  if (node.list !== this) {
-    throw new Error('removing node which does not belong to this list')
-  }
-
-  var next = node.next
-  var prev = node.prev
-
-  if (next) {
-    next.prev = prev
-  }
-
-  if (prev) {
-    prev.next = next
-  }
-
-  if (node === this.head) {
-    this.head = next
-  }
-  if (node === this.tail) {
-    this.tail = prev
-  }
-
-  node.list.length--
-  node.next = null
-  node.prev = null
-  node.list = null
-
-  return next
-}
-
-Yallist.prototype.unshiftNode = function (node) {
-  if (node === this.head) {
-    return
-  }
-
-  if (node.list) {
-    node.list.removeNode(node)
-  }
-
-  var head = this.head
-  node.list = this
-  node.next = head
-  if (head) {
-    head.prev = node
-  }
-
-  this.head = node
-  if (!this.tail) {
-    this.tail = node
-  }
-  this.length++
-}
-
-Yallist.prototype.pushNode = function (node) {
-  if (node === this.tail) {
-    return
-  }
-
-  if (node.list) {
-    node.list.removeNode(node)
-  }
-
-  var tail = this.tail
-  node.list = this
-  node.prev = tail
-  if (tail) {
-    tail.next = node
-  }
-
-  this.tail = node
-  if (!this.head) {
-    this.head = node
-  }
-  this.length++
-}
-
-Yallist.prototype.push = function () {
-  for (var i = 0, l = arguments.length; i < l; i++) {
-    push(this, arguments[i])
-  }
-  return this.length
-}
-
-Yallist.prototype.unshift = function () {
-  for (var i = 0, l = arguments.length; i < l; i++) {
-    unshift(this, arguments[i])
-  }
-  return this.length
-}
-
-Yallist.prototype.pop = function () {
-  if (!this.tail) {
-    return undefined
-  }
-
-  var res = this.tail.value
-  this.tail = this.tail.prev
-  if (this.tail) {
-    this.tail.next = null
-  } else {
-    this.head = null
-  }
-  this.length--
-  return res
-}
-
-Yallist.prototype.shift = function () {
-  if (!this.head) {
-    return undefined
-  }
-
-  var res = this.head.value
-  this.head = this.head.next
-  if (this.head) {
-    this.head.prev = null
-  } else {
-    this.tail = null
-  }
-  this.length--
-  return res
-}
-
-Yallist.prototype.forEach = function (fn, thisp) {
-  thisp = thisp || this
-  for (var walker = this.head, i = 0; walker !== null; i++) {
-    fn.call(thisp, walker.value, i, this)
-    walker = walker.next
-  }
-}
-
-Yallist.prototype.forEachReverse = function (fn, thisp) {
-  thisp = thisp || this
-  for (var walker = this.tail, i = this.length - 1; walker !== null; i--) {
-    fn.call(thisp, walker.value, i, this)
-    walker = walker.prev
-  }
-}
-
-Yallist.prototype.get = function (n) {
-  for (var i = 0, walker = this.head; walker !== null && i < n; i++) {
-    // abort out of the list early if we hit a cycle
-    walker = walker.next
-  }
-  if (i === n && walker !== null) {
-    return walker.value
-  }
-}
-
-Yallist.prototype.getReverse = function (n) {
-  for (var i = 0, walker = this.tail; walker !== null && i < n; i++) {
-    // abort out of the list early if we hit a cycle
-    walker = walker.prev
-  }
-  if (i === n && walker !== null) {
-    return walker.value
-  }
-}
-
-Yallist.prototype.map = function (fn, thisp) {
-  thisp = thisp || this
-  var res = new Yallist()
-  for (var walker = this.head; walker !== null;) {
-    res.push(fn.call(thisp, walker.value, this))
-    walker = walker.next
-  }
-  return res
-}
-
-Yallist.prototype.mapReverse = function (fn, thisp) {
-  thisp = thisp || this
-  var res = new Yallist()
-  for (var walker = this.tail; walker !== null;) {
-    res.push(fn.call(thisp, walker.value, this))
-    walker = walker.prev
-  }
-  return res
-}
-
-Yallist.prototype.reduce = function (fn, initial) {
-  var acc
-  var walker = this.head
-  if (arguments.length > 1) {
-    acc = initial
-  } else if (this.head) {
-    walker = this.head.next
-    acc = this.head.value
-  } else {
-    throw new TypeError('Reduce of empty list with no initial value')
-  }
-
-  for (var i = 0; walker !== null; i++) {
-    acc = fn(acc, walker.value, i)
-    walker = walker.next
-  }
-
-  return acc
-}
-
-Yallist.prototype.reduceReverse = function (fn, initial) {
-  var acc
-  var walker = this.tail
-  if (arguments.length > 1) {
-    acc = initial
-  } else if (this.tail) {
-    walker = this.tail.prev
-    acc = this.tail.value
-  } else {
-    throw new TypeError('Reduce of empty list with no initial value')
-  }
-
-  for (var i = this.length - 1; walker !== null; i--) {
-    acc = fn(acc, walker.value, i)
-    walker = walker.prev
-  }
-
-  return acc
-}
-
-Yallist.prototype.toArray = function () {
-  var arr = new Array(this.length)
-  for (var i = 0, walker = this.head; walker !== null; i++) {
-    arr[i] = walker.value
-    walker = walker.next
-  }
-  return arr
-}
-
-Yallist.prototype.toArrayReverse = function () {
-  var arr = new Array(this.length)
-  for (var i = 0, walker = this.tail; walker !== null; i++) {
-    arr[i] = walker.value
-    walker = walker.prev
-  }
-  return arr
-}
-
-Yallist.prototype.slice = function (from, to) {
-  to = to || this.length
-  if (to < 0) {
-    to += this.length
-  }
-  from = from || 0
-  if (from < 0) {
-    from += this.length
-  }
-  var ret = new Yallist()
-  if (to < from || to < 0) {
-    return ret
-  }
-  if (from < 0) {
-    from = 0
-  }
-  if (to > this.length) {
-    to = this.length
-  }
-  for (var i = 0, walker = this.head; walker !== null && i < from; i++) {
-    walker = walker.next
-  }
-  for (; walker !== null && i < to; i++, walker = walker.next) {
-    ret.push(walker.value)
-  }
-  return ret
-}
-
-Yallist.prototype.sliceReverse = function (from, to) {
-  to = to || this.length
-  if (to < 0) {
-    to += this.length
-  }
-  from = from || 0
-  if (from < 0) {
-    from += this.length
-  }
-  var ret = new Yallist()
-  if (to < from || to < 0) {
-    return ret
-  }
-  if (from < 0) {
-    from = 0
-  }
-  if (to > this.length) {
-    to = this.length
-  }
-  for (var i = this.length, walker = this.tail; walker !== null && i > to; i--) {
-    walker = walker.prev
-  }
-  for (; walker !== null && i > from; i--, walker = walker.prev) {
-    ret.push(walker.value)
-  }
-  return ret
-}
-
-Yallist.prototype.splice = function (start, deleteCount, ...nodes) {
-  if (start > this.length) {
-    start = this.length - 1
-  }
-  if (start < 0) {
-    start = this.length + start;
-  }
-
-  for (var i = 0, walker = this.head; walker !== null && i < start; i++) {
-    walker = walker.next
-  }
-
-  var ret = []
-  for (var i = 0; walker && i < deleteCount; i++) {
-    ret.push(walker.value)
-    walker = this.removeNode(walker)
-  }
-  if (walker === null) {
-    walker = this.tail
-  }
-
-  if (walker !== this.head && walker !== this.tail) {
-    walker = walker.prev
-  }
-
-  for (var i = 0; i < nodes.length; i++) {
-    walker = insert(this, walker, nodes[i])
-  }
-  return ret;
-}
-
-Yallist.prototype.reverse = function () {
-  var head = this.head
-  var tail = this.tail
-  for (var walker = head; walker !== null; walker = walker.prev) {
-    var p = walker.prev
-    walker.prev = walker.next
-    walker.next = p
-  }
-  this.head = tail
-  this.tail = head
-  return this
-}
-
-function insert (self, node, value) {
-  var inserted = node === self.head ?
-    new Node(value, null, node, self) :
-    new Node(value, node, node.next, self)
-
-  if (inserted.next === null) {
-    self.tail = inserted
-  }
-  if (inserted.prev === null) {
-    self.head = inserted
-  }
-
-  self.length++
-
-  return inserted
-}
-
-function push (self, item) {
-  self.tail = new Node(item, self.tail, null, self)
-  if (!self.head) {
-    self.head = self.tail
-  }
-  self.length++
-}
-
-function unshift (self, item) {
-  self.head = new Node(item, null, self.head, self)
-  if (!self.tail) {
-    self.tail = self.head
-  }
-  self.length++
-}
-
-function Node (value, prev, next, list) {
-  if (!(this instanceof Node)) {
-    return new Node(value, prev, next, list)
-  }
-
-  this.list = list
-  this.value = value
-
-  if (prev) {
-    prev.next = this
-    this.prev = prev
-  } else {
-    this.prev = null
-  }
-
-  if (next) {
-    next.prev = this
-    this.next = next
-  } else {
-    this.next = null
-  }
-}
-
-try {
-  // add if support for Symbol.iterator is present
-  __nccwpck_require__(4091)(Yallist)
-} catch (er) {}
-
-
-/***/ }),
-
 /***/ 8992:
 /***/ ((module) => {
 
@@ -50167,7 +48123,7 @@ module.exports = require("zlib");
 
 /***/ }),
 
-/***/ 7259:
+/***/ 153:
 /***/ (function(module, __unused_webpack_exports, __nccwpck_require__) {
 
 "use strict";
@@ -50175,13 +48131,13 @@ module.exports = require("zlib");
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
-const index_js_1 = __importDefault(__nccwpck_require__(4098));
+const index_js_1 = __importDefault(__nccwpck_require__(4878));
 module.exports = Object.assign(index_js_1.default, { default: index_js_1.default, minimatch: index_js_1.default });
 //# sourceMappingURL=index-cjs.js.map
 
 /***/ }),
 
-/***/ 4098:
+/***/ 4878:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
@@ -50266,7 +48222,7 @@ exports.sep = path.sep;
 exports.minimatch.sep = exports.sep;
 exports.GLOBSTAR = Symbol('globstar **');
 exports.minimatch.GLOBSTAR = exports.GLOBSTAR;
-const brace_expansion_1 = __importDefault(__nccwpck_require__(6245));
+const brace_expansion_1 = __importDefault(__nccwpck_require__(4515));
 const plTypes = {
     '!': { open: '(?:(?!(?:', close: '))[^/]*?)' },
     '?': { open: '(?:', close: ')?' },
@@ -51278,6 +49234,2474 @@ exports.minimatch.Minimatch = Minimatch;
 
 /***/ }),
 
+/***/ 4458:
+/***/ ((module) => {
+
+const perf =
+  typeof performance === 'object' &&
+  performance &&
+  typeof performance.now === 'function'
+    ? performance
+    : Date
+
+const hasAbortController = typeof AbortController === 'function'
+
+// minimal backwards-compatibility polyfill
+// this doesn't have nearly all the checks and whatnot that
+// actual AbortController/Signal has, but it's enough for
+// our purposes, and if used properly, behaves the same.
+const AC = hasAbortController
+  ? AbortController
+  : class AbortController {
+      constructor() {
+        this.signal = new AS()
+      }
+      abort(reason = new Error('This operation was aborted')) {
+        this.signal.reason = this.signal.reason || reason
+        this.signal.aborted = true
+        this.signal.dispatchEvent({
+          type: 'abort',
+          target: this.signal,
+        })
+      }
+    }
+
+const hasAbortSignal = typeof AbortSignal === 'function'
+// Some polyfills put this on the AC class, not global
+const hasACAbortSignal = typeof AC.AbortSignal === 'function'
+const AS = hasAbortSignal
+  ? AbortSignal
+  : hasACAbortSignal
+  ? AC.AbortController
+  : class AbortSignal {
+      constructor() {
+        this.reason = undefined
+        this.aborted = false
+        this._listeners = []
+      }
+      dispatchEvent(e) {
+        if (e.type === 'abort') {
+          this.aborted = true
+          this.onabort(e)
+          this._listeners.forEach(f => f(e), this)
+        }
+      }
+      onabort() {}
+      addEventListener(ev, fn) {
+        if (ev === 'abort') {
+          this._listeners.push(fn)
+        }
+      }
+      removeEventListener(ev, fn) {
+        if (ev === 'abort') {
+          this._listeners = this._listeners.filter(f => f !== fn)
+        }
+      }
+    }
+
+const warned = new Set()
+const deprecatedOption = (opt, instead) => {
+  const code = `LRU_CACHE_OPTION_${opt}`
+  if (shouldWarn(code)) {
+    warn(code, `${opt} option`, `options.${instead}`, LRUCache)
+  }
+}
+const deprecatedMethod = (method, instead) => {
+  const code = `LRU_CACHE_METHOD_${method}`
+  if (shouldWarn(code)) {
+    const { prototype } = LRUCache
+    const { get } = Object.getOwnPropertyDescriptor(prototype, method)
+    warn(code, `${method} method`, `cache.${instead}()`, get)
+  }
+}
+const deprecatedProperty = (field, instead) => {
+  const code = `LRU_CACHE_PROPERTY_${field}`
+  if (shouldWarn(code)) {
+    const { prototype } = LRUCache
+    const { get } = Object.getOwnPropertyDescriptor(prototype, field)
+    warn(code, `${field} property`, `cache.${instead}`, get)
+  }
+}
+
+const emitWarning = (...a) => {
+  typeof process === 'object' &&
+  process &&
+  typeof process.emitWarning === 'function'
+    ? process.emitWarning(...a)
+    : console.error(...a)
+}
+
+const shouldWarn = code => !warned.has(code)
+
+const warn = (code, what, instead, fn) => {
+  warned.add(code)
+  const msg = `The ${what} is deprecated. Please use ${instead} instead.`
+  emitWarning(msg, 'DeprecationWarning', code, fn)
+}
+
+const isPosInt = n => n && n === Math.floor(n) && n > 0 && isFinite(n)
+
+/* istanbul ignore next - This is a little bit ridiculous, tbh.
+ * The maximum array length is 2^32-1 or thereabouts on most JS impls.
+ * And well before that point, you're caching the entire world, I mean,
+ * that's ~32GB of just integers for the next/prev links, plus whatever
+ * else to hold that many keys and values.  Just filling the memory with
+ * zeroes at init time is brutal when you get that big.
+ * But why not be complete?
+ * Maybe in the future, these limits will have expanded. */
+const getUintArray = max =>
+  !isPosInt(max)
+    ? null
+    : max <= Math.pow(2, 8)
+    ? Uint8Array
+    : max <= Math.pow(2, 16)
+    ? Uint16Array
+    : max <= Math.pow(2, 32)
+    ? Uint32Array
+    : max <= Number.MAX_SAFE_INTEGER
+    ? ZeroArray
+    : null
+
+class ZeroArray extends Array {
+  constructor(size) {
+    super(size)
+    this.fill(0)
+  }
+}
+
+class Stack {
+  constructor(max) {
+    if (max === 0) {
+      return []
+    }
+    const UintArray = getUintArray(max)
+    this.heap = new UintArray(max)
+    this.length = 0
+  }
+  push(n) {
+    this.heap[this.length++] = n
+  }
+  pop() {
+    return this.heap[--this.length]
+  }
+}
+
+class LRUCache {
+  constructor(options = {}) {
+    const {
+      max = 0,
+      ttl,
+      ttlResolution = 1,
+      ttlAutopurge,
+      updateAgeOnGet,
+      updateAgeOnHas,
+      allowStale,
+      dispose,
+      disposeAfter,
+      noDisposeOnSet,
+      noUpdateTTL,
+      maxSize = 0,
+      maxEntrySize = 0,
+      sizeCalculation,
+      fetchMethod,
+      fetchContext,
+      noDeleteOnFetchRejection,
+      noDeleteOnStaleGet,
+      allowStaleOnFetchRejection,
+      allowStaleOnFetchAbort,
+      ignoreFetchAbort,
+    } = options
+
+    // deprecated options, don't trigger a warning for getting them if
+    // the thing being passed in is another LRUCache we're copying.
+    const { length, maxAge, stale } =
+      options instanceof LRUCache ? {} : options
+
+    if (max !== 0 && !isPosInt(max)) {
+      throw new TypeError('max option must be a nonnegative integer')
+    }
+
+    const UintArray = max ? getUintArray(max) : Array
+    if (!UintArray) {
+      throw new Error('invalid max value: ' + max)
+    }
+
+    this.max = max
+    this.maxSize = maxSize
+    this.maxEntrySize = maxEntrySize || this.maxSize
+    this.sizeCalculation = sizeCalculation || length
+    if (this.sizeCalculation) {
+      if (!this.maxSize && !this.maxEntrySize) {
+        throw new TypeError(
+          'cannot set sizeCalculation without setting maxSize or maxEntrySize'
+        )
+      }
+      if (typeof this.sizeCalculation !== 'function') {
+        throw new TypeError('sizeCalculation set to non-function')
+      }
+    }
+
+    this.fetchMethod = fetchMethod || null
+    if (this.fetchMethod && typeof this.fetchMethod !== 'function') {
+      throw new TypeError(
+        'fetchMethod must be a function if specified'
+      )
+    }
+
+    this.fetchContext = fetchContext
+    if (!this.fetchMethod && fetchContext !== undefined) {
+      throw new TypeError(
+        'cannot set fetchContext without fetchMethod'
+      )
+    }
+
+    this.keyMap = new Map()
+    this.keyList = new Array(max).fill(null)
+    this.valList = new Array(max).fill(null)
+    this.next = new UintArray(max)
+    this.prev = new UintArray(max)
+    this.head = 0
+    this.tail = 0
+    this.free = new Stack(max)
+    this.initialFill = 1
+    this.size = 0
+
+    if (typeof dispose === 'function') {
+      this.dispose = dispose
+    }
+    if (typeof disposeAfter === 'function') {
+      this.disposeAfter = disposeAfter
+      this.disposed = []
+    } else {
+      this.disposeAfter = null
+      this.disposed = null
+    }
+    this.noDisposeOnSet = !!noDisposeOnSet
+    this.noUpdateTTL = !!noUpdateTTL
+    this.noDeleteOnFetchRejection = !!noDeleteOnFetchRejection
+    this.allowStaleOnFetchRejection = !!allowStaleOnFetchRejection
+    this.allowStaleOnFetchAbort = !!allowStaleOnFetchAbort
+    this.ignoreFetchAbort = !!ignoreFetchAbort
+
+    // NB: maxEntrySize is set to maxSize if it's set
+    if (this.maxEntrySize !== 0) {
+      if (this.maxSize !== 0) {
+        if (!isPosInt(this.maxSize)) {
+          throw new TypeError(
+            'maxSize must be a positive integer if specified'
+          )
+        }
+      }
+      if (!isPosInt(this.maxEntrySize)) {
+        throw new TypeError(
+          'maxEntrySize must be a positive integer if specified'
+        )
+      }
+      this.initializeSizeTracking()
+    }
+
+    this.allowStale = !!allowStale || !!stale
+    this.noDeleteOnStaleGet = !!noDeleteOnStaleGet
+    this.updateAgeOnGet = !!updateAgeOnGet
+    this.updateAgeOnHas = !!updateAgeOnHas
+    this.ttlResolution =
+      isPosInt(ttlResolution) || ttlResolution === 0
+        ? ttlResolution
+        : 1
+    this.ttlAutopurge = !!ttlAutopurge
+    this.ttl = ttl || maxAge || 0
+    if (this.ttl) {
+      if (!isPosInt(this.ttl)) {
+        throw new TypeError(
+          'ttl must be a positive integer if specified'
+        )
+      }
+      this.initializeTTLTracking()
+    }
+
+    // do not allow completely unbounded caches
+    if (this.max === 0 && this.ttl === 0 && this.maxSize === 0) {
+      throw new TypeError(
+        'At least one of max, maxSize, or ttl is required'
+      )
+    }
+    if (!this.ttlAutopurge && !this.max && !this.maxSize) {
+      const code = 'LRU_CACHE_UNBOUNDED'
+      if (shouldWarn(code)) {
+        warned.add(code)
+        const msg =
+          'TTL caching without ttlAutopurge, max, or maxSize can ' +
+          'result in unbounded memory consumption.'
+        emitWarning(msg, 'UnboundedCacheWarning', code, LRUCache)
+      }
+    }
+
+    if (stale) {
+      deprecatedOption('stale', 'allowStale')
+    }
+    if (maxAge) {
+      deprecatedOption('maxAge', 'ttl')
+    }
+    if (length) {
+      deprecatedOption('length', 'sizeCalculation')
+    }
+  }
+
+  getRemainingTTL(key) {
+    return this.has(key, { updateAgeOnHas: false }) ? Infinity : 0
+  }
+
+  initializeTTLTracking() {
+    this.ttls = new ZeroArray(this.max)
+    this.starts = new ZeroArray(this.max)
+
+    this.setItemTTL = (index, ttl, start = perf.now()) => {
+      this.starts[index] = ttl !== 0 ? start : 0
+      this.ttls[index] = ttl
+      if (ttl !== 0 && this.ttlAutopurge) {
+        const t = setTimeout(() => {
+          if (this.isStale(index)) {
+            this.delete(this.keyList[index])
+          }
+        }, ttl + 1)
+        /* istanbul ignore else - unref() not supported on all platforms */
+        if (t.unref) {
+          t.unref()
+        }
+      }
+    }
+
+    this.updateItemAge = index => {
+      this.starts[index] = this.ttls[index] !== 0 ? perf.now() : 0
+    }
+
+    this.statusTTL = (status, index) => {
+      if (status) {
+        status.ttl = this.ttls[index]
+        status.start = this.starts[index]
+        status.now = cachedNow || getNow()
+        status.remainingTTL = status.now + status.ttl - status.start
+      }
+    }
+
+    // debounce calls to perf.now() to 1s so we're not hitting
+    // that costly call repeatedly.
+    let cachedNow = 0
+    const getNow = () => {
+      const n = perf.now()
+      if (this.ttlResolution > 0) {
+        cachedNow = n
+        const t = setTimeout(
+          () => (cachedNow = 0),
+          this.ttlResolution
+        )
+        /* istanbul ignore else - not available on all platforms */
+        if (t.unref) {
+          t.unref()
+        }
+      }
+      return n
+    }
+
+    this.getRemainingTTL = key => {
+      const index = this.keyMap.get(key)
+      if (index === undefined) {
+        return 0
+      }
+      return this.ttls[index] === 0 || this.starts[index] === 0
+        ? Infinity
+        : this.starts[index] +
+            this.ttls[index] -
+            (cachedNow || getNow())
+    }
+
+    this.isStale = index => {
+      return (
+        this.ttls[index] !== 0 &&
+        this.starts[index] !== 0 &&
+        (cachedNow || getNow()) - this.starts[index] >
+          this.ttls[index]
+      )
+    }
+  }
+  updateItemAge(_index) {}
+  statusTTL(_status, _index) {}
+  setItemTTL(_index, _ttl, _start) {}
+  isStale(_index) {
+    return false
+  }
+
+  initializeSizeTracking() {
+    this.calculatedSize = 0
+    this.sizes = new ZeroArray(this.max)
+    this.removeItemSize = index => {
+      this.calculatedSize -= this.sizes[index]
+      this.sizes[index] = 0
+    }
+    this.requireSize = (k, v, size, sizeCalculation) => {
+      // provisionally accept background fetches.
+      // actual value size will be checked when they return.
+      if (this.isBackgroundFetch(v)) {
+        return 0
+      }
+      if (!isPosInt(size)) {
+        if (sizeCalculation) {
+          if (typeof sizeCalculation !== 'function') {
+            throw new TypeError('sizeCalculation must be a function')
+          }
+          size = sizeCalculation(v, k)
+          if (!isPosInt(size)) {
+            throw new TypeError(
+              'sizeCalculation return invalid (expect positive integer)'
+            )
+          }
+        } else {
+          throw new TypeError(
+            'invalid size value (must be positive integer). ' +
+              'When maxSize or maxEntrySize is used, sizeCalculation or size ' +
+              'must be set.'
+          )
+        }
+      }
+      return size
+    }
+    this.addItemSize = (index, size, status) => {
+      this.sizes[index] = size
+      if (this.maxSize) {
+        const maxSize = this.maxSize - this.sizes[index]
+        while (this.calculatedSize > maxSize) {
+          this.evict(true)
+        }
+      }
+      this.calculatedSize += this.sizes[index]
+      if (status) {
+        status.entrySize = size
+        status.totalCalculatedSize = this.calculatedSize
+      }
+    }
+  }
+  removeItemSize(_index) {}
+  addItemSize(_index, _size) {}
+  requireSize(_k, _v, size, sizeCalculation) {
+    if (size || sizeCalculation) {
+      throw new TypeError(
+        'cannot set size without setting maxSize or maxEntrySize on cache'
+      )
+    }
+  }
+
+  *indexes({ allowStale = this.allowStale } = {}) {
+    if (this.size) {
+      for (let i = this.tail; true; ) {
+        if (!this.isValidIndex(i)) {
+          break
+        }
+        if (allowStale || !this.isStale(i)) {
+          yield i
+        }
+        if (i === this.head) {
+          break
+        } else {
+          i = this.prev[i]
+        }
+      }
+    }
+  }
+
+  *rindexes({ allowStale = this.allowStale } = {}) {
+    if (this.size) {
+      for (let i = this.head; true; ) {
+        if (!this.isValidIndex(i)) {
+          break
+        }
+        if (allowStale || !this.isStale(i)) {
+          yield i
+        }
+        if (i === this.tail) {
+          break
+        } else {
+          i = this.next[i]
+        }
+      }
+    }
+  }
+
+  isValidIndex(index) {
+    return (
+      index !== undefined &&
+      this.keyMap.get(this.keyList[index]) === index
+    )
+  }
+
+  *entries() {
+    for (const i of this.indexes()) {
+      if (
+        this.valList[i] !== undefined &&
+        this.keyList[i] !== undefined &&
+        !this.isBackgroundFetch(this.valList[i])
+      ) {
+        yield [this.keyList[i], this.valList[i]]
+      }
+    }
+  }
+  *rentries() {
+    for (const i of this.rindexes()) {
+      if (
+        this.valList[i] !== undefined &&
+        this.keyList[i] !== undefined &&
+        !this.isBackgroundFetch(this.valList[i])
+      ) {
+        yield [this.keyList[i], this.valList[i]]
+      }
+    }
+  }
+
+  *keys() {
+    for (const i of this.indexes()) {
+      if (
+        this.keyList[i] !== undefined &&
+        !this.isBackgroundFetch(this.valList[i])
+      ) {
+        yield this.keyList[i]
+      }
+    }
+  }
+  *rkeys() {
+    for (const i of this.rindexes()) {
+      if (
+        this.keyList[i] !== undefined &&
+        !this.isBackgroundFetch(this.valList[i])
+      ) {
+        yield this.keyList[i]
+      }
+    }
+  }
+
+  *values() {
+    for (const i of this.indexes()) {
+      if (
+        this.valList[i] !== undefined &&
+        !this.isBackgroundFetch(this.valList[i])
+      ) {
+        yield this.valList[i]
+      }
+    }
+  }
+  *rvalues() {
+    for (const i of this.rindexes()) {
+      if (
+        this.valList[i] !== undefined &&
+        !this.isBackgroundFetch(this.valList[i])
+      ) {
+        yield this.valList[i]
+      }
+    }
+  }
+
+  [Symbol.iterator]() {
+    return this.entries()
+  }
+
+  find(fn, getOptions) {
+    for (const i of this.indexes()) {
+      const v = this.valList[i]
+      const value = this.isBackgroundFetch(v)
+        ? v.__staleWhileFetching
+        : v
+      if (value === undefined) continue
+      if (fn(value, this.keyList[i], this)) {
+        return this.get(this.keyList[i], getOptions)
+      }
+    }
+  }
+
+  forEach(fn, thisp = this) {
+    for (const i of this.indexes()) {
+      const v = this.valList[i]
+      const value = this.isBackgroundFetch(v)
+        ? v.__staleWhileFetching
+        : v
+      if (value === undefined) continue
+      fn.call(thisp, value, this.keyList[i], this)
+    }
+  }
+
+  rforEach(fn, thisp = this) {
+    for (const i of this.rindexes()) {
+      const v = this.valList[i]
+      const value = this.isBackgroundFetch(v)
+        ? v.__staleWhileFetching
+        : v
+      if (value === undefined) continue
+      fn.call(thisp, value, this.keyList[i], this)
+    }
+  }
+
+  get prune() {
+    deprecatedMethod('prune', 'purgeStale')
+    return this.purgeStale
+  }
+
+  purgeStale() {
+    let deleted = false
+    for (const i of this.rindexes({ allowStale: true })) {
+      if (this.isStale(i)) {
+        this.delete(this.keyList[i])
+        deleted = true
+      }
+    }
+    return deleted
+  }
+
+  dump() {
+    const arr = []
+    for (const i of this.indexes({ allowStale: true })) {
+      const key = this.keyList[i]
+      const v = this.valList[i]
+      const value = this.isBackgroundFetch(v)
+        ? v.__staleWhileFetching
+        : v
+      if (value === undefined) continue
+      const entry = { value }
+      if (this.ttls) {
+        entry.ttl = this.ttls[i]
+        // always dump the start relative to a portable timestamp
+        // it's ok for this to be a bit slow, it's a rare operation.
+        const age = perf.now() - this.starts[i]
+        entry.start = Math.floor(Date.now() - age)
+      }
+      if (this.sizes) {
+        entry.size = this.sizes[i]
+      }
+      arr.unshift([key, entry])
+    }
+    return arr
+  }
+
+  load(arr) {
+    this.clear()
+    for (const [key, entry] of arr) {
+      if (entry.start) {
+        // entry.start is a portable timestamp, but we may be using
+        // node's performance.now(), so calculate the offset.
+        // it's ok for this to be a bit slow, it's a rare operation.
+        const age = Date.now() - entry.start
+        entry.start = perf.now() - age
+      }
+      this.set(key, entry.value, entry)
+    }
+  }
+
+  dispose(_v, _k, _reason) {}
+
+  set(
+    k,
+    v,
+    {
+      ttl = this.ttl,
+      start,
+      noDisposeOnSet = this.noDisposeOnSet,
+      size = 0,
+      sizeCalculation = this.sizeCalculation,
+      noUpdateTTL = this.noUpdateTTL,
+      status,
+    } = {}
+  ) {
+    size = this.requireSize(k, v, size, sizeCalculation)
+    // if the item doesn't fit, don't do anything
+    // NB: maxEntrySize set to maxSize by default
+    if (this.maxEntrySize && size > this.maxEntrySize) {
+      if (status) {
+        status.set = 'miss'
+        status.maxEntrySizeExceeded = true
+      }
+      // have to delete, in case a background fetch is there already.
+      // in non-async cases, this is a no-op
+      this.delete(k)
+      return this
+    }
+    let index = this.size === 0 ? undefined : this.keyMap.get(k)
+    if (index === undefined) {
+      // addition
+      index = this.newIndex()
+      this.keyList[index] = k
+      this.valList[index] = v
+      this.keyMap.set(k, index)
+      this.next[this.tail] = index
+      this.prev[index] = this.tail
+      this.tail = index
+      this.size++
+      this.addItemSize(index, size, status)
+      if (status) {
+        status.set = 'add'
+      }
+      noUpdateTTL = false
+    } else {
+      // update
+      this.moveToTail(index)
+      const oldVal = this.valList[index]
+      if (v !== oldVal) {
+        if (this.isBackgroundFetch(oldVal)) {
+          oldVal.__abortController.abort(new Error('replaced'))
+        } else {
+          if (!noDisposeOnSet) {
+            this.dispose(oldVal, k, 'set')
+            if (this.disposeAfter) {
+              this.disposed.push([oldVal, k, 'set'])
+            }
+          }
+        }
+        this.removeItemSize(index)
+        this.valList[index] = v
+        this.addItemSize(index, size, status)
+        if (status) {
+          status.set = 'replace'
+          const oldValue =
+            oldVal && this.isBackgroundFetch(oldVal)
+              ? oldVal.__staleWhileFetching
+              : oldVal
+          if (oldValue !== undefined) status.oldValue = oldValue
+        }
+      } else if (status) {
+        status.set = 'update'
+      }
+    }
+    if (ttl !== 0 && this.ttl === 0 && !this.ttls) {
+      this.initializeTTLTracking()
+    }
+    if (!noUpdateTTL) {
+      this.setItemTTL(index, ttl, start)
+    }
+    this.statusTTL(status, index)
+    if (this.disposeAfter) {
+      while (this.disposed.length) {
+        this.disposeAfter(...this.disposed.shift())
+      }
+    }
+    return this
+  }
+
+  newIndex() {
+    if (this.size === 0) {
+      return this.tail
+    }
+    if (this.size === this.max && this.max !== 0) {
+      return this.evict(false)
+    }
+    if (this.free.length !== 0) {
+      return this.free.pop()
+    }
+    // initial fill, just keep writing down the list
+    return this.initialFill++
+  }
+
+  pop() {
+    if (this.size) {
+      const val = this.valList[this.head]
+      this.evict(true)
+      return val
+    }
+  }
+
+  evict(free) {
+    const head = this.head
+    const k = this.keyList[head]
+    const v = this.valList[head]
+    if (this.isBackgroundFetch(v)) {
+      v.__abortController.abort(new Error('evicted'))
+    } else {
+      this.dispose(v, k, 'evict')
+      if (this.disposeAfter) {
+        this.disposed.push([v, k, 'evict'])
+      }
+    }
+    this.removeItemSize(head)
+    // if we aren't about to use the index, then null these out
+    if (free) {
+      this.keyList[head] = null
+      this.valList[head] = null
+      this.free.push(head)
+    }
+    this.head = this.next[head]
+    this.keyMap.delete(k)
+    this.size--
+    return head
+  }
+
+  has(k, { updateAgeOnHas = this.updateAgeOnHas, status } = {}) {
+    const index = this.keyMap.get(k)
+    if (index !== undefined) {
+      if (!this.isStale(index)) {
+        if (updateAgeOnHas) {
+          this.updateItemAge(index)
+        }
+        if (status) status.has = 'hit'
+        this.statusTTL(status, index)
+        return true
+      } else if (status) {
+        status.has = 'stale'
+        this.statusTTL(status, index)
+      }
+    } else if (status) {
+      status.has = 'miss'
+    }
+    return false
+  }
+
+  // like get(), but without any LRU updating or TTL expiration
+  peek(k, { allowStale = this.allowStale } = {}) {
+    const index = this.keyMap.get(k)
+    if (index !== undefined && (allowStale || !this.isStale(index))) {
+      const v = this.valList[index]
+      // either stale and allowed, or forcing a refresh of non-stale value
+      return this.isBackgroundFetch(v) ? v.__staleWhileFetching : v
+    }
+  }
+
+  backgroundFetch(k, index, options, context) {
+    const v = index === undefined ? undefined : this.valList[index]
+    if (this.isBackgroundFetch(v)) {
+      return v
+    }
+    const ac = new AC()
+    if (options.signal) {
+      options.signal.addEventListener('abort', () =>
+        ac.abort(options.signal.reason)
+      )
+    }
+    const fetchOpts = {
+      signal: ac.signal,
+      options,
+      context,
+    }
+    const cb = (v, updateCache = false) => {
+      const { aborted } = ac.signal
+      const ignoreAbort = options.ignoreFetchAbort && v !== undefined
+      if (options.status) {
+        if (aborted && !updateCache) {
+          options.status.fetchAborted = true
+          options.status.fetchError = ac.signal.reason
+          if (ignoreAbort) options.status.fetchAbortIgnored = true
+        } else {
+          options.status.fetchResolved = true
+        }
+      }
+      if (aborted && !ignoreAbort && !updateCache) {
+        return fetchFail(ac.signal.reason)
+      }
+      // either we didn't abort, and are still here, or we did, and ignored
+      if (this.valList[index] === p) {
+        if (v === undefined) {
+          if (p.__staleWhileFetching) {
+            this.valList[index] = p.__staleWhileFetching
+          } else {
+            this.delete(k)
+          }
+        } else {
+          if (options.status) options.status.fetchUpdated = true
+          this.set(k, v, fetchOpts.options)
+        }
+      }
+      return v
+    }
+    const eb = er => {
+      if (options.status) {
+        options.status.fetchRejected = true
+        options.status.fetchError = er
+      }
+      return fetchFail(er)
+    }
+    const fetchFail = er => {
+      const { aborted } = ac.signal
+      const allowStaleAborted =
+        aborted && options.allowStaleOnFetchAbort
+      const allowStale =
+        allowStaleAborted || options.allowStaleOnFetchRejection
+      const noDelete = allowStale || options.noDeleteOnFetchRejection
+      if (this.valList[index] === p) {
+        // if we allow stale on fetch rejections, then we need to ensure that
+        // the stale value is not removed from the cache when the fetch fails.
+        const del = !noDelete || p.__staleWhileFetching === undefined
+        if (del) {
+          this.delete(k)
+        } else if (!allowStaleAborted) {
+          // still replace the *promise* with the stale value,
+          // since we are done with the promise at this point.
+          // leave it untouched if we're still waiting for an
+          // aborted background fetch that hasn't yet returned.
+          this.valList[index] = p.__staleWhileFetching
+        }
+      }
+      if (allowStale) {
+        if (options.status && p.__staleWhileFetching !== undefined) {
+          options.status.returnedStale = true
+        }
+        return p.__staleWhileFetching
+      } else if (p.__returned === p) {
+        throw er
+      }
+    }
+    const pcall = (res, rej) => {
+      this.fetchMethod(k, v, fetchOpts).then(v => res(v), rej)
+      // ignored, we go until we finish, regardless.
+      // defer check until we are actually aborting,
+      // so fetchMethod can override.
+      ac.signal.addEventListener('abort', () => {
+        if (
+          !options.ignoreFetchAbort ||
+          options.allowStaleOnFetchAbort
+        ) {
+          res()
+          // when it eventually resolves, update the cache.
+          if (options.allowStaleOnFetchAbort) {
+            res = v => cb(v, true)
+          }
+        }
+      })
+    }
+    if (options.status) options.status.fetchDispatched = true
+    const p = new Promise(pcall).then(cb, eb)
+    p.__abortController = ac
+    p.__staleWhileFetching = v
+    p.__returned = null
+    if (index === undefined) {
+      // internal, don't expose status.
+      this.set(k, p, { ...fetchOpts.options, status: undefined })
+      index = this.keyMap.get(k)
+    } else {
+      this.valList[index] = p
+    }
+    return p
+  }
+
+  isBackgroundFetch(p) {
+    return (
+      p &&
+      typeof p === 'object' &&
+      typeof p.then === 'function' &&
+      Object.prototype.hasOwnProperty.call(
+        p,
+        '__staleWhileFetching'
+      ) &&
+      Object.prototype.hasOwnProperty.call(p, '__returned') &&
+      (p.__returned === p || p.__returned === null)
+    )
+  }
+
+  // this takes the union of get() and set() opts, because it does both
+  async fetch(
+    k,
+    {
+      // get options
+      allowStale = this.allowStale,
+      updateAgeOnGet = this.updateAgeOnGet,
+      noDeleteOnStaleGet = this.noDeleteOnStaleGet,
+      // set options
+      ttl = this.ttl,
+      noDisposeOnSet = this.noDisposeOnSet,
+      size = 0,
+      sizeCalculation = this.sizeCalculation,
+      noUpdateTTL = this.noUpdateTTL,
+      // fetch exclusive options
+      noDeleteOnFetchRejection = this.noDeleteOnFetchRejection,
+      allowStaleOnFetchRejection = this.allowStaleOnFetchRejection,
+      ignoreFetchAbort = this.ignoreFetchAbort,
+      allowStaleOnFetchAbort = this.allowStaleOnFetchAbort,
+      fetchContext = this.fetchContext,
+      forceRefresh = false,
+      status,
+      signal,
+    } = {}
+  ) {
+    if (!this.fetchMethod) {
+      if (status) status.fetch = 'get'
+      return this.get(k, {
+        allowStale,
+        updateAgeOnGet,
+        noDeleteOnStaleGet,
+        status,
+      })
+    }
+
+    const options = {
+      allowStale,
+      updateAgeOnGet,
+      noDeleteOnStaleGet,
+      ttl,
+      noDisposeOnSet,
+      size,
+      sizeCalculation,
+      noUpdateTTL,
+      noDeleteOnFetchRejection,
+      allowStaleOnFetchRejection,
+      allowStaleOnFetchAbort,
+      ignoreFetchAbort,
+      status,
+      signal,
+    }
+
+    let index = this.keyMap.get(k)
+    if (index === undefined) {
+      if (status) status.fetch = 'miss'
+      const p = this.backgroundFetch(k, index, options, fetchContext)
+      return (p.__returned = p)
+    } else {
+      // in cache, maybe already fetching
+      const v = this.valList[index]
+      if (this.isBackgroundFetch(v)) {
+        const stale =
+          allowStale && v.__staleWhileFetching !== undefined
+        if (status) {
+          status.fetch = 'inflight'
+          if (stale) status.returnedStale = true
+        }
+        return stale ? v.__staleWhileFetching : (v.__returned = v)
+      }
+
+      // if we force a refresh, that means do NOT serve the cached value,
+      // unless we are already in the process of refreshing the cache.
+      const isStale = this.isStale(index)
+      if (!forceRefresh && !isStale) {
+        if (status) status.fetch = 'hit'
+        this.moveToTail(index)
+        if (updateAgeOnGet) {
+          this.updateItemAge(index)
+        }
+        this.statusTTL(status, index)
+        return v
+      }
+
+      // ok, it is stale or a forced refresh, and not already fetching.
+      // refresh the cache.
+      const p = this.backgroundFetch(k, index, options, fetchContext)
+      const hasStale = p.__staleWhileFetching !== undefined
+      const staleVal = hasStale && allowStale
+      if (status) {
+        status.fetch = hasStale && isStale ? 'stale' : 'refresh'
+        if (staleVal && isStale) status.returnedStale = true
+      }
+      return staleVal ? p.__staleWhileFetching : (p.__returned = p)
+    }
+  }
+
+  get(
+    k,
+    {
+      allowStale = this.allowStale,
+      updateAgeOnGet = this.updateAgeOnGet,
+      noDeleteOnStaleGet = this.noDeleteOnStaleGet,
+      status,
+    } = {}
+  ) {
+    const index = this.keyMap.get(k)
+    if (index !== undefined) {
+      const value = this.valList[index]
+      const fetching = this.isBackgroundFetch(value)
+      this.statusTTL(status, index)
+      if (this.isStale(index)) {
+        if (status) status.get = 'stale'
+        // delete only if not an in-flight background fetch
+        if (!fetching) {
+          if (!noDeleteOnStaleGet) {
+            this.delete(k)
+          }
+          if (status) status.returnedStale = allowStale
+          return allowStale ? value : undefined
+        } else {
+          if (status) {
+            status.returnedStale =
+              allowStale && value.__staleWhileFetching !== undefined
+          }
+          return allowStale ? value.__staleWhileFetching : undefined
+        }
+      } else {
+        if (status) status.get = 'hit'
+        // if we're currently fetching it, we don't actually have it yet
+        // it's not stale, which means this isn't a staleWhileRefetching.
+        // If it's not stale, and fetching, AND has a __staleWhileFetching
+        // value, then that means the user fetched with {forceRefresh:true},
+        // so it's safe to return that value.
+        if (fetching) {
+          return value.__staleWhileFetching
+        }
+        this.moveToTail(index)
+        if (updateAgeOnGet) {
+          this.updateItemAge(index)
+        }
+        return value
+      }
+    } else if (status) {
+      status.get = 'miss'
+    }
+  }
+
+  connect(p, n) {
+    this.prev[n] = p
+    this.next[p] = n
+  }
+
+  moveToTail(index) {
+    // if tail already, nothing to do
+    // if head, move head to next[index]
+    // else
+    //   move next[prev[index]] to next[index] (head has no prev)
+    //   move prev[next[index]] to prev[index]
+    // prev[index] = tail
+    // next[tail] = index
+    // tail = index
+    if (index !== this.tail) {
+      if (index === this.head) {
+        this.head = this.next[index]
+      } else {
+        this.connect(this.prev[index], this.next[index])
+      }
+      this.connect(this.tail, index)
+      this.tail = index
+    }
+  }
+
+  get del() {
+    deprecatedMethod('del', 'delete')
+    return this.delete
+  }
+
+  delete(k) {
+    let deleted = false
+    if (this.size !== 0) {
+      const index = this.keyMap.get(k)
+      if (index !== undefined) {
+        deleted = true
+        if (this.size === 1) {
+          this.clear()
+        } else {
+          this.removeItemSize(index)
+          const v = this.valList[index]
+          if (this.isBackgroundFetch(v)) {
+            v.__abortController.abort(new Error('deleted'))
+          } else {
+            this.dispose(v, k, 'delete')
+            if (this.disposeAfter) {
+              this.disposed.push([v, k, 'delete'])
+            }
+          }
+          this.keyMap.delete(k)
+          this.keyList[index] = null
+          this.valList[index] = null
+          if (index === this.tail) {
+            this.tail = this.prev[index]
+          } else if (index === this.head) {
+            this.head = this.next[index]
+          } else {
+            this.next[this.prev[index]] = this.next[index]
+            this.prev[this.next[index]] = this.prev[index]
+          }
+          this.size--
+          this.free.push(index)
+        }
+      }
+    }
+    if (this.disposed) {
+      while (this.disposed.length) {
+        this.disposeAfter(...this.disposed.shift())
+      }
+    }
+    return deleted
+  }
+
+  clear() {
+    for (const index of this.rindexes({ allowStale: true })) {
+      const v = this.valList[index]
+      if (this.isBackgroundFetch(v)) {
+        v.__abortController.abort(new Error('deleted'))
+      } else {
+        const k = this.keyList[index]
+        this.dispose(v, k, 'delete')
+        if (this.disposeAfter) {
+          this.disposed.push([v, k, 'delete'])
+        }
+      }
+    }
+
+    this.keyMap.clear()
+    this.valList.fill(null)
+    this.keyList.fill(null)
+    if (this.ttls) {
+      this.ttls.fill(0)
+      this.starts.fill(0)
+    }
+    if (this.sizes) {
+      this.sizes.fill(0)
+    }
+    this.head = 0
+    this.tail = 0
+    this.initialFill = 1
+    this.free.length = 0
+    this.calculatedSize = 0
+    this.size = 0
+    if (this.disposed) {
+      while (this.disposed.length) {
+        this.disposeAfter(...this.disposed.shift())
+      }
+    }
+  }
+
+  get reset() {
+    deprecatedMethod('reset', 'clear')
+    return this.clear
+  }
+
+  get length() {
+    deprecatedProperty('length', 'size')
+    return this.size
+  }
+
+  static get AbortController() {
+    return AC
+  }
+  static get AbortSignal() {
+    return AS
+  }
+}
+
+module.exports = LRUCache
+
+
+/***/ }),
+
+/***/ 8187:
+/***/ ((module) => {
+
+const perf =
+  typeof performance === 'object' &&
+  performance &&
+  typeof performance.now === 'function'
+    ? performance
+    : Date
+
+const hasAbortController = typeof AbortController === 'function'
+
+// minimal backwards-compatibility polyfill
+// this doesn't have nearly all the checks and whatnot that
+// actual AbortController/Signal has, but it's enough for
+// our purposes, and if used properly, behaves the same.
+const AC = hasAbortController
+  ? AbortController
+  : class AbortController {
+      constructor() {
+        this.signal = new AS()
+      }
+      abort(reason = new Error('This operation was aborted')) {
+        this.signal.reason = this.signal.reason || reason
+        this.signal.aborted = true
+        this.signal.dispatchEvent({
+          type: 'abort',
+          target: this.signal,
+        })
+      }
+    }
+
+const hasAbortSignal = typeof AbortSignal === 'function'
+// Some polyfills put this on the AC class, not global
+const hasACAbortSignal = typeof AC.AbortSignal === 'function'
+const AS = hasAbortSignal
+  ? AbortSignal
+  : hasACAbortSignal
+  ? AC.AbortController
+  : class AbortSignal {
+      constructor() {
+        this.reason = undefined
+        this.aborted = false
+        this._listeners = []
+      }
+      dispatchEvent(e) {
+        if (e.type === 'abort') {
+          this.aborted = true
+          this.onabort(e)
+          this._listeners.forEach(f => f(e), this)
+        }
+      }
+      onabort() {}
+      addEventListener(ev, fn) {
+        if (ev === 'abort') {
+          this._listeners.push(fn)
+        }
+      }
+      removeEventListener(ev, fn) {
+        if (ev === 'abort') {
+          this._listeners = this._listeners.filter(f => f !== fn)
+        }
+      }
+    }
+
+const warned = new Set()
+const deprecatedOption = (opt, instead) => {
+  const code = `LRU_CACHE_OPTION_${opt}`
+  if (shouldWarn(code)) {
+    warn(code, `${opt} option`, `options.${instead}`, LRUCache)
+  }
+}
+const deprecatedMethod = (method, instead) => {
+  const code = `LRU_CACHE_METHOD_${method}`
+  if (shouldWarn(code)) {
+    const { prototype } = LRUCache
+    const { get } = Object.getOwnPropertyDescriptor(prototype, method)
+    warn(code, `${method} method`, `cache.${instead}()`, get)
+  }
+}
+const deprecatedProperty = (field, instead) => {
+  const code = `LRU_CACHE_PROPERTY_${field}`
+  if (shouldWarn(code)) {
+    const { prototype } = LRUCache
+    const { get } = Object.getOwnPropertyDescriptor(prototype, field)
+    warn(code, `${field} property`, `cache.${instead}`, get)
+  }
+}
+
+const emitWarning = (...a) => {
+  typeof process === 'object' &&
+  process &&
+  typeof process.emitWarning === 'function'
+    ? process.emitWarning(...a)
+    : console.error(...a)
+}
+
+const shouldWarn = code => !warned.has(code)
+
+const warn = (code, what, instead, fn) => {
+  warned.add(code)
+  const msg = `The ${what} is deprecated. Please use ${instead} instead.`
+  emitWarning(msg, 'DeprecationWarning', code, fn)
+}
+
+const isPosInt = n => n && n === Math.floor(n) && n > 0 && isFinite(n)
+
+/* istanbul ignore next - This is a little bit ridiculous, tbh.
+ * The maximum array length is 2^32-1 or thereabouts on most JS impls.
+ * And well before that point, you're caching the entire world, I mean,
+ * that's ~32GB of just integers for the next/prev links, plus whatever
+ * else to hold that many keys and values.  Just filling the memory with
+ * zeroes at init time is brutal when you get that big.
+ * But why not be complete?
+ * Maybe in the future, these limits will have expanded. */
+const getUintArray = max =>
+  !isPosInt(max)
+    ? null
+    : max <= Math.pow(2, 8)
+    ? Uint8Array
+    : max <= Math.pow(2, 16)
+    ? Uint16Array
+    : max <= Math.pow(2, 32)
+    ? Uint32Array
+    : max <= Number.MAX_SAFE_INTEGER
+    ? ZeroArray
+    : null
+
+class ZeroArray extends Array {
+  constructor(size) {
+    super(size)
+    this.fill(0)
+  }
+}
+
+class Stack {
+  constructor(max) {
+    if (max === 0) {
+      return []
+    }
+    const UintArray = getUintArray(max)
+    this.heap = new UintArray(max)
+    this.length = 0
+  }
+  push(n) {
+    this.heap[this.length++] = n
+  }
+  pop() {
+    return this.heap[--this.length]
+  }
+}
+
+class LRUCache {
+  constructor(options = {}) {
+    const {
+      max = 0,
+      ttl,
+      ttlResolution = 1,
+      ttlAutopurge,
+      updateAgeOnGet,
+      updateAgeOnHas,
+      allowStale,
+      dispose,
+      disposeAfter,
+      noDisposeOnSet,
+      noUpdateTTL,
+      maxSize = 0,
+      maxEntrySize = 0,
+      sizeCalculation,
+      fetchMethod,
+      fetchContext,
+      noDeleteOnFetchRejection,
+      noDeleteOnStaleGet,
+      allowStaleOnFetchRejection,
+      allowStaleOnFetchAbort,
+      ignoreFetchAbort,
+    } = options
+
+    // deprecated options, don't trigger a warning for getting them if
+    // the thing being passed in is another LRUCache we're copying.
+    const { length, maxAge, stale } =
+      options instanceof LRUCache ? {} : options
+
+    if (max !== 0 && !isPosInt(max)) {
+      throw new TypeError('max option must be a nonnegative integer')
+    }
+
+    const UintArray = max ? getUintArray(max) : Array
+    if (!UintArray) {
+      throw new Error('invalid max value: ' + max)
+    }
+
+    this.max = max
+    this.maxSize = maxSize
+    this.maxEntrySize = maxEntrySize || this.maxSize
+    this.sizeCalculation = sizeCalculation || length
+    if (this.sizeCalculation) {
+      if (!this.maxSize && !this.maxEntrySize) {
+        throw new TypeError(
+          'cannot set sizeCalculation without setting maxSize or maxEntrySize'
+        )
+      }
+      if (typeof this.sizeCalculation !== 'function') {
+        throw new TypeError('sizeCalculation set to non-function')
+      }
+    }
+
+    this.fetchMethod = fetchMethod || null
+    if (this.fetchMethod && typeof this.fetchMethod !== 'function') {
+      throw new TypeError(
+        'fetchMethod must be a function if specified'
+      )
+    }
+
+    this.fetchContext = fetchContext
+    if (!this.fetchMethod && fetchContext !== undefined) {
+      throw new TypeError(
+        'cannot set fetchContext without fetchMethod'
+      )
+    }
+
+    this.keyMap = new Map()
+    this.keyList = new Array(max).fill(null)
+    this.valList = new Array(max).fill(null)
+    this.next = new UintArray(max)
+    this.prev = new UintArray(max)
+    this.head = 0
+    this.tail = 0
+    this.free = new Stack(max)
+    this.initialFill = 1
+    this.size = 0
+
+    if (typeof dispose === 'function') {
+      this.dispose = dispose
+    }
+    if (typeof disposeAfter === 'function') {
+      this.disposeAfter = disposeAfter
+      this.disposed = []
+    } else {
+      this.disposeAfter = null
+      this.disposed = null
+    }
+    this.noDisposeOnSet = !!noDisposeOnSet
+    this.noUpdateTTL = !!noUpdateTTL
+    this.noDeleteOnFetchRejection = !!noDeleteOnFetchRejection
+    this.allowStaleOnFetchRejection = !!allowStaleOnFetchRejection
+    this.allowStaleOnFetchAbort = !!allowStaleOnFetchAbort
+    this.ignoreFetchAbort = !!ignoreFetchAbort
+
+    // NB: maxEntrySize is set to maxSize if it's set
+    if (this.maxEntrySize !== 0) {
+      if (this.maxSize !== 0) {
+        if (!isPosInt(this.maxSize)) {
+          throw new TypeError(
+            'maxSize must be a positive integer if specified'
+          )
+        }
+      }
+      if (!isPosInt(this.maxEntrySize)) {
+        throw new TypeError(
+          'maxEntrySize must be a positive integer if specified'
+        )
+      }
+      this.initializeSizeTracking()
+    }
+
+    this.allowStale = !!allowStale || !!stale
+    this.noDeleteOnStaleGet = !!noDeleteOnStaleGet
+    this.updateAgeOnGet = !!updateAgeOnGet
+    this.updateAgeOnHas = !!updateAgeOnHas
+    this.ttlResolution =
+      isPosInt(ttlResolution) || ttlResolution === 0
+        ? ttlResolution
+        : 1
+    this.ttlAutopurge = !!ttlAutopurge
+    this.ttl = ttl || maxAge || 0
+    if (this.ttl) {
+      if (!isPosInt(this.ttl)) {
+        throw new TypeError(
+          'ttl must be a positive integer if specified'
+        )
+      }
+      this.initializeTTLTracking()
+    }
+
+    // do not allow completely unbounded caches
+    if (this.max === 0 && this.ttl === 0 && this.maxSize === 0) {
+      throw new TypeError(
+        'At least one of max, maxSize, or ttl is required'
+      )
+    }
+    if (!this.ttlAutopurge && !this.max && !this.maxSize) {
+      const code = 'LRU_CACHE_UNBOUNDED'
+      if (shouldWarn(code)) {
+        warned.add(code)
+        const msg =
+          'TTL caching without ttlAutopurge, max, or maxSize can ' +
+          'result in unbounded memory consumption.'
+        emitWarning(msg, 'UnboundedCacheWarning', code, LRUCache)
+      }
+    }
+
+    if (stale) {
+      deprecatedOption('stale', 'allowStale')
+    }
+    if (maxAge) {
+      deprecatedOption('maxAge', 'ttl')
+    }
+    if (length) {
+      deprecatedOption('length', 'sizeCalculation')
+    }
+  }
+
+  getRemainingTTL(key) {
+    return this.has(key, { updateAgeOnHas: false }) ? Infinity : 0
+  }
+
+  initializeTTLTracking() {
+    this.ttls = new ZeroArray(this.max)
+    this.starts = new ZeroArray(this.max)
+
+    this.setItemTTL = (index, ttl, start = perf.now()) => {
+      this.starts[index] = ttl !== 0 ? start : 0
+      this.ttls[index] = ttl
+      if (ttl !== 0 && this.ttlAutopurge) {
+        const t = setTimeout(() => {
+          if (this.isStale(index)) {
+            this.delete(this.keyList[index])
+          }
+        }, ttl + 1)
+        /* istanbul ignore else - unref() not supported on all platforms */
+        if (t.unref) {
+          t.unref()
+        }
+      }
+    }
+
+    this.updateItemAge = index => {
+      this.starts[index] = this.ttls[index] !== 0 ? perf.now() : 0
+    }
+
+    this.statusTTL = (status, index) => {
+      if (status) {
+        status.ttl = this.ttls[index]
+        status.start = this.starts[index]
+        status.now = cachedNow || getNow()
+        status.remainingTTL = status.now + status.ttl - status.start
+      }
+    }
+
+    // debounce calls to perf.now() to 1s so we're not hitting
+    // that costly call repeatedly.
+    let cachedNow = 0
+    const getNow = () => {
+      const n = perf.now()
+      if (this.ttlResolution > 0) {
+        cachedNow = n
+        const t = setTimeout(
+          () => (cachedNow = 0),
+          this.ttlResolution
+        )
+        /* istanbul ignore else - not available on all platforms */
+        if (t.unref) {
+          t.unref()
+        }
+      }
+      return n
+    }
+
+    this.getRemainingTTL = key => {
+      const index = this.keyMap.get(key)
+      if (index === undefined) {
+        return 0
+      }
+      return this.ttls[index] === 0 || this.starts[index] === 0
+        ? Infinity
+        : this.starts[index] +
+            this.ttls[index] -
+            (cachedNow || getNow())
+    }
+
+    this.isStale = index => {
+      return (
+        this.ttls[index] !== 0 &&
+        this.starts[index] !== 0 &&
+        (cachedNow || getNow()) - this.starts[index] >
+          this.ttls[index]
+      )
+    }
+  }
+  updateItemAge(_index) {}
+  statusTTL(_status, _index) {}
+  setItemTTL(_index, _ttl, _start) {}
+  isStale(_index) {
+    return false
+  }
+
+  initializeSizeTracking() {
+    this.calculatedSize = 0
+    this.sizes = new ZeroArray(this.max)
+    this.removeItemSize = index => {
+      this.calculatedSize -= this.sizes[index]
+      this.sizes[index] = 0
+    }
+    this.requireSize = (k, v, size, sizeCalculation) => {
+      // provisionally accept background fetches.
+      // actual value size will be checked when they return.
+      if (this.isBackgroundFetch(v)) {
+        return 0
+      }
+      if (!isPosInt(size)) {
+        if (sizeCalculation) {
+          if (typeof sizeCalculation !== 'function') {
+            throw new TypeError('sizeCalculation must be a function')
+          }
+          size = sizeCalculation(v, k)
+          if (!isPosInt(size)) {
+            throw new TypeError(
+              'sizeCalculation return invalid (expect positive integer)'
+            )
+          }
+        } else {
+          throw new TypeError(
+            'invalid size value (must be positive integer). ' +
+              'When maxSize or maxEntrySize is used, sizeCalculation or size ' +
+              'must be set.'
+          )
+        }
+      }
+      return size
+    }
+    this.addItemSize = (index, size, status) => {
+      this.sizes[index] = size
+      if (this.maxSize) {
+        const maxSize = this.maxSize - this.sizes[index]
+        while (this.calculatedSize > maxSize) {
+          this.evict(true)
+        }
+      }
+      this.calculatedSize += this.sizes[index]
+      if (status) {
+        status.entrySize = size
+        status.totalCalculatedSize = this.calculatedSize
+      }
+    }
+  }
+  removeItemSize(_index) {}
+  addItemSize(_index, _size) {}
+  requireSize(_k, _v, size, sizeCalculation) {
+    if (size || sizeCalculation) {
+      throw new TypeError(
+        'cannot set size without setting maxSize or maxEntrySize on cache'
+      )
+    }
+  }
+
+  *indexes({ allowStale = this.allowStale } = {}) {
+    if (this.size) {
+      for (let i = this.tail; true; ) {
+        if (!this.isValidIndex(i)) {
+          break
+        }
+        if (allowStale || !this.isStale(i)) {
+          yield i
+        }
+        if (i === this.head) {
+          break
+        } else {
+          i = this.prev[i]
+        }
+      }
+    }
+  }
+
+  *rindexes({ allowStale = this.allowStale } = {}) {
+    if (this.size) {
+      for (let i = this.head; true; ) {
+        if (!this.isValidIndex(i)) {
+          break
+        }
+        if (allowStale || !this.isStale(i)) {
+          yield i
+        }
+        if (i === this.tail) {
+          break
+        } else {
+          i = this.next[i]
+        }
+      }
+    }
+  }
+
+  isValidIndex(index) {
+    return (
+      index !== undefined &&
+      this.keyMap.get(this.keyList[index]) === index
+    )
+  }
+
+  *entries() {
+    for (const i of this.indexes()) {
+      if (
+        this.valList[i] !== undefined &&
+        this.keyList[i] !== undefined &&
+        !this.isBackgroundFetch(this.valList[i])
+      ) {
+        yield [this.keyList[i], this.valList[i]]
+      }
+    }
+  }
+  *rentries() {
+    for (const i of this.rindexes()) {
+      if (
+        this.valList[i] !== undefined &&
+        this.keyList[i] !== undefined &&
+        !this.isBackgroundFetch(this.valList[i])
+      ) {
+        yield [this.keyList[i], this.valList[i]]
+      }
+    }
+  }
+
+  *keys() {
+    for (const i of this.indexes()) {
+      if (
+        this.keyList[i] !== undefined &&
+        !this.isBackgroundFetch(this.valList[i])
+      ) {
+        yield this.keyList[i]
+      }
+    }
+  }
+  *rkeys() {
+    for (const i of this.rindexes()) {
+      if (
+        this.keyList[i] !== undefined &&
+        !this.isBackgroundFetch(this.valList[i])
+      ) {
+        yield this.keyList[i]
+      }
+    }
+  }
+
+  *values() {
+    for (const i of this.indexes()) {
+      if (
+        this.valList[i] !== undefined &&
+        !this.isBackgroundFetch(this.valList[i])
+      ) {
+        yield this.valList[i]
+      }
+    }
+  }
+  *rvalues() {
+    for (const i of this.rindexes()) {
+      if (
+        this.valList[i] !== undefined &&
+        !this.isBackgroundFetch(this.valList[i])
+      ) {
+        yield this.valList[i]
+      }
+    }
+  }
+
+  [Symbol.iterator]() {
+    return this.entries()
+  }
+
+  find(fn, getOptions) {
+    for (const i of this.indexes()) {
+      const v = this.valList[i]
+      const value = this.isBackgroundFetch(v)
+        ? v.__staleWhileFetching
+        : v
+      if (value === undefined) continue
+      if (fn(value, this.keyList[i], this)) {
+        return this.get(this.keyList[i], getOptions)
+      }
+    }
+  }
+
+  forEach(fn, thisp = this) {
+    for (const i of this.indexes()) {
+      const v = this.valList[i]
+      const value = this.isBackgroundFetch(v)
+        ? v.__staleWhileFetching
+        : v
+      if (value === undefined) continue
+      fn.call(thisp, value, this.keyList[i], this)
+    }
+  }
+
+  rforEach(fn, thisp = this) {
+    for (const i of this.rindexes()) {
+      const v = this.valList[i]
+      const value = this.isBackgroundFetch(v)
+        ? v.__staleWhileFetching
+        : v
+      if (value === undefined) continue
+      fn.call(thisp, value, this.keyList[i], this)
+    }
+  }
+
+  get prune() {
+    deprecatedMethod('prune', 'purgeStale')
+    return this.purgeStale
+  }
+
+  purgeStale() {
+    let deleted = false
+    for (const i of this.rindexes({ allowStale: true })) {
+      if (this.isStale(i)) {
+        this.delete(this.keyList[i])
+        deleted = true
+      }
+    }
+    return deleted
+  }
+
+  dump() {
+    const arr = []
+    for (const i of this.indexes({ allowStale: true })) {
+      const key = this.keyList[i]
+      const v = this.valList[i]
+      const value = this.isBackgroundFetch(v)
+        ? v.__staleWhileFetching
+        : v
+      if (value === undefined) continue
+      const entry = { value }
+      if (this.ttls) {
+        entry.ttl = this.ttls[i]
+        // always dump the start relative to a portable timestamp
+        // it's ok for this to be a bit slow, it's a rare operation.
+        const age = perf.now() - this.starts[i]
+        entry.start = Math.floor(Date.now() - age)
+      }
+      if (this.sizes) {
+        entry.size = this.sizes[i]
+      }
+      arr.unshift([key, entry])
+    }
+    return arr
+  }
+
+  load(arr) {
+    this.clear()
+    for (const [key, entry] of arr) {
+      if (entry.start) {
+        // entry.start is a portable timestamp, but we may be using
+        // node's performance.now(), so calculate the offset.
+        // it's ok for this to be a bit slow, it's a rare operation.
+        const age = Date.now() - entry.start
+        entry.start = perf.now() - age
+      }
+      this.set(key, entry.value, entry)
+    }
+  }
+
+  dispose(_v, _k, _reason) {}
+
+  set(
+    k,
+    v,
+    {
+      ttl = this.ttl,
+      start,
+      noDisposeOnSet = this.noDisposeOnSet,
+      size = 0,
+      sizeCalculation = this.sizeCalculation,
+      noUpdateTTL = this.noUpdateTTL,
+      status,
+    } = {}
+  ) {
+    size = this.requireSize(k, v, size, sizeCalculation)
+    // if the item doesn't fit, don't do anything
+    // NB: maxEntrySize set to maxSize by default
+    if (this.maxEntrySize && size > this.maxEntrySize) {
+      if (status) {
+        status.set = 'miss'
+        status.maxEntrySizeExceeded = true
+      }
+      // have to delete, in case a background fetch is there already.
+      // in non-async cases, this is a no-op
+      this.delete(k)
+      return this
+    }
+    let index = this.size === 0 ? undefined : this.keyMap.get(k)
+    if (index === undefined) {
+      // addition
+      index = this.newIndex()
+      this.keyList[index] = k
+      this.valList[index] = v
+      this.keyMap.set(k, index)
+      this.next[this.tail] = index
+      this.prev[index] = this.tail
+      this.tail = index
+      this.size++
+      this.addItemSize(index, size, status)
+      if (status) {
+        status.set = 'add'
+      }
+      noUpdateTTL = false
+    } else {
+      // update
+      this.moveToTail(index)
+      const oldVal = this.valList[index]
+      if (v !== oldVal) {
+        if (this.isBackgroundFetch(oldVal)) {
+          oldVal.__abortController.abort(new Error('replaced'))
+        } else {
+          if (!noDisposeOnSet) {
+            this.dispose(oldVal, k, 'set')
+            if (this.disposeAfter) {
+              this.disposed.push([oldVal, k, 'set'])
+            }
+          }
+        }
+        this.removeItemSize(index)
+        this.valList[index] = v
+        this.addItemSize(index, size, status)
+        if (status) {
+          status.set = 'replace'
+          const oldValue =
+            oldVal && this.isBackgroundFetch(oldVal)
+              ? oldVal.__staleWhileFetching
+              : oldVal
+          if (oldValue !== undefined) status.oldValue = oldValue
+        }
+      } else if (status) {
+        status.set = 'update'
+      }
+    }
+    if (ttl !== 0 && this.ttl === 0 && !this.ttls) {
+      this.initializeTTLTracking()
+    }
+    if (!noUpdateTTL) {
+      this.setItemTTL(index, ttl, start)
+    }
+    this.statusTTL(status, index)
+    if (this.disposeAfter) {
+      while (this.disposed.length) {
+        this.disposeAfter(...this.disposed.shift())
+      }
+    }
+    return this
+  }
+
+  newIndex() {
+    if (this.size === 0) {
+      return this.tail
+    }
+    if (this.size === this.max && this.max !== 0) {
+      return this.evict(false)
+    }
+    if (this.free.length !== 0) {
+      return this.free.pop()
+    }
+    // initial fill, just keep writing down the list
+    return this.initialFill++
+  }
+
+  pop() {
+    if (this.size) {
+      const val = this.valList[this.head]
+      this.evict(true)
+      return val
+    }
+  }
+
+  evict(free) {
+    const head = this.head
+    const k = this.keyList[head]
+    const v = this.valList[head]
+    if (this.isBackgroundFetch(v)) {
+      v.__abortController.abort(new Error('evicted'))
+    } else {
+      this.dispose(v, k, 'evict')
+      if (this.disposeAfter) {
+        this.disposed.push([v, k, 'evict'])
+      }
+    }
+    this.removeItemSize(head)
+    // if we aren't about to use the index, then null these out
+    if (free) {
+      this.keyList[head] = null
+      this.valList[head] = null
+      this.free.push(head)
+    }
+    this.head = this.next[head]
+    this.keyMap.delete(k)
+    this.size--
+    return head
+  }
+
+  has(k, { updateAgeOnHas = this.updateAgeOnHas, status } = {}) {
+    const index = this.keyMap.get(k)
+    if (index !== undefined) {
+      if (!this.isStale(index)) {
+        if (updateAgeOnHas) {
+          this.updateItemAge(index)
+        }
+        if (status) status.has = 'hit'
+        this.statusTTL(status, index)
+        return true
+      } else if (status) {
+        status.has = 'stale'
+        this.statusTTL(status, index)
+      }
+    } else if (status) {
+      status.has = 'miss'
+    }
+    return false
+  }
+
+  // like get(), but without any LRU updating or TTL expiration
+  peek(k, { allowStale = this.allowStale } = {}) {
+    const index = this.keyMap.get(k)
+    if (index !== undefined && (allowStale || !this.isStale(index))) {
+      const v = this.valList[index]
+      // either stale and allowed, or forcing a refresh of non-stale value
+      return this.isBackgroundFetch(v) ? v.__staleWhileFetching : v
+    }
+  }
+
+  backgroundFetch(k, index, options, context) {
+    const v = index === undefined ? undefined : this.valList[index]
+    if (this.isBackgroundFetch(v)) {
+      return v
+    }
+    const ac = new AC()
+    if (options.signal) {
+      options.signal.addEventListener('abort', () =>
+        ac.abort(options.signal.reason)
+      )
+    }
+    const fetchOpts = {
+      signal: ac.signal,
+      options,
+      context,
+    }
+    const cb = (v, updateCache = false) => {
+      const { aborted } = ac.signal
+      const ignoreAbort = options.ignoreFetchAbort && v !== undefined
+      if (options.status) {
+        if (aborted && !updateCache) {
+          options.status.fetchAborted = true
+          options.status.fetchError = ac.signal.reason
+          if (ignoreAbort) options.status.fetchAbortIgnored = true
+        } else {
+          options.status.fetchResolved = true
+        }
+      }
+      if (aborted && !ignoreAbort && !updateCache) {
+        return fetchFail(ac.signal.reason)
+      }
+      // either we didn't abort, and are still here, or we did, and ignored
+      if (this.valList[index] === p) {
+        if (v === undefined) {
+          if (p.__staleWhileFetching) {
+            this.valList[index] = p.__staleWhileFetching
+          } else {
+            this.delete(k)
+          }
+        } else {
+          if (options.status) options.status.fetchUpdated = true
+          this.set(k, v, fetchOpts.options)
+        }
+      }
+      return v
+    }
+    const eb = er => {
+      if (options.status) {
+        options.status.fetchRejected = true
+        options.status.fetchError = er
+      }
+      return fetchFail(er)
+    }
+    const fetchFail = er => {
+      const { aborted } = ac.signal
+      const allowStaleAborted =
+        aborted && options.allowStaleOnFetchAbort
+      const allowStale =
+        allowStaleAborted || options.allowStaleOnFetchRejection
+      const noDelete = allowStale || options.noDeleteOnFetchRejection
+      if (this.valList[index] === p) {
+        // if we allow stale on fetch rejections, then we need to ensure that
+        // the stale value is not removed from the cache when the fetch fails.
+        const del = !noDelete || p.__staleWhileFetching === undefined
+        if (del) {
+          this.delete(k)
+        } else if (!allowStaleAborted) {
+          // still replace the *promise* with the stale value,
+          // since we are done with the promise at this point.
+          // leave it untouched if we're still waiting for an
+          // aborted background fetch that hasn't yet returned.
+          this.valList[index] = p.__staleWhileFetching
+        }
+      }
+      if (allowStale) {
+        if (options.status && p.__staleWhileFetching !== undefined) {
+          options.status.returnedStale = true
+        }
+        return p.__staleWhileFetching
+      } else if (p.__returned === p) {
+        throw er
+      }
+    }
+    const pcall = (res, rej) => {
+      this.fetchMethod(k, v, fetchOpts).then(v => res(v), rej)
+      // ignored, we go until we finish, regardless.
+      // defer check until we are actually aborting,
+      // so fetchMethod can override.
+      ac.signal.addEventListener('abort', () => {
+        if (
+          !options.ignoreFetchAbort ||
+          options.allowStaleOnFetchAbort
+        ) {
+          res()
+          // when it eventually resolves, update the cache.
+          if (options.allowStaleOnFetchAbort) {
+            res = v => cb(v, true)
+          }
+        }
+      })
+    }
+    if (options.status) options.status.fetchDispatched = true
+    const p = new Promise(pcall).then(cb, eb)
+    p.__abortController = ac
+    p.__staleWhileFetching = v
+    p.__returned = null
+    if (index === undefined) {
+      // internal, don't expose status.
+      this.set(k, p, { ...fetchOpts.options, status: undefined })
+      index = this.keyMap.get(k)
+    } else {
+      this.valList[index] = p
+    }
+    return p
+  }
+
+  isBackgroundFetch(p) {
+    return (
+      p &&
+      typeof p === 'object' &&
+      typeof p.then === 'function' &&
+      Object.prototype.hasOwnProperty.call(
+        p,
+        '__staleWhileFetching'
+      ) &&
+      Object.prototype.hasOwnProperty.call(p, '__returned') &&
+      (p.__returned === p || p.__returned === null)
+    )
+  }
+
+  // this takes the union of get() and set() opts, because it does both
+  async fetch(
+    k,
+    {
+      // get options
+      allowStale = this.allowStale,
+      updateAgeOnGet = this.updateAgeOnGet,
+      noDeleteOnStaleGet = this.noDeleteOnStaleGet,
+      // set options
+      ttl = this.ttl,
+      noDisposeOnSet = this.noDisposeOnSet,
+      size = 0,
+      sizeCalculation = this.sizeCalculation,
+      noUpdateTTL = this.noUpdateTTL,
+      // fetch exclusive options
+      noDeleteOnFetchRejection = this.noDeleteOnFetchRejection,
+      allowStaleOnFetchRejection = this.allowStaleOnFetchRejection,
+      ignoreFetchAbort = this.ignoreFetchAbort,
+      allowStaleOnFetchAbort = this.allowStaleOnFetchAbort,
+      fetchContext = this.fetchContext,
+      forceRefresh = false,
+      status,
+      signal,
+    } = {}
+  ) {
+    if (!this.fetchMethod) {
+      if (status) status.fetch = 'get'
+      return this.get(k, {
+        allowStale,
+        updateAgeOnGet,
+        noDeleteOnStaleGet,
+        status,
+      })
+    }
+
+    const options = {
+      allowStale,
+      updateAgeOnGet,
+      noDeleteOnStaleGet,
+      ttl,
+      noDisposeOnSet,
+      size,
+      sizeCalculation,
+      noUpdateTTL,
+      noDeleteOnFetchRejection,
+      allowStaleOnFetchRejection,
+      allowStaleOnFetchAbort,
+      ignoreFetchAbort,
+      status,
+      signal,
+    }
+
+    let index = this.keyMap.get(k)
+    if (index === undefined) {
+      if (status) status.fetch = 'miss'
+      const p = this.backgroundFetch(k, index, options, fetchContext)
+      return (p.__returned = p)
+    } else {
+      // in cache, maybe already fetching
+      const v = this.valList[index]
+      if (this.isBackgroundFetch(v)) {
+        const stale =
+          allowStale && v.__staleWhileFetching !== undefined
+        if (status) {
+          status.fetch = 'inflight'
+          if (stale) status.returnedStale = true
+        }
+        return stale ? v.__staleWhileFetching : (v.__returned = v)
+      }
+
+      // if we force a refresh, that means do NOT serve the cached value,
+      // unless we are already in the process of refreshing the cache.
+      const isStale = this.isStale(index)
+      if (!forceRefresh && !isStale) {
+        if (status) status.fetch = 'hit'
+        this.moveToTail(index)
+        if (updateAgeOnGet) {
+          this.updateItemAge(index)
+        }
+        this.statusTTL(status, index)
+        return v
+      }
+
+      // ok, it is stale or a forced refresh, and not already fetching.
+      // refresh the cache.
+      const p = this.backgroundFetch(k, index, options, fetchContext)
+      const hasStale = p.__staleWhileFetching !== undefined
+      const staleVal = hasStale && allowStale
+      if (status) {
+        status.fetch = hasStale && isStale ? 'stale' : 'refresh'
+        if (staleVal && isStale) status.returnedStale = true
+      }
+      return staleVal ? p.__staleWhileFetching : (p.__returned = p)
+    }
+  }
+
+  get(
+    k,
+    {
+      allowStale = this.allowStale,
+      updateAgeOnGet = this.updateAgeOnGet,
+      noDeleteOnStaleGet = this.noDeleteOnStaleGet,
+      status,
+    } = {}
+  ) {
+    const index = this.keyMap.get(k)
+    if (index !== undefined) {
+      const value = this.valList[index]
+      const fetching = this.isBackgroundFetch(value)
+      this.statusTTL(status, index)
+      if (this.isStale(index)) {
+        if (status) status.get = 'stale'
+        // delete only if not an in-flight background fetch
+        if (!fetching) {
+          if (!noDeleteOnStaleGet) {
+            this.delete(k)
+          }
+          if (status) status.returnedStale = allowStale
+          return allowStale ? value : undefined
+        } else {
+          if (status) {
+            status.returnedStale =
+              allowStale && value.__staleWhileFetching !== undefined
+          }
+          return allowStale ? value.__staleWhileFetching : undefined
+        }
+      } else {
+        if (status) status.get = 'hit'
+        // if we're currently fetching it, we don't actually have it yet
+        // it's not stale, which means this isn't a staleWhileRefetching.
+        // If it's not stale, and fetching, AND has a __staleWhileFetching
+        // value, then that means the user fetched with {forceRefresh:true},
+        // so it's safe to return that value.
+        if (fetching) {
+          return value.__staleWhileFetching
+        }
+        this.moveToTail(index)
+        if (updateAgeOnGet) {
+          this.updateItemAge(index)
+        }
+        return value
+      }
+    } else if (status) {
+      status.get = 'miss'
+    }
+  }
+
+  connect(p, n) {
+    this.prev[n] = p
+    this.next[p] = n
+  }
+
+  moveToTail(index) {
+    // if tail already, nothing to do
+    // if head, move head to next[index]
+    // else
+    //   move next[prev[index]] to next[index] (head has no prev)
+    //   move prev[next[index]] to prev[index]
+    // prev[index] = tail
+    // next[tail] = index
+    // tail = index
+    if (index !== this.tail) {
+      if (index === this.head) {
+        this.head = this.next[index]
+      } else {
+        this.connect(this.prev[index], this.next[index])
+      }
+      this.connect(this.tail, index)
+      this.tail = index
+    }
+  }
+
+  get del() {
+    deprecatedMethod('del', 'delete')
+    return this.delete
+  }
+
+  delete(k) {
+    let deleted = false
+    if (this.size !== 0) {
+      const index = this.keyMap.get(k)
+      if (index !== undefined) {
+        deleted = true
+        if (this.size === 1) {
+          this.clear()
+        } else {
+          this.removeItemSize(index)
+          const v = this.valList[index]
+          if (this.isBackgroundFetch(v)) {
+            v.__abortController.abort(new Error('deleted'))
+          } else {
+            this.dispose(v, k, 'delete')
+            if (this.disposeAfter) {
+              this.disposed.push([v, k, 'delete'])
+            }
+          }
+          this.keyMap.delete(k)
+          this.keyList[index] = null
+          this.valList[index] = null
+          if (index === this.tail) {
+            this.tail = this.prev[index]
+          } else if (index === this.head) {
+            this.head = this.next[index]
+          } else {
+            this.next[this.prev[index]] = this.next[index]
+            this.prev[this.next[index]] = this.prev[index]
+          }
+          this.size--
+          this.free.push(index)
+        }
+      }
+    }
+    if (this.disposed) {
+      while (this.disposed.length) {
+        this.disposeAfter(...this.disposed.shift())
+      }
+    }
+    return deleted
+  }
+
+  clear() {
+    for (const index of this.rindexes({ allowStale: true })) {
+      const v = this.valList[index]
+      if (this.isBackgroundFetch(v)) {
+        v.__abortController.abort(new Error('deleted'))
+      } else {
+        const k = this.keyList[index]
+        this.dispose(v, k, 'delete')
+        if (this.disposeAfter) {
+          this.disposed.push([v, k, 'delete'])
+        }
+      }
+    }
+
+    this.keyMap.clear()
+    this.valList.fill(null)
+    this.keyList.fill(null)
+    if (this.ttls) {
+      this.ttls.fill(0)
+      this.starts.fill(0)
+    }
+    if (this.sizes) {
+      this.sizes.fill(0)
+    }
+    this.head = 0
+    this.tail = 0
+    this.initialFill = 1
+    this.free.length = 0
+    this.calculatedSize = 0
+    this.size = 0
+    if (this.disposed) {
+      while (this.disposed.length) {
+        this.disposeAfter(...this.disposed.shift())
+      }
+    }
+  }
+
+  get reset() {
+    deprecatedMethod('reset', 'clear')
+    return this.clear
+  }
+
+  get length() {
+    deprecatedProperty('length', 'size')
+    return this.size
+  }
+
+  static get AbortController() {
+    return AC
+  }
+  static get AbortSignal() {
+    return AS
+  }
+}
+
+module.exports = LRUCache
+
+
+/***/ }),
+
 /***/ 1526:
 /***/ ((module) => {
 
@@ -51354,7 +51778,7 @@ module.exports = JSON.parse('[["0","\\u0000",128],["a1","｡",62],["8140","　�
 /***/ ((module) => {
 
 "use strict";
-module.exports = JSON.parse('{"name":"make-fetch-happen","version":"11.0.2","description":"Opinionated, caching, retrying fetch client","main":"lib/index.js","files":["bin/","lib/"],"scripts":{"test":"tap","posttest":"npm run lint","eslint":"eslint","lint":"eslint \\"**/*.js\\"","lintfix":"npm run lint -- --fix","postlint":"template-oss-check","snap":"tap","template-oss-apply":"template-oss-apply --force"},"repository":{"type":"git","url":"https://github.com/npm/make-fetch-happen.git"},"keywords":["http","request","fetch","mean girls","caching","cache","subresource integrity"],"author":"GitHub Inc.","license":"ISC","dependencies":{"agentkeepalive":"^4.2.1","cacache":"^17.0.0","http-cache-semantics":"^4.1.0","http-proxy-agent":"^5.0.0","https-proxy-agent":"^5.0.0","is-lambda":"^1.0.1","lru-cache":"^7.7.1","minipass":"^4.0.0","minipass-collect":"^1.0.2","minipass-fetch":"^3.0.0","minipass-flush":"^1.0.5","minipass-pipeline":"^1.2.4","negotiator":"^0.6.3","promise-retry":"^2.0.1","socks-proxy-agent":"^7.0.0","ssri":"^10.0.0"},"devDependencies":{"@npmcli/eslint-config":"^4.0.0","@npmcli/template-oss":"4.10.0","mkdirp":"^1.0.4","nock":"^13.2.4","rimraf":"^3.0.2","safe-buffer":"^5.2.1","standard-version":"^9.3.2","tap":"^16.0.0"},"engines":{"node":"^14.17.0 || ^16.13.0 || >=18.0.0"},"tap":{"color":1,"files":"test/*.js","check-coverage":true,"timeout":60,"nyc-arg":["--exclude","tap-snapshots/**"]},"templateOSS":{"//@npmcli/template-oss":"This file is partially managed by @npmcli/template-oss. Edits may be overwritten.","version":"4.10.0"}}');
+module.exports = JSON.parse('{"name":"make-fetch-happen","version":"11.0.3","description":"Opinionated, caching, retrying fetch client","main":"lib/index.js","files":["bin/","lib/"],"scripts":{"test":"tap","posttest":"npm run lint","eslint":"eslint","lint":"eslint \\"**/*.js\\"","lintfix":"npm run lint -- --fix","postlint":"template-oss-check","snap":"tap","template-oss-apply":"template-oss-apply --force"},"repository":{"type":"git","url":"https://github.com/npm/make-fetch-happen.git"},"keywords":["http","request","fetch","mean girls","caching","cache","subresource integrity"],"author":"GitHub Inc.","license":"ISC","dependencies":{"agentkeepalive":"^4.2.1","cacache":"^17.0.0","http-cache-semantics":"^4.1.1","http-proxy-agent":"^5.0.0","https-proxy-agent":"^5.0.0","is-lambda":"^1.0.1","lru-cache":"^7.7.1","minipass":"^4.0.0","minipass-fetch":"^3.0.0","minipass-flush":"^1.0.5","minipass-pipeline":"^1.2.4","negotiator":"^0.6.3","promise-retry":"^2.0.1","socks-proxy-agent":"^7.0.0","ssri":"^10.0.0"},"devDependencies":{"@npmcli/eslint-config":"^4.0.0","@npmcli/template-oss":"4.11.3","nock":"^13.2.4","safe-buffer":"^5.2.1","standard-version":"^9.3.2","tap":"^16.0.0"},"engines":{"node":"^14.17.0 || ^16.13.0 || >=18.0.0"},"tap":{"color":1,"files":"test/*.js","check-coverage":true,"timeout":60,"nyc-arg":["--exclude","tap-snapshots/**"]},"templateOSS":{"//@npmcli/template-oss":"This file is partially managed by @npmcli/template-oss. Edits may be overwritten.","version":"4.11.3"}}');
 
 /***/ }),
 

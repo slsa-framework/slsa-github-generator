@@ -11,11 +11,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-import type { Endpoints } from "@octokit/types";
-
-export type ApiWorkflowRun =
-  Endpoints["GET /repos/{owner}/{repo}/actions/runs/{run_id}"]["response"]["data"];
-
 export interface Builder {
   id: string;
   version?: string;

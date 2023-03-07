@@ -1,6 +1,6 @@
 import * as fs from "fs";
 import * as process from "process";
-import * as types from "./predicate";
+import type { SLSAv1Predicate } from "predicate-utils";
 import * as github from "@actions/github";
 import type { ApiWorkflowRun } from "./predicate";
 
@@ -24,9 +24,9 @@ export async function getWorkflowRun(
 // addGitHubParameters adds trusted GitHub context to system paramters
 // and external parameters.
 export function addGitHubParameters(
-  predicate: types.SLSAv1Predicate,
+  predicate: SLSAv1Predicate,
   currentRun: ApiWorkflowRun
-): types.SLSAv1Predicate {
+): SLSAv1Predicate {
   const { env } = process;
   const ctx = github.context;
 

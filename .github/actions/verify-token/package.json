@@ -26,6 +26,7 @@
     "@actions/core": "^1.10.0",
     "@actions/github": "^5.1.1",
     "@octokit/webhooks-types": "^6.9.0",
+    "predicate-utils": "file:../common/predicate-utils",
     "sigstore": "^1.0.0"
   },
   "devDependencies": {

@@ -14,12 +14,9 @@ limitations under the License.
 import * as github from "@actions/github";
 import * as fs from "fs";
 
-import {
-  githubObj,
-  rawTokenInterface,
-  ArtifactReference,
-  SLSAv1Predicate,
-} from "./types";
+import { githubObj, rawTokenInterface } from "./types";
+
+import { ArtifactReference, SLSAv1Predicate } from "predicate-utils";
 
 const DELEGATOR_BUILD_TYPE =
   "https://github.com/slsa-framework/slsa-github-generator/delegator-generic@v0";

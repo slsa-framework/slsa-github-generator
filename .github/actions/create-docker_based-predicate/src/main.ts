@@ -1,5 +1,5 @@
 import * as core from "@actions/core";
-import type { BuildDefinition, ArtifactReference } from "./predicate";
+import type { BuildDefinition, ArtifactReference } from "predicate-utils";
 import { generatePredicate } from "./predicate";
 import * as gh from "./github";
 import * as utils from "./utils";
