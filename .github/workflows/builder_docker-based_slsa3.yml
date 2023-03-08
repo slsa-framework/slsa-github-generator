@@ -465,14 +465,15 @@ jobs:
     env:
       BUILD_DEFINITION_NAME: ${{ needs.generate-build-definition.outputs.build-definition-name }}
       SLSA_OUTPUTS_NAME: ${{ needs.build.outputs.slsa-outputs-name }}
+      RNG: ${{ needs.rng.outputs.value }}
     steps:
       - uses: geekyeggo/delete-artifact@54ab544f12cdb7b71613a16a2b5a37a9ade990af # v2.0.0
         with:
-          name: "${{ env.BUILD_DEFINITION_NAME }}-${{ needs.rng.outputs.value }}"
+          name: "${{ env.BUILD_DEFINITION_NAME }}-${{ env.RNG }}"
           useGlob: true
       - uses: geekyeggo/delete-artifact@54ab544f12cdb7b71613a16a2b5a37a9ade990af # v2.0.0
         with:
-          name: "${{ env.SLSA_OUTPUTS_NAME }}-${{ needs.rng.outputs.value }}"
+          name: "${{ env.SLSA_OUTPUTS_NAME }}-${{ env.RNG }}"
       - uses: geekyeggo/delete-artifact@54ab544f12cdb7b71613a16a2b5a37a9ade990af # v2.0.0
         with:
-          name: "${{ env.BUILDER_BINARY }}-${{ needs.rng.outputs.value }}"
+          name: "${{ env.BUILDER_BINARY }}-${{ env.RNG }}"
