@@ -428,9 +428,29 @@ For each of the GHA builders, you will need to:
    - [v14.2](https://github.com/slsa-framework/example-package/releases/tag/v14.2)
    - [v13.0.30](https://github.com/slsa-framework/example-package/releases/tag/v13.0.30)
 
-   Wait for the runs to complete and download the uploaded artifacts of each of the created releases.
+   Wait for the runs to complete
 
-2. Move these files to `./cli/slsa-verifier/testdata/gha_$BUILDER_TYPE/$BUILDER_TAG/`. Send a pull request to merge the changes into the verifier's repository. The pre-submits will validate that the verifier is able to verify provenance from the `$BUILDER_TAG` builder.
+2. Download the uploaded artifacts of each of the created releases.
+
+3. Move these files to
+   `./cli/slsa-verifier/testdata/gha_$BUILDER_TYPE/$BUILDER_TAG/` in the
+   slsa-verifier repository. You may need to rename the files to match the
+   directory structure.
+
+4. Determine the digest that was uploaded by the build to the
+   [example-package.verifier-e2e.all.tag.main.default.slsa3](https://github.com/slsa-framework/example-package/pkgs/container/example-package.verifier-e2e.all.tag.main.default.slsa3)
+   package.
+
+5. Export the image to the
+   `./cli/slsa-verifier/testdata/gha_generic_container/$BUILDER_TAG/` directory.
+
+   ```shell
+   cosign save --dir container_workflow_dispatch ghcr.io/slsa-framework/example-package.verifier-e2e.all.tag.main.default.slsa3@sha256:<digest>
+   ```
+
+6. Send a pull request to merge the changes into the verifier's repository. The
+   pre-submits will validate that the verifier is able to verify provenance from
+   the `$BUILDER_TAG` builder.
 
 ### Finish the release.
 
