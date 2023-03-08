@@ -29,7 +29,7 @@ import (
 
 func Test_CreateBuildDefinition(t *testing.T) {
 	config := &DockerBuildConfig{
-		SourceRepo:   "git+https://github.com/slsa-framework/slsa-github-generator",
+		SourceRepo:   "git+https://github.com/slsa-framework/slsa-github-generator@refs/heads/main",
 		SourceDigest: Digest{Alg: "sha1", Value: "cf5804b5c6f1a4b2a0b03401a487dfdfbe3a5f00"},
 		BuilderImage: DockerImage{
 			Name:   "bash",
@@ -176,7 +176,7 @@ func Test_inspectArtifacts(t *testing.T) {
 
 	s1 := intoto.Subject{
 		Name:   "build-definition.json",
-		Digest: map[string]string{"sha256": "fbe3d5448f3e43b20368c223eda70ecbf41bbe6e5956ee81b5d490c1753ea118"},
+		Digest: map[string]string{"sha256": "b1c74863007166aadca8ff54a0e647047696bee38e8e8a25a1290f494e3abc46"},
 	}
 	s2 := intoto.Subject{
 		Name:   "config.toml",
@@ -185,7 +185,7 @@ func Test_inspectArtifacts(t *testing.T) {
 
 	s3 := intoto.Subject{
 		Name:   "slsa1-provenance.json",
-		Digest: map[string]string{"sha256": "d40de4149c9ad41d2fdcba44ddb2be1760eb4fbb01644f7ddf9ed0a424d7ed44"},
+		Digest: map[string]string{"sha256": "f472aaf04468ae881ab502f1f02f23476fe0d4dbb7a8a4b5d3eae9b2843e2ecd"},
 	}
 
 	s4 := intoto.Subject{
@@ -226,7 +226,7 @@ func Test_inspectArtifactsNoRoot(t *testing.T) {
 
 	s1 := intoto.Subject{
 		Name:   "build-definition.json",
-		Digest: map[string]string{"sha256": "fbe3d5448f3e43b20368c223eda70ecbf41bbe6e5956ee81b5d490c1753ea118"},
+		Digest: map[string]string{"sha256": "b1c74863007166aadca8ff54a0e647047696bee38e8e8a25a1290f494e3abc46"},
 	}
 	s2 := intoto.Subject{
 		Name:   "config.toml",
@@ -235,7 +235,7 @@ func Test_inspectArtifactsNoRoot(t *testing.T) {
 
 	s3 := intoto.Subject{
 		Name:   "slsa1-provenance.json",
-		Digest: map[string]string{"sha256": "d40de4149c9ad41d2fdcba44ddb2be1760eb4fbb01644f7ddf9ed0a424d7ed44"},
+		Digest: map[string]string{"sha256": "f472aaf04468ae881ab502f1f02f23476fe0d4dbb7a8a4b5d3eae9b2843e2ecd"},
 	}
 
 	s4 := intoto.Subject{
@@ -304,7 +304,7 @@ func Test_ProvenanceStatementSLSA1_ToDockerBuildConfig(t *testing.T) {
 	}
 
 	want := &DockerBuildConfig{
-		SourceRepo: "git+https://github.com/slsa-framework/slsa-github-generator",
+		SourceRepo: "git+https://github.com/slsa-framework/slsa-github-generator@refs/heads/main",
 		SourceDigest: Digest{
 			Alg:   "sha1",
 			Value: "cf5804b5c6f1a4b2a0b03401a487dfdfbe3a5f00",
