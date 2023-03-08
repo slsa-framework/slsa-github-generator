@@ -12604,7 +12604,7 @@ formatters.O = function (v) {
 
 /*!
  * depd
- * Copyright(c) 2014-2017 Douglas Christopher Wilson
+ * Copyright(c) 2014-2018 Douglas Christopher Wilson
  * MIT Licensed
  */
 
@@ -12612,8 +12612,6 @@ formatters.O = function (v) {
  * Module dependencies.
  */
 
-var callSiteToString = (__nccwpck_require__(9829).callSiteToString)
-var eventListenerCount = (__nccwpck_require__(9829).eventListenerCount)
 var relative = (__nccwpck_require__(1017).relative)
 
 /**
@@ -12696,7 +12694,7 @@ function createStackString (stack) {
   }
 
   for (var i = 0; i < stack.length; i++) {
-    str += '\n    at ' + callSiteToString(stack[i])
+    str += '\n    at ' + stack[i].toString()
   }
 
   return str
@@ -12733,11 +12731,30 @@ function depd (namespace) {
 }
 
 /**
+ * Determine if event emitter has listeners of a given type.
+ *
+ * The way to do this check is done three different ways in Node.js >= 0.8
+ * so this consolidates them into a minimal set using instance methods.
+ *
+ * @param {EventEmitter} emitter
+ * @param {string} type
+ * @returns {boolean}
+ * @private
+ */
+
+function eehaslisteners (emitter, type) {
+  var count = typeof emitter.listenerCount !== 'function'
+    ? emitter.listeners(type).length
+    : emitter.listenerCount(type)
+
+  return count > 0
+}
+
+/**
  * Determine if namespace is ignored.
  */
 
 function isignored (namespace) {
-  /* istanbul ignore next: tested in a child processs */
   if (process.noDeprecation) {
     // --no-deprecation support
     return true
@@ -12754,7 +12771,6 @@ function isignored (namespace) {
  */
 
 function istraced (namespace) {
-  /* istanbul ignore next: tested in a child processs */
   if (process.traceDeprecation) {
     // --trace-deprecation support
     return true
@@ -12771,7 +12787,7 @@ function istraced (namespace) {
  */
 
 function log (message, site) {
-  var haslisteners = eventListenerCount(process, 'deprecation') !== 0
+  var haslisteners = eehaslisteners(process, 'deprecation')
 
   // abort early if no destination
   if (!haslisteners && this._ignored) {
@@ -12914,7 +12930,7 @@ function formatPlain (msg, caller, stack) {
   // add stack trace
   if (this._traced) {
     for (var i = 0; i < stack.length; i++) {
-      formatted += '\n    at ' + callSiteToString(stack[i])
+      formatted += '\n    at ' + stack[i].toString()
     }
 
     return formatted
@@ -12939,7 +12955,7 @@ function formatColor (msg, caller, stack) {
   // add stack trace
   if (this._traced) {
     for (var i = 0; i < stack.length; i++) {
-      formatted += '\n    \x1b[36mat ' + callSiteToString(stack[i]) + '\x1b[39m' // cyan
+      formatted += '\n    \x1b[36mat ' + stack[i].toString() + '\x1b[39m' // cyan
     }
 
     return formatted
@@ -13004,18 +13020,18 @@ function wrapfunction (fn, message) {
   }
 
   var args = createArgumentsString(fn.length)
-  var deprecate = this // eslint-disable-line no-unused-vars
   var stack = getStack()
   var site = callSiteLocation(stack[1])
 
   site.name = fn.name
 
-   // eslint-disable-next-line no-eval
-  var deprecatedfn = eval('(function (' + args + ') {\n' +
+  // eslint-disable-next-line no-new-func
+  var deprecatedfn = new Function('fn', 'log', 'deprecate', 'message', 'site',
     '"use strict"\n' +
+    'return function (' + args + ') {' +
     'log.call(deprecate, message, site)\n' +
     'return fn.apply(this, arguments)\n' +
-    '})')
+    '}')(fn, log, this, message, site)
 
   return deprecatedfn
 }
@@ -13123,234 +13139,6 @@ function DeprecationError (namespace, message, stack) {
   })
 
   return error
-}
-
-
-/***/ }),
-
-/***/ 5554:
-/***/ ((module) => {
-
-"use strict";
-/*!
- * depd
- * Copyright(c) 2014 Douglas Christopher Wilson
- * MIT Licensed
- */
-
-
-
-/**
- * Module exports.
- */
-
-module.exports = callSiteToString
-
-/**
- * Format a CallSite file location to a string.
- */
-
-function callSiteFileLocation (callSite) {
-  var fileName
-  var fileLocation = ''
-
-  if (callSite.isNative()) {
-    fileLocation = 'native'
-  } else if (callSite.isEval()) {
-    fileName = callSite.getScriptNameOrSourceURL()
-    if (!fileName) {
-      fileLocation = callSite.getEvalOrigin()
-    }
-  } else {
-    fileName = callSite.getFileName()
-  }
-
-  if (fileName) {
-    fileLocation += fileName
-
-    var lineNumber = callSite.getLineNumber()
-    if (lineNumber != null) {
-      fileLocation += ':' + lineNumber
-
-      var columnNumber = callSite.getColumnNumber()
-      if (columnNumber) {
-        fileLocation += ':' + columnNumber
-      }
-    }
-  }
-
-  return fileLocation || 'unknown source'
-}
-
-/**
- * Format a CallSite to a string.
- */
-
-function callSiteToString (callSite) {
-  var addSuffix = true
-  var fileLocation = callSiteFileLocation(callSite)
-  var functionName = callSite.getFunctionName()
-  var isConstructor = callSite.isConstructor()
-  var isMethodCall = !(callSite.isToplevel() || isConstructor)
-  var line = ''
-
-  if (isMethodCall) {
-    var methodName = callSite.getMethodName()
-    var typeName = getConstructorName(callSite)
-
-    if (functionName) {
-      if (typeName && functionName.indexOf(typeName) !== 0) {
-        line += typeName + '.'
-      }
-
-      line += functionName
-
-      if (methodName && functionName.lastIndexOf('.' + methodName) !== functionName.length - methodName.length - 1) {
-        line += ' [as ' + methodName + ']'
-      }
-    } else {
-      line += typeName + '.' + (methodName || '<anonymous>')
-    }
-  } else if (isConstructor) {
-    line += 'new ' + (functionName || '<anonymous>')
-  } else if (functionName) {
-    line += functionName
-  } else {
-    addSuffix = false
-    line += fileLocation
-  }
-
-  if (addSuffix) {
-    line += ' (' + fileLocation + ')'
-  }
-
-  return line
-}
-
-/**
- * Get constructor name of reviver.
- */
-
-function getConstructorName (obj) {
-  var receiver = obj.receiver
-  return (receiver.constructor && receiver.constructor.name) || null
-}
-
-
-/***/ }),
-
-/***/ 2078:
-/***/ ((module) => {
-
-"use strict";
-/*!
- * depd
- * Copyright(c) 2015 Douglas Christopher Wilson
- * MIT Licensed
- */
-
-
-
-/**
- * Module exports.
- * @public
- */
-
-module.exports = eventListenerCount
-
-/**
- * Get the count of listeners on an event emitter of a specific type.
- */
-
-function eventListenerCount (emitter, type) {
-  return emitter.listeners(type).length
-}
-
-
-/***/ }),
-
-/***/ 9829:
-/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
-
-"use strict";
-/*!
- * depd
- * Copyright(c) 2014-2015 Douglas Christopher Wilson
- * MIT Licensed
- */
-
-
-
-/**
- * Module dependencies.
- * @private
- */
-
-var EventEmitter = (__nccwpck_require__(2361).EventEmitter)
-
-/**
- * Module exports.
- * @public
- */
-
-lazyProperty(module.exports, 'callSiteToString', function callSiteToString () {
-  var limit = Error.stackTraceLimit
-  var obj = {}
-  var prep = Error.prepareStackTrace
-
-  function prepareObjectStackTrace (obj, stack) {
-    return stack
-  }
-
-  Error.prepareStackTrace = prepareObjectStackTrace
-  Error.stackTraceLimit = 2
-
-  // capture the stack
-  Error.captureStackTrace(obj)
-
-  // slice the stack
-  var stack = obj.stack.slice()
-
-  Error.prepareStackTrace = prep
-  Error.stackTraceLimit = limit
-
-  return stack[0].toString ? toString : __nccwpck_require__(5554)
-})
-
-lazyProperty(module.exports, 'eventListenerCount', function eventListenerCount () {
-  return EventEmitter.listenerCount || __nccwpck_require__(2078)
-})
-
-/**
- * Define a lazy property.
- */
-
-function lazyProperty (obj, prop, getter) {
-  function get () {
-    var val = getter()
-
-    Object.defineProperty(obj, prop, {
-      configurable: true,
-      enumerable: true,
-      value: val
-    })
-
-    return val
-  }
-
-  Object.defineProperty(obj, prop, {
-    configurable: true,
-    enumerable: true,
-    get: get
-  })
-}
-
-/**
- * Call toString() on the obj
- */
-
-function toString (obj) {
-  return obj.toString()
 }
 
 
