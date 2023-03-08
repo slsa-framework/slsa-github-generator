@@ -32,7 +32,7 @@ func Test_BuildDefinition(t *testing.T) {
 	}
 
 	wantSource := slsa1.ArtifactReference{
-		URI:    "git+https://github.com/slsa-framework/slsa-github-generator",
+		URI:    "git+https://github.com/slsa-framework/slsa-github-generator@refs/heads/main",
 		Digest: map[string]string{"sha1": "cf5804b5c6f1a4b2a0b03401a487dfdfbe3a5f00"},
 	}
 
