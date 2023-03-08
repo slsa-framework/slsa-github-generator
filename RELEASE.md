@@ -442,10 +442,13 @@ For each of the GHA builders, you will need to:
    package.
 
 5. Export the image to the
-   `./cli/slsa-verifier/testdata/gha_generic_container/$BUILDER_TAG/` directory.
+   `./cli/slsa-verifier/testdata/gha_generic_container/$BUILDER_TAG/` directory
+   in the slsa-verifier repository.
 
    ```shell
-   cosign save --dir container_workflow_dispatch ghcr.io/slsa-framework/example-package.verifier-e2e.all.tag.main.default.slsa3@sha256:<digest>
+   cosign save \
+       --dir ./cli/slsa-verifier/testdata/gha_generic_container/$BUILDER_TAG/container_workflow_dispatch \
+       ghcr.io/slsa-framework/example-package.verifier-e2e.all.tag.main.default.slsa3@sha256:<digest>
    ```
 
 6. Send a pull request to merge the changes into the verifier's repository. The
