@@ -18,3 +18,15 @@ if [[ "$results" != "" ]]; then
     echo "$results"
     exit 1
 fi
+
+results=$(
+    find .github/workflows/ -maxdepth 1 -type f -print0 -name '*.yaml' -o -name '*.yml' \
+    | xargs -0 grep -P "slsa-framework/slsa-github-generator/.github/workflows/delegator_generic_slsa3.yml@(?!main)" \
+    || true
+)
+if [[ "$results" != "" ]]; then
+    echo "Some delegator workflows are not referenced at main"
+    echo "$results"
+    exit 1
+fi
+

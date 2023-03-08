@@ -40,6 +40,19 @@ if [[ "$results" != "" ]]; then
     exit 1
 fi
 
+# Verify the internal calls to BYOB workflows are referenced by the release tag.
+results=$(
+    find .github/workflows/ -maxdepth 1 -type f -print0 -name '*.yaml' -o -name '*.yml' |
+        xargs -0 grep -Pn "slsa-framework/slsa-github-generator/.github/workflows/delegator_generic_slsa3.yml@(?!$RELEASE_TAG)" |
+        sed 's/\(.*:\) *uses:.*\(\/.*\)/\1 [...]\2/' ||
+        true
+)
+if [[ "$results" != "" ]]; then
+    echo "Some delegator workflows are not referenced via the correct release tag \"$RELEASE_TAG\""
+    echo "$results"
+    exit 1
+fi
+
 if [[ "$RELEASE_TAG" =~ .*-rc\.[0-9]*$ ]]; then
     # don't check documentation for release candidates
     exit 0
