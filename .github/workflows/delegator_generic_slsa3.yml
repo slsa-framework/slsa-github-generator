@@ -248,7 +248,7 @@ jobs:
   # cleanup deletes internal artifacts used by the delegator workflow
   cleanup:
     runs-on: ubuntu-latest
-    needs: [generate-provenance]
+    needs: [rng, generate-provenance]
     env:
       RNG: ${{ needs.rng.outputs.value }}
     steps:
