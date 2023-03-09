@@ -1,8 +1,8 @@
 /**
- * @fileoverview Tests for predicate.ts
+ * @fileoverview Tests for utils.ts
  */
 
-import { getWorkflowPath } from "../src/predicate";
+import { getWorkflowPath } from "../src/utils";
 import { githubObj } from "../src/types";
 
 describe("getWorkflowPath", () => {
