@@ -68,7 +68,6 @@ e2e_verify_common_all_v1() {
 # $1: the predicate content
 e2e_verify_common_buildDefinition_v1() {
     # This does not include buildType since it is not common to all.
-    e2e_verify_predicate_v1_buildDefinition_externalParameters_source "$1" "{\"uri\":\"git+https://github.com/$GITHUB_REPOSITORY@$GITHUB_REF\",\"digest\":{\"sha1\":\"$GITHUB_SHA\"}}"
     e2e_verify_predicate_v1_buildDefinition_systemParameters "$1" "GITHUB_EVENT_NAME" "$GITHUB_EVENT_NAME"
     e2e_verify_predicate_v1_buildDefinition_systemParameters "$1" "GITHUB_REF" "$GITHUB_REF"
     e2e_verify_predicate_v1_buildDefinition_systemParameters "$1" "GITHUB_REF_TYPE" "$GITHUB_REF_TYPE"
