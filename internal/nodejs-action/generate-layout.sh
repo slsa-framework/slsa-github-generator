@@ -17,7 +17,7 @@ integrity_digest=$(echo "${PACK_JSON}" | jq -r '.[0].integrity')
 alg=$(echo "${integrity_digest}" | cut -d'-' -f1 | tr '[:upper:]' '[:lower:]')
 # Here we parse out the checksum and convert it to hex. 'od' seems to be the
 # standard tool to do this kind conversion on Linux.
-digest=$(echo "${integrity_digest}" | cut -d'-' -f2 | base64 -d | od -A n -v -t x1 | tr -d ' \n')
+digest=$(echo "${integrity_digest}" | cut -d'-' -f2- | base64 -d | od -A n -v -t x1 | tr -d ' \n')
 
 # NOTE: the name of the attestation should be configurable.
 cat <<EOF | jq | tee "$SLSA_OUTPUTS_ARTIFACTS_FILE"
