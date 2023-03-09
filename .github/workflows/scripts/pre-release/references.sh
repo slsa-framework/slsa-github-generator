@@ -26,10 +26,11 @@ if [ "$RELEASE_TAG" == "" ]; then
     exit 1
 fi
 
-# Verify internal Actions are referenced by the release tag.
 cd __THIS_REPO__
+
+# Verify internal Actions are referenced by the release tag.
 results=$(
-    find .github/workflows/ -maxdepth 1 -type f -print0 -name '*.yaml' -o -name '*.yml' |
+    find .github/workflows/ -maxdepth 1 -name '*.yaml' -o -name '*.yml' -type f -print0 |
         xargs -0 grep -Pn "slsa-framework/slsa-github-generator/.github/actions/.*@(?!$RELEASE_TAG)" |
         sed 's/\(.*:\) *uses:.*\(\/.*\)/\1 [...]\2/' ||
         true
@@ -40,15 +41,15 @@ if [[ "$results" != "" ]]; then
     exit 1
 fi
 
-# Verify the internal calls to workflows are referenced by the release tag.
+# Verify the calls to delegator workflows are referenced by the release tag in our builders.
 results=$(
-    find .github/workflows/ -maxdepth 1 -type f -print0 -name '*.yaml' -o -name '*.yml' |
+    find .github/workflows/ -maxdepth 1 -name 'builder_*.yaml' -o -name 'builder_*.yml' -type f -print0 |
         xargs -0 grep -Pn "slsa-framework/slsa-github-generator/.github/workflows/.*@(?!$RELEASE_TAG)" |
         sed 's/\(.*:\) *uses:.*\(\/.*\)/\1 [...]\2/' ||
         true
 )
 if [[ "$results" != "" ]]; then
-    echo "Some workflows are not referenced via the correct release tag \"$RELEASE_TAG\""
+    echo "Some builder workflows are not referenced via the correct release tag \"$RELEASE_TAG\""
     echo "$results"
     exit 1
 fi
