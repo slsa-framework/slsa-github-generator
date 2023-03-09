@@ -22,3 +22,97 @@ export function getWorkflowPath(obj: githubObj): string {
     .substring(`${obj.repository}/`.length)
     .split("@", 1)[0];
 }
+
+export function parseCertificate(
+  bundle: sigstore.sigstore.Bundle
+): [string, string, string, string] {
+  if (bundle === undefined) {
+    throw new Error(`undefined bundle.`);
+  }
+  if (bundle.verificationMaterial === undefined) {
+    throw new Error(`undefined bundle.verificationMaterial.`);
+  }
+  if (bundle.verificationMaterial.x509CertificateChain === undefined) {
+    throw new Error(
+      `undefined bundle.verificationMaterial.x509CertificateChain.`
+    );
+  }
+  if (
+    bundle.verificationMaterial.x509CertificateChain.certificates.length === 0
+  ) {
+    throw new Error(
+      `bundle.verificationMaterial.x509CertificateChaincertificates is empty.`
+    );
+  }
+  // NOTE: the first certificate is the client certificate.
+  const clientCertDer = Buffer.from(
+    bundle.verificationMaterial.x509CertificateChain.certificates[0].rawBytes,
+    "base64"
+  );
+  const clientCertPath = "client.cert";
+  fs.writeFileSync(clientCertPath, clientCertDer);
+
+  // https://stackabuse.com/executing-shell-commands-with-node-js/
+  // The SAN from the certificate looks like:
+  // `
+  //  X509v3 Subject Alternative Name: critical\n
+  //      URI:https://github.com/laurentsimon/slsa-delegated-tool/.github/workflows/tool1_slsa3.yml@refs/heads/main\n
+  // `
+  const resultSAN = child_process
+    .execSync(`openssl x509 -in ${clientCertPath} -noout -ext subjectAltName`)
+    .toString();
+  const indexSAN = resultSAN.indexOf("URI:");
+  if (indexSAN === -1) {
+    throw new Error("error: cannot find URI in subjectAltName");
+  }
+  const toolURI = resultSAN.slice(indexSAN + 4).replace("\n", "");
+  core.debug(`tool-uri: ${toolURI}`);
+
+  // NOTE: we can use the job_workflow_ref and job_workflow_sha when they become available.
+  const [toolRepository, toolRef] = extractIdentifyFromSAN(toolURI);
+  core.debug(`tool-repository: ${toolRepository}`);
+  core.debug(`tool-ref: ${toolRef}`);
+
+  // The commit sha for the repo is stored in
+  // a v3 extension with oid '1.3.6.1.4.1.57264.1.3'.
+  // `
+  //    1.3.6.1.4.1.57264.1.3:\n
+  //        8cbf4d422367d8499d5980a837cb9cc8e1e67001
+  // `
+  const resultSha = child_process
+    .execSync(`openssl x509 -in ${clientCertPath} -noout -text | grep -A 1 '1.3.6.1.4.1.57264.1.3:`)
+    .toString();
+  const indexSha = resultSha.indexOf("1.3.6.1.4.1.57264.1.3");
+  if (indexSha === -1) {
+    throw new Error("error: cannot find oid '1.3.6.1.4.1.57264.1.3' in certificate");
+  }
+  const toolSha = resultSha.slice(indexSha + "1.3.6.1.4.1.57264.1.3:".length).replace("\n", "").trim();
+  core.debug(`tool-sha: ${toolSha}`);
+
+  return [toolURI, toolRepository, toolRef, toolSha];
+}
+
+function extractIdentifyFromSAN(URI: string): [string, string] {
+  // NOTE: the URI looks like:
+  // https://github.com/laurentsimon/slsa-delegated-tool/.github/workflows/tool1_slsa3.yml@refs/heads/main.
+  // We want to extract:
+  // - the repository: laurentsimon/slsa-delegated-tool
+  // - the ref: refs/heads/main
+  const parts = URI.split("@");
+  if (parts.length !== 2) {
+    throw new Error(`invalid URI (1): ${URI}`);
+  }
+  const ref = parts[1];
+  const url = parts[0];
+  const gitHubURL = "https://github.com/";
+  if (!url.startsWith(gitHubURL)) {
+    throw new Error(`not a GitHub URI: ${URI}`);
+  }
+  // NOTE: we omit the gitHubURL from the URL.
+  const parts2 = url.slice(gitHubURL.length).split("/");
+  if (parts2.length <= 2) {
+    throw new Error(`invalid URI (2): ${URI}`);
+  }
+  const repo = `${parts2[0]}/${parts2[1]}`;
+  return [repo, ref];
+}
