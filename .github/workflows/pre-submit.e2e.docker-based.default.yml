@@ -43,4 +43,7 @@ jobs:
       - uses: actions/download-artifact@e9ef242655d12993efdcda9058dee2db83a2cb9b
         with:
           name: ${{ needs.build.outputs.attestations-download-name }}
-      - run: ./.github/workflows/scripts/pre-submit.e2e.docker-based.default.sh
+      - env:
+          BINARY: ${{ steps.build.outputs.name }}
+          PROVENANCE: attestation.intoto
+        run: ./.github/workflows/scripts/pre-submit.e2e.docker-based.default.sh
