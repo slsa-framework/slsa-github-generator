@@ -86,6 +86,13 @@ jobs:
       contents: write # For asset uploads. Optional
     runs-on: ubuntu-latest
     steps:
+      - name: Setup Node
+        uses: actions/setup-node@64ed1c7eab4cce3362f8c340dee64e5eaeef8f7c # v3.6.0
+        with:
+          node-version: ${{ inputs.node-version }}
+          node-version-file: ${{ inputs.node-version-file }}
+          registry-url: ${{ inputs.registry-url }}
+
       - name: Download attestations
         uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
         with:
@@ -106,6 +113,16 @@ jobs:
       # TODO(#888): Publish to GitHub release.
 
       # TODO(#1669): Publish to npm. Note that we need to upload our own bundle to npm.
-      # - name: Publish to npm registry
-      #   run: |
-      #     npm publish # ...
+      # TODO(#1669): Use mainline version of npm
+      - name: Publish to npm registry
+        id: publish
+        run: |
+          set -euo pipefail
+
+          # Clone npm fork.
+          cd $(which node)
+          mkdir -p node_modules
+          cd node_modules
+          git clone https://github.com/ianlewis/cli.git npm
+
+          ./npm/bin/npm publish --provenance /path/to/bundle.sigstore
