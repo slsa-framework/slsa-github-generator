@@ -172,7 +172,9 @@ async function run(): Promise<void> {
         break;
       }
       default: {
-        throw new Error(`Unsupported slsa-version: ${slsaVersion}`);
+        throw new Error(
+          `Unsupported slsa-version: ${rawMaskedTokenObj.slsaVersion}`
+        );
       }
     }
     fs.writeFileSync(safeOutput, predicateStr, {
