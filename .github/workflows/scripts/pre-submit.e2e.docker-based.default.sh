@@ -18,7 +18,6 @@ set -euo pipefail
 
 source "./.github/workflows/scripts/e2e-verify.common.sh"
 
-# TODO(github.com/slsa-framework/slsa-github-generator/issues/129): Address base64 output format.
 ATTESTATION=$(cat "$PROVENANCE")
 
 # Verify subject
