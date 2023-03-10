@@ -42,7 +42,7 @@ inputs:
     type: string
     required: true
 
-  slsa-workflow-inputs-mask:
+  slsa-workflow-masked-inputs:
     description: >
       A comma-separated list of input fields to mask in the provenance.
       It should be used for fields that have low-entropy values
