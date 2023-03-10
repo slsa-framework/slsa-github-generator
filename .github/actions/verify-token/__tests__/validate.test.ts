@@ -114,54 +114,6 @@ describe("validateFieldNonEmpty", () => {
   });
 });
 
-const token: rawTokenInterface = {
-  version: 1,
-  context: "the context",
-  builder: {
-    private_repository: true,
-    runner_label: "the label",
-    audience: "the audience",
-  },
-  github: {
-    actor_id: "123",
-    event_name: "workflow_dispatch",
-    event_path: "/path/to/event.json",
-    job: "234",
-    ref: "refs/heads/mybranch",
-    ref_type: "branch",
-    repository: "ianlewis/byob-test",
-    repository_id: "456",
-    repository_owner_id: "789",
-    run_attempt: "1",
-    run_id: "123456789",
-    run_number: "1",
-    sha: "deadbeef",
-    workflow_ref:
-      "ianlewis/byob-test/.github/workflows/my-workflow.yml@refs/heads/my_branch",
-    workflow_sha: "deadbeef",
-  },
-  runner: {
-    arch: "arch",
-    name: "name",
-    os: "os",
-  },
-  image: {
-    os: "os",
-    version: "version",
-  },
-  tool: {
-    actions: {
-      build_artifacts: {
-        path: "path",
-      },
-    },
-    inputs: JSON.parse(
-      '{"name1": "value1", "name2": 2, "name3": "", "name4": true}'
-    ),
-    masked_inputs: ["name2", "name3", "name4"],
-  },
-};
-
 function createToken(
   inputs: Map<string, string | number | boolean>,
   masked: string[]
