@@ -16,7 +16,6 @@ import * as fetch from 'node-fetch';
 import * as YAML from 'yaml';
 import { rawTokenInterface, GitHubWorkflowInterface } from "../src/types";
 
-
 export async function filterWorkflowInputs(slsaToken: rawTokenInterface, 
     ghToken: string, repoName: string, hash: string, workflowPath: string): Promise<rawTokenInterface> {
     const ret = Object.create(slsaToken);

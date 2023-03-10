@@ -193,6 +193,22 @@ describe("validateAndMaskInputs", () => {
     );
   });
 
+  it("single masked inputs", () => {
+    const inputs = JSON.parse(
+      '{"name1": "value1", "name2": 2, "name3": "", "name4": true}'
+    );
+    const masked = ["name2"];
+    const token = createToken(inputs, masked);
+    expect(validateAndMaskInputs(token).tool.inputs).toEqual(
+      new Map<string, string | number | boolean>([
+        ["name1", "value1"],
+        ["name2", "***"],
+        ["name3", ""],
+        ["name4", true],
+      ])
+    );
+  });
+
   it("empty masked inputs", () => {
     const inputs = JSON.parse(
       '{"name1": "value1", "name2": 2, "name3": "", "name4": true}'
