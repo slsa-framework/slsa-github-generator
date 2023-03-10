@@ -33,7 +33,7 @@ on:
         type: string
 
       run-scripts:
-        description: "An ordered list of scripts from the package.json file to run (space separated). Example value: 'script1 script2'"
+        description: "An ordered list of scripts from the package.json file to run (comma separated). Example value: 'script1, script2'"
         required: false
         type: string
 
