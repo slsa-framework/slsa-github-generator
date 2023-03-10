@@ -66,7 +66,7 @@ async function run(): Promise<void> {
     // Construct an unsigned SLSA token.
     const unsignedSlsaToken = {
       version: 1,
-      slsaVersion: slsaVersion,
+      slsaVersion,
       context: "SLSA delegator framework",
       builder: {
         rekor_log_public: rekorLogPublic,
