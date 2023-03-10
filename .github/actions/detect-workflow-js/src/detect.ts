@@ -74,7 +74,11 @@ export async function detectWorkflowFromContext(
       workflowPath[0].split("/");
     const tmpRepository = [workflowOwner, workflowRepo].join("/");
     if (!reusableWorkflow.ref) {
-      return Promise.reject(Error("Referenced workflow missing ref: was the workflow invoked by digest?"))
+      return Promise.reject(
+        Error(
+          "Referenced workflow missing ref: was the workflow invoked by digest?"
+        )
+      );
     }
     const tmpRef = reusableWorkflow.ref;
     const tmpWorkflow = workflowArray.join("/");
