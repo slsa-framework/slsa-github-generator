@@ -14,32 +14,18 @@ limitations under the License.
 import * as github from "@actions/github";
 import * as fs from "fs";
 
-import {
-  githubObj,
-  rawTokenInterface,
-  ArtifactReference,
-  SLSAv1Predicate,
-} from "./types";
+import { rawTokenInterface } from "./types";
+import { createURI, getWorkflowPath } from "./utils";
+import { SLSAPredicate, ArtifactReference } from "./slsatypes1";
 
-const DELEGATOR_BUILD_TYPE =
-  "https://github.com/slsa-framework/slsa-github-generator/delegator-generic@v0";
-
-// getWorkflowPath returns the workflow's path from the workflow_ref.
-export function getWorkflowPath(obj: githubObj): string {
-  // GITHUB_WORKFLOW_REF contains the repository name in the path. We will trim
-  // it out.
-  // e.g. 'octocat/hello-world/.github/workflows/my-workflow.yml@refs/heads/my_branch'
-  // Strip off the repo name and git ref from the workflow path.
-  return obj.workflow_ref
-    .substring(`${obj.repository}/`.length)
-    .split("@", 1)[0];
-}
+const DELEGATOR_BUILD_TYPE_V1 =
+  "https://github.com/slsa-framework/slsa-github-generator/delegator-generic@v1";
 
 export async function createPredicate(
   rawTokenObj: rawTokenInterface,
   toolURI: string,
   token: string
-): Promise<SLSAv1Predicate> {
+): Promise<SLSAPredicate> {
   const callerRepo: string = createURI(
     rawTokenObj.github.repository,
     rawTokenObj.github.ref
@@ -64,9 +50,9 @@ export async function createPredicate(
   });
 
   // NOTE: see example at https://github.com/slsa-framework/slsa/blob/main/docs/github-actions-workflow/examples/v0.1/example.json.
-  const predicate: SLSAv1Predicate = {
+  const predicate: SLSAPredicate = {
     buildDefinition: {
-      buildType: DELEGATOR_BUILD_TYPE,
+      buildType: DELEGATOR_BUILD_TYPE_V1,
       externalParameters: {
         // Inputs to the TRW, which define the interface of the builder for the
         // BYOB framework. Some of these values may be masked by the TRW.
@@ -138,16 +124,4 @@ export async function createPredicate(
   }
 
   return predicate;
-}
-
-// createURI creates the fully qualified URI out of the repository
-function createURI(repository: string, ref: string): string {
-  if (!repository) {
-    throw new Error(`cannot create URI: repository undefined`);
-  }
-  let refVal = "";
-  if (ref) {
-    refVal = `@${ref}`;
-  }
-  return `git+https://github.com/${repository}${refVal}`;
 }

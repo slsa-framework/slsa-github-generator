@@ -40,62 +40,6 @@ export interface runnerObj {
   os: string;
 }
 
-export interface Builder {
-  id: string;
-  version?: string;
-  builderDependencies?: ArtifactReference[];
-}
-
-export interface DigestSet {
-  [key: string]: string;
-}
-
-export interface Metadata {
-  invocationId?: string;
-  startedOn?: Date;
-  finishedOn?: Date;
-}
-
-export interface ArtifactReference {
-  uri: string;
-  digest: DigestSet;
-  localName?: string;
-  downloadLocation?: string;
-  mediaType?: string;
-}
-
-export interface BuildDefinition {
-  // buildType is a TypeURI that unambiguously indicates the type of this message and how to initiate the build.
-  buildType: string;
-
-  // externalParameters is the set of top-level external inputs to the build.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  externalParameters: any;
-
-  // systemParameters describes parameters of the build environment provided by the `builder`.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  systemParameters?: any;
-
-  // resolvedDependencies are dependencies needed at build time.
-  resolvedDependencies?: ArtifactReference[];
-}
-
-export interface RunDetails {
-  builder: Builder;
-
-  metadata: Metadata;
-
-  byproducts?: ArtifactReference[];
-}
-
-export interface SLSAv1Predicate {
-  // buildDefinition describes the inputs to the build.
-  buildDefinition: BuildDefinition;
-
-  // runDetails includes details specific to this particular execution of the build.
-  runDetails: RunDetails;
-}
-
 export interface rawTokenInterface {
   version: number;
   context: string;

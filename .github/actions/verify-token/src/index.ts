@@ -22,7 +22,8 @@ import {
   validateGitHubFields,
   validateAndMaskInputs,
 } from "./validate";
-import { createPredicate } from "./predicate";
+import { createPredicate as createPredicate_v1 } from "./predicate1";
+import { createPredicate as createPredicate_v02 } from "./predicate02";
 import { rawTokenInterface } from "./types";
 import { getEnv, resolvePathInput } from "./utils";
 
@@ -55,11 +56,17 @@ async function run(): Promise<void> {
     const workflowRecipient = core.getInput("slsa-workflow-recipient");
     const unverifiedToken = core.getInput("slsa-unverified-token");
 
+    const slsaVersion = core.getInput("slsa-version");
+    if (!["1.0-rc1", "0.2"].includes(slsaVersion)) {
+      throw new Error(`Unsupported slsa-version: ${slsaVersion}`);
+    }
+
     const outputPredicate = core.getInput("output-predicate");
     if (!outputPredicate) {
       // detect if output predicate is null or empty string.
       throw new Error("output-predicate must be supplied");
     }
+
     const wd = getEnv("GITHUB_WORKSPACE");
     const safeOutput = resolvePathInput(outputPredicate, wd);
     // TODO(#1513): Use a common utility to harden file writes.
@@ -143,16 +150,35 @@ async function run(): Promise<void> {
     }
 
     // NOTE: we create the predicate using the token with masked inputs.
-    const predicate = await createPredicate(
-      rawMaskedTokenObj,
-      toolURI,
-      ghToken
-    );
-    fs.writeFileSync(safeOutput, JSON.stringify(predicate), {
+    let predicateStr = "";
+    switch (slsaVersion) {
+      case "1.0-rc1": {
+        const predicate_v1 = await createPredicate_v1(
+          rawMaskedTokenObj,
+          toolURI,
+          ghToken
+        );
+        predicateStr = JSON.stringify(predicate_v1);
+        break;
+      }
+      case "0.2": {
+        const predicate_v02 = await createPredicate_v02(
+          rawMaskedTokenObj,
+          toolURI,
+          ghToken
+        );
+        predicateStr = JSON.stringify(predicate_v02);
+        break;
+      }
+      default: {
+        throw new Error(`Unsupported slsa-version: ${slsaVersion}`);
+      }
+    }
+    fs.writeFileSync(safeOutput, predicateStr, {
       flag: "ax",
       mode: 0o600,
     });
-    core.debug(`predicate: ${JSON.stringify(predicate)}`);
+    core.debug(`predicate: ${predicateStr}`);
     core.debug(`Wrote predicate to ${safeOutput}`);
 
     core.setOutput("tool-repository", toolRepository);
