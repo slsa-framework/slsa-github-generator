@@ -91,7 +91,7 @@ async function run(): Promise<void> {
 
     const rawTokenStr = rawToken.toString();
     const rawTokenObj: rawTokenInterface = JSON.parse(rawTokenStr);
-
+/*
     // Verify the version.
     validateField("version", rawTokenObj.version, 1);
 
@@ -126,20 +126,25 @@ async function run(): Promise<void> {
       "tool.actions.build_artifacts.path",
       rawTokenObj.tool.actions.build_artifacts.path
     );
-
+*/
     // No validation needed for the builder inputs,
     // they may be empty.
     // TODO(#1780): test empty inputs.
 
     // Extract certificate information.
-    const [toolURI, toolRepository, toolRef, toolSha] = parseCertificate(bundle);
+    const [toolURI, toolRepository, toolRef, toolSha, toolPath] = parseCertificate(bundle);
 
     // Extract the inputs.
     // See https://github.com/slsa-framework/slsa-github-generator/issues/1737.
-    const rawFinalTokenObj = fixInputs(rawTokenObj, "todo", toolRepository, toolSha);
-      //TODO: use result in next call
+    const rawFinalTokenObj = await filterWorkflowInputs(rawTokenObj, ghToken, toolRepository, toolSha, toolPath);
+    core.debug(
+      `workflow inputs: ${JSON.stringify(
+        Object.fromEntries(rawFinalTokenObj.tool.inputs)
+      )}`
+    );
+
     // Validate the masked inputs and update the token.
-    const rawMaskedTokenObj = validateAndMaskInputs(rawTokenObj);
+    const rawMaskedTokenObj = validateAndMaskInputs(rawFinalTokenObj);
     core.debug(
       `masked inputs: ${JSON.stringify(
         Object.fromEntries(rawMaskedTokenObj.tool.inputs)
@@ -149,11 +154,6 @@ async function run(): Promise<void> {
     core.debug(`slsa-verified-token: ${rawTokenStr}`);
 
     // Now generate the SLSA predicate using the verified token and the GH context.
-    const ghToken = core.getInput("token");
-    if (!ghToken) {
-      throw new Error("token not provided");
-    }
-
     // NOTE: we create the predicate using the token with masked inputs.
     let predicateStr = "";
     switch (rawMaskedTokenObj.slsaVersion) {

@@ -13,34 +13,56 @@ limitations under the License.
 
 import * as core from "@actions/core";
 import * as fetch from 'node-fetch';
-import { rawTokenInterface } from "../src/types";
+import * as YAML from 'yaml';
+import { rawTokenInterface, GitHubWorkflowInterface } from "../src/types";
 
 
-export function fixInputs(slsaToken: rawTokenInterface, 
-    ghToken: string, repoName: string, hash: string): rawTokenInterface {
+export async function filterWorkflowInputs(slsaToken: rawTokenInterface, 
+    ghToken: string, repoName: string, hash: string, workflowPath: string): Promise<rawTokenInterface> {
     const ret = Object.create(slsaToken);
-    const modifiedInputs = new Map(Object.entries(slsaToken.tool.inputs));
+    const wokflowInputs = new Map(Object.entries(slsaToken.tool.inputs));
 
-    // 1.3.6.1.4.1.57264.1.3: 
-    // 8cbf4d422367d8499d5980a837cb9cc8e1e67001
-
-    // for (const key of token.tool.masked_inputs) {
-    //     if (!maskedMapInputs.has(key)) {
-    //     throw new Error(`input ${key} does not exist in the input map`);
-    //     }
-    //     // verify non-empty keys.
-    //     if (key === undefined || key.trim().length === 0) {
-    //     throw new Error("empty key in the input map");
-    //     }
-    //     // NOTE: This mask is the same used by GitHub for encrypted secrets and masked values.
-    //     maskedMapInputs.set(key, "***");
-    // }
-    // ret.tool.inputs = maskedMapInputs;
-    //
+    // repoName = "laurentsimon/sbom-action";
+    // hash = "3d7a2997e55f3f36789b031d69e8550194b51fa8";
+    // workflowPath = ".github/workflows/slsa3.yml";
+    const url = `https://raw.githubusercontent.com/${repoName}/${hash}/${workflowPath}`;
+    core.debug(`url: ${url}`);
+    
     const headers = new fetch.Headers();
-    headers.append("Authorization:", `token ${ghToken}`);
-    const response = fetch.default('https://api.github.com/users/github',{headers: headers});
-    core.info(`repsonse: ${response}`)
+    headers.append("Authorization", `token ${ghToken}`);
+    const response = await fetch.default(url);
+    if (response.status != 200){
+        throw new Error(`status error: ${response.status}`);
+    }
+    if (response.body == undefined){
+        throw new Error(`no body`);
+    }
+    const body = await response.text();
+    //core.info(`response: ${body}`);
+
+    const workflow: GitHubWorkflowInterface = YAML.parse(body);
+    if (workflow.on == undefined) {
+        throw new Error("no 'on' field");
+    }
+    if (workflow.on.workflow_call == undefined) {
+        throw new Error("no 'workflow_call' field");
+    }
+    // No inputs defined for the builder.
+    if (workflow.on.workflow_call.inputs == undefined) {
+        core.info("no input defined in the workflow")
+        ret.tool.inputs = new Map();
+    } else {
+        for (const name in wokflowInputs){
+            core.info(`name: ${name}`);
+            if (!workflow.on.workflow_call.inputs.has(name)){
+                core.info(`delete: ${name}`);
+                wokflowInputs.delete(name);
+            }
+        }
+    }
+    
+    ret.tool.inputs = wokflowInputs;
+    core.info(`response: ${body}`);
     return ret;
 }
 

@@ -65,3 +65,11 @@ export interface rawTokenInterface {
     masked_inputs: string[];
   };
 }
+
+export interface GitHubWorkflowInterface{
+  on: {
+    workflow_call:{
+      inputs: Map<string, Object>,
+    }
+  }
+}

@@ -25,7 +25,7 @@ export function getWorkflowPath(obj: githubObj): string {
 
 export function parseCertificate(
   bundle: sigstore.sigstore.Bundle
-): [string, string, string, string] {
+): [string, string, string, string, string] {
   if (bundle === undefined) {
     throw new Error(`undefined bundle.`);
   }
@@ -79,18 +79,39 @@ export function parseCertificate(
   //    1.3.6.1.4.1.57264.1.3:\n
   //        8cbf4d422367d8499d5980a837cb9cc8e1e67001
   // `
-  const resultSha = child_process
-    .execSync(`openssl x509 -in ${clientCertPath} -noout -text | grep -A 1 '1.3.6.1.4.1.57264.1.3:`)
+  const textCertPath = "./client.txt";
+  const shaOid = "1.3.6.1.4.1.57264.1.3";
+  child_process
+    .execSync(`openssl x509 -in ${clientCertPath} -noout -text -out ${textCertPath}`)
     .toString();
-  const indexSha = resultSha.indexOf("1.3.6.1.4.1.57264.1.3");
+  const resultSha = child_process
+    .execSync(`grep -A 1 '${shaOid}:' ${textCertPath}`)
+    .toString();
+  const indexSha = resultSha.indexOf(shaOid);
   if (indexSha === -1) {
-    throw new Error("error: cannot find oid '1.3.6.1.4.1.57264.1.3' in certificate");
+    throw new Error(`error: cannot find oid '${shaOid}' in certificate`);
   }
-  const toolSha = resultSha.slice(indexSha + "1.3.6.1.4.1.57264.1.3:".length).replace("\n", "").trim();
+  const toolSha = resultSha.slice(indexSha + `${shaOid}:`.length).replace("\n", "").trim();
   core.debug(`tool-sha: ${toolSha}`);
-
-  return [toolURI, toolRepository, toolRef, toolSha];
+  
+  const toolPath = removeSuffix(removePrefix(toolURI, `https://github.com/${toolRepository}/`), `@${toolRef}`);
+  core.debug(`tool-path: ${toolPath}`);
+  return [toolURI, toolRepository, toolRef, toolSha, toolPath];
 }
+
+function removeSuffix(s: string, suffix: string): string{
+  if (!s.endsWith(suffix)){
+    throw new Error(`error: no suffix '${suffix}' in '${s}'`);
+  }
+  return s.slice(0, - suffix.length);
+}
+
+function removePrefix(s: string, prefix: string): string {
+  if (!s.startsWith(prefix)){
+    throw new Error(`error: no prefix '${prefix}' in '${s}'`);
+  }
+  return s.slice(prefix.length);
+};
 
 function extractIdentifyFromSAN(URI: string): [string, string] {
   // NOTE: the URI looks like:
