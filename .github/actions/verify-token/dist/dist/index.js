@@ -87,10 +87,6 @@ function run() {
             */
             const workflowRecipient = core.getInput("slsa-workflow-recipient");
             const unverifiedToken = core.getInput("slsa-unverified-token");
-            const slsaVersion = core.getInput("slsa-version");
-            if (!["1.0-rc1", "0.2"].includes(slsaVersion)) {
-                throw new Error(`Unsupported slsa-version: ${slsaVersion}`);
-            }
             const outputPredicate = core.getInput("output-predicate");
             if (!outputPredicate) {
                 // detect if output predicate is null or empty string.
@@ -122,6 +118,11 @@ function run() {
             const rawTokenObj = JSON.parse(rawTokenStr);
             // Verify the version.
             (0, validate_1.validateField)("version", rawTokenObj.version, 1);
+            // Validate the slsaVersion
+            (0, validate_1.validateFieldAnyOf)("slsaVersion", rawTokenObj.slsaVersion, [
+                "1.0-rc1",
+                "0.2",
+            ]);
             // Verify the context of the signature.
             (0, validate_1.validateField)("context", rawTokenObj.context, "SLSA delegator framework");
             // Verify the intended recipient.
@@ -148,7 +149,7 @@ function run() {
             }
             // NOTE: we create the predicate using the token with masked inputs.
             let predicateStr = "";
-            switch (slsaVersion) {
+            switch (rawMaskedTokenObj.slsaVersion) {
                 case "1.0-rc1": {
                     const predicate_v1 = yield (0, predicate1_1.createPredicate)(rawMaskedTokenObj, toolURI, ghToken);
                     predicateStr = JSON.stringify(predicate_v1);
@@ -160,7 +161,7 @@ function run() {
                     break;
                 }
                 default: {
-                    throw new Error(`Unsupported slsa-version: ${slsaVersion}`);
+                    throw new Error(`Unsupported slsa-version: ${rawMaskedTokenObj.slsaVersion}`);
                 }
             }
             fs.writeFileSync(safeOutput, predicateStr, {
