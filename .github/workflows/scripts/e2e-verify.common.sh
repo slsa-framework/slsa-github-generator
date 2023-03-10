@@ -99,6 +99,8 @@ e2e_verify_common_runDetails_v1() {
 }
 
 # Verifies the content of a decoded slsa token.
+# $1: The decoded token
+# $2: A boolean whether masked inputs are used
 e2e_verify_decoded_token() {
     local decoded_token="$1"
     local use_mask="$2"
