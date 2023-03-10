@@ -3,6 +3,11 @@ name: setup token
 description: "Create a SLSA token for the delegated workflow"
 
 inputs:
+  slsa-version:
+    description: "The version of SLSA provenance format to output."
+    required: false
+    default: "1.0-rc1"
+
   slsa-workflow-recipient:
     description: >
       The workflow filename that this token is intended for.

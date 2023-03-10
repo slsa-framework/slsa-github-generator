@@ -33,6 +33,10 @@ async function run(): Promise<void> {
         nodejs ./dist/index.js
     */
 
+    const slsaVersion = core.getInput("slsa-version");
+    if (!["1.0-rc1", "0.2"].includes(slsaVersion)) {
+      throw new Error(`Unsupported slsa-version: ${slsaVersion}`);
+    }
     const workflowRecipient = core.getInput("slsa-workflow-recipient");
     const rekorLogPublic = core.getInput("slsa-rekor-log-public");
     const runnerLabel = core.getInput("slsa-runner-label");
@@ -62,6 +66,7 @@ async function run(): Promise<void> {
     // Construct an unsigned SLSA token.
     const unsignedSlsaToken = {
       version: 1,
+      slsaVersion: slsaVersion,
       context: "SLSA delegator framework",
       builder: {
         rekor_log_public: rekorLogPublic,

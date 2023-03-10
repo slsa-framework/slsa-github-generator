@@ -118,6 +118,7 @@ describe("validateAndMaskInputs", () => {
   it("validates and mask empty inputs", () => {
     const token: rawTokenInterface = {
       version: 1,
+      slsaVersion: "1.0-rc1"
       context: "the context",
       builder: {
         private_repository: true,
