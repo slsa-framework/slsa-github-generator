@@ -371,7 +371,6 @@ jobs:
         uses: softprops/action-gh-release@de2c0eb89ae2a093876385947365aca7b0e5f844 # v0.1.15
         if: inputs.upload-tag-name != ''
         with:
-          prerelease: ${{ inputs.prerelease }}
           tag_name: "${{ inputs.upload-tag-name }}"
           files: |
             ${{ needs.build-dry.outputs.go-binary-name }}
