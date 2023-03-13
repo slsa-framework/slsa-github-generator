@@ -19,6 +19,11 @@ jobs:
       id-token: write
     runs-on: ubuntu-latest
     steps:
+      # NOTE: to test this workflow on a dev branch, use:
+      # curl -s -X POST -H "Accept: application/vnd.github.v3+json" \
+      #   "https://api.github.com/repos/$USERNAME/slsa-github-generator/actions/workflows/e2e.verify-token.schedule.yml/dispatches" \
+      #   -d "{\"ref\":\"$BRANCH\"}" \
+      #   -H "Authorization: token $GH_TOKEN"
       - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # v3.3.0
       - id: setup
         uses: ./actions/delegator/setup-token
@@ -45,7 +50,7 @@ jobs:
           TOOL_REPOSITORY: ${{ steps.verify.outputs.tool-repository }}
           TOOL_REF: ${{ steps.verify.outputs.tool-ref }}
           PREDICATE: predicate.json
-        run: ./.github/workflows/scripts/schedule.actions/verify-token.sh
+        run: ./.github/workflows/scripts/schedule.actions/verify-verified-token.sh
       - id: verify-mismatch-recipient
         uses: ./.github/actions/verify-token
         continue-on-error: true
@@ -62,16 +67,23 @@ jobs:
           output-predicate: mismatch-token-predicate.json
       - id: setup-invalid-mask
         uses: ./actions/delegator/setup-token
-        continue-on-error: true
         with:
           slsa-workflow-recipient: "delegator_generic_slsa3.yml"
           slsa-rekor-log-public: true
           slsa-runner-label: "ubuntu-latest"
           slsa-build-action-path: "./actions/build-artifacts-composite"
           slsa-workflow-inputs: '{"name1":"value1","name2":"value2","name3":"value3","name4":"","name5":"value5","name6":"value6","private-repository":true}'
-          slsa-workflow-inputs-mask: name2, name4,name7 # name7 does not exist so it should trigger an error.
+          slsa-workflow-masked-inputs: name2, name4,name7 # name7 does not exist in the inputs.
+      - id: verify-invalid-mask
+        uses: ./.github/actions/verify-token
+        continue-on-error: true
+        with:
+          # name7 does not exist in the inputs so it should trigger an error.
+          slsa-unverified-token: ${{ steps.setup-invalid-mask.outputs.slsa-token }}
+          slsa-workflow-recipient: "delegator_generic_slsa3.yml"
+          output-predicate: invalid-mask-predicate.json
       - env:
-          SUCCESS: ${{ steps.verify-mismatch-recipient.outcome == 'failure' && steps.verify-mismatch-token.outcome == 'failure' && steps.setup-invalid-mask.outcome == 'failure' }}
+          SUCCESS: ${{ steps.verify-mismatch-recipient.outcome == 'failure' && steps.verify-mismatch-token.outcome == 'failure' && steps.verify-invalid-mask.outcome == 'failure' }}
         run: |
           [ "$SUCCESS" == "true" ]
       # TODO(1419): Add more tests that manipulate the token.
