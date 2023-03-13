@@ -11,7 +11,7 @@ echo "TOOL_REPOSITORY: $TOOL_REPOSITORY"
 echo "TOOL_REF: $TOOL_REF"
 echo "PREDICATE: $PREDICATE"
 
-e2e_verify_decoded_token "$VERIFIED_TOKEN"
+e2e_verify_decoded_token "$VERIFIED_TOKEN" true
 
 e2e_assert_eq "$TOOL_REPOSITORY" "$GITHUB_REPOSITORY"
 e2e_assert_eq "$TOOL_REF" "$GITHUB_REF"
