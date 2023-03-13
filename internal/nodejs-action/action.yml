@@ -49,8 +49,7 @@ runs:
         UNTRUSTED_DIRECTORY: ${{ fromJson(inputs.slsa-workflow-inputs).directory }}
         UNTRUSTED_RUN_SCRIPTS: ${{ fromJson(inputs.slsa-workflow-inputs).run-scripts }}
       shell: bash
-      run: |
-        ./../__TOOL_ACTION_DIR__/build.sh
+      run: ./../__TOOL_ACTION_DIR__/build.sh
 
     - uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
       with:
@@ -70,5 +69,4 @@ runs:
         SLSA_OUTPUTS_ARTIFACTS_FILE: ${{ inputs.slsa-layout-file }}
         PACK_JSON: ${{ steps.build.outputs.pack_json }}
       shell: bash
-      run: |
-        ./../__TOOL_ACTION_DIR__/generate-layout.sh
+      run: ./../__TOOL_ACTION_DIR__/generate-layout.sh
