@@ -69,7 +69,7 @@ jobs:
           slsa-runner-label: "ubuntu-latest"
           slsa-build-action-path: "./actions/build-artifacts-composite"
           slsa-workflow-inputs: '{"name1":"value1","name2":"value2","name3":"value3","name4":"","name5":"value5","name6":"value6","private-repository":true}'
-          slsa-workflow-inputs-mask: name2, name4,name7 # name7 does not exist so it should trigger an error.
+          slsa-workflow-masked-inputs: name2, name4,name7 # name7 does not exist so it should trigger an error.
       - env:
           SUCCESS: ${{ steps.verify-mismatch-recipient.outcome == 'failure' && steps.verify-mismatch-token.outcome == 'failure' && steps.setup-invalid-mask.outcome == 'failure' }}
         run: |
