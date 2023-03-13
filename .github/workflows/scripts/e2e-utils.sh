@@ -88,6 +88,10 @@ e2e_verify_predicate_v1_buildDefinition_externalParameters_source() {
     _e2e_verify_query "$1" "$2" '.buildDefinition.externalParameters.source'
 }
 
+e2e_verify_predicate_v1_buildDefinition_externalParameters_inputs() {
+    _e2e_verify_query "$1" "$2" '.buildDefinition.externalParameters.inputs'
+}
+
 e2e_verify_predicate_v1_buildDefinition_buildType() {
     _e2e_verify_query "$1" "$2" '.buildDefinition.buildType'
 }

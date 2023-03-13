@@ -67,8 +67,10 @@ e2e_verify_common_all_v1() {
 # Verifies common fields of the SLSA v1.0 predicate buildDefinition.
 # $1: the predicate content
 e2e_verify_common_buildDefinition_v1() {
+    echo "pred: $1"
     # This does not include buildType since it is not common to all.
     e2e_verify_predicate_v1_buildDefinition_externalParameters_source "$1" "{\"uri\":\"git+https://github.com/$GITHUB_REPOSITORY@$GITHUB_REF\",\"digest\":{\"sha1\":\"$GITHUB_SHA\"}}"
+    e2e_verify_predicate_v1_buildDefinition_externalParameters_inputs "$1" '{"name1":"value1","name2":"***","name3":"value3","name4":"***","name5":"value5","name6":"***","private-repository":true}'
     e2e_verify_predicate_v1_buildDefinition_systemParameters "$1" "GITHUB_EVENT_NAME" "$GITHUB_EVENT_NAME"
     e2e_verify_predicate_v1_buildDefinition_systemParameters "$1" "GITHUB_REF" "$GITHUB_REF"
     e2e_verify_predicate_v1_buildDefinition_systemParameters "$1" "GITHUB_REF_TYPE" "$GITHUB_REF_TYPE"
@@ -103,23 +105,14 @@ e2e_verify_common_runDetails_v1() {
 # $2: A boolean whether masked inputs are used
 e2e_verify_decoded_token() {
     local decoded_token="$1"
-    local use_mask="$2"
 
     # Non-GitHub's information.
     _e2e_verify_query "$decoded_token" "delegator_generic_slsa3.yml" '.builder.audience'
     _e2e_verify_query "$decoded_token" "ubuntu-latest" '.builder.runner_label'
     _e2e_verify_query "$decoded_token" "true" '.builder.rekor_log_public'
     _e2e_verify_query "$decoded_token" "./actions/build-artifacts-composite" '.tool.actions.build_artifacts.path'
-    echo "use_mask: $use_mask"
-    if [[ "$use_mask" == "true" ]]; then
-        eccho "it's true"
-        _e2e_verify_query "$decoded_token" '{"name1":"value1","name2":"***","name3":"value3","name4":"***","name5":"value5","name6":"***","private-repository":true}' '.tool.inputs'
-    else
-        echo "it's false"
-        _e2e_verify_query "$decoded_token" '{"name1":"value1","name2":"value2","name3":"value3","name4":"","name5":"value5","name6":"value6","private-repository":true}' '.tool.inputs'
-    fi
+    _e2e_verify_query "$decoded_token" '{"name1":"value1","name2":"value2","name3":"value3","name4":"","name5":"value5","name6":"value6","private-repository":true}' '.tool.inputs'
     
-
     # GitHub's information.
     _e2e_verify_query "$decoded_token" "$GITHUB_ACTOR_ID" '.github.actor_id'
     _e2e_verify_query "$decoded_token" "$GITHUB_EVENT_NAME" '.github.event_name'

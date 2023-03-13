@@ -13,4 +13,4 @@ fi
 b64_token=$(echo -n "$SLSA_TOKEN" | cut -d '.' -f2)
 decoded_token=$(echo "$b64_token" | base64 -d)
 
-e2e_verify_decoded_token "$decoded_token" false
+e2e_verify_decoded_token "$decoded_token"
