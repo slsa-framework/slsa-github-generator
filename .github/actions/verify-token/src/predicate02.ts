@@ -55,7 +55,7 @@ export async function createPredicate(
         entryPoint: getWorkflowPath(rawTokenObj.github),
       },
       parameters: {
-        // NOTE: the Map object needs to be coverted to an object to serialize to JSON.
+        // NOTE: the Map object needs to be converted to an object to serialize to JSON.
         inputs: Object.fromEntries(rawTokenObj.tool.inputs),
       },
       environment: {

@@ -56,7 +56,7 @@ export async function createPredicate(
       externalParameters: {
         // Inputs to the TRW, which define the interface of the builder for the
         // BYOB framework. Some of these values may be masked by the TRW.
-        // NOTE: the Map object needs to be coverted to an object to serialize to JSON.
+        // NOTE: the Map object needs to be converted to an object to serialize to JSON.
         inputs: Object.fromEntries(rawTokenObj.tool.inputs),
         // Variables are always empty for BYOB / builders.
         // TODO(#1555): add support for generators.
