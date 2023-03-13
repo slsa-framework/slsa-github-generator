@@ -80,6 +80,14 @@ _e2e_verify_query() {
     e2e_assert_eq "${name}" "${expected}" "${query} should be ${expected}"
 }
 
+# _e2e_verify_presence verifies that the result of the given jq query is present.
+_e2e_verify_presence() {
+    local attestation="$1"
+    local query="$2"
+    name=$(echo -n "${attestation}" | jq -c -r "${query}")
+    assert_true "${name}" "${query} should be ${expected}"
+}
+
 e2e_verify_predicate_v1_buildDefinition_externalParameters_workflow_path() {
     _e2e_verify_query "$1" "$2" '.buildDefinition.externalParameters.workflow.path'
 }
@@ -102,6 +110,10 @@ e2e_verify_predicate_v1_buildDefinition_resolvedDependencies() {
 
 e2e_verify_predicate_v1_buildDefinition_systemParameters() {
     _e2e_verify_query "$1" "$3" '.buildDefinition.systemParameters.'"$2"
+}
+
+e2e_present_predicate_v1_buildDefinition_systemParameters() {
+    _e2e_verify_presence "$1" '.buildDefinition.systemParameters.'"$2"
 }
 
 e2e_verify_predicate_v1_runDetails_builder_id() {
