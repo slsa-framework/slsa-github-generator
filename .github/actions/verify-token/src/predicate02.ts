@@ -55,7 +55,7 @@ export async function createPredicate(
         entryPoint: getWorkflowPath(rawTokenObj.github),
       },
       parameters: {
-        inputs: rawTokenObj.tool.inputs,
+        inputs: Object.fromEntries(rawTokenObj.tool.inputs),
       },
       environment: {
         GITHUB_ACTOR_ID: rawTokenObj.github.actor_id,
