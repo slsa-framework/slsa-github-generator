@@ -81,7 +81,7 @@ jobs:
           # name7 does not exist in the inputs so it should trigger an error.
           slsa-unverified-token: ${{ steps.setup-invalid-mask.outputs.slsa-token }}
           slsa-workflow-recipient: "delegator_generic_slsa3.yml"
-          output-predicate: predicate.json
+          output-predicate: predicate-invalid.json
       - env:
           SUCCESS: ${{ steps.verify-mismatch-recipient.outcome == 'failure' && steps.verify-mismatch-token.outcome == 'failure' && steps.verify-invalid-mask.outcome == 'failure' }}
         run: |
