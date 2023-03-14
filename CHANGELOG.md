@@ -2,6 +2,15 @@
 
 <!-- toc -->
 
+- [Next Release](#next-release)
+  - [Summary of changes](#summary-of-changes)
+    - [Go builder](#go-builder)
+      - [New Features](#new-features)
+    - [Generic generator](#generic-generator)
+      - [New Features](#new-features-1)
+    - [Container generator](#container-generator)
+      - [New Features](#new-features-2)
+  - [Changelog since main](#changelog-since-main)
 - [v1.5.0](#v150)
   - [Summary of changes](#summary-of-changes)
     - [Go builder](#go-builder)
@@ -61,9 +70,31 @@
 
 <!-- tocstop -->
 
-# v1.5.0
+# Next Release
 
 <!-- Information on the next release will be added here. -->
+
+## Summary of changes
+
+### Go builder
+
+#### New Features
+
+- A new [`prerelease`](https://github.com/slsa-framework/slsa-github-generator/blob/v1.5.0/internal/builders/generic/README.md#workflow-inputs) input was added to allow users to specify that a new GitHub release should be created as a prerelease when `upload-assets` is set to true.
+
+### Generic generator
+
+#### New Features
+
+### Container generator
+
+#### New Features
+
+## Changelog since main
+
+https://github.com/slsa-framework/slsa-github-generator/compare/v1.5.0...main
+
+# v1.5.0
 
 ## Summary of changes
 

@@ -191,6 +191,7 @@ The builder workflow [slsa-framework/slsa-github-generator/.github/workflows/bui
 | `upload-assets`      | no       | true on new tags                        | Whether to upload assets to a GitHub release or not.                                                                                                                                                                                                      |
 | `upload-tag-name`    | no       |                                         | If specified and `upload-assets` is set to true, the provenance will be uploaded to a Github release identified by the tag-name regardless of the triggering event.                                                                                       |
 | `private-repository` | no       | false                                   | Set to true to opt-in to posting to the public transparency log. Will generate an error if false for private repositories. This input has no effect for public repositories. See [Private Repositories](#private-repositories).                           |
+| `prerelease` | no       | false                                   | If set to true, the new GitHub Release created when `upload-assets` is true is a pre-release.                           |
 
 ### Workflow Example
 
