@@ -115,8 +115,7 @@ jobs:
     needs: [setup-token, verify-token]
     runs-on: ubuntu-latest
     # We use `== 'failure'` instead of ` != 'success'` because we want to ignore skipped jobs, if there are any.
-    #if: github.event_name != 'workflow_dispatch' && needs.verify-token.result != 'failure' && needs.setup-token.result != 'failure'
-    if: needs.verify-token.result != 'failure' && needs.setup-token.result != 'failure'
+    if: github.event_name != 'workflow_dispatch' && needs.verify-token.result != 'failure' && needs.setup-token.result != 'failure'
     permissions:
       contents: read
       issues: write
@@ -130,8 +129,7 @@ jobs:
   if-failed:
     needs: [setup-token, verify-token]
     runs-on: ubuntu-latest
-    #if: always() && github.event_name != 'workflow_dispatch' && (needs.verify-token.result == 'failure' || needs.setup-token.result == 'failure')
-    if: always() && (needs.verify-token.result == 'failure' || needs.setup-token.result == 'failure')
+    if: always() && github.event_name != 'workflow_dispatch' && (needs.verify-token.result == 'failure' || needs.setup-token.result == 'failure')
     permissions:
       contents: read
       issues: write
