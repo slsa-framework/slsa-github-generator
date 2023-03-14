@@ -84,8 +84,8 @@ _e2e_verify_query() {
 _e2e_verify_presence() {
     local attestation="$1"
     local query="$2"
-    name=$(echo -n "${attestation}" | jq -c -r "${query}")
-    assert_true "${name}" "${query} should be ${expected}"
+    name=$(echo -n "${attestation}" | jq -c -r "${query} | select(type != \"null\")")
+    assert_not_empty "${name}" "${query} should not be empty"
 }
 
 e2e_verify_predicate_v1_buildDefinition_externalParameters_workflow_path() {

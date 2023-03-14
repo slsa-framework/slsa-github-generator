@@ -90,7 +90,6 @@ e2e_verify_common_buildDefinition_v1() {
     # verifies.
     e2e_present_predicate_v1_buildDefinition_systemParameters "$1" "RUNNER_NAME"
     e2e_present_predicate_v1_buildDefinition_systemParameters "$1" "IMAGE_VERSION"
-
 }
 
 # Verifies common fields of the SLSA v1.0 predicate runDetails.
