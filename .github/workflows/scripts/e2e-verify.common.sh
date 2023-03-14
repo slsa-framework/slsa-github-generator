@@ -115,7 +115,7 @@ e2e_verify_decoded_token() {
     # GitHub's information.
     _e2e_verify_query "$decoded_token" "$GITHUB_ACTOR_ID" '.github.actor_id'
     _e2e_verify_query "$decoded_token" "$GITHUB_EVENT_NAME" '.github.event_name'
-    _e2e_verify_query "$decoded_token" "$GITHUB_JOB" '.github.job'
+    _e2e_verify_query "$decoded_token" "setup-token" '.github.job'
     _e2e_verify_query "$decoded_token" "$GITHUB_REF" '.github.ref'
     _e2e_verify_query "$decoded_token" "$GITHUB_REF_TYPE" '.github.ref_type'
     _e2e_verify_query "$decoded_token" "$GITHUB_REPOSITORY" '.github.repository'
