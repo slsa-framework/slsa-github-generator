@@ -84,11 +84,12 @@ e2e_verify_common_buildDefinition_v1() {
     e2e_verify_predicate_v1_buildDefinition_systemParameters "$1" "GITHUB_WORKFLOW_SHA" "$GITHUB_WORKFLOW_SHA"
     # shellcheck disable=SC2154
     e2e_verify_predicate_v1_buildDefinition_systemParameters "$1" "IMAGE_OS" "$ImageOS"
-    # shellcheck disable=SC2154
-    e2e_verify_predicate_v1_buildDefinition_systemParameters "$1" "IMAGE_VERSION" "$ImageVersion"
     e2e_verify_predicate_v1_buildDefinition_systemParameters "$1" "RUNNER_ARCH" "$RUNNER_ARCH"
-    e2e_verify_predicate_v1_buildDefinition_systemParameters "$1" "RUNNER_NAME" "$RUNNER_NAME"
     e2e_verify_predicate_v1_buildDefinition_systemParameters "$1" "RUNNER_OS" "$RUNNER_OS"
+    # These may differ between the jobs that created the predicate and the job that
+    # verifies.
+    e2e_present_predicate_v1_buildDefinition_systemParameters "$1" "RUNNER_NAME"
+    e2e_present_predicate_v1_buildDefinition_systemParameters "$1" "IMAGE_VERSION"
 }
 
 # Verifies common fields of the SLSA v1.0 predicate runDetails.
