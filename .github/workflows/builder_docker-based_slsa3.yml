@@ -72,6 +72,27 @@ on:
         description: The artifact name of the signed provenance. The file must have the .intoto extension. Defaults to <filename>.intoto for single artifact or multiple.intoto.jsonl for multiple artifacts.
         required: false
         type: string
+      upload-assets:
+        description: >
+          If true, provenance is uploaded to a GitHub release for new tags.
+          When the workflow does not run on a new tag, such as on a workflow_dispatch,
+          the `upload-tag-name` argument must be provided as well.
+        required: false
+        type: boolean
+        default: true
+      upload-tag-name:
+        description: >
+          If non-empty and `upload-assets` is set to true, the provenance is uploaded to the GitHub
+          release identified by the tag name. If a workflow is run on a new tag and `upload-tag-name`
+          is non-empty, the new tag is ignored and the value of `upload-tag-name` is used instead to upload
+          the assets.
+        type: string
+        default: ""
+      prerelease:
+        description: "If true, GitHub Release is created as a pre-release."
+        required: false
+        type: boolean
+        default: false
         # TODO: Secrets and Authentication options for the builder-image.
         #      * registry-username
         #      * registry-password
@@ -375,6 +396,7 @@ jobs:
       actions: read # Needed to read workflow info.
     outputs:
       provenance-name: "${{ env.OUTPUT_FOLDER }}-${{ needs.rng.outputs.value }}"
+      provenance-sha256: ${{ steps.upload. }}
     steps:
       - name: Checkout builder repository
         uses: slsa-framework/slsa-github-generator/.github/actions/secure-builder-checkout@main
@@ -426,11 +448,11 @@ jobs:
 
       - name: Upload unsigned intoto attestations file for pull request
         if: ${{ github.event_name == 'pull_request' }}
-        uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
+        id: upload
+        uses: ./__BUILDER_CHECKOUT_DIR__/.github/actions/secure-upload-artifact
         with:
           name: "${{ env.OUTPUT_FOLDER }}-${{ needs.rng.outputs.value }}"
           path: "attestations-${{ needs.rng.outputs.value }}"
-          if-no-files-found: error
 
       ###################################################################
       #                       Sign the attestation                      #
@@ -447,11 +469,63 @@ jobs:
       - name: Upload the signed attestations
         id: upload
         if: ${{ github.event_name != 'pull_request' }}
-        uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
+        uses: ./__BUILDER_CHECKOUT_DIR__/.github/actions/secure-upload-artifact
         with:
           name: "${{ env.OUTPUT_FOLDER }}-${{ needs.rng.outputs.value }}"
           path: "${{ env.OUTPUT_FOLDER }}-${{ needs.rng.outputs.value }}"
-          if-no-files-found: error
+
+  ###################################################################
+  #                                                                 #
+  #          Upload artifacts and provenance as assets              #
+  #                                                                 #
+  ###################################################################
+  upload-assets:
+    permissions:
+      contents: write # Needed to write artifacts to a release.
+    runs-on: ubuntu-latest
+    needs: [build, provenance, detect-env]
+    if: inputs.upload-assets && (startsWith(github.ref, 'refs/tags/') || inputs.upload-tag-name != '')
+    steps:
+      - name: Checkout builder repository
+        uses: slsa-framework/slsa-github-generator/.github/actions/secure-builder-checkout@main
+        with:
+          repository: "${{ needs.detect-env.outputs.repository }}"
+          ref: "${{ needs.detect-env.outputs.ref }}"
+          path: __BUILDER_CHECKOUT_DIR__
+
+      # TODO(https://github.com/slsa-framework/slsa-github-generator/issues/1655): Investigate
+      # use of secure download for a folder of artifacts, or use the SLSA layout files and their
+      # checksums.
+      - name: Download artifacts
+        uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
+        with:
+          name: "${{ needs.build.outputs.build-outputs-name }}"
+          path: "${{ needs.build.outputs.build-outputs-name }}"
+
+      - name: Download provenance
+        uses: ./__BUILDER_CHECKOUT_DIR__/.github/actions/secure-download-artifact
+        with:
+          name: "${{ needs.provenance.outputs.provenance-name }}"
+          path: "${{ needs.provenance.outputs.provenance-name }}"
+          sha256: "${{ needs.provenance.outputs.provenance-sha256 }}"
+
+      - name: Upload provenance new tag
+        uses: softprops/action-gh-release@de2c0eb89ae2a093876385947365aca7b0e5f844 # v0.1.15
+        if: startsWith(github.ref, 'refs/tags/') && inputs.upload-tag-name == ''
+        id: release-new-tags
+        with:
+          prerelease: ${{ inputs.prerelease }}
+          files: |
+            ${{ needs.build-dry.outputs.go-binary-name }}
+            ${{ needs.provenance.outputs.provenance-name }}
+      - name: Upload provenance tag name
+        uses: softprops/action-gh-release@de2c0eb89ae2a093876385947365aca7b0e5f844 # v0.1.15
+        if: inputs.upload-tag-name != ''
+        with:
+          tag_name: "${{ inputs.upload-tag-name }}"
+          files: |
+            ${{ needs.build.outputs.build-outputs-name }}/*
+            ${{ needs.provenance.outputs.provenance-name }}
 
   ###################################################################
   #                                                                 #
