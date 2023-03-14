@@ -77,6 +77,9 @@ on:
         description: The artifact name of the signed provenance. The file must have the .intoto extension. Defaults to <filename>.intoto for single artifact or multiple.intoto.jsonl for multiple artifacts.
         required: false
         type: string
+      registry-username:
+        description: "Username to log into the container registry."
+        type: string
       gcp-workload-identity-provider:
         description: "The full identifier of the Workload Identity Provider, including the project number, pool name, and provider name.."
         required: false
