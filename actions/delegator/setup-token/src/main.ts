@@ -34,7 +34,7 @@ async function run(): Promise<void> {
     */
 
     const slsaVersion = core.getInput("slsa-version");
-    if (!["1.0-rc1", "0.2"].includes(slsaVersion)) {
+    if (!["v1-rc1", "v0.2"].includes(slsaVersion)) {
       throw new Error(`Unsupported slsa-version: ${slsaVersion}`);
     }
     const workflowRecipient = core.getInput("slsa-workflow-recipient");

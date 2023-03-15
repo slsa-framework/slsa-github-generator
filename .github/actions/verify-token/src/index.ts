@@ -157,7 +157,7 @@ async function run(): Promise<void> {
     // NOTE: we create the predicate using the token with masked inputs.
     let predicateStr = "";
     switch (rawMaskedTokenObj.slsaVersion) {
-      case "1.0-rc1": {
+      case "v1-rc1": {
         const predicate_v1 = await createPredicate_v1(
           rawMaskedTokenObj,
           toolURI,
@@ -166,7 +166,7 @@ async function run(): Promise<void> {
         predicateStr = JSON.stringify(predicate_v1);
         break;
       }
-      case "0.2": {
+      case "v0.2": {
         const predicate_v02 = await createPredicate_v02(
           rawMaskedTokenObj,
           toolURI,
