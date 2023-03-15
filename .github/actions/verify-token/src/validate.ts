@@ -101,22 +101,33 @@ export function validateGitHubFields(gho: githubObj): void {
 export function validateAndMaskInputs(
   token: rawTokenInterface
 ): rawTokenInterface {
-  const ret = Object.create(token);
   const maskedMapInputs = new Map(Object.entries(token.tool.inputs));
+  const toolInputs = token.tool.masked_inputs;
+  if (
+    toolInputs === undefined ||
+    // If TRW provides an empty argument, it's a 1-length array
+    // with an empty string value.
+    (toolInputs.length === 1 && toolInputs[0].length === 0)
+  ) {
+    token.tool.inputs = maskedMapInputs;
+    return token;
+  }
 
-  for (const key of token.tool.masked_inputs) {
-    if (!maskedMapInputs.has(key)) {
-      throw new Error(`input ${key} does not exist in the input map`);
-    }
+  for (const key of toolInputs) {
     // verify non-empty keys.
     if (key === undefined || key.trim().length === 0) {
       throw new Error("empty key in the input map");
     }
+
+    if (!maskedMapInputs.has(key)) {
+      throw new Error(`input '${key}' does not exist in the input map`);
+    }
+
     // NOTE: This mask is the same used by GitHub for encrypted secrets and masked values.
     maskedMapInputs.set(key, "***");
   }
-  ret.tool.inputs = maskedMapInputs;
-  return ret;
+  token.tool.inputs = maskedMapInputs;
+  return token;
 }
 
 export function validateFieldAnyOf<T>(

@@ -52,7 +52,7 @@ export async function detectWorkflowFromContext(
     run_id: Number(process.env.GITHUB_RUN_ID),
   });
   const workflowData: ApiWorkflowRun = res.data;
-  core.info(`abc ${JSON.stringify(workflowData)}`);
+  core.info(`workflow data: ${JSON.stringify(workflowData)}`);
 
   if (!workflowData.referenced_workflows) {
     return Promise.reject(
@@ -73,7 +73,14 @@ export async function detectWorkflowFromContext(
     const [workflowOwner, workflowRepo, ...workflowArray] =
       workflowPath[0].split("/");
     const tmpRepository = [workflowOwner, workflowRepo].join("/");
-    const tmpRef = reusableWorkflow.ref || "";
+    if (!reusableWorkflow.ref) {
+      return Promise.reject(
+        Error(
+          "Referenced workflow missing ref: was the workflow invoked by digest?"
+        )
+      );
+    }
+    const tmpRef = reusableWorkflow.ref;
     const tmpWorkflow = workflowArray.join("/");
     if (workflowRepo === "slsa-github-generator") {
       // If there are multiple invocations of reusable workflows in
