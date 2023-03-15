@@ -44,7 +44,8 @@ jobs:
     steps:
       - name: Generate the token
         id: generate
-        uses: slsa-framework/slsa-github-generator/actions/delegator/setup-token@main
+        # uses: slsa-framework/slsa-github-generator/actions/delegator/setup-token@main
+        uses: ianlewis/slsa-github-generator/actions/delegator/setup-token@nodejs-v02
         with:
           slsa-workflow-recipient: "delegator_generic_slsa3.yml"
           slsa-rekor-log-public: ${{ inputs.rekor-log-public }}
