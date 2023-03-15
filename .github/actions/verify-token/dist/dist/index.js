@@ -124,8 +124,8 @@ function run() {
             (0, validate_1.validateField)("version", rawTokenObj.version, 1);
             // Validate the slsaVersion
             (0, validate_1.validateFieldAnyOf)("slsaVersion", rawTokenObj.slsaVersion, [
-                "1.0-rc1",
-                "0.2",
+                "v1-rc1",
+                "v0.2",
             ]);
             // Verify the context of the signature.
             (0, validate_1.validateField)("context", rawTokenObj.context, "SLSA delegator framework");
@@ -154,12 +154,12 @@ function run() {
             // NOTE: we create the predicate using the token with masked inputs.
             let predicateStr = "";
             switch (rawMaskedTokenObj.slsaVersion) {
-                case "1.0-rc1": {
+                case "v1-rc1": {
                     const predicate_v1 = yield (0, predicate1_1.createPredicate)(rawMaskedTokenObj, toolURI, ghToken);
                     predicateStr = JSON.stringify(predicate_v1);
                     break;
                 }
-                case "0.2": {
+                case "v0.2": {
                     const predicate_v02 = yield (0, predicate02_1.createPredicate)(rawMaskedTokenObj, toolURI, ghToken);
                     predicateStr = JSON.stringify(predicate_v02);
                     break;
@@ -446,7 +446,7 @@ exports.createPredicate = void 0;
 const github = __importStar(__nccwpck_require__(5438));
 const fs = __importStar(__nccwpck_require__(7147));
 const utils_1 = __nccwpck_require__(918);
-const DELEGATOR_BUILD_TYPE_V1 = "https://github.com/slsa-framework/slsa-github-generator/delegator-generic@v1";
+const DELEGATOR_BUILD_TYPE_V0 = "https://github.com/slsa-framework/slsa-github-generator/delegator-generic@v0";
 function createPredicate(rawTokenObj, toolURI, token) {
     return __awaiter(this, void 0, void 0, function* () {
         const callerRepo = (0, utils_1.createURI)(rawTokenObj.github.repository, rawTokenObj.github.ref);
@@ -469,7 +469,7 @@ function createPredicate(rawTokenObj, toolURI, token) {
         // NOTE: see example at https://github.com/slsa-framework/slsa/blob/main/docs/github-actions-workflow/examples/v0.1/example.json.
         const predicate = {
             buildDefinition: {
-                buildType: DELEGATOR_BUILD_TYPE_V1,
+                buildType: DELEGATOR_BUILD_TYPE_V0,
                 externalParameters: {
                     // Inputs to the TRW, which define the interface of the builder for the
                     // BYOB framework. Some of these values may be masked by the TRW.
