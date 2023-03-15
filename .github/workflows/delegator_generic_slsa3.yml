@@ -225,7 +225,9 @@ jobs:
         id: predicate-type
         env:
           SLSA_VERSION: ${{ fromJson(needs.verify-token.outputs.slsa-verified-token).slsaVersion }}
+          SLSA_VERIFIED_TOKEN: ${{ needs.verify-token.outputs.slsa-verified-token }}
         run: |
+          echo "$SLSA_VERIFIED_TOKEN"
           case "$SLSA_VERSION" in
             "v0.2")
               echo "predicate-type=https://slsa.dev/provenance/v0.2" >> "$GITHUB_OUTPUT"
