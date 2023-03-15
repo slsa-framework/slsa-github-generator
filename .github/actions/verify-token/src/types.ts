@@ -42,6 +42,7 @@ export interface runnerObj {
 
 export interface rawTokenInterface {
   version: number;
+  slsaVersion: string;
   context: string;
   builder: {
     private_repository: boolean;
