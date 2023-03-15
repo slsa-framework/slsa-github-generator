@@ -101,8 +101,8 @@ async function run(): Promise<void> {
 
     // Validate the slsaVersion
     validateFieldAnyOf("slsaVersion", rawTokenObj.slsaVersion, [
-      "1.0-rc1",
-      "0.2",
+      "v1-rc1",
+      "v0.2",
     ]);
 
     // Verify the context of the signature.
