@@ -120,6 +120,7 @@ function createToken(
 ): rawTokenInterface {
   const token: rawTokenInterface = {
     version: 1,
+    slsaVersion: "1.0-rc1",
     context: "the context",
     builder: {
       private_repository: true,
@@ -130,7 +131,6 @@ function createToken(
       actor_id: "123",
       event_name: "workflow_dispatch",
       event_path: "/path/to/event.json",
-      job: "234",
       ref: "refs/heads/mybranch",
       ref_type: "branch",
       repository: "ianlewis/byob-test",
@@ -227,7 +227,6 @@ describe("validateGitHubFields", () => {
     process.env.GITHUB_ACTOR_ID = "123";
     process.env.GITHUB_EVENT_NAME = "workflow_dispatch";
     process.env.GITHUB_EVENT_PATH = "/path/to/event.json";
-    process.env.GITHUB_JOB = "234";
     process.env.GITHUB_REF = "refs/heads/mybranch";
     process.env.GITHUB_REF_TYPE = "branch";
     process.env.GITHUB_REPOSITORY = "ianlewis/byob-test";
@@ -245,7 +244,6 @@ describe("validateGitHubFields", () => {
       actor_id: "123",
       event_name: "workflow_dispatch",
       event_path: "/path/to/event.json",
-      job: "234",
       ref: "refs/heads/mybranch",
       ref_type: "branch",
       repository: "ianlewis/byob-test",
@@ -266,7 +264,6 @@ describe("validateGitHubFields", () => {
     process.env.GITHUB_ACTOR_ID = "123";
     process.env.GITHUB_EVENT_NAME = "workflow_dispatch";
     process.env.GITHUB_EVENT_PATH = "/path/to/event.json";
-    process.env.GITHUB_JOB = "234";
     process.env.GITHUB_REF = "refs/heads/mybranch";
     process.env.GITHUB_REF_TYPE = "branch";
     process.env.GITHUB_REPOSITORY = "ianlewis/byob-test";
@@ -284,7 +281,6 @@ describe("validateGitHubFields", () => {
       actor_id: "123",
       event_name: "workflow_dispatch",
       event_path: "/path/to/event.json",
-      job: "234",
       ref: "refs/heads/mybranch",
       ref_type: "branch",
       repository: "ianlewis/byob-test",
@@ -326,7 +322,6 @@ describe("validateGitHubFields", () => {
       actor_id: "123",
       event_name: "workflow_dispatch",
       event_path: "/path/to/event.json",
-      job: "234",
       ref: "refs/heads/mybranch",
       ref_type: "branch",
       repository: "asraa/byob-test", // NOTE: Not equal
