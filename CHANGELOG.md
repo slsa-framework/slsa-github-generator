@@ -1,7 +1,15 @@
 <!-- markdown-toc --bullets="-" -i CHANGELOG.md -->
 
 <!-- toc -->
-
+- [Next](#v160)
+  - [Summary of changes](#summary-of-changes)
+    - [Go builder](#go-builder)
+      - [New Features](#new-features)
+    - [Generic generator](#generic-generator)
+      - [New Features](#new-features-1)
+    - [Container generator](#container-generator)
+      - [New Features](#new-features-2)
+  - [Changelog since v1.4.0](#changelog-since-v140)
 - [v1.5.0](#v150)
   - [Summary of changes](#summary-of-changes)
     - [Go builder](#go-builder)
@@ -60,6 +68,31 @@
   - [Contributors](#contributors)
 
 <!-- tocstop -->
+
+<!-- Information on the next release will be added here. -->
+
+# v1.6.0
+
+## Summary of changes
+
+### Go builder
+
+#### New Features
+
+- A new [`prerelease`](https://github.com/slsa-framework/slsa-github-generator/blob/v1.6.0/internal/builders/generic/README.md#workflow-inputs) input was added to allow users to specify the tag name for the release when `upload-assets` is set to `true`.
+- The environment variables included in provenance output were changed to include only those variables that are specified by the user in the [slsa-goreleaser.yml configuration file](https://github.com/slsa-framework/slsa-github-generator/tree/v1.6.0/internal/builders/go#configuration-file) in order to improve reproducibility. See [#1795](https://github.com/slsa-framework/slsa-github-generator/issues/1795) and [#1830](https://github.com/slsa-framework/slsa-github-generator/pull/1830) for more information and background.
+
+### Generic generator
+
+#### New Features
+
+### Container generator
+
+#### New Features
+
+## Changelog since v1.5.0
+
+https://github.com/slsa-framework/slsa-github-generator/compare/todo...v1.5.0
 
 # v1.5.0
 
