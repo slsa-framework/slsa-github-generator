@@ -80,8 +80,7 @@
 
 #### New Features
 
-- A new [`prerelease`](https://github.com/slsa-framework/slsa-github-generator/blob/v1.6.0/internal/builders/generic/README.md#workflow-inputs) input was added to allow users to specify the tag name for the release when `upload-assets` is set to `true`.
-- The environment variables included in provenance output were changed to include only those variables that are specified by the user in the [slsa-goreleaser.yml configuration file](https://github.com/slsa-framework/slsa-github-generator/tree/v1.6.0/internal/builders/go#configuration-file) in order to improve reproducibility. See [#1795](https://github.com/slsa-framework/slsa-github-generator/issues/1795) and [#1830](https://github.com/slsa-framework/slsa-github-generator/pull/1830) for more information and background.
+- A new [`prerelease`](https://github.com/slsa-framework/slsa-github-generator/blob/v1.6.0/internal/builders/generic/README.md#workflow-inputs) input was added to allow users to create releases marked as prerelease when `upload-assets` is set to `true`.
 
 ### Generic generator
 
