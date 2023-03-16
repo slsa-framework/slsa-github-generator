@@ -114,56 +114,66 @@ describe("validateFieldNonEmpty", () => {
   });
 });
 
-describe("validateAndMaskInputs", () => {
-  it("validates and mask empty inputs", () => {
-    const token: rawTokenInterface = {
-      version: 1,
-      context: "the context",
-      builder: {
-        private_repository: true,
-        runner_label: "the label",
-        audience: "the audience",
-      },
-      github: {
-        actor_id: "123",
-        event_name: "workflow_dispatch",
-        event_path: "/path/to/event.json",
-        job: "234",
-        ref: "refs/heads/mybranch",
-        ref_type: "branch",
-        repository: "ianlewis/byob-test",
-        repository_id: "456",
-        repository_owner_id: "789",
-        run_attempt: "1",
-        run_id: "123456789",
-        run_number: "1",
-        sha: "deadbeef",
-        workflow_ref:
-          "ianlewis/byob-test/.github/workflows/my-workflow.yml@refs/heads/my_branch",
-        workflow_sha: "deadbeef",
-      },
-      runner: {
-        arch: "arch",
-        name: "name",
-        os: "os",
-      },
-      image: {
-        os: "os",
-        version: "version",
-      },
-      tool: {
-        actions: {
-          build_artifacts: {
-            path: "path",
-          },
+function createToken(
+  inputs: Map<string, string | number | boolean>,
+  masked: string[]
+): rawTokenInterface {
+  const token: rawTokenInterface = {
+    version: 1,
+    slsaVersion: "1.0-rc1",
+    context: "the context",
+    builder: {
+      private_repository: true,
+      runner_label: "the label",
+      audience: "the audience",
+    },
+    github: {
+      actor_id: "123",
+      event_name: "workflow_dispatch",
+      event_path: "/path/to/event.json",
+      job: "234",
+      ref: "refs/heads/mybranch",
+      ref_type: "branch",
+      repository: "ianlewis/byob-test",
+      repository_id: "456",
+      repository_owner_id: "789",
+      run_attempt: "1",
+      run_id: "123456789",
+      run_number: "1",
+      sha: "deadbeef",
+      workflow_ref:
+        "ianlewis/byob-test/.github/workflows/my-workflow.yml@refs/heads/my_branch",
+      workflow_sha: "deadbeef",
+    },
+    runner: {
+      arch: "arch",
+      name: "name",
+      os: "os",
+    },
+    image: {
+      os: "os",
+      version: "version",
+    },
+    tool: {
+      actions: {
+        build_artifacts: {
+          path: "path",
         },
-        inputs: JSON.parse(
-          '{"name1": "value1", "name2": 2, "name3": "", "name4": true}'
-        ),
-        masked_inputs: ["name2", "name3", "name4"],
       },
-    };
+      inputs: inputs,
+      masked_inputs: masked,
+    },
+  };
+  return token;
+}
 
+describe("validateAndMaskInputs", () => {
+  it("valid masked inputs", () => {
+    const inputs = JSON.parse(
+      '{"name1": "value1", "name2": 2, "name3": "", "name4": true}'
+    );
+    const masked = ["name2", "name3", "name4"];
+    const token = createToken(inputs, masked);
     expect(validateAndMaskInputs(token).tool.inputs).toEqual(
       new Map<string, string | number | boolean>([
         ["name1", "value1"],
@@ -172,8 +182,30 @@ describe("validateAndMaskInputs", () => {
         ["name4", "***"],
       ])
     );
+  });
 
-    token.tool.masked_inputs = ["does-not-exist"];
+  it("empty masked inputs", () => {
+    const inputs = JSON.parse(
+      '{"name1": "value1", "name2": 2, "name3": "", "name4": true}'
+    );
+    const masked = [""];
+    const token = createToken(inputs, masked);
+    expect(validateAndMaskInputs(token).tool.inputs).toEqual(
+      new Map<string, string | number | boolean>([
+        ["name1", "value1"],
+        ["name2", 2],
+        ["name3", ""],
+        ["name4", true],
+      ])
+    );
+  });
+
+  it("invalid masked input name", () => {
+    const inputs = JSON.parse(
+      '{"name1": "value1", "name2": 2, "name3": "", "name4": true}'
+    );
+    const masked = ["does-not-exist"];
+    const token = createToken(inputs, masked);
     expect(() => {
       validateAndMaskInputs(token);
     }).toThrow();

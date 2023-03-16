@@ -221,12 +221,29 @@ jobs:
           echo "predicate file: $(cat ${{ env.SLSA_PREDICATE_FILE }})"
           echo "artifact file: $(cat ${{ env.SLSA_ARTIFACTS_FILE }})"
 
+      - name: Set predicate-type
+        id: predicate-type
+        env:
+          SLSA_VERSION: ${{ toJson(needs.verify-token.outputs.slsa-verified-token).slsaVersion }}
+        run: |
+          case "$SLSA_VERSION" in
+            "v0.2")
+              echo "predicate-type=https://slsa.dev/provenance/v0.2" >> "$GITHUB_OUTPUT"
+              ;;
+            "v1-rc1")
+              echo "predicate-type=https://slsa.dev/provenance/v1-rc1" >> "$GITHUB_OUTPUT"
+              ;;
+            *)
+              >&2 echo "Error: unknown SLSA version: ${SLSA_VERSION}"
+              exit 1
+          esac
+
       - name: Generate attestations
         id: attestations
         uses: slsa-framework/slsa-github-generator/.github/actions/generate-attestations@main
         with:
           slsa-layout-file: ${{ env.SLSA_ARTIFACTS_FILE }}
-          predicate-type: "https://slsa.dev/provenance/v1.0?draft"
+          predicate-type: ${{ steps.predicate-type.outputs.predicate-type }}
           predicate-file: ${{ env.SLSA_PREDICATE_FILE }}
           output-folder: attestations
 
@@ -248,11 +265,13 @@ jobs:
   # cleanup deletes internal artifacts used by the delegator workflow
   cleanup:
     runs-on: ubuntu-latest
-    needs: [generate-provenance]
+    needs: [rng, generate-provenance]
+    env:
+      RNG: ${{ needs.rng.outputs.value }}
     steps:
       - uses: geekyeggo/delete-artifact@54ab544f12cdb7b71613a16a2b5a37a9ade990af # v2.0.0
         with:
-          name: "*-${{ env.SLSA_PREDICATE_FILE }}"
+          name: "${{ env.RNG }}-${{ env.SLSA_PREDICATE_FILE }}"
       - uses: geekyeggo/delete-artifact@54ab544f12cdb7b71613a16a2b5a37a9ade990af # v2.0.0
         with:
-          name: "*-${{ env.SLSA_ARTIFACTS_FILE }}"
+          name: "${{ env.RNG }}-${{ env.SLSA_ARTIFACTS_FILE }}"

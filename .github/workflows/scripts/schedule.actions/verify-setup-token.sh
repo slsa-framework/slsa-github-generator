@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-source "./.github/workflows/scripts/e2e-utils.sh"
+source "./.github/workflows/scripts/e2e-verify.common.sh"
 
 # TODO(#1709): Add more token verification.
 if [[ "$SLSA_TOKEN" == "" ]]; then

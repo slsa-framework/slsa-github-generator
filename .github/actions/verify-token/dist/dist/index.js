@@ -56,7 +56,8 @@ const sigstore = __importStar(__nccwpck_require__(9149));
 const fs = __importStar(__nccwpck_require__(7147));
 const child_process = __importStar(__nccwpck_require__(2081));
 const validate_1 = __nccwpck_require__(1997);
-const predicate_1 = __nccwpck_require__(5464);
+const predicate1_1 = __nccwpck_require__(2338);
+const predicate02_1 = __nccwpck_require__(4816);
 const utils_1 = __nccwpck_require__(918);
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
@@ -64,22 +65,26 @@ function run() {
             /* Test locally. Requires a GitHub token:
                 $ env INPUT_SLSA-WORKFLOW-RECIPIENT="delegator_generic_slsa3.yml" \
                 INPUT_SLSA-UNVERIFIED-TOKEN="$(cat testdata/slsa-token)" \
-                INPUT_TOKEN="$(gh auth token)" \
+                INPUT_SLSA-VERSION="1.0-rc1" \
+                INPUT_TOKEN="$(echo $GH_TOKEN)" \
                 INPUT_OUTPUT-PREDICATE="predicate.json" \
-                GITHUB_EVENT_NAME="workflow_dispatch" \
+                GITHUB_EVENT_NAME="push" \
                 GITHUB_RUN_ATTEMPT="1" \
-                GITHUB_RUN_ID="3790385865" \
-                GITHUB_RUN_NUMBER="200" \
+                GITHUB_RUN_ID="4386810663" \
+                GITHUB_RUN_NUMBER="74" \
                 GITHUB_WORKFLOW="delegate release project" \
-                GITHUB_SHA="8cbf4d422367d8499d5980a837cb9cc8e1e67001" \
+                GITHUB_WORKFLOW_REF="laurentsimon/slsa-delegate-project/.github/workflows/anchor-sbom.yml@refs/tags/v0.0.2" \
+                GITHUB_WORKFLOW_SHA="66a665d98ad0b990bbcb1dfc57891a63182459ea" \
+                GITHUB_SHA="66a665d98ad0b990bbcb1dfc57891a63182459ea" \
                 GITHUB_REPOSITORY="laurentsimon/slsa-delegate-project" \
                 GITHUB_REPOSITORY_ID="567955265" \
                 GITHUB_REPOSITORY_OWNER="laurentsimon" \
                 GITHUB_REPOSITORY_OWNER_ID="64505099" \
                 GITHUB_ACTOR_ID="64505099" \
-                GITHUB_REF="refs/heads/main" \
+                GITHUB_REF="refs/tags/v0.0.2" \
+                GITHUB_EVENT_PATH="/home/runner/work/_temp/_github_workflow/event.json" \
                 GITHUB_BASE_REF="" \
-                GITHUB_REF_TYPE="branch" \
+                GITHUB_REF_TYPE="tag" \
                 GITHUB_ACTOR="laurentsimon" \
                 GITHUB_WORKSPACE="$(pwd)" \
                 nodejs ./dist/dist/index.js
@@ -117,6 +122,11 @@ function run() {
             const rawTokenObj = JSON.parse(rawTokenStr);
             // Verify the version.
             (0, validate_1.validateField)("version", rawTokenObj.version, 1);
+            // Validate the slsaVersion
+            (0, validate_1.validateFieldAnyOf)("slsaVersion", rawTokenObj.slsaVersion, [
+                "v1-rc1",
+                "v0.2",
+            ]);
             // Verify the context of the signature.
             (0, validate_1.validateField)("context", rawTokenObj.context, "SLSA delegator framework");
             // Verify the intended recipient.
@@ -142,12 +152,27 @@ function run() {
                 throw new Error("token not provided");
             }
             // NOTE: we create the predicate using the token with masked inputs.
-            const predicate = yield (0, predicate_1.createPredicate)(rawMaskedTokenObj, toolURI, ghToken);
-            fs.writeFileSync(safeOutput, JSON.stringify(predicate), {
+            let predicateStr = "";
+            switch (rawMaskedTokenObj.slsaVersion) {
+                case "v1-rc1": {
+                    const predicate_v1 = yield (0, predicate1_1.createPredicate)(rawMaskedTokenObj, toolURI, ghToken);
+                    predicateStr = JSON.stringify(predicate_v1);
+                    break;
+                }
+                case "v0.2": {
+                    const predicate_v02 = yield (0, predicate02_1.createPredicate)(rawMaskedTokenObj, toolURI, ghToken);
+                    predicateStr = JSON.stringify(predicate_v02);
+                    break;
+                }
+                default: {
+                    throw new Error(`Unsupported slsa-version: ${rawMaskedTokenObj.slsaVersion}`);
+                }
+            }
+            fs.writeFileSync(safeOutput, predicateStr, {
                 flag: "ax",
                 mode: 0o600,
             });
-            core.debug(`predicate: ${JSON.stringify(predicate)}`);
+            core.debug(`predicate: ${predicateStr}`);
             core.debug(`Wrote predicate to ${safeOutput}`);
             core.setOutput("tool-repository", toolRepository);
             core.setOutput("tool-ref", toolRef);
@@ -232,7 +257,7 @@ run();
 
 /***/ }),
 
-/***/ 5464:
+/***/ 4816:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
@@ -282,24 +307,149 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.createPredicate = exports.getWorkflowPath = void 0;
+exports.createPredicate = void 0;
 const github = __importStar(__nccwpck_require__(5438));
-const fs = __importStar(__nccwpck_require__(7147));
-const DELEGATOR_BUILD_TYPE = "https://github.com/slsa-framework/slsa-github-generator/delegator-generic@v0";
-// getWorkflowPath returns the workflow's path from the workflow_ref.
-function getWorkflowPath(obj) {
-    // GITHUB_WORKFLOW_REF contains the repository name in the path. We will trim
-    // it out.
-    // e.g. 'octocat/hello-world/.github/workflows/my-workflow.yml@refs/heads/my_branch'
-    // Strip off the repo name and git ref from the workflow path.
-    return obj.workflow_ref
-        .substring(`${obj.repository}/`.length)
-        .split("@", 1)[0];
-}
-exports.getWorkflowPath = getWorkflowPath;
+const utils_1 = __nccwpck_require__(918);
+const DELEGATOR_BUILD_TYPE_V0 = "https://github.com/slsa-framework/slsa-github-generator/delegator-generic@v0";
 function createPredicate(rawTokenObj, toolURI, token) {
     return __awaiter(this, void 0, void 0, function* () {
-        const callerRepo = createURI(rawTokenObj.github.repository, rawTokenObj.github.ref);
+        const callerRepo = (0, utils_1.createURI)(rawTokenObj.github.repository, rawTokenObj.github.ref);
+        // NOTE: We get the triggering_actor_id from the workflow run via the API.
+        // We can trust this value as we have validated the run_id (as much as we can
+        // trust the GitHub API on GitHub Actions anyway).
+        const octokit = github.getOctokit(token);
+        const [owner, repo] = rawTokenObj.github.repository.split("/");
+        const { data: current_run } = yield octokit.rest.actions.getWorkflowRun({
+            owner,
+            repo,
+            run_id: Number(rawTokenObj.github.run_id),
+        });
+        const predicate = {
+            builder: {
+                id: toolURI,
+            },
+            buildType: DELEGATOR_BUILD_TYPE_V0,
+            invocation: {
+                configSource: {
+                    uri: callerRepo,
+                    digest: {
+                        sha1: rawTokenObj.github.sha,
+                    },
+                    entryPoint: (0, utils_1.getWorkflowPath)(rawTokenObj.github),
+                },
+                parameters: {
+                    // NOTE: the Map object needs to be converted to an object to serialize to JSON.
+                    inputs: Object.fromEntries(rawTokenObj.tool.inputs),
+                },
+                environment: {
+                    GITHUB_ACTOR_ID: rawTokenObj.github.actor_id,
+                    GITHUB_EVENT_NAME: rawTokenObj.github.event_name,
+                    GITHUB_JOB: rawTokenObj.github.job,
+                    GITHUB_REF: rawTokenObj.github.ref,
+                    GITHUB_REF_TYPE: rawTokenObj.github.ref_type,
+                    GITHUB_REPOSITORY: rawTokenObj.github.repository,
+                    GITHUB_REPOSITORY_ID: rawTokenObj.github.repository_id,
+                    GITHUB_REPOSITORY_OWNER_ID: rawTokenObj.github.repository_owner_id,
+                    GITHUB_RUN_ATTEMPT: rawTokenObj.github.run_attempt,
+                    GITHUB_RUN_ID: rawTokenObj.github.run_id,
+                    GITHUB_RUN_NUMBER: rawTokenObj.github.run_number,
+                    GITHUB_SHA: rawTokenObj.github.sha,
+                    // NOTE: the triggering_actor should be returned by the API but the
+                    // TypeScript type indicates that it could be undefined. If that is
+                    // the case, then we'll fall back to the actor_id.
+                    GITHUB_TRIGGERING_ACTOR_ID: (current_run.triggering_actor &&
+                        String(current_run.triggering_actor.id)) ||
+                        rawTokenObj.github.actor_id,
+                    GITHUB_WORKFLOW_REF: rawTokenObj.github.workflow_ref,
+                    GITHUB_WORKFLOW_SHA: rawTokenObj.github.workflow_sha,
+                    IMAGE_OS: rawTokenObj.image.os,
+                    IMAGE_VERSION: rawTokenObj.image.version,
+                    RUNNER_ARCH: rawTokenObj.runner.arch,
+                    RUNNER_NAME: rawTokenObj.runner.name,
+                    RUNNER_OS: rawTokenObj.runner.os,
+                },
+            },
+            metadata: {
+                buildInvocationId: `https://github.com/${rawTokenObj.github.repository}/actions/runs/${rawTokenObj.github.run_id}/attempts/${rawTokenObj.github.run_attempt}`,
+                completeness: {
+                    parameters: true,
+                },
+            },
+            materials: [
+                {
+                    uri: callerRepo,
+                    digest: {
+                        sha1: rawTokenObj.github.sha,
+                    },
+                },
+            ],
+        };
+        return predicate;
+    });
+}
+exports.createPredicate = createPredicate;
+
+
+/***/ }),
+
+/***/ 2338:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+/*
+Copyright 2023 SLSA Authors
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+    https://www.apache.org/licenses/LICENSE-2.0
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WIHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.createPredicate = void 0;
+const github = __importStar(__nccwpck_require__(5438));
+const fs = __importStar(__nccwpck_require__(7147));
+const utils_1 = __nccwpck_require__(918);
+const DELEGATOR_BUILD_TYPE_V0 = "https://github.com/slsa-framework/slsa-github-generator/delegator-generic@v0";
+function createPredicate(rawTokenObj, toolURI, token) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const callerRepo = (0, utils_1.createURI)(rawTokenObj.github.repository, rawTokenObj.github.ref);
         const sourceRef = {
             uri: callerRepo,
             digest: {
@@ -319,11 +469,12 @@ function createPredicate(rawTokenObj, toolURI, token) {
         // NOTE: see example at https://github.com/slsa-framework/slsa/blob/main/docs/github-actions-workflow/examples/v0.1/example.json.
         const predicate = {
             buildDefinition: {
-                buildType: DELEGATOR_BUILD_TYPE,
+                buildType: DELEGATOR_BUILD_TYPE_V0,
                 externalParameters: {
                     // Inputs to the TRW, which define the interface of the builder for the
                     // BYOB framework. Some of these values may be masked by the TRW.
-                    inputs: rawTokenObj.tool.inputs,
+                    // NOTE: the Map object needs to be converted to an object to serialize to JSON.
+                    inputs: Object.fromEntries(rawTokenObj.tool.inputs),
                     // Variables are always empty for BYOB / builders.
                     // TODO(#1555): add support for generators.
                     vars: {},
@@ -331,7 +482,7 @@ function createPredicate(rawTokenObj, toolURI, token) {
                     workflow: {
                         ref: rawTokenObj.github.ref,
                         repository: rawTokenObj.github.repository,
-                        path: getWorkflowPath(rawTokenObj.github),
+                        path: (0, utils_1.getWorkflowPath)(rawTokenObj.github),
                     },
                     // We only use source here because the source contained the source
                     // repository and the build configuration.
@@ -387,17 +538,6 @@ function createPredicate(rawTokenObj, toolURI, token) {
     });
 }
 exports.createPredicate = createPredicate;
-// createURI creates the fully qualified URI out of the repository
-function createURI(repository, ref) {
-    if (!repository) {
-        throw new Error(`cannot create URI: repository undefined`);
-    }
-    let refVal = "";
-    if (ref) {
-        refVal = `@${ref}`;
-    }
-    return `git+https://github.com/${repository}${refVal}`;
-}
 
 
 /***/ }),
@@ -407,36 +547,12 @@ function createURI(repository, ref) {
 
 "use strict";
 
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.resolvePathInput = exports.getEnv = void 0;
+exports.getWorkflowPath = exports.createURI = exports.resolvePathInput = exports.getEnv = void 0;
 const path_1 = __importDefault(__nccwpck_require__(1017));
-const process = __importStar(__nccwpck_require__(7282));
 function getEnv(name) {
     const res = process.env[name];
     if (!res) {
@@ -453,6 +569,29 @@ function resolvePathInput(untrustedInput, wd) {
     return safeJoin;
 }
 exports.resolvePathInput = resolvePathInput;
+// createURI creates the fully qualified URI out of the repository
+function createURI(repository, ref) {
+    if (!repository) {
+        throw new Error(`cannot create URI: repository undefined`);
+    }
+    let refVal = "";
+    if (ref) {
+        refVal = `@${ref}`;
+    }
+    return `git+https://github.com/${repository}${refVal}`;
+}
+exports.createURI = createURI;
+// getWorkflowPath returns the workflow's path from the workflow_ref.
+function getWorkflowPath(obj) {
+    // GITHUB_WORKFLOW_REF contains the repository name in the path. We will trim
+    // it out.
+    // e.g. 'octocat/hello-world/.github/workflows/my-workflow.yml@refs/heads/my_branch'
+    // Strip off the repo name and git ref from the workflow path.
+    return obj.workflow_ref
+        .substring(`${obj.repository}/`.length)
+        .split("@", 1)[0];
+}
+exports.getWorkflowPath = getWorkflowPath;
 
 
 /***/ }),
@@ -509,21 +648,28 @@ function validateGitHubFields(gho) {
 }
 exports.validateGitHubFields = validateGitHubFields;
 function validateAndMaskInputs(token) {
-    const ret = Object.create(token);
     const maskedMapInputs = new Map(Object.entries(token.tool.inputs));
-    for (const key of token.tool.masked_inputs) {
-        if (!maskedMapInputs.has(key)) {
-            throw new Error(`input ${key} does not exist in the input map`);
-        }
+    const toolInputs = token.tool.masked_inputs;
+    if (toolInputs === undefined ||
+        // If TRW provides an empty argument, it's a 1-length array
+        // with an empty string value.
+        (toolInputs.length === 1 && toolInputs[0].length === 0)) {
+        token.tool.inputs = maskedMapInputs;
+        return token;
+    }
+    for (const key of toolInputs) {
         // verify non-empty keys.
         if (key === undefined || key.trim().length === 0) {
             throw new Error("empty key in the input map");
         }
+        if (!maskedMapInputs.has(key)) {
+            throw new Error(`input '${key}' does not exist in the input map`);
+        }
         // NOTE: This mask is the same used by GitHub for encrypted secrets and masked values.
         maskedMapInputs.set(key, "***");
     }
-    ret.tool.inputs = maskedMapInputs;
-    return ret;
+    token.tool.inputs = maskedMapInputs;
+    return token;
 }
 exports.validateAndMaskInputs = validateAndMaskInputs;
 function validateFieldAnyOf(name, actual, expected) {
@@ -49880,14 +50026,6 @@ module.exports = require("os");
 
 "use strict";
 module.exports = require("path");
-
-/***/ }),
-
-/***/ 7282:
-/***/ ((module) => {
-
-"use strict";
-module.exports = require("process");
 
 /***/ }),
 
