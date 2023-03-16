@@ -372,6 +372,7 @@ jobs:
         if: inputs.upload-tag-name != ''
         with:
           tag_name: "${{ inputs.upload-tag-name }}"
+          prerelease: ${{ inputs.prerelease }}
           files: |
             ${{ needs.build-dry.outputs.go-binary-name }}
             ${{ needs.provenance.outputs.go-provenance-name }}

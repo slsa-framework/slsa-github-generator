@@ -18,8 +18,8 @@ import { rawTokenInterface } from "./types";
 import { createURI, getWorkflowPath } from "./utils";
 import { SLSAPredicate, ArtifactReference } from "./slsatypes1";
 
-const DELEGATOR_BUILD_TYPE_V1 =
-  "https://github.com/slsa-framework/slsa-github-generator/delegator-generic@v1";
+const DELEGATOR_BUILD_TYPE_V0 =
+  "https://github.com/slsa-framework/slsa-github-generator/delegator-generic@v0";
 
 export async function createPredicate(
   rawTokenObj: rawTokenInterface,
@@ -52,7 +52,7 @@ export async function createPredicate(
   // NOTE: see example at https://github.com/slsa-framework/slsa/blob/main/docs/github-actions-workflow/examples/v0.1/example.json.
   const predicate: SLSAPredicate = {
     buildDefinition: {
-      buildType: DELEGATOR_BUILD_TYPE_V1,
+      buildType: DELEGATOR_BUILD_TYPE_V0,
       externalParameters: {
         // Inputs to the TRW, which define the interface of the builder for the
         // BYOB framework. Some of these values may be masked by the TRW.
@@ -74,7 +74,6 @@ export async function createPredicate(
       systemParameters: {
         GITHUB_ACTOR_ID: rawTokenObj.github.actor_id,
         GITHUB_EVENT_NAME: rawTokenObj.github.event_name,
-        GITHUB_JOB: rawTokenObj.github.job,
         GITHUB_REF: rawTokenObj.github.ref,
         GITHUB_REF_TYPE: rawTokenObj.github.ref_type,
         GITHUB_REPOSITORY: rawTokenObj.github.repository,
