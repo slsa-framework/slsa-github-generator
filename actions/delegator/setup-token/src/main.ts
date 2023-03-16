@@ -77,7 +77,6 @@ async function run(): Promise<void> {
         actor_id: process.env.GITHUB_ACTOR_ID,
         event_name: process.env.GITHUB_EVENT_NAME,
         event_path: process.env.GITHUB_EVENT_PATH,
-        job: process.env.GITHUB_JOB,
         ref: process.env.GITHUB_REF,
         ref_type: process.env.GITHUB_REF_TYPE,
         repository: process.env.GITHUB_REPOSITORY,
