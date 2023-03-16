@@ -39,7 +39,11 @@ on:
   workflow_call:
     secrets:
       registry-username:
-        description: "Username to log into the container registry."
+        description: >
+          Username to log into the container registry. This should only be used for high 
+          entropy values.
+
+          See https://github.com/slsa-framework/slsa-github-generator/blob/main/internal/builders/docker/README.md#workflow-inputs
       registry-password:
         description: "Password to log in the container registry."
     inputs:
@@ -69,24 +73,34 @@ on:
         type: boolean
         default: false
       rekor-log-public:
-        description: "In case of a private GitHub repository, allow publication of your repository name on the public Rekor log"
+        description: >
+          In case of a private GitHub repository, allow publication of your repository
+          name on the public Rekor log"
         required: false
         type: boolean
         default: false
       provenance-name:
-        description: The artifact name of the signed provenance. The file must have the .intoto extension. Defaults to <filename>.intoto for single artifact or multiple.intoto.jsonl for multiple artifacts.
+        description: >
+          The artifact name of the signed provenance. The file must have the .intoto 
+          extension. 
+          Defaults to <filename>.intoto for single artifact or multiple.intoto.jsonl 
+          for multiple artifacts.
         required: false
         type: string
       registry-username:
         description: "Username to log into the container registry."
         type: string
       gcp-workload-identity-provider:
-        description: "The full identifier of the Workload Identity Provider, including the project number, pool name, and provider name.."
+        description: >
+          The full identifier of the Workload Identity Provider, including the project
+          number, pool name, and provider name.
         required: false
         type: string
         default: ""
       gcp-service-account:
-        description: "Email address or unique identifier of the Google Cloud service account for which to generate credentials."
+        description: >
+          Email address or unique identifier of the Google Cloud service account for
+          which to generate credentials.
         required: false
         type: string
         default: ""
