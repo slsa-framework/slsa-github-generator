@@ -24,7 +24,7 @@ directory="${UNTRUSTED_DIRECTORY}"
 cd "${directory}"
 
 # Remove tab, newlines, spaces from the scripts input.
-run_scripts=$("${UNTRUSTED_RUN_SCRIPTS//[$'\t\r\n ']/}" | tr "," "\n")
+run_scripts=$(echo "${UNTRUSTED_RUN_SCRIPTS//[$'\t\r\n ']/}" | tr "," "\n")
 
 for script in $run_scripts; do
     echo "** Running 'npm run $script' **"

@@ -224,7 +224,7 @@ jobs:
       - name: Set predicate-type
         id: predicate-type
         env:
-          SLSA_VERSION: ${{ toJson(needs.verify-token.outputs.slsa-verified-token).slsaVersion }}
+          SLSA_VERSION: ${{ fromJson(needs.verify-token.outputs.slsa-verified-token).slsaVersion }}
         run: |
           case "$SLSA_VERSION" in
             "v0.2")
