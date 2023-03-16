@@ -185,7 +185,7 @@ jobs:
       build-definition-name: ${{ steps.generate.outputs.build-definition-name }}
       build-definition-sha256: ${{ steps.upload.outputs.sha256 }}
     runs-on: ubuntu-latest
-    needs: [rng, detect-env, verify-builder-image, generate-builder]
+    needs: [rng, detect-env, generate-builder]
     steps:
       - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # v3.3.0
       - name: Checkout builder repository
