@@ -90,6 +90,7 @@ on:
       registry-username:
         description: "Username to log into the container registry."
         type: string
+        required: false
       gcp-workload-identity-provider:
         description: >
           The full identifier of the Workload Identity Provider, including the project
@@ -298,9 +299,11 @@ jobs:
           else
             username="${UNTRUSTED_SECRET_USERNAME:-${UNTRUSTED_INPUT_USERNAME}}"
             if [ "${username}" == "" ]; then
-                echo "registry-username is required." >&2
-                exit 1
+                # This may be the case for public base images.
+                echo "registry-username is not provided, skipping login." >&2
+                exit 0
             fi
+            # A username is present, so a password must be provided.
             password="${UNTRUSTED_PASSWORD}"
             if [ "${password}" == "" ]; then
                 echo "registry-password is required." >&2
