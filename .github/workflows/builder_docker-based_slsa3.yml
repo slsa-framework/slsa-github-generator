@@ -37,6 +37,15 @@ defaults:
 ###################################################################
 on:
   workflow_call:
+    secrets:
+      registry-username:
+        description: >
+          Username to log into the container registry. This should only be used for high
+          entropy values.
+
+          See https://github.com/slsa-framework/slsa-github-generator/blob/main/internal/builders/docker/README.md#workflow-inputs
+      registry-password:
+        description: "Password to log in the container registry."
     inputs:
       builder-image:
         description: >
@@ -64,17 +73,37 @@ on:
         type: boolean
         default: false
       rekor-log-public:
-        description: "In case of a private GitHub repository, allow publication of your repository name on the public Rekor log"
+        description: >
+          In case of a private GitHub repository, allow publication of your repository
+          name on the public Rekor log"
         required: false
         type: boolean
         default: false
       provenance-name:
-        description: The artifact name of the signed provenance. The file must have the .intoto extension. Defaults to <filename>.intoto for single artifact or multiple.intoto.jsonl for multiple artifacts.
+        description: >
+          The artifact name of the signed provenance. The file must have the .intoto
+          extension.
+          Defaults to <filename>.intoto for single artifact or multiple.intoto.jsonl
+          for multiple artifacts.
         required: false
         type: string
-        # TODO: Secrets and Authentication options for the builder-image.
-        #      * registry-username
-        #      * registry-password
+      registry-username:
+        description: "Username to log into the container registry."
+        type: string
+      gcp-workload-identity-provider:
+        description: >
+          The full identifier of the Workload Identity Provider, including the project
+          number, pool name, and provider name.
+        required: false
+        type: string
+        default: ""
+      gcp-service-account:
+        description: >
+          Email address or unique identifier of the Google Cloud service account for
+          which to generate credentials.
+        required: false
+        type: string
+        default: ""
     outputs:
       build-outputs-name:
         description: "The name of the artifact where the generated artifacts are uploaded to the artifact registry."
@@ -98,7 +127,7 @@ jobs:
         uses: slsa-framework/slsa-github-generator/.github/actions/rng@main
 
   # This detects the repository and ref of the reusable workflow.
-  # For pull request, this gets the head repository and head SHA.
+  # For pull request, this gets the referenced slsa-github-generator workflow.
   detect-env:
     outputs:
       repository: ${{ steps.detect.outputs.repository }}
@@ -111,26 +140,6 @@ jobs:
       - name: Detect the builder ref
         id: detect
         uses: slsa-framework/slsa-github-generator/.github/actions/detect-workflow-js@main
-
-  ###################################################################
-  #                                                                 #
-  #           Optional: Verify builder-image provenance             #
-  #                                                                 #
-  ###################################################################
-  verify-builder-image:
-    # This is a no-op right now.
-    outputs:
-      verified: ${{ steps.verify.outputs.verified }}
-    runs-on: ubuntu-latest
-    steps:
-      - name: run no-op slsa-verifier
-        id: verify
-        env:
-          BUILDER_IMAGE: ${{ inputs.builder-image }}
-          BUILDER_DIGEST: ${{ inputs.builder-digest }}
-          SOURCE_URI: octocat/hello-world
-        run: |
-          echo "verified=false" >> $GITHUB_OUTPUT
 
   ###################################################################
   #                                                                 #
@@ -251,6 +260,58 @@ jobs:
       build-outputs-name: ${{ steps.build.outputs.build-outputs-name }}
     needs: [rng, detect-env, generate-builder]
     steps:
+      - id: auth
+        name: Authenticate to Google Cloud
+        if: inputs.gcp-workload-identity-provider != ''
+        uses: google-github-actions/auth@ef5d53e30bbcd8d0836f4288f5e50ff3e086997d # v1.0.0
+        with:
+          token_format: "access_token"
+          workload_identity_provider: ${{ inputs.gcp-workload-identity-provider }}
+          service_account: ${{ inputs.gcp-service-account }}
+
+      - name: Login
+        id: login
+        continue-on-error: true
+        env:
+          UNTRUSTED_IMAGE: "${{ inputs.builder-image }}"
+          UNTRUSTED_INPUT_USERNAME: "${{ inputs.registry-username }}"
+          UNTRUSTED_SECRET_USERNAME: "${{ secrets.registry-username }}"
+          UNTRUSTED_PASSWORD: "${{ secrets.registry-password }}"
+          GCP_ACCESS_TOKEN: "${{ steps.auth.outputs.access_token }}"
+        run: |
+          set -euo pipefail
+
+          # NOTE: Some docker images are of the form <org>/<name>
+          # Here we get the first part and check if it has a '.' or ':'
+          # character in it to see if it's a domain name.
+          # See: https://stackoverflow.com/questions/37861791/how-are-docker-image-names-parsed#37867949
+          untrusted_registry="docker.io"
+          # NOTE: Do not fail the script if grep does not match.
+          maybe_domain=$(echo "${UNTRUSTED_IMAGE}" | cut -f1 -d "/" | { grep -E "\.|:" || true; })
+          if [ "${maybe_domain}" != "" ]; then
+            untrusted_registry="${maybe_domain}"
+          fi
+
+          if [ "${GCP_ACCESS_TOKEN}" != "" ]; then
+            username="oauth2accesstoken"
+            password="${GCP_ACCESS_TOKEN}"
+          else
+            username="${UNTRUSTED_SECRET_USERNAME:-${UNTRUSTED_INPUT_USERNAME}}"
+            if [ "${username}" == "" ]; then
+                echo "registry-username is required." >&2
+                exit 1
+            fi
+            password="${UNTRUSTED_PASSWORD}"
+            if [ "${password}" == "" ]; then
+                echo "registry-password is required." >&2
+                exit 1
+            fi
+          fi
+
+          echo "login to ${untrusted_registry}"
+          docker login "${untrusted_registry}" -u "${username}" -p "${password}"
+
+
       - name: Checkout builder repository
         uses: slsa-framework/slsa-github-generator/.github/actions/secure-builder-checkout@main
         with:
