@@ -91,7 +91,7 @@ on:
         description: >
           Uploads the artifact and provenance to a GitHub release.
           If the `upload-tag-name` was provided, then the assets are uploaded to the provided
-          input tag. This can be used for workflow_dispatch events. Otherwise, if a new tag triggered 
+          input tag. This can be used for workflow_dispatch events. Otherwise, if a new tag triggered
           the workflow, then the assets are uploaded to the triggering tag.
         required: false
         type: boolean
