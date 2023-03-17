@@ -74,7 +74,7 @@ runs:
         VERIFIER_RELEASE: v2.1.0 # The version of the verifier to download.
 
         COMPILE_BUILDER: "${{ inputs.compile-builder }}"
-        BUILDER_REF: "${{ inputs.builder_ref || inputs.ref }}"
+        BUILDER_REF: "${{ inputs.builder-ref || inputs.ref }}"
         BUILDER_DIR: "./__BUILDER_CHECKOUT_DIR__/${{ inputs.directory }}"
         # Needed for the gh CLI used in builder-fetch.sh.
         GH_TOKEN: "${{ inputs.token }}"
