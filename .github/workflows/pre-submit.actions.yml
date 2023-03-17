@@ -302,7 +302,8 @@ jobs:
       - uses: ./.github/actions/generate-builder
         with:
           repository: "slsa-framework/slsa-github-generator"
-          ref: "refs/tags/v1.2.2"
+          ref: "refs/heads/main"
+          builder-ref: "refs/tags/v1.2.2"
           go-version: 1.18
           binary: "slsa-generator-generic-linux-amd64"
           directory: "internal/builders/generic"
