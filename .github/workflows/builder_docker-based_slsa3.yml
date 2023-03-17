@@ -74,9 +74,10 @@ on:
         type: string
       upload-assets:
         description: >
-          If true, provenance is uploaded to a GitHub release for new tags.
-          When the workflow does not run on a new tag, such as on a workflow_dispatch,
-          the `upload-tag-name` argument must be provided as well.
+          Uploads the artifact and provenance to a GitHub release.
+          If the `upload-tag-name` was provided, then the assets are uploaded to the provided
+          input tag. This can be used for workflow_dispatch events. Otherwise, if a new tag triggered 
+          the workflow, then the assets are uploaded to the triggering tag.
         required: false
         type: boolean
         default: true
@@ -88,6 +89,7 @@ on:
           the assets.
         type: string
         default: ""
+        required: false
       prerelease:
         description: "If true, GitHub Release is created as a pre-release."
         required: false
@@ -396,7 +398,7 @@ jobs:
       actions: read # Needed to read workflow info.
     outputs:
       provenance-name: "${{ env.OUTPUT_FOLDER }}-${{ needs.rng.outputs.value }}"
-      provenance-sha256: ${{ steps.upload. }}
+      provenance-sha256: ${{ steps.upload.outputs.sha256 }}
     steps:
       - name: Checkout builder repository
         uses: slsa-framework/slsa-github-generator/.github/actions/secure-builder-checkout@main
@@ -516,7 +518,7 @@ jobs:
         with:
           prerelease: ${{ inputs.prerelease }}
           files: |
-            ${{ needs.build-dry.outputs.go-binary-name }}
+            ${{ needs.build.outputs.build-outputs-name }}
             ${{ needs.provenance.outputs.provenance-name }}
       - name: Upload provenance tag name
         uses: softprops/action-gh-release@de2c0eb89ae2a093876385947365aca7b0e5f844 # v0.1.15
