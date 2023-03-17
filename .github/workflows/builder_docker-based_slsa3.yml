@@ -465,7 +465,7 @@ jobs:
       actions: read # Needed to read workflow info.
     outputs:
       provenance-name: "${{ env.OUTPUT_FOLDER }}-${{ needs.rng.outputs.value }}"
-      provenance-sha256: ${{ steps.upload.outputs.sha256 }}
+      provenance-sha256: ${{ steps.upload-signed.outputs.sha256 }}
     steps:
       - name: Checkout builder repository
         uses: slsa-framework/slsa-github-generator/.github/actions/secure-builder-checkout@main
@@ -517,7 +517,7 @@ jobs:
 
       - name: Upload unsigned intoto attestations file for pull request
         if: ${{ github.event_name == 'pull_request' }}
-        id: upload
+        id: upload-unsigned
         uses: ./__BUILDER_CHECKOUT_DIR__/.github/actions/secure-upload-artifact
         with:
           name: "${{ env.OUTPUT_FOLDER }}-${{ needs.rng.outputs.value }}"
@@ -536,7 +536,7 @@ jobs:
           output-folder: "${{ env.OUTPUT_FOLDER }}-${{ needs.rng.outputs.value }}"
 
       - name: Upload the signed attestations
-        id: upload
+        id: upload-signed
         if: ${{ github.event_name != 'pull_request' }}
         uses: ./__BUILDER_CHECKOUT_DIR__/.github/actions/secure-upload-artifact
         with:
