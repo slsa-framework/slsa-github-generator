@@ -34,6 +34,9 @@ refer to the user workflow that called the reusable workflow. The reusable
 workflow should also ideally avoid hard-coding this information as the
 repository could be a fork and the ref used is unpredictable.
 
+In the case of a pull request to the slsa-github-generator, we use the head
+SHA as the ref and the head repository as the repository.
+
 ## Usage
 
 To use detect-workflow-js, add a job to your reusable workflow with `repository`, `ref`, and `workflow` as an output. You can then use the output from the job in later jobs
