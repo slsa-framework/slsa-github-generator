@@ -300,7 +300,7 @@ jobs:
             username="${UNTRUSTED_SECRET_USERNAME:-${UNTRUSTED_INPUT_USERNAME}}"
             if [ "${username}" == "" ]; then
                 # This may be the case for public base images.
-                echo "registry-username is not provided, skipping login." >&2
+                echo "registry-username is not provided, skipping login."
                 exit 0
             fi
             # A username is present, so a password must be provided.

@@ -178,7 +178,7 @@ Secrets:
 | Name                | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `registry-username` | Username to log in the container registry. This should only be used for high entropy values such as AWS Access Key as described [here](https://github.com/docker/login-action#aws-elastic-container-registry-ecr). Normal username values could match other input values and cause them to be ignored by GitHub Actions and causing your build to fail. In those cases, use the `registry-username` input instead. |
-| `registry-password` | **(Required)** Password to log in the container registry. |
+| `registry-password` | Password to log in the container registry. Required if a `registry-username` is provided |
 
 ### Workflow Example
 
