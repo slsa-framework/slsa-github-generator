@@ -50,6 +50,7 @@ jobs:
           slsa-rekor-log-public: ${{ inputs.rekor-log-public }}
           slsa-runner-label: "ubuntu-latest"
           slsa-build-action-path: "./internal/nodejs-action"
+          slsa-version: "v0.2"
           # TODO(#1575): mask sensitive fields.
           slsa-workflow-inputs: ${{ toJson(inputs) }}
 
