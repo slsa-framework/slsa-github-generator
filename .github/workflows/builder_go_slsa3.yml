@@ -83,6 +83,9 @@ on:
       go-binary-name:
         description: "The name of the generated binary uploaded to the artifact registry."
         value: ${{ jobs.build-dry.outputs.go-binary-name }}
+      provenance-name:
+        description: "The artifact name of the signed provenance. (A file with the intoto.jsonl extension)."
+        value: ${{ jobs.provenance.outputs.go-provenance-name }}
 
 jobs:
   rng:
