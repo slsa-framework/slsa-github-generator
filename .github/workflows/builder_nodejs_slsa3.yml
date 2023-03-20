@@ -122,7 +122,7 @@ jobs:
           # Install dependencies
           ./bin/npm ci
 
-      - name: Clone npm fork
+      - name: Publish the package
         id: publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.node-auth-token }}
