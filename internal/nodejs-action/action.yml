@@ -22,6 +22,15 @@ inputs:
     type: string
     required: false
 
+outputs:
+  attestation-name:
+    description: "The name of the attestation in the generated layout file."
+    value: ${{ steps.generate-layout.outputs.attestation-name }}
+
+  package-filename:
+    description: "The filename of the package tarball."
+    value: ${{ steps.build.outputs.filename }}
+
 runs:
   using: "composite"
   steps:
@@ -55,7 +64,7 @@ runs:
       with:
         name: package.tgz
         # TODO(#1669): Should this have an rng value?
-        path: ${{ steps.build.outputs.filename }}
+        path: ${{ steps.build.outputs.file-path }}
         if-no-files-found: error
         retention-days: 5
 

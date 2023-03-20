@@ -96,22 +96,6 @@ jobs:
       id-token: write # For token creation.
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout builder repository
-        uses: slsa-framework/slsa-github-generator/.github/actions/secure-builder-checkout@main
-        with:
-          repository: "${{ needs.detect-env.outputs.repository }}"
-          ref: "${{ needs.detect-env.outputs.ref }}"
-          path: __BUILDER_CHECKOUT_DIR__
-
-      - name: Checkout the Node repository
-        uses: ./__BUILDER_CHECKOUT_DIR__/.github/actions/secure-project-checkout-node
-        with:
-          path: __PROJECT_CHECKOUT_DIR__
-          node-version: ${{ inputs.node-version }}
-          node-version-file: ${{ inputs.node-version-file }}
-          # NOTE: Only support the public registry for now.
-          registry-url: "https://registry.npmjs.org"
-
       # NOTE: The attestation name has a rng value in it's name so we don't need to check for file collisions.
       - name: Download attestations
         id: attestation-download
@@ -161,35 +145,15 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.node-auth-token }}
           ATTESTATION_DIR: ${{ steps.attestation-download.outputs.download-path }}
+          ATTESTATION_NAME: ${{ fromJSON(needs.slsa-run.outpts.build-artifacts-outputs).attestation-name }}
           PACKAGE_DIR: ${{ steps.package-download.outputs.download-path }}
+          PACKAGE_FILE_NAME: ${{ fromJSON(needs.slsa-run.outpts.build-artifacts-outputs).package-filename }}
           UNTRUSTED_DIRECTORY: ${{ inputs.directory }}
         run: |
           set -euo pipefail
 
-          npm_path="$(dirname "$(which node)")"/node_modules/npm/bin/npm
-
-          # Move to the project checkout dir.
-          untrusted_realpath=$(realpath -e "__PROJECT_CHECKOUT_DIR__/${UNTRUSTED_DIRECTORY}")
-          echo "Directory '${UNTRUSTED_DIRECTORY}' resolved to '${untrusted_realpath}'"
-
-          github_workspace_realpath=$(realpath -e "${GITHUB_WORKSPACE}")
-          echo "GitHub workspace '${GITHUB_WORKSPACE}' resolved to '${github_workspace_realpath}'"
-
-          echo "Checking directory '${untrusted_realpath}' is a sub-directory of '${github_workspace_realpath}'"
-          if [[ "${untrusted_realpath}" != "${github_workspace_realpath}" ]] && [[ ${untrusted_realpath} != ${github_workspace_realpath}/* ]]; then
-              echo "${UNTRUSTED_DIRECTORY} not a sub-directory of ${GITHUB_WORKSPACE}"
-              exit 1
-          fi
-          # Directory was validated. Explicitly trust it.
-          directory="${untrusted_realpath}"
-
-          # Get absolute path to the attestation sigstore bundle since it's
-          # outside the project checkout dir.
-          # NOTE: The attestation file name is specified in the internal/nodejs-action
-          attestation_path="${ATTESTATION_DIR}/attestation.intoto.sigstore"
-
-          # Get the filename for the package.
-          package_path="${PACKAGE_DIR}/$(${npm_path} pack "${directory}/" --dry-run --json | jq -r '.[0].filename')"
+          package_path="${PACKAGE_DIR}/${PACKAGE_FILE_NAME}"
+          attestation_path="${ATTESTATION_DIR}/${ATTESTATION_NAME}.sigstore"
 
           # Run npm publish using npm fork.
           # TODO(#1829): Support the --access flag.

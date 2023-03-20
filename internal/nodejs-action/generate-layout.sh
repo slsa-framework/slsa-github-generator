@@ -34,13 +34,14 @@ alg=$(echo "${integrity_digest}" | cut -d'-' -f1 | tr '[:upper:]' '[:lower:]')
 digest=$(echo "${integrity_digest}" | cut -d'-' -f2- | base64 -d | od -A n -v -t x1 | tr -d ' \n')
 
 # NOTE: the name of the attestation should be configurable.
+attestation_name="attestation.intoto"
 cat <<EOF | jq | tee "$SLSA_OUTPUTS_ARTIFACTS_FILE"
 {
   "version": 1,
   "attestations":
   [
     {
-      "name": "attestation.intoto",
+      "name": "${attestation_name}",
       "subjects":
       [
         {
@@ -55,3 +56,5 @@ cat <<EOF | jq | tee "$SLSA_OUTPUTS_ARTIFACTS_FILE"
   ]
 }
 EOF
+
+echo "attestation-name=${attestation_name}" >>"$GITHUB_OUTPUT"
