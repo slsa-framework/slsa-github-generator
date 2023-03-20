@@ -27,3 +27,4 @@ e2e_verify_predicate_v1_buildDefinition_externalParameters_workflow_path "$PREDI
 
 # Verify external parameters source
 e2e_verify_predicate_v1_buildDefinition_externalParameters_source "$PREDICATE_CONTENT" "{\"uri\":\"git+https://github.com/$GITHUB_REPOSITORY@$GITHUB_REF\",\"digest\":{\"sha1\":\"$GITHUB_SHA\"}}"
+e2e_verify_predicate_v1_buildDefinition_externalParameters_inputs "$PREDICATE_CONTENT" '{"name1":"value1","name2":"***","name3":"value3","name4":"***","name5":"value5","name6":"***","private-repository":true}'

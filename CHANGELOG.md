@@ -2,7 +2,7 @@
 
 <!-- toc -->
 
-- [v1.5.0](#v150)
+- [v1.6.0](#v160)
   - [Summary of changes](#summary-of-changes)
     - [Go builder](#go-builder)
       - [New Features](#new-features)
@@ -10,6 +10,15 @@
       - [New Features](#new-features-1)
     - [Container generator](#container-generator)
       - [New Features](#new-features-2)
+  - [Changelog since v1.5.0](#changelog-since-v150)
+- [v1.5.0](#v150)
+  - [Summary of changes](#summary-of-changes-1)
+    - [Go builder](#go-builder-1)
+      - [New Features](#new-features-3)
+    - [Generic generator](#generic-generator-1)
+      - [New Features](#new-features-4)
+    - [Container generator](#container-generator-1)
+      - [New Features](#new-features-5)
   - [Changelog since v1.4.0](#changelog-since-v140)
 - [v1.4.0](#v140)
   - [What's Changed](#whats-changed)
@@ -37,18 +46,18 @@
   - [Full Changelog](#full-changelog-4)
 - [v1.2.1](#v121)
   - [What's Changed](#whats-changed-5)
-    - [Generic generator](#generic-generator-1)
+    - [Generic generator](#generic-generator-2)
       - [buildType](#buildtype)
       - [Provenance file names](#provenance-file-names)
       - [Explicit opt-in for private repos](#explicit-opt-in-for-private-repos)
-    - [Go builder](#go-builder-1)
+    - [Go builder](#go-builder-2)
       - [Support private repos](#support-private-repos)
   - [New Contributors](#new-contributors-5)
   - [Full Changelog](#full-changelog-5)
 - [v1.2.0](#v120)
   - [What's Changed](#whats-changed-6)
-    - [Generic generator](#generic-generator-2)
-    - [Go builder](#go-builder-2)
+    - [Generic generator](#generic-generator-3)
+    - [Go builder](#go-builder-3)
   - [New Contributors](#new-contributors-6)
   - [Full Changelog](#full-changelog-6)
 - [v1.1.1](#v111)
@@ -60,6 +69,30 @@
   - [Contributors](#contributors)
 
 <!-- tocstop -->
+
+<!-- Information on the next release will be added here. -->
+
+# v1.6.0
+
+## Summary of changes
+
+### Go builder
+
+#### New Features
+
+- A new [`prerelease`](https://github.com/slsa-framework/slsa-github-generator/blob/v1.6.0/internal/builders/generic/README.md#workflow-inputs) input was added to allow users to create releases marked as prerelease when `upload-assets` is set to `true`.
+
+### Generic generator
+
+#### New Features
+
+### Container generator
+
+#### New Features
+
+## Changelog since v1.5.0
+
+https://github.com/slsa-framework/slsa-github-generator/compare/v1.5.0...v1.6.0
 
 # v1.5.0
 
