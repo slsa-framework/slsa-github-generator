@@ -105,7 +105,8 @@ jobs:
           path: __PROJECT_CHECKOUT_DIR__
           node-version: ${{ inputs.node-version }}
           node-version-file: ${{ inputs.node-version-file }}
-          registry-url: ${{ inputs.registry-url }}
+          # NOTE: Only support the public registry for now.
+          registry-url: "https://registry.npmjs.org"
 
       # NOTE: The attestation name has a rng value in it's name so we don't need to check for file collisions.
       - name: Download attestations
