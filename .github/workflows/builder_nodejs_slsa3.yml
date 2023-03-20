@@ -155,4 +155,4 @@ jobs:
 
           # Run npm publish using npm fork.
           # TODO(#1829): Support the --access flag.
-          ${npm_path} publish "${package_path}" --access public --provenance "${attestation_path}"
+          "$(dirname "$(which node)")"/node_modules/npm/bin/npm publish "${package_path}" --access public --provenance "${attestation_path}"
