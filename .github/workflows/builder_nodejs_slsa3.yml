@@ -185,4 +185,5 @@ jobs:
           cd "${directory}"
 
           # Run npm publish using npm fork.
-          "$(dirname "$(which node)")"/node_modules/npm/bin/npm publish --provenance "${attestation_abs_path}"
+          # TODO(#1829): Support the --access flag.
+          "$(dirname "$(which node)")"/node_modules/npm/bin/npm publish --provenance "${attestation_abs_path}" --access public
