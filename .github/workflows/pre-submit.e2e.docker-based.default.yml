@@ -12,7 +12,7 @@ env:
   GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 jobs:
-  build:
+  build-docker-based:
     permissions:
       id-token: write # For signing.
       contents: write # For asset uploads.

@@ -102,16 +102,13 @@ name information is tracked on [issue
 
 ### Registry Authentication
 
-<!-- 
+This workflow support authentication against a Docker registry for private base images
+through an input `registry-username` and `registry-password` secret. Authentication is
+not required for public base images.
+See [Workflow Inputs](#workflow-inputs) for more.
 
-TODO(https://github.com/slsa-framework/slsa-github-generator/issues/1727):
-Implement registry authentication
-
--->
-
-Currently, only public container images are supported. Support for registry
-authentication is tracked
-[here](https://github.com/slsa-framework/slsa-github-generator/issues/1727).
+Authentication to GCR using GCP workflow identity federation is also supported using
+`gcp-workload-identity-provider` and `gcp-service-account`.
 
 ### Supported Triggers
 
@@ -172,6 +169,16 @@ Inputs:
 | `compile-builder`              | Whether to build the builder from source. This increases build time by ~2m.<br>Default: `false`.                                                                                                                                                                                      |
 | `provenance-name`             | The artifact name of the signed provenance. The file must have the `.intoto` extension.<br>Defaults to `<filename>.intoto` for single artifact or `multiple.intoto.jsonl` for multiple artifacts.                                    |
 | `rekor-log-public`             | Set to true to opt-in to posting to the public transparency log. Will generate an error if false for private repositories. This input has no effect for public repositories. See [Private Repositories](#private-repositories).<br>Default: `false`                                     |
+| `registry-username`              | Username to log in the container registry.                                                                                                                                                                 |
+| `gcp-workload-identity-provider` | The full identifier of the Workload Identity Provider, including the project number, pool name, and provider name. If provided, this must be the full identifier which includes all parts:<br>`projects/123456789/locations/global/workloadIdentityPools/my-pool/providers/my-provider` |
+| `gcp-service-account`            | Email address or unique identifier of the Google Cloud service account for which to generate credentials. For example:<br>`my-service-account@my-project.iam.gserviceaccount.com`                                                                                                       |
+
+Secrets:
+
+| Name                | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `registry-username` | Username to log in the container registry. This should only be used for high entropy values such as AWS Access Key as described [here](https://github.com/docker/login-action#aws-elastic-container-registry-ecr). Normal username values could match other input values and cause them to be ignored by GitHub Actions and causing your build to fail. In those cases, use the `registry-username` input instead. |
+| `registry-password` | Password to log in the container registry. Required if a `registry-username` is provided |
 
 ### Workflow Example
 

@@ -2,8 +2,6 @@
 
 set -euo pipefail
 
-run_scripts="${UNTRUSTED_RUN_SCRIPTS}"
-
 if [ "${GITHUB_WORKSPACE}" == "" ]; then
     echo "\$GITHUB_WORKSPACE is empty."
     exit 1
@@ -24,6 +22,9 @@ fi
 directory="${UNTRUSTED_DIRECTORY}"
 
 cd "${directory}"
+
+# Remove tab, newlines, spaces from the scripts input.
+run_scripts=$(echo "${UNTRUSTED_RUN_SCRIPTS//[$'\t\r\n ']/}" | tr "," "\n")
 
 for script in $run_scripts; do
     echo "** Running 'npm run $script' **"

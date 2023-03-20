@@ -31,11 +31,8 @@ runs:
     - name: Setup Node
       uses: actions/setup-node@64ed1c7eab4cce3362f8c340dee64e5eaeef8f7c # v3.6.0
       with:
-        always-auth: ${{ fromJson(inputs.slsa-workflow-inputs).always-auth }}
         node-version: ${{ fromJson(inputs.slsa-workflow-inputs).node-version }}
         node-version-file: ${{ fromJson(inputs.slsa-workflow-inputs).node-version-file }}
-        registry-url: ${{ fromJson(inputs.slsa-workflow-inputs).registry-url }}
-        scope: ${{ fromJson(inputs.slsa-workflow-inputs).scope }}
         # TODO(#1679): cache dependencies.
         # cache: npm
         # NOTE: cache-dependency-path needs to be validated to be a subdirectory of GITHUB_WORKSPACE.
@@ -52,8 +49,7 @@ runs:
         UNTRUSTED_DIRECTORY: ${{ fromJson(inputs.slsa-workflow-inputs).directory }}
         UNTRUSTED_RUN_SCRIPTS: ${{ fromJson(inputs.slsa-workflow-inputs).run-scripts }}
       shell: bash
-      run: |
-        ./../__TOOL_ACTION_DIR__/build.sh
+      run: ./../__TOOL_ACTION_DIR__/build.sh
 
     - uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
       with:
@@ -73,5 +69,4 @@ runs:
         SLSA_OUTPUTS_ARTIFACTS_FILE: ${{ inputs.slsa-layout-file }}
         PACK_JSON: ${{ steps.build.outputs.pack_json }}
       shell: bash
-      run: |
-        ./../__TOOL_ACTION_DIR__/generate-layout.sh
+      run: ./../__TOOL_ACTION_DIR__/generate-layout.sh

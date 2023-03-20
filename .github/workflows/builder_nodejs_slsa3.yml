@@ -5,12 +5,6 @@ permissions: {}
 on:
   workflow_call:
     inputs:
-      always-auth:
-        description: "Set always-auth in npmrc."
-        required: false
-        type: boolean
-        default: false
-
       directory:
         description: "Sub-directory where package.json is located. Must be under the workspace."
         required: false
@@ -27,18 +21,8 @@ on:
         required: false
         type: string
 
-      registry-url:
-        description: "Optional registry to set up for auth. Will set the registry in a project level .npmrc and .yarnrc file, and set up auth to read in from env.NODE_AUTH_TOKEN."
-        required: false
-        type: string
-
       run-scripts:
-        description: "An ordered list of scripts from the package.json file to run (space separated). Example value: 'script1 script2'"
-        required: false
-        type: string
-
-      scope:
-        description: "Optional scope for authenticating against scoped registries. Will fall back to the repository owner when using the GitHub Packages registry (https://npm.pkg.github.com/)."
+        description: "An ordered list of scripts from the package.json file to run (comma separated). Example value: 'script1, script2'"
         required: false
         type: string
 
@@ -66,6 +50,7 @@ jobs:
           slsa-rekor-log-public: ${{ inputs.rekor-log-public }}
           slsa-runner-label: "ubuntu-latest"
           slsa-build-action-path: "./internal/nodejs-action"
+          slsa-version: "v0.2"
           # TODO(#1575): mask sensitive fields.
           slsa-workflow-inputs: ${{ toJson(inputs) }}
 
