@@ -105,9 +105,14 @@ jobs:
           set -euo pipefail
 
           # Clone npm fork.
-          cd $(which node)
+          cd $(dirname $(which node))
           mkdir -p node_modules
           cd node_modules
           git clone https://github.com/ianlewis/cli.git npm
 
-          ./npm/bin/npm publish --provenance /path/to/bundle.sigstore
+          # checkout branch
+          cd npm
+          git checkout oob-provenance
+
+          # Run npm publish
+          ./bin/npm publish --provenance /path/to/bundle.sigstore
