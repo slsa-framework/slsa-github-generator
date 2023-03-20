@@ -119,12 +119,13 @@ jobs:
         with:
           name: ${{ needs.slsa-run.outputs.attestations-download-name }}
 
+      - name: Download artifact
+        id: package-download
+        uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
+        with:
+          name: "package.tgz"
+
       # TODO(#1680): verify the attestation before upload.
-      # - name: Download artifact
-      #   uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
-      #   with:
-      #     name: "package.tgz"
-      #
       # - name: Verify attestations
       #   env:
       #     SLSA_ATTESTATION_DOWNLOAD_NAME: ${{ needs.slsa-run.outputs.attestations-download-name }}
@@ -160,12 +161,14 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.node-auth-token }}
           ATTESTATION_DIR: ${{ steps.attestation-download.outputs.download-path }}
+          PACKAGE_DIR: ${{ steps.package-download.outputs.download-path }}
           UNTRUSTED_DIRECTORY: ${{ inputs.directory }}
         run: |
           set -euo pipefail
 
-          # Get absolute path to the attestation sigstore bundle since it's
+          # Get absolute path to the package and attestation sigstore bundle since it's
           # outside the project checkout dir.
+          package_abs_path="$(realpath -e "${PACKAGE_DIR}/package.tgz")"
           # NOTE: The attestation file name is specified in the internal/nodejs-action
           attestation_abs_path="$(realpath -e "${ATTESTATION_DIR}/attestation.intoto.sigstore")"
 
@@ -190,7 +193,7 @@ jobs:
 
           # Run npm publish using npm fork.
           # TODO(#1829): Support the --access flag.
-          "$(dirname "$(which node)")"/node_modules/npm/bin/npm publish --access public --provenance "${attestation_abs_path}"
+          "$(dirname "$(which node)")"/node_modules/npm/bin/npm publish "${package_abs_path}" --access public --provenance "${attestation_abs_path}"
 
           # test with npm generated provenance
           # "$(dirname "$(which node)")"/node_modules/npm/bin/npm publish --access public --provenance
