@@ -122,10 +122,29 @@ jobs:
           # Install dependencies
           ./bin/npm ci
 
+      # TODO(#1669): Use mainline version of npm
+      # TODO(#1669): Generalize directory path checking. The same logic is needed in internal action.
       - name: Publish the package
         id: publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.node-auth-token }}
+          UNTRUSTED_DIRECTORY: ${{ inputs.directory }}
         run: |
+          untrusted_realpath=$(realpath -e "${UNTRUSTED_DIRECTORY}")
+          echo "Directory '${UNTRUSTED_DIRECTORY}' resolved to '${untrusted_realpath}'"
+
+          github_workspace_realpath=$(realpath -e "${GITHUB_WORKSPACE}")
+          echo "GitHub workspace '${GITHUB_WORKSPACE}' resolved to '${github_workspace_realpath}'"
+
+          echo "Checking directory '${untrusted_realpath}' is a sub-directory of '${github_workspace_realpath}'"
+          if [[ "${untrusted_realpath}" != "${github_workspace_realpath}" ]] && [[ ${untrusted_realpath} != ${github_workspace_realpath}/* ]]; then
+              echo "${UNTRUSTED_DIRECTORY} not a sub-directory of ${GITHUB_WORKSPACE}"
+              exit 1
+          fi
+          # Directory was validated. Explicitly trust it.
+          directory="${UNTRUSTED_DIRECTORY}"
+
+          cd "${directory}"
+
           # Run npm publish using npm fork.
           "$(dirname $(which node))"/node_modules/npm/bin/npm publish --provenance /path/to/bundle.sigstore
