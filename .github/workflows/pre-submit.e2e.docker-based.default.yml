@@ -26,7 +26,7 @@ jobs:
       compile-builder: true
 
   verify:
-    needs: build
+    needs: build-docker-based
     runs-on: ubuntu-latest
     env:
       HEAD_SHA: ${{ github.event.pull_request.head.sha }}
