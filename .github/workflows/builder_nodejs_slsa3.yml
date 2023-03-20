@@ -187,7 +187,7 @@ jobs:
           attestation_path="${ATTESTATION_DIR}/attestation.intoto.sigstore"
 
           # Get the filename for the package.
-          package_path="${PACKAGE_DIR}/$(npm pack "${directory}" --dry-run --json | jq -r '.[0].filename')"
+          package_path="${PACKAGE_DIR}/$(npm pack "${directory}/" --dry-run --json | jq -r '.[0].filename')"
 
           # Run npm publish using npm fork.
           # TODO(#1829): Support the --access flag.
