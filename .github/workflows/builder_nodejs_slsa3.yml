@@ -179,7 +179,7 @@ jobs:
               exit 1
           fi
           # Directory was validated. Explicitly trust it.
-          directory="${UNTRUSTED_DIRECTORY}"
+          directory="${untrusted_realpath}"
 
           # Get absolute path to the attestation sigstore bundle since it's
           # outside the project checkout dir.
@@ -187,11 +187,8 @@ jobs:
           attestation_path="${ATTESTATION_DIR}/attestation.intoto.sigstore"
 
           # Get the filename for the package.
-          package_path="${PACKAGE_DIR}/$(npm pack ${directory} --dry-run --json | jq -r '.[0].filename')"
+          package_path="${PACKAGE_DIR}/$(npm pack "${directory}" --dry-run --json | jq -r '.[0].filename')"
 
           # Run npm publish using npm fork.
           # TODO(#1829): Support the --access flag.
           "$(dirname "$(which node)")"/node_modules/npm/bin/npm publish "${package_path}" --access public --provenance "${attestation_path}"
-
-          # test with npm generated provenance
-          # "$(dirname "$(which node)")"/node_modules/npm/bin/npm publish --access public --provenance
