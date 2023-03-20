@@ -69,8 +69,24 @@ jobs:
     with:
       slsa-token: ${{ needs.slsa-setup.outputs.slsa-token }}
 
+  # This detects the repository and ref of the reusable workflow.
+  # For pull request, this gets the referenced slsa-github-generator workflow.
+  detect-env:
+    outputs:
+      repository: ${{ steps.detect.outputs.repository }}
+      ref: ${{ steps.detect.outputs.ref }}
+      workflow: ${{ steps.detect.outputs.workflow }}
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write # Needed to detect the current reusable repository and ref.
+    steps:
+      - name: Detect the builder ref
+        id: detect
+        uses: slsa-framework/slsa-github-generator/.github/actions/detect-workflow-js@main
+
+  # TODO(#1847): Use cleanup/finalize hook.
   slsa-publish:
-    needs: [slsa-run]
+    needs: [detect-env, slsa-run]
     if: startsWith(github.ref, 'refs/tags/')
     permissions:
       contents: write # For asset uploads. Optional
@@ -83,17 +99,33 @@ jobs:
           node-version-file: ${{ inputs.node-version-file }}
           registry-url: ${{ inputs.registry-url }}
 
+      - name: Checkout builder repository
+        uses: slsa-framework/slsa-github-generator/.github/actions/secure-builder-checkout@main
+        with:
+          repository: "${{ needs.detect-env.outputs.repository }}"
+          ref: "${{ needs.detect-env.outputs.ref }}"
+          path: __BUILDER_CHECKOUT_DIR__
+
+      - name: Checkout the Node repository
+        uses: ./__BUILDER_CHECKOUT_DIR__/.github/actions/secure-project-checkout-node
+        with:
+          path: __PROJECT_CHECKOUT_DIR__
+          node-version: ${{ inputs.node-version }}
+          node-version-file: ${{ inputs.node-version-file }}
+          registry-url: ${{ inputs.registry-url }}
+
+      # NOTE: The attestation name has a rng value in it's name so we don't need to check for file collisions.
       - name: Download attestations
         uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
         with:
           name: ${{ needs.slsa-run.outputs.attestations-download-name }}
 
-      - name: Download artifact
-        uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
-        with:
-          name: "package.tgz"
-
       # TODO(#1680): verify the attestation before upload.
+      # - name: Download artifact
+      #   uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
+      #   with:
+      #     name: "package.tgz"
+      #
       # - name: Verify attestations
       #   env:
       #     SLSA_ATTESTATION_DOWNLOAD_NAME: ${{ needs.slsa-run.outputs.attestations-download-name }}
@@ -110,7 +142,7 @@ jobs:
           set -euo pipefail
 
           # Clone npm fork.
-          cd $(dirname $(which node))
+          cd "$(dirname "$(which node)")"
           mkdir -p node_modules
           cd node_modules
           git clone https://github.com/ianlewis/cli.git npm
@@ -128,9 +160,19 @@ jobs:
         id: publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.node-auth-token }}
+          ATTESTATION_NAME: ${{ needs.slsa-run.outputs.attestations-download-name }}
           UNTRUSTED_DIRECTORY: ${{ inputs.directory }}
         run: |
-          untrusted_realpath=$(realpath -e "${UNTRUSTED_DIRECTORY}")
+          set -euo pipefail
+
+          # Get absolute path to the attestation sigstore bundle since it's
+          # outside the project checkout dir.
+          attestation_abs_path="$(realpath -e "${ATTESTATION_NAME}")"
+
+          # Move to the project checkout dir.
+          cd __PROJECT_CHECKOUT_DIR__
+
+          untrusted_realpath="$(realpath -e "${UNTRUSTED_DIRECTORY}")"
           echo "Directory '${UNTRUSTED_DIRECTORY}' resolved to '${untrusted_realpath}'"
 
           github_workspace_realpath=$(realpath -e "${GITHUB_WORKSPACE}")
@@ -147,4 +189,4 @@ jobs:
           cd "${directory}"
 
           # Run npm publish using npm fork.
-          "$(dirname $(which node))"/node_modules/npm/bin/npm publish --provenance /path/to/bundle.sigstore
+          "$(dirname "$(which node)")"/node_modules/npm/bin/npm publish --provenance "${attestation_abs_path}"

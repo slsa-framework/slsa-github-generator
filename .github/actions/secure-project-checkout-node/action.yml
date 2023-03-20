@@ -12,7 +12,13 @@ inputs:
     default: ${{ github.token }}
   node-version:
     description: "The Node version to use, as expected by https://github.com/actions/setup-node."
-    required: true
+    required: false
+  node-version-file:
+    description: "File containing the version Spec of the version to use.  Examples: .nvmrc, .node-version, .tool-versions."
+    required: false
+  registry-url:
+    description: "Optional registry to set up for auth. Will set the registry in a project level .npmrc and .yarnrc file, and set up auth to read in from env.NODE_AUTH_TOKEN."
+    required: false
 
 runs:
   using: "composite"
@@ -30,3 +36,5 @@ runs:
       uses: actions/setup-node@64ed1c7eab4cce3362f8c340dee64e5eaeef8f7c # v3.6.0
       with:
         node-version: ${{ inputs.node-version }}
+        node-version-file: ${{ inputs.node-version-file }}
+        registry-url: ${{ inputs.registry-url }}
