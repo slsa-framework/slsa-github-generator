@@ -2,7 +2,21 @@
 
 set -euo pipefail
 
-package_id=$(echo "${PACK_JSON}" | jq -r '.[0].id')
+package_scope=$(echo "${PACK_JSON}" | jq -r '.[0].name' | cut -d'/' -f1)
+package_name=$(echo "${PACK_JSON}" | jq -r '.[0].name' | cut -d'/' -f2)
+if [ "${package_name}" == "" ]; then
+	package_name="${package_scope}"
+	package_scope=""
+fi
+# NOTE: npm URI encodes package scope in the provenance.
+package_scope=$(echo "\"${package_scope}\"" | jq -r '. | @uri')
+
+package_version=$(echo "${PACK_JSON}" | jq -r '.[0].version')
+
+package_id="${package_name}@${package_version}"
+if [ "${package_scope}" != "" ]; then
+	package_id="${package_scope}/${package_id}"
+fi
 
 # The integrity digest is formatted as follows:
 #
