@@ -83,17 +83,17 @@ export async function detectWorkflowFromContext(
       const workflowPath = reusableWorkflow.path.split("@", 1);
       const [workflowOwner, workflowRepo, ...workflowArray] =
         workflowPath[0].split("/");
-      const tmpRepository = [workflowOwner, workflowRepo].join("/");
-      if (!reusableWorkflow.ref) {
-        return Promise.reject(
-          Error(
-            "Referenced workflow missing ref: was the workflow invoked by digest?"
-          )
-        );
-      }
-      const tmpRef = reusableWorkflow.ref;
-      const tmpWorkflow = workflowArray.join("/");
       if (workflowRepo === "slsa-github-generator") {
+        if (!reusableWorkflow.ref) {
+          return Promise.reject(
+            Error(
+              "Referenced slsa-github-generator workflow missing ref: was the workflow invoked by digest?"
+            )
+          );
+        }
+        const tmpRepository = [workflowOwner, workflowRepo].join("/");
+        const tmpRef = reusableWorkflow.ref;
+        const tmpWorkflow = workflowArray.join("/");
         // If there are multiple invocations of reusable workflows in
         // a single caller workflow, ensure that the repositories and refs are
         // the same.

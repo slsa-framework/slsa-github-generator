@@ -90,6 +90,7 @@ on:
       registry-username:
         description: "Username to log into the container registry."
         type: string
+        required: false
       gcp-workload-identity-provider:
         description: >
           The full identifier of the Workload Identity Provider, including the project
@@ -187,7 +188,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [rng, detect-env, generate-builder]
     steps:
-      - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # v3.3.0
+      - uses: actions/checkout@24cb9080177205b6e8c946b17badbe402adc938f # v3.4.0
       - name: Checkout builder repository
         uses: slsa-framework/slsa-github-generator/.github/actions/secure-builder-checkout@main
         with:
@@ -298,9 +299,11 @@ jobs:
           else
             username="${UNTRUSTED_SECRET_USERNAME:-${UNTRUSTED_INPUT_USERNAME}}"
             if [ "${username}" == "" ]; then
-                echo "registry-username is required." >&2
-                exit 1
+                # This may be the case for public base images.
+                echo "registry-username is not provided, skipping login."
+                exit 0
             fi
+            # A username is present, so a password must be provided.
             password="${UNTRUSTED_PASSWORD}"
             if [ "${password}" == "" ]; then
                 echo "registry-password is required." >&2
@@ -328,7 +331,7 @@ jobs:
           set-executable: true
 
       - name: Checkout the source repository
-        uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # v3.3.0
+        uses: actions/checkout@24cb9080177205b6e8c946b17badbe402adc938f # v3.4.0
         with:
           fetch-depth: 1
           persist-credentials: false
