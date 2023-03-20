@@ -34,7 +34,7 @@ jobs:
       - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # v3.3.0
       - uses: actions/download-artifact@e9ef242655d12993efdcda9058dee2db83a2cb9b
         with:
-          name: ${{ needs.build.outputs.build-outputs-name }}
+          name: ${{ needs.build-docker-based.outputs.build-outputs-name }}
           path: outputs
       - name: Get build artifact
         id: build
@@ -44,8 +44,8 @@ jobs:
           echo "name=$(basename $name)" >> $GITHUB_OUTPUT
       - uses: actions/download-artifact@e9ef242655d12993efdcda9058dee2db83a2cb9b
         with:
-          name: ${{ needs.build.outputs.attestations-download-name }}
+          name: ${{ needs.build-docker-based.outputs.attestations-download-name }}
       - env:
-          BINARY: ${{ steps.build.outputs.name }}
+          BINARY: ${{ steps.build-docker-based.outputs.name }}
           PROVENANCE: attestation.intoto
         run: ./.github/workflows/scripts/pre-submit.e2e.docker-based.default.sh
