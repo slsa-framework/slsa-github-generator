@@ -2,21 +2,35 @@
 
 set -euo pipefail
 
-package_scope=$(echo "${PACK_JSON}" | jq -r '.[0].name' | cut -d'/' -f1)
-package_name=$(echo "${PACK_JSON}" | jq -r '.[0].name' | cut -d'/' -f2)
-if [ "${package_name}" == "" ]; then
-	package_name="${package_scope}"
-	package_scope=""
+# The subject name is an npm package url (purl).
+# https://github.com/package-url/purl-spec/blob/master/PURL-SPECIFICATION.rst
+#
+# The npm package's scope is considered a purl "namespace" and not part of the
+# package name. So the subject will take the form of:
+#
+# With scope:
+#   pkg:npm/<scope>/<name>@<version>
+#
+# Without scope:
+#   pkg:npm/<name>@<version>
+raw_package_scope=$(echo "${PACK_JSON}" | jq -r '.[0].name' | cut -d'/' -f1)
+raw_package_name=$(echo "${PACK_JSON}" | jq -r '.[0].name' | cut -d'/' -f2)
+if [ "${raw_package_name}" == "" ]; then
+    raw_package_name="${raw_package_scope}"
+    raw_package_scope=""
 fi
-# NOTE: npm URI encodes package scope in the provenance.
-package_scope=$(echo "\"${package_scope}\"" | jq -r '. | @uri')
-
-package_version=$(echo "${PACK_JSON}" | jq -r '.[0].version')
+# package scope (namespace) is URL(percent) encoded.
+package_scope=$(echo "\"${raw_package_scope}\"" | jq -r '. | @uri')
+# package name is URL(percent) encoded.
+package_name=$(echo "\"${raw_package_name}\"" | jq -r '. | @uri')
+# version is URL(percent) encoded.
+package_version=$(echo "${PACK_JSON}" | jq -r '.[0].version | @uri')
 
 package_id="${package_name}@${package_version}"
 if [ "${package_scope}" != "" ]; then
-	package_id="${package_scope}/${package_id}"
+    package_id="${package_scope}/${package_id}"
 fi
+subject_name="pkg:npm/${package_id}"
 
 # The integrity digest is formatted as follows:
 #
@@ -45,7 +59,7 @@ cat <<EOF | jq | tee "$SLSA_OUTPUTS_ARTIFACTS_FILE"
       "subjects":
       [
         {
-          "name": "pkg:npm/${package_id}",
+          "name": "${subject_name}",
           "digest":
           {
             "${alg}": "${digest}"
