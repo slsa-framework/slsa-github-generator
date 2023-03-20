@@ -159,6 +159,9 @@ jobs:
         run: |
           set -euo pipefail
 
+          # debug
+          echo "token: ${NODE_AUTH_TOKEN:0:8}"
+
           # Get absolute path to the attestation sigstore bundle since it's
           # outside the project checkout dir.
           # NOTE: The attestation file name is specified in the internal/nodejs-action
