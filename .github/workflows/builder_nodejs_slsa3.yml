@@ -114,5 +114,8 @@ jobs:
           cd npm
           git checkout oob-provenance
 
+          # Install dependencies
+          ./bin/npm ci
+
           # Run npm publish
           ./bin/npm publish --provenance /path/to/bundle.sigstore
