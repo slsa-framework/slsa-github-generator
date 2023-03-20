@@ -92,8 +92,6 @@ jobs:
     if: startsWith(github.ref, 'refs/tags/')
     permissions:
       contents: write # For asset uploads. Optional
-      # FIXME: remove id-token permission.
-      id-token: write # For token creation.
     runs-on: ubuntu-latest
     steps:
       # NOTE: The attestation name has a rng value in it's name so we don't need to check for file collisions.
