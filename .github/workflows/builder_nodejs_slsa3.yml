@@ -34,6 +34,11 @@ on:
         type: boolean
         default: false
 
+    secrets:
+      node-auth-token:
+        description: "The npm registry auth token used to publish the package."
+        required: true
+
 jobs:
   slsa-setup:
     permissions:
@@ -101,6 +106,8 @@ jobs:
       # TODO(#1669): Use mainline version of npm
       - name: Publish to npm registry
         id: publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.node-auth-token }}
         run: |
           set -euo pipefail
 
