@@ -71,24 +71,9 @@ jobs:
     with:
       slsa-token: ${{ needs.slsa-setup.outputs.slsa-token }}
 
-  # This detects the repository and ref of the reusable workflow.
-  # For pull request, this gets the referenced slsa-github-generator workflow.
-  detect-env:
-    outputs:
-      repository: ${{ steps.detect.outputs.repository }}
-      ref: ${{ steps.detect.outputs.ref }}
-      workflow: ${{ steps.detect.outputs.workflow }}
-    runs-on: ubuntu-latest
-    permissions:
-      id-token: write # Needed to detect the current reusable repository and ref.
-    steps:
-      - name: Detect the builder ref
-        id: detect
-        uses: slsa-framework/slsa-github-generator/.github/actions/detect-workflow-js@main
-
   # TODO(#1847): Use cleanup/finalize hook.
   slsa-publish:
-    needs: [detect-env, slsa-run]
+    needs: [slsa-run]
     if: startsWith(github.ref, 'refs/tags/')
     permissions:
       contents: write # For asset uploads. Optional
