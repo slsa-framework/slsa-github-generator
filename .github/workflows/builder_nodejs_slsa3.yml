@@ -109,6 +109,7 @@ jobs:
 
       # NOTE: The attestation name has a rng value in it's name so we don't need to check for file collisions.
       - name: Download attestations
+        id: attestation-download
         uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
         with:
           name: ${{ needs.slsa-run.outputs.attestations-download-name }}
@@ -153,14 +154,15 @@ jobs:
         id: publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.node-auth-token }}
-          ATTESTATION_NAME: ${{ needs.slsa-run.outputs.attestations-download-name }}
+          ATTESTATION_DIR: ${{ steps.attestation-download.outputs.download-path }}
           UNTRUSTED_DIRECTORY: ${{ inputs.directory }}
         run: |
           set -euo pipefail
 
           # Get absolute path to the attestation sigstore bundle since it's
           # outside the project checkout dir.
-          attestation_abs_path="$(realpath -e "${ATTESTATION_NAME}")"
+          # NOTE: The attestation file name is specified in the internal/nodejs-action
+          attestation_abs_path="$(realpath -e "${ATTESTATION_DIR}/attestation.intoto.sigstore")"
 
           # Move to the project checkout dir.
           cd __PROJECT_CHECKOUT_DIR__
