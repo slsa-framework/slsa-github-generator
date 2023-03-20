@@ -92,13 +92,6 @@ jobs:
       contents: write # For asset uploads. Optional
     runs-on: ubuntu-latest
     steps:
-      - name: Setup Node
-        uses: actions/setup-node@64ed1c7eab4cce3362f8c340dee64e5eaeef8f7c # v3.6.0
-        with:
-          node-version: ${{ inputs.node-version }}
-          node-version-file: ${{ inputs.node-version-file }}
-          registry-url: ${{ inputs.registry-url }}
-
       - name: Checkout builder repository
         uses: slsa-framework/slsa-github-generator/.github/actions/secure-builder-checkout@main
         with:
