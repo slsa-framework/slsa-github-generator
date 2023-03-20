@@ -128,9 +128,9 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.node-auth-token }}
           ATTESTATION_DIR: ${{ steps.attestation-download.outputs.download-path }}
-          ATTESTATION_NAME: ${{ fromJSON(needs.slsa-run.outpts.build-artifacts-outputs).attestation-name }}
+          ATTESTATION_NAME: ${{ fromJSON(needs.slsa-run.outputs.build-artifacts-outputs).attestation-name }}
           PACKAGE_DIR: ${{ steps.package-download.outputs.download-path }}
-          PACKAGE_FILE_NAME: ${{ fromJSON(needs.slsa-run.outpts.build-artifacts-outputs).package-filename }}
+          PACKAGE_FILE_NAME: ${{ fromJSON(needs.slsa-run.outputs.build-artifacts-outputs).package-filename }}
           UNTRUSTED_DIRECTORY: ${{ inputs.directory }}
         run: |
           set -euo pipefail
