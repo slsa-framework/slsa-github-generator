@@ -60,11 +60,6 @@ async function run(): Promise<void> {
     const workflowRecipient = core.getInput("slsa-workflow-recipient");
     const unverifiedToken = core.getInput("slsa-unverified-token");
 
-    const slsaVersion = core.getInput("slsa-version");
-    if (!["1.0-rc1", "0.2"].includes(slsaVersion)) {
-      throw new Error(`Unsupported slsa-version: ${slsaVersion}`);
-    }
-
     const outputPredicate = core.getInput("output-predicate");
     if (!outputPredicate) {
       // detect if output predicate is null or empty string.
@@ -103,6 +98,12 @@ async function run(): Promise<void> {
 
     // Verify the version.
     validateField("version", rawTokenObj.version, 1);
+
+    // Validate the slsaVersion
+    validateFieldAnyOf("slsaVersion", rawTokenObj.slsaVersion, [
+      "v1-rc1",
+      "v0.2",
+    ]);
 
     // Verify the context of the signature.
     validateField("context", rawTokenObj.context, "SLSA delegator framework");
@@ -155,8 +156,8 @@ async function run(): Promise<void> {
 
     // NOTE: we create the predicate using the token with masked inputs.
     let predicateStr = "";
-    switch (slsaVersion) {
-      case "1.0-rc1": {
+    switch (rawMaskedTokenObj.slsaVersion) {
+      case "v1-rc1": {
         const predicate_v1 = await createPredicate_v1(
           rawMaskedTokenObj,
           toolURI,
@@ -165,7 +166,7 @@ async function run(): Promise<void> {
         predicateStr = JSON.stringify(predicate_v1);
         break;
       }
-      case "0.2": {
+      case "v0.2": {
         const predicate_v02 = await createPredicate_v02(
           rawMaskedTokenObj,
           toolURI,
@@ -175,7 +176,9 @@ async function run(): Promise<void> {
         break;
       }
       default: {
-        throw new Error(`Unsupported slsa-version: ${slsaVersion}`);
+        throw new Error(
+          `Unsupported slsa-version: ${rawMaskedTokenObj.slsaVersion}`
+        );
       }
     }
     fs.writeFileSync(safeOutput, predicateStr, {

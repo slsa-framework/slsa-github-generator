@@ -20,11 +20,6 @@ inputs:
     description: "The filename to place the output SLSA predicate based on the verified token"
     required: true
 
-  slsa-version:
-    description: "The version of SLSA provenance format to output in the predicate."
-    required: false
-    default: "1.0-rc1"
-
 outputs:
   slsa-verified-token:
     description: "Verified SLSA token."
