@@ -110,9 +110,6 @@ on:
         required: false
         type: boolean
         default: false
-        # TODO: Secrets and Authentication options for the builder-image.
-        #      * registry-username
-        #      * registry-password
       registry-username:
         description: "Username to log into the container registry."
         type: string
@@ -587,6 +584,7 @@ jobs:
           files: |
             ${{ needs.build.outputs.build-outputs-name }}
             ${{ needs.provenance.outputs.provenance-name }}
+
       - name: Upload provenance tag name
         uses: softprops/action-gh-release@de2c0eb89ae2a093876385947365aca7b0e5f844 # v0.1.15
         if: inputs.upload-tag-name != ''
