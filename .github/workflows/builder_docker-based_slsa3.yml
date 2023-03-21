@@ -515,7 +515,7 @@ jobs:
       - name: Upload unsigned intoto attestations file for pull request
         if: ${{ github.event_name == 'pull_request' }}
         id: upload-unsigned
-        uses: ./__BUILDER_CHECKOUT_DIR__/.github/actions/secure-upload-artifact
+        uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
         with:
           name: "${{ env.OUTPUT_FOLDER }}-${{ needs.rng.outputs.value }}"
           path: "attestations-${{ needs.rng.outputs.value }}"
@@ -535,7 +535,7 @@ jobs:
       - name: Upload the signed attestations
         id: upload-signed
         if: ${{ github.event_name != 'pull_request' }}
-        uses: ./__BUILDER_CHECKOUT_DIR__/.github/actions/secure-upload-artifact
+        uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
         with:
           name: "${{ env.OUTPUT_FOLDER }}-${{ needs.rng.outputs.value }}"
           path: "${{ env.OUTPUT_FOLDER }}-${{ needs.rng.outputs.value }}"
@@ -559,9 +559,8 @@ jobs:
           ref: "${{ needs.detect-env.outputs.ref }}"
           path: __BUILDER_CHECKOUT_DIR__
 
-      # TODO(https://github.com/slsa-framework/slsa-github-generator/issues/1655): Investigate
-      # use of secure download for a folder of artifacts, or use the SLSA layout files and their
-      # checksums.
+      # TODO(https://github.com/slsa-framework/slsa-github-generator/issues/1655): Use the SLSA 
+      # layout files and their checksums to validate the artifacts.
       - name: Download artifacts
         uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
         with:
