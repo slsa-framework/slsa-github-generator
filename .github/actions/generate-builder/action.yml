@@ -74,7 +74,11 @@ runs:
         VERIFIER_RELEASE: v2.1.0 # The version of the verifier to download.
 
         COMPILE_BUILDER: "${{ inputs.compile-builder }}"
-        BUILDER_REF: "${{ inputs.builder-ref || inputs.ref }}"
+        # NOTE: If a builder reference is specified, then we will download this version of the builder.
+        # Otherwise, we sue the same tag reference as the source.
+        # The builder-ref option can be used to test the scripts at main to download a builder binary at
+        # a previous tag.
+        BUILDER_REF: "${{ inputs.builder-ref || inputs.ref }}" # The version of the builder to retrieve.
         BUILDER_DIR: "./__BUILDER_CHECKOUT_DIR__/${{ inputs.directory }}"
         # Needed for the gh CLI used in builder-fetch.sh.
         GH_TOKEN: "${{ inputs.token }}"
