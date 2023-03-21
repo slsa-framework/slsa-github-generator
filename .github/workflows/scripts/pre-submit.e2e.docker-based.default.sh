@@ -26,7 +26,7 @@ e2e_verify_predicate_subject_name "$ATTESTATION" "$BINARY"
 # Verify all common provenance fields.
 PREDICATE_CONTENT=$(echo "$ATTESTATION" | jq -r '.predicate')
 e2e_verify_common_all_v1 "$PREDICATE_CONTENT"
-e2e_verify_predicate_v1_runDetails_builder_id "$PREDICATE_CONTENT" "https://github.com/slsa-framework/slsa-github-generator/.github/workflows/builder_docker-based_slsa3.yml@$GITHUB_REF"
+e2e_verify_predicate_v1_runDetails_builder_id "$PREDICATE_CONTENT" "https://github.com/$GITHUB_HEAD_REPOSITORY/.github/workflows/builder_docker-based_slsa3.yml@$HEAD_SHA"
 e2e_verify_predicate_v1_buildDefinition_buildType "$PREDICATE_CONTENT" "https://slsa.dev/container-based-build/v0.1?draft"
 
 # Verify source: note that the ref is the head sha on pull request presubmits.
