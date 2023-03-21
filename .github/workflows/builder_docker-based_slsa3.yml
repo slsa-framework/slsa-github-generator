@@ -519,6 +519,7 @@ jobs:
         with:
           name: "${{ env.OUTPUT_FOLDER }}-${{ needs.rng.outputs.value }}"
           path: "attestations-${{ needs.rng.outputs.value }}"
+          if-no-files-found: error
 
       ###################################################################
       #                       Sign the attestation                      #
@@ -539,6 +540,7 @@ jobs:
         with:
           name: "${{ env.OUTPUT_FOLDER }}-${{ needs.rng.outputs.value }}"
           path: "${{ env.OUTPUT_FOLDER }}-${{ needs.rng.outputs.value }}"
+          if-no-files-found: error
 
   ###################################################################
   #                                                                 #
@@ -559,7 +561,7 @@ jobs:
           ref: "${{ needs.detect-env.outputs.ref }}"
           path: __BUILDER_CHECKOUT_DIR__
 
-      # TODO(https://github.com/slsa-framework/slsa-github-generator/issues/1655): Use the SLSA 
+      # TODO(https://github.com/slsa-framework/slsa-github-generator/issues/1655): Use the SLSA
       # layout files and their checksums to validate the artifacts.
       - name: Download artifacts
         uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
@@ -588,6 +590,7 @@ jobs:
         uses: softprops/action-gh-release@de2c0eb89ae2a093876385947365aca7b0e5f844 # v0.1.15
         if: inputs.upload-tag-name != ''
         with:
+          prerelease: ${{ inputs.prerelease }}
           tag_name: "${{ inputs.upload-tag-name }}"
           files: |
             ${{ needs.build.outputs.build-outputs-name }}/*
