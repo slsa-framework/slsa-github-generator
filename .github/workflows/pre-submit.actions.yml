@@ -298,10 +298,10 @@ jobs:
   generate-builder-generic-no-compile:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@24cb9080177205b6e8c946b17badbe402adc938f # v3.4.0
       - name: Detect the builder ref
         id: detect
         uses: ./.github/actions/detect-workflow@main
+      - uses: actions/checkout@24cb9080177205b6e8c946b17badbe402adc938f # v3.4.0
       - uses: ./.github/actions/generate-builder
         with:
           repository: ${{ steps.detect.output.repository }}
