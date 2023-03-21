@@ -75,7 +75,9 @@ runs:
 
         COMPILE_BUILDER: "${{ inputs.compile-builder }}"
         # NOTE: If a builder reference is specified, then we will download this version of the builder.
-        # Otherwise, we use the same tag reference as the source.
+        # Otherwise, we use the same tag reference as the detected workflow source reference. This allows
+        # pinning the builder binary version at the same as the reuseable workflow reference, and avoids
+        # dynamically fetching a builder binary.
         # The builder-ref option can be used to test the scripts at main to download a builder binary at
         # a previous tag.
         BUILDER_REF: "${{ inputs.builder-ref || inputs.ref }}" # The version of the builder to retrieve.
