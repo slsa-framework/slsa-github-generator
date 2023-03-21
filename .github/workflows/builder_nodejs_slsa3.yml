@@ -110,18 +110,21 @@ jobs:
       # TODO(#1669): Use mainline version of npm
       - name: Clone npm fork
         id: clone-fork
+        env:
+          NPM_GIT_SHA: bc657b76f09cbdd5801e360633898b14a4bbc5e8
         run: |
           set -euo pipefail
 
           # Clone npm fork.
           cd "$(dirname "$(which node)")"
-          mkdir -p node_modules
-          cd node_modules
-          git clone https://github.com/ianlewis/cli.git npm
+          mkdir -p node_modules/npm
+          cd node_modules/npm
+          git init
+          git remote add origin https://github.com/ianlewis/cli.git
 
-          # checkout branch
-          cd npm
-          git checkout oob-provenance
+          # Fetch and checkout oob-provenance branch at pinned digest.
+          git fetch --depth 1 "${NPM_GIT_SHA}"
+          git checkout "${NPM_GIT_SHA}"
 
           # Install dependencies
           ./bin/npm ci
