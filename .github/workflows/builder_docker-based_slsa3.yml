@@ -240,7 +240,7 @@ jobs:
 
           REF="@${GITHUB_REF}"
           if [[ "${GITHUB_EVENT_NAME}" == "pull_request" ]]; then
-            REF="@${GITHUB_SHA}"
+            REF=""
           fi
 
           # Note: this outputs information about resolved arguments, etc.
