@@ -32,4 +32,4 @@ e2e_verify_predicate_v1_runDetails_builder_id "$PREDICATE_CONTENT" "https://gith
 e2e_verify_predicate_v1_buildDefinition_buildType "$PREDICATE_CONTENT" "https://slsa.dev/container-based-build/v0.1?draft"
 
 # Verify source: note that the ref is the head sha on pull request presubmits.
-e2e_verify_predicate_v1_buildDefinition_externalParameters_source "$PREDICATE_CONTENT" "{\"uri\":\"git+https://github.com/$GITHUB_REPOSITORY@$HEAD_SHA\",\"digest\":{\"sha1\":\"$GITHUB_SHA\"}}"
+e2e_verify_predicate_v1_buildDefinition_externalParameters_source "$PREDICATE_CONTENT" "{\"uri\":\"git+https://github.com/$GITHUB_REPOSITORY@$GITHUB_SHA\",\"digest\":{\"sha1\":\"$GITHUB_SHA\"}}"
