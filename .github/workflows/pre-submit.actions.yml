@@ -299,10 +299,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@24cb9080177205b6e8c946b17badbe402adc938f # v3.4.0
+      - name: Detect the builder ref
+        id: detect
+        uses: ./.github/actions/detect-workflow
       - uses: ./.github/actions/generate-builder
         with:
-          repository: "slsa-framework/slsa-github-generator"
-          ref: "refs/tags/v1.2.2"
+          repository: ${{ steps.detect.output.repository }}
+          ref: ${{ steps.detect.outputs.ref }}
+          builder-ref: "refs/tags/v1.2.2"
           go-version: 1.18
           binary: "slsa-generator-generic-linux-amd64"
           directory: "internal/builders/generic"

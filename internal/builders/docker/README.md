@@ -172,6 +172,9 @@ Inputs:
 | `registry-username`              | Username to log in the container registry.                                                                                                                                                                 |
 | `gcp-workload-identity-provider` | The full identifier of the Workload Identity Provider, including the project number, pool name, and provider name. If provided, this must be the full identifier which includes all parts:<br>`projects/123456789/locations/global/workloadIdentityPools/my-pool/providers/my-provider` |
 | `gcp-service-account`            | Email address or unique identifier of the Google Cloud service account for which to generate credentials. For example:<br>`my-service-account@my-project.iam.gserviceaccount.com`                                                                                                       |
+| `upload-assets`            |  Uploads the artifact and provenance to a GitHub release.<br>If the `upload-tag-name` was provided, then the assets are uploaded to the provided input tag. This can be used for workflow_dispatch events. Otherwise, if a new tag triggered the workflow, then the assets are uploaded to the triggering tag.           |
+| `upload-tag-name`            | If non-empty and `upload-assets` is set to true, the provenance is uploaded to the GitHub release identified by the tag name. If a workflow is run on a new tag and `upload-tag-name` is non-empty, the new tag is ignored and the value of `upload-tag-name` is used instead to upload the assets.              |
+| `prerelease`            | EIf true, GitHub Release is created as a pre-release.                                                                                                     |
 
 Secrets:
 
