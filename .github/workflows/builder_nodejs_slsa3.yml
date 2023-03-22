@@ -91,11 +91,15 @@ jobs:
         with:
           name: ${{ needs.slsa-run.outputs.attestations-download-name }}
 
-      - name: Download artifact
-        id: package-download
-        uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
+      # NOTE: secure-download-artifact ensures that the downloaded file doesn't overwrite an existing file.
+      - name: Download package
+        uses: slsa-framework/slsa-github-generator/.github/actions/secure-download-artifact@main
         with:
-          name: "package.tgz"
+          name: ${{ fromJSON(needs.slsa-run.outputs.build-artifacts-outputs).package-download-name }}
+          path: ${{ fromJSON(needs.slsa-run.outputs.build-artifacts-outputs).package-filename }}
+          # NOTE: The sha256 here comes from the build action.
+          sha256: ${{ fromJSON(needs.slsa-run.outputs.build-artifacts-outputs).package-sha256 }}
+          set-executable: false
 
       # TODO(#1680): verify the attestation before upload.
       # - name: Verify attestations

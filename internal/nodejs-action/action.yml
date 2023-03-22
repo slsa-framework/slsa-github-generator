@@ -27,9 +27,17 @@ outputs:
     description: "The name of the attestation in the generated layout file."
     value: ${{ steps.generate-layout.outputs.attestation-name }}
 
+  package-download-name:
+    description: "Name of the artifact to download the package tarball."
+    value: "${{ steps.rng.outputs.value }}-${{ steps.build.outputs.file-path }}"
+
   package-filename:
-    description: "The filename of the package tarball."
+    description: "The filename of the package tarball in the package artifact."
     value: ${{ steps.build.outputs.filename }}
+
+  package-sha256:
+    description: "The sha256 digest of the package file."
+    value: ${{ steps.sha.outputs.sha256 }}
 
 runs:
   using: "composite"
@@ -60,10 +68,20 @@ runs:
       shell: bash
       run: ./../__TOOL_ACTION_DIR__/build.sh
 
+    - id: sha
+      uses: slsa-framework/slsa-github-generator/.github/actions/compute-sha256@main
+      with:
+        path: ${{ steps.build.outputs.file-path }}
+
+    # rng generates a random number to avoid name collision in artifacts
+    # when multiple workflows run concurrently.
+    - name: Generate random 16-byte value (32-char hex encoded)
+      id: rng
+      uses: slsa-framework/slsa-github-generator/.github/actions/rng@main
+
     - uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
       with:
-        name: package.tgz
-        # TODO(#1669): Should this have an rng value?
+        name: "${{ steps.rng.outputs.value }}-${{ steps.build.outputs.file-path }}"
         path: ${{ steps.build.outputs.file-path }}
         if-no-files-found: error
         retention-days: 5
