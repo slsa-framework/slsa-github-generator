@@ -91,7 +91,9 @@ jobs:
     steps:
       - name: Verify token with test action
         id: verify
-        uses: slsa-framework/slsa-github-generator/.github/actions/verify-token@main
+        # FIXME(ianlewis): debug
+        # uses: slsa-framework/slsa-github-generator/.github/actions/verify-token@main
+        uses: ianlewis/slsa-github-generator/.github/actions/verify-token@nodejs-publish
         with:
           slsa-workflow-recipient: "delegator_generic_slsa3.yml"
           slsa-unverified-token: ${{ inputs.slsa-token }}
