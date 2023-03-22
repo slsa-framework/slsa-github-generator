@@ -128,7 +128,7 @@ jobs:
           git remote add origin https://github.com/ianlewis/cli.git
 
           # Fetch and checkout oob-provenance branch at pinned digest.
-          git fetch --depth 1 "${NPM_GIT_SHA}"
+          git fetch --depth 1 origin "${NPM_GIT_SHA}"
           git checkout "${NPM_GIT_SHA}"
 
           # Install dependencies
