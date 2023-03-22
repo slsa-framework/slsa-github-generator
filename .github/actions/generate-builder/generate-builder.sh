@@ -2,9 +2,10 @@
 set -euo pipefail
 
 if [[ "$COMPILE_BUILDER" == true ]]; then
-    echo "Building the builder"
+    echo "Building the builder with ref: $BUILDER_REF"
 
     cd "$BUILDER_DIR"
+    git checkout "$BUILDER_REF"
 
     #TODO(reproducible)
     go mod vendor
