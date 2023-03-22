@@ -65,9 +65,7 @@ jobs:
       id-token: write # For signing.
       contents: write # For asset uploads.
       packages: write # For publishing to GitHub packages.
-    # FIXME(ianlewis): debug
-    # uses: slsa-framework/slsa-github-generator/.github/workflows/delegator_generic_slsa3.yml@main
-    uses: ianlewis/slsa-github-generator/.github/workflows/delegator_generic_slsa3.yml@nodejs-publish
+    uses: slsa-framework/slsa-github-generator/.github/workflows/delegator_generic_slsa3.yml@main
     with:
       slsa-token: ${{ needs.slsa-setup.outputs.slsa-token }}
 
