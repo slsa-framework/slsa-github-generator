@@ -69,7 +69,6 @@ jobs:
     with:
       slsa-token: ${{ needs.slsa-setup.outputs.slsa-token }}
 
-  # TODO(#1847): Use cleanup/finalize hook.
   slsa-publish:
     needs: [slsa-run]
     if: startsWith(github.ref, 'refs/tags/')
