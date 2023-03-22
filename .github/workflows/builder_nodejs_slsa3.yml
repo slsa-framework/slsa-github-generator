@@ -136,16 +136,38 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.node-auth-token }}
           ATTESTATION_DIR: ${{ steps.attestation-download.outputs.download-path }}
-          ATTESTATION_NAME: ${{ fromJSON(needs.slsa-run.outputs.build-artifacts-outputs).attestation-name }}
+          UNTRUSTED_ATTESTATION_NAME: ${{ fromJSON(needs.slsa-run.outputs.build-artifacts-outputs).attestation-name }}
           PACKAGE_DIR: ${{ steps.package-download.outputs.download-path }}
-          PACKAGE_FILE_NAME: ${{ fromJSON(needs.slsa-run.outputs.build-artifacts-outputs).package-filename }}
+          UNTRUSTED_PACKAGE_FILE_NAME: ${{ fromJSON(needs.slsa-run.outputs.build-artifacts-outputs).package-filename }}
           UNTRUSTED_DIRECTORY: ${{ inputs.directory }}
         run: |
           set -euo pipefail
 
-          package_path="${PACKAGE_DIR}/${PACKAGE_FILE_NAME}"
-          attestation_path="${ATTESTATION_DIR}/${ATTESTATION_NAME}.sigstore"
+          github_workspace_realpath=$(realpath -e "${GITHUB_WORKSPACE}")
+          echo "GitHub workspace '${GITHUB_WORKSPACE}' resolved to '${github_workspace_realpath}'"
+
+          # Verify the attestation path.
+          untrusted_attestation_realpath=$(realpath "${ATTESTATION_DIR}/${UNTRUSTED_ATTESTATION_NAME}.sigstore")
+          echo "Attestation path resolved to '${untrusted_attestation_realpath}'"
+          echo "Checking directory '${untrusted_attestation_realpath}' is a sub-directory of '${github_workspace_realpath}'"
+          if [[ "${untrusted_attestation_realpath}" != "${github_workspace_realpath}" ]] && [[ ${untrusted_attestation_realpath} != ${github_workspace_realpath}/* ]]; then
+              echo "${untrusted_attestation_realpath} not a sub-directory of ${GITHUB_WORKSPACE}"
+              exit 1
+          fi
+          # Directory was validated. Explicitly trust it.
+          attestation_realpath="${untrusted_attestation_realpath}"
+
+          # Verify the package path.
+          untrusted_package_realpath=$(realpath "${PACKAGE_DIR}/${UNTRUSTED_PACKAGE_FILE}")
+          echo "Package path resolved to '${untrusted_package_realpath}'"
+          echo "Checking directory '${untrusted_package_realpath}' is a sub-directory of '${github_workspace_realpath}'"
+          if [[ "${untrusted_package_realpath}" != "${github_workspace_realpath}" ]] && [[ ${untrusted_package_realpath} != ${github_workspace_realpath}/* ]]; then
+              echo "${untrusted_package_realpath} not a sub-directory of ${GITHUB_WORKSPACE}"
+              exit 1
+          fi
+          # Directory was validated. Explicitly trust it.
+          package_realpath="${untrusted_package_realpath}"
 
           # Run npm publish using npm fork.
           # TODO(#1829): Support the --access flag.
-          "$(dirname "$(which node)")"/node_modules/npm/bin/npm publish "${package_path}" --access public --provenance "${attestation_path}"
+          "$(dirname "$(which node)")"/node_modules/npm/bin/npm publish "${package_realpath}" --access public --provenance "${attestation_realpath}"
