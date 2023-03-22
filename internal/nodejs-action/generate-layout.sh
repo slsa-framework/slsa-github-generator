@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-# The subject name is an npm package url (purl).
+# We will encode the subject name as an npm package url (purl).
 # https://github.com/package-url/purl-spec/blob/master/PURL-SPECIFICATION.rst
 #
 # The npm package's scope is considered a purl "namespace" and not part of the
@@ -13,6 +13,11 @@ set -euo pipefail
 #
 # Without scope:
 #   pkg:npm/<name>@<version>
+#
+# Each of scope, name, and version are URL(percent) encoded.
+
+# Get the raw package name and scope from the output of `npm pack --json`
+# This name is of the form '<scope>/<package name>'
 raw_package_scope=$(echo "${PACK_JSON}" | jq -r '.[0].name' | cut -d'/' -f1)
 raw_package_name=$(echo "${PACK_JSON}" | jq -r '.[0].name' | cut -d'/' -f2)
 if [ "${raw_package_name}" == "" ]; then
@@ -43,8 +48,8 @@ integrity_digest=$(echo "${PACK_JSON}" | jq -r '.[0].integrity')
 # We will parse out the checksum hash algorithm used.
 # NOTE: ensure lowercase just to make sure.
 alg=$(echo "${integrity_digest}" | cut -d'-' -f1 | tr '[:upper:]' '[:lower:]')
-# Here we parse out the checksum and convert it to hex. 'od' seems to be the
-# standard tool to do this kind conversion on Linux.
+# Here we parse out the checksum and convert it from base64 to hex. 'od' seems
+# to be the standard tool to do this kind conversion on Linux.
 digest=$(echo "${integrity_digest}" | cut -d'-' -f2- | base64 -d | od -A n -v -t x1 | tr -d ' \n')
 
 # NOTE: the name of the attestation should be configurable.
