@@ -94,6 +94,7 @@ jobs:
 
       # NOTE: secure-download-artifact ensures that the downloaded file doesn't overwrite an existing file.
       - name: Download package
+        id: package-download
         uses: slsa-framework/slsa-github-generator/.github/actions/secure-download-artifact@main
         with:
           name: ${{ fromJSON(needs.slsa-run.outputs.build-artifacts-outputs).package-download-name }}
@@ -142,7 +143,6 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.node-auth-token }}
           ATTESTATION_DIR: ${{ steps.attestation-download.outputs.download-path }}
           UNTRUSTED_ATTESTATION_NAME: ${{ fromJSON(needs.slsa-run.outputs.build-artifacts-outputs).attestation-name }}
-          PACKAGE_DIR: ${{ steps.package-download.outputs.download-path }}
           UNTRUSTED_PACKAGE_FILENAME: ${{ fromJSON(needs.slsa-run.outputs.build-artifacts-outputs).package-filename }}
           UNTRUSTED_DIRECTORY: ${{ inputs.directory }}
         run: |
@@ -152,7 +152,7 @@ jobs:
           echo "GitHub workspace '${GITHUB_WORKSPACE}' resolved to '${github_workspace_realpath}'"
 
           # Verify the attestation path.
-          untrusted_attestation_realpath=$(realpath "${ATTESTATION_DIR}/${UNTRUSTED_ATTESTATION_NAME}.sigstore")
+          untrusted_attestation_realpath=$(realpath -e "${ATTESTATION_DIR}/${UNTRUSTED_ATTESTATION_NAME}.sigstore")
           echo "Attestation path resolved to '${untrusted_attestation_realpath}'"
           echo "Checking directory '${untrusted_attestation_realpath}' is a sub-directory of '${github_workspace_realpath}'"
           if [[ "${untrusted_attestation_realpath}" != "${github_workspace_realpath}" ]] && [[ ${untrusted_attestation_realpath} != ${github_workspace_realpath}/* ]]; then
@@ -163,7 +163,7 @@ jobs:
           attestation_realpath="${untrusted_attestation_realpath}"
 
           # Verify the package path.
-          untrusted_package_realpath=$(realpath "${PACKAGE_DIR}/${UNTRUSTED_PACKAGE_FILENAME}")
+          untrusted_package_realpath=$(realpath -e "${UNTRUSTED_PACKAGE_FILENAME}")
           echo "Package path resolved to '${untrusted_package_realpath}'"
           echo "Checking directory '${untrusted_package_realpath}' is a sub-directory of '${github_workspace_realpath}'"
           if [[ "${untrusted_package_realpath}" != "${github_workspace_realpath}" ]] && [[ ${untrusted_package_realpath} != ${github_workspace_realpath}/* ]]; then
