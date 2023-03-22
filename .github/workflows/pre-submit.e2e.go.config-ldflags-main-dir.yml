@@ -55,8 +55,8 @@ jobs:
           name: ${{ needs.build.outputs.go-binary-name }}
       - uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
         with:
-          name: ${{ needs.build.outputs.go-binary-name }}.intoto.jsonl
+          name: ${{ needs.build.outputs.go-provenance-name }}
       - env:
           BINARY: ${{ needs.build.outputs.go-binary-name }}
-          PROVENANCE: ${{ needs.build.outputs.go-binary-name }}.intoto.jsonl
+          PROVENANCE: ${{ needs.build.outputs.go-provenance-name }}
         run: ./.github/workflows/scripts/pre-submit.e2e.go.default.sh
