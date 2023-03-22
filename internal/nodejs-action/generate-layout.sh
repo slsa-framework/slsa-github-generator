@@ -53,7 +53,8 @@ alg=$(echo "${integrity_digest}" | cut -d'-' -f1 | tr '[:upper:]' '[:lower:]')
 digest=$(echo "${integrity_digest}" | cut -d'-' -f2- | base64 -d | od -A n -v -t x1 | tr -d ' \n')
 
 # NOTE: the name of the attestation should be configurable.
-attestation_name="attestation.intoto"
+filename=$(echo "${PACK_JSON}" | jq -r '.[0].filename')
+attestation_name="${filename%.*}.intoto"
 cat <<EOF | jq | tee "$SLSA_OUTPUTS_ARTIFACTS_FILE"
 {
   "version": 1,
