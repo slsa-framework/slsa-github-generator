@@ -39,7 +39,7 @@ jobs:
 
       - name: Rebuild the dist/ directory
         working-directory: ${{ matrix.action }}
-        run: make package
+        run: make clean package
 
       - name: Compare the expected and actual dist/ directories
         working-directory: ${{ matrix.action }}
