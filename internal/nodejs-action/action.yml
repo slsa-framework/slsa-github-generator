@@ -29,7 +29,7 @@ outputs:
 
   package-download-name:
     description: "Name of the artifact to download the package tarball."
-    value: "${{ steps.rng.outputs.value }}-${{ steps.build.outputs.file-path }}"
+    value: "${{ steps.rng.outputs.value }}-package.tgz"
 
   package-filename:
     description: "The filename of the package tarball in the package artifact."
@@ -81,7 +81,7 @@ runs:
 
     - uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
       with:
-        name: "${{ steps.rng.outputs.random }}-${{ steps.build.outputs.file-path }}"
+        name: "${{ steps.rng.outputs.random }}-package.tgz"
         path: ${{ steps.build.outputs.file-path }}
         if-no-files-found: error
         retention-days: 5
