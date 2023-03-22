@@ -16,6 +16,7 @@ This document explains how to use the builder for [Go](https://go.dev/) projects
   - [Migration from GoReleaser](#migration-from-goreleaser)
   - [Multi-platform builds](#multi-platform-builds)
   - [Workflow Inputs](#workflow-inputs)
+  - [Workflow Outputs](#workflow-outputs)
   - [Workflow Example](#workflow-example)
   - [Provenance Example](#provenance-example)
   - [BuildConfig Format](#buildconfig-format)
