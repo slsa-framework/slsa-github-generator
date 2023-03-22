@@ -190,17 +190,17 @@ The builder workflow [slsa-framework/slsa-github-generator/.github/workflows/bui
 | `go-version`         | yes      |                                         | The go version for your project. This value is passed, unchanged, to the [actions/setup-go](https://github.com/actions/setup-go) action when setting up the environment                                                                                   |
 | `upload-assets`      | no       | true on new tags                        | Whether to upload assets to a GitHub release or not.                                                                                                                                                                                                      |
 | `upload-tag-name`    | no       |                                         | If specified and `upload-assets` is set to true, the provenance will be uploaded to a Github release identified by the tag-name regardless of the triggering event.                                                                                       |
-| `prerelease`    | no       |                                         | If specified and `upload-assets` is set to true, the release is created as prerelease.
+| `prerelease`         | no       |                                         | If specified and `upload-assets` is set to true, the release is created as prerelease.                                                                                                                                                                    |
 | `private-repository` | no       | false                                   | Set to true to opt-in to posting to the public transparency log. Will generate an error if false for private repositories. This input has no effect for public repositories. See [Private Repositories](#private-repositories).                           |
 
 ### Workflow Outputs
 
 The builder workflow [slsa-framework/slsa-github-generator/.github/workflows/builder_go_slsa3.yml](https://github.com/slsa-framework/slsa-github-generator/blob/main/.github/workflows/builder_go_slsa3.yml) provides the following outputs:
 
-| Name                 |Description                                                                                                                                                                                                                                               |
-| -------------------- |--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `go-binary-name`        | The name of the generated binary uploaded to the artifact registry.                                                                                    |
-| `provenance-name`     | The artifact name of the signed provenance. (A file with the intoto.jsonl extension). |
+| Name                 | Description                                                                           |
+| -------------------- | ------------------------------------------------------------------------------------- |
+| `go-binary-name`     | The name of the generated binary uploaded to the artifact registry.                   |
+| `go-provenance-name` | The artifact name of the signed provenance. (A file with the intoto.jsonl extension). |
 
 ### Workflow Example
 
