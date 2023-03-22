@@ -15,7 +15,6 @@ export interface githubObj {
   actor_id: string;
   event_name: string;
   event_path: string;
-  job: string;
   ref: string;
   ref_type: string;
   repository: string;
@@ -42,6 +41,7 @@ export interface runnerObj {
 
 export interface rawTokenInterface {
   version: number;
+  slsaVersion: string;
   context: string;
   builder: {
     private_repository: boolean;

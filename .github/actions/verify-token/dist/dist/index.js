@@ -65,32 +65,32 @@ function run() {
             /* Test locally. Requires a GitHub token:
                 $ env INPUT_SLSA-WORKFLOW-RECIPIENT="delegator_generic_slsa3.yml" \
                 INPUT_SLSA-UNVERIFIED-TOKEN="$(cat testdata/slsa-token)" \
-                INPUT_TOKEN="$(gh auth token)" \
+                INPUT_SLSA-VERSION="1.0-rc1" \
+                INPUT_TOKEN="$(echo $GH_TOKEN)" \
                 INPUT_OUTPUT-PREDICATE="predicate.json" \
-                GITHUB_EVENT_NAME="workflow_dispatch" \
+                GITHUB_EVENT_NAME="push" \
                 GITHUB_RUN_ATTEMPT="1" \
-                GITHUB_RUN_ID="3790385865" \
-                GITHUB_RUN_NUMBER="200" \
+                GITHUB_RUN_ID="4386810663" \
+                GITHUB_RUN_NUMBER="74" \
                 GITHUB_WORKFLOW="delegate release project" \
-                GITHUB_SHA="8cbf4d422367d8499d5980a837cb9cc8e1e67001" \
+                GITHUB_WORKFLOW_REF="laurentsimon/slsa-delegate-project/.github/workflows/anchor-sbom.yml@refs/tags/v0.0.2" \
+                GITHUB_WORKFLOW_SHA="66a665d98ad0b990bbcb1dfc57891a63182459ea" \
+                GITHUB_SHA="66a665d98ad0b990bbcb1dfc57891a63182459ea" \
                 GITHUB_REPOSITORY="laurentsimon/slsa-delegate-project" \
                 GITHUB_REPOSITORY_ID="567955265" \
                 GITHUB_REPOSITORY_OWNER="laurentsimon" \
                 GITHUB_REPOSITORY_OWNER_ID="64505099" \
                 GITHUB_ACTOR_ID="64505099" \
-                GITHUB_REF="refs/heads/main" \
+                GITHUB_REF="refs/tags/v0.0.2" \
+                GITHUB_EVENT_PATH="/home/runner/work/_temp/_github_workflow/event.json" \
                 GITHUB_BASE_REF="" \
-                GITHUB_REF_TYPE="branch" \
+                GITHUB_REF_TYPE="tag" \
                 GITHUB_ACTOR="laurentsimon" \
                 GITHUB_WORKSPACE="$(pwd)" \
                 nodejs ./dist/dist/index.js
             */
             const workflowRecipient = core.getInput("slsa-workflow-recipient");
             const unverifiedToken = core.getInput("slsa-unverified-token");
-            const slsaVersion = core.getInput("slsa-version");
-            if (!["1.0-rc1", "0.2"].includes(slsaVersion)) {
-                throw new Error(`Unsupported slsa-version: ${slsaVersion}`);
-            }
             const outputPredicate = core.getInput("output-predicate");
             if (!outputPredicate) {
                 // detect if output predicate is null or empty string.
@@ -122,6 +122,11 @@ function run() {
             const rawTokenObj = JSON.parse(rawTokenStr);
             // Verify the version.
             (0, validate_1.validateField)("version", rawTokenObj.version, 1);
+            // Validate the slsaVersion
+            (0, validate_1.validateFieldAnyOf)("slsaVersion", rawTokenObj.slsaVersion, [
+                "v1-rc1",
+                "v0.2",
+            ]);
             // Verify the context of the signature.
             (0, validate_1.validateField)("context", rawTokenObj.context, "SLSA delegator framework");
             // Verify the intended recipient.
@@ -148,19 +153,19 @@ function run() {
             }
             // NOTE: we create the predicate using the token with masked inputs.
             let predicateStr = "";
-            switch (slsaVersion) {
-                case "1.0-rc1": {
+            switch (rawMaskedTokenObj.slsaVersion) {
+                case "v1-rc1": {
                     const predicate_v1 = yield (0, predicate1_1.createPredicate)(rawMaskedTokenObj, toolURI, ghToken);
                     predicateStr = JSON.stringify(predicate_v1);
                     break;
                 }
-                case "0.2": {
+                case "v0.2": {
                     const predicate_v02 = yield (0, predicate02_1.createPredicate)(rawMaskedTokenObj, toolURI, ghToken);
                     predicateStr = JSON.stringify(predicate_v02);
                     break;
                 }
                 default: {
-                    throw new Error(`Unsupported slsa-version: ${slsaVersion}`);
+                    throw new Error(`Unsupported slsa-version: ${rawMaskedTokenObj.slsaVersion}`);
                 }
             }
             fs.writeFileSync(safeOutput, predicateStr, {
@@ -333,12 +338,12 @@ function createPredicate(rawTokenObj, toolURI, token) {
                     entryPoint: (0, utils_1.getWorkflowPath)(rawTokenObj.github),
                 },
                 parameters: {
-                    inputs: rawTokenObj.tool.inputs,
+                    // NOTE: the Map object needs to be converted to an object to serialize to JSON.
+                    inputs: Object.fromEntries(rawTokenObj.tool.inputs),
                 },
                 environment: {
                     GITHUB_ACTOR_ID: rawTokenObj.github.actor_id,
                     GITHUB_EVENT_NAME: rawTokenObj.github.event_name,
-                    GITHUB_JOB: rawTokenObj.github.job,
                     GITHUB_REF: rawTokenObj.github.ref,
                     GITHUB_REF_TYPE: rawTokenObj.github.ref_type,
                     GITHUB_REPOSITORY: rawTokenObj.github.repository,
@@ -440,7 +445,7 @@ exports.createPredicate = void 0;
 const github = __importStar(__nccwpck_require__(5438));
 const fs = __importStar(__nccwpck_require__(7147));
 const utils_1 = __nccwpck_require__(918);
-const DELEGATOR_BUILD_TYPE_V1 = "https://github.com/slsa-framework/slsa-github-generator/delegator-generic@v1";
+const DELEGATOR_BUILD_TYPE_V0 = "https://github.com/slsa-framework/slsa-github-generator/delegator-generic@v0";
 function createPredicate(rawTokenObj, toolURI, token) {
     return __awaiter(this, void 0, void 0, function* () {
         const callerRepo = (0, utils_1.createURI)(rawTokenObj.github.repository, rawTokenObj.github.ref);
@@ -463,11 +468,12 @@ function createPredicate(rawTokenObj, toolURI, token) {
         // NOTE: see example at https://github.com/slsa-framework/slsa/blob/main/docs/github-actions-workflow/examples/v0.1/example.json.
         const predicate = {
             buildDefinition: {
-                buildType: DELEGATOR_BUILD_TYPE_V1,
+                buildType: DELEGATOR_BUILD_TYPE_V0,
                 externalParameters: {
                     // Inputs to the TRW, which define the interface of the builder for the
                     // BYOB framework. Some of these values may be masked by the TRW.
-                    inputs: rawTokenObj.tool.inputs,
+                    // NOTE: the Map object needs to be converted to an object to serialize to JSON.
+                    inputs: Object.fromEntries(rawTokenObj.tool.inputs),
                     // Variables are always empty for BYOB / builders.
                     // TODO(#1555): add support for generators.
                     vars: {},
@@ -484,7 +490,6 @@ function createPredicate(rawTokenObj, toolURI, token) {
                 systemParameters: {
                     GITHUB_ACTOR_ID: rawTokenObj.github.actor_id,
                     GITHUB_EVENT_NAME: rawTokenObj.github.event_name,
-                    GITHUB_JOB: rawTokenObj.github.job,
                     GITHUB_REF: rawTokenObj.github.ref,
                     GITHUB_REF_TYPE: rawTokenObj.github.ref_type,
                     GITHUB_REPOSITORY: rawTokenObj.github.repository,
@@ -641,21 +646,28 @@ function validateGitHubFields(gho) {
 }
 exports.validateGitHubFields = validateGitHubFields;
 function validateAndMaskInputs(token) {
-    const ret = Object.create(token);
     const maskedMapInputs = new Map(Object.entries(token.tool.inputs));
-    for (const key of token.tool.masked_inputs) {
-        if (!maskedMapInputs.has(key)) {
-            throw new Error(`input ${key} does not exist in the input map`);
-        }
+    const toolInputs = token.tool.masked_inputs;
+    if (toolInputs === undefined ||
+        // If TRW provides an empty argument, it's a 1-length array
+        // with an empty string value.
+        (toolInputs.length === 1 && toolInputs[0].length === 0)) {
+        token.tool.inputs = maskedMapInputs;
+        return token;
+    }
+    for (const key of toolInputs) {
         // verify non-empty keys.
         if (key === undefined || key.trim().length === 0) {
             throw new Error("empty key in the input map");
         }
+        if (!maskedMapInputs.has(key)) {
+            throw new Error(`input '${key}' does not exist in the input map`);
+        }
         // NOTE: This mask is the same used by GitHub for encrypted secrets and masked values.
         maskedMapInputs.set(key, "***");
     }
-    ret.tool.inputs = maskedMapInputs;
-    return ret;
+    token.tool.inputs = maskedMapInputs;
+    return token;
 }
 exports.validateAndMaskInputs = validateAndMaskInputs;
 function validateFieldAnyOf(name, actual, expected) {

@@ -79,37 +79,50 @@ function detectWorkflowFromContext(repoName, token) {
             run_id: Number(process.env.GITHUB_RUN_ID),
         });
         const workflowData = res.data;
-        core.info(`abc ${JSON.stringify(workflowData)}`);
+        core.info(`workflow data: ${JSON.stringify(workflowData)}`);
         if (!workflowData.referenced_workflows) {
             return Promise.reject(Error(`No reusable workflows detected ${JSON.stringify(workflowData)}.`));
         }
-        // Filter referenced_workflows for slsa-github-generator repositories,
-        // on any fork.
-        // TODO(https://github.com/actions/runner/issues/2417): When
-        // GITHUB_JOB_WORKFLOW_SHA becomes fully functional, the OIDC token
-        // detection can be removed and we can identify the current reusable workflow
-        // through the sha of a referenced workflow, fully supporting all triggers
-        // without the repository filter.
         let [repository, ref, workflow] = ["", "", ""];
-        for (const reusableWorkflow of workflowData.referenced_workflows) {
-            const workflowPath = reusableWorkflow.path.split("@", 1);
-            const [workflowOwner, workflowRepo, ...workflowArray] = workflowPath[0].split("/");
-            const tmpRepository = [workflowOwner, workflowRepo].join("/");
-            const tmpRef = reusableWorkflow.ref || "";
-            const tmpWorkflow = workflowArray.join("/");
-            if (workflowRepo === "slsa-github-generator") {
-                // If there are multiple invocations of reusable workflows in
-                // a single caller workflow, ensure that the repositories and refs are
-                // the same.
-                if (repository !== "" && repository !== tmpRepository) {
-                    return Promise.reject(Error("Unexpected mismatch of repositories"));
+        // If this is a slsa-github-generator repository or fork, then look
+        // for the repo and head SHA from the pull_request event value.
+        if (workflowData.event === "pull_request" &&
+            workflowData.repository.name === "slsa-github-generator") {
+            ref = workflowData.head_sha;
+            repository = workflowData.head_repository.full_name;
+            workflow = workflowData.path;
+        }
+        else {
+            // Otherwise this is an external repository.
+            // Filter referenced_workflows for slsa-github-generator repositories.
+            // TODO(https://github.com/actions/runner/issues/2417): When
+            // GITHUB_JOB_WORKFLOW_SHA becomes fully functional, the OIDC token
+            // detection can be removed and we can identify the current reusable workflow
+            // through the sha of a referenced workflow, fully supporting all triggers
+            // without the repository filter.
+            for (const reusableWorkflow of workflowData.referenced_workflows) {
+                const workflowPath = reusableWorkflow.path.split("@", 1);
+                const [workflowOwner, workflowRepo, ...workflowArray] = workflowPath[0].split("/");
+                if (workflowRepo === "slsa-github-generator") {
+                    if (!reusableWorkflow.ref) {
+                        return Promise.reject(Error("Referenced slsa-github-generator workflow missing ref: was the workflow invoked by digest?"));
+                    }
+                    const tmpRepository = [workflowOwner, workflowRepo].join("/");
+                    const tmpRef = reusableWorkflow.ref;
+                    const tmpWorkflow = workflowArray.join("/");
+                    // If there are multiple invocations of reusable workflows in
+                    // a single caller workflow, ensure that the repositories and refs are
+                    // the same.
+                    if (repository !== "" && repository !== tmpRepository) {
+                        return Promise.reject(Error("Unexpected mismatch of repositories"));
+                    }
+                    if (ref !== "" && ref !== tmpRef) {
+                        return Promise.reject(Error("Unexpected mismatch of reference"));
+                    }
+                    repository = tmpRepository;
+                    ref = tmpRef;
+                    workflow = tmpWorkflow;
                 }
-                if (ref !== "" && ref !== tmpRef) {
-                    return Promise.reject(Error("Unexpected mismatch of reference"));
-                }
-                repository = tmpRepository;
-                ref = tmpRef;
-                workflow = tmpWorkflow;
             }
         }
         return [repository, ref, workflow];
@@ -168,8 +181,8 @@ function run() {
     return __awaiter(this, void 0, void 0, function* () {
         /* Test locally. Requires a GitHub token:
               $ env INPUT_TOKEN="$(gh auth token)" \
-              GITHUB_RUN_ID="4303658979" \
-              GITHUB_REPOSITORY="project-oak/oak" \
+              GITHUB_RUN_ID="4449301889" \
+              GITHUB_REPOSITORY="slsa-framework/slsa-github-generator" \
               nodejs ./dist/index.js
           */
         const token = core.getInput("token");

@@ -32,22 +32,26 @@ async function run(): Promise<void> {
     /* Test locally. Requires a GitHub token:
         $ env INPUT_SLSA-WORKFLOW-RECIPIENT="delegator_generic_slsa3.yml" \
         INPUT_SLSA-UNVERIFIED-TOKEN="$(cat testdata/slsa-token)" \
-        INPUT_TOKEN="$(gh auth token)" \
+        INPUT_SLSA-VERSION="1.0-rc1" \
+        INPUT_TOKEN="$(echo $GH_TOKEN)" \
         INPUT_OUTPUT-PREDICATE="predicate.json" \
-        GITHUB_EVENT_NAME="workflow_dispatch" \
+        GITHUB_EVENT_NAME="push" \
         GITHUB_RUN_ATTEMPT="1" \
-        GITHUB_RUN_ID="3790385865" \
-        GITHUB_RUN_NUMBER="200" \
+        GITHUB_RUN_ID="4386810663" \
+        GITHUB_RUN_NUMBER="74" \
         GITHUB_WORKFLOW="delegate release project" \
-        GITHUB_SHA="8cbf4d422367d8499d5980a837cb9cc8e1e67001" \
+        GITHUB_WORKFLOW_REF="laurentsimon/slsa-delegate-project/.github/workflows/anchor-sbom.yml@refs/tags/v0.0.2" \
+        GITHUB_WORKFLOW_SHA="66a665d98ad0b990bbcb1dfc57891a63182459ea" \
+        GITHUB_SHA="66a665d98ad0b990bbcb1dfc57891a63182459ea" \
         GITHUB_REPOSITORY="laurentsimon/slsa-delegate-project" \
         GITHUB_REPOSITORY_ID="567955265" \
         GITHUB_REPOSITORY_OWNER="laurentsimon" \
         GITHUB_REPOSITORY_OWNER_ID="64505099" \
         GITHUB_ACTOR_ID="64505099" \
-        GITHUB_REF="refs/heads/main" \
+        GITHUB_REF="refs/tags/v0.0.2" \
+        GITHUB_EVENT_PATH="/home/runner/work/_temp/_github_workflow/event.json" \
         GITHUB_BASE_REF="" \
-        GITHUB_REF_TYPE="branch" \
+        GITHUB_REF_TYPE="tag" \
         GITHUB_ACTOR="laurentsimon" \
         GITHUB_WORKSPACE="$(pwd)" \
         nodejs ./dist/dist/index.js
@@ -55,11 +59,6 @@ async function run(): Promise<void> {
 
     const workflowRecipient = core.getInput("slsa-workflow-recipient");
     const unverifiedToken = core.getInput("slsa-unverified-token");
-
-    const slsaVersion = core.getInput("slsa-version");
-    if (!["1.0-rc1", "0.2"].includes(slsaVersion)) {
-      throw new Error(`Unsupported slsa-version: ${slsaVersion}`);
-    }
 
     const outputPredicate = core.getInput("output-predicate");
     if (!outputPredicate) {
@@ -99,6 +98,12 @@ async function run(): Promise<void> {
 
     // Verify the version.
     validateField("version", rawTokenObj.version, 1);
+
+    // Validate the slsaVersion
+    validateFieldAnyOf("slsaVersion", rawTokenObj.slsaVersion, [
+      "v1-rc1",
+      "v0.2",
+    ]);
 
     // Verify the context of the signature.
     validateField("context", rawTokenObj.context, "SLSA delegator framework");
@@ -151,8 +156,8 @@ async function run(): Promise<void> {
 
     // NOTE: we create the predicate using the token with masked inputs.
     let predicateStr = "";
-    switch (slsaVersion) {
-      case "1.0-rc1": {
+    switch (rawMaskedTokenObj.slsaVersion) {
+      case "v1-rc1": {
         const predicate_v1 = await createPredicate_v1(
           rawMaskedTokenObj,
           toolURI,
@@ -161,7 +166,7 @@ async function run(): Promise<void> {
         predicateStr = JSON.stringify(predicate_v1);
         break;
       }
-      case "0.2": {
+      case "v0.2": {
         const predicate_v02 = await createPredicate_v02(
           rawMaskedTokenObj,
           toolURI,
@@ -171,7 +176,9 @@ async function run(): Promise<void> {
         break;
       }
       default: {
-        throw new Error(`Unsupported slsa-version: ${slsaVersion}`);
+        throw new Error(
+          `Unsupported slsa-version: ${rawMaskedTokenObj.slsaVersion}`
+        );
       }
     }
     fs.writeFileSync(safeOutput, predicateStr, {

@@ -74,10 +74,18 @@ on:
         required: false
         type: boolean
         default: false
+      prerelease:
+        description: "If true, GitHub Release is created as a pre-release."
+        required: false
+        type: boolean
+        default: false
     outputs:
       go-binary-name:
         description: "The name of the generated binary uploaded to the artifact registry."
         value: ${{ jobs.build-dry.outputs.go-binary-name }}
+      go-provenance-name:
+        description: "The artifact name of the signed provenance. (A file with the intoto.jsonl extension)."
+        value: ${{ jobs.provenance.outputs.go-provenance-name }}
 
 jobs:
   rng:
@@ -357,6 +365,7 @@ jobs:
         if: inputs.upload-tag-name == ''
         id: release-new-tags
         with:
+          prerelease: ${{ inputs.prerelease }}
           files: |
             ${{ needs.build-dry.outputs.go-binary-name }}
             ${{ needs.provenance.outputs.go-provenance-name }}
@@ -366,6 +375,7 @@ jobs:
         if: inputs.upload-tag-name != ''
         with:
           tag_name: "${{ inputs.upload-tag-name }}"
+          prerelease: ${{ inputs.prerelease }}
           files: |
             ${{ needs.build-dry.outputs.go-binary-name }}
             ${{ needs.provenance.outputs.go-provenance-name }}
