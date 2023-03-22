@@ -29,7 +29,7 @@ outputs:
 
   package-download-name:
     description: "Name of the artifact to download the package tarball."
-    value: "${{ steps.rng.outputs.value }}-package.tgz"
+    value: "${{ steps.rng.outputs.random }}-package.tgz"
 
   package-filename:
     description: "The filename of the package tarball in the package artifact."
