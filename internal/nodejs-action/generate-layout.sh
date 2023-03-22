@@ -28,7 +28,9 @@ fi
 package_scope=$(echo "\"${raw_package_scope}\"" | jq -r '. | @uri')
 # package name is URL(percent) encoded.
 package_name=$(echo "\"${raw_package_name}\"" | jq -r '. | @uri')
-# version is URL(percent) encoded.
+# version is URL(percent) encoded. This is the version from the project's
+# package.json and could be a commit, or any string by the user. It does not
+# actually have to be a version number and is not validated as such by npm.
 package_version=$(echo "${PACK_JSON}" | jq -r '.[0].version | @uri')
 
 package_id="${package_name}@${package_version}"
