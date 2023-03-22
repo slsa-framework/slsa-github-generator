@@ -168,6 +168,7 @@ jobs:
           # Directory was validated. Explicitly trust it.
           package_realpath="${untrusted_package_realpath}"
 
-          # Run npm publish using npm fork.
+          # Run npm publish using npm fork. We are temporarily using a fork so
+          # that we can specify the provenance bundle.
           # TODO(#1829): Support the --access flag.
           "$(dirname "$(which node)")"/node_modules/npm/bin/npm publish "${package_realpath}" --access public --provenance "${attestation_realpath}"
