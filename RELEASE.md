@@ -93,7 +93,11 @@ This will trigger the [release workflow](https://github.com/slsa-framework/slsa-
 Update version references with the following command:
 
 ```shell
-find .github/workflows/ -name '*.yaml' -o -name '*.yml' | xargs sed -i "s/uses: slsa-framework\/slsa-github-generator\/\.github\/actions\/\(.*\)@\(main\|v[0-9]\+\.[0-9]\+\.[0-9]\+\(-rc\.[0-9]\+\)\?\)/uses: slsa-framework\/slsa-github-generator\/.github\/actions\/\1@$BUILDER_TAG/"
+$ find .github/workflows/ -name '*.yaml' -o -name '*.yml' | xargs sed -i "s/uses: slsa-framework\/slsa-github-generator\/\(.*\)@\(main\|v[0-9]\+\.[0-9]\+\.[0-9]\+\(-rc\.[0-9]\+\)\?\)/uses: slsa-framework\/slsa-github-generator\/\1@$BUILDER_TAG/"
+
+$ find .github/actions/ -maxdepth 2 -name '*.yaml' -o -name '*.yml' | xargs sed -i "s/uses: slsa-framework\/slsa-github-generator\/\(.*\)@\(main\|v[0-9]\+\.[0-9]\+\.[0-9]\+\(-rc\.[0-9]\+\)\?\)/uses: slsa-framework\/slsa-github-generator\/\1@$BUILDER_TAG/"
+
+$ find actions/ -maxdepth 3 -name '*.yaml' -o -name '*.yml' | xargs sed -i "s/uses: slsa-framework\/slsa-github-generator\/\(.*\)@\(main\|v[0-9]\+\.[0-9]\+\.[0-9]\+\(-rc\.[0-9]\+\)\?\)/uses: slsa-framework\/slsa-github-generator\/\1@$BUILDER_TAG/"
 ```
 
 Send a PR with this update and add `#label:release ${BUILDER_TAG}` in the PR description.
@@ -372,7 +376,11 @@ This will trigger the [release workflow](https://github.com/slsa-framework/slsa-
 Update version references with the following command:
 
 ```shell
-find .github/workflows/ -name '*.yaml' -o -name '*.yml' | xargs sed -i "s/uses: slsa-framework\/slsa-github-generator\/\.github\/actions\/\(.*\)@\(main\|v[0-9]\+\.[0-9]\+\.[0-9]\+\(-rc\.[0-9]\+\)\?\)/uses: slsa-framework\/slsa-github-generator\/.github\/actions\/\1@$BUILDER_TAG/"
+$ find .github/workflows/ -name '*.yaml' -o -name '*.yml' | xargs sed -i "s/uses: slsa-framework\/slsa-github-generator\/\(.*\)@\(main\|v[0-9]\+\.[0-9]\+\.[0-9]\+\(-rc\.[0-9]\+\)\?\)/uses: slsa-framework\/slsa-github-generator\/\1@$BUILDER_TAG/"
+
+$ find .github/actions/ -maxdepth 1 -name '*.yaml' -o -name '*.yml' | xargs sed -i "s/uses: slsa-framework\/slsa-github-generator\/\(.*\)@\(main\|v[0-9]\+\.[0-9]\+\.[0-9]\+\(-rc\.[0-9]\+\)\?\)/uses: slsa-framework\/slsa-github-generator\/\1@$BUILDER_TAG/"
+
+$ find actions/ -maxdepth 3 -name '*.yaml' -o -name '*.yml' | xargs sed -i "s/uses: slsa-framework\/slsa-github-generator\/\(.*\)@\(main\|v[0-9]\+\.[0-9]\+\.[0-9]\+\(-rc\.[0-9]\+\)\?\)/uses: slsa-framework\/slsa-github-generator\/\1@$BUILDER_TAG/"
 ```
 
 Likewise, update documentation with the following command:
@@ -398,10 +406,14 @@ Re-run the [adversarial tests](#adversarial-tests) using the final `$BUILDER_TAG
 
 ### Reference Actions at main
 
-Send a PR to reference the internal Actions at `@main`. You can use:
+Send a PR to reference the Actions at `@main`. You can use:
 
 ```shell
-find .github/workflows/ -name '*.yaml' -o -name '*.yml' | xargs sed -i "s/uses: slsa-framework\/slsa-github-generator\/\.github\/actions\/\(.*\)@${BUILDER_TAG}/uses: slsa-framework\/slsa-github-generator\/.github\/actions\/\1@main/"
+$ find .github/workflows/ -name '*.yaml' -o -name '*.yml' | xargs sed -i "s/uses: slsa-framework\/slsa-github-generator\/\(.*\)@${BUILDER_TAG}/uses: slsa-framework\/slsa-github-generator\/\1@main/"
+
+$ find .github/actions/ -maxdepth 3 -name '*.yaml' -o -name '*.yml' | xargs sed -i "s/uses: slsa-framework\/slsa-github-generator\/\(.*\)@${BUILDER_TAG}/uses: slsa-framework\/slsa-github-generator\/\1@main/"
+
+$ find actions/ -maxdepth 3 -name '*.yaml' -o -name '*.yml' | xargs sed -i "s/uses: slsa-framework\/slsa-github-generator\/\(.*\)@${BUILDER_TAG}/uses: slsa-framework\/slsa-github-generator\/\1@main/"
 ```
 
 ### Update verifier
