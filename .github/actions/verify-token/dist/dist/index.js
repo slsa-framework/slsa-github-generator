@@ -369,7 +369,10 @@ function createPredicate(rawTokenObj, toolURI, token) {
                 },
             },
             metadata: {
-                buildInvocationId: `https://github.com/${rawTokenObj.github.repository}/actions/runs/${rawTokenObj.github.run_id}/attempts/${rawTokenObj.github.run_attempt}`,
+                // TODO(#1848): Update the buildInvocationId to be a URI.
+                // NOTE: npmjs.com validates the buildInvocationId against environment.GITHUB_RUN_ID and environment.GITHUB_RUN_ATTEMPT
+                // buildInvocationId: `https://github.com/${rawTokenObj.github.repository}/actions/runs/${rawTokenObj.github.run_id}/attempts/${rawTokenObj.github.run_attempt}`,
+                buildInvocationId: `${rawTokenObj.github.run_id}-${rawTokenObj.github.run_attempt}`,
                 completeness: {
                     parameters: true,
                 },
