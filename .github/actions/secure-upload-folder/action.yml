@@ -11,7 +11,7 @@ inputs:
 outputs:
   sha256:
     description: "SHA256 of the uploaded tarball."
-    value: "${{ steps.compute-digest.outputs.sha256 }}"
+    value: "${{ steps.upload.outputs.sha256 }}"
 
 runs:
   using: "composite"
@@ -23,6 +23,7 @@ runs:
         tar -cvf "$PATH" "$PATH.tar"
 
     - name: Upload the artifact
+      id: upload
       uses: slsa-framework/slsa-github-generator/.github/actions/secure-upload-artifact@main
       with:
         name: "${{ inputs.name }}"
