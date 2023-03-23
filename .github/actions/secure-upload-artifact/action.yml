@@ -16,9 +16,6 @@ outputs:
 runs:
   using: "composite"
   steps:
-    # Note: this assumes to top-level re-usable workflow
-    # has checkout'ed the builder repository using
-    # `.github/actions/secure-builder-checkout`.
     - name: Compute binary hash
       id: compute-digest
       uses: slsa-framework/slsa-github-generator/.github/actions/compute-sha256@main

@@ -1,0 +1,31 @@
+name: "Secure folder upload"
+description: "Upload a folder as a tarball and outputs its SHA256"
+inputs:
+  name:
+    description: "Artifact name."
+    default: "artifact"
+    required: false
+  path:
+    description: 'Path to the folder'
+    required: true
+outputs:
+  sha256:
+    description: "SHA256 of the uploaded tarball."
+    value: "${{ steps.compute-digest.outputs.sha256 }}"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Create tarball
+      env:
+        PATH: ${{ inputs.path }}
+      run: |
+        tar -cvf "$PATH" "$PATH.tar"
+
+    - name: Upload the artifact
+      uses: slsa-framework/slsa-github-generator/.github/actions/secure-upload-artifact@main
+      with:
+        name: "${{ inputs.name }}"
+        path: "${{ inputs.path }}.tar"
+        if-no-files-found: error
+        retention-days: 5
