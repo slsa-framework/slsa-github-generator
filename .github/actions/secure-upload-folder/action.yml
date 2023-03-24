@@ -16,17 +16,37 @@ outputs:
 runs:
   using: "composite"
   steps:
-    - name: Create tarball
+    - name: Validate the path and create the tarball
+      id: create
+      shell: bash
       env:
-        PATH: ${{ inputs.path }}
+        UNTRUSTED_PATH: ${{ inputs.path }}
       run: |
-        tar -cvf "$PATH" "$PATH.tar"
+        set -euo pipefail
+
+        if [[ ! -d "${UNTRUSTED_PATH}" ]]; then
+          echo "'${UNTRUSTED_PATH}' is not a directory"
+          exit 1
+        fi
+
+        # Ensure no directory traversal.
+        resolved_dir=$(readlink -m "${UNTRUSTED_PATH}")
+        wd=$(readlink -m "$PWD")
+        if [[ "$resolved_dir" != "$wd"/* ]]; then
+          echo "Path is not in the current directory: ${UNTRUSTED_PATH}"
+          exit 1
+        fi
+
+        tempdir=$(mktemp -d)
+        tarball_path="${tempdir}/folder.tgz"
+        tar -czvf "${tarball_path}" "${UNTRUSTED_PATH}"
+        echo "tarball-path=${tarball_path}" >> "$GITHUB_OUTPUT"
 
     - name: Upload the artifact
       id: upload
       uses: slsa-framework/slsa-github-generator/.github/actions/secure-upload-artifact@main
       with:
         name: "${{ inputs.name }}"
-        path: "${{ inputs.path }}.tar"
+        path: "${{ steps.create.outputs.tarball-path }}"
         if-no-files-found: error
         retention-days: 5
