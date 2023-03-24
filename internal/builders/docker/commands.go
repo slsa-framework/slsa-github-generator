@@ -85,6 +85,7 @@ func BuildCmd(check func(error)) *cobra.Command {
 			if !strings.HasPrefix(filepath.Dir(absoluteOutputFolder), "/tmp") {
 				check(fmt.Errorf("output folder must be in /tmp: %s", absoluteOutputFolder))
 			}
+			check(pkg.CheckExistingFiles(absoluteOutputFolder))
 
 			w, err := utils.CreateNewFileUnderCurrentDirectory(subjectsPath, os.O_WRONLY)
 			check(err)
