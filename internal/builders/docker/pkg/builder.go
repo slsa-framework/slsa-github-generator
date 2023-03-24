@@ -153,7 +153,7 @@ func (b *Builder) SetUpBuildState() (*DockerBuild, error) {
 
 	// 3. Check that the ArtifactPath pattern does not match any existing files,
 	// so that we don't accidentally generate provenances for the wrong files.
-	if err := checkExistingFiles(bc.ArtifactPath); err != nil {
+	if err := CheckExistingFiles(bc.ArtifactPath); err != nil {
 		return nil, err
 	}
 
@@ -501,8 +501,8 @@ func saveToTempFile(readers ...io.Reader) ([]string, error) {
 	return files, nil
 }
 
-// Checks if any files match the given pattern, and returns an error if so.
-func checkExistingFiles(pattern string) error {
+// CheckExistingFiles checks if any files match the given pattern, and returns an error if so.
+func CheckExistingFiles(pattern string) error {
 	matches, err := filepath.Glob(pattern)
 	// The only possible error is ErrBadPattern.
 	if err != nil {
