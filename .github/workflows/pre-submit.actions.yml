@@ -247,6 +247,7 @@ jobs:
 
       - name: Upload
         id: upload-traversal
+        continue-on-error: true
         uses: ./.github/actions/secure-upload-folder
         with:
           name: "${{ env.ARTIFACT_NAME }}"
@@ -254,6 +255,7 @@ jobs:
 
       - name: Upload
         id: upload-outside
+        continue-on-error: true
         uses: ./.github/actions/secure-upload-folder
         with:
           name: "${{ env.ARTIFACT_NAME }}"
