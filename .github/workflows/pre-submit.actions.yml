@@ -164,7 +164,7 @@ jobs:
       - name: Create folder
         run: |
           set -euo pipefail
-          
+
           mkdir -p "${UPLOAD_FOLDER_NAME}/inside"
           mkdir -p "${UPLOAD_FOLDER_NAME}/empty"
 
@@ -187,13 +187,13 @@ jobs:
         with:
           name: "${{ env.ARTIFACT_NAME }}"
           path: "${{ env.DOWNLOAD_FOLDER_NAME }}"
-          sha256: ${{ needs.secure-upload-folder.outputs.sha256 }}
+          sha256: ${{ steps.upload.outputs.sha256 }}
 
       - name: Download locally
         uses: ./.github/actions/secure-download-folder
         with:
           name: "${{ env.ARTIFACT_NAME }}"
-          sha256: ${{ needs.secure-upload-folder.outputs.sha256 }}
+          sha256: ${{ steps.upload.outputs.sha256 }}
 
       - name: Validate contents
         run: |

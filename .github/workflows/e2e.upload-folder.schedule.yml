@@ -23,7 +23,7 @@ jobs:
       - name: Create folder
         run: |
           set -euo pipefail
-          
+
           mkdir -p "${UPLOAD_FOLDER_NAME}/inside"
           mkdir -p "${UPLOAD_FOLDER_NAME}/empty"
 
@@ -81,7 +81,7 @@ jobs:
         with:
           name: "${{ env.ARTIFACT_NAME }}"
           sha256: ${{ needs.secure-upload-folder.outputs.sha256 }}
-      
+
       - name: Download incorrect hash
         id: download-incorrect-hash
         continue-on-error: true
