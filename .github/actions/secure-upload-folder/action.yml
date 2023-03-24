@@ -48,5 +48,3 @@ runs:
       with:
         name: "${{ inputs.name }}"
         path: "${{ steps.create.outputs.tarball-path }}"
-        if-no-files-found: error
-        retention-days: 5

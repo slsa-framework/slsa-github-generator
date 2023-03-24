@@ -23,25 +23,25 @@ runs:
       uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
       with:
         name: "${{ inputs.name }}"
-        path: "${{ steps.rng.outputs.result }}"
+        path: "${{ steps.rng.outputs.random }}"
 
     - name: Compute the hash
       id: compute
       uses: slsa-framework/slsa-github-generator/.github/actions/compute-sha256@main
       with:
-        path: "${{ steps.rng.outputs.result }}/folder.tgz"
+        path: "${{ steps.rng.outputs.random }}/folder.tgz"
 
     - name: Verify the SHA256
       env:
         UNTRUSTED_EXPECTED_HASH: "${{ inputs.sha256 }}"
         UNTRUSTED_COMPUTED_HASH: "${{ steps.compute.outputs.sha256 }}"
-        UNTRUSTED_FOLDER: "${{ steps.rng.outputs.result }}/folder.tgz"
+        TRUSTED_FOLDER: "${{ steps.rng.outputs.random }}/folder.tgz"
       shell: bash
       run: |
         set -euo pipefail
 
-        if ! [[ -f "${UNTRUSTED_FOLDER}" ]]; then
-          echo "File '${UNTRUSTED_FOLDER}' not present"
+        if ! [[ -f "${TRUSTED_FOLDER}" ]]; then
+          echo "File '${TRUSTED_FOLDER}' not present"
           exit 5
         fi
 
@@ -56,16 +56,17 @@ runs:
     - name: Extract tarball content
       shell: bash
       env:
-        TRUSTED_FOLDER: "${{ steps.rng.outputs.result }}"
+        TRUSTED_FOLDER: "${{ steps.rng.outputs.random }}"
         UNTRUSTED_PATH: "${{ inputs.path }}"
       run: |
         set -euo pipefail
 
         tempdir=$(mktemp -d)
-        tar -xzvf "${UNTRUSTED_FOLDER}/folder.tgz" --directory "${tempdir}"
+        tar -xzvf "${TRUSTED_FOLDER}/folder.tgz" --directory "${tempdir}"
         rm -rf "${TRUSTED_FOLDER}"
 
         # Ensure no directory traversal.
+        # Remove possible trailing '/'.
         resolved_dir=$(readlink -m "${UNTRUSTED_PATH}")
         wd=$(readlink -m "$PWD")
         if [[ "$resolved_dir" != "$wd"/* ]]; then
@@ -76,10 +77,10 @@ runs:
         # Move all entries (file or folder).
         for file in "${tempdir}"/*; do
             # Ensure we don't overwrite existing files.
-            if [ -e "${file}" ]; then
-              echo "Path ${file} already exists"
+            if [ -e "${resolved_dir}/${file}" ]; then
+              echo "Path '${resolved_dir}/${file}'' already exists"
               exit 5
             fi
-            mv "${file}" "${UNTRUSTED_PATH}"
+            mv "${file}" "${resolved_dir}/"
         done
 

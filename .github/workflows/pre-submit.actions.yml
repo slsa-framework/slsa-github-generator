@@ -153,6 +153,78 @@ jobs:
           path: __PROJECT_CHECKOUT_DIR__
           go-version: 16
 
+  secure-upload-folder:
+    runs-on: ubuntu-latest
+    env:
+      ARTIFACT_NAME: "my-artifact"
+      UPLOAD_FOLDER_NAME: "upload-folder"
+      DOWNLOAD_FOLDER_NAME: "download-folder"
+    steps:
+      - uses: actions/checkout@24cb9080177205b6e8c946b17badbe402adc938f # v3.4.0
+      - name: Create folder
+        run: |
+          set -euo pipefail
+          
+          mkdir -p "${UPLOAD_FOLDER_NAME}/inside"
+          mkdir -p "${UPLOAD_FOLDER_NAME}/empty"
+          
+          echo file1 > "${UPLOAD_FOLDER_NAME}/file1"
+          echo file2 > "${UPLOAD_FOLDER_NAME}/file2"
+          echo file3 > "${UPLOAD_FOLDER_NAME}/inside/file3"
+          echo file4 > "${UPLOAD_FOLDER_NAME}/inside/file4"
+          
+          tree "${UPLOAD_FOLDER_NAME}"
+
+      - name: Upload
+        id: upload
+        uses: ./.github/actions/secure-upload-folder@main
+        with:
+          name: "${{ env.ARTIFACT_NAME }}"
+          path: "${{ env.UPLOAD_FOLDER_NAME }}"
+
+      - name: Download
+        id: download
+        uses: ./.github/actions/secure-download-folder@main
+        with:
+          name: "${{ env.ARTIFACT_NAME }}"
+          path: "${{ env.DOWNLOAD_FOLDER_NAME }}"
+          sha256: ${{ steps.upload.outputs.sha256 }}
+
+      - name: Validate contents
+        run: |
+          set -euo pipefail
+          
+          tree "${DOWNLOAD_FOLDER_NAME}"
+
+          cd "${UPLOAD_FOLDER_NAME}"
+          upload_tree=$(tree .)
+          
+          cd "../${DOWNLOAD_FOLDER_NAME}/${UPLOAD_FOLDER_NAME}"
+          download_tree=$(tree .)
+          
+          if [[ "${upload_tree}" != "${download_tree}" ]]; then
+            echo "Folder trees differ: ${upload_tree} != ${download_tree}"
+            echo "Upload tree: ${upload_tree}"
+            echo "Download tree: ${download_tree}"
+            exit 1
+          fi
+
+      - name: Download
+        id: download-error
+        continue-on-error: true
+        uses: ./.github/actions/secure-download-folder@main
+        with:
+          name: "${{ env.ARTIFACT_NAME }}"
+          path: "${{ env.DOWNLOAD_FOLDER_NAME }}"
+          sha256: 977b0c871b048d6578f5d5b40a5b6030a22fc130831a2d7b45b6868da7b51431
+
+      - name: fail check
+        env:
+          OUTCOME: ${{ steps.download-error.outcome }}
+        run: |
+          set -euo pipefail
+          [ "${OUTCOME}" == "failure" ]
+
   secure-download-artifact:
     runs-on: ubuntu-latest
     steps:
