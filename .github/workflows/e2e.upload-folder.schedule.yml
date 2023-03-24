@@ -1,0 +1,155 @@
+name: schedule secure-upload-folder
+
+on:
+  # Daily run.
+  schedule:
+    - cron: "0 4 * * *"
+  workflow_dispatch:
+
+permissions: read-all
+
+env:
+  ARTIFACT_NAME: "my-artifact"
+  UPLOAD_FOLDER_NAME: "upload-folder"
+  DOWNLOAD_FOLDER_NAME: "download-folder"
+
+jobs:
+  secure-upload-folder:
+    runs-on: ubuntu-latest
+    outputs:
+      sha256: ${{ steps.upload.outputs.sha256 }}
+    steps:
+      - uses: actions/checkout@24cb9080177205b6e8c946b17badbe402adc938f # v3.4.0
+      - name: Create folder
+        run: |
+          set -euo pipefail
+          
+          mkdir -p "${UPLOAD_FOLDER_NAME}/inside"
+          mkdir -p "${UPLOAD_FOLDER_NAME}/empty"
+
+          echo file1 > "${UPLOAD_FOLDER_NAME}/file1"
+          echo file2 > "${UPLOAD_FOLDER_NAME}/file2"
+          echo file3 > "${UPLOAD_FOLDER_NAME}/inside/file3"
+          echo file4 > "${UPLOAD_FOLDER_NAME}/inside/file4"
+
+          tree "${UPLOAD_FOLDER_NAME}"
+
+      - name: Upload
+        id: upload
+        uses: ./.github/actions/secure-upload-folder
+        with:
+          name: "${{ env.ARTIFACT_NAME }}"
+          path: "${{ env.UPLOAD_FOLDER_NAME }}"
+
+      - name: Upload path traversal
+        id: upload-traversal
+        continue-on-error: true
+        uses: ./.github/actions/secure-upload-folder
+        with:
+          name: "${{ env.ARTIFACT_NAME }}"
+          path: "../"
+
+      - name: Upload outside workspace
+        id: upload-outside
+        continue-on-error: true
+        uses: ./.github/actions/secure-upload-folder
+        with:
+          name: "${{ env.ARTIFACT_NAME }}"
+          path: "/tmp/"
+
+      - name: fail check
+        env:
+          SUCCESS: ${{ steps.upload-outside.outcome == 'failure' && steps.upload-traversal.outcome == 'failure' }}
+        run: |
+          set -euo pipefail
+          [ "$SUCCESS" == "true" ]
+
+  secure-download-folder:
+    needs: [secure-upload-folder]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@24cb9080177205b6e8c946b17badbe402adc938f # v3.4.0
+      - name: Download in new folder
+        uses: ./.github/actions/secure-download-folder
+        with:
+          name: "${{ env.ARTIFACT_NAME }}"
+          path: "${{ env.DOWNLOAD_FOLDER_NAME }}"
+          sha256: ${{ needs.secure-upload-folder.outputs.sha256 }}
+
+      - name: Download locally
+        uses: ./.github/actions/secure-download-folder
+        with:
+          name: "${{ env.ARTIFACT_NAME }}"
+          sha256: ${{ needs.secure-upload-folder.outputs.sha256 }}
+      
+      - name: Download incorrect hash
+        id: download-incorrect-hash
+        continue-on-error: true
+        uses: ./.github/actions/secure-download-folder
+        with:
+          name: "${{ env.ARTIFACT_NAME }}"
+          path: "some-folder"
+          sha256: 977b0c871b048d6578f5d5b40a5b6030a22fc130831a2d7b45b6868da7b51431
+
+      - name: Download existing file
+        id: download-existing-file
+        continue-on-error: true
+        uses: ./.github/actions/secure-download-folder
+        with:
+          name: "${{ env.ARTIFACT_NAME }}"
+          path: "${{ env.DOWNLOAD_FOLDER_NAME }}"
+          sha256: ${{ needs.secure-upload-folder.outputs.sha256 }}
+
+      - name: Download path traversal
+        id: download-traversal
+        continue-on-error: true
+        uses: ./.github/actions/secure-download-folder
+        with:
+          name: "${{ env.ARTIFACT_NAME }}"
+          path: ".."
+          sha256: ${{ needs.secure-upload-folder.outputs.sha256 }}
+
+      - name: Download outside workspace
+        id: download-outside
+        continue-on-error: true
+        uses: ./.github/actions/secure-download-folder
+        with:
+          name: "${{ env.ARTIFACT_NAME }}"
+          path: "/tmp"
+          sha256: ${{ needs.secure-upload-folder.outputs.sha256 }}
+
+      - name: fail check
+        env:
+          SUCCESS: ${{ steps.download-incorrect-hash.outcome == 'failure' && steps.download-existing-file.outcome == 'failure' && steps.download-traversal.outcome == 'failure' && steps.download-outside.outcome == 'failure' }}
+        run: |
+          set -euo pipefail
+          [ "$SUCCESS" == "true" ]
+
+  if-succeed:
+    needs: [secure-upload-folder, secure-download-folder]
+    runs-on: ubuntu-latest
+    # We use `== 'failure'` instead of ` != 'success'` because we want to ignore skipped jobs, if there are any.
+    if: github.event_name != 'workflow_dispatch' && needs.secure-upload-folder.result != 'failure' && needs.secure-download-folder.result != 'failure'
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@24cb9080177205b6e8c946b17badbe402adc938f # v3.4.0
+        with:
+          repository: slsa-framework/example-package
+          ref: main
+      - run: ./.github/workflows/scripts/e2e-report-success.sh
+
+  if-failed:
+    needs: [secure-upload-folder, secure-download-folder]
+    runs-on: ubuntu-latest
+    if: always() && github.event_name != 'workflow_dispatch' && (needs.secure-upload-folder.result == 'failure' || needs.secure-download-folder.result == 'failure')
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@24cb9080177205b6e8c946b17badbe402adc938f # v3.4.0
+        with:
+          repository: slsa-framework/example-package
+          ref: main
+      - run: ./.github/workflows/scripts/e2e-report-failure.sh
