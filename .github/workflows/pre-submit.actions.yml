@@ -189,14 +189,6 @@ jobs:
           path: "${{ env.DOWNLOAD_FOLDER_NAME }}"
           sha256: ${{ steps.upload.outputs.sha256 }}
 
-      - name: Remove local folder
-        run: rm -rf "${UPLOAD_FOLDER_NAME}"
-      - name: Download locally
-        uses: ./.github/actions/secure-download-folder
-        with:
-          name: "${{ env.ARTIFACT_NAME }}"
-          sha256: ${{ steps.upload.outputs.sha256 }}
-
       - name: Validate contents
         run: |
           set -euo pipefail
@@ -215,6 +207,14 @@ jobs:
             echo "Download tree: ${download_tree}"
             exit 1
           fi
+
+      - name: Remove local folder
+        run: rm -rf "${UPLOAD_FOLDER_NAME}"
+      - name: Download locally
+        uses: ./.github/actions/secure-download-folder
+        with:
+          name: "${{ env.ARTIFACT_NAME }}"
+          sha256: ${{ steps.upload.outputs.sha256 }}
 
       - name: Download incorrect hash
         id: download-incorrect-hash
