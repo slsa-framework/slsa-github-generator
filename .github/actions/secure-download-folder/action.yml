@@ -74,12 +74,19 @@ runs:
           exit 1
         fi
 
+        # Create the destination directory if it does not exist.
+        if ! [[ -e "${UNTRUSTED_PATH}" ]]; then
+          mkdir -p "${UNTRUSTED_PATH}"
+        fi
+
         # Move all entries (file or folder).
         for file in "${tempdir}"/*; do
             # Ensure we don't overwrite existing files.
-            if [ -e "${resolved_dir}/${file}" ]; then
-              echo "Path '${resolved_dir}/${file}'' already exists"
+            dst="${resolved_dir}"/$(basename "${file}")
+            if [ -e "${dst}" ]; then
+              echo "Path '${dst}' already exists"
               exit 5
             fi
-            mv "${file}" "${resolved_dir}/"
+            mv "${file}" "${dst}"
         done
+ 
