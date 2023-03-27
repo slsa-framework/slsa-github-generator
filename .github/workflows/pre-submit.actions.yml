@@ -222,7 +222,7 @@ jobs:
       - name: Cleanup workspace
         run: |
           # NOTE: We don't remove DOWNLOAD_FOLDER_NAME to ensure that download-existing-file fails.
-          rm -rf "${UPLOAD_FOLDER_NAME}" "${DOWNLOAD_FOLDER_NAME}"
+          rm -rf "${UPLOAD_FOLDER_NAME}"
           rm -rf $(dirname "${UPLOAD_FOLDER_NO_ROOT_NAME}") $(dirname "${DOWNLOAD_FOLDER_NO_ROOT_NAME}")
 
       - name: Download locally
