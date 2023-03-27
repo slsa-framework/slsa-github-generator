@@ -216,8 +216,8 @@ jobs:
       - name: Validate contents
         run: |
           set -euo pipefail
-          ./.github/workflows/scripts/schedule.actions/secure-upload-folder.sh "${DOWNLOAD_FOLDER_NAME}" "${UPLOAD_FOLDER_NAME}"
-          ./.github/workflows/scripts/schedule.actions/secure-upload-folder.sh "${DOWNLOAD_FOLDER_NO_ROOT_NAME}" "${UPLOAD_FOLDER_NO_ROOT_NAME}"
+          ./.github/workflows/scripts/pre-submit.actions/secure-upload-folder.sh "${DOWNLOAD_FOLDER_NAME}" "${UPLOAD_FOLDER_NAME}"
+          ./.github/workflows/scripts/pre-submit.actions/secure-upload-folder.sh "${DOWNLOAD_FOLDER_NO_ROOT_NAME}" "${UPLOAD_FOLDER_NO_ROOT_NAME}"
 
       - name: Cleanup workspace
         run: |
