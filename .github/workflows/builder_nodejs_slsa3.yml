@@ -40,8 +40,8 @@ on:
         required: false
         type: string
 
-      tag:
-        description: "The package tag to attach."
+      dist-tag:
+        description: "The package dist-tag to attach. See `npm help dist-tag` for more information."
         required: false
         type: string
         default: "latest"
@@ -156,7 +156,7 @@ jobs:
           UNTRUSTED_ATTESTATION_NAME: ${{ fromJSON(needs.slsa-run.outputs.build-artifacts-outputs).attestation-name }}
           UNTRUSTED_PACKAGE_FILENAME: ${{ fromJSON(needs.slsa-run.outputs.build-artifacts-outputs).package-filename }}
           UNTRUSTED_DIRECTORY: ${{ inputs.directory }}
-          UNTRUSTED_TAG: ${{ inputs.tag }}
+          UNTRUSTED_DIST_TAG: ${{ inputs.dist-tag }}
         run: |
           set -euo pipefail
 
@@ -198,13 +198,13 @@ jobs:
             publish_flags="${publish_flags} --access=${UNTRUSTED_ACCESS}"
           fi
 
-          if [[ "${UNTRUSTED_TAG}" != "" ]]; then
+          if [[ "${UNTRUSTED_DIST_TAG}" != "" ]]; then
             # We need to validate the input so that it doesn't try to inject or other arguments.
-            if ! [[ "${UNTRUSTED_TAG}" =~ [a-zA-Z0-9]+ ]]; then
+            if ! [[ "${UNTRUSTED_DIST_TAG}" =~ [a-zA-Z0-9]+ ]]; then
               >&2 echo "Tag should be a string that matches [a-zA-Z0-9]+"
               exit 1
             fi
-            publish_flags="${publish_flags} --tag=${UNTRUSTED_TAG}"
+            publish_flags="${publish_flags} --tag=${UNTRUSTED_DIST_TAG}"
           fi
 
           # NOTE: We don't quote $publish_flags because we are using word splitting to add the flags.
