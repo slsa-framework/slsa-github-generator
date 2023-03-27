@@ -1,5 +1,5 @@
 name: "Secure folder download"
-description: "Download a folder and verify its SHA256"
+description: "Download a folder uploaded by secure-upload-folder and verify its SHA256"
 inputs:
   name:
     description: "Artifact name. (Note: this is a name given to an upload, not the path or filename)."
