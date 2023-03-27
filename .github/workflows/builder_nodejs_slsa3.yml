@@ -41,7 +41,7 @@ on:
         type: string
 
       tag:
-        description: "The package tag to attach. Defaults to 'latest'"
+        description: "The package tag to attach."
         required: false
         type: string
         default: "latest"
@@ -191,17 +191,16 @@ jobs:
           if [[ "${UNTRUSTED_ACCESS}" != "" ]]; then
             # We need to validate the input so that it doesn't inject commands or other arguments.
             # We will let npm validate the input but we will just make sure it's a single alphabetic string.
-            if [[ "${UNTRUSTED_ACCESS}" =~ [a-zA-Z]+ ]]; then
+            if ! [[ "${UNTRUSTED_ACCESS}" =~ [a-zA-Z]+ ]]; then
               >&2 echo "Access should be a string that matches [a-zA-Z]+"
               exit 1
             fi
             publish_flags="${publish_flags} --access=${UNTRUSTED_ACCESS}"
           fi
 
-          publish_flags=""
           if [[ "${UNTRUSTED_TAG}" != "" ]]; then
             # We need to validate the input so that it doesn't try to inject or other arguments.
-            if [[ "${UNTRUSTED_TAG}" =~ [a-zA-Z0-9]+ ]]; then
+            if ! [[ "${UNTRUSTED_TAG}" !=~ [a-zA-Z0-9]+ ]]; then
               >&2 echo "Tag should be a string that matches [a-zA-Z0-9]+"
               exit 1
             fi
