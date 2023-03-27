@@ -324,6 +324,10 @@ as an [in-toto](https://in-toto.io/) statement with a SLSA predicate.
 }
 ```
 
+See
+[hello-transparent-release](https://github.com/project-oak/hello-transparent-release)
+for a more detailed description of how to use this workflow.
+
 ## Command line tool
 
 This folder contains a command line tool for building artifacts using a Docker
