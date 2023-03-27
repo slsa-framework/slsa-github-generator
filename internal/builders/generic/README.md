@@ -237,6 +237,7 @@ The [generic workflow](https://github.com/slsa-framework/slsa-github-generator/b
 | `attestation-name`   | no       | "(subject name).intoto.jsonl" if a single subject. "multiple.intoto.json" if multiple subjects. | The artifact name of the signed provenance. The file must have the `intoto.jsonl` extension. DEPRECATED: use `provenance-name` instead.                                                                                                                          |
 | `private-repository` | no       | false                                                                                           | Set to true to opt-in to posting to the public transparency log. Will generate an error if false for private repositories. This input has no effect for public repositories. See [Private Repositories](#private-repositories).                                  |
 | `continue-on-error`  | no       | false                                                                                           | Set to true to ignore errors. This option is useful if you won't want a failure to fail your entire workflow.                                                                                                                                                    |
+| `draft-release`      | no        |false                   | If true, the release is created as a draft                                                                                |
 
 ### Workflow Outputs
 
