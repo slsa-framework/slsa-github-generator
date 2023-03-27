@@ -5,6 +5,12 @@ permissions: {}
 on:
   workflow_call:
     inputs:
+      access:
+        description: "The package access level. Defaults to 'restricted' for scoped packages, 'public' for unscoped packages"
+        required: false
+        type: string
+        default: ""
+
       directory:
         description: "Sub-directory where package.json is located. Must be under the workspace."
         required: false
@@ -21,11 +27,6 @@ on:
         required: false
         type: string
 
-      run-scripts:
-        description: "An ordered list of scripts from the package.json file to run (comma separated). Example value: 'script1, script2'"
-        required: false
-        type: string
-
       # NOTE: the additional inputs below are to support additional
       # functionality of the workflow.
       rekor-log-public:
@@ -33,6 +34,17 @@ on:
         required: false
         type: boolean
         default: false
+
+      run-scripts:
+        description: "An ordered list of scripts from the package.json file to run (comma separated). Example value: 'script1, script2'"
+        required: false
+        type: string
+
+      tag:
+        description: "The package tag to attach. Defaults to 'latest'"
+        required: false
+        type: string
+        default: "latest"
 
     secrets:
       node-auth-token:
@@ -138,11 +150,13 @@ jobs:
       - name: Publish the package
         id: publish
         env:
+          UNTRUSTED_ACCESS: ${{ inputs.access }}
           NODE_AUTH_TOKEN: ${{ secrets.node-auth-token }}
           ATTESTATION_DIR: ${{ steps.attestation-download.outputs.download-path }}
           UNTRUSTED_ATTESTATION_NAME: ${{ fromJSON(needs.slsa-run.outputs.build-artifacts-outputs).attestation-name }}
           UNTRUSTED_PACKAGE_FILENAME: ${{ fromJSON(needs.slsa-run.outputs.build-artifacts-outputs).package-filename }}
           UNTRUSTED_DIRECTORY: ${{ inputs.directory }}
+          UNTRUSTED_TAG: ${{ inputs.tag }}
         run: |
           set -euo pipefail
 
@@ -154,7 +168,7 @@ jobs:
           echo "Attestation path resolved to '${untrusted_attestation_realpath}'"
           echo "Checking directory '${untrusted_attestation_realpath}' is a sub-directory of '${github_workspace_realpath}'"
           if [[ "${untrusted_attestation_realpath}" != "${github_workspace_realpath}" ]] && [[ ${untrusted_attestation_realpath} != ${github_workspace_realpath}/* ]]; then
-              echo "${untrusted_attestation_realpath} not a sub-directory of ${GITHUB_WORKSPACE}"
+              >&2 echo "${untrusted_attestation_realpath} not a sub-directory of ${GITHUB_WORKSPACE}"
               exit 1
           fi
           # Directory was validated. Explicitly trust it.
@@ -165,7 +179,7 @@ jobs:
           echo "Package path resolved to '${untrusted_package_realpath}'"
           echo "Checking directory '${untrusted_package_realpath}' is a sub-directory of '${github_workspace_realpath}'"
           if [[ "${untrusted_package_realpath}" != "${github_workspace_realpath}" ]] && [[ ${untrusted_package_realpath} != ${github_workspace_realpath}/* ]]; then
-              echo "${untrusted_package_realpath} not a sub-directory of ${GITHUB_WORKSPACE}"
+              >&2 echo "${untrusted_package_realpath} not a sub-directory of ${GITHUB_WORKSPACE}"
               exit 1
           fi
           # Directory was validated. Explicitly trust it.
@@ -173,5 +187,26 @@ jobs:
 
           # Run npm publish using npm fork. We are temporarily using a fork so
           # that we can specify the provenance bundle.
-          # TODO(#1829): Support the --access flag.
-          "$(dirname "$(which node)")"/node_modules/npm/bin/npm publish "${package_realpath}" --access public --provenance "${attestation_realpath}"
+          publish_flags="--provenance ${attestation_realpath}"
+          if [[ "${UNTRUSTED_ACCESS}" != "" ]]; then
+            # We need to validate the input so that it doesn't inject commands or other arguments.
+            # We will let npm validate the input but we will just make sure it's a single alphabetic string.
+            if [[ "${UNTRUSTED_ACCESS}" =~ [a-zA-Z]+ ]]; then
+              >&2 echo "Access should be a string that matches [a-zA-Z]+"
+              exit 1
+            fi
+            publish_flags="${publish_flags} --access=${UNTRUSTED_ACCESS}"
+          fi
+
+          publish_flags=""
+          if [[ "${UNTRUSTED_TAG}" != "" ]]; then
+            # We need to validate the input so that it doesn't try to inject or other arguments.
+            if [[ "${UNTRUSTED_TAG}" =~ [a-zA-Z0-9]+ ]]; then
+              >&2 echo "Tag should be a string that matches [a-zA-Z0-9]+"
+              exit 1
+            if
+            publish_flags="${publish_flags} --tag=${UNTRUSTED_TAG}"
+          fi
+
+          # NOTE: We don't quote $publish_flags because we are using word splitting to add the flags.
+          "$(dirname "$(which node)")"/node_modules/npm/bin/npm publish "${package_realpath}" ${publish_flags}
