@@ -216,13 +216,13 @@ jobs:
       - name: Validate contents
         run: |
           set -euo pipefail
-          ./.github/workflows/scripts/schedule.actions/secure-upload-folder.sh "${DOWNLOAD_FOLDER_NAME}" "${UPLOAD_FOLDER_NAME}"
-          ./.github/workflows/scripts/schedule.actions/secure-upload-folder.sh "${DOWNLOAD_FOLDER_NO_ROOT_NAME}" "${UPLOAD_FOLDER_NO_ROOT_NAME}"
+          ./.github/workflows/scripts/pre-submit.actions/secure-upload-folder.sh "${DOWNLOAD_FOLDER_NAME}" "${UPLOAD_FOLDER_NAME}"
+          ./.github/workflows/scripts/pre-submit.actions/secure-upload-folder.sh "${DOWNLOAD_FOLDER_NO_ROOT_NAME}" "${UPLOAD_FOLDER_NO_ROOT_NAME}"
 
       - name: Cleanup workspace
         run: |
           # NOTE: We don't remove DOWNLOAD_FOLDER_NAME to ensure that download-existing-file fails.
-          rm -rf "${UPLOAD_FOLDER_NAME}" "${DOWNLOAD_FOLDER_NAME}"
+          rm -rf "${UPLOAD_FOLDER_NAME}"
           rm -rf $(dirname "${UPLOAD_FOLDER_NO_ROOT_NAME}") $(dirname "${DOWNLOAD_FOLDER_NO_ROOT_NAME}")
 
       - name: Download locally
@@ -291,6 +291,7 @@ jobs:
 
       - name: fail check
         env:
+          # NOTE: These are all adversarial tests. They should fail.
           SUCCESS: ${{ steps.download-incorrect-hash.outcome == 'failure' && steps.download-existing-file.outcome == 'failure' && steps.download-traversal.outcome == 'failure' && steps.upload-traversal.outcome == 'failure' && steps.upload-outside.outcome == 'failure' && steps.download-outside.outcome == 'failure' }}
         run: |
           set -euo pipefail
