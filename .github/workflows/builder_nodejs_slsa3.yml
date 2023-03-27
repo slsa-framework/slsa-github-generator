@@ -200,7 +200,7 @@ jobs:
 
           if [[ "${UNTRUSTED_TAG}" != "" ]]; then
             # We need to validate the input so that it doesn't try to inject or other arguments.
-            if ! [[ "${UNTRUSTED_TAG}" !=~ [a-zA-Z0-9]+ ]]; then
+            if ! [[ "${UNTRUSTED_TAG}" =~ [a-zA-Z0-9]+ ]]; then
               >&2 echo "Tag should be a string that matches [a-zA-Z0-9]+"
               exit 1
             fi
