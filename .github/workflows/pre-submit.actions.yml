@@ -159,12 +159,16 @@ jobs:
       ARTIFACT_NAME: "my-artifact"
       UPLOAD_FOLDER_NAME: "upload-folder"
       DOWNLOAD_FOLDER_NAME: "download-folder"
+      ARTIFACT_NO_ROOT_NAME: "my-artifact-noroot"
+      UPLOAD_FOLDER_NO_ROOT_NAME: "upload-root/upload-folder"
+      DOWNLOAD_FOLDER_NO_ROOT_NAME: "download-root/download-folder"
     steps:
       - uses: actions/checkout@24cb9080177205b6e8c946b17badbe402adc938f # v3.4.0
       - name: Create folder
         run: |
           set -euo pipefail
 
+          # Folder in the root of GITHUB_WORKSPACE
           mkdir -p "${UPLOAD_FOLDER_NAME}/inside"
           mkdir -p "${UPLOAD_FOLDER_NAME}/empty"
 
@@ -175,12 +179,25 @@ jobs:
 
           tree "${UPLOAD_FOLDER_NAME}"
 
+          # Folder not in the root of GITHUB_WORKSPACE
+          mkdir -p "${UPLOAD_FOLDER_NO_ROOT_NAME}"
+          cp -R "${UPLOAD_FOLDER_NAME}"/* "${UPLOAD_FOLDER_NO_ROOT_NAME}"/
+
+          tree "${UPLOAD_FOLDER_NO_ROOT_NAME}"
+
       - name: Upload
         id: upload
         uses: ./.github/actions/secure-upload-folder
         with:
           name: "${{ env.ARTIFACT_NAME }}"
           path: "${{ env.UPLOAD_FOLDER_NAME }}"
+
+      - name: Upload
+        id: upload-noroot
+        uses: ./.github/actions/secure-upload-folder
+        with:
+          name: "${{ env.ARTIFACT_NO_ROOT_NAME }}"
+          path: "${{ env.UPLOAD_FOLDER_NO_ROOT_NAME }}"
 
       - name: Download in new folder
         uses: ./.github/actions/secure-download-folder
@@ -189,32 +206,36 @@ jobs:
           path: "${{ env.DOWNLOAD_FOLDER_NAME }}"
           sha256: ${{ steps.upload.outputs.sha256 }}
 
+      - name: Download in new folder noroot
+        uses: ./.github/actions/secure-download-folder
+        with:
+          name: "${{ env.ARTIFACT_NO_ROOT_NAME }}"
+          path: "${{ env.DOWNLOAD_FOLDER_NO_ROOT_NAME }}"
+          sha256: ${{ steps.upload-noroot.outputs.sha256 }}
+
       - name: Validate contents
         run: |
           set -euo pipefail
+          ./.github/workflows/scripts/schedule.actions/secure-upload-folder.sh "${DOWNLOAD_FOLDER_NAME}" "${UPLOAD_FOLDER_NAME}"
+          ./.github/workflows/scripts/schedule.actions/secure-upload-folder.sh "${DOWNLOAD_FOLDER_NO_ROOT_NAME}" "${UPLOAD_FOLDER_NO_ROOT_NAME}"
 
-          tree "${DOWNLOAD_FOLDER_NAME}"
+      - name: Cleanup workspace
+        run: |
+          # NOTE: We don't remove DOWNLOAD_FOLDER_NAME to ensure that download-existing-file fails.
+          rm -rf "${UPLOAD_FOLDER_NAME}" "${DOWNLOAD_FOLDER_NAME}"
+          rm -rf $(dirname "${UPLOAD_FOLDER_NO_ROOT_NAME}") $(dirname "${DOWNLOAD_FOLDER_NO_ROOT_NAME}")
 
-          cd "${UPLOAD_FOLDER_NAME}"
-          upload_tree=$(tree .)
-
-          cd "../${DOWNLOAD_FOLDER_NAME}/${UPLOAD_FOLDER_NAME}"
-          download_tree=$(tree .)
-
-          if [[ "${upload_tree}" != "${download_tree}" ]]; then
-            echo "Folder trees differ: ${upload_tree} != ${download_tree}"
-            echo "Upload tree: ${upload_tree}"
-            echo "Download tree: ${download_tree}"
-            exit 1
-          fi
-
-      - name: Remove local folder
-        run: rm -rf "${UPLOAD_FOLDER_NAME}"
       - name: Download locally
         uses: ./.github/actions/secure-download-folder
         with:
           name: "${{ env.ARTIFACT_NAME }}"
           sha256: ${{ steps.upload.outputs.sha256 }}
+
+      - name: Download locally noroot
+        uses: ./.github/actions/secure-download-folder
+        with:
+          name: "${{ env.ARTIFACT_NO_ROOT_NAME }}"
+          sha256: ${{ steps.upload-noroot.outputs.sha256 }}
 
       - name: Download incorrect hash
         id: download-incorrect-hash
