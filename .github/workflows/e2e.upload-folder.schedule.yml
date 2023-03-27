@@ -42,7 +42,7 @@ jobs:
           # Folder not in the root of GITHUB_WORKSPACE
           mkdir -p "${UPLOAD_FOLDER_NO_ROOT_NAME}"
           cp -R "${UPLOAD_FOLDER_NAME}"/* "${UPLOAD_FOLDER_NO_ROOT_NAME}"/
-          
+
           tree "${UPLOAD_FOLDER_NO_ROOT_NAME}"
 
       - name: Upload

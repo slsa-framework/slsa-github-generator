@@ -134,7 +134,6 @@ const fs_1 = __importDefault(__nccwpck_require__(147));
 const path_1 = __importDefault(__nccwpck_require__(17));
 const attestation_1 = __nccwpck_require__(420);
 const utils_1 = __nccwpck_require__(918);
-const tscommon_1 = __nccwpck_require__(634);
 function run() {
     try {
         /*
@@ -146,7 +145,6 @@ function run() {
           GITHUB_WORKSPACE=$PWD \
           nodejs ./dist/index.js
         */
-        (0, tscommon_1.sayHello)();
         const wd = process.env[`GITHUB_WORKSPACE`] || "";
         // SLSA subjects layout file.
         const slsaOutputs = core.getInput("slsa-layout-file");
@@ -1970,39 +1968,6 @@ function checkBypass(reqUrl) {
 }
 exports.checkBypass = checkBypass;
 //# sourceMappingURL=proxy.js.map
-
-/***/ }),
-
-/***/ 484:
-/***/ ((__unused_webpack_module, exports) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.sayGoodbye = exports.sayHello = void 0;
-function sayHello() {
-    console.log('hi');
-}
-exports.sayHello = sayHello;
-function sayGoodbye() {
-    console.log('goodbye');
-}
-exports.sayGoodbye = sayGoodbye;
-
-
-/***/ }),
-
-/***/ 634:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.sayGoodbye = exports.sayHello = void 0;
-var file_1 = __nccwpck_require__(484);
-Object.defineProperty(exports, "sayHello", ({ enumerable: true, get: function () { return file_1.sayHello; } }));
-Object.defineProperty(exports, "sayGoodbye", ({ enumerable: true, get: function () { return file_1.sayGoodbye; } }));
-
 
 /***/ }),
 
