@@ -3,6 +3,7 @@ import fs from "fs";
 import path from "path";
 import { writeAttestations } from "./attestation";
 import { resolvePathInput } from "./utils";
+import { sayHello } from "tscommon";
 
 export function run(): void {
   try {
@@ -15,6 +16,7 @@ export function run(): void {
       GITHUB_WORKSPACE=$PWD \
       nodejs ./dist/index.js
     */
+    sayHello();
     const wd = process.env[`GITHUB_WORKSPACE`] || "";
 
     // SLSA subjects layout file.
