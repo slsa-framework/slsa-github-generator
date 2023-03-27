@@ -5,7 +5,7 @@ This document explains how to generate SLSA provenance for Node.js packages.
 This can be done by adding a step to your Github Actions workflow to call a
 [reusable
 workflow](https://docs.github.com/en/actions/using-workflows/reusing-workflows)
-to build the package and generate generic SLSA provenance. We'll call this
+to build the package and generate SLSA provenance. We'll call this
 workflow the "Node.js builder" from now on.
 
 ---
@@ -95,16 +95,16 @@ repository.
 
 ```yaml
 jobs:
-	build:
-		permissions:
-			actions: read # for detecting the Github Actions environment.
-			id-token: write # for creating OIDC tokens for signing.
-			packages: write # for uploading attestations.
-		if: startsWith(github.ref, 'refs/tags/')
-		uses: slsa-framework/slsa-github-generator/.github/workflows/builder_nodejs_slsa3.yml@v1.5.0
-		with:
-			run-scripts: "ci, build"
-		secrets:
+  build:
+    permissions:
+      actions: read # for detecting the Github Actions environment.
+      id-token: write # for creating OIDC tokens for signing.
+      packages: write # for uploading attestations.
+    if: startsWith(github.ref, 'refs/tags/')
+    uses: slsa-framework/slsa-github-generator/.github/workflows/builder_nodejs_slsa3.yml@v1.5.0
+    with:
+      run-scripts: "ci, build"
+    secrets:
       node-auth-token: ${{ secrets.NPM_TOKEN }}
 ```
 
