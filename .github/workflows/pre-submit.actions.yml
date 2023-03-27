@@ -291,7 +291,8 @@ jobs:
 
       - name: fail check
         env:
-          SUCCESS: ${{ steps.download-incorrect-hash.outcome == 'success' && steps.download-existing-file.outcome == 'success' && steps.download-traversal.outcome == 'success' && steps.upload-traversal.outcome == 'success' && steps.upload-outside.outcome == 'success' && steps.download-outside.outcome == 'success' }}
+          # NOTE: These are all adversarial tests. They should fail.
+          SUCCESS: ${{ steps.download-incorrect-hash.outcome == 'failure' && steps.download-existing-file.outcome == 'failure' && steps.download-traversal.outcome == 'failure' && steps.upload-traversal.outcome == 'failure' && steps.upload-outside.outcome == 'failure' && steps.download-outside.outcome == 'failure' }}
         run: |
           set -euo pipefail
           [ "$SUCCESS" == "true" ]
