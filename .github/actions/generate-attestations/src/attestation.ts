@@ -1,6 +1,7 @@
 import * as types from "./intoto";
-import fs from "fs";
 import path from "path";
+import * as tscommon from "tscommon";
+
 
 // Maximum number of attestations to be written.
 const MAX_ATTESTATION_COUNT = 50;
@@ -24,7 +25,7 @@ export function writeAttestations(
   predicateFile: string
 ): Record<string, string> {
   // Read SLSA output layout file.
-  const buffer = fs.readFileSync(layoutFile);
+  const buffer = tscommon.readFileSync(layoutFile);
   const layout: types.Layout = JSON.parse(buffer.toString());
 
   if (layout.version !== 1) {
@@ -37,7 +38,7 @@ export function writeAttestations(
   }
 
   // Read predicate
-  const predicateBuffer = fs.readFileSync(predicateFile);
+  const predicateBuffer = tscommon.readFileSync(predicateFile);
   const predicateJson = JSON.parse(predicateBuffer.toString());
 
   // TODO(https://github.com/slsa-framework/slsa-github-generator/issues/1422): Add other predicate validations.
