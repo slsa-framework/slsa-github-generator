@@ -38408,6 +38408,7 @@ function getGitHubWorkspace() {
 }
 exports.getGitHubWorkspace = getGitHubWorkspace;
 // Detect directory traversal for input file.
+// This function is exported for unit tests only.
 function resolvePathInput(input) {
     const wd = getGitHubWorkspace();
     const resolvedInput = path_1.default.resolve(input);

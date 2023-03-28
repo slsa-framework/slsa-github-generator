@@ -4,10 +4,10 @@ import path from "path";
 // This function is for unit tests.
 // We need to set the working directory to the tscommon/ directory
 // instead of the GITHUB_WORKSPACE.
-export function getGitHubWorkspace(): string{
+export function getGitHubWorkspace(): string {
   const wdt = process.env["UNIT_TESTS_WD"] || "";
-  if (wdt){
-    return wdt
+  if (wdt) {
+    return wdt;
   }
   return process.env["GITHUB_WORKSPACE"] || "";
 }
