@@ -1,2 +1,2 @@
 https://stackoverflow.com/questions/15806241/how-to-specify-local-modules-as-npm-package-dependencies
-https://github.com/bersling/typescript-library-starter/blob/master
+https://github.com/bersling/typescript-library-starter/blob/masterhttps://www.tsmean.com/articles/how-to-write-a-typescript-library/
