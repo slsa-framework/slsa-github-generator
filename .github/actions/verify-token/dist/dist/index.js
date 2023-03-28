@@ -43739,12 +43739,23 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.safePromises_stat = exports.safePromises_readdir = exports.safeExistsSync = exports.rmdirSync = exports.safeUnlinkSync = exports.safeReadFileSync = exports.safeMkdirSync = exports.safeWriteFileSync = exports.resolvePathInput = void 0;
+exports.safePromises_stat = exports.safePromises_readdir = exports.safeExistsSync = exports.rmdirSync = exports.safeUnlinkSync = exports.safeReadFileSync = exports.safeMkdirSync = exports.safeWriteFileSync = exports.resolvePathInput = exports.getGitHubWorkspace = void 0;
 const fs_1 = __importDefault(__nccwpck_require__(7147));
 const path_1 = __importDefault(__nccwpck_require__(1017));
+// This function is for unit tests.
+// We need to set the working directory to the tscommon/ directory
+// instead of the GITHUB_WORKSPACE.
+function getGitHubWorkspace() {
+    const wdt = process.env["UNIT_TESTS_WD"] || "";
+    if (wdt) {
+        return wdt;
+    }
+    return process.env["GITHUB_WORKSPACE"] || "";
+}
+exports.getGitHubWorkspace = getGitHubWorkspace;
 // Detect directory traversal for input file.
 function resolvePathInput(input) {
-    const wd = process.env["GITHUB_WORKSPACE"] || "";
+    const wd = getGitHubWorkspace();
     const resolvedInput = path_1.default.resolve(input);
     if ((resolvedInput + path_1.default.sep).startsWith(wd + path_1.default.sep)) {
         return resolvedInput;
