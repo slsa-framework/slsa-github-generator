@@ -40,7 +40,7 @@ jobs:
 
       - name: Rebuild the dist/ directory
         working-directory: ${{ matrix.action }}
-        run: nodejs --version && make clean package
+        run: node --version && make clean package
 
       - name: Compare the expected and actual dist/ directories
         working-directory: ${{ matrix.action }}
