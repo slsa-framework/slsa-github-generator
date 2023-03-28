@@ -36,10 +36,10 @@ export function run(): void {
     );
 
     // Write attestations
-    tscommon.mkdirSync(outputFolder, { recursive: true });
+    tscommon.safeMkdirSync(outputFolder, { recursive: true });
     for (const att in attestations) {
       const outputFile = path.join(outputFolder, att);
-      tscommon.writeFileSync(outputFile, attestations[att]);
+      tscommon.safeWriteFileSync(outputFile, attestations[att]);
     }
   } catch (error) {
     if (error instanceof Error) {

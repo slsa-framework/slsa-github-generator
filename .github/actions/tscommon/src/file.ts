@@ -1,34 +1,42 @@
 import fs from "fs";
 import path from "path";
 
-// export function sayHello(): void {
-//   console.log("hi");
-// }
-// export function sayGoodbye(): void {
-//   console.log("goodbye");
-// }
+// This function is for unit tests.
+// We need to set the working directory to the tscommon/ directory
+// instead of the GITHUB_WORKSPACE.
+export function getGitHubWorkspace(): string{
+  const wdt = process.env["UNIT_TESTS_WD"] || "";
+  if (wdt){
+    return wdt
+  }
+  return process.env["GITHUB_WORKSPACE"] || "";
+}
 
 // Detect directory traversal for input file.
 export function resolvePathInput(input: string): string {
-  const wd = process.env["GITHUB_WORKSPACE"] || process.env["PWD"] || "";
-  const safeJoin = path.resolve(path.join(wd, input));
-  if (!(safeJoin + path.sep).startsWith(wd + path.sep)) {
-    throw Error(`unsafe path ${safeJoin}`);
+  const wd = getGitHubWorkspace();
+  const resolvedInput = path.resolve(input);
+  if ((resolvedInput + path.sep).startsWith(wd + path.sep)) {
+    return resolvedInput;
   }
-  return safeJoin;
+  throw Error(`unsafe path ${resolvedInput}`);
 }
 
 // Safe write function.
-export function writeFileSync(outputFn: string, data: string | Buffer): void {
+export function safeWriteFileSync(
+  outputFn: string,
+  data: string | Buffer
+): void {
   const safeOutputFn = resolvePathInput(outputFn);
+  // WARNING: if the call fails, the type of the error is not 'Error'.
   fs.writeFileSync(safeOutputFn, data, {
-    flag: "ax",
+    flag: "wx",
     mode: 0o600,
   });
 }
 
 // Safe mkdir function.
-export function mkdirSync(
+export function safeMkdirSync(
   outputFn: string,
   options: fs.MakeDirectoryOptions & { recursive: true }
 ): void {
@@ -37,7 +45,40 @@ export function mkdirSync(
 }
 
 // Safe read file function.
-export function readFileSync(inputFn: string): Buffer {
+export function safeReadFileSync(inputFn: string): Buffer {
   const safeInputFn = resolvePathInput(inputFn);
   return fs.readFileSync(safeInputFn);
+}
+
+// Safe unlink function.
+export function safeUnlinkSync(inputFn: string): void {
+  const safeInputFn = resolvePathInput(inputFn);
+  return fs.unlinkSync(safeInputFn);
+}
+
+// Safe remove directory function.
+export function rmdirSync(
+  dir: string,
+  options?: fs.RmOptions | undefined
+): void {
+  const safeDir = resolvePathInput(dir);
+  return fs.rmdirSync(safeDir, options);
+}
+
+// Safe exist function.
+export function safeExistsSync(inputFn: string): boolean {
+  const safeInputFn = resolvePathInput(inputFn);
+  return fs.existsSync(safeInputFn);
+}
+
+// Safe readdir function.
+export async function safePromises_readdir(inputFn: string): Promise<string[]> {
+  const safeInputFn = resolvePathInput(inputFn);
+  return fs.promises.readdir(safeInputFn);
+}
+
+// Safe stat function.
+export async function safePromises_stat(inputFn: string): Promise<fs.Stats> {
+  const safeInputFn = resolvePathInput(inputFn);
+  return fs.promises.stat(safeInputFn);
 }

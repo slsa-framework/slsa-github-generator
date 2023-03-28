@@ -1,0 +1,22 @@
+name: Safe APIs
+
+on:
+  push:
+    branches: [main, "*"]
+  pull_request:
+    # The branches below must be a subset of the branches above
+    branches: [main]
+  merge_group:
+  workflow_dispatch:
+
+permissions:
+  contents: read # Needed to check out the repo.
+
+jobs:
+  safe-apis:
+    name: safe-apis
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@24cb9080177205b6e8c946b17badbe402adc938f # v3.4.0
+      - name: Check safe file systems APIs
+        run: ./.github/workflows/scripts/pre-submit.apis/verify-safefs.sh

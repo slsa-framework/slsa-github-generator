@@ -31,13 +31,13 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core = __importStar(__nccwpck_require__(186));
-const fs = __importStar(__nccwpck_require__(147));
 const crypto = __importStar(__nccwpck_require__(113));
+const tscommon = __importStar(__nccwpck_require__(634));
 function shasum256(untrustedPath) {
-    if (!fs.existsSync(untrustedPath)) {
+    if (!tscommon.safeExistsSync(untrustedPath)) {
         throw new Error(`File ${untrustedPath} not present`);
     }
-    const untrustedFile = fs.readFileSync(untrustedPath);
+    const untrustedFile = tscommon.safeReadFileSync(untrustedPath);
     return crypto.createHash("sha256").update(untrustedFile).digest("hex");
 }
 function run() {
@@ -1811,6 +1811,122 @@ function checkBypass(reqUrl) {
 }
 exports.checkBypass = checkBypass;
 //# sourceMappingURL=proxy.js.map
+
+/***/ }),
+
+/***/ 484:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.safePromises_stat = exports.safePromises_readdir = exports.safeExistsSync = exports.rmdirSync = exports.safeUnlinkSync = exports.safeReadFileSync = exports.safeMkdirSync = exports.safeWriteFileSync = exports.resolvePathInput = void 0;
+const fs_1 = __importDefault(__nccwpck_require__(147));
+const path_1 = __importDefault(__nccwpck_require__(17));
+// Detect directory traversal for input file.
+function resolvePathInput(input) {
+    const wd = process.env["GITHUB_WORKSPACE"] || "";
+    const resolvedInput = path_1.default.resolve(input);
+    if ((resolvedInput + path_1.default.sep).startsWith(wd + path_1.default.sep)) {
+        return resolvedInput;
+    }
+    throw Error(`unsafe path ${resolvedInput}`);
+}
+exports.resolvePathInput = resolvePathInput;
+// Safe write function.
+function safeWriteFileSync(outputFn, data) {
+    const safeOutputFn = resolvePathInput(outputFn);
+    // WARNING: if the call fails, the type of the error is not 'Error'.
+    fs_1.default.writeFileSync(safeOutputFn, data, {
+        flag: "wx",
+        mode: 0o600,
+    });
+}
+exports.safeWriteFileSync = safeWriteFileSync;
+// Safe mkdir function.
+function safeMkdirSync(outputFn, options) {
+    const safeOutputFn = resolvePathInput(outputFn);
+    fs_1.default.mkdirSync(safeOutputFn, options);
+}
+exports.safeMkdirSync = safeMkdirSync;
+// Safe read file function.
+function safeReadFileSync(inputFn) {
+    const safeInputFn = resolvePathInput(inputFn);
+    return fs_1.default.readFileSync(safeInputFn);
+}
+exports.safeReadFileSync = safeReadFileSync;
+// Safe unlink function.
+function safeUnlinkSync(inputFn) {
+    const safeInputFn = resolvePathInput(inputFn);
+    return fs_1.default.unlinkSync(safeInputFn);
+}
+exports.safeUnlinkSync = safeUnlinkSync;
+// Safe remove directory function.
+function rmdirSync(dir, options) {
+    const safeDir = resolvePathInput(dir);
+    return fs_1.default.rmdirSync(safeDir, options);
+}
+exports.rmdirSync = rmdirSync;
+// Safe exist function.
+function safeExistsSync(inputFn) {
+    const safeInputFn = resolvePathInput(inputFn);
+    return fs_1.default.existsSync(safeInputFn);
+}
+exports.safeExistsSync = safeExistsSync;
+// Safe readdir function.
+function safePromises_readdir(inputFn) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const safeInputFn = resolvePathInput(inputFn);
+        return fs_1.default.promises.readdir(safeInputFn);
+    });
+}
+exports.safePromises_readdir = safePromises_readdir;
+// Safe stat function.
+function safePromises_stat(inputFn) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const safeInputFn = resolvePathInput(inputFn);
+        return fs_1.default.promises.stat(safeInputFn);
+    });
+}
+exports.safePromises_stat = safePromises_stat;
+
+
+/***/ }),
+
+/***/ 634:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __exportStar = (this && this.__exportStar) || function(m, exports) {
+    for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+__exportStar(__nccwpck_require__(484), exports);
+
 
 /***/ }),
 
