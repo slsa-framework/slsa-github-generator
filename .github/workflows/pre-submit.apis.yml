@@ -1,4 +1,4 @@
-name: Safe APIs
+name: pre-submit apis
 
 on:
   push:
@@ -13,8 +13,8 @@ permissions:
   contents: read # Needed to check out the repo.
 
 jobs:
-  safe-apis:
-    name: safe-apis
+  verify-safe-apis:
+    name: verify safe APIs
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@24cb9080177205b6e8c946b17badbe402adc938f # v3.4.0
