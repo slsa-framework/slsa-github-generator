@@ -7,6 +7,7 @@ export declare function safeWriteFileSync(outputFn: string, data: string | Buffe
 export declare function safeMkdirSync(outputFn: string, options: fs.MakeDirectoryOptions & {
     recursive: true;
 }): void;
+export declare function safeReadGitHubEventFileSync(): Buffer;
 export declare function safeReadFileSync(inputFn: string): Buffer;
 export declare function safeUnlinkSync(inputFn: string): void;
 export declare function rmdirSync(dir: string, options?: fs.RmOptions | undefined): void;

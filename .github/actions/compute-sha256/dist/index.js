@@ -1832,18 +1832,19 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.safePromises_stat = exports.safePromises_readdir = exports.safeExistsSync = exports.rmdirSync = exports.safeUnlinkSync = exports.safeReadFileSync = exports.safeMkdirSync = exports.safeWriteFileSync = exports.resolvePathInput = exports.getGitHubWorkspace = void 0;
+exports.safePromises_stat = exports.safePromises_readdir = exports.safeExistsSync = exports.rmdirSync = exports.safeUnlinkSync = exports.safeReadFileSync = exports.safeReadGitHubEventFileSync = exports.safeMkdirSync = exports.safeWriteFileSync = exports.resolvePathInput = exports.getGitHubWorkspace = void 0;
 const fs_1 = __importDefault(__nccwpck_require__(147));
 const path_1 = __importDefault(__nccwpck_require__(17));
+const process_1 = __importDefault(__nccwpck_require__(282));
 // This function is for unit tests.
 // We need to set the working directory to the tscommon/ directory
 // instead of the GITHUB_WORKSPACE.
 function getGitHubWorkspace() {
-    const wdt = process.env["UNIT_TESTS_WD"] || "";
+    const wdt = process_1.default.env["UNIT_TESTS_WD"] || "";
     if (wdt) {
         return wdt;
     }
-    return process.env["GITHUB_WORKSPACE"] || "";
+    return process_1.default.env["GITHUB_WORKSPACE"] || "";
 }
 exports.getGitHubWorkspace = getGitHubWorkspace;
 // Detect directory traversal for input file.
@@ -1873,6 +1874,16 @@ function safeMkdirSync(outputFn, options) {
     fs_1.default.mkdirSync(safeOutputFn, options);
 }
 exports.safeMkdirSync = safeMkdirSync;
+// Read file defined by the GitHub context,
+// even if they are outside the workspace.
+function safeReadGitHubEventFileSync() {
+    const eventFile = process_1.default.env.GITHUB_EVENT_PATH || "";
+    if (!eventFile) {
+        throw Error("env GITHUB_EVENT_PATH is empty");
+    }
+    return fs_1.default.readFileSync(eventFile);
+}
+exports.safeReadGitHubEventFileSync = safeReadGitHubEventFileSync;
 // Safe read file function.
 function safeReadFileSync(inputFn) {
     const safeInputFn = resolvePathInput(inputFn);
@@ -2937,6 +2948,14 @@ module.exports = require("os");
 
 "use strict";
 module.exports = require("path");
+
+/***/ }),
+
+/***/ 282:
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("process");
 
 /***/ }),
 

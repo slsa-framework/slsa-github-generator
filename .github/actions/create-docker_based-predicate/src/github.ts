@@ -63,7 +63,7 @@ export function addGitHubParameters(
   // TODO(github.com/slsa-framework/slsa-github-generator/issues/1575): Redact sensitive information.
   if (env.GITHUB_EVENT_PATH) {
     const ghEvent = JSON.parse(
-      tscommon.safeReadFileSync(env.GITHUB_EVENT_PATH).toString()
+      tscommon.safeReadGitHubEventFileSync().toString()
     );
     systemParams.GITHUB_EVENT_PAYLOAD = ghEvent;
   }

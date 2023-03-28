@@ -1,5 +1,6 @@
 import fs from "fs";
 import path from "path";
+import process from "process";
 
 // This function is for unit tests.
 // We need to set the working directory to the tscommon/ directory
@@ -43,6 +44,16 @@ export function safeMkdirSync(
 ): void {
   const safeOutputFn = resolvePathInput(outputFn);
   fs.mkdirSync(safeOutputFn, options);
+}
+
+// Read file defined by the GitHub context,
+// even if they are outside the workspace.
+export function safeReadGitHubEventFileSync(): Buffer {
+  const eventFile = process.env.GITHUB_EVENT_PATH || "";
+  if (!eventFile) {
+    throw Error("env GITHUB_EVENT_PATH is empty");
+  }
+  return fs.readFileSync(eventFile);
 }
 
 // Safe read file function.
