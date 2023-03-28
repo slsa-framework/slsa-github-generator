@@ -26,4 +26,3 @@ cd "${download_folder}/${upload_folder}"
 download_tree=$(tree .)
 
 compare_trees "${upload_tree}" "${download_tree}"
-
