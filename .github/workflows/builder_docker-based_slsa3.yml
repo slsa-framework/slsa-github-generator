@@ -250,13 +250,15 @@ jobs:
             --build-definition-path build-definition.json \
             --builder-image "${BUILDER_IMAGE}@${BUILDER_DIGEST}" \
             --git-commit-digest "sha1:${GITHUB_SHA}" \
-            --source-repo "git+https://github.com/${GITHUB_REPOSITORY}${REF}"
+            --source-repo "git+https://github.com/${GITHUB_REPOSITORY}${REF}" \
+            --verbose
           "${GITHUB_WORKSPACE}/${BUILDER_BINARY}" dry-run \
             --build-config-path "${CONFIG_PATH}" \
             --build-definition-path build-definition.json \
             --builder-image "${BUILDER_IMAGE}@${BUILDER_DIGEST}" \
             --git-commit-digest "sha1:${GITHUB_SHA}" \
-            --source-repo "git+https://github.com/${GITHUB_REPOSITORY}${REF}"
+            --source-repo "git+https://github.com/${GITHUB_REPOSITORY}${REF}" \
+            --verbose
 
           echo "build-definition-name=build-definition.json" >> $GITHUB_OUTPUT
 
@@ -387,14 +389,16 @@ jobs:
             --git-commit-digest "sha1:${GITHUB_SHA}" \
             --source-repo "git+https://github.com/${GITHUB_REPOSITORY}${REF}" \
             --subjects-path subjects.json \
-            --output-folder /tmp/build-outputs-${RNG}
+            --output-folder /tmp/build-outputs-${RNG} \
+            --verbose
           "${GITHUB_WORKSPACE}/${BUILDER_BINARY}" build \
             --build-config-path "${CONFIG_PATH}" \
             --builder-image "${BUILDER_IMAGE}@${BUILDER_DIGEST}" \
             --git-commit-digest "sha1:${GITHUB_SHA}" \
             --source-repo "git+https://github.com/${GITHUB_REPOSITORY}${REF}" \
             --subjects-path subjects.json \
-            --output-folder /tmp/build-outputs-${RNG}
+            --output-folder /tmp/build-outputs-${RNG} \
+            --verbose
 
           # Construct attestation filename.
           FILENAME=${PROVENANCE_NAME}
