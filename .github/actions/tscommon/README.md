@@ -22,3 +22,6 @@ $ npm pack
 $ cd ../another-action
 $ npm install --save ../tscommon/tscommon-0.0.0.tgz
 ```
+
+### Changes
+Any changes to this code need to be reflected in deendent Actions as shown above.

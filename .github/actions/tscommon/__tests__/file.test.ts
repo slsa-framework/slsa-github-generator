@@ -37,6 +37,8 @@ describe("resolvePathInput", () => {
     const input = "path";
     const safe = file.resolvePathInput(input);
     expect(safe).toEqual(`${wd}/path`);
+    const safesafe = file.resolvePathInput(safe);
+    expect(safesafe).toEqual(`${safe}`);
   });
 });
 
