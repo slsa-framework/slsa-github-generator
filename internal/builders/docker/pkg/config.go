@@ -66,6 +66,7 @@ type DockerBuildConfig struct {
 	BuilderImage    DockerImage
 	BuildConfigPath string
 	ForceCheckout   bool
+	Verbose         bool
 }
 
 // NewDockerBuildConfig validates the inputs and generates an instance of
@@ -95,6 +96,7 @@ func NewDockerBuildConfig(io *InputOptions) (*DockerBuildConfig, error) {
 		BuilderImage:    *dockerImage,
 		BuildConfigPath: io.BuildConfigPath,
 		ForceCheckout:   io.ForceCheckout,
+		Verbose:         io.Verbose,
 	}, nil
 }
 

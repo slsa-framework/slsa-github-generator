@@ -23,6 +23,7 @@ type InputOptions struct {
 	GitCommitHash   string
 	BuilderImage    string
 	ForceCheckout   bool
+	Verbose         bool
 }
 
 // AddFlags adds input flags to the given command.
@@ -41,4 +42,7 @@ func (io *InputOptions) AddFlags(cmd *cobra.Command) {
 
 	cmd.Flags().BoolVarP(&io.ForceCheckout, "force-checkout", "f", false,
 		"Optional - Forces checking out the source code from the given Git repo.")
+
+	cmd.Flags().BoolVarP(&io.Verbose, "verbose", "v", false,
+		"Optional - Prints all logs and errors in console.")
 }
