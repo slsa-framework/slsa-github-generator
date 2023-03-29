@@ -13,7 +13,6 @@
     "format": "prettier --write 'src/**/*.ts'",
     "format-check": "prettier --check 'src/**/*.ts'",
     "lint": "eslint src/**/*.ts",
-    "package": "ncc build --source-map",
     "all": "npm ci && npm run format && npm run lint && npm run build",
     "test": "jest"
   },
