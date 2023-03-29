@@ -10,7 +10,7 @@
     "format-check": "prettier --check '**/*.ts'",
     "package": "ncc build --source-map",
     "lint": "eslint --max-warnings 0 src/**/*.ts",
-    "all": "npm ci && npm run format && npm run lint && npm run build && npm run package",
+    "all": "npm ci && npm run format && npm run lint && npm run build && npm run package"
   },
   "keywords": [],
   "author": "",
