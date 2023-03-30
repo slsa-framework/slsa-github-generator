@@ -525,7 +525,7 @@ function createPredicate(rawTokenObj, toolURI, token) {
         // TODO(github.com/slsa-framework/slsa-github-generator/issues/1575): Redact sensitive information.
         if (rawTokenObj.github.event_path) {
             // NOTE: event_path has been validated as the same as env.GITHUB_EVENT_PATH
-            const ghEvent = JSON.parse(tscommon.safeReadFileSync(rawTokenObj.github.event_path).toString());
+            const ghEvent = JSON.parse(tscommon.safeReadGitHubEventFileSync().toString());
             predicate.buildDefinition.systemParameters.GITHUB_EVENT_PAYLOAD = ghEvent;
         }
         return predicate;
