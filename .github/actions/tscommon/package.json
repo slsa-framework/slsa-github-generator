@@ -1,0 +1,36 @@
+{
+  "name": "tscommon",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Library for common utilities for TS Actions.",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "/dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "format": "prettier --write 'src/**/*.ts'",
+    "format-check": "prettier --check 'src/**/*.ts'",
+    "lint": "eslint src/**/*.ts",
+    "package": "rm -rf *.tgz && npm pack",
+    "all": "npm ci && npm run format && npm run lint && npm run build",
+    "test": "jest"
+  },
+  "keywords": [
+    "file",
+    "node"
+  ],
+  "devDependencies": {
+    "@types/jest": "^29.2.4",
+    "@types/node": "^18.15.3",
+    "@typescript-eslint/eslint-plugin": "5.55.0",
+    "@typescript-eslint/parser": "5.55.0",
+    "@vercel/ncc": "0.36.1",
+    "eslint": "8.36.0",
+    "eslint-plugin-github": "4.6.1",
+    "prettier": "2.8.4",
+    "ts-jest": "^29.0.3",
+    "typescript": "^4.9.3"
+  }
+}

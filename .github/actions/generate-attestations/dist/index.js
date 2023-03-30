@@ -35,8 +35,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.writeAttestations = exports.createStatement = void 0;
 const types = __importStar(__nccwpck_require__(905));
-const fs_1 = __importDefault(__nccwpck_require__(147));
 const path_1 = __importDefault(__nccwpck_require__(17));
+const tscommon = __importStar(__nccwpck_require__(634));
 // Maximum number of attestations to be written.
 const MAX_ATTESTATION_COUNT = 50;
 function createStatement(subjects, type, predicate) {
@@ -50,7 +50,7 @@ function createStatement(subjects, type, predicate) {
 exports.createStatement = createStatement;
 function writeAttestations(layoutFile, predicateType, predicateFile) {
     // Read SLSA output layout file.
-    const buffer = fs_1.default.readFileSync(layoutFile);
+    const buffer = tscommon.safeReadFileSync(layoutFile);
     const layout = JSON.parse(buffer.toString());
     if (layout.version !== 1) {
         throw Error(`SLSA outputs layout invalid version: ${layout.version}`);
@@ -60,7 +60,7 @@ function writeAttestations(layoutFile, predicateType, predicateFile) {
         throw Error(`SLSA outputs layout had too many attestations: ${count}`);
     }
     // Read predicate
-    const predicateBuffer = fs_1.default.readFileSync(predicateFile);
+    const predicateBuffer = tscommon.safeReadFileSync(predicateFile);
     const predicateJson = JSON.parse(predicateBuffer.toString());
     // TODO(https://github.com/slsa-framework/slsa-github-generator/issues/1422): Add other predicate validations.
     // Iterate through SLSA output layout and create attestations
@@ -130,10 +130,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.run = void 0;
 const core = __importStar(__nccwpck_require__(186));
-const fs_1 = __importDefault(__nccwpck_require__(147));
-const path_1 = __importDefault(__nccwpck_require__(17));
 const attestation_1 = __nccwpck_require__(420);
-const utils_1 = __nccwpck_require__(918);
+const path_1 = __importDefault(__nccwpck_require__(17));
+const tscommon = __importStar(__nccwpck_require__(634));
 function run() {
     try {
         /*
@@ -145,30 +144,23 @@ function run() {
           GITHUB_WORKSPACE=$PWD \
           nodejs ./dist/index.js
         */
-        const wd = process.env[`GITHUB_WORKSPACE`] || "";
         // SLSA subjects layout file.
         const slsaOutputs = core.getInput("slsa-layout-file");
-        const safeSlsaOutputs = (0, utils_1.resolvePathInput)(slsaOutputs, wd);
-        core.debug(`Using SLSA output file at ${safeSlsaOutputs}!`);
+        core.debug(`Using SLSA output file at ${slsaOutputs}!`);
         // Predicate.
         const predicateFile = core.getInput("predicate-file");
-        const safePredicateFile = (0, utils_1.resolvePathInput)(predicateFile, wd);
-        core.debug(`Inputs: Predicate file ${safePredicateFile}!`);
+        core.debug(`Inputs: Predicate file ${predicateFile}!`);
         // Predicate type
         const predicateType = core.getInput("predicate-type");
         core.debug(`Inputs: Predicate type ${predicateType}!`);
         // Attach subjects and generate attestation files
         const outputFolder = core.getInput("output-folder");
-        const attestations = (0, attestation_1.writeAttestations)(safeSlsaOutputs, predicateType, safePredicateFile);
+        const attestations = (0, attestation_1.writeAttestations)(slsaOutputs, predicateType, predicateFile);
         // Write attestations
-        fs_1.default.mkdirSync(outputFolder, { recursive: true });
+        tscommon.safeMkdirSync(outputFolder, { recursive: true });
         for (const att in attestations) {
             const outputFile = path_1.default.join(outputFolder, att);
-            const safeOutput = (0, utils_1.resolvePathInput)(outputFile, wd);
-            fs_1.default.writeFileSync(safeOutput, attestations[att], {
-                flag: "ax",
-                mode: 0o600,
-            });
+            tscommon.safeWriteFileSync(outputFile, attestations[att]);
         }
     }
     catch (error) {
@@ -182,30 +174,6 @@ function run() {
 }
 exports.run = run;
 run();
-
-
-/***/ }),
-
-/***/ 918:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.resolvePathInput = void 0;
-const path_1 = __importDefault(__nccwpck_require__(17));
-// Detect directory traversal for input file.
-function resolvePathInput(input, wd) {
-    const safeJoin = path_1.default.resolve(path_1.default.join(wd, input));
-    if (!(safeJoin + path_1.default.sep).startsWith(wd + path_1.default.sep)) {
-        throw Error(`unsafe path ${safeJoin}`);
-    }
-    return safeJoin;
-}
-exports.resolvePathInput = resolvePathInput;
 
 
 /***/ }),
@@ -1971,6 +1939,145 @@ exports.checkBypass = checkBypass;
 
 /***/ }),
 
+/***/ 484:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.safePromises_stat = exports.safePromises_readdir = exports.safeExistsSync = exports.rmdirSync = exports.safeUnlinkSync = exports.safeReadFileSync = exports.safeReadGitHubEventFileSync = exports.safeMkdirSync = exports.safeWriteFileSync = exports.resolvePathInput = exports.getGitHubWorkspace = void 0;
+const fs_1 = __importDefault(__nccwpck_require__(147));
+const path_1 = __importDefault(__nccwpck_require__(17));
+const process_1 = __importDefault(__nccwpck_require__(282));
+// This function is for unit tests.
+// We need to set the working directory to the tscommon/ directory
+// instead of the GITHUB_WORKSPACE.
+function getGitHubWorkspace() {
+    const wdt = process_1.default.env["UNIT_TESTS_WD"] || "";
+    if (wdt) {
+        return wdt;
+    }
+    return process_1.default.env["GITHUB_WORKSPACE"] || "";
+}
+exports.getGitHubWorkspace = getGitHubWorkspace;
+// Detect directory traversal for input file.
+// This function is exported for unit tests only.
+function resolvePathInput(input) {
+    const wd = getGitHubWorkspace();
+    const resolvedInput = path_1.default.resolve(input);
+    if ((resolvedInput + path_1.default.sep).startsWith(wd + path_1.default.sep)) {
+        return resolvedInput;
+    }
+    throw Error(`unsafe path ${resolvedInput}`);
+}
+exports.resolvePathInput = resolvePathInput;
+// Safe write function.
+function safeWriteFileSync(outputFn, data) {
+    const safeOutputFn = resolvePathInput(outputFn);
+    // WARNING: if the call fails, the type of the error is not 'Error'.
+    fs_1.default.writeFileSync(safeOutputFn, data, {
+        flag: "wx",
+        mode: 0o600,
+    });
+}
+exports.safeWriteFileSync = safeWriteFileSync;
+// Safe mkdir function.
+function safeMkdirSync(outputFn, options) {
+    const safeOutputFn = resolvePathInput(outputFn);
+    fs_1.default.mkdirSync(safeOutputFn, options);
+}
+exports.safeMkdirSync = safeMkdirSync;
+// Read file defined by the GitHub context,
+// even if they are outside the workspace.
+function safeReadGitHubEventFileSync() {
+    const eventFile = process_1.default.env.GITHUB_EVENT_PATH || "";
+    if (!eventFile) {
+        throw Error("env GITHUB_EVENT_PATH is empty");
+    }
+    return fs_1.default.readFileSync(eventFile);
+}
+exports.safeReadGitHubEventFileSync = safeReadGitHubEventFileSync;
+// Safe read file function.
+function safeReadFileSync(inputFn) {
+    const safeInputFn = resolvePathInput(inputFn);
+    return fs_1.default.readFileSync(safeInputFn);
+}
+exports.safeReadFileSync = safeReadFileSync;
+// Safe unlink function.
+function safeUnlinkSync(inputFn) {
+    const safeInputFn = resolvePathInput(inputFn);
+    return fs_1.default.unlinkSync(safeInputFn);
+}
+exports.safeUnlinkSync = safeUnlinkSync;
+// Safe remove directory function.
+function rmdirSync(dir, options) {
+    const safeDir = resolvePathInput(dir);
+    return fs_1.default.rmdirSync(safeDir, options);
+}
+exports.rmdirSync = rmdirSync;
+// Safe exist function.
+function safeExistsSync(inputFn) {
+    const safeInputFn = resolvePathInput(inputFn);
+    return fs_1.default.existsSync(safeInputFn);
+}
+exports.safeExistsSync = safeExistsSync;
+// Safe readdir function.
+function safePromises_readdir(inputFn) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const safeInputFn = resolvePathInput(inputFn);
+        return fs_1.default.promises.readdir(safeInputFn);
+    });
+}
+exports.safePromises_readdir = safePromises_readdir;
+// Safe stat function.
+function safePromises_stat(inputFn) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const safeInputFn = resolvePathInput(inputFn);
+        return fs_1.default.promises.stat(safeInputFn);
+    });
+}
+exports.safePromises_stat = safePromises_stat;
+
+
+/***/ }),
+
+/***/ 634:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __exportStar = (this && this.__exportStar) || function(m, exports) {
+    for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+__exportStar(__nccwpck_require__(484), exports);
+
+
+/***/ }),
+
 /***/ 294:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
@@ -2966,6 +3073,14 @@ module.exports = require("os");
 
 "use strict";
 module.exports = require("path");
+
+/***/ }),
+
+/***/ 282:
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("process");
 
 /***/ }),
 

@@ -12,7 +12,7 @@ limitations under the License.
 */
 
 import * as github from "@actions/github";
-import * as fs from "fs";
+import * as tscommon from "tscommon";
 
 import { rawTokenInterface } from "./types";
 import { createURI, getWorkflowPath } from "./utils";
@@ -118,7 +118,7 @@ export async function createPredicate(
   if (rawTokenObj.github.event_path) {
     // NOTE: event_path has been validated as the same as env.GITHUB_EVENT_PATH
     const ghEvent = JSON.parse(
-      fs.readFileSync(rawTokenObj.github.event_path).toString()
+      tscommon.safeReadFileSync(rawTokenObj.github.event_path).toString()
     );
     predicate.buildDefinition.systemParameters.GITHUB_EVENT_PAYLOAD = ghEvent;
   }

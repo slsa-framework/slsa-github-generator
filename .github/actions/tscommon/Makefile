@@ -1,5 +1,6 @@
 SHELL := /bin/bash
 ACTION_NAME = $(shell basename "$$(pwd)")
+export UNIT_TESTS_WD := $(shell echo "$$(pwd)")
 
 .PHONY: help
 help: ## Shows all targets and help from the Makefile (this message).
@@ -27,7 +28,6 @@ action: node_modules/.installed ## Builds the action.
 
 .PHONY: package
 package: action ## Builds the distribution package.
-	npm run package
 
 .PHONY: clean
 clean:
@@ -44,5 +44,5 @@ unit-test: node_modules/.installed ## Runs all unit tests.
 
 .PHONY: lint
 lint: node_modules/.installed ## Runs eslint.
+	npm run format-check
 	npm run lint
-

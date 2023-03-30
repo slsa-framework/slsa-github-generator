@@ -13,7 +13,6 @@ limitations under the License.
 
 import * as core from "@actions/core";
 import * as sigstore from "sigstore";
-import * as fs from "fs";
 import * as child_process from "child_process";
 import {
   validateField,
@@ -25,7 +24,7 @@ import {
 import { createPredicate as createPredicate_v1 } from "./predicate1";
 import { createPredicate as createPredicate_v02 } from "./predicate02";
 import { rawTokenInterface } from "./types";
-import { getEnv, resolvePathInput } from "./utils";
+import * as tscommon from "tscommon";
 
 async function run(): Promise<void> {
   try {
@@ -66,10 +65,7 @@ async function run(): Promise<void> {
       throw new Error("output-predicate must be supplied");
     }
 
-    const wd = getEnv("GITHUB_WORKSPACE");
-    const safeOutput = resolvePathInput(outputPredicate, wd);
-    // TODO(#1513): Use a common utility to harden file writes.
-    if (fs.existsSync(safeOutput)) {
+    if (tscommon.safeExistsSync(outputPredicate)) {
       throw new Error("output-predicate file already exists");
     }
 
@@ -181,12 +177,9 @@ async function run(): Promise<void> {
         );
       }
     }
-    fs.writeFileSync(safeOutput, predicateStr, {
-      flag: "ax",
-      mode: 0o600,
-    });
+    tscommon.safeWriteFileSync(outputPredicate, predicateStr);
     core.debug(`predicate: ${predicateStr}`);
-    core.debug(`Wrote predicate to ${safeOutput}`);
+    core.debug(`Wrote predicate to ${outputPredicate}`);
 
     core.setOutput("tool-repository", toolRepository);
     core.setOutput("tool-ref", toolRef);
@@ -229,7 +222,7 @@ function parseCertificateIdentity(
     "base64"
   );
   const clientCertPath = "client.cert";
-  fs.writeFileSync(clientCertPath, clientCertDer);
+  tscommon.safeWriteFileSync(clientCertPath, clientCertDer);
 
   // https://stackabuse.com/executing-shell-commands-with-node-js/
   // The SAN from the certificate looks like:
