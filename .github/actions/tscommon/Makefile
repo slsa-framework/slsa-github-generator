@@ -28,7 +28,6 @@ action: node_modules/.installed ## Builds the action.
 
 .PHONY: package
 package: action ## Builds the distribution package.
-	npm run package
 
 .PHONY: clean
 clean:
