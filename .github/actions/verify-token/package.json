@@ -27,7 +27,7 @@
     "@actions/github": "^5.1.1",
     "@octokit/webhooks-types": "^6.9.0",
     "sigstore": "^1.0.0",
-    "tscommon": "file:../tscommon/tscommon-0.0.0.tgz"
+    "tscommon": "file:../tscommon/dist/tscommon-0.0.0.tgz.0.tgz"
   },
   "devDependencies": {
     "@types/jest": "^29.4.0",
