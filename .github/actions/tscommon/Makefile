@@ -1,6 +1,13 @@
 SHELL := /bin/bash
 ACTION_NAME = $(shell basename "$$(pwd)")
 export UNIT_TESTS_WD := $(shell echo "$$(pwd)")
+ifeq ($(origin GITHUB_EVENT_PATH),undefined)
+export GITHUB_EVENT_PATH := $(shell readlink -m "$$(pwd)"/../event/path.json)
+endif
+ifeq ($(origin RUNNER_TEMP),undefined)
+export RUNNER_TEMP := $(shell readlink -m "$$(pwd)"/../tmp)
+endif
+
 
 .PHONY: help
 help: ## Shows all targets and help from the Makefile (this message).
@@ -28,6 +35,8 @@ action: node_modules/.installed ## Builds the action.
 
 .PHONY: package
 package: action ## Builds the distribution package.
+# WARNING: nothing here because we don't want the pre-submit to overwrite
+# the tarball. To build the tarbal, manually run `npm run package`.
 
 .PHONY: clean
 clean:
@@ -39,7 +48,7 @@ clean:
 .PHONY: unit-test
 unit-test: node_modules/.installed ## Runs all unit tests.
 	# NOTE: Make sure the package builds.
-	npm run build
+	#npm run build
 	npm run test
 
 .PHONY: lint

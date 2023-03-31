@@ -24,4 +24,11 @@ $ npm install --save ../tscommon/tscommon-0.0.0.tgz
 ```
 
 ### Changes
-Any changes to this code need to be reflected in deendent Actions as shown above.
+Any changes to this code need to be reflected in dependent Actions as shown above.
+Run the script:
+```bash
+$ cd tscommon
+$ npm run all
+$ npm run package
+$ bash update-actions.sh
+```
