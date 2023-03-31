@@ -21,7 +21,6 @@ export function resolvePathInput(input: string, write: Boolean): string {
 
   // Allowed files for read only.
   const allowedReadFiles: string[] = [process.env.GITHUB_EVENT_PATH || ""];
-
   for (const allowedReadFile of allowedReadFiles) {
     if (allowedReadFile === resolvedInput) {
       if (write) {
