@@ -92,7 +92,7 @@ function addGitHubParameters(predicate, currentRun) {
     // Put GitHub event payload into systemParameters.
     // TODO(github.com/slsa-framework/slsa-github-generator/issues/1575): Redact sensitive information.
     if (env.GITHUB_EVENT_PATH) {
-        const ghEvent = JSON.parse(tscommon.safeReadGitHubEventFileSync().toString());
+        const ghEvent = JSON.parse(tscommon.safeReadFileSync(env.GITHUB_EVENT_PATH || "").toString());
         systemParams.GITHUB_EVENT_PAYLOAD = ghEvent;
     }
     predicate.buildDefinition.systemParameters = systemParams;
@@ -6975,7 +6975,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.safePromises_stat = exports.safePromises_readdir = exports.safeExistsSync = exports.rmdirSync = exports.safeUnlinkSync = exports.safeReadFileSync = exports.safeReadGitHubEventFileSync = exports.safeMkdirSync = exports.safeWriteFileSync = exports.resolvePathInput = exports.getGitHubWorkspace = void 0;
+exports.safePromises_stat = exports.safePromises_readdir = exports.safeExistsSync = exports.safeRmdirSync = exports.safeUnlinkSync = exports.safeReadFileSync = exports.safeMkdirSync = exports.safeWriteFileSync = exports.resolvePathInput = exports.getGitHubWorkspace = void 0;
 const fs_1 = __importDefault(__nccwpck_require__(7147));
 const path_1 = __importDefault(__nccwpck_require__(1017));
 const process_1 = __importDefault(__nccwpck_require__(7282));
@@ -6992,18 +6992,34 @@ function getGitHubWorkspace() {
 exports.getGitHubWorkspace = getGitHubWorkspace;
 // Detect directory traversal for input file.
 // This function is exported for unit tests only.
-function resolvePathInput(input) {
+function resolvePathInput(input, write) {
     const wd = getGitHubWorkspace();
     const resolvedInput = path_1.default.resolve(input);
-    if ((resolvedInput + path_1.default.sep).startsWith(wd + path_1.default.sep)) {
-        return resolvedInput;
+    // Allowed files for read only.
+    const allowedReadFiles = [process_1.default.env.GITHUB_EVENT_PATH || ""];
+    for (const allowedReadFile of allowedReadFiles) {
+        if (allowedReadFile === resolvedInput) {
+            if (write) {
+                throw Error(`unsafe write path ${resolvedInput}`);
+            }
+            return resolvedInput;
+        }
+    }
+    // Allowed directories for read and write.
+    const allowedDirs = [wd, "/tmp", process_1.default.env.RUNNER_TEMP || ""];
+    for (const allowedDir of allowedDirs) {
+        // NOTE: we call 'resolve' to normalize the directory name.
+        const resolvedAllowedDir = path_1.default.resolve(allowedDir);
+        if ((resolvedInput + path_1.default.sep).startsWith(resolvedAllowedDir + path_1.default.sep)) {
+            return resolvedInput;
+        }
     }
     throw Error(`unsafe path ${resolvedInput}`);
 }
 exports.resolvePathInput = resolvePathInput;
 // Safe write function.
 function safeWriteFileSync(outputFn, data) {
-    const safeOutputFn = resolvePathInput(outputFn);
+    const safeOutputFn = resolvePathInput(outputFn, true);
     // WARNING: if the call fails, the type of the error is not 'Error'.
     fs_1.default.writeFileSync(safeOutputFn, data, {
         flag: "wx",
@@ -7013,48 +7029,38 @@ function safeWriteFileSync(outputFn, data) {
 exports.safeWriteFileSync = safeWriteFileSync;
 // Safe mkdir function.
 function safeMkdirSync(outputFn, options) {
-    const safeOutputFn = resolvePathInput(outputFn);
+    const safeOutputFn = resolvePathInput(outputFn, true);
     fs_1.default.mkdirSync(safeOutputFn, options);
 }
 exports.safeMkdirSync = safeMkdirSync;
-// Read file defined by the GitHub context,
-// even if they are outside the workspace.
-function safeReadGitHubEventFileSync() {
-    const eventFile = process_1.default.env.GITHUB_EVENT_PATH || "";
-    if (!eventFile) {
-        throw Error("env GITHUB_EVENT_PATH is empty");
-    }
-    return fs_1.default.readFileSync(eventFile);
-}
-exports.safeReadGitHubEventFileSync = safeReadGitHubEventFileSync;
 // Safe read file function.
 function safeReadFileSync(inputFn) {
-    const safeInputFn = resolvePathInput(inputFn);
+    const safeInputFn = resolvePathInput(inputFn, false);
     return fs_1.default.readFileSync(safeInputFn);
 }
 exports.safeReadFileSync = safeReadFileSync;
 // Safe unlink function.
 function safeUnlinkSync(inputFn) {
-    const safeInputFn = resolvePathInput(inputFn);
+    const safeInputFn = resolvePathInput(inputFn, true);
     return fs_1.default.unlinkSync(safeInputFn);
 }
 exports.safeUnlinkSync = safeUnlinkSync;
 // Safe remove directory function.
-function rmdirSync(dir, options) {
-    const safeDir = resolvePathInput(dir);
+function safeRmdirSync(dir, options) {
+    const safeDir = resolvePathInput(dir, true);
     return fs_1.default.rmdirSync(safeDir, options);
 }
-exports.rmdirSync = rmdirSync;
+exports.safeRmdirSync = safeRmdirSync;
 // Safe exist function.
 function safeExistsSync(inputFn) {
-    const safeInputFn = resolvePathInput(inputFn);
+    const safeInputFn = resolvePathInput(inputFn, false);
     return fs_1.default.existsSync(safeInputFn);
 }
 exports.safeExistsSync = safeExistsSync;
 // Safe readdir function.
 function safePromises_readdir(inputFn) {
     return __awaiter(this, void 0, void 0, function* () {
-        const safeInputFn = resolvePathInput(inputFn);
+        const safeInputFn = resolvePathInput(inputFn, false);
         return fs_1.default.promises.readdir(safeInputFn);
     });
 }
@@ -7062,7 +7068,7 @@ exports.safePromises_readdir = safePromises_readdir;
 // Safe stat function.
 function safePromises_stat(inputFn) {
     return __awaiter(this, void 0, void 0, function* () {
-        const safeInputFn = resolvePathInput(inputFn);
+        const safeInputFn = resolvePathInput(inputFn, true);
         return fs_1.default.promises.stat(safeInputFn);
     });
 }
