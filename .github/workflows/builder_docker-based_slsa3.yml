@@ -573,12 +573,13 @@ jobs:
           name: "${{ needs.build.outputs.build-outputs-name }}"
           path: "${{ needs.build.outputs.build-outputs-name }}"
 
+      # TODO(https://github.com/slsa-framework/slsa-github-generator/issues/1655): Use the
+      # secure-folder-download action.
       - name: Download provenance
-        uses: ./__BUILDER_CHECKOUT_DIR__/.github/actions/secure-download-artifact
+        uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
         with:
           name: "${{ needs.provenance.outputs.provenance-name }}"
           path: "${{ needs.provenance.outputs.provenance-name }}"
-          sha256: "${{ needs.provenance.outputs.provenance-sha256 }}"
 
       - name: Upload provenance new tag
         uses: softprops/action-gh-release@de2c0eb89ae2a093876385947365aca7b0e5f844 # v0.1.15
