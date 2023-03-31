@@ -118,7 +118,7 @@ export async function createPredicate(
   if (rawTokenObj.github.event_path) {
     // NOTE: event_path has been validated as the same as env.GITHUB_EVENT_PATH
     const ghEvent = JSON.parse(
-      tscommon.safeReadGitHubEventFileSync().toString()
+      tscommon.safeReadFileSync(rawTokenObj.github.event_path).toString()
     );
     predicate.buildDefinition.systemParameters.GITHUB_EVENT_PAYLOAD = ghEvent;
   }
