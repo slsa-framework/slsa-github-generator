@@ -1,21 +1,12 @@
 import * as core from "@actions/core";
-import * as fs from "fs";
 import { sigstore } from "sigstore";
 import * as path from "path";
+import * as tscommon from "tscommon";
 
 const signOptions = {
   oidcClientID: "sigstore",
   oidcIssuer: "https://oauth2.sigstore.dev/auth",
 };
-
-// Detect directory traversal for input file.
-function resolvePathInput(input: string, wd: string): string {
-  const safeJoin = path.resolve(path.join(wd, input));
-  if (!(safeJoin + path.sep).startsWith(wd + path.sep)) {
-    throw Error(`unsafe path ${safeJoin}`);
-  }
-  return safeJoin;
-}
 
 async function run(): Promise<void> {
   try {
@@ -25,40 +16,30 @@ async function run(): Promise<void> {
         GITHUB_WORKSPACE="$(pwd)" \
         nodejs ./dist/index.js
     */
-    const wd = process.env.GITHUB_WORKSPACE;
-    if (!wd) {
-      core.setFailed("No repository detected.");
-      return;
-    }
 
     // Attestations
     const attestationFolder = core.getInput("attestations");
-    const safeAttestationFolder = resolvePathInput(attestationFolder, wd);
     const payloadType = core.getInput("payload-type");
 
     // Output folder
     const outputFolder = core.getInput("output-folder");
-    const safeOutputFolder = resolvePathInput(outputFolder, wd);
-    fs.mkdirSync(safeOutputFolder, { recursive: true });
+    tscommon.safeMkdirSync(outputFolder, { recursive: true });
 
-    const files = await fs.promises.readdir(safeAttestationFolder);
+    const files = await tscommon.safePromises_readdir(attestationFolder);
     for (const file of files) {
-      const fpath = resolvePathInput(path.join(attestationFolder, file), wd);
-      const stat = await fs.promises.stat(fpath);
+      const fpath = path.join(attestationFolder, file);
+      const stat = await tscommon.safePromises_stat(fpath);
       if (stat.isFile()) {
         core.debug(`Signing ${fpath}...`);
-        const buffer = fs.readFileSync(fpath);
+        const buffer = tscommon.safeReadFileSync(fpath);
         const bundle = await sigstore.attest(buffer, payloadType, signOptions);
         const bundleStr = JSON.stringify(bundle);
-        // We detect path traversal for safeOutputFolder, so this should be safe.
         const outputPath = path.join(
-          safeOutputFolder,
+          outputFolder,
           `${path.basename(fpath)}.sigstore`
         );
-        fs.writeFileSync(outputPath, bundleStr, {
-          flag: "ax",
-          mode: 0o600,
-        });
+        // We detect path traversal for outputPath in safeWriteFileSync.
+        tscommon.safeWriteFileSync(outputPath, bundleStr);
         core.debug(`Wrote signed attestation to '${outputPath}.`);
       }
     }

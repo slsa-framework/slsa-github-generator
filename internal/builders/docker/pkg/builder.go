@@ -153,7 +153,7 @@ func (b *Builder) SetUpBuildState() (*DockerBuild, error) {
 
 	// 3. Check that the ArtifactPath pattern does not match any existing files,
 	// so that we don't accidentally generate provenances for the wrong files.
-	if err := checkExistingFiles(bc.ArtifactPath); err != nil {
+	if err := CheckExistingFiles(bc.ArtifactPath); err != nil {
 		return nil, err
 	}
 
@@ -217,7 +217,7 @@ func runDockerRun(db *DockerBuild) error {
 		return fmt.Errorf("couldn't start the 'git checkout' command: %v", err)
 	}
 
-	files, err := saveToTempFile(stdout, stderr)
+	files, err := saveToTempFile(db.config.Verbose, stdout, stderr)
 	if err != nil {
 		return fmt.Errorf("cannot save logs and errs to file: %v", err)
 	}
@@ -240,6 +240,7 @@ type GitClient struct {
 	logFiles      []string
 	errFiles      []string
 	forceCheckout bool
+	verbose       bool
 	depth         int
 }
 
@@ -282,6 +283,7 @@ func newGitClient(config *DockerBuildConfig, depth int) (*GitClient, error) {
 		forceCheckout: config.ForceCheckout,
 		depth:         depth,
 		checkoutInfo:  &RepoCheckoutInfo{},
+		verbose:       config.Verbose,
 	}, nil
 }
 
@@ -423,7 +425,7 @@ func (c *GitClient) cloneGitRepo() error {
 		return fmt.Errorf("couldn't start the 'git checkout' command: %v", err)
 	}
 
-	files, err := saveToTempFile(stdout, stderr)
+	files, err := saveToTempFile(c.verbose, stdout, stderr)
 	if err != nil {
 		return fmt.Errorf("cannot save logs and errs to file: %v", err)
 	}
@@ -456,7 +458,7 @@ func (c *GitClient) checkoutGitCommit() error {
 		return fmt.Errorf("couldn't start the 'git checkout' command: %v", err)
 	}
 
-	files, err := saveToTempFile(stdout, stderr)
+	files, err := saveToTempFile(c.verbose, stdout, stderr)
 	if err != nil {
 		return fmt.Errorf("cannot save logs and errs to file: %v", err)
 	}
@@ -477,13 +479,21 @@ func (c *GitClient) checkoutGitCommit() error {
 }
 
 // saveToTempFile creates a tempfile in `/tmp` and writes the content of the
-// given reader to that file.
-func saveToTempFile(readers ...io.Reader) ([]string, error) {
+// given readers to that file.
+func saveToTempFile(verbose bool, readers ...io.Reader) ([]string, error) {
 	var files []string
 	for _, reader := range readers {
 		bytes, err := io.ReadAll(reader)
 		if err != nil {
 			return files, err
+		}
+
+		if verbose {
+			if len(bytes) > 0 {
+				fmt.Print("\n\n>>>>>>>>>>>>>> output from command <<<<<<<<<<<<<<\n")
+				fmt.Printf("%s", bytes)
+				fmt.Print("=================================================\n\n\n")
+			}
 		}
 
 		tmpfile, err := os.CreateTemp("", "log-*.txt")
@@ -501,8 +511,8 @@ func saveToTempFile(readers ...io.Reader) ([]string, error) {
 	return files, nil
 }
 
-// Checks if any files match the given pattern, and returns an error if so.
-func checkExistingFiles(pattern string) error {
+// CheckExistingFiles checks if any files match the given pattern, and returns an error if so.
+func CheckExistingFiles(pattern string) error {
 	matches, err := filepath.Glob(pattern)
 	// The only possible error is ErrBadPattern.
 	if err != nil {
@@ -660,5 +670,6 @@ func (p *ProvenanceStatementSLSA1) ToDockerBuildConfig(forceCheckout bool) (*Doc
 		BuilderImage:    *di,
 		BuildConfigPath: ep.ConfigPath,
 		ForceCheckout:   forceCheckout,
+		Verbose:         false,
 	}, nil
 }

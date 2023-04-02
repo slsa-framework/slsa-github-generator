@@ -193,4 +193,40 @@ describe("detectWorkflowFromContext", () => {
       detect.detectWorkflowFromContext("unused", "unused")
     ).rejects.toThrow();
   });
+
+  it("success - PR on slsa-github-generator repo", async () => {
+    octokit.rest.actions.getWorkflowRun.mockReturnValue(
+      Promise.resolve({
+        data: {
+          event: "pull_request",
+          head_sha: "088d04f305bd32ad4594d82e8c1571507acf03d5",
+          path: ".github/workflows/pre-submit.e2e.docker-based.default.yml",
+          referenced_workflows: [
+            {
+              path: "slsa-framework/slsa-github-generator/.github/workflows/builder_docker-based_slsa3.yml@9929152897cce5842f58221572911e18dd937808",
+              sha: "9929152897cce5842f58221572911e18dd937808",
+              ref: "refs/pull/3669/merge",
+            },
+          ],
+          repository: {
+            name: "slsa-github-generator",
+            full_name: "slsa-framework/slsa-github-generator",
+          },
+          head_repository: {
+            name: "slsa-github-generator",
+            full_name: "asraa/slsa-github-generator",
+          },
+        },
+      })
+    );
+    const [repo, ref, workflow] = await detect.detectWorkflowFromContext(
+      "unused",
+      "unused"
+    );
+    expect(repo).toBe("asraa/slsa-github-generator");
+    expect(ref).toBe("088d04f305bd32ad4594d82e8c1571507acf03d5");
+    expect(workflow).toBe(
+      ".github/workflows/pre-submit.e2e.docker-based.default.yml"
+    );
+  });
 });

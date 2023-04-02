@@ -5,6 +5,12 @@ permissions: {}
 on:
   workflow_call:
     inputs:
+      access:
+        description: "The package access level. Defaults to 'restricted' for scoped packages, 'public' for unscoped packages"
+        required: false
+        type: string
+        default: ""
+
       directory:
         description: "Sub-directory where package.json is located. Must be under the workspace."
         required: false
@@ -21,11 +27,6 @@ on:
         required: false
         type: string
 
-      run-scripts:
-        description: "An ordered list of scripts from the package.json file to run (comma separated). Example value: 'script1, script2'"
-        required: false
-        type: string
-
       # NOTE: the additional inputs below are to support additional
       # functionality of the workflow.
       rekor-log-public:
@@ -33,6 +34,22 @@ on:
         required: false
         type: boolean
         default: false
+
+      run-scripts:
+        description: "An ordered list of scripts from the package.json file to run (comma separated). Example value: 'script1, script2'"
+        required: false
+        type: string
+
+      dist-tag:
+        description: "The package dist-tag to attach. See `npm help dist-tag` for more information."
+        required: false
+        type: string
+        default: "latest"
+
+    secrets:
+      node-auth-token:
+        description: "The npm registry auth token used to publish the package."
+        required: true
 
 jobs:
   slsa-setup:
@@ -71,15 +88,30 @@ jobs:
       contents: write # For asset uploads. Optional
     runs-on: ubuntu-latest
     steps:
+      - name: Set up Node environment
+        uses: actions/setup-node@64ed1c7eab4cce3362f8c340dee64e5eaeef8f7c # v3.6.0
+        with:
+          node-version: ${{ inputs.node-version }}
+          node-version-file: ${{ inputs.node-version-file }}
+          registry-url: "https://registry.npmjs.org"
+
+      # NOTE: The attestation name has a rng value in it's name so we don't need to check for file collisions.
       - name: Download attestations
+        id: attestation-download
         uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
         with:
           name: ${{ needs.slsa-run.outputs.attestations-download-name }}
 
-      - name: Download artifact
-        uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
+      # NOTE: secure-download-artifact ensures that the downloaded file doesn't overwrite an existing file.
+      - name: Download package
+        id: package-download
+        uses: slsa-framework/slsa-github-generator/.github/actions/secure-download-artifact@main
         with:
-          name: "package.tgz"
+          name: ${{ fromJSON(needs.slsa-run.outputs.build-artifacts-outputs).package-download-name }}
+          path: ${{ fromJSON(needs.slsa-run.outputs.build-artifacts-outputs).package-filename }}
+          # NOTE: The sha256 here comes from the build action.
+          sha256: ${{ fromJSON(needs.slsa-run.outputs.build-artifacts-outputs).package-sha256 }}
+          set-executable: false
 
       # TODO(#1680): verify the attestation before upload.
       # - name: Verify attestations
@@ -91,6 +123,89 @@ jobs:
       # TODO(#888): Publish to GitHub release.
 
       # TODO(#1669): Publish to npm. Note that we need to upload our own bundle to npm.
-      # - name: Publish to npm registry
-      #   run: |
-      #     npm publish # ...
+      # TODO(#1669): Use mainline version of npm
+      - name: Clone npm fork
+        id: clone-fork
+        env:
+          NPM_GIT_SHA: bc657b76f09cbdd5801e360633898b14a4bbc5e8
+        run: |
+          set -euo pipefail
+
+          # Clone npm fork.
+          cd "$(dirname "$(which node)")"
+          mkdir -p node_modules/npm
+          cd node_modules/npm
+          git init
+          git remote add origin https://github.com/ianlewis/cli.git
+
+          # Fetch and checkout oob-provenance branch at pinned digest.
+          git fetch --depth 1 origin "${NPM_GIT_SHA}"
+          git checkout "${NPM_GIT_SHA}"
+
+          # Install dependencies
+          ./bin/npm ci
+
+      # TODO(#1669): Use mainline version of npm
+      # TODO(#1669): Generalize directory path checking. The same logic is needed in internal action.
+      - name: Publish the package
+        id: publish
+        env:
+          UNTRUSTED_ACCESS: ${{ inputs.access }}
+          NODE_AUTH_TOKEN: ${{ secrets.node-auth-token }}
+          ATTESTATION_DIR: ${{ steps.attestation-download.outputs.download-path }}
+          UNTRUSTED_ATTESTATION_NAME: ${{ fromJSON(needs.slsa-run.outputs.build-artifacts-outputs).attestation-name }}
+          UNTRUSTED_PACKAGE_FILENAME: ${{ fromJSON(needs.slsa-run.outputs.build-artifacts-outputs).package-filename }}
+          UNTRUSTED_DIRECTORY: ${{ inputs.directory }}
+          UNTRUSTED_DIST_TAG: ${{ inputs.dist-tag }}
+        run: |
+          set -euo pipefail
+
+          github_workspace_realpath=$(realpath -e "${GITHUB_WORKSPACE}")
+          echo "GitHub workspace '${GITHUB_WORKSPACE}' resolved to '${github_workspace_realpath}'"
+
+          # Verify the attestation path.
+          untrusted_attestation_realpath=$(realpath -e "${ATTESTATION_DIR}/${UNTRUSTED_ATTESTATION_NAME}.sigstore")
+          echo "Attestation path resolved to '${untrusted_attestation_realpath}'"
+          echo "Checking directory '${untrusted_attestation_realpath}' is a sub-directory of '${github_workspace_realpath}'"
+          if [[ "${untrusted_attestation_realpath}" != "${github_workspace_realpath}" ]] && [[ ${untrusted_attestation_realpath} != ${github_workspace_realpath}/* ]]; then
+              >&2 echo "${untrusted_attestation_realpath} not a sub-directory of ${GITHUB_WORKSPACE}"
+              exit 1
+          fi
+          # Directory was validated. Explicitly trust it.
+          attestation_realpath="${untrusted_attestation_realpath}"
+
+          # Verify the package path.
+          untrusted_package_realpath=$(realpath -e "${UNTRUSTED_PACKAGE_FILENAME}")
+          echo "Package path resolved to '${untrusted_package_realpath}'"
+          echo "Checking directory '${untrusted_package_realpath}' is a sub-directory of '${github_workspace_realpath}'"
+          if [[ "${untrusted_package_realpath}" != "${github_workspace_realpath}" ]] && [[ ${untrusted_package_realpath} != ${github_workspace_realpath}/* ]]; then
+              >&2 echo "${untrusted_package_realpath} not a sub-directory of ${GITHUB_WORKSPACE}"
+              exit 1
+          fi
+          # Directory was validated. Explicitly trust it.
+          package_realpath="${untrusted_package_realpath}"
+
+          # Run npm publish using npm fork. We are temporarily using a fork so
+          # that we can specify the provenance bundle.
+          publish_flags="--provenance ${attestation_realpath}"
+          if [[ "${UNTRUSTED_ACCESS}" != "" ]]; then
+            # We need to validate the input so that it doesn't inject commands or other arguments.
+            # We will let npm validate the input but we will just make sure it's a single alphabetic string.
+            if ! [[ "${UNTRUSTED_ACCESS}" =~ [a-zA-Z]+ ]]; then
+              >&2 echo "Access should be a string that matches [a-zA-Z]+"
+              exit 1
+            fi
+            publish_flags="${publish_flags} --access=${UNTRUSTED_ACCESS}"
+          fi
+
+          if [[ "${UNTRUSTED_DIST_TAG}" != "" ]]; then
+            # We need to validate the input so that it doesn't try to inject or other arguments.
+            if ! [[ "${UNTRUSTED_DIST_TAG}" =~ [a-zA-Z0-9]+ ]]; then
+              >&2 echo "Tag should be a string that matches [a-zA-Z0-9]+"
+              exit 1
+            fi
+            publish_flags="${publish_flags} --tag=${UNTRUSTED_DIST_TAG}"
+          fi
+
+          # NOTE: We don't quote $publish_flags because we are using word splitting to add the flags.
+          "$(dirname "$(which node)")"/node_modules/npm/bin/npm publish "${package_realpath}" ${publish_flags}

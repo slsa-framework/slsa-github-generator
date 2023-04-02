@@ -21,5 +21,31 @@ jobs:
     with:
       builder-image: "bash"
       builder-digest: "sha256:9e2ba52487d945504d250de186cb4fe2e3ba023ed2921dd6ac8b97ed43e76af9"
-      config-path: "internal/builders/docker/testdata/wildcard-config.toml"
+      config-path: "internal/builders/docker/testdata/config.toml"
       compile-builder: true
+
+  verify:
+    needs: build-docker-based
+    runs-on: ubuntu-latest
+    env:
+      HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+      GITHUB_HEAD_REPOSITORY: ${{ github.event.pull_request.head.repo.full_name }}
+    steps:
+      - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # v3.3.0
+      - uses: actions/download-artifact@e9ef242655d12993efdcda9058dee2db83a2cb9b
+        with:
+          name: ${{ needs.build-docker-based.outputs.build-outputs-name }}
+          path: outputs
+      - name: Get build artifact
+        id: build
+        run: |
+          name=$(find outputs/ -type f | head -1)
+          cp $name .
+          echo "name=$(basename $name)" >> $GITHUB_OUTPUT
+      - uses: actions/download-artifact@e9ef242655d12993efdcda9058dee2db83a2cb9b
+        with:
+          name: ${{ needs.build-docker-based.outputs.attestations-download-name }}
+      - env:
+          BINARY: ${{ steps.build.outputs.name }}
+          PROVENANCE: ${{ steps.build.outputs.name }}.intoto
+        run: ./.github/workflows/scripts/pre-submit.e2e.docker-based.default.sh

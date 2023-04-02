@@ -172,6 +172,9 @@ Inputs:
 | `registry-username`              | Username to log in the container registry.                                                                                                                                                                 |
 | `gcp-workload-identity-provider` | The full identifier of the Workload Identity Provider, including the project number, pool name, and provider name. If provided, this must be the full identifier which includes all parts:<br>`projects/123456789/locations/global/workloadIdentityPools/my-pool/providers/my-provider` |
 | `gcp-service-account`            | Email address or unique identifier of the Google Cloud service account for which to generate credentials. For example:<br>`my-service-account@my-project.iam.gserviceaccount.com`                                                                                                       |
+| `upload-assets`            |  Uploads the artifact and provenance to a GitHub release.<br>If the `upload-tag-name` was provided, then the assets are uploaded to the provided input tag. This can be used for workflow_dispatch events. Otherwise, if a new tag triggered the workflow, then the assets are uploaded to the triggering tag.           |
+| `upload-tag-name`            | If non-empty and `upload-assets` is set to true, the provenance is uploaded to the GitHub release identified by the tag name. If a workflow is run on a new tag and `upload-tag-name` is non-empty, the new tag is ignored and the value of `upload-tag-name` is used instead to upload the assets.              |
+| `prerelease`            | EIf true, GitHub Release is created as a pre-release.                                                                                                     |
 
 Secrets:
 
@@ -233,6 +236,8 @@ The `buildDefinition` contains the following fields:
 | `externalParameters.buildConfig.ArtifactPath` | `"dist/**"`                                               | The path describing the output artifacts to attest to and upload. |
 | `externalParameters.buildConfig.Command` | `"["npm", "run", "all"]"`                                               | The build command invoked in the container image to produce the output artifacts. |
 | `externalParameters.resolvedDependencies` | `slsa.ArtifactReference`                                               | An artifact reference specifying the binary used by the reusable workflow to build the artifact and generate the build definition. See the [CLI tool](#command-line-tool) below. |
+
+The [CLI tool](#command-line-tool) described in `externalParameters.resolvedDependencies` contains the `uri` of the source that was used to build the artifact (from this GitHub repository). The `digest` referes to the cryptographic digest of the built binary. Using this information, a verifier may download the source artifact from the GitHub releases inferred by the URI and verify its digest.
 
 ### Provenance Example
 
@@ -320,6 +325,10 @@ as an [in-toto](https://in-toto.io/) statement with a SLSA predicate.
   }
 }
 ```
+
+See
+[hello-transparent-release](https://github.com/project-oak/hello-transparent-release)
+for a more detailed description of how to use this workflow.
 
 ## Command line tool
 

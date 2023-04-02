@@ -46,7 +46,7 @@ Set up env variables:
 ```shell
 export GITHUB_USERNAME="laurentsimon"
 # This is the existing slsa-verifier version used by the builder. (https://github.com/slsa-framework/slsa-github-generator/blob/main/.github/actions/generate-builder/action.yml#L55)
-export VERIFIER_TAG="v2.0.1"
+export VERIFIER_TAG="v2.1.0"
 export VERIFIER_REPOSITORY="$GITHUB_USERNAME/slsa-verifier"
 # Release tag of the builder we want to release. Release Candidates end with "-rc.#"
 export BUILDER_TAG="v1.5.0-rc.0"
@@ -93,7 +93,7 @@ This will trigger the [release workflow](https://github.com/slsa-framework/slsa-
 Update version references with the following command:
 
 ```shell
-find .github/workflows/ -name '*.yaml' -o -name '*.yml' | xargs sed -i "s/uses: slsa-framework\/slsa-github-generator\/\.github\/actions\/\(.*\)@\(main\|v[0-9]\+\.[0-9]\+\.[0-9]\+\(-rc\.[0-9]\+\)\?\)/uses: slsa-framework\/slsa-github-generator\/.github\/actions\/\1@$BUILDER_TAG/"
+$ find .github/workflows/ .github/actions/ actions/ -name '*.yaml' -o -name '*.yml' | xargs sed -i "s/uses: slsa-framework\/slsa-github-generator\/\(.*\)@\(main\|v[0-9]\+\.[0-9]\+\.[0-9]\+\(-rc\.[0-9]\+\)\?\)/uses: slsa-framework\/slsa-github-generator\/\1@$BUILDER_TAG/"
 ```
 
 Send a PR with this update and add `#label:release ${BUILDER_TAG}` in the PR description.
@@ -372,7 +372,7 @@ This will trigger the [release workflow](https://github.com/slsa-framework/slsa-
 Update version references with the following command:
 
 ```shell
-find .github/workflows/ -name '*.yaml' -o -name '*.yml' | xargs sed -i "s/uses: slsa-framework\/slsa-github-generator\/\.github\/actions\/\(.*\)@\(main\|v[0-9]\+\.[0-9]\+\.[0-9]\+\(-rc\.[0-9]\+\)\?\)/uses: slsa-framework\/slsa-github-generator\/.github\/actions\/\1@$BUILDER_TAG/"
+$ find .github/workflows/ .github/actions/ actions/ -name '*.yaml' -o -name '*.yml' | xargs sed -i "s/uses: slsa-framework\/slsa-github-generator\/\(.*\)@\(main\|v[0-9]\+\.[0-9]\+\.[0-9]\+\(-rc\.[0-9]\+\)\?\)/uses: slsa-framework\/slsa-github-generator\/\1@$BUILDER_TAG/"
 ```
 
 Likewise, update documentation with the following command:
@@ -398,10 +398,10 @@ Re-run the [adversarial tests](#adversarial-tests) using the final `$BUILDER_TAG
 
 ### Reference Actions at main
 
-Send a PR to reference the internal Actions at `@main`. You can use:
+Send a PR to reference the Actions at `@main`. You can use:
 
 ```shell
-find .github/workflows/ -name '*.yaml' -o -name '*.yml' | xargs sed -i "s/uses: slsa-framework\/slsa-github-generator\/\.github\/actions\/\(.*\)@${BUILDER_TAG}/uses: slsa-framework\/slsa-github-generator\/.github\/actions\/\1@main/"
+$ find .github/workflows/ .github/actions/ actions/ -name '*.yaml' -o -name '*.yml' | xargs sed -i "s/uses: slsa-framework\/slsa-github-generator\/\(.*\)@${BUILDER_TAG}/uses: slsa-framework\/slsa-github-generator\/\1@main/"
 ```
 
 ### Update verifier

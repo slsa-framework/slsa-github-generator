@@ -1,8 +1,8 @@
-import * as fs from "fs";
 import * as process from "process";
 import * as types from "./predicate";
 import * as github from "@actions/github";
 import type { ApiWorkflowRun } from "./predicate";
+import * as tscommon from "tscommon";
 
 // getWorkflowRun retrieves the current WorkflowRun given the repository (owner/repo)
 // and run ID.
@@ -63,7 +63,7 @@ export function addGitHubParameters(
   // TODO(github.com/slsa-framework/slsa-github-generator/issues/1575): Redact sensitive information.
   if (env.GITHUB_EVENT_PATH) {
     const ghEvent = JSON.parse(
-      fs.readFileSync(env.GITHUB_EVENT_PATH).toString()
+      tscommon.safeReadFileSync(env.GITHUB_EVENT_PATH || "").toString()
     );
     systemParams.GITHUB_EVENT_PAYLOAD = ghEvent;
   }

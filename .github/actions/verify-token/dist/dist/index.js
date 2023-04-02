@@ -53,12 +53,11 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core = __importStar(__nccwpck_require__(2186));
 const sigstore = __importStar(__nccwpck_require__(9149));
-const fs = __importStar(__nccwpck_require__(7147));
 const child_process = __importStar(__nccwpck_require__(2081));
 const validate_1 = __nccwpck_require__(1997);
 const predicate1_1 = __nccwpck_require__(2338);
 const predicate02_1 = __nccwpck_require__(4816);
-const utils_1 = __nccwpck_require__(918);
+const tscommon = __importStar(__nccwpck_require__(6634));
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
@@ -96,10 +95,7 @@ function run() {
                 // detect if output predicate is null or empty string.
                 throw new Error("output-predicate must be supplied");
             }
-            const wd = (0, utils_1.getEnv)("GITHUB_WORKSPACE");
-            const safeOutput = (0, utils_1.resolvePathInput)(outputPredicate, wd);
-            // TODO(#1513): Use a common utility to harden file writes.
-            if (fs.existsSync(safeOutput)) {
+            if (tscommon.safeExistsSync(outputPredicate)) {
                 throw new Error("output-predicate file already exists");
             }
             // Log the inputs for troubleshooting.
@@ -168,12 +164,9 @@ function run() {
                     throw new Error(`Unsupported slsa-version: ${rawMaskedTokenObj.slsaVersion}`);
                 }
             }
-            fs.writeFileSync(safeOutput, predicateStr, {
-                flag: "ax",
-                mode: 0o600,
-            });
+            tscommon.safeWriteFileSync(outputPredicate, predicateStr);
             core.debug(`predicate: ${predicateStr}`);
-            core.debug(`Wrote predicate to ${safeOutput}`);
+            core.debug(`Wrote predicate to ${outputPredicate}`);
             core.setOutput("tool-repository", toolRepository);
             core.setOutput("tool-ref", toolRef);
             // NOTE: we output the token with unmasked inputs because the inputs
@@ -206,7 +199,7 @@ function parseCertificateIdentity(bundle) {
     // NOTE: the first certificate is the client certificate.
     const clientCertDer = Buffer.from(bundle.verificationMaterial.x509CertificateChain.certificates[0].rawBytes, "base64");
     const clientCertPath = "client.cert";
-    fs.writeFileSync(clientCertPath, clientCertDer);
+    tscommon.safeWriteFileSync(clientCertPath, clientCertDer);
     // https://stackabuse.com/executing-shell-commands-with-node-js/
     // The SAN from the certificate looks like:
     // `
@@ -369,7 +362,10 @@ function createPredicate(rawTokenObj, toolURI, token) {
                 },
             },
             metadata: {
-                buildInvocationId: `https://github.com/${rawTokenObj.github.repository}/actions/runs/${rawTokenObj.github.run_id}/attempts/${rawTokenObj.github.run_attempt}`,
+                // TODO(#1848): Update the buildInvocationId to be a URI.
+                // NOTE: npmjs.com validates the buildInvocationId against environment.GITHUB_RUN_ID and environment.GITHUB_RUN_ATTEMPT
+                // buildInvocationId: `https://github.com/${rawTokenObj.github.repository}/actions/runs/${rawTokenObj.github.run_id}/attempts/${rawTokenObj.github.run_attempt}`,
+                buildInvocationId: `${rawTokenObj.github.run_id}-${rawTokenObj.github.run_attempt}`,
                 completeness: {
                     parameters: true,
                 },
@@ -443,7 +439,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.createPredicate = void 0;
 const github = __importStar(__nccwpck_require__(5438));
-const fs = __importStar(__nccwpck_require__(7147));
+const tscommon = __importStar(__nccwpck_require__(6634));
 const utils_1 = __nccwpck_require__(918);
 const DELEGATOR_BUILD_TYPE_V0 = "https://github.com/slsa-framework/slsa-github-generator/delegator-generic@v0";
 function createPredicate(rawTokenObj, toolURI, token) {
@@ -529,7 +525,7 @@ function createPredicate(rawTokenObj, toolURI, token) {
         // TODO(github.com/slsa-framework/slsa-github-generator/issues/1575): Redact sensitive information.
         if (rawTokenObj.github.event_path) {
             // NOTE: event_path has been validated as the same as env.GITHUB_EVENT_PATH
-            const ghEvent = JSON.parse(fs.readFileSync(rawTokenObj.github.event_path).toString());
+            const ghEvent = JSON.parse(tscommon.safeReadFileSync(rawTokenObj.github.event_path).toString());
             predicate.buildDefinition.systemParameters.GITHUB_EVENT_PAYLOAD = ghEvent;
         }
         return predicate;
@@ -541,32 +537,12 @@ exports.createPredicate = createPredicate;
 /***/ }),
 
 /***/ 918:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+/***/ ((__unused_webpack_module, exports) => {
 
 "use strict";
 
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.getWorkflowPath = exports.createURI = exports.resolvePathInput = exports.getEnv = void 0;
-const path_1 = __importDefault(__nccwpck_require__(1017));
-function getEnv(name) {
-    const res = process.env[name];
-    if (!res) {
-        throw new Error(`missing env: ${name}`);
-    }
-    return String(res);
-}
-exports.getEnv = getEnv;
-function resolvePathInput(untrustedInput, wd) {
-    const safeJoin = path_1.default.resolve(path_1.default.join(wd, untrustedInput));
-    if (!(safeJoin + path_1.default.sep).startsWith(wd + path_1.default.sep)) {
-        throw Error(`unsafe path ${safeJoin}`);
-    }
-    return safeJoin;
-}
-exports.resolvePathInput = resolvePathInput;
+exports.getWorkflowPath = exports.createURI = void 0;
 // createURI creates the fully qualified URI out of the repository
 function createURI(repository, ref) {
     if (!repository) {
@@ -43745,6 +43721,151 @@ module.exports.PROCESSING_OPTIONS = PROCESSING_OPTIONS;
 
 /***/ }),
 
+/***/ 6484:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.safePromises_stat = exports.safePromises_readdir = exports.safeExistsSync = exports.safeRmdirSync = exports.safeUnlinkSync = exports.safeReadFileSync = exports.safeMkdirSync = exports.safeWriteFileSync = exports.resolvePathInput = exports.getGitHubWorkspace = void 0;
+const fs_1 = __importDefault(__nccwpck_require__(7147));
+const path_1 = __importDefault(__nccwpck_require__(1017));
+const process_1 = __importDefault(__nccwpck_require__(7282));
+// This function is for unit tests.
+// We need to set the working directory to the tscommon/ directory
+// instead of the GITHUB_WORKSPACE.
+function getGitHubWorkspace() {
+    const wdt = process_1.default.env["UNIT_TESTS_WD"] || "";
+    if (wdt) {
+        return wdt;
+    }
+    return process_1.default.env["GITHUB_WORKSPACE"] || "";
+}
+exports.getGitHubWorkspace = getGitHubWorkspace;
+// Detect directory traversal for input file.
+// This function is exported for unit tests only.
+function resolvePathInput(input, write) {
+    const wd = getGitHubWorkspace();
+    const resolvedInput = path_1.default.resolve(input);
+    // Allowed files for read only.
+    const allowedReadFiles = [process_1.default.env.GITHUB_EVENT_PATH || ""];
+    for (const allowedReadFile of allowedReadFiles) {
+        if (allowedReadFile === resolvedInput) {
+            if (write) {
+                throw Error(`unsafe write path ${resolvedInput}`);
+            }
+            return resolvedInput;
+        }
+    }
+    // Allowed directories for read and write.
+    const allowedDirs = [wd, "/tmp", process_1.default.env.RUNNER_TEMP || ""];
+    for (const allowedDir of allowedDirs) {
+        // NOTE: we call 'resolve' to normalize the directory name.
+        const resolvedAllowedDir = path_1.default.resolve(allowedDir);
+        if ((resolvedInput + path_1.default.sep).startsWith(resolvedAllowedDir + path_1.default.sep)) {
+            return resolvedInput;
+        }
+    }
+    throw Error(`unsafe path ${resolvedInput}`);
+}
+exports.resolvePathInput = resolvePathInput;
+// Safe write function.
+function safeWriteFileSync(outputFn, data) {
+    const safeOutputFn = resolvePathInput(outputFn, true);
+    // WARNING: if the call fails, the type of the error is not 'Error'.
+    fs_1.default.writeFileSync(safeOutputFn, data, {
+        flag: "wx",
+        mode: 0o600,
+    });
+}
+exports.safeWriteFileSync = safeWriteFileSync;
+// Safe mkdir function.
+function safeMkdirSync(outputFn, options) {
+    const safeOutputFn = resolvePathInput(outputFn, true);
+    fs_1.default.mkdirSync(safeOutputFn, options);
+}
+exports.safeMkdirSync = safeMkdirSync;
+// Safe read file function.
+function safeReadFileSync(inputFn) {
+    const safeInputFn = resolvePathInput(inputFn, false);
+    return fs_1.default.readFileSync(safeInputFn);
+}
+exports.safeReadFileSync = safeReadFileSync;
+// Safe unlink function.
+function safeUnlinkSync(inputFn) {
+    const safeInputFn = resolvePathInput(inputFn, true);
+    return fs_1.default.unlinkSync(safeInputFn);
+}
+exports.safeUnlinkSync = safeUnlinkSync;
+// Safe remove directory function.
+function safeRmdirSync(dir, options) {
+    const safeDir = resolvePathInput(dir, true);
+    return fs_1.default.rmdirSync(safeDir, options);
+}
+exports.safeRmdirSync = safeRmdirSync;
+// Safe exist function.
+function safeExistsSync(inputFn) {
+    const safeInputFn = resolvePathInput(inputFn, false);
+    return fs_1.default.existsSync(safeInputFn);
+}
+exports.safeExistsSync = safeExistsSync;
+// Safe readdir function.
+function safePromises_readdir(inputFn) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const safeInputFn = resolvePathInput(inputFn, false);
+        return fs_1.default.promises.readdir(safeInputFn);
+    });
+}
+exports.safePromises_readdir = safePromises_readdir;
+// Safe stat function.
+function safePromises_stat(inputFn) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const safeInputFn = resolvePathInput(inputFn, true);
+        return fs_1.default.promises.stat(safeInputFn);
+    });
+}
+exports.safePromises_stat = safePromises_stat;
+
+
+/***/ }),
+
+/***/ 6634:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __exportStar = (this && this.__exportStar) || function(m, exports) {
+    for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+__exportStar(__nccwpck_require__(6484), exports);
+
+
+/***/ }),
+
 /***/ 7040:
 /***/ ((__unused_webpack_module, exports) => {
 
@@ -50024,6 +50145,14 @@ module.exports = require("os");
 
 "use strict";
 module.exports = require("path");
+
+/***/ }),
+
+/***/ 7282:
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("process");
 
 /***/ }),
 
