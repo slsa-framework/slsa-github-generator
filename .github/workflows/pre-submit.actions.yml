@@ -159,7 +159,7 @@ jobs:
         uses: ./__BUILDER_CHECKOUT_DIR__/.github/actions/secure-project-checkout-go
         with:
           path: __PROJECT_CHECKOUT_DIR__
-          go-version-file: "go.mod"
+          go-version: "1.20"
 
   secure-project-checkout-node:
     runs-on: ubuntu-latest
