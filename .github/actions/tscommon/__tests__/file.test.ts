@@ -4,19 +4,23 @@ const fs = require("fs");
 const wd = file.getGitHubWorkspace()
 
 beforeAll(() => {
-    if (file.safeExistsSync("safewritefile")){
-        file.safeUnlinkSync("safewritefile")
-    }
-    if (file.safeExistsSync("safemkdir")){
-        file.safeRmdirSync("safemkdir")
-    }
-    if (!file.safeExistsSync("safeunlink")){
+   if (!file.safeExistsSync("safeunlink")){
         file.safeWriteFileSync("safeunlink", "data")
     }
     if (!file.safeExistsSync("safermdir")){
         file.safeMkdirSync("safermdir")
     }
     initGitHub();
+});
+
+afterAll(() => {
+    if (file.safeExistsSync("safewritefile")){
+        file.safeUnlinkSync("safewritefile")
+    }
+    if (file.safeExistsSync("safemkdir")){
+        file.safeRmdirSync("safemkdir")
+    }
+    cleanupGitHub();
 });
 
 function initGitHub(): void{
@@ -55,10 +59,6 @@ function cleanupGitHub(): void{
     }
 }
 
-afterAll(() => {
-    cleanupGitHub();
-});
-
 describe("resolvePathInput", () => {
   beforeEach(() => {
     if (fs.existsSync("/tmp/hello")){
@@ -95,7 +95,7 @@ describe("resolvePathInput", () => {
     expect(safe).toEqual(`${wd}/path`);
     const safesafe = file.resolvePathInput(safe, true);
     expect(safesafe).toEqual(`${safe}`);
-    
+
     const input2 = "path2";
     const safe2 = file.resolvePathInput(input2, false);
     expect(safe2).toEqual(`${wd}/path2`);
@@ -212,7 +212,7 @@ describe("safeWriteFileSync", () => {
         file.safeWriteFileSync(input, "data");
         expect(() => file.safeWriteFileSync(input, "data")).toThrow();
     });
-    
+
     it("safe with runner tmp", () => {
         const input = path.join(process.env.RUNNER_TEMP || "", "file");
         file.safeWriteFileSync(input, "data");
@@ -310,7 +310,7 @@ describe("safeMkdirSync", () => {
                 fs.rmdirSync(d);
             }
         }
-        
+
       });
     it("path traversal", () => {
         const input = "../path";
@@ -587,7 +587,7 @@ describe("safePromises_readdir", () => {
             }
         }
       });
-    
+
     it("path traversal", async () => {
         const input = "../path";
         await expect(file.safePromises_readdir(input)).rejects.toThrow();
