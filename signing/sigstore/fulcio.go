@@ -22,6 +22,7 @@ import (
 
 	"github.com/sigstore/cosign/v2/cmd/cosign/cli/fulcio"
 	"github.com/sigstore/cosign/v2/cmd/cosign/cli/options"
+	"github.com/sigstore/cosign/v2/cmd/cosign/cli/sign"
 	"github.com/sigstore/cosign/v2/pkg/providers"
 	"github.com/sigstore/sigstore/pkg/signature/dsse"
 	"github.com/slsa-framework/slsa-github-generator/signing"
@@ -74,6 +75,21 @@ func NewFulcio(fulcioAddr, oidcIssuer, oidcClientID string) *Fulcio {
 	}
 }
 
+func (s *Fulcio) newSigner(ctx context.Context) (*fulcio.Signer, error) {
+	ko := options.KeyOpts{
+		OIDCIssuer:   s.oidcIssuer,
+		OIDCClientID: s.oidcClientID,
+		FulcioURL:    s.fulcioAddr,
+	}
+
+	sv, err := sign.SignerFromKeyOpts(ctx, "", "", ko)
+	if err != nil {
+		return nil, fmt.Errorf("getting signer: %w", err)
+	}
+
+	return fulcio.NewSigner(ctx, ko, sv)
+}
+
 // Sign signs the given provenance statement and returns the signed
 // attestation.
 func (s *Fulcio) Sign(ctx context.Context, p *intoto.Statement) (signing.Attestation, error) {
@@ -87,17 +103,13 @@ func (s *Fulcio) Sign(ctx context.Context, p *intoto.Statement) (signing.Attesta
 		return nil, fmt.Errorf("marshalling json: %w", err)
 	}
 
-	k, err := fulcio.NewSigner(ctx, options.KeyOpts{
-		OIDCIssuer:   s.oidcIssuer,
-		OIDCClientID: s.oidcClientID,
-		FulcioURL:    s.fulcioAddr,
-	})
+	k, err := s.newSigner(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("creating fulcio signer: %w", err)
+		return nil, fmt.Errorf("creating signer: %v", err)
 	}
-	wrappedSigner := dsse.WrapSigner(k, intoto.PayloadType)
 
-	signedAtt, err := wrappedSigner.SignMessage(bytes.NewReader(attBytes))
+	signer := dsse.WrapSigner(k, intoto.PayloadType)
+	signedAtt, err := signer.SignMessage(bytes.NewReader(attBytes))
 	if err != nil {
 		return nil, fmt.Errorf("signing message: %v", err)
 	}
