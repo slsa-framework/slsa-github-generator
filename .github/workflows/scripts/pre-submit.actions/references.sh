@@ -8,9 +8,10 @@ set -euo pipefail
 
 cd __THIS_REPO__
 
+# Verify our Actions are referenced at main in workflows.
 results=$(
-    find .github/workflows/ -maxdepth 1 -type f -print0 -name '*.yaml' -o -name '*.yml' \
-    | xargs -0 grep -P "slsa-framework/slsa-github-generator/.github/actions/.*@(?!main)" \
+    find .github/workflows/ -maxdepth 1 -name '*.yaml' -o -name '*.yml' -type f -print0 \
+    | xargs -0 grep -P "slsa-framework/slsa-github-generator/.*@(?!main)" \
     || true
 )
 if [[ "$results" != "" ]]; then
@@ -18,3 +19,29 @@ if [[ "$results" != "" ]]; then
     echo "$results"
     exit 1
 fi
+
+# Verify our Actions are referenced at main in internal actions.
+results=$(
+    find .github/actions/ -maxdepth 2 -name '*.yaml' -o -name '*.yml' -type f -print0 \
+    xargs -0 grep -P "slsa-framework/slsa-github-generator/.*@(?!main)" \
+    || true
+)
+if [[ "$results" != "" ]]; then
+    echo "Some Actions are not referenced at main in internal Actions"
+    echo "$results"
+    exit 1
+fi
+
+# Verify our Actions are referenced at main in external actions.
+results=$(
+    find actions/ -maxdepth 3 -name '*.yaml' -o -name '*.yml' -type f -print0 \
+    | xargs -0 grep -Pn "slsa-framework/slsa-github-generator/.*@(?!main)" \
+    || true
+)
+if [[ "$results" != "" ]]; then
+    echo "Some Actions are not referenced at main in external Actions"
+    echo "$results"
+    exit 1
+fi
+
+

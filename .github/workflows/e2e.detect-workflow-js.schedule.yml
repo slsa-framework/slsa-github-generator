@@ -1,0 +1,76 @@
+name: schedule detect-workflow-js
+
+on:
+  # Daily run.
+  schedule:
+    - cron: "0 4 * * *"
+  workflow_dispatch:
+
+permissions: read-all
+
+env:
+  GH_TOKEN: ${{ github.token }}
+  ISSUE_REPOSITORY: ${{ github.repository }}
+
+jobs:
+  detect-workflow:
+    permissions:
+      contents: read
+      id-token: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@24cb9080177205b6e8c946b17badbe402adc938f # v3.4.0
+      - id: detect
+        uses: ./.github/actions/detect-workflow-js
+      - id: verify
+        env:
+          REPO: ${{ steps.detect.outputs.repository }}
+          REF: ${{ steps.detect.outputs.ref }}
+          WORKFLOW: ${{ steps.detect.outputs.workflow }}
+        run: |
+          if [[ "${REPO}" != "${GITHUB_REPOSITORY}" ]]; then
+            echo "expected ${GITHUB_REPOSITORY}, got ${REPO}"
+            exit 1
+          fi
+          # When calling this action from a caller workflow, this will be
+          # the caller github ref.
+          if [[ "${REF}" != "${GITHUB_REF}" ]]; then
+            echo "expected ${GITHUB_REF}, got ${REF}"
+            exit 1
+          fi
+          # When calling this action from a caller workflow, this will be
+          # the caller workflow.
+          workflow=$(echo "${GITHUB_WORKFLOW_REF}" | cut -d '@' -f1 | cut -d '/' -f3-)
+          if [[ "${WORKFLOW}" != "${workflow}" ]]; then
+            echo "expected ${workflow}, got ${WORKFLOW}"
+            exit 1
+          fi
+
+  if-succeed:
+    needs: [detect-workflow]
+    runs-on: ubuntu-latest
+    # We use `== 'failure'` instead of ` != 'success'` because we want to ignore skipped jobs, if there are any.
+    if: github.event_name != 'workflow_dispatch' && needs.detect-workflow.result != 'failure'
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@24cb9080177205b6e8c946b17badbe402adc938f # v3.4.0
+        with:
+          repository: slsa-framework/example-package
+          ref: main
+      - run: ./.github/workflows/scripts/e2e-report-success.sh
+
+  if-failed:
+    needs: [detect-workflow]
+    runs-on: ubuntu-latest
+    if: always() && github.event_name != 'workflow_dispatch' && needs.detect-workflow.result == 'failure'
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@24cb9080177205b6e8c946b17badbe402adc938f # v3.4.0
+        with:
+          repository: slsa-framework/example-package
+          ref: main
+      - run: ./.github/workflows/scripts/e2e-report-failure.sh

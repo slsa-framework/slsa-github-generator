@@ -22,6 +22,23 @@ inputs:
     type: string
     required: false
 
+outputs:
+  attestation-name:
+    description: "The name of the attestation in the generated layout file."
+    value: ${{ steps.generate-layout.outputs.attestation-name }}
+
+  package-download-name:
+    description: "Name of the artifact to download the package tarball."
+    value: "${{ steps.rng.outputs.random }}-package.tgz"
+
+  package-filename:
+    description: "The filename of the package tarball in the package artifact."
+    value: ${{ steps.build.outputs.filename }}
+
+  package-sha256:
+    description: "The sha256 digest of the package file."
+    value: ${{ steps.sha.outputs.sha256 }}
+
 runs:
   using: "composite"
   steps:
@@ -31,11 +48,8 @@ runs:
     - name: Setup Node
       uses: actions/setup-node@64ed1c7eab4cce3362f8c340dee64e5eaeef8f7c # v3.6.0
       with:
-        always-auth: ${{ fromJson(inputs.slsa-workflow-inputs).always-auth }}
         node-version: ${{ fromJson(inputs.slsa-workflow-inputs).node-version }}
         node-version-file: ${{ fromJson(inputs.slsa-workflow-inputs).node-version-file }}
-        registry-url: ${{ fromJson(inputs.slsa-workflow-inputs).registry-url }}
-        scope: ${{ fromJson(inputs.slsa-workflow-inputs).scope }}
         # TODO(#1679): cache dependencies.
         # cache: npm
         # NOTE: cache-dependency-path needs to be validated to be a subdirectory of GITHUB_WORKSPACE.
@@ -52,13 +66,23 @@ runs:
         UNTRUSTED_DIRECTORY: ${{ fromJson(inputs.slsa-workflow-inputs).directory }}
         UNTRUSTED_RUN_SCRIPTS: ${{ fromJson(inputs.slsa-workflow-inputs).run-scripts }}
       shell: bash
-      run: |
-        ./../__TOOL_ACTION_DIR__/build.sh
+      run: ./../__TOOL_ACTION_DIR__/build.sh
+
+    - id: sha
+      uses: slsa-framework/slsa-github-generator/.github/actions/compute-sha256@main
+      with:
+        path: ${{ steps.build.outputs.file-path }}
+
+    # rng generates a random number to avoid name collision in artifacts
+    # when multiple workflows run concurrently.
+    - name: Generate random 16-byte value (32-char hex encoded)
+      id: rng
+      uses: slsa-framework/slsa-github-generator/.github/actions/rng@main
 
     - uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
       with:
-        name: package.tgz
-        path: ${{ steps.build.outputs.filename }}
+        name: "${{ steps.rng.outputs.random }}-package.tgz"
+        path: ${{ steps.build.outputs.file-path }}
         if-no-files-found: error
         retention-days: 5
 
@@ -73,5 +97,4 @@ runs:
         SLSA_OUTPUTS_ARTIFACTS_FILE: ${{ inputs.slsa-layout-file }}
         PACK_JSON: ${{ steps.build.outputs.pack_json }}
       shell: bash
-      run: |
-        ./../__TOOL_ACTION_DIR__/generate-layout.sh
+      run: ./../__TOOL_ACTION_DIR__/generate-layout.sh

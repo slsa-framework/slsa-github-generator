@@ -55,7 +55,7 @@ Provenance can be used to determine the authenticity and trustworthiness of
 software artifacts that you use.
 
 As part of the framework, SLSA defines a
-[provenance format](https://slsa.dev/provenance/) which can be used hold this
+[provenance format](https://slsa.dev/provenance/) which can be used to hold this
 metadata.
 
 ### What is slsa-github-generator?

@@ -16,6 +16,7 @@ package pkg
 
 import (
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -28,7 +29,7 @@ import (
 
 func Test_CreateBuildDefinition(t *testing.T) {
 	config := &DockerBuildConfig{
-		SourceRepo:   "git+https://github.com/slsa-framework/slsa-github-generator",
+		SourceRepo:   "git+https://github.com/slsa-framework/slsa-github-generator@refs/heads/main",
 		SourceDigest: Digest{Alg: "sha1", Value: "cf5804b5c6f1a4b2a0b03401a487dfdfbe3a5f00"},
 		BuilderImage: DockerImage{
 			Name:   "bash",
@@ -163,14 +164,19 @@ func Test_inspectArtifacts(t *testing.T) {
 	// Note: If the files in ../testdata/ change, this test must be updated.
 	pattern := "../testdata/*"
 	out := t.TempDir()
-	got, err := inspectAndWriteArtifacts(pattern, out, "..")
+	wd, err := os.Getwd()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	got, err := inspectAndWriteArtifacts(pattern, out, filepath.Dir(wd))
 	if err != nil {
 		t.Fatalf("failed to inspect artifacts: %v", err)
 	}
 
 	s1 := intoto.Subject{
 		Name:   "build-definition.json",
-		Digest: map[string]string{"sha256": "fbe3d5448f3e43b20368c223eda70ecbf41bbe6e5956ee81b5d490c1753ea118"},
+		Digest: map[string]string{"sha256": "b1c74863007166aadca8ff54a0e647047696bee38e8e8a25a1290f494e3abc46"},
 	}
 	s2 := intoto.Subject{
 		Name:   "config.toml",
@@ -179,7 +185,57 @@ func Test_inspectArtifacts(t *testing.T) {
 
 	s3 := intoto.Subject{
 		Name:   "slsa1-provenance.json",
-		Digest: map[string]string{"sha256": "d40de4149c9ad41d2fdcba44ddb2be1760eb4fbb01644f7ddf9ed0a424d7ed44"},
+		Digest: map[string]string{"sha256": "f472aaf04468ae881ab502f1f02f23476fe0d4dbb7a8a4b5d3eae9b2843e2ecd"},
+	}
+
+	s4 := intoto.Subject{
+		Name:   "wildcard-config.toml",
+		Digest: map[string]string{"sha256": "d9b8670f1b9616db95b0dc84cbc68062c691ef31bb9240d82753de0739c59194"},
+	}
+
+	want := []intoto.Subject{s1, s2, s3, s4}
+
+	if diff := cmp.Diff(got, want); diff != "" {
+		t.Errorf(diff)
+	}
+}
+
+// When running in the checkout of the repository root, root == "".
+func Test_inspectArtifactsNoRoot(t *testing.T) {
+	// Note: If the files in ../testdata/ change, this test must be updated.
+	pattern := "testdata/*"
+	out := t.TempDir()
+
+	wd, err := os.Getwd()
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() {
+		if err := os.Chdir(wd); err != nil {
+			t.Fatal(err)
+		}
+	})
+	if err := os.Chdir(".."); err != nil {
+		t.Fatal(err)
+	}
+
+	got, err := inspectAndWriteArtifacts(pattern, out, "")
+	if err != nil {
+		t.Fatalf("failed to inspect artifacts: %v", err)
+	}
+
+	s1 := intoto.Subject{
+		Name:   "build-definition.json",
+		Digest: map[string]string{"sha256": "b1c74863007166aadca8ff54a0e647047696bee38e8e8a25a1290f494e3abc46"},
+	}
+	s2 := intoto.Subject{
+		Name:   "config.toml",
+		Digest: map[string]string{"sha256": "975a0582b8c9607f3f20a6b8cfef01b25823e68c5c3658e6e1ccaaced2a3255d"},
+	}
+
+	s3 := intoto.Subject{
+		Name:   "slsa1-provenance.json",
+		Digest: map[string]string{"sha256": "f472aaf04468ae881ab502f1f02f23476fe0d4dbb7a8a4b5d3eae9b2843e2ecd"},
 	}
 
 	s4 := intoto.Subject{
@@ -248,7 +304,7 @@ func Test_ProvenanceStatementSLSA1_ToDockerBuildConfig(t *testing.T) {
 	}
 
 	want := &DockerBuildConfig{
-		SourceRepo: "git+https://github.com/slsa-framework/slsa-github-generator",
+		SourceRepo: "git+https://github.com/slsa-framework/slsa-github-generator@refs/heads/main",
 		SourceDigest: Digest{
 			Alg:   "sha1",
 			Value: "cf5804b5c6f1a4b2a0b03401a487dfdfbe3a5f00",

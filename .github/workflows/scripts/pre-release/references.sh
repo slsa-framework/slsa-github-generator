@@ -26,16 +26,43 @@ if [ "$RELEASE_TAG" == "" ]; then
     exit 1
 fi
 
-# Verify internal Actions are referenced by the release tag.
 cd __THIS_REPO__
+
+# Verify our Actions are referenced by the release tag in workflows.
 results=$(
-    find .github/workflows/ -maxdepth 1 -type f -print0 -name '*.yaml' -o -name '*.yml' |
-        xargs -0 grep -Pn "slsa-framework/slsa-github-generator/.github/actions/.*@(?!$RELEASE_TAG)" |
+    find .github/workflows/ -maxdepth 1 -name '*.yaml' -o -name '*.yml' -type f -print0 |
+        xargs -0 grep -Pn "slsa-framework/slsa-github-generator/.*@(?!$RELEASE_TAG)" |
         sed 's/\(.*:\) *uses:.*\(\/.*\)/\1 [...]\2/' ||
         true
 )
 if [[ "$results" != "" ]]; then
-    echo "Some Actions are not referenced via the correct release tag \"$RELEASE_TAG\""
+    echo "Some Actions are not referenced via the correct release tag \"$RELEASE_TAG\" in workflows"
+    echo "$results"
+    exit 1
+fi
+
+# Verify our Actions are referenced by the release tag in internal actions.
+results=$(
+    find .github/actions/ -maxdepth 2 -name '*.yaml' -o -name '*.yml' -type f -print0 |
+        xargs -0 grep -Pn "slsa-framework/slsa-github-generator/.*@(?!$RELEASE_TAG)" |
+        sed 's/\(.*:\) *uses:.*\(\/.*\)/\1 [...]\2/' ||
+        true
+)
+if [[ "$results" != "" ]]; then
+    echo "Some Actions are not referenced via the correct release tag \"$RELEASE_TAG\" in internal actions"
+    echo "$results"
+    exit 1
+fi
+
+# Verify our Actions are referenced by the release tag in external actions.
+results=$(
+    find actions/ -maxdepth 3 -name '*.yaml' -o -name '*.yml' -type f -print0 |
+        xargs -0 grep -Pn "slsa-framework/slsa-github-generator/.*@(?!$RELEASE_TAG)" |
+        sed 's/\(.*:\) *uses:.*\(\/.*\)/\1 [...]\2/' ||
+        true
+)
+if [[ "$results" != "" ]]; then
+    echo "Some Actions are not referenced via the correct release tag \"$RELEASE_TAG\" in external actions"
     echo "$results"
     exit 1
 fi

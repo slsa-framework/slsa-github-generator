@@ -1,8 +1,8 @@
-import * as fs from "fs";
 import * as process from "process";
 import * as types from "./predicate";
 import * as github from "@actions/github";
 import type { ApiWorkflowRun } from "./predicate";
+import * as tscommon from "tscommon";
 
 // getWorkflowRun retrieves the current WorkflowRun given the repository (owner/repo)
 // and run ID.
@@ -21,8 +21,9 @@ export async function getWorkflowRun(
   return res.data;
 }
 
-// addGitHubSystemParameters adds trusted GitHub context to system paramters.
-export function addGitHubSystemParameters(
+// addGitHubParameters adds trusted GitHub context to system paramters
+// and external parameters.
+export function addGitHubParameters(
   predicate: types.SLSAv1Predicate,
   currentRun: ApiWorkflowRun
 ): types.SLSAv1Predicate {
@@ -62,12 +63,16 @@ export function addGitHubSystemParameters(
   // TODO(github.com/slsa-framework/slsa-github-generator/issues/1575): Redact sensitive information.
   if (env.GITHUB_EVENT_PATH) {
     const ghEvent = JSON.parse(
-      fs.readFileSync(env.GITHUB_EVENT_PATH).toString()
+      tscommon.safeReadFileSync(env.GITHUB_EVENT_PATH || "").toString()
     );
     systemParams.GITHUB_EVENT_PAYLOAD = ghEvent;
   }
 
   predicate.buildDefinition.systemParameters = systemParams;
+
+  if (!env.GITHUB_WORKFLOW_REF) {
+    throw new Error("missing GITHUB_WORKFLOW_REF");
+  }
 
   return predicate;
 }

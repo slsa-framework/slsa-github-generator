@@ -11,7 +11,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-import { githubObj } from "../src/types";
+import { githubObj, rawTokenInterface } from "../src/types";
 
 export function validateGitHubFields(gho: githubObj): void {
   // actor_id
@@ -30,9 +30,6 @@ export function validateGitHubFields(gho: githubObj): void {
     gho.event_path,
     process.env.GITHUB_EVENT_PATH
   );
-
-  // job
-  validateField("github.job", gho.job, process.env.GITHUB_JOB);
 
   // ref
   validateField("github.ref", gho.ref, process.env.GITHUB_REF);
@@ -99,6 +96,38 @@ export function validateGitHubFields(gho: githubObj): void {
     gho.workflow_sha,
     process.env.GITHUB_WORKFLOW_SHA
   );
+}
+
+export function validateAndMaskInputs(
+  token: rawTokenInterface
+): rawTokenInterface {
+  const maskedMapInputs = new Map(Object.entries(token.tool.inputs));
+  const toolInputs = token.tool.masked_inputs;
+  if (
+    toolInputs === undefined ||
+    // If TRW provides an empty argument, it's a 1-length array
+    // with an empty string value.
+    (toolInputs.length === 1 && toolInputs[0].length === 0)
+  ) {
+    token.tool.inputs = maskedMapInputs;
+    return token;
+  }
+
+  for (const key of toolInputs) {
+    // verify non-empty keys.
+    if (key === undefined || key.trim().length === 0) {
+      throw new Error("empty key in the input map");
+    }
+
+    if (!maskedMapInputs.has(key)) {
+      throw new Error(`input '${key}' does not exist in the input map`);
+    }
+
+    // NOTE: This mask is the same used by GitHub for encrypted secrets and masked values.
+    maskedMapInputs.set(key, "***");
+  }
+  token.tool.inputs = maskedMapInputs;
+  return token;
 }
 
 export function validateFieldAnyOf<T>(

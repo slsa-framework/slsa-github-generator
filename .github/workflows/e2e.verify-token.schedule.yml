@@ -13,13 +13,21 @@ env:
   ISSUE_REPOSITORY: ${{ github.repository }}
 
 jobs:
-  verify-token:
+  setup-token:
     permissions:
       contents: read
       id-token: write
     runs-on: ubuntu-latest
+    outputs:
+      valid-token: ${{ steps.verify.outputs.slsa-token }}
+      invalid-mask-token: ${{ steps.verify-invalid-mask.outputs.slsa-token }}
     steps:
-      - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # v3.3.0
+      # NOTE: to test this workflow on a dev branch, use:
+      # curl -s -X POST -H "Accept: application/vnd.github.v3+json" \
+      #   "https://api.github.com/repos/$USERNAME/slsa-github-generator/actions/workflows/e2e.verify-token.schedule.yml/dispatches" \
+      #   -d "{\"ref\":\"$BRANCH\"}" \
+      #   -H "Authorization: token $GH_TOKEN"
+      - uses: actions/checkout@24cb9080177205b6e8c946b17badbe402adc938f # v3.4.0
       - id: setup
         uses: ./actions/delegator/setup-token
         with:
@@ -27,19 +35,54 @@ jobs:
           slsa-rekor-log-public: true
           slsa-runner-label: "ubuntu-latest"
           slsa-build-action-path: "./actions/build-artifacts-composite"
-          slsa-workflow-inputs: '{"name1":"value1","name2":"value2","private-repository":true}'
+          slsa-workflow-inputs: '{"name1":"value1","name2":"value2","name3":"value3","name4":"","name5":"value5","name6":"value6","private-repository":true}'
+          # name4 has empty value and won't be obfuscated even though it's in the list.
+          # The Action should trim the spaces automatically.
+          slsa-workflow-masked-inputs: name2, name4,name6
+      - id: verify
+        env:
+          SLSA_TOKEN: ${{ steps.setup.outputs.slsa-token }}
+        run: |
+          set -euo pipefail
+          ./.github/workflows/scripts/schedule.actions/verify-setup-token.sh
+          echo "slsa-token=$SLSA_TOKEN" >> "$GITHUB_OUTPUT"
+
+      - id: setup-invalid-mask
+        uses: ./actions/delegator/setup-token
+        with:
+          slsa-workflow-recipient: "delegator_generic_slsa3.yml"
+          slsa-rekor-log-public: true
+          slsa-runner-label: "ubuntu-latest"
+          slsa-build-action-path: "./actions/build-artifacts-composite"
+          slsa-workflow-inputs: '{"name1":"value1","name2":"value2","name3":"value3","name4":"","name5":"value5","name6":"value6","private-repository":true}'
+          slsa-workflow-masked-inputs: name2, name4,name7 # name7 does not exist in the inputs.
+      - id: verify-invalid-mask
+        env:
+          SLSA_TOKEN: ${{ steps.setup-invalid-mask.outputs.slsa-token }}
+        run: |
+          set -euo pipefail
+          ./.github/workflows/scripts/schedule.actions/verify-setup-token.sh
+          echo "slsa-token=$SLSA_TOKEN" >> "$GITHUB_OUTPUT"
+
+  verify-token:
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+    needs: [setup-token]
+    steps:
+      - uses: actions/checkout@24cb9080177205b6e8c946b17badbe402adc938f # v3.4.0
       - id: verify
         uses: ./.github/actions/verify-token
         with:
-          slsa-unverified-token: ${{ steps.setup.outputs.slsa-token }}
+          slsa-unverified-token: ${{ needs.setup-token.outputs.valid-token }}
           slsa-workflow-recipient: "delegator_generic_slsa3.yml"
           output-predicate: predicate.json
-      - run: ./.github/workflows/scripts/schedule.actions/verify-token.sh
-        env:
+      - env:
           VERIFIED_TOKEN: ${{ steps.verify.outputs.slsa-verified-token }}
           TOOL_REPOSITORY: ${{ steps.verify.outputs.tool-repository }}
           TOOL_REF: ${{ steps.verify.outputs.tool-ref }}
           PREDICATE: predicate.json
+        run: ./.github/workflows/scripts/schedule.actions/verify-verified-token.sh
       - id: verify-mismatch-recipient
         uses: ./.github/actions/verify-token
         continue-on-error: true
@@ -54,36 +97,44 @@ jobs:
           slsa-unverified-token: aGVsbG8K
           slsa-workflow-recipient: "delegator_generic_slsa3.yml"
           output-predicate: mismatch-token-predicate.json
+      - id: verify-invalid-mask
+        uses: ./.github/actions/verify-token
+        continue-on-error: true
+        with:
+          # name7 does not exist in the inputs so it should trigger an error.
+          slsa-unverified-token: ${{ needs.setup-token.outputs.invalid-mask-token }}
+          slsa-workflow-recipient: "delegator_generic_slsa3.yml"
+          output-predicate: invalid-mask-predicate.json
       - env:
-          SUCCESS: ${{ steps.verify-mismatch-recipient.outcome == 'failure' && steps.verify-mismatch-token.outcome == 'failure' }}
+          SUCCESS: ${{ steps.verify-mismatch-recipient.outcome == 'failure' && steps.verify-mismatch-token.outcome == 'failure' && steps.verify-invalid-mask.outcome == 'failure' }}
         run: |
           [ "$SUCCESS" == "true" ]
       # TODO(1419): Add more tests that manipulate the token.
 
   if-succeed:
-    needs: [verify-token]
+    needs: [setup-token, verify-token]
     runs-on: ubuntu-latest
     # We use `== 'failure'` instead of ` != 'success'` because we want to ignore skipped jobs, if there are any.
-    if: github.event_name != 'workflow_dispatch' && needs.verify-token.result != 'failure'
+    if: github.event_name != 'workflow_dispatch' && needs.verify-token.result != 'failure' && needs.setup-token.result != 'failure'
     permissions:
       contents: read
       issues: write
     steps:
-      - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # v3.3.0
+      - uses: actions/checkout@24cb9080177205b6e8c946b17badbe402adc938f # v3.4.0
         with:
           repository: slsa-framework/example-package
           ref: main
       - run: ./.github/workflows/scripts/e2e-report-success.sh
 
   if-failed:
-    needs: [verify-token]
+    needs: [setup-token, verify-token]
     runs-on: ubuntu-latest
-    if: always() && github.event_name != 'workflow_dispatch' && needs.verify-token.result == 'failure'
+    if: always() && github.event_name != 'workflow_dispatch' && (needs.verify-token.result == 'failure' || needs.setup-token.result == 'failure')
     permissions:
       contents: read
       issues: write
     steps:
-      - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # v3.3.0
+      - uses: actions/checkout@24cb9080177205b6e8c946b17badbe402adc938f # v3.4.0
         with:
           repository: slsa-framework/example-package
           ref: main

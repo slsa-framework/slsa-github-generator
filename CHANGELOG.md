@@ -4,7 +4,7 @@
 
 <!-- toc -->
 
-- [Next Release](#next-release)
+- [v1.6.0](#v160)
   - [Summary of changes](#summary-of-changes)
     - [Go builder](#go-builder)
       - [New Features](#new-features)
@@ -12,58 +12,92 @@
       - [New Features](#new-features-1)
     - [Container generator](#container-generator)
       - [New Features](#new-features-2)
-  - [Changelog since v1.4.0](#changelog-since-v140)
-- [v1.4.0](#v140)
-  - [What's Changed](#whats-changed)
-    - [Generic Generator](#generic-generator)
-      - [Bug fixes](#bug-fixes)
-    - [Go Builder](#go-builder)
-      - [Bug fixes](#bug-fixes-1)
-  - [New Contributors](#new-contributors)
-  - [Full Changelog](#full-changelog)
-- [v1.4.0-rc.2](#v140-rc2)
-  - [What's Changed](#whats-changed-1)
-  - [New Contributors](#new-contributors-1)
-  - [Full Changelog](#full-changelog-1)
-- [v1.4.0-rc.1](#v140-rc1)
-  - [What's Changed](#whats-changed-2)
-  - [New Contributors](#new-contributors-2)
-  - [Full Changelog](#full-changelog-2)
-- [v1.4.0-rc.0](#v140-rc0)
-  - [What's Changed](#whats-changed-3)
-  - [New Contributors](#new-contributors-3)
-  - [Full Changelog](#full-changelog-3)
-- [v1.2.2](#v122)
-  - [What's Changed](#whats-changed-4)
-  - [New Contributors](#new-contributors-4)
-  - [Full Changelog](#full-changelog-4)
-- [v1.2.1](#v121)
-  - [What's Changed](#whats-changed-5)
-    - [Generic generator](#generic-generator-1)
-      - [buildType](#buildtype)
-      - [Provenance file names](#provenance-file-names)
-      - [Explicit opt-in for private repos](#explicit-opt-in-for-private-repos)
-    - [Go builder](#go-builder-1)
-      - [Support private repos](#support-private-repos)
-  - [New Contributors](#new-contributors-5)
-  - [Full Changelog](#full-changelog-5)
-- [v1.2.0](#v120)
-  - [What's Changed](#whats-changed-6)
-    - [Generic generator](#generic-generator-2)
-    - [Go builder](#go-builder-2)
-  - [New Contributors](#new-contributors-6)
-  - [Full Changelog](#full-changelog-6)
-- [v1.1.1](#v111)
-  - [What's Changed](#whats-changed-7)
-  - [New Contributors](#new-contributors-7)
-  - [Full Changelog](#full-changelog-7)
-- [v1.0.0](#v100)
-  - [What's Changed](#whats-changed-8)
-  - [Contributors](#contributors)
+  - [Changelog since v1.5.0](#changelog-since-v150)
+- [v1.5.0](#v150)
+    - [Summary of changes](#summary-of-changes-1)
+      - [Go builder](#go-builder-1)
+        - [New Features](#new-features-3)
+      - [Generic generator](#generic-generator-1)
+        - [New Features](#new-features-4)
+      - [Container generator](#container-generator-1)
+        - [New Features](#new-features-5)
+    - [Changelog since v1.4.0](#changelog-since-v140)
+  - [v1.4.0](#v140)
+    - [What's Changed](#whats-changed)
+      - [Generic Generator](#generic-generator)
+        - [Bug fixes](#bug-fixes)
+      - [Go Builder](#go-builder)
+        - [Bug fixes](#bug-fixes-1)
+    - [New Contributors](#new-contributors)
+    - [Full Changelog](#full-changelog)
+  - [v1.4.0-rc.2](#v140-rc2)
+    - [What's Changed](#whats-changed-1)
+    - [New Contributors](#new-contributors-1)
+    - [Full Changelog](#full-changelog-1)
+  - [v1.4.0-rc.1](#v140-rc1)
+    - [What's Changed](#whats-changed-2)
+    - [New Contributors](#new-contributors-2)
+    - [Full Changelog](#full-changelog-2)
+  - [v1.4.0-rc.0](#v140-rc0)
+    - [What's Changed](#whats-changed-3)
+    - [New Contributors](#new-contributors-3)
+    - [Full Changelog](#full-changelog-3)
+  - [v1.2.2](#v122)
+    - [What's Changed](#whats-changed-4)
+    - [New Contributors](#new-contributors-4)
+    - [Full Changelog](#full-changelog-4)
+  - [v1.2.1](#v121)
+    - [What's Changed](#whats-changed-5)
+      - [Generic generator](#generic-generator-2)
+        - [buildType](#buildtype)
+        - [Provenance file names](#provenance-file-names)
+        - [Explicit opt-in for private repos](#explicit-opt-in-for-private-repos)
+      - [Go builder](#go-builder-2)
+        - [Support private repos](#support-private-repos)
+    - [New Contributors](#new-contributors-5)
+    - [Full Changelog](#full-changelog-5)
+  - [v1.2.0](#v120)
+    - [What's Changed](#whats-changed-6)
+      - [Generic generator](#generic-generator-3)
+      - [Go builder](#go-builder-3)
+    - [New Contributors](#new-contributors-6)
+    - [Full Changelog](#full-changelog-6)
+  - [v1.1.1](#v111)
+    - [What's Changed](#whats-changed-7)
+    - [New Contributors](#new-contributors-7)
+    - [Full Changelog](#full-changelog-7)
+  - [v1.0.0](#v100)
+    - [What's Changed](#whats-changed-8)
+    - [Contributors](#contributors)
 
 <!-- tocstop -->
 
-## Next Release
+<!-- Information on the next release will be added here. -->
+
+# v1.6.0
+
+## Summary of changes
+
+### Go builder
+
+#### New Features
+
+- A new [`prerelease`](https://github.com/slsa-framework/slsa-github-generator/blob/v1.6.0/internal/builders/generic/README.md#workflow-inputs) input was added to allow users to create releases marked as prerelease when `upload-assets` is set to `true`.
+- A new output `go-provenance-name` added which can be used to retrieve the name of the provenance file generated by the builder.
+
+### Generic generator
+
+#### New Features
+
+### Container generator
+
+#### New Features
+
+## Changelog since v1.5.0
+
+https://github.com/slsa-framework/slsa-github-generator/compare/v1.5.0...v1.6.0
+
+# v1.5.0
 
 <!-- Information on the next release will be added here. -->
 
@@ -73,27 +107,27 @@
 
 ##### New Features
 
-- A new [`upload-tag-name`](https://github.com/slsa-framework/slsa-github-generator/blob/main/internal/builders/generic/README.md#workflow-inputs) input was added to allow users to specify the tag name for the release when `upload-assets` is set to `true`.
-- The environment variables included in provenance output were changed to include only those variables that are specified by the user in the [slsa-goreleaser.yml configuration file](https://github.com/slsa-framework/slsa-github-generator/tree/main/internal/builders/go#configuration-file) in order to improve reproducibility. See [#822](https://github.com/slsa-framework/slsa-github-generator/issues/822) for more information and background.
+- A new [`upload-tag-name`](https://github.com/slsa-framework/slsa-github-generator/blob/v1.5.0/internal/builders/generic/README.md#workflow-inputs) input was added to allow users to specify the tag name for the release when `upload-assets` is set to `true`.
+- The environment variables included in provenance output were changed to include only those variables that are specified by the user in the [slsa-goreleaser.yml configuration file](https://github.com/slsa-framework/slsa-github-generator/tree/v1.5.0/internal/builders/go#configuration-file) in order to improve reproducibility. See [#822](https://github.com/slsa-framework/slsa-github-generator/issues/822) for more information and background.
 
 #### Generic generator
 
 ##### New Features
 
-- A new boolean [`continue-on-error`](https://github.com/slsa-framework/slsa-github-generator/blob/main/internal/builders/generic/README.md#workflow-inputs) input was added which, when set to `true`, prevents the workflow from failing when a step fails. If set to true, the result of the reusable workflow will be return in the [`outcome`](https://github.com/slsa-framework/slsa-github-generator/blob/main/internal/builders/generic/README.md#workflow-outputs) output.
-- A new [`upload-tag-name`](https://github.com/slsa-framework/slsa-github-generator/blob/main/internal/builders/generic/README.md#workflow-inputs) input was added to allow users to specify the tag name for the release when `upload-assets` is set to `true`.
+- A new boolean [`continue-on-error`](https://github.com/slsa-framework/slsa-github-generator/blob/v1.5.0/internal/builders/generic/README.md#workflow-inputs) input was added which, when set to `true`, prevents the workflow from failing when a step fails. If set to true, the result of the reusable workflow will be return in the [`outcome`](https://github.com/slsa-framework/slsa-github-generator/blob/v1.5.0/internal/builders/generic/README.md#workflow-outputs) output.
+- A new [`upload-tag-name`](https://github.com/slsa-framework/slsa-github-generator/blob/v1.5.0/internal/builders/generic/README.md#workflow-inputs) input was added to allow users to specify the tag name for the release when `upload-assets` is set to `true`.
 
 #### Container generator
 
 ##### New Features
 
-- A new boolean [`continue-on-error`](https://github.com/slsa-framework/slsa-github-generator/blob/main/internal/builders/container/README.md#workflow-inputs) input was added which, when set to `true`, prevents the workflow from failing when a step fails. If set to true, the result of the reusable workflow will be return in the [`outcome`](https://github.com/slsa-framework/slsa-github-generator/blob/main/internal/builders/container/README.md#workflow-outputs) output.
-- A new [`repository-username`](https://github.com/slsa-framework/slsa-github-generator/blob/main/internal/builders/container/README.md#workflow-inputs) secret input was added to allow users to pass their repository username that is stored in a [Github Actions encrypted secret](https://docs.github.com/en/actions/security-guides/encrypted-secrets). This secret input should only be used for high-entropy registry username values such as AWS Access Key.
-- Support was added for authenticating with [Google Artifact Registry](https://cloud.google.com/artifact-registry) and [Google Container Registry](https://cloud.google.com/container-registry) using [Workload Identity Federation](https://cloud.google.com/iam/docs/workload-identity-federation). Users can use this new feature by using the [`gcp-workload-identity-provider` and `gcp-service-account` inputs](https://github.com/slsa-framework/slsa-github-generator/blob/main/internal/builders/container/README.md#workflow-inputs)
+- A new boolean [`continue-on-error`](https://github.com/slsa-framework/slsa-github-generator/blob/v1.5.0/internal/builders/container/README.md#workflow-inputs) input was added which, when set to `true`, prevents the workflow from failing when a step fails. If set to true, the result of the reusable workflow will be return in the [`outcome`](https://github.com/slsa-framework/slsa-github-generator/blob/v1.5.0/internal/builders/container/README.md#workflow-outputs) output.
+- A new [`repository-username`](https://github.com/slsa-framework/slsa-github-generator/blob/v1.5.0/internal/builders/container/README.md#workflow-inputs) secret input was added to allow users to pass their repository username that is stored in a [Github Actions encrypted secret](https://docs.github.com/en/actions/security-guides/encrypted-secrets). This secret input should only be used for high-entropy registry username values such as AWS Access Key.
+- Support was added for authenticating with [Google Artifact Registry](https://cloud.google.com/artifact-registry) and [Google Container Registry](https://cloud.google.com/container-registry) using [Workload Identity Federation](https://cloud.google.com/iam/docs/workload-identity-federation). Users can use this new feature by using the [`gcp-workload-identity-provider` and `gcp-service-account` inputs](https://github.com/slsa-framework/slsa-github-generator/blob/v1.5.0/internal/builders/container/README.md#workflow-inputs)
 
 ### Changelog since v1.4.0
 
-https://github.com/slsa-framework/slsa-github-generator/compare/v1.4.0...main
+https://github.com/slsa-framework/slsa-github-generator/compare/v1.4.0...v1.5.0
 
 ## v1.4.0
 

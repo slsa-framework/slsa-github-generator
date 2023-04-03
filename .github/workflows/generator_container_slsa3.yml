@@ -94,7 +94,7 @@ jobs:
       - name: Detect the generator ref
         id: detect
         continue-on-error: true
-        uses: slsa-framework/slsa-github-generator/.github/actions/detect-workflow@v1.5.0-rc.0
+        uses: slsa-framework/slsa-github-generator/.github/actions/detect-workflow@main
 
       - name: Final outcome
         id: final
@@ -125,7 +125,7 @@ jobs:
       - name: Generate builder
         id: generate-builder
         continue-on-error: true
-        uses: slsa-framework/slsa-github-generator/.github/actions/generate-builder@v1.5.0-rc.0
+        uses: slsa-framework/slsa-github-generator/.github/actions/generate-builder@main
         with:
           repository: "${{ needs.detect-env.outputs.repository }}"
           ref: "${{ needs.detect-env.outputs.ref }}"
@@ -146,7 +146,9 @@ jobs:
           service_account: ${{ inputs.gcp-service-account }}
 
       - id: cosign-install
-        uses: sigstore/cosign-installer@9becc617647dfa20ae7b1151972e9b3a2c338a2b # tag=v2.8.1
+        uses: sigstore/cosign-installer@c3667d99424e7e6047999fb6246c0da843953c65 # v3.0.1
+        with:
+          cosign-release: v2.0.0
         continue-on-error: true
 
       - name: Login
@@ -207,7 +209,7 @@ jobs:
 
           COSIGN_EXPERIMENTAL=1 cosign attest --predicate="$predicate_name" \
             --type slsaprovenance \
-            --force \
+            --yes \
             "${UNTRUSTED_IMAGE}@${UNTRUSTED_DIGEST}"
 
       - name: Final outcome

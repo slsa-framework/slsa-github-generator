@@ -31,6 +31,7 @@ This is a document to describe the release process for the slsa-github-generator
   - [Reference Actions at main](#reference-actions-at-main)
   - [Update verifier](#update-verifier)
   - [Finish the release](#finish-the-release)
+  - [Update SECURITY.md](#update-securitymd)
   - [Update the starter workflows](#update-the-starter-workflows)
   - [Announce](#announce)
 
@@ -45,7 +46,7 @@ Set up env variables:
 ```shell
 export GITHUB_USERNAME="laurentsimon"
 # This is the existing slsa-verifier version used by the builder. (https://github.com/slsa-framework/slsa-github-generator/blob/main/.github/actions/generate-builder/action.yml#L55)
-export VERIFIER_TAG="v2.0.1"
+export VERIFIER_TAG="v2.1.0"
 export VERIFIER_REPOSITORY="$GITHUB_USERNAME/slsa-verifier"
 # Release tag of the builder we want to release. Release Candidates end with "-rc.#"
 export BUILDER_TAG="v1.5.0-rc.0"
@@ -92,7 +93,7 @@ This will trigger the [release workflow](https://github.com/slsa-framework/slsa-
 Update version references with the following command:
 
 ```shell
-find .github/workflows/ -name '*.yaml' -o -name '*.yml' | xargs sed -i "s/uses: slsa-framework\/slsa-github-generator\/\.github\/actions\/\(.*\)@\(main\|v[0-9]\+\.[0-9]\+\.[0-9]\+\(-rc\.[0-9]\+\)\?\)/uses: slsa-framework\/slsa-github-generator\/.github\/actions\/\1@$BUILDER_TAG/"
+$ find .github/workflows/ .github/actions/ actions/ -name '*.yaml' -o -name '*.yml' | xargs sed -i "s/uses: slsa-framework\/slsa-github-generator\/\(.*\)@\(main\|v[0-9]\+\.[0-9]\+\.[0-9]\+\(-rc\.[0-9]\+\)\?\)/uses: slsa-framework\/slsa-github-generator\/\1@$BUILDER_TAG/"
 ```
 
 Send a PR with this update and add `#label:release ${BUILDER_TAG}` in the PR description.
@@ -371,13 +372,13 @@ This will trigger the [release workflow](https://github.com/slsa-framework/slsa-
 Update version references with the following command:
 
 ```shell
-find .github/workflows/ -name '*.yaml' -o -name '*.yml' | xargs sed -i "s/uses: slsa-framework\/slsa-github-generator\/\.github\/actions\/\(.*\)@\(main\|v[0-9]\+\.[0-9]\+\.[0-9]\+\(-rc\.[0-9]\+\)\?\)/uses: slsa-framework\/slsa-github-generator\/.github\/actions\/\1@$BUILDER_TAG/"
+$ find .github/workflows/ .github/actions/ actions/ -name '*.yaml' -o -name '*.yml' | xargs sed -i "s/uses: slsa-framework\/slsa-github-generator\/\(.*\)@\(main\|v[0-9]\+\.[0-9]\+\.[0-9]\+\(-rc\.[0-9]\+\)\?\)/uses: slsa-framework\/slsa-github-generator\/\1@$BUILDER_TAG/"
 ```
 
 Likewise, update documentation with the following command:
 
 ```shell
-find . -name "*.md" -exec sed -i "s~\(uses: .*/slsa-github-generator/.*@\)v[0-9]\+\.[0-9]\+\.[0-9]\+~\1$BUILDER_TAG~g" {} +
+find . -name "*.md" -exec sed -i "s~\(uses: .*/slsa-github-generator/.*@\)v[0-9]\+\.[0-9]\+\.[0-9]\+\(-rc\.[0-9]\+\)~\1$BUILDER_TAG~g" {} +
 ```
 
 Send a PR with this update and add `#label:release ${BUILDER_TAG}` in the PR description.
@@ -397,10 +398,10 @@ Re-run the [adversarial tests](#adversarial-tests) using the final `$BUILDER_TAG
 
 ### Reference Actions at main
 
-Send a PR to reference the internal Actions at `@main`. You can use:
+Send a PR to reference the Actions at `@main`. You can use:
 
 ```shell
-find .github/workflows/ -name '*.yaml' -o -name '*.yml' | xargs sed -i "s/uses: slsa-framework\/slsa-github-generator\/\.github\/actions\/\(.*\)@${BUILDER_TAG}/uses: slsa-framework\/slsa-github-generator\/.github\/actions\/\1@main/"
+$ find .github/workflows/ .github/actions/ actions/ -name '*.yaml' -o -name '*.yml' | xargs sed -i "s/uses: slsa-framework\/slsa-github-generator\/\(.*\)@${BUILDER_TAG}/uses: slsa-framework\/slsa-github-generator\/\1@main/"
 ```
 
 ### Update verifier
@@ -427,14 +428,42 @@ For each of the GHA builders, you will need to:
    - [v14.2](https://github.com/slsa-framework/example-package/releases/tag/v14.2)
    - [v13.0.30](https://github.com/slsa-framework/example-package/releases/tag/v13.0.30)
 
-   Wait for the runs to complete and download the uploaded artifacts of each of the created releases.
+   Wait for the runs to complete
 
-2. Move these files to `./cli/slsa-verifier/testdata/gha_$BUILDER_TYPE/$BUILDER_TAG/`. Send a pull request to merge the changes into the verifier's repository. The pre-submits will validate that the verifier is able to verify provenance from the `$BUILDER_TAG` builder.
+2. Download the uploaded artifacts of each of the created releases.
+
+3. Move these files to
+   `./cli/slsa-verifier/testdata/gha_$BUILDER_TYPE/$BUILDER_TAG/` in the
+   slsa-verifier repository. You may need to rename the files to match the
+   directory structure.
+
+4. Determine the digest that was uploaded by the build to the
+   [example-package.verifier-e2e.all.tag.main.default.slsa3](https://github.com/slsa-framework/example-package/pkgs/container/example-package.verifier-e2e.all.tag.main.default.slsa3)
+   package.
+
+5. Export the image to the
+   `./cli/slsa-verifier/testdata/gha_generic_container/$BUILDER_TAG/` directory
+   in the slsa-verifier repository.
+
+   ```shell
+   cosign save \
+       --dir ./cli/slsa-verifier/testdata/gha_generic_container/$BUILDER_TAG/container_workflow_dispatch \
+       ghcr.io/slsa-framework/example-package.verifier-e2e.all.tag.main.default.slsa3@sha256:<digest>
+   ```
+
+6. Send a pull request to merge the changes into the verifier's repository. The
+   pre-submits will validate that the verifier is able to verify provenance from
+   the `$BUILDER_TAG` builder.
 
 ### Finish the release
 
 1. Remove the "This is an un-finalized release." note from the release description.
 1. Un-tick the `This is a pre-release` option.
+1. If it's the latest release, tick the `Set as the latest release` option.
+
+### Update SECURITY.md
+
+Update the `Supported Versions` section in [SECURITY.md](./SECURITY.md).
 
 ### Update the starter workflows
 

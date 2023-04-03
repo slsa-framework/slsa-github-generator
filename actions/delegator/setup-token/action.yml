@@ -3,6 +3,11 @@ name: setup token
 description: "Create a SLSA token for the delegated workflow"
 
 inputs:
+  slsa-version:
+    description: "The version of SLSA provenance format to output."
+    required: false
+    default: "v1-rc1"
+
   slsa-workflow-recipient:
     description: >
       The workflow filename that this token is intended for.
@@ -39,6 +44,18 @@ inputs:
       passed to the tool's build Action.
 
       Note: The TRW is the reusable workflow calling this Action.
+    type: string
+    required: true
+
+  slsa-workflow-masked-inputs:
+    description: >
+      A comma-separated list of input fields to mask in the provenance.
+      It should be used for fields that have low-entropy values
+      but need to be kept private. The masking will replace
+      the value of the fields with '***'. Use this option to mask
+      usernames, emails or other PII inputs.
+
+      Example: field1, field2, field3
     type: string
     required: true
 

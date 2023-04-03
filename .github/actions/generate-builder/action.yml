@@ -2,8 +2,11 @@ name: "Generate the builder"
 description: "Build or fetch the builder binary"
 inputs:
   ref:
-    description: "A fully formed ref (refs/...) or SHA to checkout."
+    description: "A fully formed ref (refs/...) or SHA to checkout for the action code."
     required: true
+  builder-ref:
+    description: "A fully formed ref (refs/...) or SHA to generate the builder. If not provided, defaults to inputs.ref"
+    required: false
   repository:
     description: "Repository of the builder."
     required: true
@@ -67,11 +70,17 @@ runs:
         # release binaries when the compile-builder input is false.
         VERIFIER_REPOSITORY: slsa-framework/slsa-verifier # The repository to download the pre-built verifier binary from.
         VERIFIER_RELEASE_BINARY: slsa-verifier-linux-amd64 # The name of the verifier binary in the release assets.
-        VERIFIER_RELEASE_BINARY_SHA256: b1d6c9bbce6274e253f0be33158cacd7fb894c5ebd643f14a911bfe55574f4c0 # The expected hash of the verifier binary.
-        VERIFIER_RELEASE: v1.3.2 # The version of the verifier to download.
+        VERIFIER_RELEASE_BINARY_SHA256: 538e5346784ddab14189dd66fb995e49c69247985a364558ad3b44e1fbff04cf # The expected hash of the verifier binary.
+        VERIFIER_RELEASE: v2.1.0 # The version of the verifier to download.
 
         COMPILE_BUILDER: "${{ inputs.compile-builder }}"
-        BUILDER_REF: "${{ inputs.ref }}"
+        # NOTE: If a builder reference is specified, then we will download this version of the builder.
+        # Otherwise, we use the same tag reference as the detected workflow source reference. This allows
+        # pinning the builder binary version at the same as the reuseable workflow reference, and avoids
+        # dynamically fetching a builder binary.
+        # The builder-ref option can be used to test the scripts at main to download a builder binary at
+        # a previous tag.
+        BUILDER_REF: "${{ inputs.builder-ref || inputs.ref }}" # The version of the builder to retrieve.
         BUILDER_DIR: "./__BUILDER_CHECKOUT_DIR__/${{ inputs.directory }}"
         # Needed for the gh CLI used in builder-fetch.sh.
         GH_TOKEN: "${{ inputs.token }}"

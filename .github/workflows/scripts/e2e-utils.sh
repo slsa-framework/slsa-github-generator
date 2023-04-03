@@ -2,14 +2,14 @@
 
 source "./.github/workflows/scripts/e2e-assert.sh"
 
-# Gets the name of the currently running workflow file.
-# Note: this requires GH_TOKEN to be set in the workflows.
-e2e_this_file() {
-    gh api -H "Accept: application/vnd.github.v3+json" "/repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" | jq -r '.path' | cut -d '/' -f3
-}
-
 e2e_this_file_full_path() {
     gh api -H "Accept: application/vnd.github.v3+json" "/repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" | jq -r '.path'
+}
+
+# e2e_this_file prints the name of the currently running workflow file.
+# Note: this requires GH_TOKEN to be set in the workflows.
+e2e_this_file() {
+    e2e_this_file_full_path | cut -d '/' -f3
 }
 
 e2e_verify_predicate_subject_name() {
@@ -80,12 +80,24 @@ _e2e_verify_query() {
     e2e_assert_eq "${name}" "${expected}" "${query} should be ${expected}"
 }
 
-e2e_verify_predicate_v1_buildDefinition_externalParameters_workflowPath() {
-    _e2e_verify_query "$1" "$2" '.buildDefinition.externalParameters.workflowPath'
+# _e2e_verify_presence verifies that the result of the given jq query is present.
+_e2e_verify_presence() {
+    local attestation="$1"
+    local query="$2"
+    name=$(echo -n "${attestation}" | jq -c -r "${query} | select(type != \"null\")")
+    assert_not_empty "${name}" "${query} should not be empty"
+}
+
+e2e_verify_predicate_v1_buildDefinition_externalParameters_workflow_path() {
+    _e2e_verify_query "$1" "$2" '.buildDefinition.externalParameters.workflow.path'
 }
 
 e2e_verify_predicate_v1_buildDefinition_externalParameters_source() {
     _e2e_verify_query "$1" "$2" '.buildDefinition.externalParameters.source'
+}
+
+e2e_verify_predicate_v1_buildDefinition_externalParameters_inputs() {
+    _e2e_verify_query "$1" "$2" '.buildDefinition.externalParameters.inputs'
 }
 
 e2e_verify_predicate_v1_buildDefinition_buildType() {
@@ -98,6 +110,10 @@ e2e_verify_predicate_v1_buildDefinition_resolvedDependencies() {
 
 e2e_verify_predicate_v1_buildDefinition_systemParameters() {
     _e2e_verify_query "$1" "$3" '.buildDefinition.systemParameters.'"$2"
+}
+
+e2e_present_predicate_v1_buildDefinition_systemParameters() {
+    _e2e_verify_presence "$1" '.buildDefinition.systemParameters.'"$2"
 }
 
 e2e_verify_predicate_v1_runDetails_builder_id() {

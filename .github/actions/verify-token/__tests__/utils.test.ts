@@ -1,8 +1,8 @@
 /**
- * @fileoverview Tests for predicate.ts
+ * @fileoverview Tests for utils.ts
  */
 
-import { getWorkflowPath } from "../src/predicate";
+import { getWorkflowPath } from "../src/utils";
 import { githubObj } from "../src/types";
 
 describe("getWorkflowPath", () => {
@@ -11,7 +11,6 @@ describe("getWorkflowPath", () => {
       actor_id: "",
       event_name: "",
       event_path: "",
-      job: "",
       ref: "",
       ref_type: "",
       repository: "octocat/hello-world",
@@ -35,7 +34,6 @@ describe("getWorkflowPath", () => {
       actor_id: "",
       event_name: "",
       event_path: "",
-      job: "",
       ref: "",
       ref_type: "",
       repository: "octocat/hello-world",

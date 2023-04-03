@@ -18,13 +18,13 @@
     "setup"
   ],
   "devDependencies": {
-    "@types/node": "18.13.0",
-    "@typescript-eslint/eslint-plugin": "5.51.0",
-    "@typescript-eslint/parser": "5.51.0",
+    "@types/node": "18.15.11",
+    "@typescript-eslint/eslint-plugin": "5.57.0",
+    "@typescript-eslint/parser": "5.57.0",
     "@vercel/ncc": "0.36.1",
-    "eslint": "8.34.0",
-    "eslint-plugin-github": "4.6.0",
-    "prettier": "2.8.4",
+    "eslint": "8.37.0",
+    "eslint-plugin-github": "4.7.0",
+    "prettier": "2.8.7",
     "typescript": "4.9.5"
   },
   "dependencies": {

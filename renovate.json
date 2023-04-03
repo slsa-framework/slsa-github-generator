@@ -6,7 +6,15 @@
   "packageRules": [
     {
       "matchManagers": ["github-actions"],
-      "groupName": "github-actions"
+      "excludePackageNames": ["slsa-framework/slsa-github-generator"],
+      "groupName": "github-actions",
+      "pinDigests": true
+    },
+    {
+      "matchManagers": ["github-actions"],
+      "matchPackageNames": ["slsa-framework/slsa-github-generator"],
+      "groupName": "github-actions",
+      "pinDigests": false
     },
     {
       "matchManagers": ["dockerfile"],

@@ -28,14 +28,20 @@ async function run(): Promise<void> {
         INPUT_SLSA-REKOR-LOG-PUBLIC=true \
         INPUT_SLSA-RUNNER-LABEL="ubuntu-latest" \
         INPUT_SLSA-BUILD-ACTION-PATH="./actions/build-artifacts-composite" \
-        INPUT_SLSA-WORKFLOW-INPUTS="{\"name1\":\"value1\",\"name2\":\"value2\"}" \
+        INPUT_SLSA-WORKFLOW-INPUTS="{\"name1\":\"value1\",\"name2\":\"value2\",\"name3\":\"value3\",\"name4\":\"value4\"}" \
+        INPUT_SLSA-WORKFLOW-INPUTS-MASK="name2, name4" \
         nodejs ./dist/index.js
     */
 
+    const slsaVersion = core.getInput("slsa-version");
+    if (!["v1-rc1", "v0.2"].includes(slsaVersion)) {
+      throw new Error(`Unsupported slsa-version: ${slsaVersion}`);
+    }
     const workflowRecipient = core.getInput("slsa-workflow-recipient");
     const rekorLogPublic = core.getInput("slsa-rekor-log-public");
     const runnerLabel = core.getInput("slsa-runner-label");
     const buildArtifactsActionPath = core.getInput("slsa-build-action-path");
+    const workflowsInputsMask = core.getInput("slsa-workflow-masked-inputs");
     // The workflow inputs are represented as a JSON object theselves.
     const workflowsInputsText = core.getInput("slsa-workflow-inputs");
 
@@ -48,12 +54,19 @@ async function run(): Promise<void> {
       core.info(` ${key}: ${value}`);
     }
 
+    const workflowMaskedInputs = getMaskedInputs(workflowsInputsMask);
+    core.info(`maskedInputs: `);
+    for (const value of workflowMaskedInputs) {
+      core.info(` ${value}`);
+    }
+
     const payload = JSON.stringify(github.context.payload, undefined, 2);
     core.debug(`The event payload: ${payload}`);
 
     // Construct an unsigned SLSA token.
     const unsignedSlsaToken = {
       version: 1,
+      slsaVersion,
       context: "SLSA delegator framework",
       builder: {
         rekor_log_public: rekorLogPublic,
@@ -63,7 +76,7 @@ async function run(): Promise<void> {
       github: {
         actor_id: process.env.GITHUB_ACTOR_ID,
         event_name: process.env.GITHUB_EVENT_NAME,
-        job: process.env.GITHUB_JOB,
+        event_path: process.env.GITHUB_EVENT_PATH,
         ref: process.env.GITHUB_REF,
         ref_type: process.env.GITHUB_REF_TYPE,
         repository: process.env.GITHUB_REPOSITORY,
@@ -92,6 +105,7 @@ async function run(): Promise<void> {
           },
         },
         inputs: workflowInputs,
+        masked_inputs: workflowMaskedInputs,
       },
     };
 
@@ -102,27 +116,20 @@ async function run(): Promise<void> {
     core.info(`unsignedB64Token: ${unsignedB64Token}`);
 
     // Sign and prepare the base64 bundle.
-    const eventName = process.env.GITHUB_EVENT_NAME || "";
-    let bundleStr = "";
-    if (eventName === "pull_request") {
-      bundleStr = "PLACEHOLDER_SIGNATURE";
-    } else {
-      const bundle = await sigstore.sign(
-        Buffer.from(unsignedB64Token),
-        signOptions
-      );
-      bundleStr = JSON.stringify(bundle);
-    }
+    const bundle = await sigstore.sign(
+      Buffer.from(unsignedB64Token),
+      signOptions
+    );
+
+    // Verify just to double check.
+    // NOTE: this is an offline verification.
+    // TODO(#1668): re-enable verification.
+    // await sigstore.verify(bundle, Buffer.from(unsignedB64Token));
+    const bundleStr = JSON.stringify(bundle);
 
     const bundleB64 = Buffer.from(bundleStr).toString("base64");
     core.info(`bundleStr: ${bundleStr}`);
     core.info(`bundleB64: ${bundleB64}`);
-
-    // Verify just to double check.
-    // NOTE: this is an offline verification.
-    // TODO(https://github.com/sigstore/sigstore-js/issues/215): Re-enable when fixed.
-    // await sigstore.sigstore.verify(bundle, Buffer.from(unsignedB64Token));
-
     // Output the signed token.
     core.info(`slsa-token: ${bundleB64}.${unsignedB64Token}`);
     core.setOutput("slsa-token", `${bundleB64}.${unsignedB64Token}`);
@@ -133,6 +140,15 @@ async function run(): Promise<void> {
       core.setFailed(`Unexpected error: ${error}`);
     }
   }
+}
+
+function getMaskedInputs(inputsStr: string): string[] {
+  const ret = [];
+  const inputArr = inputsStr.split(",");
+  for (const input of inputArr) {
+    ret.push(input.trim());
+  }
+  return ret;
 }
 
 run();

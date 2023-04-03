@@ -11,33 +11,21 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-import * as fs from "fs";
+import * as github from "@actions/github";
+import * as tscommon from "tscommon";
 
-import {
-  githubObj,
-  rawTokenInterface,
-  ArtifactReference,
-  SLSAv1Predicate,
-} from "./types";
+import { rawTokenInterface } from "./types";
+import { createURI, getWorkflowPath } from "./utils";
+import { SLSAPredicate, ArtifactReference } from "./slsatypes1";
 
-const DELEGATOR_BUILD_TYPE =
+const DELEGATOR_BUILD_TYPE_V0 =
   "https://github.com/slsa-framework/slsa-github-generator/delegator-generic@v0";
 
-// getWorkflowPath returns the workflow's path from the workflow_ref.
-export function getWorkflowPath(obj: githubObj): string {
-  // GITHUB_WORKFLOW_REF contains the repository name in the path. We will trim
-  // it out.
-  // e.g. 'octocat/hello-world/.github/workflows/my-workflow.yml@refs/heads/my_branch'
-  // Strip off the repo name and git ref from the workflow path.
-  return obj.workflow_ref
-    .substring(`${obj.repository}/`.length)
-    .split("@", 1)[0];
-}
-
-export function createPredicate(
+export async function createPredicate(
   rawTokenObj: rawTokenInterface,
-  toolURI: string
-): SLSAv1Predicate {
+  toolURI: string,
+  token: string
+): Promise<SLSAPredicate> {
   const callerRepo: string = createURI(
     rawTokenObj.github.repository,
     rawTokenObj.github.ref
@@ -50,15 +38,26 @@ export function createPredicate(
     },
   };
 
+  // NOTE: We get the triggering_actor_id from the workflow run via the API.
+  // We can trust this value as we have validated the run_id (as much as we can
+  // trust the GitHub API on GitHub Actions anyway).
+  const octokit = github.getOctokit(token);
+  const [owner, repo] = rawTokenObj.github.repository.split("/");
+  const { data: current_run } = await octokit.rest.actions.getWorkflowRun({
+    owner,
+    repo,
+    run_id: Number(rawTokenObj.github.run_id),
+  });
+
   // NOTE: see example at https://github.com/slsa-framework/slsa/blob/main/docs/github-actions-workflow/examples/v0.1/example.json.
-  const predicate: SLSAv1Predicate = {
+  const predicate: SLSAPredicate = {
     buildDefinition: {
-      buildType: DELEGATOR_BUILD_TYPE,
+      buildType: DELEGATOR_BUILD_TYPE_V0,
       externalParameters: {
         // Inputs to the TRW, which define the interface of the builder for the
-        // BYOB framework.
-        // TODO(#1575): mask inputs.
-        inputs: rawTokenObj.tool.inputs,
+        // BYOB framework. Some of these values may be masked by the TRW.
+        // NOTE: the Map object needs to be converted to an object to serialize to JSON.
+        inputs: Object.fromEntries(rawTokenObj.tool.inputs),
         // Variables are always empty for BYOB / builders.
         // TODO(#1555): add support for generators.
         vars: {},
@@ -75,7 +74,6 @@ export function createPredicate(
       systemParameters: {
         GITHUB_ACTOR_ID: rawTokenObj.github.actor_id,
         GITHUB_EVENT_NAME: rawTokenObj.github.event_name,
-        GITHUB_JOB: rawTokenObj.github.job,
         GITHUB_REF: rawTokenObj.github.ref,
         GITHUB_REF_TYPE: rawTokenObj.github.ref_type,
         GITHUB_REPOSITORY: rawTokenObj.github.repository,
@@ -85,6 +83,13 @@ export function createPredicate(
         GITHUB_RUN_ID: rawTokenObj.github.run_id,
         GITHUB_RUN_NUMBER: rawTokenObj.github.run_number,
         GITHUB_SHA: rawTokenObj.github.sha,
+        // NOTE: the triggering_actor should be returned by the API but the
+        // TypeScript type indicates that it could be undefined. If that is
+        // the case, then we'll fall back to the actor_id.
+        GITHUB_TRIGGERING_ACTOR_ID:
+          (current_run.triggering_actor &&
+            String(current_run.triggering_actor.id)) ||
+          rawTokenObj.github.actor_id,
         GITHUB_WORKFLOW_REF: rawTokenObj.github.workflow_ref,
         GITHUB_WORKFLOW_SHA: rawTokenObj.github.workflow_sha,
 
@@ -113,22 +118,10 @@ export function createPredicate(
   if (rawTokenObj.github.event_path) {
     // NOTE: event_path has been validated as the same as env.GITHUB_EVENT_PATH
     const ghEvent = JSON.parse(
-      fs.readFileSync(rawTokenObj.github.event_path).toString()
+      tscommon.safeReadFileSync(rawTokenObj.github.event_path).toString()
     );
     predicate.buildDefinition.systemParameters.GITHUB_EVENT_PAYLOAD = ghEvent;
   }
 
   return predicate;
-}
-
-// createURI creates the fully qualified URI out of the repository
-function createURI(repository: string, ref: string): string {
-  if (!repository) {
-    throw new Error(`cannot create URI: repository undefined`);
-  }
-  let refVal = "";
-  if (ref) {
-    refVal = `@${ref}`;
-  }
-  return `git+https://github.com/${repository}${refVal}`;
 }

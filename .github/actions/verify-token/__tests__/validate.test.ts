@@ -7,8 +7,9 @@ import {
   validateFieldAnyOf,
   validateFieldNonEmpty,
   validateGitHubFields,
+  validateAndMaskInputs,
 } from "../src/validate";
-import { githubObj } from "../src/types";
+import { githubObj, rawTokenInterface } from "../src/types";
 
 describe("validateField", () => {
   it("validates equal values", () => {
@@ -113,6 +114,103 @@ describe("validateFieldNonEmpty", () => {
   });
 });
 
+function createToken(
+  inputs: Map<string, string | number | boolean>,
+  masked: string[]
+): rawTokenInterface {
+  const token: rawTokenInterface = {
+    version: 1,
+    slsaVersion: "1.0-rc1",
+    context: "the context",
+    builder: {
+      private_repository: true,
+      runner_label: "the label",
+      audience: "the audience",
+    },
+    github: {
+      actor_id: "123",
+      event_name: "workflow_dispatch",
+      event_path: "/path/to/event.json",
+      ref: "refs/heads/mybranch",
+      ref_type: "branch",
+      repository: "ianlewis/byob-test",
+      repository_id: "456",
+      repository_owner_id: "789",
+      run_attempt: "1",
+      run_id: "123456789",
+      run_number: "1",
+      sha: "deadbeef",
+      workflow_ref:
+        "ianlewis/byob-test/.github/workflows/my-workflow.yml@refs/heads/my_branch",
+      workflow_sha: "deadbeef",
+    },
+    runner: {
+      arch: "arch",
+      name: "name",
+      os: "os",
+    },
+    image: {
+      os: "os",
+      version: "version",
+    },
+    tool: {
+      actions: {
+        build_artifacts: {
+          path: "path",
+        },
+      },
+      inputs: inputs,
+      masked_inputs: masked,
+    },
+  };
+  return token;
+}
+
+describe("validateAndMaskInputs", () => {
+  it("valid masked inputs", () => {
+    const inputs = JSON.parse(
+      '{"name1": "value1", "name2": 2, "name3": "", "name4": true}'
+    );
+    const masked = ["name2", "name3", "name4"];
+    const token = createToken(inputs, masked);
+    expect(validateAndMaskInputs(token).tool.inputs).toEqual(
+      new Map<string, string | number | boolean>([
+        ["name1", "value1"],
+        ["name2", "***"],
+        ["name3", "***"],
+        ["name4", "***"],
+      ])
+    );
+  });
+
+  it("empty masked inputs", () => {
+    const inputs = JSON.parse(
+      '{"name1": "value1", "name2": 2, "name3": "", "name4": true}'
+    );
+    const masked = [""];
+    const token = createToken(inputs, masked);
+    expect(validateAndMaskInputs(token).tool.inputs).toEqual(
+      new Map<string, string | number | boolean>([
+        ["name1", "value1"],
+        ["name2", 2],
+        ["name3", ""],
+        ["name4", true],
+      ])
+    );
+  });
+
+  it("invalid masked input name", () => {
+    const inputs = JSON.parse(
+      '{"name1": "value1", "name2": 2, "name3": "", "name4": true}'
+    );
+    const masked = ["does-not-exist"];
+    const token = createToken(inputs, masked);
+    expect(() => {
+      validateAndMaskInputs(token);
+    }).toThrow();
+  });
+});
+
 describe("validateGitHubFields", () => {
   const env = process.env;
 
@@ -129,7 +227,6 @@ describe("validateGitHubFields", () => {
     process.env.GITHUB_ACTOR_ID = "123";
     process.env.GITHUB_EVENT_NAME = "workflow_dispatch";
     process.env.GITHUB_EVENT_PATH = "/path/to/event.json";
-    process.env.GITHUB_JOB = "234";
     process.env.GITHUB_REF = "refs/heads/mybranch";
     process.env.GITHUB_REF_TYPE = "branch";
     process.env.GITHUB_REPOSITORY = "ianlewis/byob-test";
@@ -147,7 +244,6 @@ describe("validateGitHubFields", () => {
       actor_id: "123",
       event_name: "workflow_dispatch",
       event_path: "/path/to/event.json",
-      job: "234",
       ref: "refs/heads/mybranch",
       ref_type: "branch",
       repository: "ianlewis/byob-test",
@@ -168,7 +264,6 @@ describe("validateGitHubFields", () => {
     process.env.GITHUB_ACTOR_ID = "123";
     process.env.GITHUB_EVENT_NAME = "workflow_dispatch";
     process.env.GITHUB_EVENT_PATH = "/path/to/event.json";
-    process.env.GITHUB_JOB = "234";
     process.env.GITHUB_REF = "refs/heads/mybranch";
     process.env.GITHUB_REF_TYPE = "branch";
     process.env.GITHUB_REPOSITORY = "ianlewis/byob-test";
@@ -186,7 +281,6 @@ describe("validateGitHubFields", () => {
       actor_id: "123",
       event_name: "workflow_dispatch",
       event_path: "/path/to/event.json",
-      job: "234",
       ref: "refs/heads/mybranch",
       ref_type: "branch",
       repository: "ianlewis/byob-test",
@@ -228,7 +322,6 @@ describe("validateGitHubFields", () => {
       actor_id: "123",
       event_name: "workflow_dispatch",
       event_path: "/path/to/event.json",
-      job: "234",
       ref: "refs/heads/mybranch",
       ref_type: "branch",
       repository: "asraa/byob-test", // NOTE: Not equal
