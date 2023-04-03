@@ -105,20 +105,20 @@ func (s *Fulcio) Sign(ctx context.Context, p *intoto.Statement) (signing.Attesta
 
 	k, err := s.newSigner(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("creating signer: %v", err)
+		return nil, fmt.Errorf("creating signer: %w", err)
 	}
 
 	signer := dsse.WrapSigner(k, intoto.PayloadType)
 	signedAtt, err := signer.SignMessage(bytes.NewReader(attBytes))
 	if err != nil {
-		return nil, fmt.Errorf("signing message: %v", err)
+		return nil, fmt.Errorf("signing message: %w", err)
 	}
 
 	// Add certificate to envelope.
 	// TODO: Remove when DSSE spec includes a cert field inside the signatures.
 	signedAttWithCert, err := envelope.AddCertToEnvelope(signedAtt, k.Cert)
 	if err != nil {
-		return nil, fmt.Errorf("adding certificate to DSSE: %v", err)
+		return nil, fmt.Errorf("adding certificate to DSSE: %w", err)
 	}
 
 	return &attestation{
