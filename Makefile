@@ -55,14 +55,14 @@ markdownlint: node_modules/.installed ## Runs the markdownlint linter.
 	@set -e;\
 		if [ "$(OUTPUT_FORMAT)" == "github" ]; then \
 			exit_code=0; \
-			while IFS="" read -r p || [ -n "$$p" ]; do \
+			while IFS="" read -r p && [ -n "$$p" ]; do \
 				FILE=$$(echo "$$p" | jq -c -r '.fileName // empty'); \
 				LINE=$$(echo "$$p" | jq -c -r '.lineNumber // empty'); \
 				ENDLINE=$${LINE}; \
 				MESSAGE=$$(echo "$$p" | jq -c -r '.ruleNames[0] + "/" + .ruleNames[1] + " " + .ruleDescription + " [Detail: \"" + .errorDetail + "\", Context: \"" + .errorContext + "\"]"'); \
 				exit_code=1; \
 				echo "::error file=$${FILE},line=$${LINE},endLine=$${ENDLINE}::$${MESSAGE}"; \
-			done <<< $$(./node_modules/.bin/markdownlint --dot --json . 2>&1 | jq -c '.[]'); \
+			done <<< "$$(./node_modules/.bin/markdownlint --dot --json . 2>&1 | jq -c '.[]')"; \
 			exit "$${exit_code}"; \
 		else \
 			npm run lint; \
@@ -85,7 +85,7 @@ shellcheck: ## Runs the shellcheck linter.
 		files=$$(find . -type f -not -iwholename '*/.git/*' -not -iwholename '*/vendor/*' -not -iwholename '*/node_modules/*' -exec bash -c 'file "$$1" | cut -d':' -f2 | grep --quiet shell' _ {} \; -print); \
 		if [ "$(OUTPUT_FORMAT)" == "github" ]; then \
 			exit_code=0; \
-			while IFS="" read -r p || [ -n "$$p" ]; do \
+			while IFS="" read -r p && [ -n "$$p" ]; do \
 				LEVEL=$$(echo "$$p" | jq -c '.level // empty' | tr -d '"'); \
 				FILE=$$(echo "$$p" | jq -c '.file // empty' | tr -d '"'); \
 				LINE=$$(echo "$$p" | jq -c '.line // empty' | tr -d '"'); \
@@ -105,7 +105,7 @@ shellcheck: ## Runs the shellcheck linter.
 					echo "::error file=$${FILE},line=$${LINE},endLine=$${ENDLINE},col=$${COL},endColumn=$${ENDCOL}::$${MESSAGE}"; \
 					;; \
 				esac; \
-			done <<< $$(echo -n "$$files" | xargs shellcheck -f json $(SHELLCHECK_ARGS) | jq -c '.[]'); \
+			done <<< "$$(echo -n "$$files" | xargs shellcheck -f json $(SHELLCHECK_ARGS) | jq -c '.[]')"; \
 			exit "$${exit_code}"; \
 		else \
 			echo -n "$$files" | xargs shellcheck $(SHELLCHECK_ARGS); \
