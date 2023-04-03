@@ -237,6 +237,8 @@ The `buildDefinition` contains the following fields:
 | `externalParameters.buildConfig.Command` | `"["npm", "run", "all"]"`                                               | The build command invoked in the container image to produce the output artifacts. |
 | `externalParameters.resolvedDependencies` | `slsa.ArtifactReference`                                               | An artifact reference specifying the binary used by the reusable workflow to build the artifact and generate the build definition. See the [CLI tool](#command-line-tool) below. |
 
+The [CLI tool](#command-line-tool) described in `externalParameters.resolvedDependencies` contains the `uri` of the source that was used to build the artifact (from this GitHub repository). The `digest` referes to the cryptographic digest of the built binary. Using this information, a verifier may download the source artifact from the GitHub releases inferred by the URI and verify its digest.
+
 ### Provenance Example
 
 The following is an example of the generated provenance. Provenance is generated
@@ -323,6 +325,10 @@ as an [in-toto](https://in-toto.io/) statement with a SLSA predicate.
   }
 }
 ```
+
+See
+[hello-transparent-release](https://github.com/project-oak/hello-transparent-release)
+for a more detailed description of how to use this workflow.
 
 ## Command line tool
 

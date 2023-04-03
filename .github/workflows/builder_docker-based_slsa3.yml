@@ -211,7 +211,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [rng, detect-env, generate-builder]
     steps:
-      - uses: actions/checkout@24cb9080177205b6e8c946b17badbe402adc938f # v3.4.0
+      - uses: actions/checkout@8f4b7f84864484a7bf31766abe9204da3cbe65b3 # v3.5.0
       - name: Checkout builder repository
         uses: slsa-framework/slsa-github-generator/.github/actions/secure-builder-checkout@main
         with:
@@ -250,13 +250,15 @@ jobs:
             --build-definition-path build-definition.json \
             --builder-image "${BUILDER_IMAGE}@${BUILDER_DIGEST}" \
             --git-commit-digest "sha1:${GITHUB_SHA}" \
-            --source-repo "git+https://github.com/${GITHUB_REPOSITORY}${REF}"
+            --source-repo "git+https://github.com/${GITHUB_REPOSITORY}${REF}" \
+            --verbose
           "${GITHUB_WORKSPACE}/${BUILDER_BINARY}" dry-run \
             --build-config-path "${CONFIG_PATH}" \
             --build-definition-path build-definition.json \
             --builder-image "${BUILDER_IMAGE}@${BUILDER_DIGEST}" \
             --git-commit-digest "sha1:${GITHUB_SHA}" \
-            --source-repo "git+https://github.com/${GITHUB_REPOSITORY}${REF}"
+            --source-repo "git+https://github.com/${GITHUB_REPOSITORY}${REF}" \
+            --verbose
 
           echo "build-definition-name=build-definition.json" >> $GITHUB_OUTPUT
 
@@ -354,7 +356,7 @@ jobs:
           set-executable: true
 
       - name: Checkout the source repository
-        uses: actions/checkout@24cb9080177205b6e8c946b17badbe402adc938f # v3.4.0
+        uses: actions/checkout@8f4b7f84864484a7bf31766abe9204da3cbe65b3 # v3.5.0
         with:
           fetch-depth: 1
           persist-credentials: false
@@ -387,14 +389,16 @@ jobs:
             --git-commit-digest "sha1:${GITHUB_SHA}" \
             --source-repo "git+https://github.com/${GITHUB_REPOSITORY}${REF}" \
             --subjects-path subjects.json \
-            --output-folder /tmp/build-outputs-${RNG}
+            --output-folder /tmp/build-outputs-${RNG} \
+            --verbose
           "${GITHUB_WORKSPACE}/${BUILDER_BINARY}" build \
             --build-config-path "${CONFIG_PATH}" \
             --builder-image "${BUILDER_IMAGE}@${BUILDER_DIGEST}" \
             --git-commit-digest "sha1:${GITHUB_SHA}" \
             --source-repo "git+https://github.com/${GITHUB_REPOSITORY}${REF}" \
             --subjects-path subjects.json \
-            --output-folder /tmp/build-outputs-${RNG}
+            --output-folder /tmp/build-outputs-${RNG} \
+            --verbose
 
           # Construct attestation filename.
           FILENAME=${PROVENANCE_NAME}

@@ -27,7 +27,7 @@ jobs:
       #   "https://api.github.com/repos/$USERNAME/slsa-github-generator/actions/workflows/e2e.verify-token.schedule.yml/dispatches" \
       #   -d "{\"ref\":\"$BRANCH\"}" \
       #   -H "Authorization: token $GH_TOKEN"
-      - uses: actions/checkout@24cb9080177205b6e8c946b17badbe402adc938f # v3.4.0
+      - uses: actions/checkout@8f4b7f84864484a7bf31766abe9204da3cbe65b3 # v3.5.0
       - id: setup
         uses: ./actions/delegator/setup-token
         with:
@@ -70,7 +70,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [setup-token]
     steps:
-      - uses: actions/checkout@24cb9080177205b6e8c946b17badbe402adc938f # v3.4.0
+      - uses: actions/checkout@8f4b7f84864484a7bf31766abe9204da3cbe65b3 # v3.5.0
       - id: verify
         uses: ./.github/actions/verify-token
         with:
@@ -120,7 +120,7 @@ jobs:
       contents: read
       issues: write
     steps:
-      - uses: actions/checkout@24cb9080177205b6e8c946b17badbe402adc938f # v3.4.0
+      - uses: actions/checkout@8f4b7f84864484a7bf31766abe9204da3cbe65b3 # v3.5.0
         with:
           repository: slsa-framework/example-package
           ref: main
@@ -134,7 +134,7 @@ jobs:
       contents: read
       issues: write
     steps:
-      - uses: actions/checkout@24cb9080177205b6e8c946b17badbe402adc938f # v3.4.0
+      - uses: actions/checkout@8f4b7f84864484a7bf31766abe9204da3cbe65b3 # v3.5.0
         with:
           repository: slsa-framework/example-package
           ref: main

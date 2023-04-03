@@ -29,7 +29,7 @@ runs:
         # in the workspace directory, but this may change in the future.
         resolved_dir=$(readlink -m "$UNTRUSTED_PATH")
         wd=$(readlink -m "$PWD")
-        if [[ "$resolved_dir" != "$wd"/* ]]; then
+        if [[ "$resolved_dir" != "$wd"/* ]] && [[ "$resolved_dir" != "$wd" ]]; then
           echo "Path is not in the current directory: $UNTRUSTED_PATH"
           exit 1
         fi

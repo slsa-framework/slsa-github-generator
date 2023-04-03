@@ -13,8 +13,28 @@ jobs:
     name: verify no checkout in Actions
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@24cb9080177205b6e8c946b17badbe402adc938f # v3.4.0
+      - uses: actions/checkout@8f4b7f84864484a7bf31766abe9204da3cbe65b3 # v3.5.0
       - run: ./.github/workflows/scripts/pre-submit.actions/checkout.sh
+
+  check-tscommon-tarball:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@8f4b7f84864484a7bf31766abe9204da3cbe65b3 # v3.5.0
+
+      - name: Untar the package tarball
+        working-directory: .github/actions/tscommon
+        run: tar xvzf tscommon-0.0.0.tgz
+
+      - name: Compare the expected and actual dist/ directories
+        working-directory: .github/actions/tscommon
+        id: diff
+        run: |
+          set -euo pipefail
+          if [ "$(git diff --ignore-space-at-eol dist/ | wc -l)" -gt "0" ]; then
+            echo "Detected uncommitted changes after build.  See status below:"
+            git diff
+            exit 1
+          fi
 
   check-dist-matrix:
     runs-on: ubuntu-latest
@@ -29,13 +49,14 @@ jobs:
           - ./actions/delegator/setup-token
           - .github/actions/verify-token
           - .github/actions/detect-workflow-js
+          - .github/actions/tscommon
     steps:
-      - uses: actions/checkout@24cb9080177205b6e8c946b17badbe402adc938f # v3.4.0
+      - uses: actions/checkout@8f4b7f84864484a7bf31766abe9204da3cbe65b3 # v3.5.0
 
-      - name: Set Node.js 16
+      - name: Set Node.js 18
         uses: actions/setup-node@64ed1c7eab4cce3362f8c340dee64e5eaeef8f7c # v3.6.0
         with:
-          node-version: 16
+          node-version: 18
 
       - name: Rebuild the dist/ directory
         working-directory: ${{ matrix.action }}
@@ -76,7 +97,7 @@ jobs:
   compute-sha256:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@24cb9080177205b6e8c946b17badbe402adc938f # v3.4.0
+      - uses: actions/checkout@8f4b7f84864484a7bf31766abe9204da3cbe65b3 # v3.5.0
       - run: |
           echo "foo" > artifact
       - id: compute-sha256
@@ -91,7 +112,7 @@ jobs:
   rng:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@24cb9080177205b6e8c946b17badbe402adc938f # v3.4.0
+      - uses: actions/checkout@8f4b7f84864484a7bf31766abe9204da3cbe65b3 # v3.5.0
       - run: |
           echo "foo" > artifact
       - id: rng
@@ -105,10 +126,10 @@ jobs:
   references:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@24cb9080177205b6e8c946b17badbe402adc938f # v3.4.0
+      - uses: actions/checkout@8f4b7f84864484a7bf31766abe9204da3cbe65b3 # v3.5.0
         with:
           path: __THIS_REPO__
-      - uses: actions/checkout@24cb9080177205b6e8c946b17badbe402adc938f # v3.4.0
+      - uses: actions/checkout@8f4b7f84864484a7bf31766abe9204da3cbe65b3 # v3.5.0
         with:
           repository: slsa-framework/example-package
           ref: main
@@ -130,7 +151,7 @@ jobs:
   secure-project-checkout-go:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@24cb9080177205b6e8c946b17badbe402adc938f # v3.4.0
+      - uses: actions/checkout@8f4b7f84864484a7bf31766abe9204da3cbe65b3 # v3.5.0
         with:
           path: __BUILDER_CHECKOUT_DIR__
 
@@ -143,7 +164,7 @@ jobs:
   secure-project-checkout-node:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@24cb9080177205b6e8c946b17badbe402adc938f # v3.4.0
+      - uses: actions/checkout@8f4b7f84864484a7bf31766abe9204da3cbe65b3 # v3.5.0
         with:
           path: __BUILDER_CHECKOUT_DIR__
 
@@ -153,10 +174,154 @@ jobs:
           path: __PROJECT_CHECKOUT_DIR__
           go-version: 16
 
+  secure-upload-folder:
+    runs-on: ubuntu-latest
+    env:
+      ARTIFACT_NAME: "my-artifact"
+      UPLOAD_FOLDER_NAME: "upload-folder"
+      DOWNLOAD_FOLDER_NAME: "download-folder"
+      ARTIFACT_NO_ROOT_NAME: "my-artifact-noroot"
+      UPLOAD_FOLDER_NO_ROOT_NAME: "upload-root/upload-folder"
+      DOWNLOAD_FOLDER_NO_ROOT_NAME: "download-root/download-folder"
+    steps:
+      - uses: actions/checkout@8f4b7f84864484a7bf31766abe9204da3cbe65b3 # v3.5.0
+      - name: Create folder
+        run: |
+          set -euo pipefail
+
+          # Folder in the root of GITHUB_WORKSPACE
+          mkdir -p "${UPLOAD_FOLDER_NAME}/inside"
+          mkdir -p "${UPLOAD_FOLDER_NAME}/empty"
+
+          echo file1 > "${UPLOAD_FOLDER_NAME}/file1"
+          echo file2 > "${UPLOAD_FOLDER_NAME}/file2"
+          echo file3 > "${UPLOAD_FOLDER_NAME}/inside/file3"
+          echo file4 > "${UPLOAD_FOLDER_NAME}/inside/file4"
+
+          tree "${UPLOAD_FOLDER_NAME}"
+
+          # Folder not in the root of GITHUB_WORKSPACE
+          mkdir -p "${UPLOAD_FOLDER_NO_ROOT_NAME}"
+          cp -R "${UPLOAD_FOLDER_NAME}"/* "${UPLOAD_FOLDER_NO_ROOT_NAME}"/
+
+          tree "${UPLOAD_FOLDER_NO_ROOT_NAME}"
+
+      - name: Upload
+        id: upload
+        uses: ./.github/actions/secure-upload-folder
+        with:
+          name: "${{ env.ARTIFACT_NAME }}"
+          path: "${{ env.UPLOAD_FOLDER_NAME }}"
+
+      - name: Upload
+        id: upload-noroot
+        uses: ./.github/actions/secure-upload-folder
+        with:
+          name: "${{ env.ARTIFACT_NO_ROOT_NAME }}"
+          path: "${{ env.UPLOAD_FOLDER_NO_ROOT_NAME }}"
+
+      - name: Download in new folder
+        uses: ./.github/actions/secure-download-folder
+        with:
+          name: "${{ env.ARTIFACT_NAME }}"
+          path: "${{ env.DOWNLOAD_FOLDER_NAME }}"
+          sha256: ${{ steps.upload.outputs.sha256 }}
+
+      - name: Download in new folder noroot
+        uses: ./.github/actions/secure-download-folder
+        with:
+          name: "${{ env.ARTIFACT_NO_ROOT_NAME }}"
+          path: "${{ env.DOWNLOAD_FOLDER_NO_ROOT_NAME }}"
+          sha256: ${{ steps.upload-noroot.outputs.sha256 }}
+
+      - name: Validate contents
+        run: |
+          set -euo pipefail
+          ./.github/workflows/scripts/pre-submit.actions/secure-upload-folder.sh "${DOWNLOAD_FOLDER_NAME}" "${UPLOAD_FOLDER_NAME}"
+          ./.github/workflows/scripts/pre-submit.actions/secure-upload-folder.sh "${DOWNLOAD_FOLDER_NO_ROOT_NAME}" "${UPLOAD_FOLDER_NO_ROOT_NAME}"
+
+      - name: Cleanup workspace
+        run: |
+          # NOTE: We don't remove DOWNLOAD_FOLDER_NAME to ensure that download-existing-file fails.
+          rm -rf "${UPLOAD_FOLDER_NAME}"
+          rm -rf $(dirname "${UPLOAD_FOLDER_NO_ROOT_NAME}") $(dirname "${DOWNLOAD_FOLDER_NO_ROOT_NAME}")
+
+      - name: Download locally
+        uses: ./.github/actions/secure-download-folder
+        with:
+          name: "${{ env.ARTIFACT_NAME }}"
+          sha256: ${{ steps.upload.outputs.sha256 }}
+
+      - name: Download locally noroot
+        uses: ./.github/actions/secure-download-folder
+        with:
+          name: "${{ env.ARTIFACT_NO_ROOT_NAME }}"
+          sha256: ${{ steps.upload-noroot.outputs.sha256 }}
+
+      - name: Download incorrect hash
+        id: download-incorrect-hash
+        continue-on-error: true
+        uses: ./.github/actions/secure-download-folder
+        with:
+          name: "${{ env.ARTIFACT_NAME }}"
+          path: "${{ env.DOWNLOAD_FOLDER_NAME }}"
+          sha256: 977b0c871b048d6578f5d5b40a5b6030a22fc130831a2d7b45b6868da7b51431
+
+      - name: Download existing file
+        id: download-existing-file
+        continue-on-error: true
+        uses: ./.github/actions/secure-download-folder
+        with:
+          name: "${{ env.ARTIFACT_NAME }}"
+          path: "${{ env.DOWNLOAD_FOLDER_NAME }}"
+          sha256: ${{ steps.upload.outputs.sha256 }}
+
+      - name: Download path traversal
+        id: download-traversal
+        continue-on-error: true
+        uses: ./.github/actions/secure-download-folder
+        with:
+          name: "${{ env.ARTIFACT_NAME }}"
+          path: ".."
+          sha256: ${{ steps.upload.outputs.sha256 }}
+
+      - name: Download outside workspace
+        id: download-outside
+        continue-on-error: true
+        uses: ./.github/actions/secure-download-folder
+        with:
+          name: "${{ env.ARTIFACT_NAME }}"
+          path: "/tmp"
+          sha256: ${{ steps.upload.outputs.sha256 }}
+
+      - name: Upload path traversal
+        id: upload-traversal
+        continue-on-error: true
+        uses: ./.github/actions/secure-upload-folder
+        with:
+          name: "${{ env.ARTIFACT_NAME }}"
+          path: "../"
+
+      - name: Upload outside workspace
+        id: upload-outside
+        continue-on-error: true
+        uses: ./.github/actions/secure-upload-folder
+        with:
+          name: "${{ env.ARTIFACT_NAME }}"
+          path: "/tmp/"
+
+      - name: fail check
+        env:
+          # NOTE: These are all adversarial tests. They should fail.
+          SUCCESS: ${{ steps.download-incorrect-hash.outcome == 'failure' && steps.download-existing-file.outcome == 'failure' && steps.download-traversal.outcome == 'failure' && steps.upload-traversal.outcome == 'failure' && steps.upload-outside.outcome == 'failure' && steps.download-outside.outcome == 'failure' }}
+        run: |
+          set -euo pipefail
+          [ "$SUCCESS" == "true" ]
+
   secure-download-artifact:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@24cb9080177205b6e8c946b17badbe402adc938f # v3.4.0
+      - uses: actions/checkout@8f4b7f84864484a7bf31766abe9204da3cbe65b3 # v3.5.0
         with:
           path: __BUILDER_CHECKOUT_DIR__
 
@@ -183,7 +348,7 @@ jobs:
   secure-download-artifact-builder-name:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@24cb9080177205b6e8c946b17badbe402adc938f # v3.4.0
+      - uses: actions/checkout@8f4b7f84864484a7bf31766abe9204da3cbe65b3 # v3.5.0
         with:
           path: __BUILDER_CHECKOUT_DIR__
 
@@ -216,7 +381,7 @@ jobs:
   secure-download-artifact-builder-repo-folder:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@24cb9080177205b6e8c946b17badbe402adc938f # v3.4.0
+      - uses: actions/checkout@8f4b7f84864484a7bf31766abe9204da3cbe65b3 # v3.5.0
         with:
           path: __BUILDER_CHECKOUT_DIR__
 
@@ -250,7 +415,7 @@ jobs:
   secure-download-artifact-builder-repo-file:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@24cb9080177205b6e8c946b17badbe402adc938f # v3.4.0
+      - uses: actions/checkout@8f4b7f84864484a7bf31766abe9204da3cbe65b3 # v3.5.0
         with:
           path: __BUILDER_CHECKOUT_DIR__
 
@@ -284,7 +449,7 @@ jobs:
   generate-builder-generic-compile:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@24cb9080177205b6e8c946b17badbe402adc938f # v3.4.0
+      - uses: actions/checkout@8f4b7f84864484a7bf31766abe9204da3cbe65b3 # v3.5.0
       - uses: ./.github/actions/generate-builder
         with:
           repository: "slsa-framework/slsa-github-generator"
@@ -298,7 +463,7 @@ jobs:
   generate-builder-generic-no-compile:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@24cb9080177205b6e8c946b17badbe402adc938f # v3.4.0
+      - uses: actions/checkout@8f4b7f84864484a7bf31766abe9204da3cbe65b3 # v3.5.0
       - name: Detect the builder ref
         id: detect
         uses: ./.github/actions/detect-workflow
@@ -316,7 +481,7 @@ jobs:
   generate-attestations:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@24cb9080177205b6e8c946b17badbe402adc938f # v3.4.0
+      - uses: actions/checkout@8f4b7f84864484a7bf31766abe9204da3cbe65b3 # v3.5.0
       - name: Test generate attestations
         id: generate
         uses: ./.github/actions/generate-attestations
