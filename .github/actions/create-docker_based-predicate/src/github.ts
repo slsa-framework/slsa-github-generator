@@ -39,6 +39,7 @@ export function addGitHubParameters(
   systemParams.GITHUB_EVENT_NAME = ctx.eventName;
   systemParams.GITHUB_JOB = ctx.job;
   systemParams.GITHUB_REF = ctx.ref;
+  systemParams.GITHUB_BASE_REF = env.GITHUB_BASE_REF || "";
   systemParams.GITHUB_REF_TYPE = env.GITHUB_REF_TYPE || "";
   systemParams.GITHUB_REPOSITORY = env.GITHUB_REPOSITORY || "";
   systemParams.GITHUB_RUN_ATTEMPT = env.GITHUB_RUN_ATTEMPT || "";
