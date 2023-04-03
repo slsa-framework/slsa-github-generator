@@ -158,26 +158,26 @@ If you think you need support for other variables, please [open an issue](https:
 
 It's easy to generate binaries for multiple platforms. To accomplish this, we can use the [maxtrix functionality](https://docs.github.com/en/actions/using-jobs/using-a-matrix-for-your-jobs) of github actions and several config files. In the below code sample, you'll see that we have a `strategy` section which lists the platforms and architectures to build for. These reference a `config-file` property at the bottom which will select the correct config for that platform.
 
-```
-  build:
-    permissions:
-      id-token: write # To sign the provenance.
-      contents: write # To upload assets to release.
-      actions: read # To read the workflow path.
-    strategy:
-      matrix:
-        os:
-          - linux
-          - windows
-          - darwin
-        arch:
-          - amd64
-          - arm64
-    uses: slsa-framework/slsa-github-generator/.github/workflows/builder_go_slsa3.yml@v1.5.0
-    with:
-      go-version: 1.19
-      config-file: .slsa-goreleaser/${{matrix.os}}-${{matrix.arch}}.yml
-      # ... your other stuff here.
+```yaml
+build:
+  permissions:
+    id-token: write # To sign the provenance.
+    contents: write # To upload assets to release.
+    actions: read # To read the workflow path.
+  strategy:
+    matrix:
+      os:
+        - linux
+        - windows
+        - darwin
+      arch:
+        - amd64
+        - arm64
+  uses: slsa-framework/slsa-github-generator/.github/workflows/builder_go_slsa3.yml@v1.5.0
+  with:
+    go-version: 1.19
+    config-file: .slsa-goreleaser/${{matrix.os}}-${{matrix.arch}}.yml
+    # ... your other stuff here.
 ```
 
 ### Workflow Inputs
@@ -400,7 +400,7 @@ The `BuildConfig` contains the following fields:
 
 Workflows are currently failing with the error:
 
-```
+```text
 validating log entry: unable to fetch Rekor public keys from TUF repository, and not trusting the Rekor API for fetching public keys: updating local metadata and targets: error updating to TUF remote mirror: tuf: invalid key
 ```
 
