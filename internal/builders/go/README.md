@@ -193,6 +193,7 @@ The builder workflow [slsa-framework/slsa-github-generator/.github/workflows/bui
 | `upload-tag-name`    | no       |                                         | If specified and `upload-assets` is set to true, the provenance will be uploaded to a Github release identified by the tag-name regardless of the triggering event.                                                                                       |
 | `prerelease`         | no       |                                         | If specified and `upload-assets` is set to true, the release is created as prerelease.                                                                                                                                                                    |
 | `private-repository` | no       | false                                   | Set to true to opt-in to posting to the public transparency log. Will generate an error if false for private repositories. This input has no effect for public repositories. See [Private Repositories](#private-repositories).                           |
+| `draft-release`      | no       | false                                   | If true, the release is created as a draft                                                                                                                                                                                                                |
 
 ### Workflow Outputs
 
