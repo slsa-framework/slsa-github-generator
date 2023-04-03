@@ -80,7 +80,12 @@ func (r *Rekor) Upload(ctx context.Context, att signing.Attestation) (signing.Lo
 	var uuid string
 	for ix, entry := range resp.Payload {
 		entry := entry
-		if err := cosign.VerifyTLogEntry(ctx, rekorClient, &entry); err != nil {
+		pubs, err := cosign.GetRekorPubs(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("getting rekor public keys: %w", err)
+		}
+
+		if err := cosign.VerifyTLogEntryOffline(ctx, &entry, pubs); err != nil {
 			return nil, fmt.Errorf("validating log entry: %w", err)
 		}
 		uuid = ix
