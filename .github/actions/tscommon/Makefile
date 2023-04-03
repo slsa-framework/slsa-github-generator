@@ -36,7 +36,7 @@ action: node_modules/.installed ## Builds the action.
 .PHONY: package
 package: action ## Builds the distribution package.
 # WARNING: nothing here because we don't want the pre-submit to overwrite
-# the tarball. To build the tarbal, manually run `npm run package`.
+# the tarball. To build the tarball, manually run `npm run package`.
 
 .PHONY: clean
 clean:
