@@ -14,90 +14,90 @@
       - [New Features](#new-features-2)
   - [Changelog since v1.5.0](#changelog-since-v150)
 - [v1.5.0](#v150)
-    - [Summary of changes](#summary-of-changes-1)
-      - [Go builder](#go-builder-1)
-        - [New Features](#new-features-3)
-      - [Generic generator](#generic-generator-1)
-        - [New Features](#new-features-4)
-      - [Container generator](#container-generator-1)
-        - [New Features](#new-features-5)
-    - [Changelog since v1.4.0](#changelog-since-v140)
-  - [v1.4.0](#v140)
-    - [What's Changed](#whats-changed)
-      - [Generic Generator](#generic-generator)
-        - [Bug fixes](#bug-fixes)
-      - [Go Builder](#go-builder)
-        - [Bug fixes](#bug-fixes-1)
-    - [New Contributors](#new-contributors)
-    - [Full Changelog](#full-changelog)
-  - [v1.4.0-rc.2](#v140-rc2)
-    - [What's Changed](#whats-changed-1)
-    - [New Contributors](#new-contributors-1)
-    - [Full Changelog](#full-changelog-1)
-  - [v1.4.0-rc.1](#v140-rc1)
-    - [What's Changed](#whats-changed-2)
-    - [New Contributors](#new-contributors-2)
-    - [Full Changelog](#full-changelog-2)
-  - [v1.4.0-rc.0](#v140-rc0)
-    - [What's Changed](#whats-changed-3)
-    - [New Contributors](#new-contributors-3)
-    - [Full Changelog](#full-changelog-3)
-  - [v1.2.2](#v122)
-    - [What's Changed](#whats-changed-4)
-    - [New Contributors](#new-contributors-4)
-    - [Full Changelog](#full-changelog-4)
-  - [v1.2.1](#v121)
-    - [What's Changed](#whats-changed-5)
-      - [Generic generator](#generic-generator-2)
-        - [buildType](#buildtype)
-        - [Provenance file names](#provenance-file-names)
-        - [Explicit opt-in for private repos](#explicit-opt-in-for-private-repos)
-      - [Go builder](#go-builder-2)
-        - [Support private repos](#support-private-repos)
-    - [New Contributors](#new-contributors-5)
-    - [Full Changelog](#full-changelog-5)
-  - [v1.2.0](#v120)
-    - [What's Changed](#whats-changed-6)
-      - [Generic generator](#generic-generator-3)
-      - [Go builder](#go-builder-3)
-    - [New Contributors](#new-contributors-6)
-    - [Full Changelog](#full-changelog-6)
-  - [v1.1.1](#v111)
-    - [What's Changed](#whats-changed-7)
-    - [New Contributors](#new-contributors-7)
-    - [Full Changelog](#full-changelog-7)
-  - [v1.0.0](#v100)
-    - [What's Changed](#whats-changed-8)
-    - [Contributors](#contributors)
+  - [Summary of changes](#summary-of-changes-1)
+    - [Go builder](#go-builder-1)
+      - [New Features](#new-features-3)
+    - [Generic generator](#generic-generator-1)
+      - [New Features](#new-features-4)
+    - [Container generator](#container-generator-1)
+      - [New Features](#new-features-5)
+  - [Changelog since v1.4.0](#changelog-since-v140)
+- [v1.4.0](#v140)
+  - [What's Changed](#whats-changed)
+    - [Generic Generator](#generic-generator)
+      - [Bug fixes](#bug-fixes)
+    - [Go Builder](#go-builder)
+      - [Bug fixes](#bug-fixes-1)
+  - [New Contributors](#new-contributors)
+  - [Full Changelog](#full-changelog)
+- [v1.4.0-rc.2](#v140-rc2)
+  - [What's Changed](#whats-changed-1)
+  - [New Contributors](#new-contributors-1)
+  - [Full Changelog](#full-changelog-1)
+- [v1.4.0-rc.1](#v140-rc1)
+  - [What's Changed](#whats-changed-2)
+  - [New Contributors](#new-contributors-2)
+  - [Full Changelog](#full-changelog-2)
+- [v1.4.0-rc.0](#v140-rc0)
+  - [What's Changed](#whats-changed-3)
+  - [New Contributors](#new-contributors-3)
+  - [Full Changelog](#full-changelog-3)
+- [v1.2.2](#v122)
+  - [What's Changed](#whats-changed-4)
+  - [New Contributors](#new-contributors-4)
+  - [Full Changelog](#full-changelog-4)
+- [v1.2.1](#v121)
+  - [What's Changed](#whats-changed-5)
+    - [Generic generator](#generic-generator-2)
+      - [buildType](#buildtype)
+      - [Provenance file names](#provenance-file-names)
+      - [Explicit opt-in for private repos](#explicit-opt-in-for-private-repos)
+    - [Go builder](#go-builder-2)
+      - [Support private repos](#support-private-repos)
+  - [New Contributors](#new-contributors-5)
+  - [Full Changelog](#full-changelog-5)
+- [v1.2.0](#v120)
+  - [What's Changed](#whats-changed-6)
+    - [Generic generator](#generic-generator-3)
+    - [Go builder](#go-builder-3)
+  - [New Contributors](#new-contributors-6)
+  - [Full Changelog](#full-changelog-6)
+- [v1.1.1](#v111)
+  - [What's Changed](#whats-changed-7)
+  - [New Contributors](#new-contributors-7)
+  - [Full Changelog](#full-changelog-7)
+- [v1.0.0](#v100)
+  - [What's Changed](#whats-changed-8)
+  - [Contributors](#contributors)
 
 <!-- tocstop -->
 
 <!-- Information on the next release will be added here. -->
 
-# v1.6.0
+## v1.6.0
 
-## Summary of changes
+### Summary of changes
 
-### Go builder
+#### Go builder
 
-#### New Features
+##### New Features
 
 - A new [`prerelease`](https://github.com/slsa-framework/slsa-github-generator/blob/v1.6.0/internal/builders/generic/README.md#workflow-inputs) input was added to allow users to create releases marked as prerelease when `upload-assets` is set to `true`.
 - A new output `go-provenance-name` added which can be used to retrieve the name of the provenance file generated by the builder.
 
-### Generic generator
+#### Generic generator
 
-#### New Features
+##### New Features
 
-### Container generator
+#### Container generator
 
-#### New Features
+##### New Features
 
-## Changelog since v1.5.0
+### Changelog since v1.5.0
 
 https://github.com/slsa-framework/slsa-github-generator/compare/v1.5.0...v1.6.0
 
-# v1.5.0
+## v1.5.0
 
 <!-- Information on the next release will be added here. -->
 
