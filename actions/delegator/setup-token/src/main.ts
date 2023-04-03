@@ -13,7 +13,6 @@ limitations under the License.
 
 import * as github from "@actions/github";
 import * as core from "@actions/core";
-import * as crypto from "crypto";
 import * as process from "process";
 import { sigstore } from "sigstore";
 import * as tscommon from "tscommon";
@@ -22,19 +21,6 @@ const signOptions = {
   oidcClientID: "sigstore",
   oidcIssuer: "https://oauth2.sigstore.dev/auth",
 };
-
-function eventShasum256(): string {
-  const trustedPath = process.env.GITHUB_EVENT_PATH;
-  if (!trustedPath) {
-    throw new Error(`GITHUB_EVENT_PATH not set.`);
-  }
-
-  if (!tscommon.safeExistsSync(trustedPath)) {
-    throw new Error(`GITHUB_EVENT_PATH: File ${trustedPath} not present`);
-  }
-  const trustedFile = tscommon.safeReadFileSync(trustedPath);
-  return crypto.createHash("sha256").update(trustedFile).digest("hex");
-}
 
 async function run(): Promise<void> {
   try {
@@ -91,7 +77,9 @@ async function run(): Promise<void> {
       github: {
         actor_id: process.env.GITHUB_ACTOR_ID,
         event_name: process.env.GITHUB_EVENT_NAME,
-        event_path_sha256: eventShaSum256(),
+        event_payload_sha256: tscommon.safeFileSha256(
+          process.env.GITHUB_EVENT_PATH || ""
+        ),
         ref: process.env.GITHUB_REF,
         ref_type: process.env.GITHUB_REF_TYPE,
         repository: process.env.GITHUB_REPOSITORY,
