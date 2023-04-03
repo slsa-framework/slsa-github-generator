@@ -119,7 +119,7 @@ are fully supported and tested:
 - `schedule`
 - Manual run via `workflow_dispatch`
 
-<!-- 
+<!--
 
 TODO(https://github.com/slsa-framework/slsa-github-generator/issues/1656):
 Support artifact and provenance upload to a release.
@@ -130,7 +130,7 @@ Support artifact and provenance upload to a release.
 
 In practice, most triggers should work. For events that do not have access to
 the `id-token: write` permission, like `pull_request`, the workflow will run the
-container-based build and produce an *unsigned* DSSE attestation for the
+container-based build and produce an _unsigned_ DSSE attestation for the
 purposes of testing.
 
 If you have an issue with any other triggers please submit a [new
@@ -161,28 +161,28 @@ accepts the following inputs:
 
 Inputs:
 
-| Name                             | Description                                                                                                                                                                                                                                                                             |
-| -------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `builder-image`                          | **(Required)** The OCI image name of the builder image in which the build execution will be run. This must not include a tag or digest.                                                                                                                                                                                                               |
-| `builder-digest`                         | **(Required)** The OCI image digest of the builder-image. The image digest of the form '<algorithm>:<digest>' (e.g. 'sha256:abcdef...')                                                                                                                                                                      |
-| `config-path`              | **(Required)** Path to a configuration file relative to the root of the repository containing the command that the builder image should be invoked with and the path to the output artifacts. See [Configuration File](#configuration-file).                                                                                                                                                                  |
-| `compile-builder`              | Whether to build the builder from source. This increases build time by ~2m.<br>Default: `false`.                                                                                                                                                                                      |
-| `provenance-name`             | The artifact name of the signed provenance. The file must have the `.intoto` extension.<br>Defaults to `<filename>.intoto` for single artifact or `multiple.intoto.jsonl` for multiple artifacts.                                    |
-| `rekor-log-public`             | Set to true to opt-in to posting to the public transparency log. Will generate an error if false for private repositories. This input has no effect for public repositories. See [Private Repositories](#private-repositories).<br>Default: `false`                                     |
-| `registry-username`              | Username to log in the container registry.                                                                                                                                                                 |
-| `gcp-workload-identity-provider` | The full identifier of the Workload Identity Provider, including the project number, pool name, and provider name. If provided, this must be the full identifier which includes all parts:<br>`projects/123456789/locations/global/workloadIdentityPools/my-pool/providers/my-provider` |
-| `gcp-service-account`            | Email address or unique identifier of the Google Cloud service account for which to generate credentials. For example:<br>`my-service-account@my-project.iam.gserviceaccount.com`                                                                                                       |
-| `upload-assets`            |  Uploads the artifact and provenance to a GitHub release.<br>If the `upload-tag-name` was provided, then the assets are uploaded to the provided input tag. This can be used for workflow_dispatch events. Otherwise, if a new tag triggered the workflow, then the assets are uploaded to the triggering tag.           |
-| `upload-tag-name`            | If non-empty and `upload-assets` is set to true, the provenance is uploaded to the GitHub release identified by the tag name. If a workflow is run on a new tag and `upload-tag-name` is non-empty, the new tag is ignored and the value of `upload-tag-name` is used instead to upload the assets.              |
-| `prerelease`            | If true, GitHub Release is created as a pre-release. |
-| `draft-release`            | If true, the release is created as a draft. Defaults to false.                                                                                                   |
+| Name                             | Description                                                                                                                                                                                                                                                                                                   |
+| -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `builder-image`                  | **(Required)** The OCI image name of the builder image in which the build execution will be run. This must not include a tag or digest.                                                                                                                                                                       |
+| `builder-digest`                 | **(Required)** The OCI image digest of the builder-image. The image digest of the form '<algorithm>:<digest>' (e.g. 'sha256:abcdef...')                                                                                                                                                                       |
+| `config-path`                    | **(Required)** Path to a configuration file relative to the root of the repository containing the command that the builder image should be invoked with and the path to the output artifacts. See [Configuration File](#configuration-file).                                                                  |
+| `compile-builder`                | Whether to build the builder from source. This increases build time by ~2m.<br>Default: `false`.                                                                                                                                                                                                              |
+| `provenance-name`                | The artifact name of the signed provenance. The file must have the `.intoto` extension.<br>Defaults to `<filename>.intoto` for single artifact or `multiple.intoto.jsonl` for multiple artifacts.                                                                                                             |
+| `rekor-log-public`               | Set to true to opt-in to posting to the public transparency log. Will generate an error if false for private repositories. This input has no effect for public repositories. See [Private Repositories](#private-repositories).<br>Default: `false`                                                           |
+| `registry-username`              | Username to log in the container registry.                                                                                                                                                                                                                                                                    |
+| `gcp-workload-identity-provider` | The full identifier of the Workload Identity Provider, including the project number, pool name, and provider name. If provided, this must be the full identifier which includes all parts:<br>`projects/123456789/locations/global/workloadIdentityPools/my-pool/providers/my-provider`                       |
+| `gcp-service-account`            | Email address or unique identifier of the Google Cloud service account for which to generate credentials. For example:<br>`my-service-account@my-project.iam.gserviceaccount.com`                                                                                                                             |
+| `upload-assets`                  | Uploads the artifact and provenance to a GitHub release.<br>If the `upload-tag-name` was provided, then the assets are uploaded to the provided input tag. This can be used for workflow_dispatch events. Otherwise, if a new tag triggered the workflow, then the assets are uploaded to the triggering tag. |
+| `upload-tag-name`                | If non-empty and `upload-assets` is set to true, the provenance is uploaded to the GitHub release identified by the tag name. If a workflow is run on a new tag and `upload-tag-name` is non-empty, the new tag is ignored and the value of `upload-tag-name` is used instead to upload the assets.           |
+| `prerelease`                     | If true, GitHub Release is created as a pre-release.                                                                                                                                                                                                                                                          |
+| `draft-release`                  | If true, the release is created as a draft. Defaults to false.                                                                                                                                                                                                                                                |
 
 Secrets:
 
-| Name                | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
-| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Name                | Description                                                                                                                                                                                                                                                                                                                                                                                                        |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `registry-username` | Username to log in the container registry. This should only be used for high entropy values such as AWS Access Key as described [here](https://github.com/docker/login-action#aws-elastic-container-registry-ecr). Normal username values could match other input values and cause them to be ignored by GitHub Actions and causing your build to fail. In those cases, use the `registry-username` input instead. |
-| `registry-password` | Password to log in the container registry. Required if a `registry-username` is provided |
+| `registry-password` | Password to log in the container registry. Required if a `registry-username` is provided                                                                                                                                                                                                                                                                                                                           |
 
 ### Workflow Example
 
@@ -218,25 +218,25 @@ jobs:
 The [container-based
 workflow](https://github.com/slsa-framework/slsa-github-generator/blob/main/.github/workflows/builder_docker-based_slsa3.yml) produces the following outputs:
 
-| Name               | Description                                                                            |
-| ------------------ | -------------------------------------------------------------------------------------- |
-| `build-outputs-name`  | The name of the artifact where the generated artifacts are uploaded to the artifact registry.       |
-| `attestations-download-name`          | Name of the artifact to download all the attestations. When run on a `pull_request` trigger, attestations are not signed and have an `.intoto` extension. When run on other triggers, attestations are signed and have an `.intoto.sigstore` extension. |
+| Name                         | Description                                                                                                                                                                                                                                             |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `build-outputs-name`         | The name of the artifact where the generated artifacts are uploaded to the artifact registry.                                                                                                                                                           |
+| `attestations-download-name` | Name of the artifact to download all the attestations. When run on a `pull_request` trigger, attestations are not signed and have an `.intoto` extension. When run on other triggers, attestations are signed and have an `.intoto.sigstore` extension. |
 
 ### Provenance Format
 
 The `buildDefinition` contains the following fields:
 
-| Name                         | Value                                                                    | Description                                                                                                                                                                                                            |
-| -------------------- | ---------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `buildType`                  | `"https://slsa.dev/container-based-build/v0.1?draft"` | Identifies the container-based build type.                                                                                                                                                                                 |
-| `externalParameters.source` | `slsa.ArtifactReference`                                               | An artifact reference specifying the location of the source repository. |
-| `externalParameters.builderImage` | `slsa.ArtifactReference`                                               | An artifact reference specifying the container base image used to build the artifacts. |
-| `externalParameters.configPath` | `".github/configs-docker/config.toml"`                                               | The location of the configuration file, relative to the root of the source repository. |
-| `externalParameters.buildConfig` | JSON object                                               | An object describing the build configuration. |
-| `externalParameters.buildConfig.ArtifactPath` | `"dist/**"`                                               | The path describing the output artifacts to attest to and upload. |
-| `externalParameters.buildConfig.Command` | `"["npm", "run", "all"]"`                                               | The build command invoked in the container image to produce the output artifacts. |
-| `externalParameters.resolvedDependencies` | `slsa.ArtifactReference`                                               | An artifact reference specifying the binary used by the reusable workflow to build the artifact and generate the build definition. See the [CLI tool](#command-line-tool) below. |
+| Name                                          | Value                                                 | Description                                                                                                                                                                      |
+| --------------------------------------------- | ----------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `buildType`                                   | `"https://slsa.dev/container-based-build/v0.1?draft"` | Identifies the container-based build type.                                                                                                                                       |
+| `externalParameters.source`                   | `slsa.ArtifactReference`                              | An artifact reference specifying the location of the source repository.                                                                                                          |
+| `externalParameters.builderImage`             | `slsa.ArtifactReference`                              | An artifact reference specifying the container base image used to build the artifacts.                                                                                           |
+| `externalParameters.configPath`               | `".github/configs-docker/config.toml"`                | The location of the configuration file, relative to the root of the source repository.                                                                                           |
+| `externalParameters.buildConfig`              | JSON object                                           | An object describing the build configuration.                                                                                                                                    |
+| `externalParameters.buildConfig.ArtifactPath` | `"dist/**"`                                           | The path describing the output artifacts to attest to and upload.                                                                                                                |
+| `externalParameters.buildConfig.Command`      | `"["npm", "run", "all"]"`                             | The build command invoked in the container image to produce the output artifacts.                                                                                                |
+| `externalParameters.resolvedDependencies`     | `slsa.ArtifactReference`                              | An artifact reference specifying the binary used by the reusable workflow to build the artifact and generate the build definition. See the [CLI tool](#command-line-tool) below. |
 
 The [CLI tool](#command-line-tool) described in `externalParameters.resolvedDependencies` contains the `uri` of the source that was used to build the artifact (from this GitHub repository). The `digest` referes to the cryptographic digest of the built binary. Using this information, a verifier may download the source artifact from the GitHub releases inferred by the URI and verify its digest.
 
@@ -276,11 +276,7 @@ as an [in-toto](https://in-toto.io/) statement with a SLSA predicate.
         "configPath": ".github/configs-docker/config.toml",
         "buildConfig": {
           "ArtifactPath": "bin/**",
-          "Command": [
-            "npm",
-            "run",
-            "all"
-          ]
+          "Command": ["npm", "run", "all"]
         }
       },
       "resolvedDependencies": [
