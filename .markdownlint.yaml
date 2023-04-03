@@ -9,7 +9,7 @@ MD007:
 # MD013/line-length - Line length
 MD013: false
 
-# TODO(#): Re-enable duplicate heading checks.
+# TODO(#1912): Re-enable duplicate heading checks.
 # MD024/no-duplicate-heading - Disable for now.
 MD024: false
 
