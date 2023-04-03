@@ -56,12 +56,12 @@ markdownlint: node_modules/.installed ## Runs the markdownlint linter.
 		if [ "$(OUTPUT_FORMAT)" == "github" ]; then \
 			exit_code=0; \
 			while IFS="" read -r p && [ -n "$$p" ]; do \
-				FILE=$$(echo "$$p" | jq -c -r '.fileName // empty'); \
-				LINE=$$(echo "$$p" | jq -c -r '.lineNumber // empty'); \
-				ENDLINE=$${LINE}; \
-				MESSAGE=$$(echo "$$p" | jq -c -r '.ruleNames[0] + "/" + .ruleNames[1] + " " + .ruleDescription + " [Detail: \"" + .errorDetail + "\", Context: \"" + .errorContext + "\"]"'); \
+				file=$$(echo "$$p" | jq -c -r '.fileName // empty'); \
+				line=$$(echo "$$p" | jq -c -r '.lineNumber // empty'); \
+				endline=$${line}; \
+				message=$$(echo "$$p" | jq -c -r '.ruleNames[0] + "/" + .ruleNames[1] + " " + .ruleDescription + " [Detail: \"" + .errorDetail + "\", Context: \"" + .errorContext + "\"]"'); \
 				exit_code=1; \
-				echo "::error file=$${FILE},line=$${LINE},endLine=$${ENDLINE}::$${MESSAGE}"; \
+				echo "::error file=$${file},line=$${line},endLine=$${endline}::$${message}"; \
 			done <<< "$$(./node_modules/.bin/markdownlint --dot --json . 2>&1 | jq -c '.[]')"; \
 			exit "$${exit_code}"; \
 		else \
@@ -86,23 +86,23 @@ shellcheck: ## Runs the shellcheck linter.
 		if [ "$(OUTPUT_FORMAT)" == "github" ]; then \
 			exit_code=0; \
 			while IFS="" read -r p && [ -n "$$p" ]; do \
-				LEVEL=$$(echo "$$p" | jq -c '.level // empty' | tr -d '"'); \
-				FILE=$$(echo "$$p" | jq -c '.file // empty' | tr -d '"'); \
-				LINE=$$(echo "$$p" | jq -c '.line // empty' | tr -d '"'); \
-				ENDLINE=$$(echo "$$p" | jq -c '.endLine // empty' | tr -d '"'); \
-				COL=$$(echo "$$p" | jq -c '.column // empty' | tr -d '"'); \
-				ENDCOL=$$(echo "$$p" | jq -c '.endColumn // empty' | tr -d '"'); \
-				MESSAGE=$$(echo "$$p" | jq -c '.message // empty' | tr -d '"'); \
+				level=$$(echo "$$p" | jq -c '.level // empty' | tr -d '"'); \
+				file=$$(echo "$$p" | jq -c '.file // empty' | tr -d '"'); \
+				line=$$(echo "$$p" | jq -c '.line // empty' | tr -d '"'); \
+				endline=$$(echo "$$p" | jq -c '.endLine // empty' | tr -d '"'); \
+				col=$$(echo "$$p" | jq -c '.column // empty' | tr -d '"'); \
+				endcol=$$(echo "$$p" | jq -c '.endColumn // empty' | tr -d '"'); \
+				message=$$(echo "$$p" | jq -c '.message // empty' | tr -d '"'); \
 				exit_code=1; \
-				case $$LEVEL in \
+				case $$level in \
 				"info") \
-					echo "::notice file=$${FILE},line=$${LINE},endLine=$${ENDLINE},col=$${COL},endColumn=$${ENDCOL}::$${MESSAGE}"; \
+					echo "::notice file=$${file},line=$${line},endLine=$${endline},col=$${col},endColumn=$${endcol}::$${message}"; \
 					;; \
 				"warning") \
-					echo "::warning file=$${FILE},line=$${LINE},endLine=$${ENDLINE},col=$${COL},endColumn=$${ENDCOL}::$${MESSAGE}"; \
+					echo "::warning file=$${file},line=$${line},endLine=$${endline},col=$${col},endColumn=$${endcol}::$${message}"; \
 					;; \
 				"error") \
-					echo "::error file=$${FILE},line=$${LINE},endLine=$${ENDLINE},col=$${COL},endColumn=$${ENDCOL}::$${MESSAGE}"; \
+					echo "::error file=$${file},line=$${line},endLine=$${endline},col=$${col},endColumn=$${endcol}::$${message}"; \
 					;; \
 				esac; \
 			done <<< "$$(echo -n "$$files" | xargs shellcheck -f json $(SHELLCHECK_ARGS) | jq -c '.[]')"; \
