@@ -27,6 +27,12 @@ on:
         required: false
         type: string
 
+      npm-publish:
+        description: "Publish the package to the npm repository."
+        required: false
+        type: boolean
+        default: startsWith(github.ref, 'refs/tags/')
+
       # NOTE: the additional inputs below are to support additional
       # functionality of the workflow.
       rekor-log-public:
@@ -83,7 +89,7 @@ jobs:
 
   slsa-publish:
     needs: [slsa-run]
-    if: startsWith(github.ref, 'refs/tags/')
+    if: ${{ inputs.npm-publish }}
     permissions:
       contents: write # For asset uploads. Optional
     runs-on: ubuntu-latest
