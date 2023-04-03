@@ -2,6 +2,7 @@
 /// <reference types="node" />
 import fs from "fs";
 export declare function getGitHubWorkspace(): string;
+export declare function safeFileSha256(untrustedPath: string): string;
 export declare function resolvePathInput(input: string, write: Boolean): string;
 export declare function safeWriteFileSync(outputFn: string, data: string | Buffer): void;
 export declare function safeMkdirSync(outputFn: string, options: fs.MakeDirectoryOptions & {

@@ -1,3 +1,4 @@
+import * as crypto from "crypto";
 import fs from "fs";
 import path from "path";
 import process from "process";
@@ -6,11 +7,21 @@ import process from "process";
 // We need to set the working directory to the tscommon/ directory
 // instead of the GITHUB_WORKSPACE.
 export function getGitHubWorkspace(): string {
-  const wdt = process.env["UNIT_TESTS_WD"] || "";
+  const wdt = process.env.UNIT_TESTS_WD || "";
   if (wdt) {
     return wdt;
   }
-  return process.env["GITHUB_WORKSPACE"] || "";
+  return process.env.GITHUB_WORKSPACE || "";
+}
+
+// safeFileSha256 returns the hex-formatted sha256 sum of the contents of an
+// untrusted file path.
+export function safeFileSha256(untrustedPath: string): string {
+  if (!safeExistsSync(untrustedPath)) {
+    throw new Error(`File ${untrustedPath} not present`);
+  }
+  const untrustedFile = safeReadFileSync(untrustedPath);
+  return crypto.createHash("sha256").update(untrustedFile).digest("hex");
 }
 
 // Detect directory traversal for input file.
