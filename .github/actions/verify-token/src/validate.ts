@@ -11,6 +11,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+import * as tscommon from "tscommon";
 import { githubObj, rawTokenInterface } from "../src/types";
 
 export function validateGitHubFields(gho: githubObj): void {
@@ -22,6 +23,13 @@ export function validateGitHubFields(gho: githubObj): void {
     "github.event_name",
     gho.event_name,
     process.env.GITHUB_EVENT_NAME
+  );
+
+  // event_payload_sha256
+  validateField(
+    "github.event_payload_sha256",
+    gho.event_payload_sha256,
+    tscommon.safeFileSha256(process.env.GITHUB_EVENT_PAYLOAD || "")
   );
 
   // ref
