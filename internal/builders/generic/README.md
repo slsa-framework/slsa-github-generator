@@ -450,8 +450,6 @@ If you use [Bazel](https://bazel.build/) to generate your artifacts, you can eas
          hashes: ${{ steps.hash.outputs.hashes }}
    ```
 
-````
-
 2. Build your project and copy the binaries from `bazel-bin` path (i.e., Bazel sandbox) to the root of the repository for easier reference (this makes it easier to upload these to the release too!):
 
    ```yaml
@@ -535,6 +533,7 @@ jobs:
     with:
       base64-subjects: "${{ needs.build.outputs.hashes }}"
       upload-assets: true # Optional: Upload to a new release
+```
 
 ### Provenance for Java
 
@@ -553,8 +552,6 @@ steps indicated in the workflow below:
          artifacts: ${{ steps.build.outputs.artifacts }}
          hashes: ${{ steps.hash.outputs.hashes }}
    ```
-
-````
 
 2. Add an `id: build` field to your maven build step and save the location of the maven output files for easier reference:
 
