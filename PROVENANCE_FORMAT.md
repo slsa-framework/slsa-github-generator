@@ -5,7 +5,7 @@ format](https://slsa.dev/provenance/v0.2). Each of the projects populates the
 provenance with the same base information based on GitHub Actions. The common
 fields of the SLSA provenance predicate attested to are below.
 
-## Common Fields.
+## Common Fields
 
 ### Builder
 

@@ -17,13 +17,20 @@ jobs:
       - run: ./.github/workflows/scripts/pre-submit.actions/checkout.sh
 
   check-tscommon-tarball:
+    strategy:
+      matrix:
+        version: ["0.0.0", "0.1.0"]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@8f4b7f84864484a7bf31766abe9204da3cbe65b3 # v3.5.0
 
       - name: Untar the package tarball
         working-directory: .github/actions/tscommon
-        run: tar xvzf tscommon-0.0.0.tgz
+        env:
+          TSCOMMON_VERSION: ${{ matrix.version }}
+        run: |
+          set -euo pipefail
+          tar xvzf "tscommon-${TSCOMMON_VERSION}.tgz"
 
       - name: Compare the expected and actual dist/ directories
         working-directory: .github/actions/tscommon
@@ -159,7 +166,7 @@ jobs:
         uses: ./__BUILDER_CHECKOUT_DIR__/.github/actions/secure-project-checkout-go
         with:
           path: __PROJECT_CHECKOUT_DIR__
-          go-version: 1.18
+          go-version: "1.20"
 
   secure-project-checkout-node:
     runs-on: ubuntu-latest
@@ -168,11 +175,11 @@ jobs:
         with:
           path: __BUILDER_CHECKOUT_DIR__
 
-      - name: Checkout the Go repository
+      - name: Checkout the JS repository
         uses: ./__BUILDER_CHECKOUT_DIR__/.github/actions/secure-project-checkout-node
         with:
           path: __PROJECT_CHECKOUT_DIR__
-          go-version: 16
+          node-version: 16
 
   secure-upload-folder:
     runs-on: ubuntu-latest
@@ -455,7 +462,7 @@ jobs:
           repository: "slsa-framework/slsa-github-generator"
           ref: "main"
           compile-builder: true
-          go-version: 1.18
+          go-version: "1.20"
           binary: "slsa-generator-generic-linux-amd64"
           directory: "internal/builders/generic"
 
@@ -472,7 +479,7 @@ jobs:
           repository: ${{ steps.detect.output.repository }}
           ref: ${{ steps.detect.outputs.ref }}
           builder-ref: "refs/tags/v1.2.2"
-          go-version: 1.18
+          go-version: "1.20"
           binary: "slsa-generator-generic-linux-amd64"
           directory: "internal/builders/generic"
           # NOTE: compile-builder explicitly set to false.

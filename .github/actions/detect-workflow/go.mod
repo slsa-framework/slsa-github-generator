@@ -1,6 +1,6 @@
 module github.com/slsa-framework/slsa-github-generator/.github/actions/detect-workflow
 
-go 1.19
+go 1.20
 
 require github.com/slsa-framework/slsa-github-generator v1.4.0
 

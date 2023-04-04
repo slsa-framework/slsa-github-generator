@@ -14,16 +14,25 @@ permissions:
   contents: read
 
 jobs:
+  markdownlint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # v3.3.0
+      - uses: actions/setup-node@64ed1c7eab4cce3362f8c340dee64e5eaeef8f7c # v3.6.0
+        with:
+          node-version: 16
+      - run: make markdownlint
+
   golangci-lint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@8f4b7f84864484a7bf31766abe9204da3cbe65b3 # v3.5.0
       - uses: actions/setup-go@4d34df0c2316fe8122ab82dc22947d607c0c91f9 # v4.0.0
         with:
-          go-version: 1.19
+          go-version-file: "go.mod"
       - env:
-          GOLANGCI_LINT_VERSION: "1.50.1"
-          GOLANGCI_LINT_CHECKSUM: "4ba1dc9dbdf05b7bdc6f0e04bdfe6f63aa70576f51817be1b2540bbce017b69a"
+          GOLANGCI_LINT_VERSION: "1.51.2"
+          GOLANGCI_LINT_CHECKSUM: "4de479eb9d9bc29da51aec1834e7c255b333723d38dbd56781c68e5dddc6a90b"
         run: |
           set -euo pipefail
 
@@ -80,7 +89,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@8f4b7f84864484a7bf31766abe9204da3cbe65b3 # v3.5.0
-      - uses: actions/setup-node@64ed1c7eab4cce3362f8c340dee64e5eaeef8f7c # v3
+      - uses: actions/setup-node@64ed1c7eab4cce3362f8c340dee64e5eaeef8f7c # v3.6.0
         with:
           node-version: 16
       - run: make eslint
