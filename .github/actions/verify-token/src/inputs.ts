@@ -14,7 +14,7 @@ limitations under the License.
 import * as core from "@actions/core";
 import * as YAML from "yaml";
 import { rawTokenInterface, GitHubWorkflowInterface } from "../src/types";
-import { fetchToolWorkflow } from "./utils";
+import { fetchToolWorkflow, asMap } from "./utils";
 
 export async function filterWorkflowInputs(
   slsaToken: rawTokenInterface,
@@ -37,8 +37,8 @@ export function updateSLSAToken(
   slsaToken: rawTokenInterface
 ): rawTokenInterface {
   const ret = Object.create(slsaToken);
-  const wokflowInputs = new Map(Object.entries(slsaToken.tool.inputs));
   const workflow: GitHubWorkflowInterface = YAML.parse(content);
+  slsaToken.tool.inputs = asMap(slsaToken.tool.inputs);
   if (!workflow.on) {
     throw new Error("no 'on' field");
   }
@@ -63,16 +63,14 @@ export function updateSLSAToken(
   }
 
   // Fields defined.
-  const names = [...wokflowInputs.keys()];
+  const names = [...slsaToken.tool.inputs.keys()];
   for (const name of names) {
     core.info(`Processing name: ${name}`);
     if (!wInputsMap.has(name)) {
       core.info(" - Removed");
-      wokflowInputs.delete(name);
+      slsaToken.tool.inputs.delete(name);
     }
   }
 
-  // Update the inputs to record.
-  ret.tool.inputs = wokflowInputs;
   return ret;
 }

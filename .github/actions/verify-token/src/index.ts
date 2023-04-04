@@ -55,7 +55,7 @@ async function run(): Promise<void> {
         GITHUB_REF_TYPE="tag" \
         GITHUB_ACTOR="laurentsimon" \
         GITHUB_WORKSPACE="$(pwd)" \
-        nodejs ./dist/dist/index.js
+        nodejs ./dist/index.js
     */
 
     const ghToken = core.getInput("token");

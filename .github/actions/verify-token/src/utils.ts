@@ -28,6 +28,18 @@ export function getWorkflowPath(obj: githubObj): string {
     .split("@", 1)[0];
 }
 
+export function asMap(
+  inputs: Map<string, string | number | boolean>
+): Map<string, string | number | boolean> {
+  if (!inputs) {
+    return new Map<string, string | number | boolean>();
+  }
+  if (!(inputs instanceof Map)) {
+    return new Map<string, string | number | boolean>(Object.entries(inputs));
+  }
+  return inputs;
+}
+
 export function parseCertificate(
   bundle: sigstore.sigstore.Bundle
 ): [string, string, string, string, string] {

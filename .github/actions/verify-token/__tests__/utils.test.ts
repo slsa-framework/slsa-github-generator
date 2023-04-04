@@ -2,7 +2,7 @@
  * @fileoverview Tests for utils.ts
  */
 
-import { getWorkflowPath } from "../src/utils.js";
+import { getWorkflowPath } from "../src/utils";
 import { githubObj } from "../src/types";
 
 describe("getWorkflowPath", () => {
