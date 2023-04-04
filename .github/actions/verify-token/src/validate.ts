@@ -11,7 +11,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-import * as core from "@actions/core";
 import * as tscommon from "tscommon";
 import { githubObj, rawTokenInterface } from "../src/types";
 
@@ -28,8 +27,9 @@ export function validateGitHubFields(gho: githubObj): void {
 
   // event_payload_sha256
   const eventPath = process.env.GITHUB_EVENT_PATH || "";
+  // NOTE: validate GITHUB_EVENT_PATH is non-empty to provide a better error
+  // message.
   validateFieldNonEmpty("GITHUB_EVENT_PATH", eventPath);
-  core.debug(`GITHUB_EVENT_PATH: ${eventPath}`);
   validateField(
     "github.event_payload_sha256",
     gho.event_payload_sha256,
