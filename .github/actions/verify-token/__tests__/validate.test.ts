@@ -11,6 +11,15 @@ import {
 } from "../src/validate";
 import { githubObj, rawTokenInterface } from "../src/types";
 
+// Import `fs` using commonJS so it can be mocked.
+const tscommon = require("tscommon");
+
+jest.mock("tscommon");
+
+afterEach(() => {
+  jest.clearAllMocks();
+});
+
 describe("validateField", () => {
   it("validates equal values", () => {
     validateField("foo", "foo", "foo");
@@ -130,7 +139,8 @@ function createToken(
     github: {
       actor_id: "123",
       event_name: "workflow_dispatch",
-      event_path: "/path/to/event.json",
+      event_payload_sha256:
+        "1307990e6ba5ca145eb35e99182a9bec46531bc54ddf656a602c780fa0240dee",
       ref: "refs/heads/mybranch",
       ref_type: "branch",
       repository: "ianlewis/byob-test",
@@ -243,7 +253,8 @@ describe("validateGitHubFields", () => {
     const obj: githubObj = {
       actor_id: "123",
       event_name: "workflow_dispatch",
-      event_path: "/path/to/event.json",
+      event_payload_sha256:
+        "1307990e6ba5ca145eb35e99182a9bec46531bc54ddf656a602c780fa0240dee",
       ref: "refs/heads/mybranch",
       ref_type: "branch",
       repository: "ianlewis/byob-test",
@@ -257,6 +268,9 @@ describe("validateGitHubFields", () => {
         "ianlewis/byob-test/.github/workflows/my-workflow.yml@refs/heads/my_branch",
       workflow_sha: "deadbeef",
     };
+
+    tscommon.safeFileSha256.mockReturnValueOnce(obj.event_payload_sha256);
+
     validateGitHubFields(obj);
   });
 
@@ -280,7 +294,8 @@ describe("validateGitHubFields", () => {
     const obj: githubObj = {
       actor_id: "123",
       event_name: "workflow_dispatch",
-      event_path: "/path/to/event.json",
+      event_payload_sha256:
+        "1307990e6ba5ca145eb35e99182a9bec46531bc54ddf656a602c780fa0240dee",
       ref: "refs/heads/mybranch",
       ref_type: "branch",
       repository: "ianlewis/byob-test",
@@ -294,12 +309,15 @@ describe("validateGitHubFields", () => {
         "ianlewis/byob-test/.github/workflows/my-workflow.yml@refs/heads/my_branch",
       workflow_sha: "deadbeef",
     };
+
+    tscommon.safeFileSha256.mockReturnValueOnce(obj.event_payload_sha256);
+
     expect(() => {
       validateGitHubFields(obj);
     }).toThrow();
   });
 
-  it("does not validate githubObj with unequal fields", () => {
+  it("does not validate githubObj with unequal repository", () => {
     process.env.GITHUB_ACTOR_ID = "123";
     process.env.GITHUB_EVENT_NAME = "workflow_dispatch";
     process.env.GITHUB_EVENT_PATH = "/path/to/event.json";
@@ -321,7 +339,8 @@ describe("validateGitHubFields", () => {
     const obj: githubObj = {
       actor_id: "123",
       event_name: "workflow_dispatch",
-      event_path: "/path/to/event.json",
+      event_payload_sha256:
+        "1307990e6ba5ca145eb35e99182a9bec46531bc54ddf656a602c780fa0240dee",
       ref: "refs/heads/mybranch",
       ref_type: "branch",
       repository: "asraa/byob-test", // NOTE: Not equal
@@ -335,6 +354,54 @@ describe("validateGitHubFields", () => {
         "ianlewis/byob-test/.github/workflows/my-workflow.yml@refs/heads/my_branch",
       workflow_sha: "deadbeef",
     };
+
+    tscommon.safeFileSha256.mockReturnValueOnce(obj.event_payload_sha256);
+
+    expect(() => {
+      validateGitHubFields(obj);
+    }).toThrow();
+  });
+
+  it("does not validate githubObj with unequal event_payload_sha256", () => {
+    process.env.GITHUB_ACTOR_ID = "123";
+    process.env.GITHUB_EVENT_NAME = "workflow_dispatch";
+    process.env.GITHUB_EVENT_PATH = "/path/to/event.json";
+    process.env.GITHUB_JOB = "234";
+    process.env.GITHUB_REF = "refs/heads/mybranch";
+    process.env.GITHUB_REF_TYPE = "branch";
+    process.env.GITHUB_REPOSITORY = "ianlewis/byob-test";
+    process.env.GITHUB_REPOSITORY_ID = "456";
+    process.env.GITHUB_REPOSITORY_OWNER_ID = "789";
+    process.env.GITHUB_RUN_ATTEMPT = "1";
+    process.env.GITHUB_RUN_ID = "123456789";
+    process.env.GITHUB_RUN_NUMBER = "1";
+    process.env.GITHUB_SHA = "deadbeef";
+    process.env.GITHUB_WORKFLOW = ".github/workflow/myworkflow.yml";
+    process.env.GITHUB_WORKFLOW_REF =
+      "ianlewis/byob-test/.github/workflows/my-workflow.yml@refs/heads/my_branch";
+    process.env.GITHUB_WORKFLOW_SHA = "deadbeef";
+
+    const obj: githubObj = {
+      actor_id: "123",
+      event_name: "workflow_dispatch",
+      event_payload_sha256:
+        "1307990e6ba5ca145eb35e99182a9bec46531bc54ddf656a602c780fa0240dee",
+      ref: "refs/heads/mybranch",
+      ref_type: "branch",
+      repository: "ianlewis/byob-test",
+      repository_id: "456",
+      repository_owner_id: "789",
+      run_attempt: "1",
+      run_id: "123456789",
+      run_number: "1",
+      sha: "deadbeef",
+      workflow_ref:
+        "ianlewis/byob-test/.github/workflows/my-workflow.yml@refs/heads/my_branch",
+      workflow_sha: "deadbeef",
+    };
+
+    tscommon.safeFileSha256.mockReturnValueOnce("incorrect-sha"); // NOTE: Not equal
+
     expect(() => {
       validateGitHubFields(obj);
     }).toThrow();

@@ -14,7 +14,7 @@ limitations under the License.
 export interface githubObj {
   actor_id: string;
   event_name: string;
-  event_path: string;
+  event_payload_sha256: string;
   ref: string;
   ref_type: string;
   repository: string;

@@ -11,6 +11,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+import * as tscommon from "tscommon";
 import { githubObj, rawTokenInterface } from "../src/types";
 
 export function validateGitHubFields(gho: githubObj): void {
@@ -24,11 +25,15 @@ export function validateGitHubFields(gho: githubObj): void {
     process.env.GITHUB_EVENT_NAME
   );
 
-  // event_path
+  // event_payload_sha256
+  const eventPath = process.env.GITHUB_EVENT_PATH || "";
+  // NOTE: validate GITHUB_EVENT_PATH is non-empty to provide a better error
+  // message.
+  validateFieldNonEmpty("GITHUB_EVENT_PATH", eventPath);
   validateField(
-    "github.event_path",
-    gho.event_path,
-    process.env.GITHUB_EVENT_PATH
+    "github.event_payload_sha256",
+    gho.event_payload_sha256,
+    tscommon.safeFileSha256(eventPath)
   );
 
   // ref
