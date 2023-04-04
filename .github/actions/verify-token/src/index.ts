@@ -13,7 +13,6 @@ limitations under the License.
 
 import * as core from "@actions/core";
 import * as sigstore from "sigstore";
-import * as child_process from "child_process";
 import {
   validateField,
   validateFieldAnyOf,
@@ -24,12 +23,15 @@ import {
 import { createPredicate as createPredicate_v1 } from "./predicate1";
 import { createPredicate as createPredicate_v02 } from "./predicate02";
 import { rawTokenInterface } from "./types";
+import { filterWorkflowInputs } from "./inputs";
+import { parseCertificate } from "./utils";
 import * as tscommon from "tscommon";
 
 async function run(): Promise<void> {
   try {
     /* Test locally. Requires a GitHub token:
-        $ env INPUT_SLSA-WORKFLOW-RECIPIENT="delegator_generic_slsa3.yml" \
+        $ rm -f client.cert && rm -f predicate.json && \
+        env INPUT_SLSA-WORKFLOW-RECIPIENT="delegator_generic_slsa3.yml" \
         INPUT_SLSA-UNVERIFIED-TOKEN="$(cat testdata/slsa-token)" \
         INPUT_SLSA-VERSION="1.0-rc1" \
         INPUT_TOKEN="$(echo $GH_TOKEN)" \
@@ -56,6 +58,10 @@ async function run(): Promise<void> {
         nodejs ./dist/dist/index.js
     */
 
+    const ghToken = core.getInput("token");
+    if (!ghToken) {
+      throw new Error("token not provided");
+    }
     const workflowRecipient = core.getInput("slsa-workflow-recipient");
     const unverifiedToken = core.getInput("slsa-unverified-token");
 
@@ -91,7 +97,7 @@ async function run(): Promise<void> {
 
     const rawTokenStr = rawToken.toString();
     const rawTokenObj: rawTokenInterface = JSON.parse(rawTokenStr);
-/*
+    /*
     // Verify the version.
     validateField("version", rawTokenObj.version, 1);
 
@@ -132,11 +138,18 @@ async function run(): Promise<void> {
     // TODO(#1780): test empty inputs.
 
     // Extract certificate information.
-    const [toolURI, toolRepository, toolRef, toolSha, toolPath] = parseCertificate(bundle);
+    const [toolURI, toolRepository, toolRef, toolSha, toolPath] =
+      parseCertificate(bundle);
 
     // Extract the inputs.
     // See https://github.com/slsa-framework/slsa-github-generator/issues/1737.
-    const rawFinalTokenObj = await filterWorkflowInputs(rawTokenObj, ghToken, toolRepository, toolSha, toolPath);
+    const rawFinalTokenObj = await filterWorkflowInputs(
+      rawTokenObj,
+      ghToken,
+      toolRepository,
+      toolSha,
+      toolPath
+    );
     core.debug(
       `workflow inputs: ${JSON.stringify(
         Object.fromEntries(rawFinalTokenObj.tool.inputs)

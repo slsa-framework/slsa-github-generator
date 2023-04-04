@@ -1,4 +1,8 @@
 import { githubObj } from "./types";
+import * as core from "@actions/core";
+import * as sigstore from "sigstore";
+import * as child_process from "child_process";
+import * as tscommon from "tscommon";
 
 // createURI creates the fully qualified URI out of the repository
 export function createURI(repository: string, ref: string): string {
@@ -50,9 +54,12 @@ export function parseCertificate(
     "base64"
   );
   const clientCertPath = "client.cert";
-  fs.writeFileSync(clientCertPath, clientCertDer);
+  
+  tscommon.safeWriteFileSync(clientCertPath, clientCertDer);
 
   // https://stackabuse.com/executing-shell-commands-with-node-js/
+  // NOTE: it's also included in the '1.3.6.1.4.1.57264.1.9' extension field.
+  // https://github.com/sigstore/fulcio/blob/main/docs/oid-info.md#1361415726419--build-signer-uri
   // The SAN from the certificate looks like:
   // `
   //  X509v3 Subject Alternative Name: critical\n
@@ -73,16 +80,21 @@ export function parseCertificate(
   core.debug(`tool-repository: ${toolRepository}`);
   core.debug(`tool-ref: ${toolRef}`);
 
-  // The commit sha for the repo is stored in
-  // a v3 extension with oid '1.3.6.1.4.1.57264.1.3'.
+  // https://github.com/sigstore/fulcio/blob/main/docs/oid-info.md
+  // We use the more recent Fulcio claims to extract the tool information.
+  // The commit sha for the tool is stored in
+  // a v3 extension with oid '1.3.6.1.4.1.57264.1.9'.
+  // https://github.com/sigstore/fulcio/blob/main/docs/oid-info.md#1361415726419--build-signer-uri
   // `
   //    1.3.6.1.4.1.57264.1.3:\n
   //        8cbf4d422367d8499d5980a837cb9cc8e1e67001
   // `
   const textCertPath = "./client.txt";
-  const shaOid = "1.3.6.1.4.1.57264.1.3";
+  const shaOid = "1.3.6.1.4.1.57264.1.10";
   child_process
-    .execSync(`openssl x509 -in ${clientCertPath} -noout -text -out ${textCertPath}`)
+    .execSync(
+      `openssl x509 -in ${clientCertPath} -noout -text -out ${textCertPath}`
+    )
     .toString();
   const resultSha = child_process
     .execSync(`grep -A 1 '${shaOid}:' ${textCertPath}`)
@@ -91,27 +103,37 @@ export function parseCertificate(
   if (indexSha === -1) {
     throw new Error(`error: cannot find oid '${shaOid}' in certificate`);
   }
-  const toolSha = resultSha.slice(indexSha + `${shaOid}:`.length).replace("\n", "").trim();
+
+  core.debug(`resultSha: ${resultSha}`);
+  const sha1ByteLen = 20;
+  const toolSha = resultSha
+    .slice(indexSha + `${shaOid}:`.length)
+    .replace("\n", "")
+    .trim()
+    .slice(-(sha1ByteLen*2));
   core.debug(`tool-sha: ${toolSha}`);
-  
-  const toolPath = removeSuffix(removePrefix(toolURI, `https://github.com/${toolRepository}/`), `@${toolRef}`);
+
+  const toolPath = removeSuffix(
+    removePrefix(toolURI, `https://github.com/${toolRepository}/`),
+    `@${toolRef}`
+  );
   core.debug(`tool-path: ${toolPath}`);
   return [toolURI, toolRepository, toolRef, toolSha, toolPath];
 }
 
-function removeSuffix(s: string, suffix: string): string{
-  if (!s.endsWith(suffix)){
+function removeSuffix(s: string, suffix: string): string {
+  if (!s.endsWith(suffix)) {
     throw new Error(`error: no suffix '${suffix}' in '${s}'`);
   }
-  return s.slice(0, - suffix.length);
+  return s.slice(0, -suffix.length);
 }
 
 function removePrefix(s: string, prefix: string): string {
-  if (!s.startsWith(prefix)){
+  if (!s.startsWith(prefix)) {
     throw new Error(`error: no prefix '${prefix}' in '${s}'`);
   }
   return s.slice(prefix.length);
-};
+}
 
 function extractIdentifyFromSAN(URI: string): [string, string] {
   // NOTE: the URI looks like:

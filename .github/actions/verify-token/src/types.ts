@@ -66,10 +66,10 @@ export interface rawTokenInterface {
   };
 }
 
-export interface GitHubWorkflowInterface{
+export interface GitHubWorkflowInterface {
   on: {
-    workflow_call:{
-      inputs: Map<string, Object>,
-    }
-  }
+    workflow_call: {
+      inputs: Map<string, Object>;
+    };
+  };
 }
