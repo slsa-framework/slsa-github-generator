@@ -43260,9 +43260,6 @@ exports.getGitHubWorkspace = getGitHubWorkspace;
 // safeFileSha256 returns the hex-formatted sha256 sum of the contents of an
 // untrusted file path.
 function safeFileSha256(untrustedPath) {
-    if (!safeExistsSync(untrustedPath)) {
-        throw new Error(`File ${untrustedPath} not present`);
-    }
     const untrustedFile = safeReadFileSync(untrustedPath);
     return crypto.createHash("sha256").update(untrustedFile).digest("hex");
 }
