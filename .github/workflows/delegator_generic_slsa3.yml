@@ -91,8 +91,7 @@ jobs:
     steps:
       - name: Verify token with test action
         id: verify
-        # uses: slsa-framework/slsa-github-generator/.github/actions/verify-token@main
-        uses: ianlewis/slsa-github-generator/.github/actions/verify-token@1900-bug-dont-validate-or-read-event_path-from-slsa-token
+        uses: slsa-framework/slsa-github-generator/.github/actions/verify-token@main
         with:
           slsa-workflow-recipient: "delegator_generic_slsa3.yml"
           slsa-unverified-token: ${{ inputs.slsa-token }}
