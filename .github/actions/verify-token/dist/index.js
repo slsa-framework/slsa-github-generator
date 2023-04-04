@@ -609,6 +609,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.validateFieldNonEmpty = exports.validateFieldStartsWith = exports.validateField = exports.validateFieldAnyOf = exports.validateAndMaskInputs = exports.validateGitHubFields = void 0;
+const core = __importStar(__nccwpck_require__(2186));
 const tscommon = __importStar(__nccwpck_require__(6634));
 function validateGitHubFields(gho) {
     // actor_id
@@ -616,7 +617,10 @@ function validateGitHubFields(gho) {
     // event_name
     validateField("github.event_name", gho.event_name, process.env.GITHUB_EVENT_NAME);
     // event_payload_sha256
-    validateField("github.event_payload_sha256", gho.event_payload_sha256, tscommon.safeFileSha256(process.env.GITHUB_EVENT_PAYLOAD || ""));
+    const eventPath = process.env.GITHUB_EVENT_PATH || "";
+    validateFieldNonEmpty("GITHUB_EVENT_PATH", eventPath);
+    core.debug(`GITHUB_EVENT_PATH: ${eventPath}`);
+    validateField("github.event_payload_sha256", gho.event_payload_sha256, tscommon.safeFileSha256(eventPath));
     // ref
     validateField("github.ref", gho.ref, process.env.GITHUB_REF);
     // ref_type
