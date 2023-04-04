@@ -29,7 +29,7 @@ export function validateGitHubFields(gho: githubObj): void {
   validateField(
     "github.event_payload_sha256",
     gho.event_payload_sha256,
-    tscommon.safeFileSha256(process.env.GITHUB_EVENT_PAYLOAD || "")
+    tscommon.safeFileSha256(process.env.GITHUB_EVENT_PATH || "")
   );
 
   // ref
