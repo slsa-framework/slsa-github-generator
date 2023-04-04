@@ -44,3 +44,4 @@ unit-test: node_modules/.installed ## Runs all unit tests.
 lint: node_modules/.installed ## Runs eslint.
 	npm run format-check
 	npm run lint
+"yaml": "^2.2.1"
