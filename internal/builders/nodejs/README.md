@@ -160,10 +160,10 @@ are fully supported and tested:
 
 However, in practice, most triggers should work with the exception of
 `pull_request`. If you would like support for `pull_request`, please tell us
-about your use case on [issue
-#358](https://github.com/slsa-framework/slsa-github-generator/issues/358). If
-you have an issue in all other triggers please submit a [new
-issue](https://github.com/slsa-framework/slsa-github-generator/issues/new/choose).
+about your use case on
+[issue #358](https://github.com/slsa-framework/slsa-github-generator/issues/358). If
+you have an issue in all other triggers please submit a
+[new issue](https://github.com/slsa-framework/slsa-github-generator/issues/new/choose).
 
 ### Workflow Inputs
 

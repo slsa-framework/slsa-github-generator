@@ -5884,6 +5884,1326 @@ exports.request = request;
 
 /***/ }),
 
+/***/ 714:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+/* eslint-disable */
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Signature = exports.Envelope = void 0;
+function createBaseEnvelope() {
+    return { payload: Buffer.alloc(0), payloadType: "", signatures: [] };
+}
+exports.Envelope = {
+    fromJSON(object) {
+        return {
+            payload: isSet(object.payload) ? Buffer.from(bytesFromBase64(object.payload)) : Buffer.alloc(0),
+            payloadType: isSet(object.payloadType) ? String(object.payloadType) : "",
+            signatures: Array.isArray(object?.signatures) ? object.signatures.map((e) => exports.Signature.fromJSON(e)) : [],
+        };
+    },
+    toJSON(message) {
+        const obj = {};
+        message.payload !== undefined &&
+            (obj.payload = base64FromBytes(message.payload !== undefined ? message.payload : Buffer.alloc(0)));
+        message.payloadType !== undefined && (obj.payloadType = message.payloadType);
+        if (message.signatures) {
+            obj.signatures = message.signatures.map((e) => e ? exports.Signature.toJSON(e) : undefined);
+        }
+        else {
+            obj.signatures = [];
+        }
+        return obj;
+    },
+};
+function createBaseSignature() {
+    return { sig: Buffer.alloc(0), keyid: "" };
+}
+exports.Signature = {
+    fromJSON(object) {
+        return {
+            sig: isSet(object.sig) ? Buffer.from(bytesFromBase64(object.sig)) : Buffer.alloc(0),
+            keyid: isSet(object.keyid) ? String(object.keyid) : "",
+        };
+    },
+    toJSON(message) {
+        const obj = {};
+        message.sig !== undefined && (obj.sig = base64FromBytes(message.sig !== undefined ? message.sig : Buffer.alloc(0)));
+        message.keyid !== undefined && (obj.keyid = message.keyid);
+        return obj;
+    },
+};
+var globalThis = (() => {
+    if (typeof globalThis !== "undefined") {
+        return globalThis;
+    }
+    if (typeof self !== "undefined") {
+        return self;
+    }
+    if (typeof window !== "undefined") {
+        return window;
+    }
+    if (typeof global !== "undefined") {
+        return global;
+    }
+    throw "Unable to locate global object";
+})();
+function bytesFromBase64(b64) {
+    if (globalThis.Buffer) {
+        return Uint8Array.from(globalThis.Buffer.from(b64, "base64"));
+    }
+    else {
+        const bin = globalThis.atob(b64);
+        const arr = new Uint8Array(bin.length);
+        for (let i = 0; i < bin.length; ++i) {
+            arr[i] = bin.charCodeAt(i);
+        }
+        return arr;
+    }
+}
+function base64FromBytes(arr) {
+    if (globalThis.Buffer) {
+        return globalThis.Buffer.from(arr).toString("base64");
+    }
+    else {
+        const bin = [];
+        arr.forEach((byte) => {
+            bin.push(String.fromCharCode(byte));
+        });
+        return globalThis.btoa(bin.join(""));
+    }
+}
+function isSet(value) {
+    return value !== null && value !== undefined;
+}
+
+
+/***/ }),
+
+/***/ 3027:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+/* eslint-disable */
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Timestamp = void 0;
+function createBaseTimestamp() {
+    return { seconds: "0", nanos: 0 };
+}
+exports.Timestamp = {
+    fromJSON(object) {
+        return {
+            seconds: isSet(object.seconds) ? String(object.seconds) : "0",
+            nanos: isSet(object.nanos) ? Number(object.nanos) : 0,
+        };
+    },
+    toJSON(message) {
+        const obj = {};
+        message.seconds !== undefined && (obj.seconds = message.seconds);
+        message.nanos !== undefined && (obj.nanos = Math.round(message.nanos));
+        return obj;
+    },
+};
+function isSet(value) {
+    return value !== null && value !== undefined;
+}
+
+
+/***/ }),
+
+/***/ 8293:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Bundle = exports.VerificationMaterial = exports.TimestampVerificationData = void 0;
+/* eslint-disable */
+const envelope_1 = __nccwpck_require__(714);
+const sigstore_common_1 = __nccwpck_require__(2193);
+const sigstore_rekor_1 = __nccwpck_require__(4951);
+function createBaseTimestampVerificationData() {
+    return { rfc3161Timestamps: [] };
+}
+exports.TimestampVerificationData = {
+    fromJSON(object) {
+        return {
+            rfc3161Timestamps: Array.isArray(object?.rfc3161Timestamps)
+                ? object.rfc3161Timestamps.map((e) => sigstore_common_1.RFC3161SignedTimestamp.fromJSON(e))
+                : [],
+        };
+    },
+    toJSON(message) {
+        const obj = {};
+        if (message.rfc3161Timestamps) {
+            obj.rfc3161Timestamps = message.rfc3161Timestamps.map((e) => e ? sigstore_common_1.RFC3161SignedTimestamp.toJSON(e) : undefined);
+        }
+        else {
+            obj.rfc3161Timestamps = [];
+        }
+        return obj;
+    },
+};
+function createBaseVerificationMaterial() {
+    return { content: undefined, tlogEntries: [], timestampVerificationData: undefined };
+}
+exports.VerificationMaterial = {
+    fromJSON(object) {
+        return {
+            content: isSet(object.publicKey)
+                ? { $case: "publicKey", publicKey: sigstore_common_1.PublicKeyIdentifier.fromJSON(object.publicKey) }
+                : isSet(object.x509CertificateChain)
+                    ? {
+                        $case: "x509CertificateChain",
+                        x509CertificateChain: sigstore_common_1.X509CertificateChain.fromJSON(object.x509CertificateChain),
+                    }
+                    : undefined,
+            tlogEntries: Array.isArray(object?.tlogEntries)
+                ? object.tlogEntries.map((e) => sigstore_rekor_1.TransparencyLogEntry.fromJSON(e))
+                : [],
+            timestampVerificationData: isSet(object.timestampVerificationData)
+                ? exports.TimestampVerificationData.fromJSON(object.timestampVerificationData)
+                : undefined,
+        };
+    },
+    toJSON(message) {
+        const obj = {};
+        message.content?.$case === "publicKey" &&
+            (obj.publicKey = message.content?.publicKey ? sigstore_common_1.PublicKeyIdentifier.toJSON(message.content?.publicKey) : undefined);
+        message.content?.$case === "x509CertificateChain" &&
+            (obj.x509CertificateChain = message.content?.x509CertificateChain
+                ? sigstore_common_1.X509CertificateChain.toJSON(message.content?.x509CertificateChain)
+                : undefined);
+        if (message.tlogEntries) {
+            obj.tlogEntries = message.tlogEntries.map((e) => e ? sigstore_rekor_1.TransparencyLogEntry.toJSON(e) : undefined);
+        }
+        else {
+            obj.tlogEntries = [];
+        }
+        message.timestampVerificationData !== undefined &&
+            (obj.timestampVerificationData = message.timestampVerificationData
+                ? exports.TimestampVerificationData.toJSON(message.timestampVerificationData)
+                : undefined);
+        return obj;
+    },
+};
+function createBaseBundle() {
+    return { mediaType: "", verificationMaterial: undefined, content: undefined };
+}
+exports.Bundle = {
+    fromJSON(object) {
+        return {
+            mediaType: isSet(object.mediaType) ? String(object.mediaType) : "",
+            verificationMaterial: isSet(object.verificationMaterial)
+                ? exports.VerificationMaterial.fromJSON(object.verificationMaterial)
+                : undefined,
+            content: isSet(object.messageSignature)
+                ? { $case: "messageSignature", messageSignature: sigstore_common_1.MessageSignature.fromJSON(object.messageSignature) }
+                : isSet(object.dsseEnvelope)
+                    ? { $case: "dsseEnvelope", dsseEnvelope: envelope_1.Envelope.fromJSON(object.dsseEnvelope) }
+                    : undefined,
+        };
+    },
+    toJSON(message) {
+        const obj = {};
+        message.mediaType !== undefined && (obj.mediaType = message.mediaType);
+        message.verificationMaterial !== undefined && (obj.verificationMaterial = message.verificationMaterial
+            ? exports.VerificationMaterial.toJSON(message.verificationMaterial)
+            : undefined);
+        message.content?.$case === "messageSignature" && (obj.messageSignature = message.content?.messageSignature
+            ? sigstore_common_1.MessageSignature.toJSON(message.content?.messageSignature)
+            : undefined);
+        message.content?.$case === "dsseEnvelope" &&
+            (obj.dsseEnvelope = message.content?.dsseEnvelope ? envelope_1.Envelope.toJSON(message.content?.dsseEnvelope) : undefined);
+        return obj;
+    },
+};
+function isSet(value) {
+    return value !== null && value !== undefined;
+}
+
+
+/***/ }),
+
+/***/ 2193:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.TimeRange = exports.X509CertificateChain = exports.SubjectAlternativeName = exports.X509Certificate = exports.DistinguishedName = exports.ObjectIdentifierValuePair = exports.ObjectIdentifier = exports.PublicKeyIdentifier = exports.PublicKey = exports.RFC3161SignedTimestamp = exports.LogId = exports.MessageSignature = exports.HashOutput = exports.subjectAlternativeNameTypeToJSON = exports.subjectAlternativeNameTypeFromJSON = exports.SubjectAlternativeNameType = exports.publicKeyDetailsToJSON = exports.publicKeyDetailsFromJSON = exports.PublicKeyDetails = exports.hashAlgorithmToJSON = exports.hashAlgorithmFromJSON = exports.HashAlgorithm = void 0;
+/* eslint-disable */
+const timestamp_1 = __nccwpck_require__(3027);
+/**
+ * Only a subset of the secure hash standard algorithms are supported.
+ * See <https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.180-4.pdf> for more
+ * details.
+ * UNSPECIFIED SHOULD not be used, primary reason for inclusion is to force
+ * any proto JSON serialization to emit the used hash algorithm, as default
+ * option is to *omit* the default value of an enum (which is the first
+ * value, represented by '0'.
+ */
+var HashAlgorithm;
+(function (HashAlgorithm) {
+    HashAlgorithm[HashAlgorithm["HASH_ALGORITHM_UNSPECIFIED"] = 0] = "HASH_ALGORITHM_UNSPECIFIED";
+    HashAlgorithm[HashAlgorithm["SHA2_256"] = 1] = "SHA2_256";
+})(HashAlgorithm = exports.HashAlgorithm || (exports.HashAlgorithm = {}));
+function hashAlgorithmFromJSON(object) {
+    switch (object) {
+        case 0:
+        case "HASH_ALGORITHM_UNSPECIFIED":
+            return HashAlgorithm.HASH_ALGORITHM_UNSPECIFIED;
+        case 1:
+        case "SHA2_256":
+            return HashAlgorithm.SHA2_256;
+        default:
+            throw new globalThis.Error("Unrecognized enum value " + object + " for enum HashAlgorithm");
+    }
+}
+exports.hashAlgorithmFromJSON = hashAlgorithmFromJSON;
+function hashAlgorithmToJSON(object) {
+    switch (object) {
+        case HashAlgorithm.HASH_ALGORITHM_UNSPECIFIED:
+            return "HASH_ALGORITHM_UNSPECIFIED";
+        case HashAlgorithm.SHA2_256:
+            return "SHA2_256";
+        default:
+            throw new globalThis.Error("Unrecognized enum value " + object + " for enum HashAlgorithm");
+    }
+}
+exports.hashAlgorithmToJSON = hashAlgorithmToJSON;
+/**
+ * Details of a specific public key, capturing the the key encoding method,
+ * and signature algorithm.
+ * To avoid the possibility of contradicting formats such as PKCS1 with
+ * ED25519 the valid permutations are listed as a linear set instead of a
+ * cartesian set (i.e one combined variable instead of two, one for encoding
+ * and one for the signature algorithm).
+ */
+var PublicKeyDetails;
+(function (PublicKeyDetails) {
+    PublicKeyDetails[PublicKeyDetails["PUBLIC_KEY_DETAILS_UNSPECIFIED"] = 0] = "PUBLIC_KEY_DETAILS_UNSPECIFIED";
+    /** PKCS1_RSA_PKCS1V5 - RSA */
+    PublicKeyDetails[PublicKeyDetails["PKCS1_RSA_PKCS1V5"] = 1] = "PKCS1_RSA_PKCS1V5";
+    /** PKCS1_RSA_PSS - See RFC8017 */
+    PublicKeyDetails[PublicKeyDetails["PKCS1_RSA_PSS"] = 2] = "PKCS1_RSA_PSS";
+    PublicKeyDetails[PublicKeyDetails["PKIX_RSA_PKCS1V5"] = 3] = "PKIX_RSA_PKCS1V5";
+    PublicKeyDetails[PublicKeyDetails["PKIX_RSA_PSS"] = 4] = "PKIX_RSA_PSS";
+    /** PKIX_ECDSA_P256_SHA_256 - ECDSA */
+    PublicKeyDetails[PublicKeyDetails["PKIX_ECDSA_P256_SHA_256"] = 5] = "PKIX_ECDSA_P256_SHA_256";
+    /** PKIX_ECDSA_P256_HMAC_SHA_256 - See RFC6979 */
+    PublicKeyDetails[PublicKeyDetails["PKIX_ECDSA_P256_HMAC_SHA_256"] = 6] = "PKIX_ECDSA_P256_HMAC_SHA_256";
+    /** PKIX_ED25519 - Ed 25519 */
+    PublicKeyDetails[PublicKeyDetails["PKIX_ED25519"] = 7] = "PKIX_ED25519";
+})(PublicKeyDetails = exports.PublicKeyDetails || (exports.PublicKeyDetails = {}));
+function publicKeyDetailsFromJSON(object) {
+    switch (object) {
+        case 0:
+        case "PUBLIC_KEY_DETAILS_UNSPECIFIED":
+            return PublicKeyDetails.PUBLIC_KEY_DETAILS_UNSPECIFIED;
+        case 1:
+        case "PKCS1_RSA_PKCS1V5":
+            return PublicKeyDetails.PKCS1_RSA_PKCS1V5;
+        case 2:
+        case "PKCS1_RSA_PSS":
+            return PublicKeyDetails.PKCS1_RSA_PSS;
+        case 3:
+        case "PKIX_RSA_PKCS1V5":
+            return PublicKeyDetails.PKIX_RSA_PKCS1V5;
+        case 4:
+        case "PKIX_RSA_PSS":
+            return PublicKeyDetails.PKIX_RSA_PSS;
+        case 5:
+        case "PKIX_ECDSA_P256_SHA_256":
+            return PublicKeyDetails.PKIX_ECDSA_P256_SHA_256;
+        case 6:
+        case "PKIX_ECDSA_P256_HMAC_SHA_256":
+            return PublicKeyDetails.PKIX_ECDSA_P256_HMAC_SHA_256;
+        case 7:
+        case "PKIX_ED25519":
+            return PublicKeyDetails.PKIX_ED25519;
+        default:
+            throw new globalThis.Error("Unrecognized enum value " + object + " for enum PublicKeyDetails");
+    }
+}
+exports.publicKeyDetailsFromJSON = publicKeyDetailsFromJSON;
+function publicKeyDetailsToJSON(object) {
+    switch (object) {
+        case PublicKeyDetails.PUBLIC_KEY_DETAILS_UNSPECIFIED:
+            return "PUBLIC_KEY_DETAILS_UNSPECIFIED";
+        case PublicKeyDetails.PKCS1_RSA_PKCS1V5:
+            return "PKCS1_RSA_PKCS1V5";
+        case PublicKeyDetails.PKCS1_RSA_PSS:
+            return "PKCS1_RSA_PSS";
+        case PublicKeyDetails.PKIX_RSA_PKCS1V5:
+            return "PKIX_RSA_PKCS1V5";
+        case PublicKeyDetails.PKIX_RSA_PSS:
+            return "PKIX_RSA_PSS";
+        case PublicKeyDetails.PKIX_ECDSA_P256_SHA_256:
+            return "PKIX_ECDSA_P256_SHA_256";
+        case PublicKeyDetails.PKIX_ECDSA_P256_HMAC_SHA_256:
+            return "PKIX_ECDSA_P256_HMAC_SHA_256";
+        case PublicKeyDetails.PKIX_ED25519:
+            return "PKIX_ED25519";
+        default:
+            throw new globalThis.Error("Unrecognized enum value " + object + " for enum PublicKeyDetails");
+    }
+}
+exports.publicKeyDetailsToJSON = publicKeyDetailsToJSON;
+var SubjectAlternativeNameType;
+(function (SubjectAlternativeNameType) {
+    SubjectAlternativeNameType[SubjectAlternativeNameType["SUBJECT_ALTERNATIVE_NAME_TYPE_UNSPECIFIED"] = 0] = "SUBJECT_ALTERNATIVE_NAME_TYPE_UNSPECIFIED";
+    SubjectAlternativeNameType[SubjectAlternativeNameType["EMAIL"] = 1] = "EMAIL";
+    SubjectAlternativeNameType[SubjectAlternativeNameType["URI"] = 2] = "URI";
+    /**
+     * OTHER_NAME - OID 1.3.6.1.4.1.57264.1.7
+     * See https://github.com/sigstore/fulcio/blob/main/docs/oid-info.md#1361415726417--othername-san
+     * for more details.
+     */
+    SubjectAlternativeNameType[SubjectAlternativeNameType["OTHER_NAME"] = 3] = "OTHER_NAME";
+})(SubjectAlternativeNameType = exports.SubjectAlternativeNameType || (exports.SubjectAlternativeNameType = {}));
+function subjectAlternativeNameTypeFromJSON(object) {
+    switch (object) {
+        case 0:
+        case "SUBJECT_ALTERNATIVE_NAME_TYPE_UNSPECIFIED":
+            return SubjectAlternativeNameType.SUBJECT_ALTERNATIVE_NAME_TYPE_UNSPECIFIED;
+        case 1:
+        case "EMAIL":
+            return SubjectAlternativeNameType.EMAIL;
+        case 2:
+        case "URI":
+            return SubjectAlternativeNameType.URI;
+        case 3:
+        case "OTHER_NAME":
+            return SubjectAlternativeNameType.OTHER_NAME;
+        default:
+            throw new globalThis.Error("Unrecognized enum value " + object + " for enum SubjectAlternativeNameType");
+    }
+}
+exports.subjectAlternativeNameTypeFromJSON = subjectAlternativeNameTypeFromJSON;
+function subjectAlternativeNameTypeToJSON(object) {
+    switch (object) {
+        case SubjectAlternativeNameType.SUBJECT_ALTERNATIVE_NAME_TYPE_UNSPECIFIED:
+            return "SUBJECT_ALTERNATIVE_NAME_TYPE_UNSPECIFIED";
+        case SubjectAlternativeNameType.EMAIL:
+            return "EMAIL";
+        case SubjectAlternativeNameType.URI:
+            return "URI";
+        case SubjectAlternativeNameType.OTHER_NAME:
+            return "OTHER_NAME";
+        default:
+            throw new globalThis.Error("Unrecognized enum value " + object + " for enum SubjectAlternativeNameType");
+    }
+}
+exports.subjectAlternativeNameTypeToJSON = subjectAlternativeNameTypeToJSON;
+function createBaseHashOutput() {
+    return { algorithm: 0, digest: Buffer.alloc(0) };
+}
+exports.HashOutput = {
+    fromJSON(object) {
+        return {
+            algorithm: isSet(object.algorithm) ? hashAlgorithmFromJSON(object.algorithm) : 0,
+            digest: isSet(object.digest) ? Buffer.from(bytesFromBase64(object.digest)) : Buffer.alloc(0),
+        };
+    },
+    toJSON(message) {
+        const obj = {};
+        message.algorithm !== undefined && (obj.algorithm = hashAlgorithmToJSON(message.algorithm));
+        message.digest !== undefined &&
+            (obj.digest = base64FromBytes(message.digest !== undefined ? message.digest : Buffer.alloc(0)));
+        return obj;
+    },
+};
+function createBaseMessageSignature() {
+    return { messageDigest: undefined, signature: Buffer.alloc(0) };
+}
+exports.MessageSignature = {
+    fromJSON(object) {
+        return {
+            messageDigest: isSet(object.messageDigest) ? exports.HashOutput.fromJSON(object.messageDigest) : undefined,
+            signature: isSet(object.signature) ? Buffer.from(bytesFromBase64(object.signature)) : Buffer.alloc(0),
+        };
+    },
+    toJSON(message) {
+        const obj = {};
+        message.messageDigest !== undefined &&
+            (obj.messageDigest = message.messageDigest ? exports.HashOutput.toJSON(message.messageDigest) : undefined);
+        message.signature !== undefined &&
+            (obj.signature = base64FromBytes(message.signature !== undefined ? message.signature : Buffer.alloc(0)));
+        return obj;
+    },
+};
+function createBaseLogId() {
+    return { keyId: Buffer.alloc(0) };
+}
+exports.LogId = {
+    fromJSON(object) {
+        return { keyId: isSet(object.keyId) ? Buffer.from(bytesFromBase64(object.keyId)) : Buffer.alloc(0) };
+    },
+    toJSON(message) {
+        const obj = {};
+        message.keyId !== undefined &&
+            (obj.keyId = base64FromBytes(message.keyId !== undefined ? message.keyId : Buffer.alloc(0)));
+        return obj;
+    },
+};
+function createBaseRFC3161SignedTimestamp() {
+    return { signedTimestamp: Buffer.alloc(0) };
+}
+exports.RFC3161SignedTimestamp = {
+    fromJSON(object) {
+        return {
+            signedTimestamp: isSet(object.signedTimestamp)
+                ? Buffer.from(bytesFromBase64(object.signedTimestamp))
+                : Buffer.alloc(0),
+        };
+    },
+    toJSON(message) {
+        const obj = {};
+        message.signedTimestamp !== undefined &&
+            (obj.signedTimestamp = base64FromBytes(message.signedTimestamp !== undefined ? message.signedTimestamp : Buffer.alloc(0)));
+        return obj;
+    },
+};
+function createBasePublicKey() {
+    return { rawBytes: undefined, keyDetails: 0, validFor: undefined };
+}
+exports.PublicKey = {
+    fromJSON(object) {
+        return {
+            rawBytes: isSet(object.rawBytes) ? Buffer.from(bytesFromBase64(object.rawBytes)) : undefined,
+            keyDetails: isSet(object.keyDetails) ? publicKeyDetailsFromJSON(object.keyDetails) : 0,
+            validFor: isSet(object.validFor) ? exports.TimeRange.fromJSON(object.validFor) : undefined,
+        };
+    },
+    toJSON(message) {
+        const obj = {};
+        message.rawBytes !== undefined &&
+            (obj.rawBytes = message.rawBytes !== undefined ? base64FromBytes(message.rawBytes) : undefined);
+        message.keyDetails !== undefined && (obj.keyDetails = publicKeyDetailsToJSON(message.keyDetails));
+        message.validFor !== undefined &&
+            (obj.validFor = message.validFor ? exports.TimeRange.toJSON(message.validFor) : undefined);
+        return obj;
+    },
+};
+function createBasePublicKeyIdentifier() {
+    return { hint: "" };
+}
+exports.PublicKeyIdentifier = {
+    fromJSON(object) {
+        return { hint: isSet(object.hint) ? String(object.hint) : "" };
+    },
+    toJSON(message) {
+        const obj = {};
+        message.hint !== undefined && (obj.hint = message.hint);
+        return obj;
+    },
+};
+function createBaseObjectIdentifier() {
+    return { id: [] };
+}
+exports.ObjectIdentifier = {
+    fromJSON(object) {
+        return { id: Array.isArray(object?.id) ? object.id.map((e) => Number(e)) : [] };
+    },
+    toJSON(message) {
+        const obj = {};
+        if (message.id) {
+            obj.id = message.id.map((e) => Math.round(e));
+        }
+        else {
+            obj.id = [];
+        }
+        return obj;
+    },
+};
+function createBaseObjectIdentifierValuePair() {
+    return { oid: undefined, value: Buffer.alloc(0) };
+}
+exports.ObjectIdentifierValuePair = {
+    fromJSON(object) {
+        return {
+            oid: isSet(object.oid) ? exports.ObjectIdentifier.fromJSON(object.oid) : undefined,
+            value: isSet(object.value) ? Buffer.from(bytesFromBase64(object.value)) : Buffer.alloc(0),
+        };
+    },
+    toJSON(message) {
+        const obj = {};
+        message.oid !== undefined && (obj.oid = message.oid ? exports.ObjectIdentifier.toJSON(message.oid) : undefined);
+        message.value !== undefined &&
+            (obj.value = base64FromBytes(message.value !== undefined ? message.value : Buffer.alloc(0)));
+        return obj;
+    },
+};
+function createBaseDistinguishedName() {
+    return { organization: "", commonName: "" };
+}
+exports.DistinguishedName = {
+    fromJSON(object) {
+        return {
+            organization: isSet(object.organization) ? String(object.organization) : "",
+            commonName: isSet(object.commonName) ? String(object.commonName) : "",
+        };
+    },
+    toJSON(message) {
+        const obj = {};
+        message.organization !== undefined && (obj.organization = message.organization);
+        message.commonName !== undefined && (obj.commonName = message.commonName);
+        return obj;
+    },
+};
+function createBaseX509Certificate() {
+    return { rawBytes: Buffer.alloc(0) };
+}
+exports.X509Certificate = {
+    fromJSON(object) {
+        return { rawBytes: isSet(object.rawBytes) ? Buffer.from(bytesFromBase64(object.rawBytes)) : Buffer.alloc(0) };
+    },
+    toJSON(message) {
+        const obj = {};
+        message.rawBytes !== undefined &&
+            (obj.rawBytes = base64FromBytes(message.rawBytes !== undefined ? message.rawBytes : Buffer.alloc(0)));
+        return obj;
+    },
+};
+function createBaseSubjectAlternativeName() {
+    return { type: 0, identity: undefined };
+}
+exports.SubjectAlternativeName = {
+    fromJSON(object) {
+        return {
+            type: isSet(object.type) ? subjectAlternativeNameTypeFromJSON(object.type) : 0,
+            identity: isSet(object.regexp)
+                ? { $case: "regexp", regexp: String(object.regexp) }
+                : isSet(object.value)
+                    ? { $case: "value", value: String(object.value) }
+                    : undefined,
+        };
+    },
+    toJSON(message) {
+        const obj = {};
+        message.type !== undefined && (obj.type = subjectAlternativeNameTypeToJSON(message.type));
+        message.identity?.$case === "regexp" && (obj.regexp = message.identity?.regexp);
+        message.identity?.$case === "value" && (obj.value = message.identity?.value);
+        return obj;
+    },
+};
+function createBaseX509CertificateChain() {
+    return { certificates: [] };
+}
+exports.X509CertificateChain = {
+    fromJSON(object) {
+        return {
+            certificates: Array.isArray(object?.certificates)
+                ? object.certificates.map((e) => exports.X509Certificate.fromJSON(e))
+                : [],
+        };
+    },
+    toJSON(message) {
+        const obj = {};
+        if (message.certificates) {
+            obj.certificates = message.certificates.map((e) => e ? exports.X509Certificate.toJSON(e) : undefined);
+        }
+        else {
+            obj.certificates = [];
+        }
+        return obj;
+    },
+};
+function createBaseTimeRange() {
+    return { start: undefined, end: undefined };
+}
+exports.TimeRange = {
+    fromJSON(object) {
+        return {
+            start: isSet(object.start) ? fromJsonTimestamp(object.start) : undefined,
+            end: isSet(object.end) ? fromJsonTimestamp(object.end) : undefined,
+        };
+    },
+    toJSON(message) {
+        const obj = {};
+        message.start !== undefined && (obj.start = message.start.toISOString());
+        message.end !== undefined && (obj.end = message.end.toISOString());
+        return obj;
+    },
+};
+var globalThis = (() => {
+    if (typeof globalThis !== "undefined") {
+        return globalThis;
+    }
+    if (typeof self !== "undefined") {
+        return self;
+    }
+    if (typeof window !== "undefined") {
+        return window;
+    }
+    if (typeof global !== "undefined") {
+        return global;
+    }
+    throw "Unable to locate global object";
+})();
+function bytesFromBase64(b64) {
+    if (globalThis.Buffer) {
+        return Uint8Array.from(globalThis.Buffer.from(b64, "base64"));
+    }
+    else {
+        const bin = globalThis.atob(b64);
+        const arr = new Uint8Array(bin.length);
+        for (let i = 0; i < bin.length; ++i) {
+            arr[i] = bin.charCodeAt(i);
+        }
+        return arr;
+    }
+}
+function base64FromBytes(arr) {
+    if (globalThis.Buffer) {
+        return globalThis.Buffer.from(arr).toString("base64");
+    }
+    else {
+        const bin = [];
+        arr.forEach((byte) => {
+            bin.push(String.fromCharCode(byte));
+        });
+        return globalThis.btoa(bin.join(""));
+    }
+}
+function fromTimestamp(t) {
+    let millis = Number(t.seconds) * 1000;
+    millis += t.nanos / 1000000;
+    return new Date(millis);
+}
+function fromJsonTimestamp(o) {
+    if (o instanceof Date) {
+        return o;
+    }
+    else if (typeof o === "string") {
+        return new Date(o);
+    }
+    else {
+        return fromTimestamp(timestamp_1.Timestamp.fromJSON(o));
+    }
+}
+function isSet(value) {
+    return value !== null && value !== undefined;
+}
+
+
+/***/ }),
+
+/***/ 4951:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.TransparencyLogEntry = exports.InclusionPromise = exports.InclusionProof = exports.Checkpoint = exports.KindVersion = void 0;
+/* eslint-disable */
+const sigstore_common_1 = __nccwpck_require__(2193);
+function createBaseKindVersion() {
+    return { kind: "", version: "" };
+}
+exports.KindVersion = {
+    fromJSON(object) {
+        return {
+            kind: isSet(object.kind) ? String(object.kind) : "",
+            version: isSet(object.version) ? String(object.version) : "",
+        };
+    },
+    toJSON(message) {
+        const obj = {};
+        message.kind !== undefined && (obj.kind = message.kind);
+        message.version !== undefined && (obj.version = message.version);
+        return obj;
+    },
+};
+function createBaseCheckpoint() {
+    return { envelope: "" };
+}
+exports.Checkpoint = {
+    fromJSON(object) {
+        return { envelope: isSet(object.envelope) ? String(object.envelope) : "" };
+    },
+    toJSON(message) {
+        const obj = {};
+        message.envelope !== undefined && (obj.envelope = message.envelope);
+        return obj;
+    },
+};
+function createBaseInclusionProof() {
+    return { logIndex: "0", rootHash: Buffer.alloc(0), treeSize: "0", hashes: [], checkpoint: undefined };
+}
+exports.InclusionProof = {
+    fromJSON(object) {
+        return {
+            logIndex: isSet(object.logIndex) ? String(object.logIndex) : "0",
+            rootHash: isSet(object.rootHash) ? Buffer.from(bytesFromBase64(object.rootHash)) : Buffer.alloc(0),
+            treeSize: isSet(object.treeSize) ? String(object.treeSize) : "0",
+            hashes: Array.isArray(object?.hashes) ? object.hashes.map((e) => Buffer.from(bytesFromBase64(e))) : [],
+            checkpoint: isSet(object.checkpoint) ? exports.Checkpoint.fromJSON(object.checkpoint) : undefined,
+        };
+    },
+    toJSON(message) {
+        const obj = {};
+        message.logIndex !== undefined && (obj.logIndex = message.logIndex);
+        message.rootHash !== undefined &&
+            (obj.rootHash = base64FromBytes(message.rootHash !== undefined ? message.rootHash : Buffer.alloc(0)));
+        message.treeSize !== undefined && (obj.treeSize = message.treeSize);
+        if (message.hashes) {
+            obj.hashes = message.hashes.map((e) => base64FromBytes(e !== undefined ? e : Buffer.alloc(0)));
+        }
+        else {
+            obj.hashes = [];
+        }
+        message.checkpoint !== undefined &&
+            (obj.checkpoint = message.checkpoint ? exports.Checkpoint.toJSON(message.checkpoint) : undefined);
+        return obj;
+    },
+};
+function createBaseInclusionPromise() {
+    return { signedEntryTimestamp: Buffer.alloc(0) };
+}
+exports.InclusionPromise = {
+    fromJSON(object) {
+        return {
+            signedEntryTimestamp: isSet(object.signedEntryTimestamp)
+                ? Buffer.from(bytesFromBase64(object.signedEntryTimestamp))
+                : Buffer.alloc(0),
+        };
+    },
+    toJSON(message) {
+        const obj = {};
+        message.signedEntryTimestamp !== undefined &&
+            (obj.signedEntryTimestamp = base64FromBytes(message.signedEntryTimestamp !== undefined ? message.signedEntryTimestamp : Buffer.alloc(0)));
+        return obj;
+    },
+};
+function createBaseTransparencyLogEntry() {
+    return {
+        logIndex: "0",
+        logId: undefined,
+        kindVersion: undefined,
+        integratedTime: "0",
+        inclusionPromise: undefined,
+        inclusionProof: undefined,
+        canonicalizedBody: Buffer.alloc(0),
+    };
+}
+exports.TransparencyLogEntry = {
+    fromJSON(object) {
+        return {
+            logIndex: isSet(object.logIndex) ? String(object.logIndex) : "0",
+            logId: isSet(object.logId) ? sigstore_common_1.LogId.fromJSON(object.logId) : undefined,
+            kindVersion: isSet(object.kindVersion) ? exports.KindVersion.fromJSON(object.kindVersion) : undefined,
+            integratedTime: isSet(object.integratedTime) ? String(object.integratedTime) : "0",
+            inclusionPromise: isSet(object.inclusionPromise) ? exports.InclusionPromise.fromJSON(object.inclusionPromise) : undefined,
+            inclusionProof: isSet(object.inclusionProof) ? exports.InclusionProof.fromJSON(object.inclusionProof) : undefined,
+            canonicalizedBody: isSet(object.canonicalizedBody)
+                ? Buffer.from(bytesFromBase64(object.canonicalizedBody))
+                : Buffer.alloc(0),
+        };
+    },
+    toJSON(message) {
+        const obj = {};
+        message.logIndex !== undefined && (obj.logIndex = message.logIndex);
+        message.logId !== undefined && (obj.logId = message.logId ? sigstore_common_1.LogId.toJSON(message.logId) : undefined);
+        message.kindVersion !== undefined &&
+            (obj.kindVersion = message.kindVersion ? exports.KindVersion.toJSON(message.kindVersion) : undefined);
+        message.integratedTime !== undefined && (obj.integratedTime = message.integratedTime);
+        message.inclusionPromise !== undefined &&
+            (obj.inclusionPromise = message.inclusionPromise ? exports.InclusionPromise.toJSON(message.inclusionPromise) : undefined);
+        message.inclusionProof !== undefined &&
+            (obj.inclusionProof = message.inclusionProof ? exports.InclusionProof.toJSON(message.inclusionProof) : undefined);
+        message.canonicalizedBody !== undefined &&
+            (obj.canonicalizedBody = base64FromBytes(message.canonicalizedBody !== undefined ? message.canonicalizedBody : Buffer.alloc(0)));
+        return obj;
+    },
+};
+var globalThis = (() => {
+    if (typeof globalThis !== "undefined") {
+        return globalThis;
+    }
+    if (typeof self !== "undefined") {
+        return self;
+    }
+    if (typeof window !== "undefined") {
+        return window;
+    }
+    if (typeof global !== "undefined") {
+        return global;
+    }
+    throw "Unable to locate global object";
+})();
+function bytesFromBase64(b64) {
+    if (globalThis.Buffer) {
+        return Uint8Array.from(globalThis.Buffer.from(b64, "base64"));
+    }
+    else {
+        const bin = globalThis.atob(b64);
+        const arr = new Uint8Array(bin.length);
+        for (let i = 0; i < bin.length; ++i) {
+            arr[i] = bin.charCodeAt(i);
+        }
+        return arr;
+    }
+}
+function base64FromBytes(arr) {
+    if (globalThis.Buffer) {
+        return globalThis.Buffer.from(arr).toString("base64");
+    }
+    else {
+        const bin = [];
+        arr.forEach((byte) => {
+            bin.push(String.fromCharCode(byte));
+        });
+        return globalThis.btoa(bin.join(""));
+    }
+}
+function isSet(value) {
+    return value !== null && value !== undefined;
+}
+
+
+/***/ }),
+
+/***/ 4012:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.TrustedRoot = exports.CertificateAuthority = exports.TransparencyLogInstance = void 0;
+/* eslint-disable */
+const sigstore_common_1 = __nccwpck_require__(2193);
+function createBaseTransparencyLogInstance() {
+    return { baseUrl: "", hashAlgorithm: 0, publicKey: undefined, logId: undefined };
+}
+exports.TransparencyLogInstance = {
+    fromJSON(object) {
+        return {
+            baseUrl: isSet(object.baseUrl) ? String(object.baseUrl) : "",
+            hashAlgorithm: isSet(object.hashAlgorithm) ? (0, sigstore_common_1.hashAlgorithmFromJSON)(object.hashAlgorithm) : 0,
+            publicKey: isSet(object.publicKey) ? sigstore_common_1.PublicKey.fromJSON(object.publicKey) : undefined,
+            logId: isSet(object.logId) ? sigstore_common_1.LogId.fromJSON(object.logId) : undefined,
+        };
+    },
+    toJSON(message) {
+        const obj = {};
+        message.baseUrl !== undefined && (obj.baseUrl = message.baseUrl);
+        message.hashAlgorithm !== undefined && (obj.hashAlgorithm = (0, sigstore_common_1.hashAlgorithmToJSON)(message.hashAlgorithm));
+        message.publicKey !== undefined &&
+            (obj.publicKey = message.publicKey ? sigstore_common_1.PublicKey.toJSON(message.publicKey) : undefined);
+        message.logId !== undefined && (obj.logId = message.logId ? sigstore_common_1.LogId.toJSON(message.logId) : undefined);
+        return obj;
+    },
+};
+function createBaseCertificateAuthority() {
+    return { subject: undefined, uri: "", certChain: undefined, validFor: undefined };
+}
+exports.CertificateAuthority = {
+    fromJSON(object) {
+        return {
+            subject: isSet(object.subject) ? sigstore_common_1.DistinguishedName.fromJSON(object.subject) : undefined,
+            uri: isSet(object.uri) ? String(object.uri) : "",
+            certChain: isSet(object.certChain) ? sigstore_common_1.X509CertificateChain.fromJSON(object.certChain) : undefined,
+            validFor: isSet(object.validFor) ? sigstore_common_1.TimeRange.fromJSON(object.validFor) : undefined,
+        };
+    },
+    toJSON(message) {
+        const obj = {};
+        message.subject !== undefined &&
+            (obj.subject = message.subject ? sigstore_common_1.DistinguishedName.toJSON(message.subject) : undefined);
+        message.uri !== undefined && (obj.uri = message.uri);
+        message.certChain !== undefined &&
+            (obj.certChain = message.certChain ? sigstore_common_1.X509CertificateChain.toJSON(message.certChain) : undefined);
+        message.validFor !== undefined &&
+            (obj.validFor = message.validFor ? sigstore_common_1.TimeRange.toJSON(message.validFor) : undefined);
+        return obj;
+    },
+};
+function createBaseTrustedRoot() {
+    return { mediaType: "", tlogs: [], certificateAuthorities: [], ctlogs: [], timestampAuthorities: [] };
+}
+exports.TrustedRoot = {
+    fromJSON(object) {
+        return {
+            mediaType: isSet(object.mediaType) ? String(object.mediaType) : "",
+            tlogs: Array.isArray(object?.tlogs) ? object.tlogs.map((e) => exports.TransparencyLogInstance.fromJSON(e)) : [],
+            certificateAuthorities: Array.isArray(object?.certificateAuthorities)
+                ? object.certificateAuthorities.map((e) => exports.CertificateAuthority.fromJSON(e))
+                : [],
+            ctlogs: Array.isArray(object?.ctlogs)
+                ? object.ctlogs.map((e) => exports.TransparencyLogInstance.fromJSON(e))
+                : [],
+            timestampAuthorities: Array.isArray(object?.timestampAuthorities)
+                ? object.timestampAuthorities.map((e) => exports.CertificateAuthority.fromJSON(e))
+                : [],
+        };
+    },
+    toJSON(message) {
+        const obj = {};
+        message.mediaType !== undefined && (obj.mediaType = message.mediaType);
+        if (message.tlogs) {
+            obj.tlogs = message.tlogs.map((e) => e ? exports.TransparencyLogInstance.toJSON(e) : undefined);
+        }
+        else {
+            obj.tlogs = [];
+        }
+        if (message.certificateAuthorities) {
+            obj.certificateAuthorities = message.certificateAuthorities.map((e) => e ? exports.CertificateAuthority.toJSON(e) : undefined);
+        }
+        else {
+            obj.certificateAuthorities = [];
+        }
+        if (message.ctlogs) {
+            obj.ctlogs = message.ctlogs.map((e) => e ? exports.TransparencyLogInstance.toJSON(e) : undefined);
+        }
+        else {
+            obj.ctlogs = [];
+        }
+        if (message.timestampAuthorities) {
+            obj.timestampAuthorities = message.timestampAuthorities.map((e) => e ? exports.CertificateAuthority.toJSON(e) : undefined);
+        }
+        else {
+            obj.timestampAuthorities = [];
+        }
+        return obj;
+    },
+};
+function isSet(value) {
+    return value !== null && value !== undefined;
+}
+
+
+/***/ }),
+
+/***/ 9980:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Input = exports.Artifact = exports.ArtifactVerificationOptions_TimestampAuthorityOptions = exports.ArtifactVerificationOptions_CtlogOptions = exports.ArtifactVerificationOptions_TlogOptions = exports.ArtifactVerificationOptions = exports.PublicKeyIdentities = exports.CertificateIdentities = exports.CertificateIdentity = void 0;
+/* eslint-disable */
+const sigstore_bundle_1 = __nccwpck_require__(8293);
+const sigstore_common_1 = __nccwpck_require__(2193);
+const sigstore_trustroot_1 = __nccwpck_require__(4012);
+function createBaseCertificateIdentity() {
+    return { issuer: "", san: undefined, oids: [] };
+}
+exports.CertificateIdentity = {
+    fromJSON(object) {
+        return {
+            issuer: isSet(object.issuer) ? String(object.issuer) : "",
+            san: isSet(object.san) ? sigstore_common_1.SubjectAlternativeName.fromJSON(object.san) : undefined,
+            oids: Array.isArray(object?.oids) ? object.oids.map((e) => sigstore_common_1.ObjectIdentifierValuePair.fromJSON(e)) : [],
+        };
+    },
+    toJSON(message) {
+        const obj = {};
+        message.issuer !== undefined && (obj.issuer = message.issuer);
+        message.san !== undefined && (obj.san = message.san ? sigstore_common_1.SubjectAlternativeName.toJSON(message.san) : undefined);
+        if (message.oids) {
+            obj.oids = message.oids.map((e) => e ? sigstore_common_1.ObjectIdentifierValuePair.toJSON(e) : undefined);
+        }
+        else {
+            obj.oids = [];
+        }
+        return obj;
+    },
+};
+function createBaseCertificateIdentities() {
+    return { identities: [] };
+}
+exports.CertificateIdentities = {
+    fromJSON(object) {
+        return {
+            identities: Array.isArray(object?.identities)
+                ? object.identities.map((e) => exports.CertificateIdentity.fromJSON(e))
+                : [],
+        };
+    },
+    toJSON(message) {
+        const obj = {};
+        if (message.identities) {
+            obj.identities = message.identities.map((e) => e ? exports.CertificateIdentity.toJSON(e) : undefined);
+        }
+        else {
+            obj.identities = [];
+        }
+        return obj;
+    },
+};
+function createBasePublicKeyIdentities() {
+    return { publicKeys: [] };
+}
+exports.PublicKeyIdentities = {
+    fromJSON(object) {
+        return {
+            publicKeys: Array.isArray(object?.publicKeys) ? object.publicKeys.map((e) => sigstore_common_1.PublicKey.fromJSON(e)) : [],
+        };
+    },
+    toJSON(message) {
+        const obj = {};
+        if (message.publicKeys) {
+            obj.publicKeys = message.publicKeys.map((e) => e ? sigstore_common_1.PublicKey.toJSON(e) : undefined);
+        }
+        else {
+            obj.publicKeys = [];
+        }
+        return obj;
+    },
+};
+function createBaseArtifactVerificationOptions() {
+    return { signers: undefined, tlogOptions: undefined, ctlogOptions: undefined, tsaOptions: undefined };
+}
+exports.ArtifactVerificationOptions = {
+    fromJSON(object) {
+        return {
+            signers: isSet(object.certificateIdentities)
+                ? {
+                    $case: "certificateIdentities",
+                    certificateIdentities: exports.CertificateIdentities.fromJSON(object.certificateIdentities),
+                }
+                : isSet(object.publicKeys)
+                    ? { $case: "publicKeys", publicKeys: exports.PublicKeyIdentities.fromJSON(object.publicKeys) }
+                    : undefined,
+            tlogOptions: isSet(object.tlogOptions)
+                ? exports.ArtifactVerificationOptions_TlogOptions.fromJSON(object.tlogOptions)
+                : undefined,
+            ctlogOptions: isSet(object.ctlogOptions)
+                ? exports.ArtifactVerificationOptions_CtlogOptions.fromJSON(object.ctlogOptions)
+                : undefined,
+            tsaOptions: isSet(object.tsaOptions)
+                ? exports.ArtifactVerificationOptions_TimestampAuthorityOptions.fromJSON(object.tsaOptions)
+                : undefined,
+        };
+    },
+    toJSON(message) {
+        const obj = {};
+        message.signers?.$case === "certificateIdentities" &&
+            (obj.certificateIdentities = message.signers?.certificateIdentities
+                ? exports.CertificateIdentities.toJSON(message.signers?.certificateIdentities)
+                : undefined);
+        message.signers?.$case === "publicKeys" && (obj.publicKeys = message.signers?.publicKeys
+            ? exports.PublicKeyIdentities.toJSON(message.signers?.publicKeys)
+            : undefined);
+        message.tlogOptions !== undefined && (obj.tlogOptions = message.tlogOptions
+            ? exports.ArtifactVerificationOptions_TlogOptions.toJSON(message.tlogOptions)
+            : undefined);
+        message.ctlogOptions !== undefined && (obj.ctlogOptions = message.ctlogOptions
+            ? exports.ArtifactVerificationOptions_CtlogOptions.toJSON(message.ctlogOptions)
+            : undefined);
+        message.tsaOptions !== undefined && (obj.tsaOptions = message.tsaOptions
+            ? exports.ArtifactVerificationOptions_TimestampAuthorityOptions.toJSON(message.tsaOptions)
+            : undefined);
+        return obj;
+    },
+};
+function createBaseArtifactVerificationOptions_TlogOptions() {
+    return { threshold: 0, performOnlineVerification: false, disable: false };
+}
+exports.ArtifactVerificationOptions_TlogOptions = {
+    fromJSON(object) {
+        return {
+            threshold: isSet(object.threshold) ? Number(object.threshold) : 0,
+            performOnlineVerification: isSet(object.performOnlineVerification)
+                ? Boolean(object.performOnlineVerification)
+                : false,
+            disable: isSet(object.disable) ? Boolean(object.disable) : false,
+        };
+    },
+    toJSON(message) {
+        const obj = {};
+        message.threshold !== undefined && (obj.threshold = Math.round(message.threshold));
+        message.performOnlineVerification !== undefined &&
+            (obj.performOnlineVerification = message.performOnlineVerification);
+        message.disable !== undefined && (obj.disable = message.disable);
+        return obj;
+    },
+};
+function createBaseArtifactVerificationOptions_CtlogOptions() {
+    return { threshold: 0, detachedSct: false, disable: false };
+}
+exports.ArtifactVerificationOptions_CtlogOptions = {
+    fromJSON(object) {
+        return {
+            threshold: isSet(object.threshold) ? Number(object.threshold) : 0,
+            detachedSct: isSet(object.detachedSct) ? Boolean(object.detachedSct) : false,
+            disable: isSet(object.disable) ? Boolean(object.disable) : false,
+        };
+    },
+    toJSON(message) {
+        const obj = {};
+        message.threshold !== undefined && (obj.threshold = Math.round(message.threshold));
+        message.detachedSct !== undefined && (obj.detachedSct = message.detachedSct);
+        message.disable !== undefined && (obj.disable = message.disable);
+        return obj;
+    },
+};
+function createBaseArtifactVerificationOptions_TimestampAuthorityOptions() {
+    return { threshold: 0, disable: false };
+}
+exports.ArtifactVerificationOptions_TimestampAuthorityOptions = {
+    fromJSON(object) {
+        return {
+            threshold: isSet(object.threshold) ? Number(object.threshold) : 0,
+            disable: isSet(object.disable) ? Boolean(object.disable) : false,
+        };
+    },
+    toJSON(message) {
+        const obj = {};
+        message.threshold !== undefined && (obj.threshold = Math.round(message.threshold));
+        message.disable !== undefined && (obj.disable = message.disable);
+        return obj;
+    },
+};
+function createBaseArtifact() {
+    return { data: undefined };
+}
+exports.Artifact = {
+    fromJSON(object) {
+        return {
+            data: isSet(object.artifactUri)
+                ? { $case: "artifactUri", artifactUri: String(object.artifactUri) }
+                : isSet(object.artifact)
+                    ? { $case: "artifact", artifact: Buffer.from(bytesFromBase64(object.artifact)) }
+                    : undefined,
+        };
+    },
+    toJSON(message) {
+        const obj = {};
+        message.data?.$case === "artifactUri" && (obj.artifactUri = message.data?.artifactUri);
+        message.data?.$case === "artifact" &&
+            (obj.artifact = message.data?.artifact !== undefined ? base64FromBytes(message.data?.artifact) : undefined);
+        return obj;
+    },
+};
+function createBaseInput() {
+    return {
+        artifactTrustRoot: undefined,
+        artifactVerificationOptions: undefined,
+        bundle: undefined,
+        artifact: undefined,
+    };
+}
+exports.Input = {
+    fromJSON(object) {
+        return {
+            artifactTrustRoot: isSet(object.artifactTrustRoot) ? sigstore_trustroot_1.TrustedRoot.fromJSON(object.artifactTrustRoot) : undefined,
+            artifactVerificationOptions: isSet(object.artifactVerificationOptions)
+                ? exports.ArtifactVerificationOptions.fromJSON(object.artifactVerificationOptions)
+                : undefined,
+            bundle: isSet(object.bundle) ? sigstore_bundle_1.Bundle.fromJSON(object.bundle) : undefined,
+            artifact: isSet(object.artifact) ? exports.Artifact.fromJSON(object.artifact) : undefined,
+        };
+    },
+    toJSON(message) {
+        const obj = {};
+        message.artifactTrustRoot !== undefined &&
+            (obj.artifactTrustRoot = message.artifactTrustRoot ? sigstore_trustroot_1.TrustedRoot.toJSON(message.artifactTrustRoot) : undefined);
+        message.artifactVerificationOptions !== undefined &&
+            (obj.artifactVerificationOptions = message.artifactVerificationOptions
+                ? exports.ArtifactVerificationOptions.toJSON(message.artifactVerificationOptions)
+                : undefined);
+        message.bundle !== undefined && (obj.bundle = message.bundle ? sigstore_bundle_1.Bundle.toJSON(message.bundle) : undefined);
+        message.artifact !== undefined && (obj.artifact = message.artifact ? exports.Artifact.toJSON(message.artifact) : undefined);
+        return obj;
+    },
+};
+var globalThis = (() => {
+    if (typeof globalThis !== "undefined") {
+        return globalThis;
+    }
+    if (typeof self !== "undefined") {
+        return self;
+    }
+    if (typeof window !== "undefined") {
+        return window;
+    }
+    if (typeof global !== "undefined") {
+        return global;
+    }
+    throw "Unable to locate global object";
+})();
+function bytesFromBase64(b64) {
+    if (globalThis.Buffer) {
+        return Uint8Array.from(globalThis.Buffer.from(b64, "base64"));
+    }
+    else {
+        const bin = globalThis.atob(b64);
+        const arr = new Uint8Array(bin.length);
+        for (let i = 0; i < bin.length; ++i) {
+            arr[i] = bin.charCodeAt(i);
+        }
+        return arr;
+    }
+}
+function base64FromBytes(arr) {
+    if (globalThis.Buffer) {
+        return globalThis.Buffer.from(arr).toString("base64");
+    }
+    else {
+        const bin = [];
+        arr.forEach((byte) => {
+            bin.push(String.fromCharCode(byte));
+        });
+        return globalThis.btoa(bin.join(""));
+    }
+}
+function isSet(value) {
+    return value !== null && value !== undefined;
+}
+
+
+/***/ }),
+
+/***/ 530:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __exportStar = (this && this.__exportStar) || function(m, exports) {
+    for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+/*
+Copyright 2023 The Sigstore Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+__exportStar(__nccwpck_require__(714), exports);
+__exportStar(__nccwpck_require__(8293), exports);
+__exportStar(__nccwpck_require__(2193), exports);
+__exportStar(__nccwpck_require__(4951), exports);
+__exportStar(__nccwpck_require__(4012), exports);
+__exportStar(__nccwpck_require__(9980), exports);
+
+
+/***/ }),
+
 /***/ 1040:
 /***/ ((__unused_webpack_module, exports) => {
 
@@ -35738,15 +37058,13 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-const fs_1 = __importDefault(__nccwpck_require__(7147));
-const os_1 = __importDefault(__nccwpck_require__(2037));
-const path_1 = __importDefault(__nccwpck_require__(1017));
 const ca_1 = __nccwpck_require__(7021);
 const identity_1 = __importDefault(__nccwpck_require__(8761));
 const sign_1 = __nccwpck_require__(9884);
 const tlog_1 = __nccwpck_require__(2030);
 const tuf = __importStar(__nccwpck_require__(5143));
 const sigstore = __importStar(__nccwpck_require__(8598));
+const util_1 = __nccwpck_require__(6901);
 const verify_1 = __nccwpck_require__(7995);
 exports.utils = __importStar(__nccwpck_require__(2021));
 exports.DEFAULT_FULCIO_URL = 'https://fulcio.sigstore.dev';
@@ -35761,6 +37079,7 @@ function createTLogClient(options) {
         rekorBaseURL: options.rekorURL || exports.DEFAULT_REKOR_URL,
     });
 }
+const tufCacheDir = util_1.appdata.appDataPath('sigstore-js');
 async function sign(payload, options = {}) {
     const ca = createCAClient(options);
     const tlog = createTLogClient(options);
@@ -35788,8 +37107,10 @@ async function attest(payload, payloadType, options = {}) {
 }
 exports.attest = attest;
 async function verify(bundle, payload, options = {}) {
-    const cacheDir = defaultCacheDir();
-    const trustedRoot = await tuf.getTrustedRoot(cacheDir);
+    const trustedRoot = await tuf.getTrustedRoot(tufCacheDir, {
+        mirrorURL: options.tufMirrorURL,
+        rootPath: options.tufRootPath,
+    });
     const verifier = new verify_1.Verifier(trustedRoot, options.keySelector);
     const deserializedBundle = sigstore.bundleFromJSON(bundle);
     const opts = collectArtifactVerificationOptions(options);
@@ -35814,16 +37135,6 @@ function configureIdentityProviders(options) {
         }
     }
     return idps;
-}
-function defaultCacheDir() {
-    let cacheRootDir = os_1.default.homedir();
-    try {
-        fs_1.default.accessSync(os_1.default.homedir(), fs_1.default.constants.W_OK | fs_1.default.constants.R_OK);
-    }
-    catch (e) {
-        cacheRootDir = os_1.default.tmpdir();
-    }
-    return path_1.default.join(cacheRootDir, '.sigstore', 'js-root');
 }
 // Assembles the AtifactVerificationOptions from the supplied VerifyOptions.
 function collectArtifactVerificationOptions(options) {
@@ -36371,90 +37682,6 @@ function filterTLogInstances(tlogInstances, logID, integratedTime) {
 
 "use strict";
 
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.getTrustedRoot = void 0;
-/*
-Copyright 2023 The Sigstore Authors.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
-const fs_1 = __importDefault(__nccwpck_require__(7147));
-const path_1 = __importDefault(__nccwpck_require__(1017));
-const tuf_js_1 = __nccwpck_require__(9475);
-const trustroot_1 = __nccwpck_require__(9339);
-async function getTrustedRoot(cacheDir) {
-    initTufCache(cacheDir);
-    const repoMap = initRepoMap(cacheDir);
-    const repoClients = Object.entries(repoMap.repositories).map(([name, urls]) => initClient(name, urls[0], cacheDir));
-    // TODO: Add support for multiple repositories. For now, we just use the first
-    // one (the production Sigstore TUF repository).
-    const fetcher = new trustroot_1.TrustedRootFetcher(repoClients[0]);
-    return fetcher.getTrustedRoot();
-}
-exports.getTrustedRoot = getTrustedRoot;
-// Initializes the root TUF cache directory
-function initTufCache(cacheDir) {
-    if (!fs_1.default.existsSync(cacheDir)) {
-        fs_1.default.mkdirSync(cacheDir, { recursive: true });
-    }
-}
-// Initializes the repo map (copying it to the cache root dir) and returns the
-// content of the repository map.
-function initRepoMap(rootDir) {
-    const mapDest = path_1.default.join(rootDir, 'map.json');
-    if (!fs_1.default.existsSync(mapDest)) {
-        const mapSrc = __nccwpck_require__.ab + "map.json";
-        fs_1.default.copyFileSync(__nccwpck_require__.ab + "map.json", mapDest);
-    }
-    const buf = fs_1.default.readFileSync(mapDest);
-    return JSON.parse(buf.toString('utf-8'));
-}
-function initClient(name, url, rootDir) {
-    const repoCachePath = path_1.default.join(rootDir, name);
-    const targetCachePath = path_1.default.join(repoCachePath, 'targets');
-    const tufRootDest = path_1.default.join(repoCachePath, 'root.json');
-    // Only copy the TUF trusted root if it doesn't already exist. It's possible
-    // that the cached root has already been updated, so we don't want to roll it
-    // back.
-    if (!fs_1.default.existsSync(tufRootDest)) {
-        const tufRootSrc = require.resolve(`../../store/${name}-root.json`);
-        fs_1.default.mkdirSync(repoCachePath);
-        fs_1.default.copyFileSync(tufRootSrc, tufRootDest);
-    }
-    if (!fs_1.default.existsSync(targetCachePath)) {
-        fs_1.default.mkdirSync(targetCachePath);
-    }
-    // TODO: Is there some better way to derive the base URL for the targets?
-    // Hard-coding for now based on current Sigstore TUF repo layout.
-    return new tuf_js_1.Updater({
-        metadataBaseUrl: url,
-        targetBaseUrl: `${url}/targets`,
-        metadataDir: repoCachePath,
-        targetDir: targetCachePath,
-    });
-}
-
-
-/***/ }),
-
-/***/ 9339:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     var desc = Object.getOwnPropertyDescriptor(m, k);
@@ -36482,7 +37709,98 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.TrustedRootFetcher = void 0;
+exports.getTrustedRoot = void 0;
+/*
+Copyright 2023 The Sigstore Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+const fs_1 = __importDefault(__nccwpck_require__(7147));
+const path_1 = __importDefault(__nccwpck_require__(1017));
+const tuf_js_1 = __nccwpck_require__(9475);
+const sigstore = __importStar(__nccwpck_require__(8598));
+const target_1 = __nccwpck_require__(9212);
+const TRUSTED_ROOT_TARGET = 'trusted_root.json';
+const DEFAULT_MIRROR_URL = 'https://sigstore-tuf-root.storage.googleapis.com';
+const DEFAULT_TUF_ROOT_PATH = '../../store/public-good-instance-root.json';
+async function getTrustedRoot(cachePath, options = {}) {
+    const tufRootPath = options.rootPath || __nccwpck_require__.ab + "public-good-instance-root.json";
+    const mirrorURL = options.mirrorURL || DEFAULT_MIRROR_URL;
+    initTufCache(cachePath, tufRootPath);
+    const remote = initRemoteConfig(cachePath, mirrorURL);
+    const repoClient = initClient(cachePath, remote);
+    const trustedRoot = await (0, target_1.getTarget)(repoClient, TRUSTED_ROOT_TARGET);
+    return sigstore.TrustedRoot.fromJSON(JSON.parse(trustedRoot));
+}
+exports.getTrustedRoot = getTrustedRoot;
+// Initializes the TUF cache directory structure including the initial
+// root.json file. If the cache directory does not exist, it will be
+// created. If the targets directory does not exist, it will be created.
+// If the root.json file does not exist, it will be copied from the
+// rootPath argument.
+function initTufCache(cachePath, tufRootPath) {
+    const targetsPath = path_1.default.join(cachePath, 'targets');
+    const cachedRootPath = path_1.default.join(cachePath, 'root.json');
+    if (!fs_1.default.existsSync(cachePath)) {
+        fs_1.default.mkdirSync(cachePath, { recursive: true });
+    }
+    if (!fs_1.default.existsSync(targetsPath)) {
+        fs_1.default.mkdirSync(targetsPath);
+    }
+    if (!fs_1.default.existsSync(cachedRootPath)) {
+        fs_1.default.copyFileSync(tufRootPath, cachedRootPath);
+    }
+    return cachePath;
+}
+// Initializes the remote.json file, which contains the URL of the TUF
+// repository. If the file does not exist, it will be created. If the file
+// exists, it will be parsed and returned.
+function initRemoteConfig(rootDir, mirrorURL) {
+    let remoteConfig;
+    const remoteConfigPath = path_1.default.join(rootDir, 'remote.json');
+    if (fs_1.default.existsSync(remoteConfigPath)) {
+        const data = fs_1.default.readFileSync(remoteConfigPath, 'utf-8');
+        remoteConfig = JSON.parse(data);
+    }
+    if (!remoteConfig) {
+        remoteConfig = { mirror: mirrorURL };
+        fs_1.default.writeFileSync(remoteConfigPath, JSON.stringify(remoteConfig));
+    }
+    return remoteConfig;
+}
+function initClient(cachePath, remote) {
+    const baseURL = remote.mirror;
+    return new tuf_js_1.Updater({
+        metadataBaseUrl: baseURL,
+        targetBaseUrl: `${baseURL}/targets`,
+        metadataDir: cachePath,
+        targetDir: path_1.default.join(cachePath, 'targets'),
+    });
+}
+
+
+/***/ }),
+
+/***/ 9212:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.getTarget = void 0;
 /*
 Copyright 2023 The Sigstore Authors.
 
@@ -36500,122 +37818,42 @@ limitations under the License.
 */
 const fs_1 = __importDefault(__nccwpck_require__(7147));
 const error_1 = __nccwpck_require__(6274);
-const sigstore = __importStar(__nccwpck_require__(8598));
-const util_1 = __nccwpck_require__(6901);
-const TRUSTED_ROOT_MEDIA_TYPE = 'application/vnd.dev.sigstore.trustedroot+json;version=0.1';
-// Type guard for SigstoreTargetMetadata
-function isTargetMetadata(m) {
-    return (m !== undefined &&
-        m !== null &&
-        typeof m === 'object' &&
-        'status' in m &&
-        'usage' in m &&
-        'uri' in m);
+// Returns the local path to the specified target. If the target is not yet
+// cached locally, the provided TUF Updater will be used to download and
+// cache the target.
+async function getTarget(tuf, targetPath) {
+    const path = await getTargetPath(tuf, targetPath);
+    try {
+        return fs_1.default.readFileSync(path, 'utf-8');
+    }
+    catch (err) {
+        throw new error_1.InternalError(`error reading trusted root: ${err}`);
+    }
 }
-class TrustedRootFetcher {
-    constructor(tuf) {
-        this.tuf = tuf;
+exports.getTarget = getTarget;
+async function getTargetPath(tuf, target) {
+    let targetInfo;
+    try {
+        targetInfo = await tuf.refresh().then(() => tuf.getTargetInfo(target));
     }
-    // Assembles a TrustedRoot from the targets in the TUF repo
-    async getTrustedRoot() {
-        // Get all available targets
-        const targets = await this.allTargets();
-        const cas = await this.getCAKeys(targets, 'Fulcio');
-        const ctlogs = await this.getTLogKeys(targets, 'CTFE');
-        const tlogs = await this.getTLogKeys(targets, 'Rekor');
-        return {
-            mediaType: TRUSTED_ROOT_MEDIA_TYPE,
-            certificateAuthorities: cas,
-            ctlogs: ctlogs,
-            tlogs: tlogs,
-            timestampAuthorities: [],
-        };
+    catch (err) {
+        throw new error_1.InternalError(`error refreshing TUF metadata: ${err}`);
     }
-    // Retrieves the list of TUF targets.
-    // NOTE: This is a HACK to get around the fact that the TUF library doesn't
-    // expose the list of targets. This is a temporary solution until TUF comes up
-    // with a story for target discovery.
-    // https://docs.google.com/document/d/1rWHAM2qCUtnjWD4lOrGWE2EIDLoA7eSy4-jB66Wgh0o
-    async allTargets() {
+    if (!targetInfo) {
+        throw new error_1.InternalError(`target ${target} not found`);
+    }
+    let path = await tuf.findCachedTarget(targetInfo);
+    // An empty path here means the target has not been cached locally, or is
+    // out of date. In either case, we need to download it.
+    if (!path) {
         try {
-            await this.tuf.refresh();
-        }
-        catch (e) {
-            throw new error_1.InternalError('error refreshing trust metadata');
-        }
-        return Object.values(
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        this.tuf.trustedSet.targets?.signed.targets || {});
-    }
-    // Filters the supplied list of targets to those with the specified usage
-    // and returns a new TransparencyLogInstance for each with the associated
-    // public key populated.
-    async getTLogKeys(targets, usage) {
-        const filteredTargets = filterByUsage(targets, usage);
-        return Promise.all(filteredTargets.map(async (target) => {
-            const keyBytes = await this.readTargetBytes(target);
-            const uri = isTargetMetadata(target.custom.sigstore)
-                ? target.custom.sigstore.uri
-                : '';
-            // The log ID is not present in the Sigstore target metadata, but
-            // can be derived by hashing the contents of the public key.
-            return {
-                baseUrl: uri,
-                hashAlgorithm: sigstore.HashAlgorithm.SHA2_256,
-                logId: { keyId: util_1.crypto.hash(keyBytes) },
-                publicKey: {
-                    keyDetails: sigstore.PublicKeyDetails.PKIX_ECDSA_P256_SHA_256,
-                    rawBytes: keyBytes,
-                },
-            };
-        }));
-    }
-    // Filters the supplied list of targets to those with the specified usage
-    // and returns a new CertificateAuthority populated with all of the associated
-    // certificates.
-    // NOTE: The Sigstore target metadata does NOT provide any mechanism to link
-    // related certificates (e.g. a root and intermediate). As a result, we
-    // assume that all certificates located here are part of the same chain.
-    // This works out OK since our certificate chain verification code tries all
-    // possible permutations of the certificates until it finds one that results
-    // in a valid, trusted chain.
-    async getCAKeys(targets, usage) {
-        const filteredTargets = filterByUsage(targets, usage);
-        const certs = await Promise.all(filteredTargets.map(async (target) => await this.readTargetBytes(target)));
-        return [
-            {
-                uri: '',
-                subject: undefined,
-                validFor: { start: new Date(0) },
-                certChain: {
-                    certificates: certs.map((cert) => ({ rawBytes: cert })),
-                },
-            },
-        ];
-    }
-    // Reads the contents of the specified target file as a DER-encoded buffer.
-    async readTargetBytes(target) {
-        try {
-            let path = await this.tuf.findCachedTarget(target);
-            // An empty path here means the target has not been cached locally, or is
-            // out of date. In either case, we need to download it.
-            if (!path) {
-                path = await this.tuf.downloadTarget(target);
-            }
-            const file = fs_1.default.readFileSync(path);
-            return util_1.pem.toDER(file.toString('utf-8'));
+            path = await tuf.downloadTarget(targetInfo);
         }
         catch (err) {
-            throw new error_1.InternalError(`error reading key/certificate for ${target.path}`);
+            throw new error_1.InternalError(`error downloading target: ${err}`);
         }
     }
-}
-exports.TrustedRootFetcher = TrustedRootFetcher;
-function filterByUsage(targets, usage) {
-    return targets.filter((target) => {
-        const meta = target.custom.sigstore;
-        return isTargetMetadata(meta) && meta.usage === usage;
-    });
+    return path;
 }
 
 
@@ -36644,1281 +37882,6 @@ exports.extractSignatureMaterial = extractSignatureMaterial;
 
 /***/ }),
 
-/***/ 4708:
-/***/ ((__unused_webpack_module, exports) => {
-
-"use strict";
-
-/* eslint-disable */
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.Signature = exports.Envelope = void 0;
-function createBaseEnvelope() {
-    return { payload: Buffer.alloc(0), payloadType: "", signatures: [] };
-}
-exports.Envelope = {
-    fromJSON(object) {
-        return {
-            payload: isSet(object.payload) ? Buffer.from(bytesFromBase64(object.payload)) : Buffer.alloc(0),
-            payloadType: isSet(object.payloadType) ? String(object.payloadType) : "",
-            signatures: Array.isArray(object?.signatures) ? object.signatures.map((e) => exports.Signature.fromJSON(e)) : [],
-        };
-    },
-    toJSON(message) {
-        const obj = {};
-        message.payload !== undefined &&
-            (obj.payload = base64FromBytes(message.payload !== undefined ? message.payload : Buffer.alloc(0)));
-        message.payloadType !== undefined && (obj.payloadType = message.payloadType);
-        if (message.signatures) {
-            obj.signatures = message.signatures.map((e) => e ? exports.Signature.toJSON(e) : undefined);
-        }
-        else {
-            obj.signatures = [];
-        }
-        return obj;
-    },
-};
-function createBaseSignature() {
-    return { sig: Buffer.alloc(0), keyid: "" };
-}
-exports.Signature = {
-    fromJSON(object) {
-        return {
-            sig: isSet(object.sig) ? Buffer.from(bytesFromBase64(object.sig)) : Buffer.alloc(0),
-            keyid: isSet(object.keyid) ? String(object.keyid) : "",
-        };
-    },
-    toJSON(message) {
-        const obj = {};
-        message.sig !== undefined && (obj.sig = base64FromBytes(message.sig !== undefined ? message.sig : Buffer.alloc(0)));
-        message.keyid !== undefined && (obj.keyid = message.keyid);
-        return obj;
-    },
-};
-var globalThis = (() => {
-    if (typeof globalThis !== "undefined") {
-        return globalThis;
-    }
-    if (typeof self !== "undefined") {
-        return self;
-    }
-    if (typeof window !== "undefined") {
-        return window;
-    }
-    if (typeof global !== "undefined") {
-        return global;
-    }
-    throw "Unable to locate global object";
-})();
-function bytesFromBase64(b64) {
-    if (globalThis.Buffer) {
-        return Uint8Array.from(globalThis.Buffer.from(b64, "base64"));
-    }
-    else {
-        const bin = globalThis.atob(b64);
-        const arr = new Uint8Array(bin.length);
-        for (let i = 0; i < bin.length; ++i) {
-            arr[i] = bin.charCodeAt(i);
-        }
-        return arr;
-    }
-}
-function base64FromBytes(arr) {
-    if (globalThis.Buffer) {
-        return globalThis.Buffer.from(arr).toString("base64");
-    }
-    else {
-        const bin = [];
-        arr.forEach((byte) => {
-            bin.push(String.fromCharCode(byte));
-        });
-        return globalThis.btoa(bin.join(""));
-    }
-}
-function isSet(value) {
-    return value !== null && value !== undefined;
-}
-
-
-/***/ }),
-
-/***/ 8365:
-/***/ ((__unused_webpack_module, exports) => {
-
-"use strict";
-
-/* eslint-disable */
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.Timestamp = void 0;
-function createBaseTimestamp() {
-    return { seconds: "0", nanos: 0 };
-}
-exports.Timestamp = {
-    fromJSON(object) {
-        return {
-            seconds: isSet(object.seconds) ? String(object.seconds) : "0",
-            nanos: isSet(object.nanos) ? Number(object.nanos) : 0,
-        };
-    },
-    toJSON(message) {
-        const obj = {};
-        message.seconds !== undefined && (obj.seconds = message.seconds);
-        message.nanos !== undefined && (obj.nanos = Math.round(message.nanos));
-        return obj;
-    },
-};
-function isSet(value) {
-    return value !== null && value !== undefined;
-}
-
-
-/***/ }),
-
-/***/ 1464:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.Bundle = exports.VerificationMaterial = exports.TimestampVerificationData = void 0;
-/* eslint-disable */
-const envelope_1 = __nccwpck_require__(4708);
-const sigstore_common_1 = __nccwpck_require__(909);
-const sigstore_rekor_1 = __nccwpck_require__(6053);
-function createBaseTimestampVerificationData() {
-    return { rfc3161Timestamps: [] };
-}
-exports.TimestampVerificationData = {
-    fromJSON(object) {
-        return {
-            rfc3161Timestamps: Array.isArray(object?.rfc3161Timestamps)
-                ? object.rfc3161Timestamps.map((e) => sigstore_common_1.RFC3161SignedTimestamp.fromJSON(e))
-                : [],
-        };
-    },
-    toJSON(message) {
-        const obj = {};
-        if (message.rfc3161Timestamps) {
-            obj.rfc3161Timestamps = message.rfc3161Timestamps.map((e) => e ? sigstore_common_1.RFC3161SignedTimestamp.toJSON(e) : undefined);
-        }
-        else {
-            obj.rfc3161Timestamps = [];
-        }
-        return obj;
-    },
-};
-function createBaseVerificationMaterial() {
-    return { content: undefined, tlogEntries: [], timestampVerificationData: undefined };
-}
-exports.VerificationMaterial = {
-    fromJSON(object) {
-        return {
-            content: isSet(object.publicKey)
-                ? { $case: "publicKey", publicKey: sigstore_common_1.PublicKeyIdentifier.fromJSON(object.publicKey) }
-                : isSet(object.x509CertificateChain)
-                    ? {
-                        $case: "x509CertificateChain",
-                        x509CertificateChain: sigstore_common_1.X509CertificateChain.fromJSON(object.x509CertificateChain),
-                    }
-                    : undefined,
-            tlogEntries: Array.isArray(object?.tlogEntries)
-                ? object.tlogEntries.map((e) => sigstore_rekor_1.TransparencyLogEntry.fromJSON(e))
-                : [],
-            timestampVerificationData: isSet(object.timestampVerificationData)
-                ? exports.TimestampVerificationData.fromJSON(object.timestampVerificationData)
-                : undefined,
-        };
-    },
-    toJSON(message) {
-        const obj = {};
-        message.content?.$case === "publicKey" &&
-            (obj.publicKey = message.content?.publicKey ? sigstore_common_1.PublicKeyIdentifier.toJSON(message.content?.publicKey) : undefined);
-        message.content?.$case === "x509CertificateChain" &&
-            (obj.x509CertificateChain = message.content?.x509CertificateChain
-                ? sigstore_common_1.X509CertificateChain.toJSON(message.content?.x509CertificateChain)
-                : undefined);
-        if (message.tlogEntries) {
-            obj.tlogEntries = message.tlogEntries.map((e) => e ? sigstore_rekor_1.TransparencyLogEntry.toJSON(e) : undefined);
-        }
-        else {
-            obj.tlogEntries = [];
-        }
-        message.timestampVerificationData !== undefined &&
-            (obj.timestampVerificationData = message.timestampVerificationData
-                ? exports.TimestampVerificationData.toJSON(message.timestampVerificationData)
-                : undefined);
-        return obj;
-    },
-};
-function createBaseBundle() {
-    return { mediaType: "", verificationMaterial: undefined, content: undefined };
-}
-exports.Bundle = {
-    fromJSON(object) {
-        return {
-            mediaType: isSet(object.mediaType) ? String(object.mediaType) : "",
-            verificationMaterial: isSet(object.verificationMaterial)
-                ? exports.VerificationMaterial.fromJSON(object.verificationMaterial)
-                : undefined,
-            content: isSet(object.messageSignature)
-                ? { $case: "messageSignature", messageSignature: sigstore_common_1.MessageSignature.fromJSON(object.messageSignature) }
-                : isSet(object.dsseEnvelope)
-                    ? { $case: "dsseEnvelope", dsseEnvelope: envelope_1.Envelope.fromJSON(object.dsseEnvelope) }
-                    : undefined,
-        };
-    },
-    toJSON(message) {
-        const obj = {};
-        message.mediaType !== undefined && (obj.mediaType = message.mediaType);
-        message.verificationMaterial !== undefined && (obj.verificationMaterial = message.verificationMaterial
-            ? exports.VerificationMaterial.toJSON(message.verificationMaterial)
-            : undefined);
-        message.content?.$case === "messageSignature" && (obj.messageSignature = message.content?.messageSignature
-            ? sigstore_common_1.MessageSignature.toJSON(message.content?.messageSignature)
-            : undefined);
-        message.content?.$case === "dsseEnvelope" &&
-            (obj.dsseEnvelope = message.content?.dsseEnvelope ? envelope_1.Envelope.toJSON(message.content?.dsseEnvelope) : undefined);
-        return obj;
-    },
-};
-function isSet(value) {
-    return value !== null && value !== undefined;
-}
-
-
-/***/ }),
-
-/***/ 909:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.TimeRange = exports.X509CertificateChain = exports.SubjectAlternativeName = exports.X509Certificate = exports.DistinguishedName = exports.ObjectIdentifierValuePair = exports.ObjectIdentifier = exports.PublicKeyIdentifier = exports.PublicKey = exports.RFC3161SignedTimestamp = exports.LogId = exports.MessageSignature = exports.HashOutput = exports.subjectAlternativeNameTypeToJSON = exports.subjectAlternativeNameTypeFromJSON = exports.SubjectAlternativeNameType = exports.publicKeyDetailsToJSON = exports.publicKeyDetailsFromJSON = exports.PublicKeyDetails = exports.hashAlgorithmToJSON = exports.hashAlgorithmFromJSON = exports.HashAlgorithm = void 0;
-/* eslint-disable */
-const timestamp_1 = __nccwpck_require__(8365);
-/**
- * Only a subset of the secure hash standard algorithms are supported.
- * See <https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.180-4.pdf> for more
- * details.
- * UNSPECIFIED SHOULD not be used, primary reason for inclusion is to force
- * any proto JSON serialization to emit the used hash algorithm, as default
- * option is to *omit* the default value of an enum (which is the first
- * value, represented by '0'.
- */
-var HashAlgorithm;
-(function (HashAlgorithm) {
-    HashAlgorithm[HashAlgorithm["HASH_ALGORITHM_UNSPECIFIED"] = 0] = "HASH_ALGORITHM_UNSPECIFIED";
-    HashAlgorithm[HashAlgorithm["SHA2_256"] = 1] = "SHA2_256";
-})(HashAlgorithm = exports.HashAlgorithm || (exports.HashAlgorithm = {}));
-function hashAlgorithmFromJSON(object) {
-    switch (object) {
-        case 0:
-        case "HASH_ALGORITHM_UNSPECIFIED":
-            return HashAlgorithm.HASH_ALGORITHM_UNSPECIFIED;
-        case 1:
-        case "SHA2_256":
-            return HashAlgorithm.SHA2_256;
-        default:
-            throw new globalThis.Error("Unrecognized enum value " + object + " for enum HashAlgorithm");
-    }
-}
-exports.hashAlgorithmFromJSON = hashAlgorithmFromJSON;
-function hashAlgorithmToJSON(object) {
-    switch (object) {
-        case HashAlgorithm.HASH_ALGORITHM_UNSPECIFIED:
-            return "HASH_ALGORITHM_UNSPECIFIED";
-        case HashAlgorithm.SHA2_256:
-            return "SHA2_256";
-        default:
-            throw new globalThis.Error("Unrecognized enum value " + object + " for enum HashAlgorithm");
-    }
-}
-exports.hashAlgorithmToJSON = hashAlgorithmToJSON;
-/**
- * Details of a specific public key, capturing the the key encoding method,
- * and signature algorithm.
- * To avoid the possibility of contradicting formats such as PKCS1 with
- * ED25519 the valid permutations are listed as a linear set instead of a
- * cartesian set (i.e one combined variable instead of two, one for encoding
- * and one for the signature algorithm).
- */
-var PublicKeyDetails;
-(function (PublicKeyDetails) {
-    PublicKeyDetails[PublicKeyDetails["PUBLIC_KEY_DETAILS_UNSPECIFIED"] = 0] = "PUBLIC_KEY_DETAILS_UNSPECIFIED";
-    /** PKCS1_RSA_PKCS1V5 - RSA */
-    PublicKeyDetails[PublicKeyDetails["PKCS1_RSA_PKCS1V5"] = 1] = "PKCS1_RSA_PKCS1V5";
-    /** PKCS1_RSA_PSS - See RFC8017 */
-    PublicKeyDetails[PublicKeyDetails["PKCS1_RSA_PSS"] = 2] = "PKCS1_RSA_PSS";
-    PublicKeyDetails[PublicKeyDetails["PKIX_RSA_PKCS1V5"] = 3] = "PKIX_RSA_PKCS1V5";
-    PublicKeyDetails[PublicKeyDetails["PKIX_RSA_PSS"] = 4] = "PKIX_RSA_PSS";
-    /** PKIX_ECDSA_P256_SHA_256 - ECDSA */
-    PublicKeyDetails[PublicKeyDetails["PKIX_ECDSA_P256_SHA_256"] = 5] = "PKIX_ECDSA_P256_SHA_256";
-    /** PKIX_ECDSA_P256_HMAC_SHA_256 - See RFC6979 */
-    PublicKeyDetails[PublicKeyDetails["PKIX_ECDSA_P256_HMAC_SHA_256"] = 6] = "PKIX_ECDSA_P256_HMAC_SHA_256";
-    /** PKIX_ED25519 - Ed 25519 */
-    PublicKeyDetails[PublicKeyDetails["PKIX_ED25519"] = 7] = "PKIX_ED25519";
-})(PublicKeyDetails = exports.PublicKeyDetails || (exports.PublicKeyDetails = {}));
-function publicKeyDetailsFromJSON(object) {
-    switch (object) {
-        case 0:
-        case "PUBLIC_KEY_DETAILS_UNSPECIFIED":
-            return PublicKeyDetails.PUBLIC_KEY_DETAILS_UNSPECIFIED;
-        case 1:
-        case "PKCS1_RSA_PKCS1V5":
-            return PublicKeyDetails.PKCS1_RSA_PKCS1V5;
-        case 2:
-        case "PKCS1_RSA_PSS":
-            return PublicKeyDetails.PKCS1_RSA_PSS;
-        case 3:
-        case "PKIX_RSA_PKCS1V5":
-            return PublicKeyDetails.PKIX_RSA_PKCS1V5;
-        case 4:
-        case "PKIX_RSA_PSS":
-            return PublicKeyDetails.PKIX_RSA_PSS;
-        case 5:
-        case "PKIX_ECDSA_P256_SHA_256":
-            return PublicKeyDetails.PKIX_ECDSA_P256_SHA_256;
-        case 6:
-        case "PKIX_ECDSA_P256_HMAC_SHA_256":
-            return PublicKeyDetails.PKIX_ECDSA_P256_HMAC_SHA_256;
-        case 7:
-        case "PKIX_ED25519":
-            return PublicKeyDetails.PKIX_ED25519;
-        default:
-            throw new globalThis.Error("Unrecognized enum value " + object + " for enum PublicKeyDetails");
-    }
-}
-exports.publicKeyDetailsFromJSON = publicKeyDetailsFromJSON;
-function publicKeyDetailsToJSON(object) {
-    switch (object) {
-        case PublicKeyDetails.PUBLIC_KEY_DETAILS_UNSPECIFIED:
-            return "PUBLIC_KEY_DETAILS_UNSPECIFIED";
-        case PublicKeyDetails.PKCS1_RSA_PKCS1V5:
-            return "PKCS1_RSA_PKCS1V5";
-        case PublicKeyDetails.PKCS1_RSA_PSS:
-            return "PKCS1_RSA_PSS";
-        case PublicKeyDetails.PKIX_RSA_PKCS1V5:
-            return "PKIX_RSA_PKCS1V5";
-        case PublicKeyDetails.PKIX_RSA_PSS:
-            return "PKIX_RSA_PSS";
-        case PublicKeyDetails.PKIX_ECDSA_P256_SHA_256:
-            return "PKIX_ECDSA_P256_SHA_256";
-        case PublicKeyDetails.PKIX_ECDSA_P256_HMAC_SHA_256:
-            return "PKIX_ECDSA_P256_HMAC_SHA_256";
-        case PublicKeyDetails.PKIX_ED25519:
-            return "PKIX_ED25519";
-        default:
-            throw new globalThis.Error("Unrecognized enum value " + object + " for enum PublicKeyDetails");
-    }
-}
-exports.publicKeyDetailsToJSON = publicKeyDetailsToJSON;
-var SubjectAlternativeNameType;
-(function (SubjectAlternativeNameType) {
-    SubjectAlternativeNameType[SubjectAlternativeNameType["SUBJECT_ALTERNATIVE_NAME_TYPE_UNSPECIFIED"] = 0] = "SUBJECT_ALTERNATIVE_NAME_TYPE_UNSPECIFIED";
-    SubjectAlternativeNameType[SubjectAlternativeNameType["EMAIL"] = 1] = "EMAIL";
-    SubjectAlternativeNameType[SubjectAlternativeNameType["URI"] = 2] = "URI";
-    /**
-     * OTHER_NAME - OID 1.3.6.1.4.1.57264.1.7
-     * See https://github.com/sigstore/fulcio/blob/main/docs/oid-info.md#1361415726417--othername-san
-     * for more details.
-     */
-    SubjectAlternativeNameType[SubjectAlternativeNameType["OTHER_NAME"] = 3] = "OTHER_NAME";
-})(SubjectAlternativeNameType = exports.SubjectAlternativeNameType || (exports.SubjectAlternativeNameType = {}));
-function subjectAlternativeNameTypeFromJSON(object) {
-    switch (object) {
-        case 0:
-        case "SUBJECT_ALTERNATIVE_NAME_TYPE_UNSPECIFIED":
-            return SubjectAlternativeNameType.SUBJECT_ALTERNATIVE_NAME_TYPE_UNSPECIFIED;
-        case 1:
-        case "EMAIL":
-            return SubjectAlternativeNameType.EMAIL;
-        case 2:
-        case "URI":
-            return SubjectAlternativeNameType.URI;
-        case 3:
-        case "OTHER_NAME":
-            return SubjectAlternativeNameType.OTHER_NAME;
-        default:
-            throw new globalThis.Error("Unrecognized enum value " + object + " for enum SubjectAlternativeNameType");
-    }
-}
-exports.subjectAlternativeNameTypeFromJSON = subjectAlternativeNameTypeFromJSON;
-function subjectAlternativeNameTypeToJSON(object) {
-    switch (object) {
-        case SubjectAlternativeNameType.SUBJECT_ALTERNATIVE_NAME_TYPE_UNSPECIFIED:
-            return "SUBJECT_ALTERNATIVE_NAME_TYPE_UNSPECIFIED";
-        case SubjectAlternativeNameType.EMAIL:
-            return "EMAIL";
-        case SubjectAlternativeNameType.URI:
-            return "URI";
-        case SubjectAlternativeNameType.OTHER_NAME:
-            return "OTHER_NAME";
-        default:
-            throw new globalThis.Error("Unrecognized enum value " + object + " for enum SubjectAlternativeNameType");
-    }
-}
-exports.subjectAlternativeNameTypeToJSON = subjectAlternativeNameTypeToJSON;
-function createBaseHashOutput() {
-    return { algorithm: 0, digest: Buffer.alloc(0) };
-}
-exports.HashOutput = {
-    fromJSON(object) {
-        return {
-            algorithm: isSet(object.algorithm) ? hashAlgorithmFromJSON(object.algorithm) : 0,
-            digest: isSet(object.digest) ? Buffer.from(bytesFromBase64(object.digest)) : Buffer.alloc(0),
-        };
-    },
-    toJSON(message) {
-        const obj = {};
-        message.algorithm !== undefined && (obj.algorithm = hashAlgorithmToJSON(message.algorithm));
-        message.digest !== undefined &&
-            (obj.digest = base64FromBytes(message.digest !== undefined ? message.digest : Buffer.alloc(0)));
-        return obj;
-    },
-};
-function createBaseMessageSignature() {
-    return { messageDigest: undefined, signature: Buffer.alloc(0) };
-}
-exports.MessageSignature = {
-    fromJSON(object) {
-        return {
-            messageDigest: isSet(object.messageDigest) ? exports.HashOutput.fromJSON(object.messageDigest) : undefined,
-            signature: isSet(object.signature) ? Buffer.from(bytesFromBase64(object.signature)) : Buffer.alloc(0),
-        };
-    },
-    toJSON(message) {
-        const obj = {};
-        message.messageDigest !== undefined &&
-            (obj.messageDigest = message.messageDigest ? exports.HashOutput.toJSON(message.messageDigest) : undefined);
-        message.signature !== undefined &&
-            (obj.signature = base64FromBytes(message.signature !== undefined ? message.signature : Buffer.alloc(0)));
-        return obj;
-    },
-};
-function createBaseLogId() {
-    return { keyId: Buffer.alloc(0) };
-}
-exports.LogId = {
-    fromJSON(object) {
-        return { keyId: isSet(object.keyId) ? Buffer.from(bytesFromBase64(object.keyId)) : Buffer.alloc(0) };
-    },
-    toJSON(message) {
-        const obj = {};
-        message.keyId !== undefined &&
-            (obj.keyId = base64FromBytes(message.keyId !== undefined ? message.keyId : Buffer.alloc(0)));
-        return obj;
-    },
-};
-function createBaseRFC3161SignedTimestamp() {
-    return { signedTimestamp: Buffer.alloc(0) };
-}
-exports.RFC3161SignedTimestamp = {
-    fromJSON(object) {
-        return {
-            signedTimestamp: isSet(object.signedTimestamp)
-                ? Buffer.from(bytesFromBase64(object.signedTimestamp))
-                : Buffer.alloc(0),
-        };
-    },
-    toJSON(message) {
-        const obj = {};
-        message.signedTimestamp !== undefined &&
-            (obj.signedTimestamp = base64FromBytes(message.signedTimestamp !== undefined ? message.signedTimestamp : Buffer.alloc(0)));
-        return obj;
-    },
-};
-function createBasePublicKey() {
-    return { rawBytes: undefined, keyDetails: 0, validFor: undefined };
-}
-exports.PublicKey = {
-    fromJSON(object) {
-        return {
-            rawBytes: isSet(object.rawBytes) ? Buffer.from(bytesFromBase64(object.rawBytes)) : undefined,
-            keyDetails: isSet(object.keyDetails) ? publicKeyDetailsFromJSON(object.keyDetails) : 0,
-            validFor: isSet(object.validFor) ? exports.TimeRange.fromJSON(object.validFor) : undefined,
-        };
-    },
-    toJSON(message) {
-        const obj = {};
-        message.rawBytes !== undefined &&
-            (obj.rawBytes = message.rawBytes !== undefined ? base64FromBytes(message.rawBytes) : undefined);
-        message.keyDetails !== undefined && (obj.keyDetails = publicKeyDetailsToJSON(message.keyDetails));
-        message.validFor !== undefined &&
-            (obj.validFor = message.validFor ? exports.TimeRange.toJSON(message.validFor) : undefined);
-        return obj;
-    },
-};
-function createBasePublicKeyIdentifier() {
-    return { hint: "" };
-}
-exports.PublicKeyIdentifier = {
-    fromJSON(object) {
-        return { hint: isSet(object.hint) ? String(object.hint) : "" };
-    },
-    toJSON(message) {
-        const obj = {};
-        message.hint !== undefined && (obj.hint = message.hint);
-        return obj;
-    },
-};
-function createBaseObjectIdentifier() {
-    return { id: [] };
-}
-exports.ObjectIdentifier = {
-    fromJSON(object) {
-        return { id: Array.isArray(object?.id) ? object.id.map((e) => Number(e)) : [] };
-    },
-    toJSON(message) {
-        const obj = {};
-        if (message.id) {
-            obj.id = message.id.map((e) => Math.round(e));
-        }
-        else {
-            obj.id = [];
-        }
-        return obj;
-    },
-};
-function createBaseObjectIdentifierValuePair() {
-    return { oid: undefined, value: Buffer.alloc(0) };
-}
-exports.ObjectIdentifierValuePair = {
-    fromJSON(object) {
-        return {
-            oid: isSet(object.oid) ? exports.ObjectIdentifier.fromJSON(object.oid) : undefined,
-            value: isSet(object.value) ? Buffer.from(bytesFromBase64(object.value)) : Buffer.alloc(0),
-        };
-    },
-    toJSON(message) {
-        const obj = {};
-        message.oid !== undefined && (obj.oid = message.oid ? exports.ObjectIdentifier.toJSON(message.oid) : undefined);
-        message.value !== undefined &&
-            (obj.value = base64FromBytes(message.value !== undefined ? message.value : Buffer.alloc(0)));
-        return obj;
-    },
-};
-function createBaseDistinguishedName() {
-    return { organization: "", commonName: "" };
-}
-exports.DistinguishedName = {
-    fromJSON(object) {
-        return {
-            organization: isSet(object.organization) ? String(object.organization) : "",
-            commonName: isSet(object.commonName) ? String(object.commonName) : "",
-        };
-    },
-    toJSON(message) {
-        const obj = {};
-        message.organization !== undefined && (obj.organization = message.organization);
-        message.commonName !== undefined && (obj.commonName = message.commonName);
-        return obj;
-    },
-};
-function createBaseX509Certificate() {
-    return { rawBytes: Buffer.alloc(0) };
-}
-exports.X509Certificate = {
-    fromJSON(object) {
-        return { rawBytes: isSet(object.rawBytes) ? Buffer.from(bytesFromBase64(object.rawBytes)) : Buffer.alloc(0) };
-    },
-    toJSON(message) {
-        const obj = {};
-        message.rawBytes !== undefined &&
-            (obj.rawBytes = base64FromBytes(message.rawBytes !== undefined ? message.rawBytes : Buffer.alloc(0)));
-        return obj;
-    },
-};
-function createBaseSubjectAlternativeName() {
-    return { type: 0, identity: undefined };
-}
-exports.SubjectAlternativeName = {
-    fromJSON(object) {
-        return {
-            type: isSet(object.type) ? subjectAlternativeNameTypeFromJSON(object.type) : 0,
-            identity: isSet(object.regexp)
-                ? { $case: "regexp", regexp: String(object.regexp) }
-                : isSet(object.value)
-                    ? { $case: "value", value: String(object.value) }
-                    : undefined,
-        };
-    },
-    toJSON(message) {
-        const obj = {};
-        message.type !== undefined && (obj.type = subjectAlternativeNameTypeToJSON(message.type));
-        message.identity?.$case === "regexp" && (obj.regexp = message.identity?.regexp);
-        message.identity?.$case === "value" && (obj.value = message.identity?.value);
-        return obj;
-    },
-};
-function createBaseX509CertificateChain() {
-    return { certificates: [] };
-}
-exports.X509CertificateChain = {
-    fromJSON(object) {
-        return {
-            certificates: Array.isArray(object?.certificates)
-                ? object.certificates.map((e) => exports.X509Certificate.fromJSON(e))
-                : [],
-        };
-    },
-    toJSON(message) {
-        const obj = {};
-        if (message.certificates) {
-            obj.certificates = message.certificates.map((e) => e ? exports.X509Certificate.toJSON(e) : undefined);
-        }
-        else {
-            obj.certificates = [];
-        }
-        return obj;
-    },
-};
-function createBaseTimeRange() {
-    return { start: undefined, end: undefined };
-}
-exports.TimeRange = {
-    fromJSON(object) {
-        return {
-            start: isSet(object.start) ? fromJsonTimestamp(object.start) : undefined,
-            end: isSet(object.end) ? fromJsonTimestamp(object.end) : undefined,
-        };
-    },
-    toJSON(message) {
-        const obj = {};
-        message.start !== undefined && (obj.start = message.start.toISOString());
-        message.end !== undefined && (obj.end = message.end.toISOString());
-        return obj;
-    },
-};
-var globalThis = (() => {
-    if (typeof globalThis !== "undefined") {
-        return globalThis;
-    }
-    if (typeof self !== "undefined") {
-        return self;
-    }
-    if (typeof window !== "undefined") {
-        return window;
-    }
-    if (typeof global !== "undefined") {
-        return global;
-    }
-    throw "Unable to locate global object";
-})();
-function bytesFromBase64(b64) {
-    if (globalThis.Buffer) {
-        return Uint8Array.from(globalThis.Buffer.from(b64, "base64"));
-    }
-    else {
-        const bin = globalThis.atob(b64);
-        const arr = new Uint8Array(bin.length);
-        for (let i = 0; i < bin.length; ++i) {
-            arr[i] = bin.charCodeAt(i);
-        }
-        return arr;
-    }
-}
-function base64FromBytes(arr) {
-    if (globalThis.Buffer) {
-        return globalThis.Buffer.from(arr).toString("base64");
-    }
-    else {
-        const bin = [];
-        arr.forEach((byte) => {
-            bin.push(String.fromCharCode(byte));
-        });
-        return globalThis.btoa(bin.join(""));
-    }
-}
-function fromTimestamp(t) {
-    let millis = Number(t.seconds) * 1000;
-    millis += t.nanos / 1000000;
-    return new Date(millis);
-}
-function fromJsonTimestamp(o) {
-    if (o instanceof Date) {
-        return o;
-    }
-    else if (typeof o === "string") {
-        return new Date(o);
-    }
-    else {
-        return fromTimestamp(timestamp_1.Timestamp.fromJSON(o));
-    }
-}
-function isSet(value) {
-    return value !== null && value !== undefined;
-}
-
-
-/***/ }),
-
-/***/ 6053:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.TransparencyLogEntry = exports.InclusionPromise = exports.InclusionProof = exports.Checkpoint = exports.KindVersion = void 0;
-/* eslint-disable */
-const sigstore_common_1 = __nccwpck_require__(909);
-function createBaseKindVersion() {
-    return { kind: "", version: "" };
-}
-exports.KindVersion = {
-    fromJSON(object) {
-        return {
-            kind: isSet(object.kind) ? String(object.kind) : "",
-            version: isSet(object.version) ? String(object.version) : "",
-        };
-    },
-    toJSON(message) {
-        const obj = {};
-        message.kind !== undefined && (obj.kind = message.kind);
-        message.version !== undefined && (obj.version = message.version);
-        return obj;
-    },
-};
-function createBaseCheckpoint() {
-    return { envelope: "" };
-}
-exports.Checkpoint = {
-    fromJSON(object) {
-        return { envelope: isSet(object.envelope) ? String(object.envelope) : "" };
-    },
-    toJSON(message) {
-        const obj = {};
-        message.envelope !== undefined && (obj.envelope = message.envelope);
-        return obj;
-    },
-};
-function createBaseInclusionProof() {
-    return { logIndex: "0", rootHash: Buffer.alloc(0), treeSize: "0", hashes: [], checkpoint: undefined };
-}
-exports.InclusionProof = {
-    fromJSON(object) {
-        return {
-            logIndex: isSet(object.logIndex) ? String(object.logIndex) : "0",
-            rootHash: isSet(object.rootHash) ? Buffer.from(bytesFromBase64(object.rootHash)) : Buffer.alloc(0),
-            treeSize: isSet(object.treeSize) ? String(object.treeSize) : "0",
-            hashes: Array.isArray(object?.hashes) ? object.hashes.map((e) => Buffer.from(bytesFromBase64(e))) : [],
-            checkpoint: isSet(object.checkpoint) ? exports.Checkpoint.fromJSON(object.checkpoint) : undefined,
-        };
-    },
-    toJSON(message) {
-        const obj = {};
-        message.logIndex !== undefined && (obj.logIndex = message.logIndex);
-        message.rootHash !== undefined &&
-            (obj.rootHash = base64FromBytes(message.rootHash !== undefined ? message.rootHash : Buffer.alloc(0)));
-        message.treeSize !== undefined && (obj.treeSize = message.treeSize);
-        if (message.hashes) {
-            obj.hashes = message.hashes.map((e) => base64FromBytes(e !== undefined ? e : Buffer.alloc(0)));
-        }
-        else {
-            obj.hashes = [];
-        }
-        message.checkpoint !== undefined &&
-            (obj.checkpoint = message.checkpoint ? exports.Checkpoint.toJSON(message.checkpoint) : undefined);
-        return obj;
-    },
-};
-function createBaseInclusionPromise() {
-    return { signedEntryTimestamp: Buffer.alloc(0) };
-}
-exports.InclusionPromise = {
-    fromJSON(object) {
-        return {
-            signedEntryTimestamp: isSet(object.signedEntryTimestamp)
-                ? Buffer.from(bytesFromBase64(object.signedEntryTimestamp))
-                : Buffer.alloc(0),
-        };
-    },
-    toJSON(message) {
-        const obj = {};
-        message.signedEntryTimestamp !== undefined &&
-            (obj.signedEntryTimestamp = base64FromBytes(message.signedEntryTimestamp !== undefined ? message.signedEntryTimestamp : Buffer.alloc(0)));
-        return obj;
-    },
-};
-function createBaseTransparencyLogEntry() {
-    return {
-        logIndex: "0",
-        logId: undefined,
-        kindVersion: undefined,
-        integratedTime: "0",
-        inclusionPromise: undefined,
-        inclusionProof: undefined,
-        canonicalizedBody: Buffer.alloc(0),
-    };
-}
-exports.TransparencyLogEntry = {
-    fromJSON(object) {
-        return {
-            logIndex: isSet(object.logIndex) ? String(object.logIndex) : "0",
-            logId: isSet(object.logId) ? sigstore_common_1.LogId.fromJSON(object.logId) : undefined,
-            kindVersion: isSet(object.kindVersion) ? exports.KindVersion.fromJSON(object.kindVersion) : undefined,
-            integratedTime: isSet(object.integratedTime) ? String(object.integratedTime) : "0",
-            inclusionPromise: isSet(object.inclusionPromise) ? exports.InclusionPromise.fromJSON(object.inclusionPromise) : undefined,
-            inclusionProof: isSet(object.inclusionProof) ? exports.InclusionProof.fromJSON(object.inclusionProof) : undefined,
-            canonicalizedBody: isSet(object.canonicalizedBody)
-                ? Buffer.from(bytesFromBase64(object.canonicalizedBody))
-                : Buffer.alloc(0),
-        };
-    },
-    toJSON(message) {
-        const obj = {};
-        message.logIndex !== undefined && (obj.logIndex = message.logIndex);
-        message.logId !== undefined && (obj.logId = message.logId ? sigstore_common_1.LogId.toJSON(message.logId) : undefined);
-        message.kindVersion !== undefined &&
-            (obj.kindVersion = message.kindVersion ? exports.KindVersion.toJSON(message.kindVersion) : undefined);
-        message.integratedTime !== undefined && (obj.integratedTime = message.integratedTime);
-        message.inclusionPromise !== undefined &&
-            (obj.inclusionPromise = message.inclusionPromise ? exports.InclusionPromise.toJSON(message.inclusionPromise) : undefined);
-        message.inclusionProof !== undefined &&
-            (obj.inclusionProof = message.inclusionProof ? exports.InclusionProof.toJSON(message.inclusionProof) : undefined);
-        message.canonicalizedBody !== undefined &&
-            (obj.canonicalizedBody = base64FromBytes(message.canonicalizedBody !== undefined ? message.canonicalizedBody : Buffer.alloc(0)));
-        return obj;
-    },
-};
-var globalThis = (() => {
-    if (typeof globalThis !== "undefined") {
-        return globalThis;
-    }
-    if (typeof self !== "undefined") {
-        return self;
-    }
-    if (typeof window !== "undefined") {
-        return window;
-    }
-    if (typeof global !== "undefined") {
-        return global;
-    }
-    throw "Unable to locate global object";
-})();
-function bytesFromBase64(b64) {
-    if (globalThis.Buffer) {
-        return Uint8Array.from(globalThis.Buffer.from(b64, "base64"));
-    }
-    else {
-        const bin = globalThis.atob(b64);
-        const arr = new Uint8Array(bin.length);
-        for (let i = 0; i < bin.length; ++i) {
-            arr[i] = bin.charCodeAt(i);
-        }
-        return arr;
-    }
-}
-function base64FromBytes(arr) {
-    if (globalThis.Buffer) {
-        return globalThis.Buffer.from(arr).toString("base64");
-    }
-    else {
-        const bin = [];
-        arr.forEach((byte) => {
-            bin.push(String.fromCharCode(byte));
-        });
-        return globalThis.btoa(bin.join(""));
-    }
-}
-function isSet(value) {
-    return value !== null && value !== undefined;
-}
-
-
-/***/ }),
-
-/***/ 5182:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.TrustedRoot = exports.CertificateAuthority = exports.TransparencyLogInstance = void 0;
-/* eslint-disable */
-const sigstore_common_1 = __nccwpck_require__(909);
-function createBaseTransparencyLogInstance() {
-    return { baseUrl: "", hashAlgorithm: 0, publicKey: undefined, logId: undefined };
-}
-exports.TransparencyLogInstance = {
-    fromJSON(object) {
-        return {
-            baseUrl: isSet(object.baseUrl) ? String(object.baseUrl) : "",
-            hashAlgorithm: isSet(object.hashAlgorithm) ? (0, sigstore_common_1.hashAlgorithmFromJSON)(object.hashAlgorithm) : 0,
-            publicKey: isSet(object.publicKey) ? sigstore_common_1.PublicKey.fromJSON(object.publicKey) : undefined,
-            logId: isSet(object.logId) ? sigstore_common_1.LogId.fromJSON(object.logId) : undefined,
-        };
-    },
-    toJSON(message) {
-        const obj = {};
-        message.baseUrl !== undefined && (obj.baseUrl = message.baseUrl);
-        message.hashAlgorithm !== undefined && (obj.hashAlgorithm = (0, sigstore_common_1.hashAlgorithmToJSON)(message.hashAlgorithm));
-        message.publicKey !== undefined &&
-            (obj.publicKey = message.publicKey ? sigstore_common_1.PublicKey.toJSON(message.publicKey) : undefined);
-        message.logId !== undefined && (obj.logId = message.logId ? sigstore_common_1.LogId.toJSON(message.logId) : undefined);
-        return obj;
-    },
-};
-function createBaseCertificateAuthority() {
-    return { subject: undefined, uri: "", certChain: undefined, validFor: undefined };
-}
-exports.CertificateAuthority = {
-    fromJSON(object) {
-        return {
-            subject: isSet(object.subject) ? sigstore_common_1.DistinguishedName.fromJSON(object.subject) : undefined,
-            uri: isSet(object.uri) ? String(object.uri) : "",
-            certChain: isSet(object.certChain) ? sigstore_common_1.X509CertificateChain.fromJSON(object.certChain) : undefined,
-            validFor: isSet(object.validFor) ? sigstore_common_1.TimeRange.fromJSON(object.validFor) : undefined,
-        };
-    },
-    toJSON(message) {
-        const obj = {};
-        message.subject !== undefined &&
-            (obj.subject = message.subject ? sigstore_common_1.DistinguishedName.toJSON(message.subject) : undefined);
-        message.uri !== undefined && (obj.uri = message.uri);
-        message.certChain !== undefined &&
-            (obj.certChain = message.certChain ? sigstore_common_1.X509CertificateChain.toJSON(message.certChain) : undefined);
-        message.validFor !== undefined &&
-            (obj.validFor = message.validFor ? sigstore_common_1.TimeRange.toJSON(message.validFor) : undefined);
-        return obj;
-    },
-};
-function createBaseTrustedRoot() {
-    return { mediaType: "", tlogs: [], certificateAuthorities: [], ctlogs: [], timestampAuthorities: [] };
-}
-exports.TrustedRoot = {
-    fromJSON(object) {
-        return {
-            mediaType: isSet(object.mediaType) ? String(object.mediaType) : "",
-            tlogs: Array.isArray(object?.tlogs) ? object.tlogs.map((e) => exports.TransparencyLogInstance.fromJSON(e)) : [],
-            certificateAuthorities: Array.isArray(object?.certificateAuthorities)
-                ? object.certificateAuthorities.map((e) => exports.CertificateAuthority.fromJSON(e))
-                : [],
-            ctlogs: Array.isArray(object?.ctlogs)
-                ? object.ctlogs.map((e) => exports.TransparencyLogInstance.fromJSON(e))
-                : [],
-            timestampAuthorities: Array.isArray(object?.timestampAuthorities)
-                ? object.timestampAuthorities.map((e) => exports.CertificateAuthority.fromJSON(e))
-                : [],
-        };
-    },
-    toJSON(message) {
-        const obj = {};
-        message.mediaType !== undefined && (obj.mediaType = message.mediaType);
-        if (message.tlogs) {
-            obj.tlogs = message.tlogs.map((e) => e ? exports.TransparencyLogInstance.toJSON(e) : undefined);
-        }
-        else {
-            obj.tlogs = [];
-        }
-        if (message.certificateAuthorities) {
-            obj.certificateAuthorities = message.certificateAuthorities.map((e) => e ? exports.CertificateAuthority.toJSON(e) : undefined);
-        }
-        else {
-            obj.certificateAuthorities = [];
-        }
-        if (message.ctlogs) {
-            obj.ctlogs = message.ctlogs.map((e) => e ? exports.TransparencyLogInstance.toJSON(e) : undefined);
-        }
-        else {
-            obj.ctlogs = [];
-        }
-        if (message.timestampAuthorities) {
-            obj.timestampAuthorities = message.timestampAuthorities.map((e) => e ? exports.CertificateAuthority.toJSON(e) : undefined);
-        }
-        else {
-            obj.timestampAuthorities = [];
-        }
-        return obj;
-    },
-};
-function isSet(value) {
-    return value !== null && value !== undefined;
-}
-
-
-/***/ }),
-
-/***/ 3454:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.Input = exports.Artifact = exports.ArtifactVerificationOptions_TimestampAuthorityOptions = exports.ArtifactVerificationOptions_CtlogOptions = exports.ArtifactVerificationOptions_TlogOptions = exports.ArtifactVerificationOptions = exports.PublicKeyIdentities = exports.CertificateIdentities = exports.CertificateIdentity = void 0;
-/* eslint-disable */
-const sigstore_bundle_1 = __nccwpck_require__(1464);
-const sigstore_common_1 = __nccwpck_require__(909);
-const sigstore_trustroot_1 = __nccwpck_require__(5182);
-function createBaseCertificateIdentity() {
-    return { issuer: "", san: undefined, oids: [] };
-}
-exports.CertificateIdentity = {
-    fromJSON(object) {
-        return {
-            issuer: isSet(object.issuer) ? String(object.issuer) : "",
-            san: isSet(object.san) ? sigstore_common_1.SubjectAlternativeName.fromJSON(object.san) : undefined,
-            oids: Array.isArray(object?.oids) ? object.oids.map((e) => sigstore_common_1.ObjectIdentifierValuePair.fromJSON(e)) : [],
-        };
-    },
-    toJSON(message) {
-        const obj = {};
-        message.issuer !== undefined && (obj.issuer = message.issuer);
-        message.san !== undefined && (obj.san = message.san ? sigstore_common_1.SubjectAlternativeName.toJSON(message.san) : undefined);
-        if (message.oids) {
-            obj.oids = message.oids.map((e) => e ? sigstore_common_1.ObjectIdentifierValuePair.toJSON(e) : undefined);
-        }
-        else {
-            obj.oids = [];
-        }
-        return obj;
-    },
-};
-function createBaseCertificateIdentities() {
-    return { identities: [] };
-}
-exports.CertificateIdentities = {
-    fromJSON(object) {
-        return {
-            identities: Array.isArray(object?.identities)
-                ? object.identities.map((e) => exports.CertificateIdentity.fromJSON(e))
-                : [],
-        };
-    },
-    toJSON(message) {
-        const obj = {};
-        if (message.identities) {
-            obj.identities = message.identities.map((e) => e ? exports.CertificateIdentity.toJSON(e) : undefined);
-        }
-        else {
-            obj.identities = [];
-        }
-        return obj;
-    },
-};
-function createBasePublicKeyIdentities() {
-    return { publicKeys: [] };
-}
-exports.PublicKeyIdentities = {
-    fromJSON(object) {
-        return {
-            publicKeys: Array.isArray(object?.publicKeys) ? object.publicKeys.map((e) => sigstore_common_1.PublicKey.fromJSON(e)) : [],
-        };
-    },
-    toJSON(message) {
-        const obj = {};
-        if (message.publicKeys) {
-            obj.publicKeys = message.publicKeys.map((e) => e ? sigstore_common_1.PublicKey.toJSON(e) : undefined);
-        }
-        else {
-            obj.publicKeys = [];
-        }
-        return obj;
-    },
-};
-function createBaseArtifactVerificationOptions() {
-    return { signers: undefined, tlogOptions: undefined, ctlogOptions: undefined, tsaOptions: undefined };
-}
-exports.ArtifactVerificationOptions = {
-    fromJSON(object) {
-        return {
-            signers: isSet(object.certificateIdentities)
-                ? {
-                    $case: "certificateIdentities",
-                    certificateIdentities: exports.CertificateIdentities.fromJSON(object.certificateIdentities),
-                }
-                : isSet(object.publicKeys)
-                    ? { $case: "publicKeys", publicKeys: exports.PublicKeyIdentities.fromJSON(object.publicKeys) }
-                    : undefined,
-            tlogOptions: isSet(object.tlogOptions)
-                ? exports.ArtifactVerificationOptions_TlogOptions.fromJSON(object.tlogOptions)
-                : undefined,
-            ctlogOptions: isSet(object.ctlogOptions)
-                ? exports.ArtifactVerificationOptions_CtlogOptions.fromJSON(object.ctlogOptions)
-                : undefined,
-            tsaOptions: isSet(object.tsaOptions)
-                ? exports.ArtifactVerificationOptions_TimestampAuthorityOptions.fromJSON(object.tsaOptions)
-                : undefined,
-        };
-    },
-    toJSON(message) {
-        const obj = {};
-        message.signers?.$case === "certificateIdentities" &&
-            (obj.certificateIdentities = message.signers?.certificateIdentities
-                ? exports.CertificateIdentities.toJSON(message.signers?.certificateIdentities)
-                : undefined);
-        message.signers?.$case === "publicKeys" && (obj.publicKeys = message.signers?.publicKeys
-            ? exports.PublicKeyIdentities.toJSON(message.signers?.publicKeys)
-            : undefined);
-        message.tlogOptions !== undefined && (obj.tlogOptions = message.tlogOptions
-            ? exports.ArtifactVerificationOptions_TlogOptions.toJSON(message.tlogOptions)
-            : undefined);
-        message.ctlogOptions !== undefined && (obj.ctlogOptions = message.ctlogOptions
-            ? exports.ArtifactVerificationOptions_CtlogOptions.toJSON(message.ctlogOptions)
-            : undefined);
-        message.tsaOptions !== undefined && (obj.tsaOptions = message.tsaOptions
-            ? exports.ArtifactVerificationOptions_TimestampAuthorityOptions.toJSON(message.tsaOptions)
-            : undefined);
-        return obj;
-    },
-};
-function createBaseArtifactVerificationOptions_TlogOptions() {
-    return { threshold: 0, performOnlineVerification: false, disable: false };
-}
-exports.ArtifactVerificationOptions_TlogOptions = {
-    fromJSON(object) {
-        return {
-            threshold: isSet(object.threshold) ? Number(object.threshold) : 0,
-            performOnlineVerification: isSet(object.performOnlineVerification)
-                ? Boolean(object.performOnlineVerification)
-                : false,
-            disable: isSet(object.disable) ? Boolean(object.disable) : false,
-        };
-    },
-    toJSON(message) {
-        const obj = {};
-        message.threshold !== undefined && (obj.threshold = Math.round(message.threshold));
-        message.performOnlineVerification !== undefined &&
-            (obj.performOnlineVerification = message.performOnlineVerification);
-        message.disable !== undefined && (obj.disable = message.disable);
-        return obj;
-    },
-};
-function createBaseArtifactVerificationOptions_CtlogOptions() {
-    return { threshold: 0, detachedSct: false, disable: false };
-}
-exports.ArtifactVerificationOptions_CtlogOptions = {
-    fromJSON(object) {
-        return {
-            threshold: isSet(object.threshold) ? Number(object.threshold) : 0,
-            detachedSct: isSet(object.detachedSct) ? Boolean(object.detachedSct) : false,
-            disable: isSet(object.disable) ? Boolean(object.disable) : false,
-        };
-    },
-    toJSON(message) {
-        const obj = {};
-        message.threshold !== undefined && (obj.threshold = Math.round(message.threshold));
-        message.detachedSct !== undefined && (obj.detachedSct = message.detachedSct);
-        message.disable !== undefined && (obj.disable = message.disable);
-        return obj;
-    },
-};
-function createBaseArtifactVerificationOptions_TimestampAuthorityOptions() {
-    return { threshold: 0, disable: false };
-}
-exports.ArtifactVerificationOptions_TimestampAuthorityOptions = {
-    fromJSON(object) {
-        return {
-            threshold: isSet(object.threshold) ? Number(object.threshold) : 0,
-            disable: isSet(object.disable) ? Boolean(object.disable) : false,
-        };
-    },
-    toJSON(message) {
-        const obj = {};
-        message.threshold !== undefined && (obj.threshold = Math.round(message.threshold));
-        message.disable !== undefined && (obj.disable = message.disable);
-        return obj;
-    },
-};
-function createBaseArtifact() {
-    return { data: undefined };
-}
-exports.Artifact = {
-    fromJSON(object) {
-        return {
-            data: isSet(object.artifactUri)
-                ? { $case: "artifactUri", artifactUri: String(object.artifactUri) }
-                : isSet(object.artifact)
-                    ? { $case: "artifact", artifact: Buffer.from(bytesFromBase64(object.artifact)) }
-                    : undefined,
-        };
-    },
-    toJSON(message) {
-        const obj = {};
-        message.data?.$case === "artifactUri" && (obj.artifactUri = message.data?.artifactUri);
-        message.data?.$case === "artifact" &&
-            (obj.artifact = message.data?.artifact !== undefined ? base64FromBytes(message.data?.artifact) : undefined);
-        return obj;
-    },
-};
-function createBaseInput() {
-    return {
-        artifactTrustRoot: undefined,
-        artifactVerificationOptions: undefined,
-        bundle: undefined,
-        artifact: undefined,
-    };
-}
-exports.Input = {
-    fromJSON(object) {
-        return {
-            artifactTrustRoot: isSet(object.artifactTrustRoot) ? sigstore_trustroot_1.TrustedRoot.fromJSON(object.artifactTrustRoot) : undefined,
-            artifactVerificationOptions: isSet(object.artifactVerificationOptions)
-                ? exports.ArtifactVerificationOptions.fromJSON(object.artifactVerificationOptions)
-                : undefined,
-            bundle: isSet(object.bundle) ? sigstore_bundle_1.Bundle.fromJSON(object.bundle) : undefined,
-            artifact: isSet(object.artifact) ? exports.Artifact.fromJSON(object.artifact) : undefined,
-        };
-    },
-    toJSON(message) {
-        const obj = {};
-        message.artifactTrustRoot !== undefined &&
-            (obj.artifactTrustRoot = message.artifactTrustRoot ? sigstore_trustroot_1.TrustedRoot.toJSON(message.artifactTrustRoot) : undefined);
-        message.artifactVerificationOptions !== undefined &&
-            (obj.artifactVerificationOptions = message.artifactVerificationOptions
-                ? exports.ArtifactVerificationOptions.toJSON(message.artifactVerificationOptions)
-                : undefined);
-        message.bundle !== undefined && (obj.bundle = message.bundle ? sigstore_bundle_1.Bundle.toJSON(message.bundle) : undefined);
-        message.artifact !== undefined && (obj.artifact = message.artifact ? exports.Artifact.toJSON(message.artifact) : undefined);
-        return obj;
-    },
-};
-var globalThis = (() => {
-    if (typeof globalThis !== "undefined") {
-        return globalThis;
-    }
-    if (typeof self !== "undefined") {
-        return self;
-    }
-    if (typeof window !== "undefined") {
-        return window;
-    }
-    if (typeof global !== "undefined") {
-        return global;
-    }
-    throw "Unable to locate global object";
-})();
-function bytesFromBase64(b64) {
-    if (globalThis.Buffer) {
-        return Uint8Array.from(globalThis.Buffer.from(b64, "base64"));
-    }
-    else {
-        const bin = globalThis.atob(b64);
-        const arr = new Uint8Array(bin.length);
-        for (let i = 0; i < bin.length; ++i) {
-            arr[i] = bin.charCodeAt(i);
-        }
-        return arr;
-    }
-}
-function base64FromBytes(arr) {
-    if (globalThis.Buffer) {
-        return globalThis.Buffer.from(arr).toString("base64");
-    }
-    else {
-        const bin = [];
-        arr.forEach((byte) => {
-            bin.push(String.fromCharCode(byte));
-        });
-        return globalThis.btoa(bin.join(""));
-    }
-}
-function isSet(value) {
-    return value !== null && value !== undefined;
-}
-
-
-/***/ }),
-
 /***/ 8598:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
@@ -37939,32 +37902,39 @@ var __exportStar = (this && this.__exportStar) || function(m, exports) {
     for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.signingCertificate = exports.bundle = exports.isVerifiableTransparencyLogEntry = exports.isCAVerificationOptions = exports.isBundleWithCertificateChain = exports.isBundleWithVerificationMaterial = exports.envelopeFromJSON = exports.envelopeToJSON = exports.bundleFromJSON = exports.bundleToJSON = exports.TransparencyLogEntry = void 0;
+exports.signingCertificate = exports.bundle = exports.isVerifiableTransparencyLogEntry = exports.isCAVerificationOptions = exports.isBundleWithCertificateChain = exports.isBundleWithVerificationMaterial = exports.envelopeFromJSON = exports.envelopeToJSON = exports.bundleFromJSON = exports.bundleToJSON = void 0;
+/*
+Copyright 2023 The Sigstore Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+const protobuf_specs_1 = __nccwpck_require__(530);
 const util_1 = __nccwpck_require__(6901);
 const cert_1 = __nccwpck_require__(3669);
 const validate_1 = __nccwpck_require__(6857);
-const envelope_1 = __nccwpck_require__(4708);
-const sigstore_bundle_1 = __nccwpck_require__(1464);
-const sigstore_common_1 = __nccwpck_require__(909);
+__exportStar(__nccwpck_require__(530), exports);
 __exportStar(__nccwpck_require__(2163), exports);
 __exportStar(__nccwpck_require__(6857), exports);
-__exportStar(__nccwpck_require__(4708), exports);
-__exportStar(__nccwpck_require__(1464), exports);
-__exportStar(__nccwpck_require__(909), exports);
-var sigstore_rekor_1 = __nccwpck_require__(6053);
-Object.defineProperty(exports, "TransparencyLogEntry", ({ enumerable: true, get: function () { return sigstore_rekor_1.TransparencyLogEntry; } }));
-__exportStar(__nccwpck_require__(5182), exports);
-__exportStar(__nccwpck_require__(3454), exports);
-exports.bundleToJSON = sigstore_bundle_1.Bundle.toJSON;
+exports.bundleToJSON = protobuf_specs_1.Bundle.toJSON;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const bundleFromJSON = (obj) => {
-    const bundle = sigstore_bundle_1.Bundle.fromJSON(obj);
+    const bundle = protobuf_specs_1.Bundle.fromJSON(obj);
     (0, validate_1.assertValidBundle)(bundle);
     return bundle;
 };
 exports.bundleFromJSON = bundleFromJSON;
-exports.envelopeToJSON = envelope_1.Envelope.toJSON;
-exports.envelopeFromJSON = envelope_1.Envelope.fromJSON;
+exports.envelopeToJSON = protobuf_specs_1.Envelope.toJSON;
+exports.envelopeFromJSON = protobuf_specs_1.Envelope.fromJSON;
 const BUNDLE_MEDIA_TYPE = 'application/vnd.dev.sigstore.bundle+json;version=0.1';
 // Type guard for narrowing a Bundle to a BundleWithVerificationMaterial
 function isBundleWithVerificationMaterial(bundle) {
@@ -38005,7 +37975,7 @@ exports.bundle = {
             $case: 'messageSignature',
             messageSignature: {
                 messageDigest: {
-                    algorithm: sigstore_common_1.HashAlgorithm.SHA2_256,
+                    algorithm: protobuf_specs_1.HashAlgorithm.SHA2_256,
                     digest: digest,
                 },
                 signature: signature.signature,
@@ -38088,21 +38058,6 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.assertValidBundle = void 0;
-/*
-Copyright 2023 The Sigstore Authors.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
 const error_1 = __nccwpck_require__(6274);
 // Performs basic validation of a Sigstore bundle to ensure that all required
 // fields are populated. This is not a complete validation of the bundle, but
@@ -38173,6 +38128,40 @@ function assertValidBundle(b) {
     }
 }
 exports.assertValidBundle = assertValidBundle;
+
+
+/***/ }),
+
+/***/ 7899:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.appDataPath = void 0;
+const os_1 = __importDefault(__nccwpck_require__(2037));
+const path_1 = __importDefault(__nccwpck_require__(1017));
+function appDataPath(name) {
+    const homedir = os_1.default.homedir();
+    switch (process.platform) {
+        case 'darwin': {
+            const appSupport = path_1.default.join(homedir, 'Library', 'Application Support');
+            return path_1.default.join(appSupport, name);
+        }
+        case 'win32': {
+            const localAppData = process.env.LOCALAPPDATA || path_1.default.join(homedir, 'AppData', 'Local');
+            return path_1.default.join(localAppData, name, 'Data');
+        }
+        default: {
+            const localData = process.env.XDG_DATA_HOME || path_1.default.join(homedir, '.local', 'share');
+            return path_1.default.join(localData, name);
+        }
+    }
+}
+exports.appDataPath = appDataPath;
 
 
 /***/ }),
@@ -38365,7 +38354,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.ua = exports.promise = exports.pem = exports.oidc = exports.json = exports.encoding = exports.dsse = exports.crypto = void 0;
+exports.ua = exports.promise = exports.pem = exports.oidc = exports.json = exports.encoding = exports.dsse = exports.crypto = exports.appdata = void 0;
 /*
 Copyright 2022 The Sigstore Authors.
 
@@ -38381,6 +38370,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
+exports.appdata = __importStar(__nccwpck_require__(7899));
 exports.crypto = __importStar(__nccwpck_require__(3684));
 exports.dsse = __importStar(__nccwpck_require__(5073));
 exports.encoding = __importStar(__nccwpck_require__(1378));
@@ -38840,7 +38830,7 @@ class Verifier {
     // Verifies the bundle signature, the bundle's certificate chain (if present)
     // and the bundle's transparency log entries.
     verify(bundle, options, data) {
-        this.verifyArtifactSignature(bundle, options, data);
+        this.verifyArtifactSignature(bundle, data);
         if (sigstore.isBundleWithCertificateChain(bundle)) {
             this.verifySigningCertificate(bundle, options);
         }
@@ -38848,8 +38838,8 @@ class Verifier {
     }
     // Performs bundle signature verification. Determines the type of the bundle
     // content and delegates to the appropriate signature verification function.
-    verifyArtifactSignature(bundle, options, data) {
-        const publicKey = this.getPublicKey(bundle, options);
+    verifyArtifactSignature(bundle, data) {
+        const publicKey = this.getPublicKey(bundle);
         switch (bundle.content?.$case) {
             case 'messageSignature':
                 if (!data) {
@@ -38882,7 +38872,7 @@ class Verifier {
     // Returns the public key which will be used to verify the bundle signature.
     // The public key is selected based on the verification material in the bundle
     // and the options provided.
-    getPublicKey(bundle, options) {
+    getPublicKey(bundle) {
         // Select the key which will be used to verify the signature
         switch (bundle.verificationMaterial?.content?.$case) {
             // If the bundle contains a certificate chain, the public key is the
@@ -38892,7 +38882,7 @@ class Verifier {
             // If the bundle contains a public key hint, the public key is selected
             // from the list of trusted keys in the options
             case 'publicKey':
-                return getPublicKeyFromHint(bundle.verificationMaterial.content.publicKey, options, this.keySelector);
+                return getPublicKeyFromHint(bundle.verificationMaterial.content.publicKey, this.keySelector);
         }
     }
 }
@@ -38904,7 +38894,7 @@ function getPublicKeyFromCertificateChain(certificateChain) {
 }
 // Retrieves the public key through the key selector callback, passing the
 // public key hint from the bundle
-function getPublicKeyFromHint(publicKeyID, options, keySelector) {
+function getPublicKeyFromHint(publicKeyID, keySelector) {
     const key = keySelector(publicKeyID.hint);
     if (!key) {
         throw new error_1.VerificationError('no public key found for signature verification');
@@ -51478,7 +51468,7 @@ module.exports = {"i8":"3.0.1"};
 /***/ ((module) => {
 
 "use strict";
-module.exports = {"i8":"1.0.0"};
+module.exports = {"i8":"1.1.1"};
 
 /***/ }),
 

@@ -318,129 +318,129 @@ This section explains how to generate non-forgeable SLSA provenance with existin
 
 1. Declare an `outputs` for the build job:
 
-```yaml
-jobs:
-  build:
-    outputs:
-      image: ${{ steps.build.outputs.image }}
-      digest: ${{ steps.build.outputs.digest }}
-```
+   ```yaml
+   jobs:
+     build:
+       outputs:
+         image: ${{ steps.build.outputs.image }}
+         digest: ${{ steps.build.outputs.digest }}
+   ```
 
 2. Add an `id: build` field to your ko step. Update the step to output the image
    and digest.
 
-```yaml
-steps:
-  [...]
-  - name: Run ko
-    id: build
-    env:
-      KO_DOCKER_REPO: "${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAME }}"
-      KO_USER: ${{ github.actor }}
-      KO_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
-      GIT_REF: ${{ github.ref }}
-    run: |
-      # get tag name without tags/refs/ prefix.
-      tag=$(echo ${GIT_REF} | cut -d'/' -f3)
+   ```yaml
+   steps:
+     [...]
+     - name: Run ko
+       id: build
+       env:
+         KO_DOCKER_REPO: "${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAME }}"
+         KO_USER: ${{ github.actor }}
+         KO_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
+         GIT_REF: ${{ github.ref }}
+       run: |
+         # get tag name without tags/refs/ prefix.
+         tag=$(echo ${GIT_REF} | cut -d'/' -f3)
 
-      # Log into regisry
-      echo "${KO_PASSWORD}" | ko login ghcr.io --username "$KO_USER" --password-stdin
+         # Log into regisry
+         echo "${KO_PASSWORD}" | ko login ghcr.io --username "$KO_USER" --password-stdin
 
-      # Build & push the image. Save the image name.
-      image_and_digest=$(ko build --tags="${tag}" .)
+         # Build & push the image. Save the image name.
+         image_and_digest=$(ko build --tags="${tag}" .)
 
-      # Output the image name and digest so we can generate provenance.
-      image=$(echo "${image_and_digest}" | cut -d'@' -f1 | cut -d':' -f1)
-      digest=$(echo "${image_and_digest}" | cut -d'@' -f2)
-      echo "image=$image" >> "$GITHUB_OUTPUT"
-      echo "digest=$digest" >> "$GITHUB_OUTPUT"
-```
+         # Output the image name and digest so we can generate provenance.
+         image=$(echo "${image_and_digest}" | cut -d'@' -f1 | cut -d':' -f1)
+         digest=$(echo "${image_and_digest}" | cut -d'@' -f2)
+         echo "image=$image" >> "$GITHUB_OUTPUT"
+         echo "digest=$digest" >> "$GITHUB_OUTPUT"
+   ```
 
 3. Call the generic container workflow to generate provenance by declaring the job below:
 
-```yaml
-provenance:
-  needs: [build]
-  permissions:
-    actions: read
-    id-token: write
-    # contents: read
-    packages: write
-  if: startsWith(github.ref, 'refs/tags/')
-  uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v1.5.0
-  with:
-    image: ${{ needs.build.outputs.image }}
-    digest: ${{ needs.build.outputs.digest }}
-    registry-username: ${{ github.actor }}
-    compile-generator: true
-  secrets:
-    registry-password: ${{ secrets.GITHUB_TOKEN }}
-```
+   ```yaml
+   provenance:
+     needs: [build]
+     permissions:
+       actions: read
+       id-token: write
+       # contents: read
+       packages: write
+     if: startsWith(github.ref, 'refs/tags/')
+     uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v1.5.0
+     with:
+       image: ${{ needs.build.outputs.image }}
+       digest: ${{ needs.build.outputs.digest }}
+       registry-username: ${{ github.actor }}
+       compile-generator: true
+     secrets:
+       registry-password: ${{ secrets.GITHUB_TOKEN }}
+   ```
 
-All together, it will look as the following:
+   All together, it will look as the following:
 
-```yaml
-jobs:
-  build:
-    permissions:
-      contents: read
-      packages: write
-    outputs:
-      image: ${{ steps.build.outputs.image }}
-      digest: ${{ steps.build.outputs.digest }}
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout the repository
-        uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # v2.3.4
+   ```yaml
+   jobs:
+     build:
+       permissions:
+         contents: read
+         packages: write
+       outputs:
+         image: ${{ steps.build.outputs.image }}
+         digest: ${{ steps.build.outputs.digest }}
+       runs-on: ubuntu-latest
+       steps:
+         - name: Checkout the repository
+           uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # v2.3.4
 
-      - uses: actions/setup-go@v3.3.0
-        with:
-          go-version: 1.19
+         - uses: actions/setup-go@v3.3.0
+           with:
+             go-version: 1.19
 
-      - name: Set up ko
-        uses: imjasonh/setup-ko@v0.6
+         - name: Set up ko
+           uses: imjasonh/setup-ko@v0.6
 
-      - name: Run ko
-        id: build
-        env:
-          KO_DOCKER_REPO: "${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAME }}"
-          KO_USER: ${{ github.actor }}
-          KO_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
-          GIT_REF: ${{ github.ref }}
-        run: |
-          # get tag name without tags/refs/ prefix.
-          tag=$(echo ${GIT_REF} | cut -d'/' -f3)
+         - name: Run ko
+           id: build
+           env:
+             KO_DOCKER_REPO: "${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAME }}"
+             KO_USER: ${{ github.actor }}
+             KO_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
+             GIT_REF: ${{ github.ref }}
+           run: |
+             # get tag name without tags/refs/ prefix.
+             tag=$(echo ${GIT_REF} | cut -d'/' -f3)
 
-          # Log into regisry
-          echo "${KO_PASSWORD}" | ko login ghcr.io --username "$KO_USER" --password-stdin
+             # Log into regisry
+             echo "${KO_PASSWORD}" | ko login ghcr.io --username "$KO_USER" --password-stdin
 
-          # Build & push the image. Save the image name.
-          image_and_digest=$(ko build --tags="${tag}" .)
+             # Build & push the image. Save the image name.
+             image_and_digest=$(ko build --tags="${tag}" .)
 
-          # Output the image name and digest so we can generate provenance.
-          image=$(echo "${image_and_digest}" | cut -d':' -f1)
-          digest=$(echo "${image_and_digest}" | cut -d'@' -f2)
-          echo "image=$image" >> "$GITHUB_OUTPUT"
-          echo "digest=$digest" >> "$GITHUB_OUTPUT"
+             # Output the image name and digest so we can generate provenance.
+             image=$(echo "${image_and_digest}" | cut -d':' -f1)
+             digest=$(echo "${image_and_digest}" | cut -d'@' -f2)
+             echo "image=$image" >> "$GITHUB_OUTPUT"
+             echo "digest=$digest" >> "$GITHUB_OUTPUT"
 
-  # This step calls the generic workflow to generate provenance.
-  provenance:
-    needs: [build]
-    permissions:
-      actions: read
-      id-token: write
-      # contents: read
-      packages: write
-    if: startsWith(github.ref, 'refs/tags/')
-    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v1.5.0
-    with:
-      image: ${{ needs.build.outputs.image }}
-      digest: ${{ needs.build.outputs.digest }}
-      registry-username: ${{ github.actor }}
-      compile-generator: true
-    secrets:
-      registry-password: ${{ secrets.GITHUB_TOKEN }}
-```
+     # This step calls the generic workflow to generate provenance.
+     provenance:
+       needs: [build]
+       permissions:
+         actions: read
+         id-token: write
+         # contents: read
+         packages: write
+       if: startsWith(github.ref, 'refs/tags/')
+       uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v1.5.0
+       with:
+         image: ${{ needs.build.outputs.image }}
+         digest: ${{ needs.build.outputs.digest }}
+         registry-username: ${{ github.actor }}
+         compile-generator: true
+       secrets:
+         registry-password: ${{ secrets.GITHUB_TOKEN }}
+   ```
 
 ## Provenance for matrix strategy builds
 
@@ -462,7 +462,7 @@ Verification of provenance attestations can be done via several different tools.
 
 Here is an example policy stored in `policy.cue`:
 
-```
+```yaml
 // The predicateType field must match this string
 predicateType: "https://slsa.dev/provenance/v0.2"
 
@@ -501,7 +501,7 @@ COSIGN_EXPERIMENTAL=1 cosign verify-attestation \
 
 This should result in output like the following:
 
-```
+```text
 will be validating against CUE policies: [policy.cue]
 
 Verification for ghcr.io/ianlewis/actions-test:v0.0.79 --

@@ -4,15 +4,6 @@ const fs = require("fs");
 const wd = file.getGitHubWorkspace();
 
 beforeAll(() => {
-  if (file.safeExistsSync("safewritefile")) {
-    file.safeUnlinkSync("safewritefile");
-  }
-  if (file.safeExistsSync("safemkdir")) {
-    file.safeRmdirSync("safemkdir");
-  }
-  if (!file.safeExistsSync("safefilesha256")) {
-    file.safeWriteFileSync("safefilesha256", "some data");
-  }
   if (!file.safeExistsSync("safeunlink")) {
     file.safeWriteFileSync("safeunlink", "data");
   }
@@ -20,6 +11,24 @@ beforeAll(() => {
     file.safeMkdirSync("safermdir");
   }
   initGitHub();
+});
+
+afterAll(() => {
+  const tmpFiles: string[] = ["safefilesha256", "safewritefile"];
+  for (const fn of tmpFiles) {
+    if (file.safeExistsSync(fn)) {
+      file.safeUnlinkSync(fn);
+    }
+  }
+
+  const tmpDirs: string[] = ["safemkdir"];
+  for (const dn of tmpDirs) {
+    if (file.safeExistsSync(dn)) {
+      file.safeRmdirSync(dn);
+    }
+  }
+
+  cleanupGitHub();
 });
 
 function initGitHub(): void {
@@ -58,12 +67,9 @@ function cleanupGitHub(): void {
   }
 }
 
-afterAll(() => {
-  cleanupGitHub();
-});
-
 describe("safeFileSha256", () => {
   const tmpFiles: string[] = [
+    "safefilesha256",
     path.join(process.env.RUNNER_TEMP || "", "file"),
     "/tmp/safewritefile",
   ];
@@ -125,6 +131,13 @@ describe("safeFileSha256", () => {
 
   it("calculates sha for file in RUNNER_TEMP", () => {
     const input = path.join(process.env.RUNNER_TEMP || "", "file");
+    const expected =
+      "1307990e6ba5ca145eb35e99182a9bec46531bc54ddf656a602c780fa0240dee";
+    expect(file.safeFileSha256(input)).toEqual(expected);
+  });
+
+  it("calculates sha for file in /tmp", () => {
+    const input = "/tmp/safewritefile";
     const expected =
       "1307990e6ba5ca145eb35e99182a9bec46531bc54ddf656a602c780fa0240dee";
     expect(file.safeFileSha256(input)).toEqual(expected);
@@ -825,6 +838,11 @@ describe("safePromises_stat", () => {
 
   it("path traversal tmp same start", async () => {
     const input = "/tmppath";
+    await expect(file.safePromises_stat(input)).rejects.toThrow();
+  });
+
+  it("path traversal runner tmp same start", async () => {
+    const input = (process.env.RUNNER_TEMP || "") + "path";
     await expect(file.safePromises_stat(input)).rejects.toThrow();
   });
 

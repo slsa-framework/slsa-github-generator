@@ -72,6 +72,11 @@ on:
         required: false
         type: boolean
         default: false
+      draft-release:
+        description: "If true, the release is created as a draft. Defaults to false."
+        required: false
+        type: boolean
+        default: false
     outputs:
       release-id:
         description: >
@@ -147,7 +152,7 @@ jobs:
         with:
           repository: "${{ needs.detect-env.outputs.repository }}"
           ref: "${{ needs.detect-env.outputs.ref }}"
-          go-version: 1.19
+          go-version: "1.20"
           binary: "${{ env.BUILDER_BINARY }}"
           compile-builder: "${{ inputs.compile-generator }}"
           directory: "${{ env.BUILDER_DIR }}"
@@ -237,6 +242,7 @@ jobs:
         if: inputs.upload-tag-name == ''
         id: release-new-tags
         with:
+          draft: ${{ inputs.draft-release }}
           files: |
             ${{ needs.generator.outputs.provenance-name }}
 
@@ -245,6 +251,7 @@ jobs:
         if: inputs.upload-tag-name != ''
         id: release-tag-name
         with:
+          draft: ${{ inputs.draft-release }}
           tag_name: "${{ inputs.upload-tag-name }}"
           files: |
             ${{ needs.generator.outputs.provenance-name }}
