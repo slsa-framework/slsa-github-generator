@@ -30,7 +30,7 @@
     },
     {
       "matchManagers": ["gomod"],
-      "excludePackageNames": ["go"],
+      "excludePackageNames": ["go", "github.com/in-toto/in-toto-golang"],
       "matchUpdateTypes": ["minor", "patch"],
       "groupName": "go"
     },

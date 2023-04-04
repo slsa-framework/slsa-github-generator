@@ -128,6 +128,11 @@ on:
         required: false
         type: string
         default: ""
+      draft-release:
+        description: "If true, the release is created as a draft. Defaults to false."
+        required: false
+        type: boolean
+        default: false
     outputs:
       build-outputs-name:
         description: "The name of the artifact where the generated artifacts are uploaded to the artifact registry."
@@ -211,7 +216,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [rng, detect-env, generate-builder]
     steps:
-      - uses: actions/checkout@24cb9080177205b6e8c946b17badbe402adc938f # v3.4.0
+      - uses: actions/checkout@8f4b7f84864484a7bf31766abe9204da3cbe65b3 # v3.5.0
       - name: Checkout builder repository
         uses: slsa-framework/slsa-github-generator/.github/actions/secure-builder-checkout@main
         with:
@@ -356,7 +361,7 @@ jobs:
           set-executable: true
 
       - name: Checkout the source repository
-        uses: actions/checkout@24cb9080177205b6e8c946b17badbe402adc938f # v3.4.0
+        uses: actions/checkout@8f4b7f84864484a7bf31766abe9204da3cbe65b3 # v3.5.0
         with:
           fetch-depth: 1
           persist-credentials: false
@@ -573,12 +578,13 @@ jobs:
           name: "${{ needs.build.outputs.build-outputs-name }}"
           path: "${{ needs.build.outputs.build-outputs-name }}"
 
+      # TODO(https://github.com/slsa-framework/slsa-github-generator/issues/1655): Use the
+      # secure-folder-download action.
       - name: Download provenance
-        uses: ./__BUILDER_CHECKOUT_DIR__/.github/actions/secure-download-artifact
+        uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
         with:
           name: "${{ needs.provenance.outputs.provenance-name }}"
           path: "${{ needs.provenance.outputs.provenance-name }}"
-          sha256: "${{ needs.provenance.outputs.provenance-sha256 }}"
 
       - name: Upload provenance new tag
         uses: softprops/action-gh-release@de2c0eb89ae2a093876385947365aca7b0e5f844 # v0.1.15
@@ -589,6 +595,7 @@ jobs:
           files: |
             ${{ needs.build.outputs.build-outputs-name }}
             ${{ needs.provenance.outputs.provenance-name }}
+          draft: ${{ inputs.draft-release }}
 
       - name: Upload provenance tag name
         uses: softprops/action-gh-release@de2c0eb89ae2a093876385947365aca7b0e5f844 # v0.1.15
@@ -599,6 +606,7 @@ jobs:
           files: |
             ${{ needs.build.outputs.build-outputs-name }}/*
             ${{ needs.provenance.outputs.provenance-name }}
+          draft: ${{ inputs.draft-release }}
 
   ###################################################################
   #                                                                 #
