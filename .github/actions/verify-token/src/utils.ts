@@ -54,7 +54,7 @@ export function parseCertificate(
     "base64"
   );
   const clientCertPath = "client.cert";
-  
+
   tscommon.safeWriteFileSync(clientCertPath, clientCertDer);
 
   // https://stackabuse.com/executing-shell-commands-with-node-js/
@@ -110,7 +110,7 @@ export function parseCertificate(
     .slice(indexSha + `${shaOid}:`.length)
     .replace("\n", "")
     .trim()
-    .slice(-(sha1ByteLen*2));
+    .slice(-(sha1ByteLen * 2));
   core.debug(`tool-sha: ${toolSha}`);
 
   const toolPath = removeSuffix(

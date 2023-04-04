@@ -23,15 +23,13 @@ export async function filterWorkflowInputs(
   hash: string,
   workflowPath: string
 ): Promise<rawTokenInterface> {
-  const ret = Object.create(slsaToken);
-  const wokflowInputs = new Map(Object.entries(slsaToken.tool.inputs));
   const url = `https://raw.githubusercontent.com/${repoName}/${hash}/${workflowPath}`;
   core.debug(`url: ${url}`);
 
   const headers = new fetch.Headers();
   headers.append("Authorization", `token ${ghToken}`);
   const response = await fetch.default(url);
-  if (response.status != 200) {
+  if (response.status !== 200) {
     throw new Error(`status error: ${response.status}`);
   }
   if (!response.body) {
@@ -40,7 +38,16 @@ export async function filterWorkflowInputs(
   const body = await response.text();
   core.info(`response: ${body}`);
 
-  const workflow: GitHubWorkflowInterface = YAML.parse(body);
+  return updateSLSAToken(body, slsaToken);
+}
+
+async function updateSLSAToken(
+  content: string,
+  slsaToken: rawTokenInterface
+): Promise<rawTokenInterface> {
+  const ret = Object.create(slsaToken);
+  const wokflowInputs = new Map(Object.entries(slsaToken.tool.inputs));
+  const workflow: GitHubWorkflowInterface = YAML.parse(content);
   if (!workflow.on) {
     throw new Error("no 'on' field");
   }
@@ -53,8 +60,10 @@ export async function filterWorkflowInputs(
     core.info("no input defined in the workflow");
     ret.tool.inputs = new Map();
   } else {
-    let wInputsMap = new Map(Object.entries(workflow.on.workflow_call.inputs));
-    const names =[ ...wokflowInputs.keys() ];
+    const wInputsMap = new Map(
+      Object.entries(workflow.on.workflow_call.inputs)
+    );
+    const names = [...wokflowInputs.keys()];
     for (const name of names) {
       core.info(`Processing name: ${name}`);
       if (!wInputsMap.has(name)) {
@@ -63,7 +72,6 @@ export async function filterWorkflowInputs(
       }
     }
   }
-
   // Update the inputs to record.
   ret.tool.inputs = wokflowInputs;
   return ret;

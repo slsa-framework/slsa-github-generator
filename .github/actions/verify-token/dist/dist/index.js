@@ -63,7 +63,7 @@ function run() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             /* Test locally. Requires a GitHub token:
-                $ rm client.cert && \
+                $ rm -f client.cert && rm -f predicate.json && \
                 env INPUT_SLSA-WORKFLOW-RECIPIENT="delegator_generic_slsa3.yml" \
                 INPUT_SLSA-UNVERIFIED-TOKEN="$(cat testdata/slsa-token)" \
                 INPUT_SLSA-VERSION="1.0-rc1" \
@@ -122,42 +122,23 @@ function run() {
             core.debug(`token: ${rawToken}`);
             const rawTokenStr = rawToken.toString();
             const rawTokenObj = JSON.parse(rawTokenStr);
-            /*
             // Verify the version.
-            validateField("version", rawTokenObj.version, 1);
-        
+            (0, validate_1.validateField)("version", rawTokenObj.version, 1);
             // Validate the slsaVersion
-            validateFieldAnyOf("slsaVersion", rawTokenObj.slsaVersion, [
-              "v1-rc1",
-              "v0.2",
+            (0, validate_1.validateFieldAnyOf)("slsaVersion", rawTokenObj.slsaVersion, [
+                "v1-rc1",
+                "v0.2",
             ]);
-        
             // Verify the context of the signature.
-            validateField("context", rawTokenObj.context, "SLSA delegator framework");
-        
+            (0, validate_1.validateField)("context", rawTokenObj.context, "SLSA delegator framework");
             // Verify the intended recipient.
-            validateField(
-              "builder.audience",
-              rawTokenObj.builder.audience,
-              workflowRecipient
-            );
-        
+            (0, validate_1.validateField)("builder.audience", rawTokenObj.builder.audience, workflowRecipient);
             // Verify the runner label.
-            validateFieldAnyOf(
-              "builder.runner_label",
-              rawTokenObj.builder.runner_label,
-              ["ubuntu-latest"]
-            );
-        
+            (0, validate_1.validateFieldAnyOf)("builder.runner_label", rawTokenObj.builder.runner_label, ["ubuntu-latest"]);
             // Verify the GitHub event information.
-            validateGitHubFields(rawTokenObj.github);
-        
+            (0, validate_1.validateGitHubFields)(rawTokenObj.github);
             // Validate the build Action is not empty.
-            validateFieldNonEmpty(
-              "tool.actions.build_artifacts.path",
-              rawTokenObj.tool.actions.build_artifacts.path
-            );
-        */
+            (0, validate_1.validateFieldNonEmpty)("tool.actions.build_artifacts.path", rawTokenObj.tool.actions.build_artifacts.path);
             // No validation needed for the builder inputs,
             // they may be empty.
             // TODO(#1780): test empty inputs.
@@ -269,14 +250,12 @@ const fetch = __importStar(__nccwpck_require__(4429));
 const YAML = __importStar(__nccwpck_require__(4083));
 function filterWorkflowInputs(slsaToken, ghToken, repoName, hash, workflowPath) {
     return __awaiter(this, void 0, void 0, function* () {
-        const ret = Object.create(slsaToken);
-        const wokflowInputs = new Map(Object.entries(slsaToken.tool.inputs));
         const url = `https://raw.githubusercontent.com/${repoName}/${hash}/${workflowPath}`;
         core.debug(`url: ${url}`);
         const headers = new fetch.Headers();
         headers.append("Authorization", `token ${ghToken}`);
         const response = yield fetch.default(url);
-        if (response.status != 200) {
+        if (response.status !== 200) {
             throw new Error(`status error: ${response.status}`);
         }
         if (!response.body) {
@@ -284,7 +263,15 @@ function filterWorkflowInputs(slsaToken, ghToken, repoName, hash, workflowPath) 
         }
         const body = yield response.text();
         core.info(`response: ${body}`);
-        const workflow = YAML.parse(body);
+        return updateSLSAToken(body, slsaToken);
+    });
+}
+exports.filterWorkflowInputs = filterWorkflowInputs;
+function updateSLSAToken(content, slsaToken) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const ret = Object.create(slsaToken);
+        const wokflowInputs = new Map(Object.entries(slsaToken.tool.inputs));
+        const workflow = YAML.parse(content);
         if (!workflow.on) {
             throw new Error("no 'on' field");
         }
@@ -297,12 +284,12 @@ function filterWorkflowInputs(slsaToken, ghToken, repoName, hash, workflowPath) 
             ret.tool.inputs = new Map();
         }
         else {
-            let wInputsMap = new Map(Object.entries(workflow.on.workflow_call.inputs));
+            const wInputsMap = new Map(Object.entries(workflow.on.workflow_call.inputs));
             const names = [...wokflowInputs.keys()];
             for (const name of names) {
                 core.info(`Processing name: ${name}`);
                 if (!wInputsMap.has(name)) {
-                    core.info(" - removed");
+                    core.info(" - Removed");
                     wokflowInputs.delete(name);
                 }
             }
@@ -312,7 +299,6 @@ function filterWorkflowInputs(slsaToken, ghToken, repoName, hash, workflowPath) 
         return ret;
     });
 }
-exports.filterWorkflowInputs = filterWorkflowInputs;
 
 
 /***/ }),

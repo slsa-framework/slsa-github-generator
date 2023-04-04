@@ -97,7 +97,7 @@ async function run(): Promise<void> {
 
     const rawTokenStr = rawToken.toString();
     const rawTokenObj: rawTokenInterface = JSON.parse(rawTokenStr);
-    /*
+
     // Verify the version.
     validateField("version", rawTokenObj.version, 1);
 
@@ -132,7 +132,7 @@ async function run(): Promise<void> {
       "tool.actions.build_artifacts.path",
       rawTokenObj.tool.actions.build_artifacts.path
     );
-*/
+
     // No validation needed for the builder inputs,
     // they may be empty.
     // TODO(#1780): test empty inputs.
