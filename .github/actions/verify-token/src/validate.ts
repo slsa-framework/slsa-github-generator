@@ -28,6 +28,7 @@ export function validateGitHubFields(gho: githubObj): void {
   // event_payload_sha256
   const eventPath = process.env.GITHUB_EVENT_PATH || "";
   validateFieldNonEmpty("GITHUB_EVENT_PATH", eventPath);
+  console.log("GITHUB_EVENT_PATH:", eventPath);
   validateField(
     "github.event_payload_sha256",
     gho.event_payload_sha256,
