@@ -3,6 +3,7 @@ import * as core from "@actions/core";
 import * as sigstore from "sigstore";
 import * as child_process from "child_process";
 import * as tscommon from "tscommon";
+import * as fetch from "node-fetch";
 
 // createURI creates the fully qualified URI out of the repository
 export function createURI(repository: string, ref: string): string {
@@ -158,4 +159,28 @@ function extractIdentifyFromSAN(URI: string): [string, string] {
   }
   const repo = `${parts2[0]}/${parts2[1]}`;
   return [repo, ref];
+}
+
+export async function fetchToolWorkflow(
+  ghToken: string,
+  repoName: string,
+  hash: string,
+  workflowPath: string
+): Promise<string> {
+  const url = `https://raw.githubusercontent.com/${repoName}/${hash}/${workflowPath}`;
+  core.debug(`url: ${url}`);
+
+  const headers = new fetch.Headers();
+  headers.append("Authorization", `token ${ghToken}`);
+  const response = await fetch.default(url);
+  if (response.status !== 200) {
+    throw new Error(`status error: ${response.status}`);
+  }
+  if (!response.body) {
+    throw new Error(`no body`);
+  }
+  const body = await response.text();
+  core.info(`response: ${body}`);
+
+  return body;
 }

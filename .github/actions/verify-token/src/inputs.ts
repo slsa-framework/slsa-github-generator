@@ -12,9 +12,9 @@ limitations under the License.
 */
 
 import * as core from "@actions/core";
-import * as fetch from "node-fetch";
 import * as YAML from "yaml";
 import { rawTokenInterface, GitHubWorkflowInterface } from "../src/types";
+import { fetchToolWorkflow } from "./utils";
 
 export async function filterWorkflowInputs(
   slsaToken: rawTokenInterface,
@@ -23,28 +23,19 @@ export async function filterWorkflowInputs(
   hash: string,
   workflowPath: string
 ): Promise<rawTokenInterface> {
-  const url = `https://raw.githubusercontent.com/${repoName}/${hash}/${workflowPath}`;
-  core.debug(`url: ${url}`);
-
-  const headers = new fetch.Headers();
-  headers.append("Authorization", `token ${ghToken}`);
-  const response = await fetch.default(url);
-  if (response.status !== 200) {
-    throw new Error(`status error: ${response.status}`);
-  }
-  if (!response.body) {
-    throw new Error(`no body`);
-  }
-  const body = await response.text();
-  core.info(`response: ${body}`);
-
-  return updateSLSAToken(body, slsaToken);
+  const content = await fetchToolWorkflow(
+    ghToken,
+    repoName,
+    hash,
+    workflowPath
+  );
+  return updateSLSAToken(content, slsaToken);
 }
 
-async function updateSLSAToken(
+export function updateSLSAToken(
   content: string,
   slsaToken: rawTokenInterface
-): Promise<rawTokenInterface> {
+): rawTokenInterface {
   const ret = Object.create(slsaToken);
   const wokflowInputs = new Map(Object.entries(slsaToken.tool.inputs));
   const workflow: GitHubWorkflowInterface = YAML.parse(content);
@@ -55,23 +46,32 @@ async function updateSLSAToken(
     throw new Error("no 'workflow_call' field");
   }
 
-  // No inputs defined for the builder.
+  // No inputs field defined.
   if (!workflow.on.workflow_call.inputs) {
     core.info("no input defined in the workflow");
     ret.tool.inputs = new Map();
-  } else {
-    const wInputsMap = new Map(
-      Object.entries(workflow.on.workflow_call.inputs)
-    );
-    const names = [...wokflowInputs.keys()];
-    for (const name of names) {
-      core.info(`Processing name: ${name}`);
-      if (!wInputsMap.has(name)) {
-        core.info(" - Removed");
-        wokflowInputs.delete(name);
-      }
+    return ret;
+  }
+
+  // Inputs defined.
+  const wInputsMap = new Map(Object.entries(workflow.on.workflow_call.inputs));
+
+  // No fields defined.
+  if (wInputsMap.size === 0) {
+    ret.tool.inputs = new Map();
+    return ret;
+  }
+
+  // Fields defined.
+  const names = [...wokflowInputs.keys()];
+  for (const name of names) {
+    core.info(`Processing name: ${name}`);
+    if (!wInputsMap.has(name)) {
+      core.info(" - Removed");
+      wokflowInputs.delete(name);
     }
   }
+
   // Update the inputs to record.
   ret.tool.inputs = wokflowInputs;
   return ret;

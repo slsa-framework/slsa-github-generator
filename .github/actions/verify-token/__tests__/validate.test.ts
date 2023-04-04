@@ -1,5 +1,5 @@
 /**
- * @fileoverview Tests for predicate.ts
+ * @fileoverview Tests for validate.ts
  */
 
 import {
