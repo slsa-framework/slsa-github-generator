@@ -245,7 +245,7 @@ jobs:
           set -euo pipefail
 
           publish_flags="--provenance ${ATTESTATION_PATH}"
-          if [[ "${UNTRUSTED_ACCESS}" != "" ]]; then
+          if [[ "${ACCESS}" != "" ]]; then
             publish_flags="${publish_flags} --access=${ACCESS}"
           fi
           if [[ "${DIST_TAG}" != "" ]]; then
