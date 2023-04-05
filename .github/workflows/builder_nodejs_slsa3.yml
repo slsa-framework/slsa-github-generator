@@ -269,7 +269,7 @@ jobs:
           draft: ${{ inputs.draft-release }}
 
       - name: Upload provenance tag name
-        usns: softprops/action-gh-release@de2c0eb89ae2a093876385947365aca7b0e5f844 # v0.1.15
+        uses: softprops/action-gh-release@de2c0eb89ae2a093876385947365aca7b0e5f844 # v0.1.15
         if: inputs.upload-assets && inputs.upload-tag-name != ''
         with:
           tag_name: "${{ inputs.upload-tag-name }}"
