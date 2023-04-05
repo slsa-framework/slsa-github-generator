@@ -57,6 +57,24 @@ on:
         description: "The npm registry auth token used to publish the package."
         required: true
 
+      upload-assets:
+        description: >
+          If true, provenance is uploaded to a GitHub release for new tags.
+          When the workflow does not run on a new tag, such as on a `workflow_dispatch`,
+          the `upload-tag-name` argument must be provided as well.
+        required: false
+        type: boolean
+        default: true
+
+      upload-tag-name:
+        description: >
+          If non-empty and `upload-assets` is set to true, the provenance is uploaded to the GitHub
+          release identified by the tag name. If a workflow is run on a new tag and `upload-tag-name`
+          is non-empty, the new tag is ignored and the value of `upload-tag-name` is used instead to upload
+          the assets.
+        type: string
+        default: ""
+
 jobs:
   slsa-setup:
     permissions:
@@ -151,17 +169,14 @@ jobs:
           # Install dependencies
           ./bin/npm ci
 
-      # TODO(#1669): Use mainline version of npm
-      # TODO(#1669): Generalize directory path checking. The same logic is needed in internal action.
-      - name: Publish the package
-        id: publish
+      # TODO(#1893): Generalize directory path checking. The same logic is needed in internal action.
+      - name: Validate outputs
+        id: validate-outputs
         env:
           UNTRUSTED_ACCESS: ${{ inputs.access }}
-          NODE_AUTH_TOKEN: ${{ secrets.node-auth-token }}
           ATTESTATION_DIR: ${{ steps.attestation-download.outputs.download-path }}
           UNTRUSTED_ATTESTATION_NAME: ${{ fromJSON(needs.slsa-run.outputs.build-artifacts-outputs).attestation-name }}
           UNTRUSTED_PACKAGE_FILENAME: ${{ fromJSON(needs.slsa-run.outputs.build-artifacts-outputs).package-filename }}
-          UNTRUSTED_DIRECTORY: ${{ inputs.directory }}
           UNTRUSTED_DIST_TAG: ${{ inputs.dist-tag }}
         run: |
           set -euo pipefail
@@ -191,9 +206,6 @@ jobs:
           # Directory was validated. Explicitly trust it.
           package_realpath="${untrusted_package_realpath}"
 
-          # Run npm publish using npm fork. We are temporarily using a fork so
-          # that we can specify the provenance bundle.
-          publish_flags="--provenance ${attestation_realpath}"
           if [[ "${UNTRUSTED_ACCESS}" != "" ]]; then
             # We need to validate the input so that it doesn't inject commands or other arguments.
             # We will let npm validate the input but we will just make sure it's a single alphabetic string.
@@ -201,8 +213,9 @@ jobs:
               >&2 echo "Access should be a string that matches [a-zA-Z]+"
               exit 1
             fi
-            publish_flags="${publish_flags} --access=${UNTRUSTED_ACCESS}"
           fi
+          # Access was validated. Explicitly trust it.
+          access="${UNTRUSTED_ACCESS}"
 
           if [[ "${UNTRUSTED_DIST_TAG}" != "" ]]; then
             # We need to validate the input so that it doesn't try to inject or other arguments.
@@ -210,8 +223,58 @@ jobs:
               >&2 echo "Tag should be a string that matches [a-zA-Z0-9]+"
               exit 1
             fi
-            publish_flags="${publish_flags} --tag=${UNTRUSTED_DIST_TAG}"
+          fi
+          # was validated. Explicitly trust it.
+          dist_tag="${UNTRUSTED_DIST_TAG}"
+
+          echo "attestation-path=${attestation_realpath}" >> "$GITHUB_OUTPUT"
+          echo "package-path=${package_realpath}" >> "$GITHUB_OUTPUT"
+          echo "access=${access}" >> "$GITHUB_OUTPUT"
+          echo "dist-tag=${dist_tag}" >> "$GITHUB_OUTPUT"
+
+      # TODO(#1669): Use mainline version of npm
+      - name: Publish the package
+        id: publish
+        env:
+          ACCESS: ${{ inputs.access }}
+          ATTESTATION_PATH: ${{ steps.validate-outputs.outputs.attestation-path }}
+          DIST_TAG: ${{ steps.validate-outputs.outputs.dist-tag }}
+          NODE_AUTH_TOKEN: ${{ secrets.node-auth-token }}
+          PACKAGE_PATH: ${{ steps.validate-outputs.outputs.package-path }}
+        run: |
+          set -euo pipefail
+
+          publish_flags="--provenance ${ATTESTATION_PATH}"
+          if [[ "${UNTRUSTED_ACCESS}" != "" ]]; then
+            publish_flags="${publish_flags} --access=${ACCESS}"
+          fi
+          if [[ "${DIST_TAG}" != "" ]]; then
+            publish_flags="${publish_flags} --tag=${DIST_TAG}"
           fi
 
+          # Run npm publish using npm fork. We are temporarily using a fork so
+          # that we can specify the provenance bundle.
           # NOTE: We don't quote $publish_flags because we are using word splitting to add the flags.
-          "$(dirname "$(which node)")"/node_modules/npm/bin/npm publish "${package_realpath}" ${publish_flags}
+          "$(dirname "$(which node)")"/node_modules/npm/bin/npm publish "${PACKAGE_PATH}" ${publish_flags}
+
+      - name: Upload provenance new tag
+        uses: softprops/action-gh-release@de2c0eb89ae2a093876385947365aca7b0e5f844 # v0.1.15
+        if: inputs.upload-assets && startsWith(github.ref, 'refs/tags/')
+        id: release-new-tags
+        with:
+          prerelease: ${{ inputs.prerelease }}
+          files: |
+            ${{ steps.validate-outputs.outputs.attestation-path }}
+            ${{ steps.validate-outputs.outputs.package-path }}
+          draft: ${{ inputs.draft-release }}
+
+      - name: Upload provenance tag name
+        usns: softprops/action-gh-release@de2c0eb89ae2a093876385947365aca7b0e5f844 # v0.1.15
+        if: inputs.upload-assets && inputs.upload-tag-name != ''
+        with:
+          tag_name: "${{ inputs.upload-tag-name }}"
+          prerelease: ${{ inputs.prerelease }}
+          files: |
+            ${{ steps.validate-outputs.outputs.attestation-path }}
+            ${{ steps.validate-outputs.outputs.package-path }}
+          draft: ${{ inputs.draft-release }}
