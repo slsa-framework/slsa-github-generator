@@ -66,7 +66,9 @@ export interface rawTokenInterface {
   };
 }
 
-export interface GitHubWorkflowInterface {
+// gitHubWorkflowInterface represents a GitHub Actions reusable workflow.
+// See: https://docs.github.com/en/actions/using-workflows/reusing-workflows#creating-a-reusable-workflow
+export interface gitHubWorkflowInterface {
   on: {
     workflow_call: {
       inputs: Map<string, Object>;

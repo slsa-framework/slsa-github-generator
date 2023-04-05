@@ -12,7 +12,7 @@ limitations under the License.
 */
 
 import * as core from "@actions/core";
-import * as sigstore from "sigstore";
+import { sigstore } from "sigstore";
 import {
   validateField,
   validateFieldAnyOf,
@@ -89,7 +89,7 @@ async function run(): Promise<void> {
 
     // First, verify the signature, i.e., that it is signed by a certificate that
     // chains up to Fulcio.
-    await sigstore.sigstore.verify(bundle, Buffer.from(b64Token));
+    await sigstore.verify(bundle, Buffer.from(b64Token));
 
     const rawToken = Buffer.from(b64Token, "base64");
     core.debug(`bundle: ${bundleStr}`);
@@ -143,7 +143,7 @@ async function run(): Promise<void> {
 
     // Extract the inputs.
     // See https://github.com/slsa-framework/slsa-github-generator/issues/1737.
-    const rawFinalTokenObj = await filterWorkflowInputs(
+    const rawFilteredTokenObj = await filterWorkflowInputs(
       rawTokenObj,
       ghToken,
       toolRepository,
@@ -152,12 +152,12 @@ async function run(): Promise<void> {
     );
     core.debug(
       `workflow inputs: ${JSON.stringify(
-        Object.fromEntries(rawFinalTokenObj.tool.inputs)
+        Object.fromEntries(rawFilteredTokenObj.tool.inputs)
       )}`
     );
 
     // Validate the masked inputs and update the token.
-    const rawMaskedTokenObj = validateAndMaskInputs(rawFinalTokenObj);
+    const rawMaskedTokenObj = validateAndMaskInputs(rawFilteredTokenObj);
     core.debug(
       `masked inputs: ${JSON.stringify(
         Object.fromEntries(rawMaskedTokenObj.tool.inputs)

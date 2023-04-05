@@ -13,9 +13,14 @@ limitations under the License.
 
 import * as core from "@actions/core";
 import * as YAML from "yaml";
-import { rawTokenInterface, GitHubWorkflowInterface } from "../src/types";
+import { rawTokenInterface, gitHubWorkflowInterface } from "../src/types";
 import { fetchToolWorkflow, asMap } from "./utils";
 
+// This function removes the fields from the workflow_dispatch,
+// and keeps only the inputs from the re-usable workflow.
+// We need to filter out event's inputs because GitHub
+// reports all of them via the `${{ inputs }}`,
+// see https://github.com/actions/runner/issues/2274.
 export async function filterWorkflowInputs(
   slsaToken: rawTokenInterface,
   ghToken: string,
@@ -37,7 +42,7 @@ export function updateSLSAToken(
   slsaToken: rawTokenInterface
 ): rawTokenInterface {
   const ret = Object.create(slsaToken);
-  const workflow: GitHubWorkflowInterface = YAML.parse(content);
+  const workflow: gitHubWorkflowInterface = YAML.parse(content);
   slsaToken.tool.inputs = asMap(slsaToken.tool.inputs);
   if (!workflow.on) {
     throw new Error("no 'on' field");

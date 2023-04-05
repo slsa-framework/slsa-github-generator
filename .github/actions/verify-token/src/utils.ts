@@ -1,9 +1,9 @@
 import { githubObj } from "./types";
 import * as core from "@actions/core";
-import * as sigstore from "sigstore";
+import { sigstore } from "sigstore";
 import * as child_process from "child_process";
 import * as tscommon from "tscommon";
-import * as fetch from "node-fetch";
+import * as github from "@actions/github";
 
 // createURI creates the fully qualified URI out of the repository
 export function createURI(repository: string, ref: string): string {
@@ -41,7 +41,7 @@ export function asMap(
 }
 
 export function parseCertificate(
-  bundle: sigstore.sigstore.Bundle
+  bundle: sigstore.Bundle
 ): [string, string, string, string, string] {
   if (bundle === undefined) {
     throw new Error(`undefined bundle.`);
@@ -179,20 +179,21 @@ export async function fetchToolWorkflow(
   hash: string,
   workflowPath: string
 ): Promise<string> {
-  const url = `https://raw.githubusercontent.com/${repoName}/${hash}/${workflowPath}`;
-  core.debug(`url: ${url}`);
+  const octokit = github.getOctokit(ghToken);
+  const [o, r] = repoName.split("/", 2);
+  const response = await octokit.rest.repos.getContent({
+    owner: o,
+    repo: r,
+    path: workflowPath,
+    ref: hash,
+  });
 
-  const headers = new fetch.Headers();
-  headers.append("Authorization", `token ${ghToken}`);
-  const response = await fetch.default(url);
-  if (response.status !== 200) {
-    throw new Error(`status error: ${response.status}`);
+  if (!("content" in response.data)) {
+    throw new Error("no data");
   }
-  if (!response.body) {
-    throw new Error(`no body`);
-  }
-  const body = await response.text();
-  core.info(`response: ${body}`);
 
-  return body;
+  // Content is base64 encoded.
+  const content = Buffer.from(response.data["content"], "base64").toString();
+  core.info(`content: ${content}`);
+  return content;
 }

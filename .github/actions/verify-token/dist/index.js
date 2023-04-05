@@ -52,7 +52,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core = __importStar(__nccwpck_require__(2186));
-const sigstore = __importStar(__nccwpck_require__(9149));
+const sigstore_1 = __nccwpck_require__(9149);
 const validate_1 = __nccwpck_require__(1997);
 const predicate1_1 = __nccwpck_require__(2338);
 const predicate02_1 = __nccwpck_require__(4816);
@@ -116,7 +116,7 @@ function run() {
             const bundle = JSON.parse(bundleStr);
             // First, verify the signature, i.e., that it is signed by a certificate that
             // chains up to Fulcio.
-            yield sigstore.sigstore.verify(bundle, Buffer.from(b64Token));
+            yield sigstore_1.sigstore.verify(bundle, Buffer.from(b64Token));
             const rawToken = Buffer.from(b64Token, "base64");
             core.debug(`bundle: ${bundleStr}`);
             core.debug(`token: ${rawToken}`);
@@ -146,10 +146,10 @@ function run() {
             const [toolURI, toolRepository, toolRef, toolSha, toolPath] = (0, utils_1.parseCertificate)(bundle);
             // Extract the inputs.
             // See https://github.com/slsa-framework/slsa-github-generator/issues/1737.
-            const rawFinalTokenObj = yield (0, inputs_1.filterWorkflowInputs)(rawTokenObj, ghToken, toolRepository, toolSha, toolPath);
-            core.debug(`workflow inputs: ${JSON.stringify(Object.fromEntries(rawFinalTokenObj.tool.inputs))}`);
+            const rawFilteredTokenObj = yield (0, inputs_1.filterWorkflowInputs)(rawTokenObj, ghToken, toolRepository, toolSha, toolPath);
+            core.debug(`workflow inputs: ${JSON.stringify(Object.fromEntries(rawFilteredTokenObj.tool.inputs))}`);
             // Validate the masked inputs and update the token.
-            const rawMaskedTokenObj = (0, validate_1.validateAndMaskInputs)(rawFinalTokenObj);
+            const rawMaskedTokenObj = (0, validate_1.validateAndMaskInputs)(rawFilteredTokenObj);
             core.debug(`masked inputs: ${JSON.stringify(Object.fromEntries(rawMaskedTokenObj.tool.inputs))}`);
             core.debug(`slsa-verified-token: ${rawTokenStr}`);
             // Now generate the SLSA predicate using the verified token and the GH context.
@@ -248,6 +248,11 @@ exports.updateSLSAToken = exports.filterWorkflowInputs = void 0;
 const core = __importStar(__nccwpck_require__(2186));
 const YAML = __importStar(__nccwpck_require__(4083));
 const utils_1 = __nccwpck_require__(918);
+// This function removes the fields from the workflow_dispatch,
+// and keeps only the inputs from the re-usable workflow.
+// We need to filter out event's inputs because GitHub
+// reports all of them via the `${{ inputs }}`,
+// see https://github.com/actions/runner/issues/2274.
 function filterWorkflowInputs(slsaToken, ghToken, repoName, hash, workflowPath) {
     return __awaiter(this, void 0, void 0, function* () {
         const content = yield (0, utils_1.fetchToolWorkflow)(ghToken, repoName, hash, workflowPath);
@@ -619,7 +624,7 @@ exports.fetchToolWorkflow = exports.parseCertificate = exports.asMap = exports.g
 const core = __importStar(__nccwpck_require__(2186));
 const child_process = __importStar(__nccwpck_require__(2081));
 const tscommon = __importStar(__nccwpck_require__(6634));
-const fetch = __importStar(__nccwpck_require__(467));
+const github = __importStar(__nccwpck_require__(5438));
 // createURI creates the fully qualified URI out of the repository
 function createURI(repository, ref) {
     if (!repository) {
@@ -763,20 +768,21 @@ function extractIdentifyFromSAN(URI) {
 }
 function fetchToolWorkflow(ghToken, repoName, hash, workflowPath) {
     return __awaiter(this, void 0, void 0, function* () {
-        const url = `https://raw.githubusercontent.com/${repoName}/${hash}/${workflowPath}`;
-        core.debug(`url: ${url}`);
-        const headers = new fetch.Headers();
-        headers.append("Authorization", `token ${ghToken}`);
-        const response = yield fetch.default(url);
-        if (response.status !== 200) {
-            throw new Error(`status error: ${response.status}`);
+        const octokit = github.getOctokit(ghToken);
+        const [o, r] = repoName.split("/", 2);
+        const response = yield octokit.rest.repos.getContent({
+            owner: o,
+            repo: r,
+            path: workflowPath,
+            ref: hash,
+        });
+        if (!("content" in response.data)) {
+            throw new Error("no data");
         }
-        if (!response.body) {
-            throw new Error(`no body`);
-        }
-        const body = yield response.text();
-        core.info(`response: ${body}`);
-        return body;
+        // Content is base64 encoded.
+        const content = Buffer.from(response.data["content"], "base64").toString();
+        core.info(`content: ${content}`);
+        return content;
     });
 }
 exports.fetchToolWorkflow = fetchToolWorkflow;
@@ -50430,7 +50436,7 @@ exports.fetchToolWorkflow = exports.parseCertificate = exports.asMap = exports.g
 const core = __importStar(__nccwpck_require__(2186));
 const child_process = __importStar(__nccwpck_require__(2081));
 const tscommon = __importStar(__nccwpck_require__(6634));
-const fetch = __importStar(__nccwpck_require__(467));
+const github = __importStar(__nccwpck_require__(5438));
 // createURI creates the fully qualified URI out of the repository
 function createURI(repository, ref) {
     if (!repository) {
@@ -50574,20 +50580,21 @@ function extractIdentifyFromSAN(URI) {
 }
 function fetchToolWorkflow(ghToken, repoName, hash, workflowPath) {
     return __awaiter(this, void 0, void 0, function* () {
-        const url = `https://raw.githubusercontent.com/${repoName}/${hash}/${workflowPath}`;
-        core.debug(`url: ${url}`);
-        const headers = new fetch.Headers();
-        headers.append("Authorization", `token ${ghToken}`);
-        const response = yield fetch.default(url);
-        if (response.status !== 200) {
-            throw new Error(`status error: ${response.status}`);
+        const octokit = github.getOctokit(ghToken);
+        const [o, r] = repoName.split("/", 2);
+        const response = yield octokit.rest.repos.getContent({
+            owner: o,
+            repo: r,
+            path: workflowPath,
+            ref: hash,
+        });
+        if (!("content" in response.data)) {
+            throw new Error("no data");
         }
-        if (!response.body) {
-            throw new Error(`no body`);
-        }
-        const body = yield response.text();
-        core.info(`response: ${body}`);
-        return body;
+        // Content is base64 encoded.
+        const content = Buffer.from(response.data["content"], "base64").toString();
+        core.info(`content: ${content}`);
+        return content;
     });
 }
 exports.fetchToolWorkflow = fetchToolWorkflow;
