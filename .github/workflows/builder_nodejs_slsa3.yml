@@ -67,7 +67,7 @@ jobs:
     steps:
       - name: Generate the token
         id: generate
-        uses: slsa-framework/slsa-github-generator/actions/delegator/setup-token@main
+        uses: slsa-framework/slsa-github-generator/actions/delegator/setup-token@v1.6.0-rc.0
         with:
           slsa-workflow-recipient: "delegator_generic_slsa3.yml"
           slsa-rekor-log-public: ${{ inputs.rekor-log-public }}
@@ -83,7 +83,7 @@ jobs:
       id-token: write # For signing.
       contents: write # For asset uploads.
       packages: write # For publishing to GitHub packages.
-    uses: slsa-framework/slsa-github-generator/.github/workflows/delegator_generic_slsa3.yml@main
+    uses: slsa-framework/slsa-github-generator/.github/workflows/delegator_generic_slsa3.yml@v1.6.0-rc.0
     with:
       slsa-token: ${{ needs.slsa-setup.outputs.slsa-token }}
 
@@ -111,7 +111,7 @@ jobs:
       # NOTE: secure-download-artifact ensures that the downloaded file doesn't overwrite an existing file.
       - name: Download package
         id: package-download
-        uses: slsa-framework/slsa-github-generator/.github/actions/secure-download-artifact@main
+        uses: slsa-framework/slsa-github-generator/.github/actions/secure-download-artifact@v1.6.0-rc.0
         with:
           name: ${{ fromJSON(needs.slsa-run.outputs.build-artifacts-outputs).package-download-name }}
           path: ${{ fromJSON(needs.slsa-run.outputs.build-artifacts-outputs).package-filename }}
