@@ -10,7 +10,7 @@ describe("getWorkflowPath", () => {
     const obj: githubObj = {
       actor_id: "",
       event_name: "",
-      event_path: "",
+      event_payload_sha256: "",
       ref: "",
       ref_type: "",
       repository: "octocat/hello-world",
@@ -33,7 +33,7 @@ describe("getWorkflowPath", () => {
     const obj: githubObj = {
       actor_id: "",
       event_name: "",
-      event_path: "",
+      event_payload_sha256: "",
       ref: "",
       ref_type: "",
       repository: "octocat/hello-world",

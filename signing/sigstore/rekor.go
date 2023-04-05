@@ -88,6 +88,10 @@ func (r *Rekor) Upload(ctx context.Context, att signing.Attestation) (signing.Lo
 	}
 
 	fmt.Printf("Uploaded signed attestation to rekor with UUID %s.\n", uuid)
+	fmt.Printf("You could use rekor-cli to view the log entry details:\n\n"+
+		"  $ rekor-cli get --uuid %[1]s\n\n"+
+		"In addition to that, you could also use the Rekor Search UI:\n\n"+
+		"  https://search.sigstore.dev/?uuid=%[1]s", uuid)
 	return &rekorEntryAnon{
 		entry: logEntry,
 		uuid:  uuid,
