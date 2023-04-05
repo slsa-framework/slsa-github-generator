@@ -77,7 +77,7 @@ jobs:
     steps:
       - name: Generate random 16-byte value (32-char hex encoded)
         id: rng
-        uses: slsa-framework/slsa-github-generator/.github/actions/rng@v1.6.0-rc.0
+        uses: slsa-framework/slsa-github-generator/.github/actions/rng@main
 
   # verify-token verifies the slsa token.
   verify-token:
@@ -91,7 +91,7 @@ jobs:
     steps:
       - name: Verify token with test action
         id: verify
-        uses: slsa-framework/slsa-github-generator/.github/actions/verify-token@v1.6.0-rc.0
+        uses: slsa-framework/slsa-github-generator/.github/actions/verify-token@main
         with:
           slsa-workflow-recipient: "delegator_generic_slsa3.yml"
           slsa-unverified-token: ${{ inputs.slsa-token }}
@@ -99,7 +99,7 @@ jobs:
 
       - name: Upload predicate
         id: upload
-        uses: slsa-framework/slsa-github-generator/.github/actions/secure-upload-artifact@v1.6.0-rc.0
+        uses: slsa-framework/slsa-github-generator/.github/actions/secure-upload-artifact@main
         with:
           name: "${{ needs.rng.outputs.value }}-${{ env.SLSA_PREDICATE_FILE }}"
           path: ${{ env.SLSA_PREDICATE_FILE }}
@@ -110,7 +110,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check private repos
-        uses: slsa-framework/slsa-github-generator/.github/actions/privacy-check@v1.6.0-rc.0
+        uses: slsa-framework/slsa-github-generator/.github/actions/privacy-check@main
         with:
           error_message: "Repository is private. The workflow has halted in order to keep the repository name from being exposed in the public transparency log. Set 'private-repository' to override."
           override: ${{ fromJson(needs.verify-token.outputs.slsa-verified-token).builder.rekor_log_public }}
@@ -138,7 +138,7 @@ jobs:
           echo "$RUNNER: $RUNNER"
 
       - name: Checkout the tool repository
-        uses: slsa-framework/slsa-github-generator/.github/actions/secure-builder-checkout@v1.6.0-rc.0
+        uses: slsa-framework/slsa-github-generator/.github/actions/secure-builder-checkout@main
         with:
           repository: ${{ needs.verify-token.outputs.tool-repository }}
           ref: ${{ needs.verify-token.outputs.tool-ref }}
@@ -162,7 +162,7 @@ jobs:
           tree
 
       - name: Checkout the project repository
-        uses: slsa-framework/slsa-github-generator/.github/actions/secure-project-checkout@v1.6.0-rc.0
+        uses: slsa-framework/slsa-github-generator/.github/actions/secure-project-checkout@main
 
       # NOTE: This calls the Action defined in the slsa-token.
       - name: Build artifacts
@@ -188,7 +188,7 @@ jobs:
 
       - name: Upload artifact layout file
         id: upload
-        uses: slsa-framework/slsa-github-generator/.github/actions/secure-upload-artifact@v1.6.0-rc.0
+        uses: slsa-framework/slsa-github-generator/.github/actions/secure-upload-artifact@main
         with:
           name: "${{ needs.rng.outputs.value }}-${{ env.SLSA_ARTIFACTS_FILE }}"
           path: "${{ env.SLSA_ARTIFACTS_FILE }}"
@@ -203,14 +203,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Download the artifact layout file
-        uses: slsa-framework/slsa-github-generator/.github/actions/secure-download-artifact@v1.6.0-rc.0
+        uses: slsa-framework/slsa-github-generator/.github/actions/secure-download-artifact@main
         with:
           name: "${{ needs.rng.outputs.value }}-${{ env.SLSA_ARTIFACTS_FILE }}"
           path: "${{ env.SLSA_ARTIFACTS_FILE }}"
           sha256: ${{ needs.build-artifacts-ubuntu.outputs.artifacts-layout-sha256 }}
 
       - name: Download the predicate file
-        uses: slsa-framework/slsa-github-generator/.github/actions/secure-download-artifact@v1.6.0-rc.0
+        uses: slsa-framework/slsa-github-generator/.github/actions/secure-download-artifact@main
         with:
           name: "${{ needs.rng.outputs.value }}-${{ env.SLSA_PREDICATE_FILE }}"
           path: ${{ env.SLSA_PREDICATE_FILE }}
@@ -240,7 +240,7 @@ jobs:
 
       - name: Generate attestations
         id: attestations
-        uses: slsa-framework/slsa-github-generator/.github/actions/generate-attestations@v1.6.0-rc.0
+        uses: slsa-framework/slsa-github-generator/.github/actions/generate-attestations@main
         with:
           slsa-layout-file: ${{ env.SLSA_ARTIFACTS_FILE }}
           predicate-type: ${{ steps.predicate-type.outputs.predicate-type }}
@@ -249,7 +249,7 @@ jobs:
 
       - name: Sign attestations
         id: sign
-        uses: slsa-framework/slsa-github-generator/.github/actions/sign-attestations@v1.6.0-rc.0
+        uses: slsa-framework/slsa-github-generator/.github/actions/sign-attestations@main
         with:
           attestations: attestations
           output-folder: "${{ needs.rng.outputs.value }}-slsa-attestations"
