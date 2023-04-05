@@ -113,10 +113,13 @@ This repository hosts the following builders:
 1. [Go Builder SLSA Level 3](internal/builders/go/README.md). **Status**: [available since v1.0.0](https://github.com/slsa-framework/slsa-github-generator/milestone/1).
    This builder builds and generates provenance for your [Go](https://go.dev/) projects. To use it,
    follow the [Go builder's README.md](internal/builders/go/README.md).
-2. _Container Builder SLSA Level 3_. **Status**: [WIP, expected release in Dec 2022](https://github.com/slsa-framework/slsa-github-generator/milestone/5).
+2. [Node.js Builder SLSA Level 3](internal/builders/nodejs/README.md).
+   **Status**: WIP, [expected Beta release Apr 2023](https://github.com/slsa-framework/slsa-github-generator/milestone/8),
+   [expected GA release Jun 2023](https://github.com/slsa-framework/slsa-github-generator/milestone/17).
+3. _Container Builder SLSA Level 3_. **Status**: [WIP, expected release by Jun 2023](https://github.com/slsa-framework/slsa-github-generator/milestone/5).
    This builder will build your container image and generate provenance. The generated provenance will be compatible with
    [cosign](https://github.com/sigstore/cosign)'s attestation format.
-3. _Dockerfile-based Builder SLSA Level 3_. **Status**: [WIP](https://github.com/slsa-framework/slsa-github-generator/milestone/4). This builder will build arbitrary
+4. _Dockerfile-based Builder SLSA Level 3_. **Status**: [WIP](https://github.com/slsa-framework/slsa-github-generator/milestone/4). This builder will build arbitrary
    artifacts using building steps defined in a Dockerfile.
 
 If you would rather build your project yourself, use the generators instead as explained in the next section.
