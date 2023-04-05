@@ -49,6 +49,10 @@ while approaching an initial release. You can track progress towards Beta via
 and towards General Availability via
 [this milestone](https://github.com/slsa-framework/slsa-github-generator/milestone/17).
 
+If you would like to test the workflow early please
+[create an issue](https://github.com/slsa-framework/slsa-github-generator/issues/new)
+and let us know.
+
 ## Generating Provenance
 
 The Node.js builder uses a Github Actions reusable workflow to build your
