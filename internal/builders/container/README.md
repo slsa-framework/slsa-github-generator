@@ -462,7 +462,7 @@ Verification of provenance attestations can be done via several different tools.
 
 Here is an example policy stored in `policy.cue`:
 
-```yaml
+```text
 // The predicateType field must match this string
 predicateType: "https://slsa.dev/provenance/v0.2"
 
@@ -495,6 +495,8 @@ We can then use `cosign` to verify the attestation using the policy.
 ```shell
 COSIGN_EXPERIMENTAL=1 cosign verify-attestation \
   --type slsaprovenance \
+  --certificate-oidc-issuer https://token.actions.githubusercontent.com \
+  --certificate-identity-regexp '^https://github.com/slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@refs/tags/v[0-9]+.[0-9]+.[0-9]+$' \
   --policy policy.cue \
   ghcr.io/ianlewis/actions-test:v0.0.79
 ```
@@ -508,7 +510,7 @@ Verification for ghcr.io/ianlewis/actions-test:v0.0.79 --
 The following checks were performed on each of these signatures:
   - The cosign claims were validated
   - Existence of the claims in the transparency log was verified offline
-  - Any certificates were verified against the Fulcio roots.
+  - The code-signing certificate was verified using trusted certificate authority certificates
 Certificate subject:  https://github.com/slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@refs/tags/v1.4.0
 Certificate issuer URL:  https://token.actions.githubusercontent.com
 GitHub Workflow Trigger: push
