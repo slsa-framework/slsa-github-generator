@@ -43,7 +43,9 @@ export function updateSLSAToken(
 ): rawTokenInterface {
   const ret = Object.create(slsaToken);
   const workflow: gitHubWorkflowInterface = YAML.parse(content);
-  slsaToken.tool.inputs = asMap(slsaToken.tool.inputs);
+  slsaToken.tool.inputs = asMap<string | number | boolean>(
+    slsaToken.tool.inputs
+  );
   if (!workflow.on) {
     throw new Error("no 'on' field");
   }
@@ -59,7 +61,7 @@ export function updateSLSAToken(
   }
 
   // Inputs defined.
-  const wInputsMap = new Map(Object.entries(workflow.on.workflow_call.inputs));
+  const wInputsMap = asMap<Object>(workflow.on.workflow_call.inputs);
 
   // No fields defined.
   if (wInputsMap.size === 0) {

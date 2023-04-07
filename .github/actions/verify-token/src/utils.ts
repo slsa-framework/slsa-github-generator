@@ -28,14 +28,16 @@ export function getWorkflowPath(obj: githubObj): string {
     .split("@", 1)[0];
 }
 
-export function asMap(
-  inputs: Map<string, string | number | boolean>
-): Map<string, string | number | boolean> {
+// This function takes an Object and
+// creates a Map. Both JSON.parse() and YAML.parse()
+// return Object for fields that are declared as Map, so we need
+// to create a Map for it.
+export function asMap<T>(inputs: Map<string, T>): Map<string, T> {
   if (!inputs) {
-    return new Map<string, string | number | boolean>();
+    return new Map<string, T>();
   }
   if (!(inputs instanceof Map)) {
-    return new Map<string, string | number | boolean>(Object.entries(inputs));
+    return new Map<string, T>(Object.entries(inputs));
   }
   return inputs;
 }

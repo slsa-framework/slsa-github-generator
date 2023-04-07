@@ -108,7 +108,9 @@ export function validateAndMaskInputs(
   slsaToken: rawTokenInterface
 ): rawTokenInterface {
   const toolInputs = slsaToken.tool.masked_inputs;
-  slsaToken.tool.inputs = asMap(slsaToken.tool.inputs);
+  slsaToken.tool.inputs = asMap<string | number | boolean>(
+    slsaToken.tool.inputs
+  );
   if (
     toolInputs === undefined ||
     // If TRW provides an empty argument, it's a 1-length array

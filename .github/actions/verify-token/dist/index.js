@@ -277,7 +277,7 @@ function updateSLSAToken(content, slsaToken) {
         return ret;
     }
     // Inputs defined.
-    const wInputsMap = new Map(Object.entries(workflow.on.workflow_call.inputs));
+    const wInputsMap = (0, utils_1.asMap)(workflow.on.workflow_call.inputs);
     // No fields defined.
     if (wInputsMap.size === 0) {
         ret.tool.inputs = new Map();
@@ -648,6 +648,10 @@ function getWorkflowPath(obj) {
         .split("@", 1)[0];
 }
 exports.getWorkflowPath = getWorkflowPath;
+// This function takes an Object and
+// creates a Map. Both JSON.parse() and YAML.parse()
+// return Object for fields that are declared as Map, so we need
+// to create a Map for it.
 function asMap(inputs) {
     if (!inputs) {
         return new Map();
@@ -50460,6 +50464,10 @@ function getWorkflowPath(obj) {
         .split("@", 1)[0];
 }
 exports.getWorkflowPath = getWorkflowPath;
+// This function takes an Object and
+// creates a Map. Both JSON.parse() and YAML.parse()
+// return Object for fields that are declared as Map, so we need
+// to create a Map for it.
 function asMap(inputs) {
     if (!inputs) {
         return new Map();
