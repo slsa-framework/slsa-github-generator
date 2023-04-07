@@ -108,8 +108,6 @@ https://github.com/slsa-framework/slsa-github-generator/compare/v1.5.0...v1.6.0
 
 ## v1.5.0
 
-<!-- Information on the next release will be added here. -->
-
 ### Summary of changes
 
 #### Go builder
