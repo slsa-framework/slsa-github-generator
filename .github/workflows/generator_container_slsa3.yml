@@ -94,7 +94,7 @@ jobs:
       - name: Detect the generator ref
         id: detect
         continue-on-error: true
-        uses: slsa-framework/slsa-github-generator/.github/actions/detect-workflow@v1.6.0-rc.0
+        uses: slsa-framework/slsa-github-generator/.github/actions/detect-workflow@main
 
       - name: Final outcome
         id: final
@@ -125,7 +125,7 @@ jobs:
       - name: Generate builder
         id: generate-builder
         continue-on-error: true
-        uses: slsa-framework/slsa-github-generator/.github/actions/generate-builder@v1.6.0-rc.0
+        uses: slsa-framework/slsa-github-generator/.github/actions/generate-builder@main
         with:
           repository: "${{ needs.detect-env.outputs.repository }}"
           ref: "${{ needs.detect-env.outputs.ref }}"
@@ -146,7 +146,7 @@ jobs:
           service_account: ${{ inputs.gcp-service-account }}
 
       - id: cosign-install
-        uses: sigstore/cosign-installer@c3667d99424e7e6047999fb6246c0da843953c65 # v3.0.1
+        uses: sigstore/cosign-installer@9e9de2292db7abb3f51b7f4808d98f0d347a8919 # v3.0.2
         with:
           cosign-release: v2.0.0
         continue-on-error: true
