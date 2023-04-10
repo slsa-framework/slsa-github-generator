@@ -11,6 +11,7 @@ This is a document to describe the release process for the slsa-github-generator
 - [Prerequisites](#prerequisites)
 - [Release candidate](#release-candidate)
   - [Update CHANGELOG](#update-changelog)
+  - [Update dependencies](#update-dependencies)
   - [RC tagging](#rc-tagging)
   - [Verify RC version references](#verify-rc-version-references)
   - [Adversarial verifier tests](#adversarial-verifier-tests)
@@ -67,6 +68,12 @@ If any tests fail for a release candidate you can address the issues and create 
 ### Update CHANGELOG
 
 Finalize the [CHANGELOG](./CHANGELOG.md) entry for the release candidate noting changes since the last release or release candidate.
+
+### Update dependencies
+
+In order to minimize vulnerabilities in releases, merge
+[outstanding PRs from Renovate](https://github.com/slsa-framework/slsa-github-generator/pulls/renovate-bot)
+as best as possible. Renovate PRs that update major versions can be skipped.
 
 ### RC tagging
 
