@@ -11,6 +11,7 @@ This is a document to describe the release process for the slsa-github-generator
 - [Prerequisites](#prerequisites)
 - [Release candidate](#release-candidate)
   - [Update CHANGELOG](#update-changelog)
+  - [Update dependencies](#update-dependencies)
   - [RC tagging](#rc-tagging)
   - [Verify RC version references](#verify-rc-version-references)
   - [Adversarial verifier tests](#adversarial-verifier-tests)
