@@ -68,6 +68,12 @@ If any tests fail for a release candidate you can address the issues and create 
 
 Finalize the [CHANGELOG](./CHANGELOG.md) entry for the release candidate noting changes since the last release or release candidate.
 
+### Update dependencies
+
+In order to minimize vulnerabilities in releases, merge
+[outstanding PRs from Renovate](https://github.com/slsa-framework/slsa-github-generator/pulls/renovate-bot)
+as best as possible. Renovate PRs that update major versions can be skipped.
+
 ### RC tagging
 
 Create a new tag for the Release Candidate via [slsa-framework/slsa-github-generator/releases/new](https://github.com/slsa-framework/slsa-github-generator/releases/new). The tag _MUST_ be a "canonical" [semantic version](https://semver.org/) without metadata (`$BUILDER_TAG`). Shorter versions are not accepted by the builder's and verifier's code.
