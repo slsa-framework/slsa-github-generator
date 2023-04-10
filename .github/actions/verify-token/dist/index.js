@@ -35820,14 +35820,20 @@ module.exports = validRange
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.toCertificateRequest = void 0;
-function toCertificateRequest(publicKey, challenge) {
+function toCertificateRequest(identityToken, publicKey, challenge) {
     return {
-        publicKey: {
-            content: publicKey
-                .export({ type: 'spki', format: 'der' })
-                .toString('base64'),
+        credentials: {
+            oidcIdentityToken: identityToken,
         },
-        signedEmailAddress: challenge.toString('base64'),
+        publicKeyRequest: {
+            publicKey: {
+                algorithm: 'ECDSA',
+                content: publicKey
+                    .export({ format: 'pem', type: 'spki' })
+                    .toString('ascii'),
+            },
+            proofOfPossession: challenge.toString('base64'),
+        },
     };
 }
 exports.toCertificateRequest = toCertificateRequest;
@@ -35844,17 +35850,16 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.CAClient = void 0;
 const client_1 = __nccwpck_require__(3969);
 const error_1 = __nccwpck_require__(6274);
-const util_1 = __nccwpck_require__(6901);
 const format_1 = __nccwpck_require__(609);
 class CAClient {
     constructor(options) {
         this.fulcio = new client_1.Fulcio({ baseURL: options.fulcioBaseURL });
     }
     async createSigningCertificate(identityToken, publicKey, challenge) {
-        const request = (0, format_1.toCertificateRequest)(publicKey, challenge);
+        const request = (0, format_1.toCertificateRequest)(identityToken, publicKey, challenge);
         try {
-            const certificate = await this.fulcio.createSigningCertificate(identityToken, request);
-            return util_1.pem.split(certificate);
+            const certificate = await this.fulcio.createSigningCertificate(request);
+            return certificate.signedCertificateEmbeddedSct.chain.certificates;
         }
         catch (err) {
             throw new error_1.InternalError('error creating signing certificate', err);
@@ -36210,22 +36215,20 @@ class Fulcio {
             retry: { retries: 2 },
             timeout: 5000,
             headers: {
-                Accept: 'application/pem-certificate-chain',
                 'Content-Type': 'application/json',
                 'User-Agent': util_1.ua.getUserAgent(),
             },
         });
         this.baseUrl = options.baseURL;
     }
-    async createSigningCertificate(idToken, request) {
-        const url = `${this.baseUrl}/api/v1/signingCert`;
+    async createSigningCertificate(request) {
+        const url = `${this.baseUrl}/api/v2/signingCert`;
         const response = await this.fetch(url, {
             method: 'POST',
-            headers: { Authorization: `Bearer ${idToken}` },
             body: JSON.stringify(request),
         });
         (0, error_1.checkStatus)(response);
-        const data = await response.text();
+        const data = await response.json();
         return data;
     }
 }
@@ -36539,8 +36542,13 @@ const oauth_1 = __nccwpck_require__(7141);
  * @param clientSecret Client secret for the issuer (optional)
  * @returns {Provider}
  */
-function oauthProvider(issuer, clientID, clientSecret) {
-    return new oauth_1.OAuthProvider(new issuer_1.Issuer(issuer), clientID, clientSecret);
+function oauthProvider(options) {
+    return new oauth_1.OAuthProvider({
+        issuer: new issuer_1.Issuer(options.issuer),
+        clientID: options.clientID,
+        clientSecret: options.clientSecret,
+        redirectURL: options.redirectURL,
+    });
 }
 /**
  * ciContextProvider returns a new Provider instance which attempts to retrieve
@@ -36653,10 +36661,11 @@ const make_fetch_happen_1 = __importDefault(__nccwpck_require__(9525));
 const url_1 = __nccwpck_require__(7310);
 const util_1 = __nccwpck_require__(6901);
 class OAuthProvider {
-    constructor(issuer, clientID, clientSecret) {
-        this.clientID = clientID;
-        this.clientSecret = clientSecret || '';
-        this.issuer = issuer;
+    constructor(options) {
+        this.clientID = options.clientID;
+        this.clientSecret = options.clientSecret || '';
+        this.issuer = options.issuer;
+        this.redirectURI = options.redirectURL;
         this.codeVerifier = generateRandomString(32);
         this.state = generateRandomString(16);
     }
@@ -36670,9 +36679,20 @@ class OAuthProvider {
     async initiateAuthRequest() {
         const server = http_1.default.createServer();
         const sockets = new Set();
-        // Start server and wait till it is listening
+        // Start server and wait till it is listening. If a redirect URL was
+        // provided, use that. Otherwise, use a random port and construct the
+        // redirect URL.
         await new Promise((resolve) => {
-            server.listen(0, resolve);
+            if (this.redirectURI) {
+                const url = new url_1.URL(this.redirectURI);
+                server.listen(Number(url.port), url.hostname, resolve);
+            }
+            else {
+                server.listen(0, resolve);
+                // Get port the server is listening on and construct the server URL
+                const port = server.address().port;
+                this.redirectURI = `http://localhost:${port}`;
+            }
         });
         // Keep track of connections to the server so we can force a shutdown
         server.on('connection', (socket) => {
@@ -36681,9 +36701,6 @@ class OAuthProvider {
                 sockets.delete(socket);
             });
         });
-        // Get port the server is listening on and construct the server URL
-        const port = server.address().port;
-        this.redirectURI = `http://localhost:${port}`;
         const result = new Promise((resolve, reject) => {
             // Set-up handler for post-auth redirect
             server.on('request', (req, res) => {
@@ -37135,7 +37152,12 @@ function configureIdentityProviders(options) {
     else {
         idps.push(identity_1.default.ciContextProvider());
         if (options.oidcIssuer && options.oidcClientID) {
-            idps.push(identity_1.default.oauthProvider(options.oidcIssuer, options.oidcClientID, options.oidcClientSecret));
+            idps.push(identity_1.default.oauthProvider({
+                issuer: options.oidcIssuer,
+                clientID: options.oidcClientID,
+                clientSecret: options.oidcClientSecret,
+                redirectURL: options.oidcRedirectURL,
+            }));
         }
     }
     return idps;
@@ -38524,7 +38546,7 @@ exports.extractJWTSubject = extractJWTSubject;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.fromDER = exports.toDER = exports.split = void 0;
+exports.fromDER = exports.toDER = void 0;
 /*
 Copyright 2022 The Sigstore Authors.
 
@@ -38542,27 +38564,6 @@ limitations under the License.
 */
 const PEM_HEADER = /-----BEGIN (.*)-----/;
 const PEM_FOOTER = /-----END (.*)-----/;
-// Given a set of PEM-encoded certificates bundled in a single string, returns
-// an array of certificates. Standard PEM encoding dictates that each certificate
-// should have a trailing newline after the footer.
-function split(certificate) {
-    const certs = [];
-    let cert = [];
-    certificate.split('\n').forEach((line) => {
-        line.includes;
-        if (line.match(PEM_HEADER)) {
-            cert = [];
-        }
-        if (line.length > 0) {
-            cert.push(line);
-        }
-        if (line.match(PEM_FOOTER)) {
-            certs.push(cert.join('\n').concat('\n'));
-        }
-    });
-    return certs;
-}
-exports.split = split;
 function toDER(certificate) {
     let der = '';
     certificate.split('\n').forEach((line) => {
@@ -38744,8 +38745,8 @@ class ByteStream {
         this.view = newView;
     }
 }
-exports.ByteStream = ByteStream;
 ByteStream.BLOCK_SIZE = 1024;
+exports.ByteStream = ByteStream;
 
 
 /***/ }),
@@ -39072,27 +39073,14 @@ const length_1 = __nccwpck_require__(8884);
 const parse_1 = __nccwpck_require__(1350);
 const tag_1 = __nccwpck_require__(1071);
 class ASN1Obj {
-    constructor(tag, headerLength, buf, subs) {
+    constructor(tag, value, subs) {
         this.tag = tag;
-        this.headerLength = headerLength;
-        this.buf = buf;
+        this.value = value;
         this.subs = subs;
     }
     // Constructs an ASN.1 object from a Buffer of DER-encoded bytes.
     static parseBuffer(buf) {
         return parseStream(new stream_1.ByteStream(buf));
-    }
-    // Returns the raw bytes of the ASN.1 object's value. For constructed objects,
-    // this is the concatenation of the raw bytes of the values of its children.
-    // For primitive objects, this is the raw bytes of the object's value.
-    // Use the various to* methods to parse the value into a specific type.
-    get value() {
-        return this.buf.subarray(this.headerLength);
-    }
-    // Returns the raw bytes of the entire ASN.1 object (including tag, length,
-    // and value)
-    get raw() {
-        return this.buf;
     }
     toDER() {
         const valueStream = new stream_1.ByteStream();
@@ -39164,13 +39152,11 @@ exports.ASN1Obj = ASN1Obj;
 /////////////////////////////////////////////////////////////////////////////
 // Internal stream parsing functions
 function parseStream(stream) {
-    // Capture current stream position so we know where this object starts
-    const startPos = stream.position;
-    // Parse tag and length from stream
+    // Parse tag, length, and value from stream
     const tag = new tag_1.ASN1Tag(stream.getUint8());
     const len = (0, length_1.decodeLength)(stream);
-    // Calculate length of header (tag + length)
-    const header = stream.position - startPos;
+    const value = stream.slice(stream.position, len);
+    const start = stream.position;
     let subs = [];
     // If the object is constructed, parse its children. Sometimes, children
     // are embedded in OCTESTRING objects, so we need to check those
@@ -39190,11 +39176,9 @@ function parseStream(stream) {
     }
     // If there are no children, move stream cursor to the end of the object
     if (subs.length === 0) {
-        stream.seek(startPos + header + len);
+        stream.seek(start + len);
     }
-    // Capture the raw bytes of the object (including tag, length, and value)
-    const buf = stream.slice(startPos, header + len);
-    return new ASN1Obj(tag, header, buf, subs);
+    return new ASN1Obj(tag, value, subs);
 }
 function collectSubs(stream, len) {
     // Calculate end of object content
@@ -39510,7 +39494,7 @@ class x509Certificate {
         return this.subjectObj.value;
     }
     get publicKey() {
-        return this.subjectPublicKeyInfoObj.raw;
+        return this.subjectPublicKeyInfoObj.toDER();
     }
     get signatureAlgorithm() {
         const oid = this.signatureAlgorithmObj.subs[0].toOID();
@@ -39566,13 +39550,13 @@ class x509Certificate {
         // Use the issuer's public key if provided, otherwise use the subject's
         const publicKey = issuerCertificate?.publicKey || this.publicKey;
         const key = util_1.crypto.createPublicKey(publicKey);
-        return util_1.crypto.verifyBlob(this.tbsCertificate.raw, key, this.signatureValue, this.signatureAlgorithm);
+        return util_1.crypto.verifyBlob(this.tbsCertificate.toDER(), key, this.signatureValue, this.signatureAlgorithm);
     }
     validForDate(date) {
         return this.notBefore <= date && date <= this.notAfter;
     }
     equals(other) {
-        return this.root.raw.equals(other.root.raw);
+        return this.root.toDER().equals(other.root.toDER());
     }
     verifySCTs(issuer, logs) {
         let extSCT;
@@ -39618,8 +39602,9 @@ class x509Certificate {
     }
     // Creates a copy of the certificate with a new buffer
     clone() {
-        const clone = Buffer.alloc(this.root.raw.length);
-        this.root.raw.copy(clone);
+        const der = this.root.toDER();
+        const clone = Buffer.alloc(der.length);
+        der.copy(clone);
         return x509Certificate.parse(clone);
     }
     findExtension(oid) {
@@ -51469,7 +51454,7 @@ module.exports = {"i8":"3.0.1"};
 /***/ ((module) => {
 
 "use strict";
-module.exports = {"i8":"1.1.1"};
+module.exports = {"i8":"1.2.0"};
 
 /***/ }),
 
