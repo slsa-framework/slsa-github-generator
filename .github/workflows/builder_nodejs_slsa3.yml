@@ -133,7 +133,7 @@ jobs:
       provenance-name: ${{ steps.generate-outputs.outputs.provenance-name }}
       release-asset-name: ${{ steps.generate-outputs.outputs.release-asset-name }}
       release-id: ${{ steps.generate-outputs.outputs.release-id }}
-      release-proveance-name: ${{ steps.generate-outputs.outputs.release-provenance-name }}
+      release-provenance-name: ${{ steps.generate-outputs.outputs.release-provenance-name }}
     if: ${{ inputs.npm-publish }}
     permissions:
       contents: write # For asset uploads. Optional
@@ -336,5 +336,5 @@ jobs:
           echo "artifact-name=${UNTRUSTED_ARTIFACT_NAME}" >> "$GITHUB_OUTPUT"
           echo "provenance-name=${PROVENANCE_NAME}" >> "$GITHUB_OUTPUT"
 
-          echo "release-artifact-name=$(basename ${ATTESTATION_PATH})" >> "$GITHUB_OUTPUT"
+          echo "release-asset-name=$(basename ${ATTESTATION_PATH})" >> "$GITHUB_OUTPUT"
           echo "release-provenance-name=$(basename ${PACKAGE_PATH})" >> "$GITHUB_OUTPUT"
