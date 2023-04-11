@@ -75,6 +75,27 @@ on:
         description: "The npm registry auth token used to publish the package."
         required: true
 
+    outputs:
+      artifact-name:
+        description: "The name of the package artifact uploaded to the workflow run."
+        value: ${{ jobs.slsa-publish.outputs.artifact-name }}
+
+      provenance-name:
+        description: "The name of the provenance attestation uploaded to the workflow run."
+        value: ${{ jobs.slsa-publish.outputs.provenance-name }}
+
+      release-asset-name:
+        description: "The package asset name uploaded to the release (if upload-assets is true). e.g. sigstore-1.1.1.tgz"
+        value: ${{ jobs.slsa-publish.outputs.release-asset-name }}
+
+      release-id:
+        description: "The name of the release where the package tarball and provenance were uploaded (if upload-assets is true)."
+        value: ${{ jobs.slsa-publish.outputs.release-id }}
+
+      release-provenance-name:
+        description: "The provenance asset name uploaded to the release (if upload-assets is true). e.g. sigstore-1.1.1.intoto.jsonl"
+        value: ${{ jobs.slsa-publish.outputs.release-provenance-name }}
+
 jobs:
   slsa-setup:
     permissions:
@@ -107,6 +128,12 @@ jobs:
 
   slsa-publish:
     needs: [slsa-run]
+    outputs:
+      artifact-name: ${{ steps.generate-outputs.outputs.artifact-name }}
+      provenance-name: ${{ steps.generate-outputs.outputs.provenance-name }}
+      release-asset-name: ${{ steps.generate-outputs.outputs.release-asset-name }}
+      release-id: ${{ steps.generate-outputs.outputs.release-id }}
+      release-provenance-name: ${{ steps.generate-outputs.outputs.release-provenance-name }}
     if: ${{ inputs.npm-publish }}
     permissions:
       contents: write # For asset uploads. Optional
@@ -258,9 +285,9 @@ jobs:
           "$(dirname "$(which node)")"/node_modules/npm/bin/npm publish "${PACKAGE_PATH}" ${publish_flags}
 
       - name: Upload provenance new tag
+        id: release-new-tags
         uses: softprops/action-gh-release@de2c0eb89ae2a093876385947365aca7b0e5f844 # v0.1.15
         if: inputs.upload-assets && startsWith(github.ref, 'refs/tags/') && inputs.upload-tag-name == ''
-        id: release-new-tags
         with:
           prerelease: ${{ inputs.prerelease }}
           files: |
@@ -269,6 +296,7 @@ jobs:
           draft: ${{ inputs.draft-release }}
 
       - name: Upload provenance tag name
+        id: release-tag-name
         uses: softprops/action-gh-release@de2c0eb89ae2a093876385947365aca7b0e5f844 # v0.1.15
         if: inputs.upload-assets && inputs.upload-tag-name != ''
         with:
@@ -278,3 +306,35 @@ jobs:
             ${{ steps.validate-outputs.outputs.attestation-path }}
             ${{ steps.validate-outputs.outputs.package-path }}
           draft: ${{ inputs.draft-release }}
+
+      - name: Generate outputs
+        shell: bash
+        id: generate-outputs
+        env:
+          RELEASE_ID_NEW_TAGS: "${{ steps.release-new-tags.outputs.id }}"
+          RELEASE_ID_TAG_NAME: "${{ steps.release-tag-name.outputs.id }}"
+          UNTRUSTED_ARTIFACT_NAME: "${{ fromJSON(needs.slsa-run.outputs.build-artifacts-outputs).package-download-name }}"
+          PROVENANCE_NAME: "${{ needs.slsa-run.outputs.attestations-download-name }}"
+          ATTESTATION_PATH: "${{ steps.validate-outputs.outputs.attestation-path }}"
+          PACKAGE_PATH: "${{ steps.validate-outputs.outputs.package-path }}"
+        run: |
+          set -euo pipefail
+          release_id=""
+          if [[ -n "${RELEASE_ID_NEW_TAGS}" ]]; then
+            release_id="${RELEASE_ID_NEW_TAGS}"
+          elif [[ -n "${RELEASE_ID_TAG_NAME}" ]]; then
+            release_id="${RELEASE_ID_TAG_NAME}"
+          else
+            # This should never happen (unless previous steps fail).
+            echo "internal error"
+            exit 1
+          fi
+          echo "release-id=${release_id}" >> "$GITHUB_OUTPUT"
+
+          # NOTE: Re: UNTRUSTED: Technically the build could provide a package file that
+          # doesn't match the provenance but it would fail validation.
+          echo "artifact-name=${UNTRUSTED_ARTIFACT_NAME}" >> "$GITHUB_OUTPUT"
+          echo "provenance-name=${PROVENANCE_NAME}" >> "$GITHUB_OUTPUT"
+
+          echo "release-asset-name=$(basename ${ATTESTATION_PATH})" >> "$GITHUB_OUTPUT"
+          echo "release-provenance-name=$(basename ${PACKAGE_PATH})" >> "$GITHUB_OUTPUT"
