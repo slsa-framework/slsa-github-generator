@@ -38,6 +38,7 @@ type that provides the full details on the build process.
   - [The `dry-run` subcommand](#the-dry-run-subcommand)
   - [The `build` subcommand](#the-build-subcommand)
   - [The `verify` command](#the-verify-command)
+- [Users](#users)
 
 <!-- tocstop -->
 
@@ -395,3 +396,12 @@ Here is an example:
 ```bash
 go run *.go verify --provenance-path testdata/slsa1-provenance.json
 ```
+
+## Users
+
+The following project currently use the container-based workflow:
+
+- [Oak](https://github.com/project-oak/oak); See [the workflow file](https://github.com/project-oak/oak/blob/main/.github/workflows/provenance.yaml)
+
+We welcome any success stories. Please create a PR to add your project to the
+list, if you are using the container-based workflow.
