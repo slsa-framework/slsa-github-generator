@@ -79,7 +79,7 @@ jobs:
       compile-builder: true
 
   # Docker-based builder.
-  go-builder:
+  docker-builder:
     needs: [pre-release-refs]
     permissions:
       id-token: write # For signing.
