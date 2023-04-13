@@ -12,8 +12,7 @@ limitations under the License.
 */
 
 import * as core from "@actions/core";
-import * as sigstore from "sigstore";
-import * as child_process from "child_process";
+import { sigstore } from "sigstore";
 import {
   validateField,
   validateFieldAnyOf,
@@ -24,12 +23,15 @@ import {
 import { createPredicate as createPredicate_v1 } from "./predicate1";
 import { createPredicate as createPredicate_v02 } from "./predicate02";
 import { rawTokenInterface } from "./types";
+import { filterWorkflowInputs } from "./inputs";
+import { parseCertificate } from "./utils";
 import * as tscommon from "tscommon";
 
 async function run(): Promise<void> {
   try {
     /* Test locally. Requires a GitHub token:
-        $ env INPUT_SLSA-WORKFLOW-RECIPIENT="delegator_generic_slsa3.yml" \
+        $ rm -f client.cert && rm -f predicate.json && \
+        env INPUT_SLSA-WORKFLOW-RECIPIENT="delegator_generic_slsa3.yml" \
         INPUT_SLSA-UNVERIFIED-TOKEN="$(cat testdata/slsa-token)" \
         INPUT_SLSA-VERSION="1.0-rc1" \
         INPUT_TOKEN="$(echo $GH_TOKEN)" \
@@ -53,9 +55,13 @@ async function run(): Promise<void> {
         GITHUB_REF_TYPE="tag" \
         GITHUB_ACTOR="laurentsimon" \
         GITHUB_WORKSPACE="$(pwd)" \
-        nodejs ./dist/dist/index.js
+        nodejs ./dist/index.js
     */
 
+    const ghToken = core.getInput("token");
+    if (!ghToken) {
+      throw new Error("token not provided");
+    }
     const workflowRecipient = core.getInput("slsa-workflow-recipient");
     const unverifiedToken = core.getInput("slsa-unverified-token");
 
@@ -83,7 +89,7 @@ async function run(): Promise<void> {
 
     // First, verify the signature, i.e., that it is signed by a certificate that
     // chains up to Fulcio.
-    await sigstore.sigstore.verify(bundle, Buffer.from(b64Token));
+    await sigstore.verify(bundle, Buffer.from(b64Token));
 
     const rawToken = Buffer.from(b64Token, "base64");
     core.debug(`bundle: ${bundleStr}`);
@@ -127,29 +133,40 @@ async function run(): Promise<void> {
       rawTokenObj.tool.actions.build_artifacts.path
     );
 
+    // No validation needed for the builder inputs,
+    // they may be empty.
+    // TODO(#1780): test empty inputs.
+
+    // Extract certificate information.
+    const [toolURI, toolRepository, toolRef, toolSha, toolPath] =
+      parseCertificate(bundle);
+
+    // Extract the inputs.
+    // See https://github.com/slsa-framework/slsa-github-generator/issues/1737.
+    const rawFilteredTokenObj = await filterWorkflowInputs(
+      rawTokenObj,
+      ghToken,
+      toolRepository,
+      toolSha,
+      toolPath
+    );
+    core.debug(
+      `workflow inputs: ${JSON.stringify(
+        Object.fromEntries(rawFilteredTokenObj.tool.inputs)
+      )}`
+    );
+
     // Validate the masked inputs and update the token.
-    const rawMaskedTokenObj = validateAndMaskInputs(rawTokenObj);
+    const rawMaskedTokenObj = validateAndMaskInputs(rawFilteredTokenObj);
     core.debug(
       `masked inputs: ${JSON.stringify(
         Object.fromEntries(rawMaskedTokenObj.tool.inputs)
       )}`
     );
 
-    // No validation needed for the builder inputs.
-    // They may be empty.
-    // TODO(#1737): keep only TRW inputs.
-
-    // Extract certificate information.
-    const [toolURI, toolRepository, toolRef] = parseCertificateIdentity(bundle);
-
     core.debug(`slsa-verified-token: ${rawTokenStr}`);
 
     // Now generate the SLSA predicate using the verified token and the GH context.
-    const ghToken = core.getInput("token");
-    if (!ghToken) {
-      throw new Error("token not provided");
-    }
-
     // NOTE: we create the predicate using the token with masked inputs.
     let predicateStr = "";
     switch (rawMaskedTokenObj.slsaVersion) {
@@ -193,84 +210,6 @@ async function run(): Promise<void> {
       core.setFailed(`Unexpected error: ${error}`);
     }
   }
-}
-
-function parseCertificateIdentity(
-  bundle: sigstore.sigstore.Bundle
-): [string, string, string] {
-  if (bundle === undefined) {
-    throw new Error(`undefined bundle.`);
-  }
-  if (bundle.verificationMaterial === undefined) {
-    throw new Error(`undefined bundle.verificationMaterial.`);
-  }
-  if (bundle.verificationMaterial.x509CertificateChain === undefined) {
-    throw new Error(
-      `undefined bundle.verificationMaterial.x509CertificateChain.`
-    );
-  }
-  if (
-    bundle.verificationMaterial.x509CertificateChain.certificates.length === 0
-  ) {
-    throw new Error(
-      `bundle.verificationMaterial.x509CertificateChaincertificates is empty.`
-    );
-  }
-  // NOTE: the first certificate is the client certificate.
-  const clientCertDer = Buffer.from(
-    bundle.verificationMaterial.x509CertificateChain.certificates[0].rawBytes,
-    "base64"
-  );
-  const clientCertPath = "client.cert";
-  tscommon.safeWriteFileSync(clientCertPath, clientCertDer);
-
-  // https://stackabuse.com/executing-shell-commands-with-node-js/
-  // The SAN from the certificate looks like:
-  // `
-  //  X509v3 Subject Alternative Name: critical\n
-  //      URI:https://github.com/laurentsimon/slsa-delegated-tool/.github/workflows/tool1_slsa3.yml@refs/heads/main\n
-  // `
-  const result = child_process
-    .execSync(`openssl x509 -in ${clientCertPath} -noout -ext subjectAltName`)
-    .toString();
-  const index = result.indexOf("URI:");
-  if (index === -1) {
-    throw new Error("error: cannot find URI in subjectAltName");
-  }
-  const toolURI = result.slice(index + 4).replace("\n", "");
-  core.debug(`tool-uri: ${toolURI}`);
-
-  // NOTE: we can use the job_workflow_ref and job_workflow_sha when they become available.
-  const [toolRepository, toolRef] = extractIdentifyFromSAN(toolURI);
-  core.debug(`tool-repository: ${toolRepository}`);
-  core.debug(`tool-ref: ${toolRef}`);
-
-  return [toolURI, toolRepository, toolRef];
-}
-
-function extractIdentifyFromSAN(URI: string): [string, string] {
-  // NOTE: the URI looks like:
-  // https://github.com/laurentsimon/slsa-delegated-tool/.github/workflows/tool1_slsa3.yml@refs/heads/main.
-  // We want to extract:
-  // - the repository: laurentsimon/slsa-delegated-tool
-  // - the ref: refs/heads/main
-  const parts = URI.split("@");
-  if (parts.length !== 2) {
-    throw new Error(`invalid URI (1): ${URI}`);
-  }
-  const ref = parts[1];
-  const url = parts[0];
-  const gitHubURL = "https://github.com/";
-  if (!url.startsWith(gitHubURL)) {
-    throw new Error(`not a GitHub URI: ${URI}`);
-  }
-  // NOTE: we omit the gitHubURL from the URL.
-  const parts2 = url.slice(gitHubURL.length).split("/");
-  if (parts2.length <= 2) {
-    throw new Error(`invalid URI (2): ${URI}`);
-  }
-  const repo = `${parts2[0]}/${parts2[1]}`;
-  return [repo, ref];
 }
 
 run();
