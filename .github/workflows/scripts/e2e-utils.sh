@@ -108,12 +108,12 @@ e2e_verify_predicate_v1_buildDefinition_resolvedDependencies() {
     _e2e_verify_query "$1" "$2" '.buildDefinition.resolvedDependencies'
 }
 
-e2e_verify_predicate_v1_buildDefinition_systemParameters() {
-    _e2e_verify_query "$1" "$3" '.buildDefinition.systemParameters.'"$2"
+e2e_verify_predicate_v1_buildDefinition_internalParameters() {
+    _e2e_verify_query "$1" "$3" '.buildDefinition.internalParameters.'"$2"
 }
 
-e2e_present_predicate_v1_buildDefinition_systemParameters() {
-    _e2e_verify_presence "$1" '.buildDefinition.systemParameters.'"$2"
+e2e_present_predicate_v1_buildDefinition_internalParameters() {
+    _e2e_verify_presence "$1" '.buildDefinition.internalParameters.'"$2"
 }
 
 e2e_verify_predicate_v1_runDetails_builder_id() {
