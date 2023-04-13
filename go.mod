@@ -178,16 +178,7 @@ require (
 	github.com/spf13/cast v1.5.0 // indirect
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
-<<<<<<< HEAD
-<<<<<<< HEAD
 	github.com/spf13/viper v1.13.0 // indirect
-=======
-	github.com/spf13/viper v1.15.0 // indirect
-=======
-	github.com/spf13/viper v1.13.0 // indirect
->>>>>>> c786a7d (update)
-	github.com/spiffe/go-spiffe/v2 v2.1.2 // indirect
->>>>>>> 267321b (update)
 	github.com/stretchr/testify v1.8.1 // indirect
 	github.com/subosito/gotenv v1.4.1 // indirect
 	github.com/syndtr/goleveldb v1.0.1-0.20220721030215-126854af5e6d // indirect
