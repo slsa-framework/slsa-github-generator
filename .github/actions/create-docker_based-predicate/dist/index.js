@@ -6963,6 +6963,29 @@ module.exports.PROCESSING_OPTIONS = PROCESSING_OPTIONS;
 
 "use strict";
 
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -6976,7 +6999,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.safePromises_stat = exports.safePromises_readdir = exports.safeExistsSync = exports.safeRmdirSync = exports.safeUnlinkSync = exports.safeReadFileSync = exports.safeMkdirSync = exports.safeWriteFileSync = exports.resolvePathInput = exports.getGitHubWorkspace = void 0;
+exports.safePromises_stat = exports.safePromises_readdir = exports.safeExistsSync = exports.safeRmdirSync = exports.safeUnlinkSync = exports.safeReadFileSync = exports.safeMkdirSync = exports.safeWriteFileSync = exports.resolvePathInput = exports.safeFileSha256 = exports.getGitHubWorkspace = void 0;
+const crypto = __importStar(__nccwpck_require__(6113));
 const fs_1 = __importDefault(__nccwpck_require__(7147));
 const path_1 = __importDefault(__nccwpck_require__(1017));
 const process_1 = __importDefault(__nccwpck_require__(7282));
@@ -6984,13 +7008,20 @@ const process_1 = __importDefault(__nccwpck_require__(7282));
 // We need to set the working directory to the tscommon/ directory
 // instead of the GITHUB_WORKSPACE.
 function getGitHubWorkspace() {
-    const wdt = process_1.default.env["UNIT_TESTS_WD"] || "";
+    const wdt = process_1.default.env.UNIT_TESTS_WD || "";
     if (wdt) {
         return wdt;
     }
-    return process_1.default.env["GITHUB_WORKSPACE"] || "";
+    return process_1.default.env.GITHUB_WORKSPACE || "";
 }
 exports.getGitHubWorkspace = getGitHubWorkspace;
+// safeFileSha256 returns the hex-formatted sha256 sum of the contents of an
+// untrusted file path.
+function safeFileSha256(untrustedPath) {
+    const untrustedFile = safeReadFileSync(untrustedPath);
+    return crypto.createHash("sha256").update(untrustedFile).digest("hex");
+}
+exports.safeFileSha256 = safeFileSha256;
 // Detect directory traversal for input file.
 // This function is exported for unit tests only.
 function resolvePathInput(input, write) {
