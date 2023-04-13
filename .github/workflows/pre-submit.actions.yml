@@ -473,7 +473,7 @@ jobs:
       - uses: actions/checkout@8f4b7f84864484a7bf31766abe9204da3cbe65b3 # v3.5.0
       - name: Detect the builder ref
         id: detect
-        uses: ./.github/actions/detect-workflow
+        uses: ./.github/actions/detect-workflow-js
       - uses: ./.github/actions/generate-builder
         with:
           repository: ${{ steps.detect.output.repository }}
