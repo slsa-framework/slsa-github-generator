@@ -26,11 +26,11 @@
     "@actions/github": "^5.1.1",
     "@octokit/webhooks-types": "^6.9.0",
     "sigstore": "^1.1.1",
-    "tscommon": "file:../tscommon/tscommon-0.1.0.tgz"
+    "tscommon": "file:../tscommon/tscommon-0.1.0.tgz",
+    "yaml": "^2.2.1"
   },
   "devDependencies": {
     "@types/jest": "^29.4.0",
-    "@types/node": "^18.11.9",
     "@typescript-eslint/eslint-plugin": "^5.45.0",
     "@typescript-eslint/parser": "^5.45.0",
     "@vercel/ncc": "^0.36.0",
