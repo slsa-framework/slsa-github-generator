@@ -21,7 +21,7 @@ export async function getWorkflowRun(
   return res.data;
 }
 
-// addGitHubParameters adds trusted GitHub context to system paramters
+// addGitHubParameters adds trusted GitHub context to internal paramters
 // and external parameters.
 export function addGitHubParameters(
   predicate: types.SLSAv1Predicate,
@@ -30,46 +30,46 @@ export function addGitHubParameters(
   const { env } = process;
   const ctx = github.context;
 
-  if (!predicate.buildDefinition.systemParameters) {
-    predicate.buildDefinition.systemParameters = {};
+  if (!predicate.buildDefinition.internalParameters) {
+    predicate.buildDefinition.internalParameters = {};
   }
-  const systemParams = predicate.buildDefinition.systemParameters;
+  const internalParams = predicate.buildDefinition.internalParameters;
 
-  // Put GitHub context and env vars into systemParameters.
-  systemParams.GITHUB_EVENT_NAME = ctx.eventName;
-  systemParams.GITHUB_JOB = ctx.job;
-  systemParams.GITHUB_REF = ctx.ref;
-  systemParams.GITHUB_BASE_REF = env.GITHUB_BASE_REF || "";
-  systemParams.GITHUB_REF_TYPE = env.GITHUB_REF_TYPE || "";
-  systemParams.GITHUB_REPOSITORY = env.GITHUB_REPOSITORY || "";
-  systemParams.GITHUB_RUN_ATTEMPT = env.GITHUB_RUN_ATTEMPT || "";
-  systemParams.GITHUB_RUN_ID = ctx.runId;
-  systemParams.GITHUB_RUN_NUMBER = ctx.runNumber;
-  systemParams.GITHUB_SHA = ctx.sha;
-  systemParams.GITHUB_WORKFLOW = ctx.workflow;
-  systemParams.GITHUB_WORKFLOW_REF = env.GITHUB_WORKFLOW_REF || "";
-  systemParams.GITHUB_WORKFLOW_SHA = env.GITHUB_WORKFLOW_SHA || "";
-  systemParams.IMAGE_OS = env.ImageOS || "";
-  systemParams.IMAGE_VERSION = env.ImageVersion || "";
-  systemParams.RUNNER_ARCH = env.RUNNER_ARCH || "";
-  systemParams.RUNNER_NAME = env.RUNNER_NAME || "";
-  systemParams.RUNNER_OS = env.RUNNER_OS || "";
-  systemParams.GITHUB_ACTOR_ID = String(currentRun.actor?.id || "");
-  systemParams.GITHUB_REPOSITORY_ID = String(currentRun.repository.id || "");
-  systemParams.GITHUB_REPOSITORY_OWNER_ID = String(
+  // Put GitHub context and env vars into internalParameters.
+  internalParams.GITHUB_EVENT_NAME = ctx.eventName;
+  internalParams.GITHUB_JOB = ctx.job;
+  internalParams.GITHUB_REF = ctx.ref;
+  internalParams.GITHUB_BASE_REF = env.GITHUB_BASE_REF || "";
+  internalParams.GITHUB_REF_TYPE = env.GITHUB_REF_TYPE || "";
+  internalParams.GITHUB_REPOSITORY = env.GITHUB_REPOSITORY || "";
+  internalParams.GITHUB_RUN_ATTEMPT = env.GITHUB_RUN_ATTEMPT || "";
+  internalParams.GITHUB_RUN_ID = ctx.runId;
+  internalParams.GITHUB_RUN_NUMBER = ctx.runNumber;
+  internalParams.GITHUB_SHA = ctx.sha;
+  internalParams.GITHUB_WORKFLOW = ctx.workflow;
+  internalParams.GITHUB_WORKFLOW_REF = env.GITHUB_WORKFLOW_REF || "";
+  internalParams.GITHUB_WORKFLOW_SHA = env.GITHUB_WORKFLOW_SHA || "";
+  internalParams.IMAGE_OS = env.ImageOS || "";
+  internalParams.IMAGE_VERSION = env.ImageVersion || "";
+  internalParams.RUNNER_ARCH = env.RUNNER_ARCH || "";
+  internalParams.RUNNER_NAME = env.RUNNER_NAME || "";
+  internalParams.RUNNER_OS = env.RUNNER_OS || "";
+  internalParams.GITHUB_ACTOR_ID = String(currentRun.actor?.id || "");
+  internalParams.GITHUB_REPOSITORY_ID = String(currentRun.repository.id || "");
+  internalParams.GITHUB_REPOSITORY_OWNER_ID = String(
     currentRun.repository.owner.id || ""
   );
 
-  // Put GitHub event payload into systemParameters.
+  // Put GitHub event payload into internalParameters.
   // TODO(github.com/slsa-framework/slsa-github-generator/issues/1575): Redact sensitive information.
   if (env.GITHUB_EVENT_PATH) {
     const ghEvent = JSON.parse(
       tscommon.safeReadFileSync(env.GITHUB_EVENT_PATH || "").toString()
     );
-    systemParams.GITHUB_EVENT_PAYLOAD = ghEvent;
+    internalParams.GITHUB_EVENT_PAYLOAD = ghEvent;
   }
 
-  predicate.buildDefinition.systemParameters = systemParams;
+  predicate.buildDefinition.internalParameters = internalParams;
 
   if (!env.GITHUB_WORKFLOW_REF) {
     throw new Error("missing GITHUB_WORKFLOW_REF");

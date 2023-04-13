@@ -39,9 +39,9 @@ export interface BuildDefinition {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   externalParameters: any;
 
-  // systemParameters describes parameters of the build environment provided by the `builder`.
+  // internalParameters describes parameters of the build environment provided by the `builder`.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  systemParameters?: any;
+  internalParameters?: any;
 
   // resolvedDependencies are dependencies needed at build time.
   resolvedDependencies?: ArtifactReference[];
