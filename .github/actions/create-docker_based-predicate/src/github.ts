@@ -30,7 +30,7 @@ export function addGitHubParameters(
   const { env } = process;
   const ctx = github.context;
 
-  if (!predicate.buildDefinition.internalarameters) {
+  if (!predicate.buildDefinition.internalParameters) {
     predicate.buildDefinition.internalParameters = {};
   }
   const internalParams = predicate.buildDefinition.internalParameters;
