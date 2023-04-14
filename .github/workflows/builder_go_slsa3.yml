@@ -112,7 +112,7 @@ jobs:
     steps:
       - name: Detect the builder ref
         id: detect
-        uses: slsa-framework/slsa-github-generator/.github/actions/detect-workflow@main
+        uses: slsa-framework/slsa-github-generator/.github/actions/detect-workflow-js@main
 
   ###################################################################
   #                                                                 #
