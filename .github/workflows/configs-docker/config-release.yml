@@ -1,0 +1,18 @@
+# Used for binary releases.
+version: 1
+env:
+  - GO111MODULE=on
+  - CGO_ENABLED=0
+
+flags:
+  - -trimpath
+  - -tags=netgo
+
+goos: linux
+goarch: amd64
+dir: internal/builders/docker/
+binary: slsa-builder-docker-{{ .Os }}-{{ .Arch }}
+# ldflags: -s -w ldflags remove the debugging information from the binary, which reduce the size of the binary.
+ldflags:
+  - "-s"
+  - "-w"
