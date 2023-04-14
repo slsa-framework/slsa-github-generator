@@ -68,27 +68,27 @@ e2e_verify_common_all_v1() {
 # $1: the predicate content
 e2e_verify_common_buildDefinition_v1() {
     # This does not include buildType since it is not common to all.
-    e2e_verify_predicate_v1_buildDefinition_systemParameters "$1" "GITHUB_EVENT_NAME" "$GITHUB_EVENT_NAME"
-    e2e_verify_predicate_v1_buildDefinition_systemParameters "$1" "GITHUB_REF" "$GITHUB_REF"
-    e2e_verify_predicate_v1_buildDefinition_systemParameters "$1" "GITHUB_REF_TYPE" "$GITHUB_REF_TYPE"
-    e2e_verify_predicate_v1_buildDefinition_systemParameters "$1" "GITHUB_REPOSITORY" "$GITHUB_REPOSITORY"
-    e2e_verify_predicate_v1_buildDefinition_systemParameters "$1" "GITHUB_RUN_ATTEMPT" "$GITHUB_RUN_ATTEMPT"
-    e2e_verify_predicate_v1_buildDefinition_systemParameters "$1" "GITHUB_RUN_ID" "$GITHUB_RUN_ID"
-    e2e_verify_predicate_v1_buildDefinition_systemParameters "$1" "GITHUB_RUN_NUMBER" "$GITHUB_RUN_NUMBER"
-    e2e_verify_predicate_v1_buildDefinition_systemParameters "$1" "GITHUB_SHA" "$GITHUB_SHA"
-    e2e_verify_predicate_v1_buildDefinition_systemParameters "$1" "GITHUB_ACTOR_ID" "$GITHUB_ACTOR_ID"
-    e2e_verify_predicate_v1_buildDefinition_systemParameters "$1" "GITHUB_REPOSITORY_ID" "$GITHUB_REPOSITORY_ID"
-    e2e_verify_predicate_v1_buildDefinition_systemParameters "$1" "GITHUB_REPOSITORY_OWNER_ID" "$GITHUB_REPOSITORY_OWNER_ID"
-    e2e_verify_predicate_v1_buildDefinition_systemParameters "$1" "GITHUB_WORKFLOW_REF" "$GITHUB_WORKFLOW_REF"
-    e2e_verify_predicate_v1_buildDefinition_systemParameters "$1" "GITHUB_WORKFLOW_SHA" "$GITHUB_WORKFLOW_SHA"
+    e2e_verify_predicate_v1_buildDefinition_internalParameters "$1" "GITHUB_EVENT_NAME" "$GITHUB_EVENT_NAME"
+    e2e_verify_predicate_v1_buildDefinition_internalParameters "$1" "GITHUB_REF" "$GITHUB_REF"
+    e2e_verify_predicate_v1_buildDefinition_internalParameters "$1" "GITHUB_REF_TYPE" "$GITHUB_REF_TYPE"
+    e2e_verify_predicate_v1_buildDefinition_internalParameters "$1" "GITHUB_REPOSITORY" "$GITHUB_REPOSITORY"
+    e2e_verify_predicate_v1_buildDefinition_internalParameters "$1" "GITHUB_RUN_ATTEMPT" "$GITHUB_RUN_ATTEMPT"
+    e2e_verify_predicate_v1_buildDefinition_internalParameters "$1" "GITHUB_RUN_ID" "$GITHUB_RUN_ID"
+    e2e_verify_predicate_v1_buildDefinition_internalParameters "$1" "GITHUB_RUN_NUMBER" "$GITHUB_RUN_NUMBER"
+    e2e_verify_predicate_v1_buildDefinition_internalParameters "$1" "GITHUB_SHA" "$GITHUB_SHA"
+    e2e_verify_predicate_v1_buildDefinition_internalParameters "$1" "GITHUB_ACTOR_ID" "$GITHUB_ACTOR_ID"
+    e2e_verify_predicate_v1_buildDefinition_internalParameters "$1" "GITHUB_REPOSITORY_ID" "$GITHUB_REPOSITORY_ID"
+    e2e_verify_predicate_v1_buildDefinition_internalParameters "$1" "GITHUB_REPOSITORY_OWNER_ID" "$GITHUB_REPOSITORY_OWNER_ID"
+    e2e_verify_predicate_v1_buildDefinition_internalParameters "$1" "GITHUB_WORKFLOW_REF" "$GITHUB_WORKFLOW_REF"
+    e2e_verify_predicate_v1_buildDefinition_internalParameters "$1" "GITHUB_WORKFLOW_SHA" "$GITHUB_WORKFLOW_SHA"
     # shellcheck disable=SC2154
-    e2e_verify_predicate_v1_buildDefinition_systemParameters "$1" "IMAGE_OS" "$ImageOS"
-    e2e_verify_predicate_v1_buildDefinition_systemParameters "$1" "RUNNER_ARCH" "$RUNNER_ARCH"
-    e2e_verify_predicate_v1_buildDefinition_systemParameters "$1" "RUNNER_OS" "$RUNNER_OS"
+    e2e_verify_predicate_v1_buildDefinition_internalParameters "$1" "IMAGE_OS" "$ImageOS"
+    e2e_verify_predicate_v1_buildDefinition_internalParameters "$1" "RUNNER_ARCH" "$RUNNER_ARCH"
+    e2e_verify_predicate_v1_buildDefinition_internalParameters "$1" "RUNNER_OS" "$RUNNER_OS"
     # These may differ between the jobs that created the predicate and the job that
     # verifies.
-    e2e_present_predicate_v1_buildDefinition_systemParameters "$1" "RUNNER_NAME"
-    e2e_present_predicate_v1_buildDefinition_systemParameters "$1" "IMAGE_VERSION"
+    e2e_present_predicate_v1_buildDefinition_internalParameters "$1" "RUNNER_NAME"
+    e2e_present_predicate_v1_buildDefinition_internalParameters "$1" "IMAGE_VERSION"
 }
 
 # Verifies common fields of the SLSA v1.0 predicate runDetails.
@@ -110,7 +110,7 @@ e2e_verify_decoded_token() {
     _e2e_verify_query "$decoded_token" "true" '.builder.rekor_log_public'
     _e2e_verify_query "$decoded_token" "./actions/build-artifacts-composite" '.tool.actions.build_artifacts.path'
     _e2e_verify_query "$decoded_token" '{"name1":"value1","name2":"value2","name3":"value3","name4":"","name5":"value5","name6":"value6","private-repository":true}' '.tool.inputs'
-    
+
     # GitHub's information.
     _e2e_verify_query "$decoded_token" "$GITHUB_ACTOR_ID" '.github.actor_id'
     _e2e_verify_query "$decoded_token" "$GITHUB_EVENT_NAME" '.github.event_name'

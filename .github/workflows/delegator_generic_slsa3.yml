@@ -89,7 +89,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [rng]
     steps:
-      - name: Verify token with test action
+      - name: Verify token
         id: verify
         uses: slsa-framework/slsa-github-generator/.github/actions/verify-token@main
         with:
