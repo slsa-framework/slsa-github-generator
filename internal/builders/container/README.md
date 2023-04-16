@@ -21,6 +21,7 @@ project simply generates provenance as a separate step in an existing workflow.
 - [Benefits of Provenance](#benefits-of-provenance)
 - [Generating Provenance](#generating-provenance)
   - [Getting Started](#getting-started)
+    - [With GCP Artifact Registry](#with-gcp-artifact-registry)
   - [Referencing the SLSA generator](#referencing-the-slsa-generator)
   - [Private Repositories](#private-repositories)
   - [Supported Triggers](#supported-triggers)
@@ -151,6 +152,125 @@ jobs:
     secrets:
       registry-password: ${{ secrets.GITHUB_TOKEN }}
 ```
+
+#### With GCP Artifact Registry
+
+The following is an example of pushing an image Artifact Registry in GCP and generating the provenance for that image. In order for you to run this example, you will need to have a [Workload Identity Federation](https://cloud.google.com/iam/docs/workload-identity-federation) that enables you to exchange a GitHub token for access within GCP. If you have not yet created one or have not created a provider within your existing federation for GitHub, please review the following resources:
+
+- https://gist.github.com/palewire/12c4b2b974ef735d22da7493cf7f4d37 
+- https://cloud.google.com/blog/products/identity-security/enabling-keyless-authentication-from-github-actions 
+
+Once you have a Workload Identity Federation with a GitHub provider, you're ready to begin implementing the GitHub Action below. 
+
+```yaml
+env:
+  IMAGE_NAME: ${{ github.repository }}
+  # FORMAT: 
+  # {region}-docker.pkg.dev/{project-id}/{artifact-registry-name}
+  # EXAMPLE:
+  # northamerica-northeast1-docker.pkg.dev/blank-check-231234/your-repository
+  REPOSITORY_PATH: ${{ vars.REPOSITORY_PATH }}
+  # EXAMPLE:
+  # projects/123123412578/locations/global/workloadIdentityPools/my-pool/providers/my-provider
+  WORKLOAD_IDENTITY_PROVIDER: ${{ vars.WORKLOAD_IDENTITY_PROVIDER }}
+  # EXAMPLE:
+  # my-service-account@blank-check-231234.iam.gserviceaccount.com
+  SERVICE_ACCOUNT: ${{ vars.SERVICE_ACCOUNT }}
+
+on: [push]
+
+jobs:
+  # This step builds our image, pushes it, and outputs the repo hash digest.
+  build:
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+    outputs:
+      image: ${{ steps.image.outputs.image }}
+      digest: ${{ steps.build.outputs.digest }}
+      workload_identity_provider: ${{ steps.idprov.outputs.widp }}
+      service_account: ${{ steps.sa.outputs.sa }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # v2.3.4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@dc7b9719a96d48369863986a06765841d7ea23f6 # v2.0.0
+
+      - id: 'auth'
+        name: 'Authenticate to Google Cloud'
+        uses: 'google-github-actions/auth@v1.0.0'
+        with:
+          token_format: 'access_token'
+          workload_identity_provider: ${{ vars.WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.SERVICE_ACCOUNT }}
+
+      - name: Authenticate Docker
+        uses: docker/login-action@49ed152c8eca782a232dede0303416e8f356c37b # v2.0.0
+        with:
+          registry: northamerica-northeast1-docker.pkg.dev
+          username: oauth2accesstoken
+          password: ${{ steps.auth.outputs.access_token }}
+
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@69f6fc9d46f2f8bf0d5491e4aabe0bb8c6a4678a # v4.0.1
+        with:
+          images: ${{ vars.REPOSITORY_PATH }}/${{ env.IMAGE_NAME }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@e551b19e49efd4e98792db7592c17c09b89db8d8 # v3.0.0
+        id: build
+        with:
+          push: true
+          tags: |
+            ${{ steps.meta.outputs.tags }}
+            ${{ vars.REPOSITORY_PATH }}/${{ env.IMAGE_NAME }}:latest
+          labels: ${{ steps.meta.outputs.labels }}
+
+      - name: Output image
+        id: image
+        run: |
+          # NOTE: Set the image as an output because the `env` context is not
+          # available to the inputs of a reusable workflow call.
+          image_name="${REPOSITORY_PATH}/${IMAGE_NAME}"
+          echo image=$image_name >> "$GITHUB_OUTPUT"
+
+      - name: Output workload_identity_provider
+        id: idprov
+        run: |
+          workload_identity_provider=${WORKLOAD_IDENTITY_PROVIDER}
+          echo widp=$workload_identity_provider >> "$GITHUB_OUTPUT"
+
+      - name: Output service_account
+        id: sa
+        run: |
+          service_account=${SERVICE_ACCOUNT}
+          echo sa=$service_account >> "$GITHUB_OUTPUT"
+
+  # This step calls the container workflow to generate provenance and push it to
+  # the container registry.
+  provenance:
+    needs: [build]
+    permissions:
+      actions: read # for detecting the Github Actions environment.
+      id-token: write # for creating OIDC tokens for signing.
+      packages: write # for uploading attestations.
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v1.5.0
+    with:
+      image: ${{ needs.build.outputs.image }}
+      digest: ${{ needs.build.outputs.digest }}
+      gcp-workload-identity-provider: ${{ needs.build.outputs.workload_identity_provider }}
+      gcp-service-account: ${{ needs.build.outputs.service_account }}
+      registry-username: ${{ github.actor }}
+    secrets:
+      registry-password: ${{ secrets.GITHUB_TOKEN }}
+
+```
+
+NOTE: There are existing challenges with using secrets in reusable workflows. Due to these problems, you will likely need to use unencrypted environment variables. To learn more: https://github.com/orgs/community/discussions/17554 and https://colinsalmcorner.com/consuming-environment-secrets-in-reusable-workflows/.
 
 ### Referencing the SLSA generator
 
