@@ -155,7 +155,7 @@ jobs:
 
 #### With GCP Artifact Registry
 
-The following is an example of pushing an image Artifact Registry in GCP and generating the provenance for that image. In order for you to run this example, you will need to have a [Workload Identity Federation](https://cloud.google.com/iam/docs/workload-identity-federation) that enables you to exchange a GitHub token for access within GCP. If you have not yet created one or have not created a provider within your existing federation for GitHub, please review the following resources:
+The following is an example of pushing an image to an Artifact Registry in GCP and generating the provenance for that image. In order for you to run this example, you will need to have a [Workload Identity Federation](https://cloud.google.com/iam/docs/workload-identity-federation) that enables you to exchange a GitHub token for access within GCP. If you have not yet created one or have not created a provider within your existing federation for GitHub, please review the following resources:
 
 - https://gist.github.com/palewire/12c4b2b974ef735d22da7493cf7f4d37 
 - https://cloud.google.com/blog/products/identity-security/enabling-keyless-authentication-from-github-actions 
