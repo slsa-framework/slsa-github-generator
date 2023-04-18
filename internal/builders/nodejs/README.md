@@ -44,9 +44,14 @@ tampered with.
 ## Development status
 
 The Node.js builder is currently under active development. The API could change
-while approaching an initial release. You can track progress towards General
-Availability via [this
-milestone](https://github.com/slsa-framework/slsa-github-generator/milestone/8).
+while approaching an initial release. You can track progress towards Beta via
+[this milestone](https://github.com/slsa-framework/slsa-github-generator/milestone/8),
+and towards General Availability via
+[this milestone](https://github.com/slsa-framework/slsa-github-generator/milestone/17).
+
+If you would like to test the workflow early please
+[create an issue](https://github.com/slsa-framework/slsa-github-generator/issues/new)
+and let us know.
 
 ## Generating Provenance
 
@@ -160,10 +165,10 @@ are fully supported and tested:
 
 However, in practice, most triggers should work with the exception of
 `pull_request`. If you would like support for `pull_request`, please tell us
-about your use case on [issue
-#358](https://github.com/slsa-framework/slsa-github-generator/issues/358). If
-you have an issue in all other triggers please submit a [new
-issue](https://github.com/slsa-framework/slsa-github-generator/issues/new/choose).
+about your use case on
+[issue #358](https://github.com/slsa-framework/slsa-github-generator/issues/358). If
+you have an issue in all other triggers please submit a
+[new issue](https://github.com/slsa-framework/slsa-github-generator/issues/new/choose).
 
 ### Workflow Inputs
 
@@ -175,6 +180,7 @@ Inputs:
 | ----------------- | -------- | ---------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | access            | No       | 'restricted' for scoped packages, 'public' for unscoped packages | The access level for the package. Valid values are "public" or "restricted".                                                                                                                                                                        |
 | directory         | No       | `github.workspace`                                               | The root directory of the package (i.e. where the `package.json` is located)                                                                                                                                                                        |
+| npm-publish       | No       | `true` if pushing a new tag, `false` otherwise                   | Publish to the npm package repository.                                                                                                                                                                                                              |
 | node-version      | No       |                                                                  | The version of Node.js to use. If no value is supplied, the `node` version from `$PATH` is used.                                                                                                                                                    |
 | node-version-file | No       |                                                                  | File containing the version Spec of the version to use. Examples: .nvmrc, .node-version, .tool-versions.                                                                                                                                            |
 | rekor-log-public  | No       | false                                                            | Set to true to opt-in to posting to the public transparency log. Will generate an error if false for private repositories. This input has no effect for public repositories. See [Private Repositories](#private-repositories).<br>Default: `false` |

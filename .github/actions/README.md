@@ -43,7 +43,7 @@ To create or update an internal Action, reference them at `@main`. For a release
    commit hash after merge `CH`. (Note: This won't affect any workflow's behavior since
    the existing code will still be calling the Action at an older commit hash).
 
-1. Update the re-usable workflow / Actions to use them in a follow-up PR:
+2. Update the re-usable workflow / Actions to use them in a follow-up PR:
 
 ```yaml
 uses: slsa-framework/slsa-github-generator/.github/actions/<your-action>@<CH>

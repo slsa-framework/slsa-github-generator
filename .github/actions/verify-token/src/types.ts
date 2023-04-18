@@ -14,7 +14,7 @@ limitations under the License.
 export interface githubObj {
   actor_id: string;
   event_name: string;
-  event_path: string;
+  event_payload_sha256: string;
   ref: string;
   ref_type: string;
   repository: string;
@@ -63,5 +63,15 @@ export interface rawTokenInterface {
     inputs: Map<string, string | number | boolean>;
     // masked_inputs is a list of input names who's value should be masked in the provenance.
     masked_inputs: string[];
+  };
+}
+
+// gitHubWorkflowInterface represents a GitHub Actions reusable workflow.
+// See: https://docs.github.com/en/actions/using-workflows/reusing-workflows#creating-a-reusable-workflow
+export interface gitHubWorkflowInterface {
+  on: {
+    workflow_call: {
+      inputs: Map<string, Object>;
+    };
   };
 }

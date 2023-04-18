@@ -11,6 +11,7 @@ This is a document to describe the release process for the slsa-github-generator
 - [Prerequisites](#prerequisites)
 - [Release candidate](#release-candidate)
   - [Update CHANGELOG](#update-changelog)
+  - [Update dependencies](#update-dependencies)
   - [RC tagging](#rc-tagging)
   - [Verify RC version references](#verify-rc-version-references)
   - [Adversarial verifier tests](#adversarial-verifier-tests)
@@ -21,7 +22,7 @@ This is a document to describe the release process for the slsa-github-generator
     - [Adversarial Go builder](#adversarial-go-builder)
     - [Adversarial generic generator](#adversarial-generic-generator)
     - [Adversarial container generator](#adversarial-container-generator)
-  - [Finalize release candidate.](#finalize-release-candidate)
+  - [Finalize release candidate](#finalize-release-candidate)
   - [Code Freeze](#code-freeze)
 - [Finalize release](#finalize-release)
   - [Update CHANGELOG](#update-changelog-1)
@@ -30,7 +31,7 @@ This is a document to describe the release process for the slsa-github-generator
   - [Final adversarial tests](#final-adversarial-tests)
   - [Reference Actions at main](#reference-actions-at-main)
   - [Update verifier](#update-verifier)
-  - [Finish the release.](#finish-the-release)
+  - [Finish the release](#finish-the-release)
   - [Update SECURITY.md](#update-securitymd)
   - [Update the starter workflows](#update-the-starter-workflows)
   - [Announce](#announce)
@@ -68,6 +69,12 @@ If any tests fail for a release candidate you can address the issues and create 
 
 Finalize the [CHANGELOG](./CHANGELOG.md) entry for the release candidate noting changes since the last release or release candidate.
 
+### Update dependencies
+
+In order to minimize vulnerabilities in releases, merge
+[outstanding PRs from Renovate](https://github.com/slsa-framework/slsa-github-generator/pulls/renovate-bot)
+as best as possible. Renovate PRs that update major versions can be skipped.
+
 ### RC tagging
 
 Create a new tag for the Release Candidate via [slsa-framework/slsa-github-generator/releases/new](https://github.com/slsa-framework/slsa-github-generator/releases/new). The tag _MUST_ be a "canonical" [semantic version](https://semver.org/) without metadata (`$BUILDER_TAG`). Shorter versions are not accepted by the builder's and verifier's code.
@@ -75,16 +82,16 @@ Create a new tag for the Release Candidate via [slsa-framework/slsa-github-gener
 Release candidates should include a suffix indicating the release candidate number of the form `-rc.#` where `#` is a number starting from `0`.
 
 1. Set the title to `$BUILDER_TAG`
-1. Add the following description.
+2. Add the following description.
 
-   ```
+   ```text
    **This is an un-finalized pre-release.**
 
    See the [CHANGELOG](./CHANGELOG.md) for details.
    ```
 
-1. Tick the `This is a pre-release` option.
-1. Click `Publish release`.
+3. Tick the `This is a pre-release` option.
+4. Click `Publish release`.
 
 This will trigger the [release workflow](https://github.com/slsa-framework/slsa-github-generator/actions/workflows/release.yml). Cancel this in the [UI](https://github.com/slsa-framework/slsa-github-generator/actions/workflows/release.yml).
 
@@ -93,7 +100,7 @@ This will trigger the [release workflow](https://github.com/slsa-framework/slsa-
 Update version references with the following command:
 
 ```shell
-$ find .github/workflows/ .github/actions/ actions/ -name '*.yaml' -o -name '*.yml' | xargs sed -i "s/uses: slsa-framework\/slsa-github-generator\/\(.*\)@\(main\|v[0-9]\+\.[0-9]\+\.[0-9]\+\(-rc\.[0-9]\+\)\?\)/uses: slsa-framework\/slsa-github-generator\/\1@$BUILDER_TAG/"
+find .github/workflows/ .github/actions/ actions/ -name '*.yaml' -o -name '*.yml' | xargs sed -i "s/uses: slsa-framework\/slsa-github-generator\/\(.*\)@\(main\|v[0-9]\+\.[0-9]\+\.[0-9]\+\(-rc\.[0-9]\+\)\?\)/uses: slsa-framework\/slsa-github-generator\/\1@$BUILDER_TAG/"
 ```
 
 Send a PR with this update and add `#label:release ${BUILDER_TAG}` in the PR description.
@@ -126,28 +133,28 @@ There is one integration test we cannot easily test "live", so we need to simula
    "$GH" release -R "$VERIFIER_REPOSITORY" upload "$VERIFIER_TAG" slsa-verifier-linux-amd64
    ```
 
-1. Ensure your fork of the builder is at the same commit hash as the official builder's `$BUILDER_TAG` release.
-1. Create a new branch `git checkout -b "$BUILDER_REF"`
-1. Update the file `$BUILDER_REPOSITORY/main/.github/actions/generate-builder/action.yml` by replacing the strings `BUILDER_REPOSITORY` and `VERIFIER_REPOSITORY` with your own username (value of `$GITHUB_USERNAME`). Then push the changes.
-1. For the Go builder, update the file `$BUILDER_REPOSITORY/main/.github/workflows/builder_go_slsa3.yml` to:
+2. Ensure your fork of the builder is at the same commit hash as the official builder's `$BUILDER_TAG` release.
+3. Create a new branch `git checkout -b "$BUILDER_REF"`
+4. Update the file `$BUILDER_REPOSITORY/main/.github/actions/generate-builder/action.yml` by replacing the strings `BUILDER_REPOSITORY` and `VERIFIER_REPOSITORY` with your own username (value of `$GITHUB_USERNAME`). Then push the changes.
+5. For the Go builder, update the file `$BUILDER_REPOSITORY/main/.github/workflows/builder_go_slsa3.yml` to:
 
    ```yaml
    uses: $BUILDER_REPOSITORY/.github/actions/generate-builder@$BUILDER_TAG
    ```
 
-1. For the Generic generator, update the file `$BUILDER_REPOSITORY/main/.github/workflows/generator_generic_slsa3.yml`to:
+6. For the Generic generator, update the file `$BUILDER_REPOSITORY/main/.github/workflows/generator_generic_slsa3.yml`to:
 
    ```yaml
    uses: $BUILDER_REPOSITORY/.github/actions/generate-builder@$BUILDER_TAG
    ```
 
-1. For the Container generator, update the file `$BUILDER_REPOSITORY/main/.github/workflows/generator_container_slsa3.yml`to:
+7. For the Container generator, update the file `$BUILDER_REPOSITORY/main/.github/workflows/generator_container_slsa3.yml`to:
 
    ```yaml
    uses: $BUILDER_REPOSITORY/.github/actions/generate-builder@$BUILDER_TAG
    ```
 
-1. Create a release for the builders for this branch:
+8. Create a release for the builders for this branch:
 
    ```shell
    "$GH" release -R "$BUILDER_REPOSITORY" create "$BUILDER_TAG" --title "$BUILDER_TAG" --notes "pre-release tests for $BUILDER_TAG $(date)" --target "$BUILDER_REF"
@@ -163,10 +170,10 @@ There is one integration test we cannot easily test "live", so we need to simula
    uses: $BUILDER_REPOSITORY/.github/workflows/builder_go_slsa3.yml@$BUILDER_TAG
    ```
 
-1. Run the test manually via the GitHub UX in [https://github.com/slsa-framework/example-package/actions/workflows/e2e.go.workflow_dispatch.main.adversarial-verifier-binary.slsa3.yml](https://github.com/slsa-framework/example-package/actions/workflows/e2e.go.workflow_dispatch.main.adversarial-verifier-binary.slsa3.yml) by cliking `Run Workflow`.
-1. Verify the run fails with log message:
+2. Run the test manually via the GitHub UX in [https://github.com/slsa-framework/example-package/actions/workflows/e2e.go.workflow_dispatch.main.adversarial-verifier-binary.slsa3.yml](https://github.com/slsa-framework/example-package/actions/workflows/e2e.go.workflow_dispatch.main.adversarial-verifier-binary.slsa3.yml) by cliking `Run Workflow`.
+3. Verify the run fails with log message:
 
-   ```
+   ```text
    verifier hash computed is 5891b5b522d5df086d0ff0b110fbd9d21bb4fc7163af34d08286a2e846f6be03
    Error: Process completed with exit code 4.
    ```
@@ -179,10 +186,10 @@ There is one integration test we cannot easily test "live", so we need to simula
    uses: $BUILDER_REPOSITORY/.github/workflows/generator_generic_slsa3.yml@$BUILDER_TAG
    ```
 
-1. Run the test manually via the GitHub UX in [https://github.com/slsa-framework/example-package/actions/workflows/e2e.generic.workflow_dispatch.main.adversarial-verifier-binary.slsa3.yml](https://github.com/slsa-framework/example-package/actions/workflows/e2e.generic.workflow_dispatch.main.adversarial-verifier-binary.slsa3.yml) by cliking `Run Workflow`.
-1. Verify the run fails with log message:
+2. Run the test manually via the GitHub UX in [https://github.com/slsa-framework/example-package/actions/workflows/e2e.generic.workflow_dispatch.main.adversarial-verifier-binary.slsa3.yml](https://github.com/slsa-framework/example-package/actions/workflows/e2e.generic.workflow_dispatch.main.adversarial-verifier-binary.slsa3.yml) by cliking `Run Workflow`.
+3. Verify the run fails with log message:
 
-   ```
+   ```text
    verifier hash computed is 5891b5b522d5df086d0ff0b110fbd9d21bb4fc7163af34d08286a2e846f6be03
    Error: Process completed with exit code 4.
    ```
@@ -195,10 +202,13 @@ There is one integration test we cannot easily test "live", so we need to simula
    uses: $BUILDER_REPOSITORY/.github/workflows/generator_container_slsa3.yml@$BUILDER_TAG
    ```
 
-1. Run the test manually via the GitHub UX in [https://github.com/slsa-framework/example-package/actions/workflows/e2e.container.workflow_dispatch.main.adversarial-verifier-binary.slsa3.yml](https://github.com/slsa-framework/example-package/actions/workflows/e2e.container.workflow_dispatch.main.adversarial-verifier-binary.slsa3.yml) by cliking `Run Workflow`.
-1. Verify the run fails with log message:
+2. Run the test manually via the GitHub UX in
+   [https://github.com/slsa-framework/example-package/actions/workflows/e2e.container.workflow_dispatch.main.adversarial-verifier-binary.slsa3.yml](https://github.com/slsa-framework/example-package/actions/workflows/e2e.container.workflow_dispatch.main.adversarial-verifier-binary.slsa3.yml)
+   by cliking `Run Workflow`.
 
-   ```
+3. Verify the run fails with log message:
+
+   ```text
    verifier hash computed is 5891b5b522d5df086d0ff0b110fbd9d21bb4fc7163af34d08286a2e846f6be03
    Error: Process completed with exit code 4.
    ```
@@ -216,16 +226,18 @@ End-to-end tests run daily in [github.com/slsa-framework/example-package/.github
    mv slsa-builder-go-linux-amd64 slsa-builder-go-linux-amd64-"$BUILDER_TAG".original
    ```
 
-1. Upload a different binary to the assets:
+2. Upload a different binary to the assets:
 
    ```shell
    echo hello > slsa-builder-go-linux-amd64
    "$GH" release -R slsa-framework/slsa-github-generator upload "$BUILDER_TAG" slsa-builder-go-linux-amd64  --clobber
    ```
 
-1. Update the version of the workflow [slsa-framework/example-package/.github/workflows/e2e.go.workflow_dispatch.main.adversarial-builder-binary.slsa3.yml](https://github.com/slsa-framework/example-package/blob/main/.github/workflows/e2e.go.workflow_dispatch.main.adversarial-builder-binary.slsa3.yml) with the `$BUILDER_TAG` to test.
+3. Update the version of the workflow
+   [slsa-framework/example-package/.github/workflows/e2e.go.workflow_dispatch.main.adversarial-builder-binary.slsa3.yml](https://github.com/slsa-framework/example-package/blob/main/.github/workflows/e2e.go.workflow_dispatch.main.adversarial-builder-binary.slsa3.yml)
+   with the `$BUILDER_TAG` to test.
 
-1. Trigger the test in [slsa-framework/example-package/actions/workflows/e2e.go.workflow_dispatch.main.adversarial-builder-binary.slsa3.yml](https://github.com/slsa-framework/example-package/actions/workflows/e2e.go.workflow_dispatch.main.adversarial-builder-binary.slsa3.yml) by cliking `Run workflow`. Verify that it fails, with a message:
+4. Trigger the test in [slsa-framework/example-package/actions/workflows/e2e.go.workflow_dispatch.main.adversarial-builder-binary.slsa3.yml](https://github.com/slsa-framework/example-package/actions/workflows/e2e.go.workflow_dispatch.main.adversarial-builder-binary.slsa3.yml) by cliking `Run workflow`. Verify that it fails, with a message:
 
    ```shell
    verifier hash computed is 60c91c9d5b9a059e37ac46da316f20c81da335b5d00e1f74d03dd50f819694bd
@@ -235,14 +247,14 @@ End-to-end tests run daily in [github.com/slsa-framework/example-package/.github
    Error: Process completed with exit code 6.
    ```
 
-1. If the test above failed with the expected message, re-upload the original binary back to the assets, e.g. via:
+5. If the test above failed with the expected message, re-upload the original binary back to the assets, e.g. via:
 
    ```shell
    mv slsa-builder-go-linux-amd64-"$BUILDER_TAG".original slsa-builder-go-linux-amd64
    "$GH" release -R slsa-framework/slsa-github-generator upload "$BUILDER_TAG" slsa-builder-go-linux-amd64  --clobber
    ```
 
-1. Re-run the workflow above and verify that it succeeds. (TODO: https://github.com/slsa-framework/slsa-github-generator/issues/116).
+6. Re-run the workflow above and verify that it succeeds. (TODO: https://github.com/slsa-framework/slsa-github-generator/issues/116).
 
    If it does not, delete the release, fix the bug and re-start the release process at the top of this page.
 
@@ -255,16 +267,20 @@ End-to-end tests run daily in [github.com/slsa-framework/example-package/.github
    mv slsa-generator-generic-linux-amd64 slsa-generator-generic-linux-amd64-"$BUILDER_TAG".original
    ```
 
-1. Upload a different binary to the assets:
+2. Upload a different binary to the assets:
 
    ```shell
    echo hello > slsa-generator-generic-linux-amd64
    "$GH" release -R slsa-framework/slsa-github-generator upload "$BUILDER_TAG" slsa-generator-generic-linux-amd64  --clobber
    ```
 
-1. Update the version of the workflow [slsa-framework/example-package/.github/workflows/e2e.generic.workflow_dispatch.main.adversarial-builder-binary.slsa3.yml#](https://github.com/slsa-framework/example-package/blob/main/.github/workflows/e2e.generic.workflow_dispatch.main.adversarial-builder-binary.slsa3.yml#) with the `$BUILDER_TAG` to test.
+3. Update the version of the workflow
+   [slsa-framework/example-package/.github/workflows/e2e.generic.workflow_dispatch.main.adversarial-builder-binary.slsa3.yml#](https://github.com/slsa-framework/example-package/blob/main/.github/workflows/e2e.generic.workflow_dispatch.main.adversarial-builder-binary.slsa3.yml#)
+   with the `$BUILDER_TAG` to test.
 
-1. Trigger the test in [slsa-framework/example-package/actions/workflows/e2e.generic.workflow_dispatch.main.adversarial-builder-binary.slsa3.yml](https://github.com/slsa-framework/example-package/actions/workflows/e2e.generic.workflow_dispatch.main.adversarial-builder-binary.slsa3.yml) by cliking `Run workflow`. Verify that it fails, with a message:
+4. Trigger the test in
+   [slsa-framework/example-package/actions/workflows/e2e.generic.workflow_dispatch.main.adversarial-builder-binary.slsa3.yml](https://github.com/slsa-framework/example-package/actions/workflows/e2e.generic.workflow_dispatch.main.adversarial-builder-binary.slsa3.yml)
+   by cliking `Run workflow`. Verify that it fails, with a message:
 
    ```shell
    verifier hash computed is 60c91c9d5b9a059e37ac46da316f20c81da335b5d00e1f74d03dd50f819694bd
@@ -274,14 +290,14 @@ End-to-end tests run daily in [github.com/slsa-framework/example-package/.github
    Error: Process completed with exit code 6.
    ```
 
-1. If the test above failed with the expected message, re-upload the original binary back to the assets, e.g. via:
+5. If the test above failed with the expected message, re-upload the original binary back to the assets, e.g. via:
 
    ```shell
    mv slsa-generator-generic-linux-amd64-"$BUILDER_TAG".original slsa-generator-generic-linux-amd64
    "$GH" release -R slsa-framework/slsa-github-generator upload "$BUILDER_TAG" slsa-generator-generic-linux-amd64  --clobber
    ```
 
-1. Re-run the workflow above and verify that it succeeds. (TODO: https://github.com/slsa-framework/slsa-github-generator/issues/116).
+6. Re-run the workflow above and verify that it succeeds. (TODO: https://github.com/slsa-framework/slsa-github-generator/issues/116).
 
    If it does not, delete the release, fix the bug and re-start the release process at the top of this page.
 
@@ -294,16 +310,20 @@ End-to-end tests run daily in [github.com/slsa-framework/example-package/.github
    mv slsa-generator-container-linux-amd64 slsa-generator-container-linux-amd64-"$BUILDER_TAG".original
    ```
 
-1. Upload a different binary to the assets:
+2. Upload a different binary to the assets:
 
    ```shell
    echo hello > slsa-generator-container-linux-amd64
    "$GH" release -R slsa-framework/slsa-github-generator upload "$BUILDER_TAG" slsa-generator-container-linux-amd64  --clobber
    ```
 
-1. Update the version of the workflow [slsa-framework/example-package/.github/workflows/e2e.container.workflow_dispatch.main.adversarial-builder-binary.slsa3.yml#](https://github.com/slsa-framework/example-package/blob/main/.github/workflows/e2e.container.workflow_dispatch.main.adversarial-builder-binary.slsa3.yml) with the `$BUILDER_TAG` to test.
+3. Update the version of the workflow
+   [slsa-framework/example-package/.github/workflows/e2e.container.workflow_dispatch.main.adversarial-builder-binary.slsa3.yml#](https://github.com/slsa-framework/example-package/blob/main/.github/workflows/e2e.container.workflow_dispatch.main.adversarial-builder-binary.slsa3.yml)
+   with the `$BUILDER_TAG` to test.
 
-1. Trigger the test in [slsa-framework/example-package/actions/workflows/e2e.container.workflow_dispatch.main.adversarial-builder-binary.slsa3.yml](https://github.com/slsa-framework/example-package/actions/workflows/e2e.container.workflow_dispatch.main.adversarial-builder-binary.slsa3.yml) by cliking `Run workflow`. Verify that it fails, with a message:
+4. Trigger the test in
+   [slsa-framework/example-package/actions/workflows/e2e.container.workflow_dispatch.main.adversarial-builder-binary.slsa3.yml](https://github.com/slsa-framework/example-package/actions/workflows/e2e.container.workflow_dispatch.main.adversarial-builder-binary.slsa3.yml)
+   by cliking `Run workflow`. Verify that it fails, with a message:
 
    ```shell
    verifier hash computed is 60c91c9d5b9a059e37ac46da316f20c81da335b5d00e1f74d03dd50f819694bd
@@ -313,18 +333,18 @@ End-to-end tests run daily in [github.com/slsa-framework/example-package/.github
    Error: Process completed with exit code 6.
    ```
 
-1. If the test above failed with the expected message, re-upload the original binary back to the assets, e.g. via:
+5. If the test above failed with the expected message, re-upload the original binary back to the assets, e.g. via:
 
    ```shell
    mv slsa-generator-container-linux-amd64-"$BUILDER_TAG".original slsa-generator-container-linux-amd64
    "$GH" release -R slsa-framework/slsa-github-generator upload "$BUILDER_TAG" slsa-generator-container-linux-amd64  --clobber
    ```
 
-1. Re-run the workflow above and verify that it succeeds. (TODO: https://github.com/slsa-framework/slsa-github-generator/issues/116).
+6. Re-run the workflow above and verify that it succeeds. (TODO: https://github.com/slsa-framework/slsa-github-generator/issues/116).
 
    If it does not, delete the release, fix the bug and re-start the release process at the top of this page.
 
-### Finalize release candidate.
+### Finalize release candidate
 
 Remove the "This is an un-finalized pre-release." note from the release description.
 
@@ -332,7 +352,9 @@ Remove the "This is an un-finalized pre-release." note from the release descript
 
 Code freeze the repository for 1-2 days.
 
-After the code freeze, verify all the e2e tests in [github.com/slsa-framework/example-package/.github/workflows/](github.com/slsa-framework/example-package/.github/workflows/) are passing. (They run daily).
+After the code freeze, verify all the e2e tests in
+[github.com/slsa-framework/example-package/.github/workflows/](github.com/slsa-framework/example-package/.github/workflows/)
+are passing. (They run daily).
 
 ## Finalize release
 
@@ -354,16 +376,16 @@ Create a new tag for the final release via [slsa-framework/slsa-github-generator
 and verifier's code.
 
 1. Set the title to `$BUILDER_TAG`
-1. Add the following description.
+2. Add the following description.
 
-   ```
+   ```text
    **This is an un-finalized release.**
 
    See the [CHANGELOG](./CHANGELOG.md) for details.
    ```
 
-1. Tick the `This is a pre-release` option.
-1. Click `Publish release`.
+3. Tick the `This is a pre-release` option.
+4. Click `Publish release`.
 
 This will trigger the [release workflow](https://github.com/slsa-framework/slsa-github-generator/actions/workflows/release.yml). Cancel this in the [UI](https://github.com/slsa-framework/slsa-github-generator/actions/workflows/release.yml).
 
@@ -372,7 +394,7 @@ This will trigger the [release workflow](https://github.com/slsa-framework/slsa-
 Update version references with the following command:
 
 ```shell
-$ find .github/workflows/ .github/actions/ actions/ -name '*.yaml' -o -name '*.yml' | xargs sed -i "s/uses: slsa-framework\/slsa-github-generator\/\(.*\)@\(main\|v[0-9]\+\.[0-9]\+\.[0-9]\+\(-rc\.[0-9]\+\)\?\)/uses: slsa-framework\/slsa-github-generator\/\1@$BUILDER_TAG/"
+find .github/workflows/ .github/actions/ actions/ -name '*.yaml' -o -name '*.yml' | xargs sed -i "s/uses: slsa-framework\/slsa-github-generator\/\(.*\)@\(main\|v[0-9]\+\.[0-9]\+\.[0-9]\+\(-rc\.[0-9]\+\)\?\)/uses: slsa-framework\/slsa-github-generator\/\1@$BUILDER_TAG/"
 ```
 
 Likewise, update documentation with the following command:
@@ -401,7 +423,7 @@ Re-run the [adversarial tests](#adversarial-tests) using the final `$BUILDER_TAG
 Send a PR to reference the Actions at `@main`. You can use:
 
 ```shell
-$ find .github/workflows/ .github/actions/ actions/ -name '*.yaml' -o -name '*.yml' | xargs sed -i "s/uses: slsa-framework\/slsa-github-generator\/\(.*\)@${BUILDER_TAG}/uses: slsa-framework\/slsa-github-generator\/\1@main/"
+find .github/workflows/ .github/actions/ actions/ -name '*.yaml' -o -name '*.yml' | xargs sed -i "s/uses: slsa-framework\/slsa-github-generator\/\(.*\)@${BUILDER_TAG}/uses: slsa-framework\/slsa-github-generator\/\1@main/"
 ```
 
 ### Update verifier
@@ -412,9 +434,13 @@ The next step is to update the verifier's GitHub Actions e2e tests. There are Gi
 
 For each of the GHA builders, you will need to:
 
-1. Generate binaries and provenance in [example-package](https://github.com/slsa-framework/example-package) using the GHA action builder.
+1. Generate binaries and provenance in
+   [example-package](https://github.com/slsa-framework/example-package) using
+   the GHA action builder.
 
-   These require using the updated builders, so the first step is to update [verifier-e2e.all.workflow_dispatch.main.all.slsa3.yml](https://github.com/slsa-framework/example-package/blob/main/.github/workflows/verifier-e2e.all.workflow_dispatch.main.all.slsa3.yml) to reference actions at `$BUILDER_TAG`.
+   These require using the updated builders, so the first step is to update
+   [verifier-e2e.all.workflow_dispatch.main.all.slsa3.yml](https://github.com/slsa-framework/example-package/blob/main/.github/workflows/verifier-e2e.all.workflow_dispatch.main.all.slsa3.yml)
+   to reference actions at `$BUILDER_TAG`.
 
    For example:
 
@@ -422,7 +448,11 @@ For each of the GHA builders, you will need to:
    uses: slsa-framework/slsa-github-generator/.github/workflows/builder_go_slsa3.yml@<BUILDER_TAG>
    ```
 
-   Next run the [verifier-e2e.all.workflow_dispatch.main.all.slsa3.yml](https://github.com/slsa-framework/example-package/actions/workflows/verifier-e2e.all.workflow_dispatch.main.all.slsa3.yml). This will dispatch the workflow and create provenance for the workflow dispatch event, and then trigger subsequent runs on the following fixed release tags.
+   Next run the
+   [verifier-e2e.all.workflow_dispatch.main.all.slsa3.yml](https://github.com/slsa-framework/example-package/actions/workflows/verifier-e2e.all.workflow_dispatch.main.all.slsa3.yml).
+   This will dispatch the workflow and create provenance for the workflow
+   dispatch event, and then trigger subsequent runs on the following fixed
+   release tags.
 
    - [v14](https://github.com/slsa-framework/example-package/releases/tag/v14)
    - [v14.2](https://github.com/slsa-framework/example-package/releases/tag/v14.2)
@@ -455,11 +485,11 @@ For each of the GHA builders, you will need to:
    pre-submits will validate that the verifier is able to verify provenance from
    the `$BUILDER_TAG` builder.
 
-### Finish the release.
+### Finish the release
 
 1. Remove the "This is an un-finalized release." note from the release description.
-1. Un-tick the `This is a pre-release` option.
-1. If it's the latest release, tick the `Set as the latest release` option.
+2. Un-tick the `This is a pre-release` option.
+3. If it's the latest release, tick the `Set as the latest release` option.
 
 ### Update SECURITY.md
 
@@ -470,7 +500,7 @@ Update the `Supported Versions` section in [SECURITY.md](./SECURITY.md).
 Update:
 
 1. [Go builder's workflow](https://github.com/actions/starter-workflows/blob/main/ci/go-ossf-slsa3-publish.yml)
-1. [Generic generator's workflow](https://github.com/actions/starter-workflows/blob/main/ci/generic-generator-ossf-slsa3-publish.yml)
+2. [Generic generator's workflow](https://github.com/actions/starter-workflows/blob/main/ci/generic-generator-ossf-slsa3-publish.yml)
 
 ### Announce
 

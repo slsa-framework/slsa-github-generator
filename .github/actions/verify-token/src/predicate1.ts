@@ -71,7 +71,7 @@ export async function createPredicate(
         // repository and the build configuration.
         source: sourceRef,
       },
-      systemParameters: {
+      internalParameters: {
         GITHUB_ACTOR_ID: rawTokenObj.github.actor_id,
         GITHUB_EVENT_NAME: rawTokenObj.github.event_name,
         GITHUB_REF: rawTokenObj.github.ref,
@@ -113,15 +113,13 @@ export async function createPredicate(
     },
   };
 
-  // Put GitHub event payload into systemParameters.
+  // Put GitHub event payload into internalParameters.
   // TODO(github.com/slsa-framework/slsa-github-generator/issues/1575): Redact sensitive information.
-  if (rawTokenObj.github.event_path) {
-    // NOTE: event_path has been validated as the same as env.GITHUB_EVENT_PATH
-    const ghEvent = JSON.parse(
-      tscommon.safeReadFileSync(rawTokenObj.github.event_path).toString()
+  // NOTE: Contents of event_path have been pre-validated.
+  predicate.buildDefinition.internalParameters.GITHUB_EVENT_PAYLOAD =
+    JSON.parse(
+      tscommon.safeReadFileSync(process.env.GITHUB_EVENT_PATH || "").toString()
     );
-    predicate.buildDefinition.systemParameters.GITHUB_EVENT_PAYLOAD = ghEvent;
-  }
 
   return predicate;
 }
