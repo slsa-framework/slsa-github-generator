@@ -25,14 +25,23 @@ jobs:
         working-directory: .github/actions/tscommon
         run: |
           set -euo pipefail
+          # NOTE: The package is extracted to package/
           tar xvzf "tscommon-0.0.0.tgz"
+
+      - name: Build the package source
+        working-directory: .github/actions/tscommon
+        run: |
+          set -euo pipefail
+          make action
 
       - name: Compare the expected and actual dist/ directories
         working-directory: .github/actions/tscommon
         id: diff
         run: |
           set -euo pipefail
-          if [ "$(git diff --ignore-space-at-eol dist/ | wc -l)" -gt "0" ]; then
+          # NOTE: Diff detects when files in directories differ as well as contents.
+          # NOTE: Don't use 'git diff' since files are not checked in.
+          if ! diff --ignore-trailing-space package/dist/ dist/; then
             echo "Detected uncommitted changes after build.  See status below:"
             git diff
             exit 1
@@ -51,7 +60,6 @@ jobs:
           - ./actions/delegator/setup-token
           - .github/actions/verify-token
           - .github/actions/detect-workflow-js
-          - .github/actions/tscommon
     steps:
       - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
 
