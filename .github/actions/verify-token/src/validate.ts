@@ -13,6 +13,7 @@ limitations under the License.
 
 import * as tscommon from "tscommon";
 import { githubObj, rawTokenInterface } from "../src/types";
+import { asMap } from "../src/utils";
 
 export function validateGitHubFields(gho: githubObj): void {
   // actor_id
@@ -104,18 +105,19 @@ export function validateGitHubFields(gho: githubObj): void {
 }
 
 export function validateAndMaskInputs(
-  token: rawTokenInterface
+  slsaToken: rawTokenInterface
 ): rawTokenInterface {
-  const maskedMapInputs = new Map(Object.entries(token.tool.inputs));
-  const toolInputs = token.tool.masked_inputs;
+  const toolInputs = slsaToken.tool.masked_inputs;
+  slsaToken.tool.inputs = asMap<string | number | boolean>(
+    slsaToken.tool.inputs
+  );
   if (
     toolInputs === undefined ||
     // If TRW provides an empty argument, it's a 1-length array
     // with an empty string value.
     (toolInputs.length === 1 && toolInputs[0].length === 0)
   ) {
-    token.tool.inputs = maskedMapInputs;
-    return token;
+    return slsaToken;
   }
 
   for (const key of toolInputs) {
@@ -124,15 +126,14 @@ export function validateAndMaskInputs(
       throw new Error("empty key in the input map");
     }
 
-    if (!maskedMapInputs.has(key)) {
+    if (!slsaToken.tool.inputs.has(key)) {
       throw new Error(`input '${key}' does not exist in the input map`);
     }
 
     // NOTE: This mask is the same used by GitHub for encrypted secrets and masked values.
-    maskedMapInputs.set(key, "***");
+    slsaToken.tool.inputs.set(key, "***");
   }
-  token.tool.inputs = maskedMapInputs;
-  return token;
+  return slsaToken;
 }
 
 export function validateFieldAnyOf<T>(
