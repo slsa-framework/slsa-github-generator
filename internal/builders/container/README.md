@@ -157,10 +157,20 @@ jobs:
 
 The following is an example of pushing an image to an [Artifact Registry](https://cloud.google.com/artifact-registry) in GCP and generating the provenance for that image. In order for you to run this example, you will need to have a [Workload Identity Federation](https://cloud.google.com/iam/docs/workload-identity-federation) that enables you to exchange a GitHub token for access within GCP. If you have not yet created one or have not created a provider within your existing federation for GitHub, please review the following resources:
 
-- https://gist.github.com/palewire/12c4b2b974ef735d22da7493cf7f4d37 
-- https://cloud.google.com/blog/products/identity-security/enabling-keyless-authentication-from-github-actions 
+- [Setting up Workload Identity Federation](https://github.com/google-github-actions/auth#setting-up-workload-identity-federation)
+- [Enabling keyless authentication from GitHub Actions](https://cloud.google.com/blog/products/identity-security/enabling-keyless-authentication-from-github-actions)
 
 Once you have a Workload Identity Federation with a GitHub provider, you're ready to begin implementing the GitHub Action below. 
+
+Friendly reminder to set the following environment variables in your GitHub settings:
+```bash
+  # EXAMPLE:
+  # projects/123123412578/locations/global/workloadIdentityPools/my-pool/providers/my-provider
+  WORKLOAD_IDENTITY_PROVIDER=
+  # EXAMPLE:
+  # my-service-account@blank-check-231234.iam.gserviceaccount.com
+  SERVICE_ACCOUNT=
+```
 
 ```yaml
 env:
@@ -170,12 +180,6 @@ env:
   # EXAMPLE:
   # northamerica-northeast1-docker.pkg.dev/blank-check-231234/your-repository
   REPOSITORY_PATH: ${{ vars.REPOSITORY_PATH }}
-  # EXAMPLE:
-  # projects/123123412578/locations/global/workloadIdentityPools/my-pool/providers/my-provider
-  WORKLOAD_IDENTITY_PROVIDER: ${{ vars.WORKLOAD_IDENTITY_PROVIDER }}
-  # EXAMPLE:
-  # my-service-account@blank-check-231234.iam.gserviceaccount.com
-  SERVICE_ACCOUNT: ${{ vars.SERVICE_ACCOUNT }}
 
 on: [push]
 
@@ -189,8 +193,6 @@ jobs:
     outputs:
       image: ${{ steps.image.outputs.image }}
       digest: ${{ steps.build.outputs.digest }}
-      workload_identity_provider: ${{ steps.idprov.outputs.widp }}
-      service_account: ${{ steps.sa.outputs.sa }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout the repository
@@ -238,18 +240,6 @@ jobs:
           image_name="${REPOSITORY_PATH}/${IMAGE_NAME}"
           echo image=$image_name >> "$GITHUB_OUTPUT"
 
-      - name: Output workload_identity_provider
-        id: idprov
-        run: |
-          workload_identity_provider=${WORKLOAD_IDENTITY_PROVIDER}
-          echo widp=$workload_identity_provider >> "$GITHUB_OUTPUT"
-
-      - name: Output service_account
-        id: sa
-        run: |
-          service_account=${SERVICE_ACCOUNT}
-          echo sa=$service_account >> "$GITHUB_OUTPUT"
-
   # This step calls the container workflow to generate provenance and push it to
   # the container registry.
   provenance:
@@ -262,8 +252,8 @@ jobs:
     with:
       image: ${{ needs.build.outputs.image }}
       digest: ${{ needs.build.outputs.digest }}
-      gcp-workload-identity-provider: ${{ needs.build.outputs.workload_identity_provider }}
-      gcp-service-account: ${{ needs.build.outputs.service_account }}
+      gcp-workload-identity-provider: ${{ vars.WORKLOAD_IDENTITY_PROVIDER }}
+      gcp-service-account: ${{ vars.SERVICE_ACCOUNT }}
       registry-username: ${{ github.actor }}
     secrets:
       registry-password: ${{ secrets.GITHUB_TOKEN }}
