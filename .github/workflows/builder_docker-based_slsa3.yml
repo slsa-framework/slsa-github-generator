@@ -18,8 +18,6 @@ permissions:
   contents: read
 
 env:
-  # Project.
-  GENERATED_BINARY_NAME: docker-compiled-binary
   # Builder.
   BUILDER_BINARY: slsa-builder-docker-linux-amd64 # Name of the binary in the release assets.
   BUILDER_DIR: internal/builders/docker # Source directory if we compile the builder.
