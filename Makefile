@@ -29,8 +29,6 @@ unit-test: go-test ts-test
 
 .PHONY: go-test
 go-test: ## Run Go unit tests.
-	# Run unit tests for the detect-workflow action.
-	make -C .github/actions/detect-workflow/ unit-test
 	go mod vendor
 	go test -mod=vendor -v ./...
 

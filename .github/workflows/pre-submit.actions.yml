@@ -13,24 +13,19 @@ jobs:
     name: verify no checkout in Actions
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@8f4b7f84864484a7bf31766abe9204da3cbe65b3 # v3.5.0
+      - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
       - run: ./.github/workflows/scripts/pre-submit.actions/checkout.sh
 
   check-tscommon-tarball:
-    strategy:
-      matrix:
-        version: ["0.0.0", "0.1.0"]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@8f4b7f84864484a7bf31766abe9204da3cbe65b3 # v3.5.0
+      - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
 
       - name: Untar the package tarball
         working-directory: .github/actions/tscommon
-        env:
-          TSCOMMON_VERSION: ${{ matrix.version }}
         run: |
           set -euo pipefail
-          tar xvzf "tscommon-${TSCOMMON_VERSION}.tgz"
+          tar xvzf "tscommon-0.0.0.tgz"
 
       - name: Compare the expected and actual dist/ directories
         working-directory: .github/actions/tscommon
@@ -58,7 +53,7 @@ jobs:
           - .github/actions/detect-workflow-js
           - .github/actions/tscommon
     steps:
-      - uses: actions/checkout@8f4b7f84864484a7bf31766abe9204da3cbe65b3 # v3.5.0
+      - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
 
       - name: Set Node.js 18
         uses: actions/setup-node@64ed1c7eab4cce3362f8c340dee64e5eaeef8f7c # v3.6.0
@@ -104,7 +99,7 @@ jobs:
   compute-sha256:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@8f4b7f84864484a7bf31766abe9204da3cbe65b3 # v3.5.0
+      - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
       - run: |
           echo "foo" > artifact
       - id: compute-sha256
@@ -119,7 +114,7 @@ jobs:
   rng:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@8f4b7f84864484a7bf31766abe9204da3cbe65b3 # v3.5.0
+      - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
       - run: |
           echo "foo" > artifact
       - id: rng
@@ -133,10 +128,10 @@ jobs:
   references:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@8f4b7f84864484a7bf31766abe9204da3cbe65b3 # v3.5.0
+      - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
         with:
           path: __THIS_REPO__
-      - uses: actions/checkout@8f4b7f84864484a7bf31766abe9204da3cbe65b3 # v3.5.0
+      - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
         with:
           repository: slsa-framework/example-package
           ref: main
@@ -158,7 +153,7 @@ jobs:
   secure-project-checkout-go:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@8f4b7f84864484a7bf31766abe9204da3cbe65b3 # v3.5.0
+      - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
         with:
           path: __BUILDER_CHECKOUT_DIR__
 
@@ -171,7 +166,7 @@ jobs:
   secure-project-checkout-node:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@8f4b7f84864484a7bf31766abe9204da3cbe65b3 # v3.5.0
+      - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
         with:
           path: __BUILDER_CHECKOUT_DIR__
 
@@ -191,7 +186,7 @@ jobs:
       UPLOAD_FOLDER_NO_ROOT_NAME: "upload-root/upload-folder"
       DOWNLOAD_FOLDER_NO_ROOT_NAME: "download-root/download-folder"
     steps:
-      - uses: actions/checkout@8f4b7f84864484a7bf31766abe9204da3cbe65b3 # v3.5.0
+      - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
       - name: Create folder
         run: |
           set -euo pipefail
@@ -328,7 +323,7 @@ jobs:
   secure-download-artifact:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@8f4b7f84864484a7bf31766abe9204da3cbe65b3 # v3.5.0
+      - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
         with:
           path: __BUILDER_CHECKOUT_DIR__
 
@@ -355,7 +350,7 @@ jobs:
   secure-download-artifact-builder-name:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@8f4b7f84864484a7bf31766abe9204da3cbe65b3 # v3.5.0
+      - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
         with:
           path: __BUILDER_CHECKOUT_DIR__
 
@@ -388,7 +383,7 @@ jobs:
   secure-download-artifact-builder-repo-folder:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@8f4b7f84864484a7bf31766abe9204da3cbe65b3 # v3.5.0
+      - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
         with:
           path: __BUILDER_CHECKOUT_DIR__
 
@@ -422,7 +417,7 @@ jobs:
   secure-download-artifact-builder-repo-file:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@8f4b7f84864484a7bf31766abe9204da3cbe65b3 # v3.5.0
+      - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
         with:
           path: __BUILDER_CHECKOUT_DIR__
 
@@ -456,7 +451,7 @@ jobs:
   generate-builder-generic-compile:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@8f4b7f84864484a7bf31766abe9204da3cbe65b3 # v3.5.0
+      - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
       - uses: ./.github/actions/generate-builder
         with:
           repository: "slsa-framework/slsa-github-generator"
@@ -470,10 +465,10 @@ jobs:
   generate-builder-generic-no-compile:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@8f4b7f84864484a7bf31766abe9204da3cbe65b3 # v3.5.0
+      - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
       - name: Detect the builder ref
         id: detect
-        uses: ./.github/actions/detect-workflow
+        uses: ./.github/actions/detect-workflow-js
       - uses: ./.github/actions/generate-builder
         with:
           repository: ${{ steps.detect.output.repository }}
@@ -488,7 +483,7 @@ jobs:
   generate-attestations:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@8f4b7f84864484a7bf31766abe9204da3cbe65b3 # v3.5.0
+      - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
       - name: Test generate attestations
         id: generate
         uses: ./.github/actions/generate-attestations
