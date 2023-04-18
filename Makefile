@@ -59,7 +59,7 @@ markdown-toc: node_modules/.installed ## Runs markdown-toc on markdown files.
 				-not -iwholename '*/.github/ISSUE_TEMPLATE/*' \
 		); \
 		for filename in $${md_files}; do \
-			markdown-toc --bullets="-" -i "$${filename}"; \
+			npm run markdown-toc "$${filename}"; \
 		done;
 
 ## Linters

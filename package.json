@@ -1,7 +1,8 @@
 {
   "scripts": {
     "lint": "markdownlint --dot .",
-    "format": "markdownlint --dot --fix ."
+    "format": "markdownlint --dot --fix .",
+    "markdown-toc": "markdown-toc --bullets='-' -i"
   },
   "dependencies": {
     "markdown-toc": "^1.2.0",
