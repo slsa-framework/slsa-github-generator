@@ -30,7 +30,7 @@ jobs:
         with:
           node-version: 16
       - name: install sigstore-js
-        run: npm i sigstore -g
+        run: npm ci --global
       # TODO: Add subject verification. This only verifies the signature on the DSSE envelope.
       - name: run verify
         working-directory: outputs

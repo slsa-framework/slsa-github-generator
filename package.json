@@ -5,6 +5,7 @@
   },
   "dependencies": {
     "markdown-toc": "^1.2.0",
-    "markdownlint-cli": "0.33.0"
+    "markdownlint-cli": "0.33.0",
+    "sigstore": "^1.2.0"
   }
 }
