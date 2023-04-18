@@ -1,0 +1,2 @@
+yamllint==1.30.0 \
+    --hash=sha256:4f58f323aedda16189a489d183ecc25c66d7a9cc0fe88f61b650fef167b13190
