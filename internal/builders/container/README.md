@@ -162,7 +162,7 @@ The following is an example of pushing an image to an [Artifact Registry](https:
 
 Once you have a Workload Identity Federation with a GitHub provider, you're ready to begin implementing the GitHub Action below. 
 
-Friendly reminder to set the following environment variables in your GitHub settings:
+Friendly reminder to [set the following environment variables](https://docs.github.com/en/actions/learn-github-actions/variables) in your GitHub settings:
 ```bash
   # EXAMPLE:
   # projects/123123412578/locations/global/workloadIdentityPools/my-pool/providers/my-provider
