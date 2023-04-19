@@ -44,4 +44,5 @@ unit-test: node_modules/.installed ## Runs all unit tests.
 
 .PHONY: lint
 lint: node_modules/.installed ## Runs eslint.
+	npm run format-check
 	npm run lint
