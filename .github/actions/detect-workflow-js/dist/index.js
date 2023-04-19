@@ -194,8 +194,8 @@ function run() {
         // Set outputs.
         let [repository, ref, workflow] = ["", "", ""];
         try {
-            // NOTE: OIDC tokens may be available for pull requests if the PR author
-            // author is a repo admin and the PR is from a branch on the same repo.
+            // NOTE: OIDC tokens may be available for pull requests if the PR
+            // author has write access and the PR is from a branch on the same repo.
             // However, we need to know the HEAD_SHA in that case, and it's not
             // available on the OIDC token.
             if (process.env.ACTIONS_ID_TOKEN_REQUEST_URL &&
