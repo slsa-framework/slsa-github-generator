@@ -7,7 +7,6 @@ type ApiWorkflowRun =
 
 type githubClaimsType = {
   aud?: string;
-  event_name?: string;
   job_workflow_ref?: string;
 };
 
