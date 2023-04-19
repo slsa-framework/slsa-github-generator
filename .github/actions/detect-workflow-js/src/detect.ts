@@ -7,6 +7,7 @@ type ApiWorkflowRun =
 
 type githubClaimsType = {
   aud?: string;
+  event_name?: string;
   job_workflow_ref?: string;
 };
 
@@ -62,11 +63,11 @@ export async function detectWorkflowFromContext(
 
   let [repository, ref, workflow] = ["", "", ""];
 
-  // If this is a slsa-github-generator repository or fork, then look
-  // for the repo and head SHA from the pull_request event value.
+  // If this is a pull request, then look for the repo and head SHA from the
+  // pull_request event value.
   if (
-    workflowData.event === "pull_request" &&
-    workflowData.repository.name === "slsa-github-generator"
+    workflowData.event === "pull_request" ||
+    workflowData.event === "merge_group"
   ) {
     ref = workflowData.head_sha;
     repository = workflowData.head_repository.full_name;
