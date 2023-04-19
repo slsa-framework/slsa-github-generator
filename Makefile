@@ -42,6 +42,26 @@ ts-test: ## Run TypeScript tests.
 			make -C $$path unit-test; \
 		done
 
+## Tools
+#####################################################################
+
+.PHONY: markdown-toc
+markdown-toc: node_modules/.installed ## Runs markdown-toc on markdown files.
+	@# NOTE: Do not include issue templates since they contain Front Matter.
+	@# markdown-toc will update Front Matter even if there is no TOC in the file.
+	@# See: https://github.com/jonschlinkert/markdown-toc/issues/151
+	@set -euo pipefail; \
+		md_files=$$( \
+			find . -name '*.md' -type f \
+				-not -iwholename '*/.git/*' \
+				-not -iwholename '*/vendor/*' \
+				-not -iwholename '*/node_modules/*' \
+				-not -iwholename '*/.github/ISSUE_TEMPLATE/*' \
+		); \
+		for filename in $${md_files}; do \
+			npm run markdown-toc "$${filename}"; \
+		done;
+
 ## Linters
 #####################################################################
 
