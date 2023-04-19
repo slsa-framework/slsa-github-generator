@@ -28,8 +28,8 @@ async function run(): Promise<void> {
     if (
       process.env.ACTIONS_ID_TOKEN_REQUEST_URL &&
       process.env.ACTIONS_ID_TOKEN_REQUEST_TOKEN &&
-      process.env.GITHUB_EVENT_NAME != "pull_request" &&
-      process.env.GITHUB_EVENT_NAME != "merge_group"
+      process.env.GITHUB_EVENT_NAME !== "pull_request" &&
+      process.env.GITHUB_EVENT_NAME !== "merge_group"
     ) {
       // Use the OIDC token when available.
       const aud = path.join(repoName, "detect-workflow-js");
