@@ -80,7 +80,7 @@ jobs:
           set -euo pipefail
 
           # Install yamllint
-          pip install "yamllint==${YAMLLINT_VERSION}"
+          pip install -r requirements.txt --require-hashes
 
           # Run yamllint
           make yamllint
