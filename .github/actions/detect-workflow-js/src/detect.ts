@@ -67,7 +67,7 @@ export async function detectWorkflowFromContext(
   if (
     (workflowData.event === "pull_request" ||
       workflowData.event === "merge_group") &&
-    workflowData.repository.full_name == "slsa-framework/slsa-github-generator"
+    workflowData.repository.full_name === "slsa-framework/slsa-github-generator"
   ) {
     ref = workflowData.head_sha;
     repository = workflowData.head_repository.full_name;
