@@ -33,9 +33,8 @@ jobs:
         run: npm ci
       # TODO: Add subject verification. This only verifies the signature on the DSSE envelope.
       - name: run verify
-        working-directory: outputs
         run: |
-          for file in *; do
+          for file in outputs/*; do
             ./node_modules/.bin/sigstore verify $file
           done
 
