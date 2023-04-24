@@ -62,11 +62,14 @@ export async function detectWorkflowFromContext(
 
   let [repository, ref, workflow] = ["", "", ""];
 
-  // If this is a slsa-github-generator repository or fork, then look
-  // for the repo and head SHA from the pull_request event value.
+  // If this is a pull request on the main repository
+  // (slsa-framework/slsa-github-generator), then look for the repo and head
+  // SHA from the pull_request event value. Pull requests on forks are not
+  // supported.
   if (
-    workflowData.event === "pull_request" &&
-    workflowData.repository.name === "slsa-github-generator"
+    (workflowData.event === "pull_request" ||
+      workflowData.event === "merge_group") &&
+    workflowData.repository.full_name === "slsa-framework/slsa-github-generator"
   ) {
     ref = workflowData.head_sha;
     repository = workflowData.head_repository.full_name;
@@ -76,9 +79,9 @@ export async function detectWorkflowFromContext(
     // Filter referenced_workflows for slsa-github-generator repositories.
     // TODO(https://github.com/actions/runner/issues/2417): When
     // GITHUB_JOB_WORKFLOW_SHA becomes fully functional, the OIDC token
-    // detection can be removed and we can identify the current reusable workflow
-    // through the sha of a referenced workflow, fully supporting all triggers
-    // without the repository filter.
+    // detection can be removed and we can identify the current reusable
+    // workflow through the sha of a referenced workflow, fully supporting all
+    // triggers without the repository filter.
     for (const reusableWorkflow of workflowData.referenced_workflows) {
       const workflowPath = reusableWorkflow.path.split("@", 1);
       const [workflowOwner, workflowRepo, ...workflowArray] =
