@@ -17,4 +17,5 @@ jobs:
     permissions:
       contents: read
       id-token: write
+      issues: write
     uses: ./.github/workflows/e2e.verify-token.reusable.yml
