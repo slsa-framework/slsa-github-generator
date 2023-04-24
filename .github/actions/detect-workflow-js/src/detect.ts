@@ -62,8 +62,10 @@ export async function detectWorkflowFromContext(
 
   let [repository, ref, workflow] = ["", "", ""];
 
-  // If this is a pull request, then look for the repo and head SHA from the
-  // pull_request event value.
+  // If this is a pull request on the main repository
+  // (slsa-framework/slsa-github-generator), then look for the repo and head
+  // SHA from the pull_request event value. Pull requests on forks are not
+  // supported.
   if (
     (workflowData.event === "pull_request" ||
       workflowData.event === "merge_group") &&
