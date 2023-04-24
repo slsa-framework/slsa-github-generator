@@ -84,10 +84,13 @@ function detectWorkflowFromContext(repoName, token) {
             return Promise.reject(Error(`No reusable workflows detected ${JSON.stringify(workflowData)}.`));
         }
         let [repository, ref, workflow] = ["", "", ""];
-        // If this is a slsa-github-generator repository or fork, then look
-        // for the repo and head SHA from the pull_request event value.
-        if (workflowData.event === "pull_request" &&
-            workflowData.repository.name === "slsa-github-generator") {
+        // If this is a pull request on the main repository
+        // (slsa-framework/slsa-github-generator), then look for the repo and head
+        // SHA from the pull_request event value. Pull requests on forks are not
+        // supported.
+        if ((workflowData.event === "pull_request" ||
+            workflowData.event === "merge_group") &&
+            workflowData.repository.full_name === "slsa-framework/slsa-github-generator") {
             ref = workflowData.head_sha;
             repository = workflowData.head_repository.full_name;
             workflow = workflowData.path;
@@ -97,9 +100,9 @@ function detectWorkflowFromContext(repoName, token) {
             // Filter referenced_workflows for slsa-github-generator repositories.
             // TODO(https://github.com/actions/runner/issues/2417): When
             // GITHUB_JOB_WORKFLOW_SHA becomes fully functional, the OIDC token
-            // detection can be removed and we can identify the current reusable workflow
-            // through the sha of a referenced workflow, fully supporting all triggers
-            // without the repository filter.
+            // detection can be removed and we can identify the current reusable
+            // workflow through the sha of a referenced workflow, fully supporting all
+            // triggers without the repository filter.
             for (const reusableWorkflow of workflowData.referenced_workflows) {
                 const workflowPath = reusableWorkflow.path.split("@", 1);
                 const [workflowOwner, workflowRepo, ...workflowArray] = workflowPath[0].split("/");
@@ -194,8 +197,14 @@ function run() {
         // Set outputs.
         let [repository, ref, workflow] = ["", "", ""];
         try {
+            // NOTE: OIDC tokens may be available for pull requests if the PR
+            // author has write access and the PR is from a branch on the same repo.
+            // However, we need to know the HEAD_SHA in that case, and it's not
+            // available on the OIDC token.
             if (process.env.ACTIONS_ID_TOKEN_REQUEST_URL &&
-                process.env.ACTIONS_ID_TOKEN_REQUEST_TOKEN) {
+                process.env.ACTIONS_ID_TOKEN_REQUEST_TOKEN &&
+                process.env.GITHUB_EVENT_NAME !== "pull_request" &&
+                process.env.GITHUB_EVENT_NAME !== "merge_group") {
                 // Use the OIDC token when available.
                 const aud = path_1.default.join(repoName, "detect-workflow-js");
                 [repository, ref, workflow] = yield (0, detect_1.detectWorkflowFromOIDC)(aud);
@@ -5000,7 +5009,7 @@ FetchError.prototype.name = 'FetchError';
 
 let convert;
 try {
-	convert = (__nccwpck_require__(2877).convert);
+	convert = (__nccwpck_require__(3975).convert);
 } catch (e) {}
 
 const INTERNALS = Symbol('Body internals');
@@ -9832,14 +9841,6 @@ function wrappy (fn, cb) {
 
 /***/ }),
 
-/***/ 2877:
-/***/ ((module) => {
-
-module.exports = eval("require")("encoding");
-
-
-/***/ }),
-
 /***/ 9491:
 /***/ ((module) => {
 
@@ -9853,6 +9854,14 @@ module.exports = require("assert");
 
 "use strict";
 module.exports = require("crypto");
+
+/***/ }),
+
+/***/ 3975:
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("encoding");
 
 /***/ }),
 

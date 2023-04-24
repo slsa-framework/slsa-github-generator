@@ -1,7 +1,8 @@
 # Hashes retrieved using instructions here:
 # https://pip.pypa.io/en/stable/cli/pip_hash/#example
-yamllint==1.30.0 \
-    --hash=sha256:4f58f323aedda16189a489d183ecc25c66d7a9cc0fe88f61b650fef167b13190
+yamllint==1.31.0 \
+    --hash=sha256:15f4bdb645e6a4a0a22fe5415bc38b4a934c51419b30104896d2f3f95e329185 \
+    --hash=sha256:2d83f1d12f733e162a87e06b176149d7bb9c5bae4a9e5fce1c771d7f703f7a65
 # NOTE: pathspec is included because it is not pinned using '==' by yamllint. So
 # we need to include the exact version and hash here.
 pathspec==0.11.1 \

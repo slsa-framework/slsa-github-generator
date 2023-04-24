@@ -67,16 +67,17 @@ native GitHub projects. It allows projects to generate
 
 Specifically, this repository contains tools for generating non-forgeable
 SLSA provenance on GitHub that meets the
-[build](https://slsa.dev/spec/v0.1/requirements#build-requirements)
-and [provenance](https://slsa.dev/spec/v0.1/requirements#provenance-requirements)
-requirements for [SLSA level 3 and above](https://slsa.dev/spec/v0.1/levels).
+[provenance generation](https://slsa.dev/spec/v1.0/requirements#provenance-generation)
+and [isolation](https://slsa.dev/spec/v1.0/requirements#isolation-strength)
+requirements for [SLSA Build level 3 and above](https://slsa.dev/spec/v1.0/levels).
 
-While slsa-github-generator can help you achieve SLSA level 3, use of the provided
+While slsa-github-generator can help you achieve SLSA Build level 3, use of the provided
 [GitHub Actions reusable workflows](https://docs.github.com/en/actions/using-workflows/reusing-workflows)
-only is not sufficient to meet all of the requirements at SLSA level 3.
-Specifically, the [source requirements](https://slsa.dev/spec/v0.1/requirements#source-requirements)
-are not covered by these workflows and must be handled explicitly to meet all
-requirements at SLSA level 3+.
+only is not sufficient to meet all of the requirements at SLSA Build level 3.
+Specifically, these workflows do not address provenance
+[distribution](https://slsa.dev/spec/v1.0/distributing-provenance) or
+[verification](https://slsa.dev/spec/v1.0/verifying-artifacts). Those requirements
+must be handled separately to meet SLSA Build level 3+.
 
 ## Roadmap
 
@@ -103,10 +104,12 @@ For guidance on how to configure renovate see [RENOVATE.md](RENOVATE.md).
 
 ### Builders
 
-Builders build and generate provenance. They let you meet the [build](https://slsa.dev/spec/v0.1/requirements#build-requirements)
-and [provenance](https://slsa.dev/spec/v0.1/requirements#provenance-requirements) requirements for [SLSA Level 3 and above](https://slsa.dev/spec/v0.1/levels).
+Build platforms build and generate provenance. They let you meet the
+[provenance generation](https://slsa.dev/spec/v1.0/requirements#provenance-generation) and
+[isolation strength](https://slsa.dev/spec/v1.0/requirements#isolation-strength)
+requirements for [SLSA Build level 3 and above](https://slsa.dev/spec/v1.0/levels).
 
-Builders are able to report the commands used to generate your artifact in the provenance.
+Builder platforms are able to report the commands used to generate your artifact in the provenance.
 
 This repository hosts the following builders:
 
@@ -127,8 +130,8 @@ If you would rather build your project yourself, use the generators instead as e
 ### Provenance-only generators
 
 Provenance-only generators let you build your artifact, and only generate provenance for you.
-They let you meet the [provenance](https://slsa.dev/spec/v0.1/requirements#provenance-requirements) requirements
-for [SLSA Level 3](https://slsa.dev/spec/v0.1/levels).
+They let you meet the [provenance generation](https://slsa.dev/spec/v1.0/requirements#provenance-generation) requirements
+for [SLSA Build level 3](https://slsa.dev/spec/v1.0/levels).
 
 Generators create an attestation to a software artifact coming from your repository.
 
