@@ -92,13 +92,6 @@ export async function createPredicate(
           rawTokenObj.github.actor_id,
         GITHUB_WORKFLOW_REF: rawTokenObj.github.workflow_ref,
         GITHUB_WORKFLOW_SHA: rawTokenObj.github.workflow_sha,
-
-        IMAGE_OS: rawTokenObj.image.os,
-        IMAGE_VERSION: rawTokenObj.image.version,
-
-        RUNNER_ARCH: rawTokenObj.runner.arch,
-        RUNNER_NAME: rawTokenObj.runner.name,
-        RUNNER_OS: rawTokenObj.runner.os,
       },
     },
     runDetails: {

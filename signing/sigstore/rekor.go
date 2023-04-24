@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/sigstore/cosign/pkg/cosign"
+	"github.com/sigstore/cosign/v2/pkg/cosign"
 	"github.com/sigstore/rekor/pkg/client"
 	"github.com/sigstore/rekor/pkg/generated/client/entries"
 	"github.com/sigstore/rekor/pkg/generated/models"
@@ -77,10 +77,17 @@ func (r *Rekor) Upload(ctx context.Context, att signing.Attestation) (signing.Lo
 	if err != nil {
 		return nil, fmt.Errorf("retrieving log uuid by index: %w", err)
 	}
+
+	pubs, err := cosign.GetRekorPubs(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("getting rekor public keys: %w", err)
+	}
+
 	var uuid string
 	for ix, entry := range resp.Payload {
 		entry := entry
-		if err := cosign.VerifyTLogEntry(ctx, rekorClient, &entry); err != nil {
+
+		if err := cosign.VerifyTLogEntryOffline(ctx, &entry, pubs); err != nil {
 			return nil, fmt.Errorf("validating log entry: %w", err)
 		}
 		uuid = ix

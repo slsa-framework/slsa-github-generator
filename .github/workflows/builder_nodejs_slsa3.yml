@@ -319,15 +319,12 @@ jobs:
           PACKAGE_PATH: "${{ steps.validate-outputs.outputs.package-path }}"
         run: |
           set -euo pipefail
+          # NOTE: release-id may be empty if npm-publish=true, upload-assets=false
           release_id=""
           if [[ -n "${RELEASE_ID_NEW_TAGS}" ]]; then
             release_id="${RELEASE_ID_NEW_TAGS}"
           elif [[ -n "${RELEASE_ID_TAG_NAME}" ]]; then
             release_id="${RELEASE_ID_TAG_NAME}"
-          else
-            # This should never happen (unless previous steps fail).
-            echo "internal error"
-            exit 1
           fi
           echo "release-id=${release_id}" >> "$GITHUB_OUTPUT"
 
