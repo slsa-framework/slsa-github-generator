@@ -1,4 +1,4 @@
-name: schedule verify-token
+name: schedule verify-token wrapper
 
 on:
   # Daily run.
@@ -14,7 +14,7 @@ env:
 
 jobs:
   verify-token-e2e:
-  permissions:
-    contents: read
-    id-token: write
-  uses: ./.github/workflows/e2e.verify-token.reusable.yml
+    permissions:
+      contents: read
+      id-token: write
+    uses: ./.github/workflows/e2e.verify-token.reusable.yml
