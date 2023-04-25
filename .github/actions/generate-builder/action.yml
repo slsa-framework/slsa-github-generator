@@ -27,6 +27,12 @@ inputs:
     type: boolean
     required: false
     default: false
+  # TODO(#2056): Remove testing input.
+  testing:
+    description: "Temporary flag used to support pre-submit testing. DO NOT USE"
+    type: boolean
+    required: false
+    default: false
 
   token:
     description: "GitHub token"
@@ -84,6 +90,8 @@ runs:
         BUILDER_DIR: "./__BUILDER_CHECKOUT_DIR__/${{ inputs.directory }}"
         # Needed for the gh CLI used in builder-fetch.sh.
         GH_TOKEN: "${{ inputs.token }}"
+        # TODO(#2056): Remove testing input.
+        SLSA_VERIFIER_TESTING: "${{ inputs.testing }}"
       run: ./__BUILDER_CHECKOUT_DIR__/.github/actions/generate-builder/generate-builder.sh
 
     - name: Compute sha256 of builder
