@@ -26,6 +26,8 @@ workflow the "Node.js builder" from now on.
   - [Provenance Format](#provenance-format)
   - [Provenance Example](#provenance-example)
 - [Verification](#verification)
+  - [npm audit signatures](#npm-audit-signatures)
+  - [slsa-verifier](#slsa-verifier)
 
 <!-- tocstop -->
 
