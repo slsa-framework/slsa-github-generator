@@ -75,6 +75,12 @@
 
 ## v1.6.0
 
+This release includes the first beta release of the
+[Node.js builder](https://github.com/slsa-framework/slsa-github-generator/tree/v1.6.0/internal/builders/nodejs).
+The Node.js builder provides a GitHub Actions reusable workflow that can be
+called to build a Node.js package, generate SLSA Build L3 compliant provenance,
+and publish it to the npm registry along with the package.
+
 ### Summary of changes
 
 #### Go builder
