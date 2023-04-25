@@ -28,7 +28,7 @@ import (
 	"github.com/slsa-framework/slsa-github-generator/signing/sigstore"
 
 	// Enable the GitHub OIDC auth provider.
-	_ "github.com/sigstore/cosign/pkg/providers/github"
+	_ "github.com/sigstore/cosign/v2/pkg/providers/github"
 
 	"github.com/slsa-framework/slsa-github-generator/internal/builders/go/pkg"
 	"github.com/slsa-framework/slsa-github-generator/internal/utils"

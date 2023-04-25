@@ -94,7 +94,7 @@ jobs:
       - name: Detect the generator ref
         id: detect
         continue-on-error: true
-        uses: slsa-framework/slsa-github-generator/.github/actions/detect-workflow-js@main
+        uses: slsa-framework/slsa-github-generator/.github/actions/detect-workflow-js@v1.6.0-rc.1
 
       - name: Final outcome
         id: final
@@ -125,7 +125,7 @@ jobs:
       - name: Generate builder
         id: generate-builder
         continue-on-error: true
-        uses: slsa-framework/slsa-github-generator/.github/actions/generate-builder@main
+        uses: slsa-framework/slsa-github-generator/.github/actions/generate-builder@v1.6.0-rc.1
         with:
           repository: "${{ needs.detect-env.outputs.repository }}"
           ref: "${{ needs.detect-env.outputs.ref }}"
@@ -139,7 +139,7 @@ jobs:
       - id: auth
         name: Authenticate to Google Cloud
         if: inputs.gcp-workload-identity-provider != ''
-        uses: google-github-actions/auth@ef5d53e30bbcd8d0836f4288f5e50ff3e086997d # v1.0.0
+        uses: google-github-actions/auth@e8df18b60c5dd38ba618c121b779307266153fbf # v1.1.0
         with:
           token_format: "access_token"
           workload_identity_provider: ${{ inputs.gcp-workload-identity-provider }}

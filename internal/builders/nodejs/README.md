@@ -105,6 +105,7 @@ jobs:
       actions: read # for detecting the Github Actions environment.
       id-token: write # for creating OIDC tokens for signing.
       packages: write # for uploading attestations.
+      contents: write # for uploading attestations.
     if: startsWith(github.ref, 'refs/tags/')
     uses: slsa-framework/slsa-github-generator/.github/workflows/builder_nodejs_slsa3.yml@v1.5.0
     with:
@@ -180,12 +181,14 @@ Inputs:
 | ----------------- | -------- | ---------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | access            | No       | 'restricted' for scoped packages, 'public' for unscoped packages | The access level for the package. Valid values are "public" or "restricted".                                                                                                                                                                        |
 | directory         | No       | `github.workspace`                                               | The root directory of the package (i.e. where the `package.json` is located)                                                                                                                                                                        |
-| npm-publish       | No       | `true` if pushing a new tag, `false` otherwise                   | Publish to the npm package repository.                                                                                                                                                                                                              |
 | node-version      | No       |                                                                  | The version of Node.js to use. If no value is supplied, the `node` version from `$PATH` is used.                                                                                                                                                    |
 | node-version-file | No       |                                                                  | File containing the version Spec of the version to use. Examples: .nvmrc, .node-version, .tool-versions.                                                                                                                                            |
+| npm-publish       | No       | `true` if pushing a new tag, `false` otherwise                   | Publish to the npm package repository.                                                                                                                                                                                                              |
 | rekor-log-public  | No       | false                                                            | Set to true to opt-in to posting to the public transparency log. Will generate an error if false for private repositories. This input has no effect for public repositories. See [Private Repositories](#private-repositories).<br>Default: `false` |
 | run-scripts       | No       |                                                                  | A comma separated ordered list of npm scripts to run before running `npm publish`. See [scripts](https://docs.npmjs.com/cli/v9/using-npm/scripts) for more information. \                                                                           |
 | dist-tag          | No       | latest                                                           | The package dist-tag to attach. See `npm help dist-tag` for more information on tags.                                                                                                                                                               |
+| `upload-assets`   | no       | true                                                             | If true the package tarball and provenance is uploaded to a GitHub release for new tags.                                                                                                                                                            |
+| `upload-tag-name` | no       |                                                                  | If specified and `upload-assets` is set to true, the package tarball and provenance will be uploaded to a Github release identified by the tag-name regardless of the triggering event.                                                             |
 
 Secrets:
 
@@ -195,7 +198,15 @@ Secrets:
 
 ### Workflow Outputs
 
-The workflow does not have any outputs.
+The Node.js builder produces the following outputs:
+
+| Name                    | Description                                                                                                    |
+| ----------------------- | -------------------------------------------------------------------------------------------------------------- |
+| artifact-name           | The name of the package artifact uploaded to the workflow run.                                                 |
+| provenance-name         | The name of the provenance attestation uploaded to the workflow run.                                           |
+| release-asset-name      | The package asset name uploaded to the release (if upload-assets is true). e.g. sigstore-1.1.1.tgz             |
+| release-id              | The name of the release where the package tarball and provenance were uploaded (if upload-assets is true).     |
+| release-provenance-name | The provenance asset name uploaded to the release (if upload-assets is true). e.g. sigstore-1.1.1.intoto.jsonl |
 
 ### Provenance Format
 

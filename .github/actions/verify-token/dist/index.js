@@ -403,11 +403,6 @@ function createPredicate(rawTokenObj, toolURI, token) {
                         rawTokenObj.github.actor_id,
                     GITHUB_WORKFLOW_REF: rawTokenObj.github.workflow_ref,
                     GITHUB_WORKFLOW_SHA: rawTokenObj.github.workflow_sha,
-                    IMAGE_OS: rawTokenObj.image.os,
-                    IMAGE_VERSION: rawTokenObj.image.version,
-                    RUNNER_ARCH: rawTokenObj.runner.arch,
-                    RUNNER_NAME: rawTokenObj.runner.name,
-                    RUNNER_OS: rawTokenObj.runner.os,
                 },
             },
             metadata: {
@@ -552,11 +547,6 @@ function createPredicate(rawTokenObj, toolURI, token) {
                         rawTokenObj.github.actor_id,
                     GITHUB_WORKFLOW_REF: rawTokenObj.github.workflow_ref,
                     GITHUB_WORKFLOW_SHA: rawTokenObj.github.workflow_sha,
-                    IMAGE_OS: rawTokenObj.image.os,
-                    IMAGE_VERSION: rawTokenObj.image.version,
-                    RUNNER_ARCH: rawTokenObj.runner.arch,
-                    RUNNER_NAME: rawTokenObj.runner.name,
-                    RUNNER_OS: rawTokenObj.runner.os,
                 },
             },
             runDetails: {
@@ -7463,6 +7453,2024 @@ function once(emitter, name, { signal } = {}) {
 }
 exports["default"] = once;
 //# sourceMappingURL=index.js.map
+
+/***/ }),
+
+/***/ 9652:
+/***/ ((module) => {
+
+const COMMA = ',';
+const COLON = ':';
+const LEFT_SQUARE_BRACKET = '[';
+const RIGHT_SQUARE_BRACKET = ']';
+const LEFT_CURLY_BRACKET = '{';
+const RIGHT_CURLY_BRACKET = '}';
+
+// Recursively encodes the supplied object according to the canonical JSON form
+// as specified at http://wiki.laptop.org/go/Canonical_JSON. It's a restricted
+// dialect of JSON in which keys are lexically sorted, floats are not allowed,
+// and only double quotes and backslashes are escaped.
+function canonicalize(object) {
+  const buffer = [];
+  if (typeof object === 'string') {
+    buffer.push(canonicalizeString(object));
+  } else if (typeof object === 'boolean') {
+    buffer.push(JSON.stringify(object));
+  } else if (Number.isInteger(object)) {
+    buffer.push(JSON.stringify(object));
+  } else if (object === null) {
+    buffer.push(JSON.stringify(object));
+  } else if (Array.isArray(object)) {
+    buffer.push(LEFT_SQUARE_BRACKET);
+    let first = true;
+    object.forEach((element) => {
+      if (!first) {
+        buffer.push(COMMA);
+      }
+      first = false;
+      buffer.push(canonicalize(element));
+    });
+    buffer.push(RIGHT_SQUARE_BRACKET);
+  } else if (typeof object === 'object') {
+    buffer.push(LEFT_CURLY_BRACKET);
+    let first = true;
+    Object.keys(object)
+      .sort()
+      .forEach((property) => {
+        if (!first) {
+          buffer.push(COMMA);
+        }
+        first = false;
+        buffer.push(canonicalizeString(property));
+        buffer.push(COLON);
+        buffer.push(canonicalize(object[property]));
+      });
+    buffer.push(RIGHT_CURLY_BRACKET);
+  } else {
+    throw new TypeError('cannot encode ' + object.toString());
+  }
+
+  return buffer.join('');
+}
+
+// String canonicalization consists of escaping backslash (\) and double
+// quote (") characters and wrapping the resulting string in double quotes.
+function canonicalizeString(string) {
+  const escapedString = string.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+  return '"' + escapedString + '"';
+}
+
+module.exports = {
+  canonicalize,
+};
+
+
+/***/ }),
+
+/***/ 159:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Signed = exports.isMetadataKind = exports.MetadataKind = void 0;
+const util_1 = __importDefault(__nccwpck_require__(3837));
+const error_1 = __nccwpck_require__(8448);
+const utils_1 = __nccwpck_require__(5688);
+const SPECIFICATION_VERSION = ['1', '0', '31'];
+var MetadataKind;
+(function (MetadataKind) {
+    MetadataKind["Root"] = "root";
+    MetadataKind["Timestamp"] = "timestamp";
+    MetadataKind["Snapshot"] = "snapshot";
+    MetadataKind["Targets"] = "targets";
+})(MetadataKind = exports.MetadataKind || (exports.MetadataKind = {}));
+function isMetadataKind(value) {
+    return (typeof value === 'string' &&
+        Object.values(MetadataKind).includes(value));
+}
+exports.isMetadataKind = isMetadataKind;
+/***
+ * A base class for the signed part of TUF metadata.
+ *
+ * Objects with base class Signed are usually included in a ``Metadata`` object
+ * on the signed attribute. This class provides attributes and methods that
+ * are common for all TUF metadata types (roles).
+ */
+class Signed {
+    constructor(options) {
+        this.specVersion = options.specVersion || SPECIFICATION_VERSION.join('.');
+        const specList = this.specVersion.split('.');
+        if (!(specList.length === 2 || specList.length === 3) ||
+            !specList.every((item) => isNumeric(item))) {
+            throw new error_1.ValueError('Failed to parse specVersion');
+        }
+        // major version must match
+        if (specList[0] != SPECIFICATION_VERSION[0]) {
+            throw new error_1.ValueError('Unsupported specVersion');
+        }
+        this.expires = options.expires || new Date().toISOString();
+        this.version = options.version || 1;
+        this.unrecognizedFields = options.unrecognizedFields || {};
+    }
+    equals(other) {
+        if (!(other instanceof Signed)) {
+            return false;
+        }
+        return (this.specVersion === other.specVersion &&
+            this.expires === other.expires &&
+            this.version === other.version &&
+            util_1.default.isDeepStrictEqual(this.unrecognizedFields, other.unrecognizedFields));
+    }
+    isExpired(referenceTime) {
+        if (!referenceTime) {
+            referenceTime = new Date();
+        }
+        return referenceTime >= new Date(this.expires);
+    }
+    static commonFieldsFromJSON(data) {
+        const { spec_version, expires, version, ...rest } = data;
+        if (utils_1.guard.isDefined(spec_version) && !(typeof spec_version === 'string')) {
+            throw new TypeError('spec_version must be a string');
+        }
+        if (utils_1.guard.isDefined(expires) && !(typeof expires === 'string')) {
+            throw new TypeError('expires must be a string');
+        }
+        if (utils_1.guard.isDefined(version) && !(typeof version === 'number')) {
+            throw new TypeError('version must be a number');
+        }
+        return {
+            specVersion: spec_version,
+            expires,
+            version,
+            unrecognizedFields: rest,
+        };
+    }
+}
+exports.Signed = Signed;
+function isNumeric(str) {
+    return !isNaN(Number(str));
+}
+
+
+/***/ }),
+
+/***/ 1662:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Delegations = void 0;
+const util_1 = __importDefault(__nccwpck_require__(3837));
+const error_1 = __nccwpck_require__(8448);
+const key_1 = __nccwpck_require__(6697);
+const role_1 = __nccwpck_require__(9393);
+const utils_1 = __nccwpck_require__(5688);
+/**
+ * A container object storing information about all delegations.
+ *
+ * Targets roles that are trusted to provide signed metadata files
+ * describing targets with designated pathnames and/or further delegations.
+ */
+class Delegations {
+    constructor(options) {
+        this.keys = options.keys;
+        this.unrecognizedFields = options.unrecognizedFields || {};
+        if (options.roles) {
+            if (Object.keys(options.roles).some((roleName) => role_1.TOP_LEVEL_ROLE_NAMES.includes(roleName))) {
+                throw new error_1.ValueError('Delegated role name conflicts with top-level role name');
+            }
+        }
+        this.succinctRoles = options.succinctRoles;
+        this.roles = options.roles;
+    }
+    equals(other) {
+        if (!(other instanceof Delegations)) {
+            return false;
+        }
+        return (util_1.default.isDeepStrictEqual(this.keys, other.keys) &&
+            util_1.default.isDeepStrictEqual(this.roles, other.roles) &&
+            util_1.default.isDeepStrictEqual(this.unrecognizedFields, other.unrecognizedFields) &&
+            util_1.default.isDeepStrictEqual(this.succinctRoles, other.succinctRoles));
+    }
+    *rolesForTarget(targetPath) {
+        if (this.roles) {
+            for (const role of Object.values(this.roles)) {
+                if (role.isDelegatedPath(targetPath)) {
+                    yield { role: role.name, terminating: role.terminating };
+                }
+            }
+        }
+        else if (this.succinctRoles) {
+            yield {
+                role: this.succinctRoles.getRoleForTarget(targetPath),
+                terminating: true,
+            };
+        }
+    }
+    toJSON() {
+        const json = {
+            keys: keysToJSON(this.keys),
+            ...this.unrecognizedFields,
+        };
+        if (this.roles) {
+            json.roles = rolesToJSON(this.roles);
+        }
+        else if (this.succinctRoles) {
+            json.succinct_roles = this.succinctRoles.toJSON();
+        }
+        return json;
+    }
+    static fromJSON(data) {
+        const { keys, roles, succinct_roles, ...unrecognizedFields } = data;
+        let succinctRoles;
+        if (utils_1.guard.isObject(succinct_roles)) {
+            succinctRoles = role_1.SuccinctRoles.fromJSON(succinct_roles);
+        }
+        return new Delegations({
+            keys: keysFromJSON(keys),
+            roles: rolesFromJSON(roles),
+            unrecognizedFields,
+            succinctRoles,
+        });
+    }
+}
+exports.Delegations = Delegations;
+function keysToJSON(keys) {
+    return Object.entries(keys).reduce((acc, [keyId, key]) => ({
+        ...acc,
+        [keyId]: key.toJSON(),
+    }), {});
+}
+function rolesToJSON(roles) {
+    return Object.values(roles).map((role) => role.toJSON());
+}
+function keysFromJSON(data) {
+    if (!utils_1.guard.isObjectRecord(data)) {
+        throw new TypeError('keys is malformed');
+    }
+    return Object.entries(data).reduce((acc, [keyID, keyData]) => ({
+        ...acc,
+        [keyID]: key_1.Key.fromJSON(keyID, keyData),
+    }), {});
+}
+function rolesFromJSON(data) {
+    let roleMap;
+    if (utils_1.guard.isDefined(data)) {
+        if (!utils_1.guard.isObjectArray(data)) {
+            throw new TypeError('roles is malformed');
+        }
+        roleMap = data.reduce((acc, role) => {
+            const delegatedRole = role_1.DelegatedRole.fromJSON(role);
+            return {
+                ...acc,
+                [delegatedRole.name]: delegatedRole,
+            };
+        }, {});
+    }
+    return roleMap;
+}
+
+
+/***/ }),
+
+/***/ 8448:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.UnsupportedAlgorithmError = exports.CryptoError = exports.LengthOrHashMismatchError = exports.UnsignedMetadataError = exports.RepositoryError = exports.ValueError = void 0;
+// An error about insufficient values
+class ValueError extends Error {
+}
+exports.ValueError = ValueError;
+// An error with a repository's state, such as a missing file.
+// It covers all exceptions that come from the repository side when
+// looking from the perspective of users of metadata API or ngclient.
+class RepositoryError extends Error {
+}
+exports.RepositoryError = RepositoryError;
+// An error about metadata object with insufficient threshold of signatures.
+class UnsignedMetadataError extends RepositoryError {
+}
+exports.UnsignedMetadataError = UnsignedMetadataError;
+// An error while checking the length and hash values of an object.
+class LengthOrHashMismatchError extends RepositoryError {
+}
+exports.LengthOrHashMismatchError = LengthOrHashMismatchError;
+class CryptoError extends Error {
+}
+exports.CryptoError = CryptoError;
+class UnsupportedAlgorithmError extends CryptoError {
+}
+exports.UnsupportedAlgorithmError = UnsupportedAlgorithmError;
+
+
+/***/ }),
+
+/***/ 1923:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.TargetFile = exports.MetaFile = void 0;
+const crypto_1 = __importDefault(__nccwpck_require__(6113));
+const util_1 = __importDefault(__nccwpck_require__(3837));
+const error_1 = __nccwpck_require__(8448);
+const utils_1 = __nccwpck_require__(5688);
+// A container with information about a particular metadata file.
+//
+// This class is used for Timestamp and Snapshot metadata.
+class MetaFile {
+    constructor(opts) {
+        if (opts.version <= 0) {
+            throw new error_1.ValueError('Metafile version must be at least 1');
+        }
+        if (opts.length !== undefined) {
+            validateLength(opts.length);
+        }
+        this.version = opts.version;
+        this.length = opts.length;
+        this.hashes = opts.hashes;
+        this.unrecognizedFields = opts.unrecognizedFields || {};
+    }
+    equals(other) {
+        if (!(other instanceof MetaFile)) {
+            return false;
+        }
+        return (this.version === other.version &&
+            this.length === other.length &&
+            util_1.default.isDeepStrictEqual(this.hashes, other.hashes) &&
+            util_1.default.isDeepStrictEqual(this.unrecognizedFields, other.unrecognizedFields));
+    }
+    verify(data) {
+        // Verifies that the given data matches the expected length.
+        if (this.length !== undefined) {
+            if (data.length !== this.length) {
+                throw new error_1.LengthOrHashMismatchError(`Expected length ${this.length} but got ${data.length}`);
+            }
+        }
+        // Verifies that the given data matches the supplied hashes.
+        if (this.hashes) {
+            Object.entries(this.hashes).forEach(([key, value]) => {
+                let hash;
+                try {
+                    hash = crypto_1.default.createHash(key);
+                }
+                catch (e) {
+                    throw new error_1.LengthOrHashMismatchError(`Hash algorithm ${key} not supported`);
+                }
+                const observedHash = hash.update(data).digest('hex');
+                if (observedHash !== value) {
+                    throw new error_1.LengthOrHashMismatchError(`Expected hash ${value} but got ${observedHash}`);
+                }
+            });
+        }
+    }
+    toJSON() {
+        const json = {
+            version: this.version,
+            ...this.unrecognizedFields,
+        };
+        if (this.length !== undefined) {
+            json.length = this.length;
+        }
+        if (this.hashes) {
+            json.hashes = this.hashes;
+        }
+        return json;
+    }
+    static fromJSON(data) {
+        const { version, length, hashes, ...rest } = data;
+        if (typeof version !== 'number') {
+            throw new TypeError('version must be a number');
+        }
+        if (utils_1.guard.isDefined(length) && typeof length !== 'number') {
+            throw new TypeError('length must be a number');
+        }
+        if (utils_1.guard.isDefined(hashes) && !utils_1.guard.isStringRecord(hashes)) {
+            throw new TypeError('hashes must be string keys and values');
+        }
+        return new MetaFile({
+            version,
+            length,
+            hashes,
+            unrecognizedFields: rest,
+        });
+    }
+}
+exports.MetaFile = MetaFile;
+// Container for info about a particular target file.
+//
+// This class is used for Target metadata.
+class TargetFile {
+    constructor(opts) {
+        validateLength(opts.length);
+        this.length = opts.length;
+        this.path = opts.path;
+        this.hashes = opts.hashes;
+        this.unrecognizedFields = opts.unrecognizedFields || {};
+    }
+    get custom() {
+        const custom = this.unrecognizedFields['custom'];
+        if (!custom || Array.isArray(custom) || !(typeof custom === 'object')) {
+            return {};
+        }
+        return custom;
+    }
+    equals(other) {
+        if (!(other instanceof TargetFile)) {
+            return false;
+        }
+        return (this.length === other.length &&
+            this.path === other.path &&
+            util_1.default.isDeepStrictEqual(this.hashes, other.hashes) &&
+            util_1.default.isDeepStrictEqual(this.unrecognizedFields, other.unrecognizedFields));
+    }
+    async verify(stream) {
+        let observedLength = 0;
+        // Create a digest for each hash algorithm
+        const digests = Object.keys(this.hashes).reduce((acc, key) => {
+            try {
+                acc[key] = crypto_1.default.createHash(key);
+            }
+            catch (e) {
+                throw new error_1.LengthOrHashMismatchError(`Hash algorithm ${key} not supported`);
+            }
+            return acc;
+        }, {});
+        // Read stream chunk by chunk
+        for await (const chunk of stream) {
+            // Keep running tally of stream length
+            observedLength += chunk.length;
+            // Append chunk to each digest
+            Object.values(digests).forEach((digest) => {
+                digest.update(chunk);
+            });
+        }
+        // Verify length matches expected value
+        if (observedLength !== this.length) {
+            throw new error_1.LengthOrHashMismatchError(`Expected length ${this.length} but got ${observedLength}`);
+        }
+        // Verify each digest matches expected value
+        Object.entries(digests).forEach(([key, value]) => {
+            const expected = this.hashes[key];
+            const actual = value.digest('hex');
+            if (actual !== expected) {
+                throw new error_1.LengthOrHashMismatchError(`Expected hash ${expected} but got ${actual}`);
+            }
+        });
+    }
+    toJSON() {
+        return {
+            length: this.length,
+            hashes: this.hashes,
+            ...this.unrecognizedFields,
+        };
+    }
+    static fromJSON(path, data) {
+        const { length, hashes, ...rest } = data;
+        if (typeof length !== 'number') {
+            throw new TypeError('length must be a number');
+        }
+        if (!utils_1.guard.isStringRecord(hashes)) {
+            throw new TypeError('hashes must have string keys and values');
+        }
+        return new TargetFile({
+            length,
+            path,
+            hashes,
+            unrecognizedFields: rest,
+        });
+    }
+}
+exports.TargetFile = TargetFile;
+// Check that supplied length if valid
+function validateLength(length) {
+    if (length < 0) {
+        throw new error_1.ValueError('Length must be at least 0');
+    }
+}
+
+
+/***/ }),
+
+/***/ 5833:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Timestamp = exports.Targets = exports.Snapshot = exports.Signature = exports.Root = exports.Metadata = exports.Key = exports.TargetFile = exports.MetaFile = exports.ValueError = exports.MetadataKind = void 0;
+var base_1 = __nccwpck_require__(159);
+Object.defineProperty(exports, "MetadataKind", ({ enumerable: true, get: function () { return base_1.MetadataKind; } }));
+var error_1 = __nccwpck_require__(8448);
+Object.defineProperty(exports, "ValueError", ({ enumerable: true, get: function () { return error_1.ValueError; } }));
+var file_1 = __nccwpck_require__(1923);
+Object.defineProperty(exports, "MetaFile", ({ enumerable: true, get: function () { return file_1.MetaFile; } }));
+Object.defineProperty(exports, "TargetFile", ({ enumerable: true, get: function () { return file_1.TargetFile; } }));
+var key_1 = __nccwpck_require__(6697);
+Object.defineProperty(exports, "Key", ({ enumerable: true, get: function () { return key_1.Key; } }));
+var metadata_1 = __nccwpck_require__(1593);
+Object.defineProperty(exports, "Metadata", ({ enumerable: true, get: function () { return metadata_1.Metadata; } }));
+var root_1 = __nccwpck_require__(9392);
+Object.defineProperty(exports, "Root", ({ enumerable: true, get: function () { return root_1.Root; } }));
+var signature_1 = __nccwpck_require__(4222);
+Object.defineProperty(exports, "Signature", ({ enumerable: true, get: function () { return signature_1.Signature; } }));
+var snapshot_1 = __nccwpck_require__(2326);
+Object.defineProperty(exports, "Snapshot", ({ enumerable: true, get: function () { return snapshot_1.Snapshot; } }));
+var targets_1 = __nccwpck_require__(5799);
+Object.defineProperty(exports, "Targets", ({ enumerable: true, get: function () { return targets_1.Targets; } }));
+var timestamp_1 = __nccwpck_require__(4042);
+Object.defineProperty(exports, "Timestamp", ({ enumerable: true, get: function () { return timestamp_1.Timestamp; } }));
+
+
+/***/ }),
+
+/***/ 6697:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Key = void 0;
+const util_1 = __importDefault(__nccwpck_require__(3837));
+const error_1 = __nccwpck_require__(8448);
+const utils_1 = __nccwpck_require__(5688);
+const key_1 = __nccwpck_require__(8725);
+// A container class representing the public portion of a Key.
+class Key {
+    constructor(options) {
+        const { keyID, keyType, scheme, keyVal, unrecognizedFields } = options;
+        this.keyID = keyID;
+        this.keyType = keyType;
+        this.scheme = scheme;
+        this.keyVal = keyVal;
+        this.unrecognizedFields = unrecognizedFields || {};
+    }
+    // Verifies the that the metadata.signatures contains a signature made with
+    // this key and is correctly signed.
+    verifySignature(metadata) {
+        const signature = metadata.signatures[this.keyID];
+        if (!signature)
+            throw new error_1.UnsignedMetadataError('no signature for key found in metadata');
+        if (!this.keyVal.public)
+            throw new error_1.UnsignedMetadataError('no public key found');
+        const publicKey = (0, key_1.getPublicKey)({
+            keyType: this.keyType,
+            scheme: this.scheme,
+            keyVal: this.keyVal.public,
+        });
+        const signedData = metadata.signed.toJSON();
+        try {
+            if (!utils_1.crypto.verifySignature(signedData, publicKey, signature.sig)) {
+                throw new error_1.UnsignedMetadataError(`failed to verify ${this.keyID} signature`);
+            }
+        }
+        catch (error) {
+            if (error instanceof error_1.UnsignedMetadataError) {
+                throw error;
+            }
+            throw new error_1.UnsignedMetadataError(`failed to verify ${this.keyID} signature`);
+        }
+    }
+    equals(other) {
+        if (!(other instanceof Key)) {
+            return false;
+        }
+        return (this.keyID === other.keyID &&
+            this.keyType === other.keyType &&
+            this.scheme === other.scheme &&
+            util_1.default.isDeepStrictEqual(this.keyVal, other.keyVal) &&
+            util_1.default.isDeepStrictEqual(this.unrecognizedFields, other.unrecognizedFields));
+    }
+    toJSON() {
+        return {
+            keytype: this.keyType,
+            scheme: this.scheme,
+            keyval: this.keyVal,
+            ...this.unrecognizedFields,
+        };
+    }
+    static fromJSON(keyID, data) {
+        const { keytype, scheme, keyval, ...rest } = data;
+        if (typeof keytype !== 'string') {
+            throw new TypeError('keytype must be a string');
+        }
+        if (typeof scheme !== 'string') {
+            throw new TypeError('scheme must be a string');
+        }
+        if (!utils_1.guard.isStringRecord(keyval)) {
+            throw new TypeError('keyval must be a string record');
+        }
+        return new Key({
+            keyID,
+            keyType: keytype,
+            scheme,
+            keyVal: keyval,
+            unrecognizedFields: rest,
+        });
+    }
+}
+exports.Key = Key;
+
+
+/***/ }),
+
+/***/ 1593:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Metadata = void 0;
+const canonical_json_1 = __nccwpck_require__(9652);
+const util_1 = __importDefault(__nccwpck_require__(3837));
+const base_1 = __nccwpck_require__(159);
+const error_1 = __nccwpck_require__(8448);
+const root_1 = __nccwpck_require__(9392);
+const signature_1 = __nccwpck_require__(4222);
+const snapshot_1 = __nccwpck_require__(2326);
+const targets_1 = __nccwpck_require__(5799);
+const timestamp_1 = __nccwpck_require__(4042);
+const utils_1 = __nccwpck_require__(5688);
+/***
+ * A container for signed TUF metadata.
+ *
+ * Provides methods to convert to and from json, read and write to and
+ * from JSON and to create and verify metadata signatures.
+ *
+ * ``Metadata[T]`` is a generic container type where T can be any one type of
+ * [``Root``, ``Timestamp``, ``Snapshot``, ``Targets``]. The purpose of this
+ * is to allow static type checking of the signed attribute in code using
+ * Metadata::
+ *
+ * root_md = Metadata[Root].fromJSON("root.json")
+ * # root_md type is now Metadata[Root]. This means signed and its
+ * # attributes like consistent_snapshot are now statically typed and the
+ * # types can be verified by static type checkers and shown by IDEs
+ *
+ * Using a type constraint is not required but not doing so means T is not a
+ * specific type so static typing cannot happen. Note that the type constraint
+ * ``[Root]`` is not validated at runtime (as pure annotations are not available
+ * then).
+ *
+ * Apart from ``expires`` all of the arguments to the inner constructors have
+ * reasonable default values for new metadata.
+ */
+class Metadata {
+    constructor(signed, signatures, unrecognizedFields) {
+        this.signed = signed;
+        this.signatures = signatures || {};
+        this.unrecognizedFields = unrecognizedFields || {};
+    }
+    sign(signer, append = true) {
+        const bytes = Buffer.from((0, canonical_json_1.canonicalize)(this.signed.toJSON()));
+        const signature = signer(bytes);
+        if (!append) {
+            this.signatures = {};
+        }
+        this.signatures[signature.keyID] = signature;
+    }
+    verifyDelegate(delegatedRole, delegatedMetadata) {
+        let role;
+        let keys = {};
+        switch (this.signed.type) {
+            case base_1.MetadataKind.Root:
+                keys = this.signed.keys;
+                role = this.signed.roles[delegatedRole];
+                break;
+            case base_1.MetadataKind.Targets:
+                if (!this.signed.delegations) {
+                    throw new error_1.ValueError(`No delegations found for ${delegatedRole}`);
+                }
+                keys = this.signed.delegations.keys;
+                if (this.signed.delegations.roles) {
+                    role = this.signed.delegations.roles[delegatedRole];
+                }
+                else if (this.signed.delegations.succinctRoles) {
+                    if (this.signed.delegations.succinctRoles.isDelegatedRole(delegatedRole)) {
+                        role = this.signed.delegations.succinctRoles;
+                    }
+                }
+                break;
+            default:
+                throw new TypeError('invalid metadata type');
+        }
+        if (!role) {
+            throw new error_1.ValueError(`no delegation found for ${delegatedRole}`);
+        }
+        const signingKeys = new Set();
+        role.keyIDs.forEach((keyID) => {
+            const key = keys[keyID];
+            // If we dont' have the key, continue checking other keys
+            if (!key) {
+                return;
+            }
+            try {
+                key.verifySignature(delegatedMetadata);
+                signingKeys.add(key.keyID);
+            }
+            catch (error) {
+                // continue
+            }
+        });
+        if (signingKeys.size < role.threshold) {
+            throw new error_1.UnsignedMetadataError(`${delegatedRole} was signed by ${signingKeys.size}/${role.threshold} keys`);
+        }
+    }
+    equals(other) {
+        if (!(other instanceof Metadata)) {
+            return false;
+        }
+        return (this.signed.equals(other.signed) &&
+            util_1.default.isDeepStrictEqual(this.signatures, other.signatures) &&
+            util_1.default.isDeepStrictEqual(this.unrecognizedFields, other.unrecognizedFields));
+    }
+    toJSON() {
+        const signatures = Object.values(this.signatures).map((signature) => {
+            return signature.toJSON();
+        });
+        return {
+            signatures,
+            signed: this.signed.toJSON(),
+            ...this.unrecognizedFields,
+        };
+    }
+    static fromJSON(type, data) {
+        const { signed, signatures, ...rest } = data;
+        if (!utils_1.guard.isDefined(signed) || !utils_1.guard.isObject(signed)) {
+            throw new TypeError('signed is not defined');
+        }
+        if (type !== signed._type) {
+            throw new error_1.ValueError(`expected '${type}', got ${signed['_type']}`);
+        }
+        let signedObj;
+        switch (type) {
+            case base_1.MetadataKind.Root:
+                signedObj = root_1.Root.fromJSON(signed);
+                break;
+            case base_1.MetadataKind.Timestamp:
+                signedObj = timestamp_1.Timestamp.fromJSON(signed);
+                break;
+            case base_1.MetadataKind.Snapshot:
+                signedObj = snapshot_1.Snapshot.fromJSON(signed);
+                break;
+            case base_1.MetadataKind.Targets:
+                signedObj = targets_1.Targets.fromJSON(signed);
+                break;
+            default:
+                throw new TypeError('invalid metadata type');
+        }
+        const sigMap = signaturesFromJSON(signatures);
+        return new Metadata(signedObj, sigMap, rest);
+    }
+}
+exports.Metadata = Metadata;
+function signaturesFromJSON(data) {
+    if (!utils_1.guard.isObjectArray(data)) {
+        throw new TypeError('signatures is not an array');
+    }
+    return data.reduce((acc, sigData) => {
+        const signature = signature_1.Signature.fromJSON(sigData);
+        return { ...acc, [signature.keyID]: signature };
+    }, {});
+}
+
+
+/***/ }),
+
+/***/ 9393:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.SuccinctRoles = exports.DelegatedRole = exports.Role = exports.TOP_LEVEL_ROLE_NAMES = void 0;
+const crypto_1 = __importDefault(__nccwpck_require__(6113));
+const minimatch_1 = __importDefault(__nccwpck_require__(153));
+const util_1 = __importDefault(__nccwpck_require__(3837));
+const error_1 = __nccwpck_require__(8448);
+const utils_1 = __nccwpck_require__(5688);
+exports.TOP_LEVEL_ROLE_NAMES = [
+    'root',
+    'targets',
+    'snapshot',
+    'timestamp',
+];
+/**
+ * Container that defines which keys are required to sign roles metadata.
+ *
+ * Role defines how many keys are required to successfully sign the roles
+ * metadata, and which keys are accepted.
+ */
+class Role {
+    constructor(options) {
+        const { keyIDs, threshold, unrecognizedFields } = options;
+        if (hasDuplicates(keyIDs)) {
+            throw new error_1.ValueError('duplicate key IDs found');
+        }
+        if (threshold < 1) {
+            throw new error_1.ValueError('threshold must be at least 1');
+        }
+        this.keyIDs = keyIDs;
+        this.threshold = threshold;
+        this.unrecognizedFields = unrecognizedFields || {};
+    }
+    equals(other) {
+        if (!(other instanceof Role)) {
+            return false;
+        }
+        return (this.threshold === other.threshold &&
+            util_1.default.isDeepStrictEqual(this.keyIDs, other.keyIDs) &&
+            util_1.default.isDeepStrictEqual(this.unrecognizedFields, other.unrecognizedFields));
+    }
+    toJSON() {
+        return {
+            keyids: this.keyIDs,
+            threshold: this.threshold,
+            ...this.unrecognizedFields,
+        };
+    }
+    static fromJSON(data) {
+        const { keyids, threshold, ...rest } = data;
+        if (!utils_1.guard.isStringArray(keyids)) {
+            throw new TypeError('keyids must be an array');
+        }
+        if (typeof threshold !== 'number') {
+            throw new TypeError('threshold must be a number');
+        }
+        return new Role({
+            keyIDs: keyids,
+            threshold,
+            unrecognizedFields: rest,
+        });
+    }
+}
+exports.Role = Role;
+function hasDuplicates(array) {
+    return new Set(array).size !== array.length;
+}
+/**
+ * A container with information about a delegated role.
+ *
+ * A delegation can happen in two ways:
+ *   - ``paths`` is set: delegates targets matching any path pattern in ``paths``
+ *   - ``pathHashPrefixes`` is set: delegates targets whose target path hash
+ *      starts with any of the prefixes in ``pathHashPrefixes``
+ *
+ *   ``paths`` and ``pathHashPrefixes`` are mutually exclusive: both cannot be
+ *   set, at least one of them must be set.
+ */
+class DelegatedRole extends Role {
+    constructor(opts) {
+        super(opts);
+        const { name, terminating, paths, pathHashPrefixes } = opts;
+        this.name = name;
+        this.terminating = terminating;
+        if (opts.paths && opts.pathHashPrefixes) {
+            throw new error_1.ValueError('paths and pathHashPrefixes are mutually exclusive');
+        }
+        this.paths = paths;
+        this.pathHashPrefixes = pathHashPrefixes;
+    }
+    equals(other) {
+        if (!(other instanceof DelegatedRole)) {
+            return false;
+        }
+        return (super.equals(other) &&
+            this.name === other.name &&
+            this.terminating === other.terminating &&
+            util_1.default.isDeepStrictEqual(this.paths, other.paths) &&
+            util_1.default.isDeepStrictEqual(this.pathHashPrefixes, other.pathHashPrefixes));
+    }
+    isDelegatedPath(targetFilepath) {
+        if (this.paths) {
+            return this.paths.some((pathPattern) => isTargetInPathPattern(targetFilepath, pathPattern));
+        }
+        if (this.pathHashPrefixes) {
+            const hasher = crypto_1.default.createHash('sha256');
+            const pathHash = hasher.update(targetFilepath).digest('hex');
+            return this.pathHashPrefixes.some((pathHashPrefix) => pathHash.startsWith(pathHashPrefix));
+        }
+        return false;
+    }
+    toJSON() {
+        const json = {
+            ...super.toJSON(),
+            name: this.name,
+            terminating: this.terminating,
+        };
+        if (this.paths) {
+            json.paths = this.paths;
+        }
+        if (this.pathHashPrefixes) {
+            json.path_hash_prefixes = this.pathHashPrefixes;
+        }
+        return json;
+    }
+    static fromJSON(data) {
+        const { keyids, threshold, name, terminating, paths, path_hash_prefixes, ...rest } = data;
+        if (!utils_1.guard.isStringArray(keyids)) {
+            throw new TypeError('keyids must be an array of strings');
+        }
+        if (typeof threshold !== 'number') {
+            throw new TypeError('threshold must be a number');
+        }
+        if (typeof name !== 'string') {
+            throw new TypeError('name must be a string');
+        }
+        if (typeof terminating !== 'boolean') {
+            throw new TypeError('terminating must be a boolean');
+        }
+        if (utils_1.guard.isDefined(paths) && !utils_1.guard.isStringArray(paths)) {
+            throw new TypeError('paths must be an array of strings');
+        }
+        if (utils_1.guard.isDefined(path_hash_prefixes) &&
+            !utils_1.guard.isStringArray(path_hash_prefixes)) {
+            throw new TypeError('path_hash_prefixes must be an array of strings');
+        }
+        return new DelegatedRole({
+            keyIDs: keyids,
+            threshold,
+            name,
+            terminating,
+            paths,
+            pathHashPrefixes: path_hash_prefixes,
+            unrecognizedFields: rest,
+        });
+    }
+}
+exports.DelegatedRole = DelegatedRole;
+// JS version of Ruby's Array#zip
+const zip = (a, b) => a.map((k, i) => [k, b[i]]);
+function isTargetInPathPattern(target, pattern) {
+    const targetParts = target.split('/');
+    const patternParts = pattern.split('/');
+    if (patternParts.length != targetParts.length) {
+        return false;
+    }
+    return zip(targetParts, patternParts).every(([targetPart, patternPart]) => (0, minimatch_1.default)(targetPart, patternPart));
+}
+/**
+ * Succinctly defines a hash bin delegation graph.
+ *
+ * A ``SuccinctRoles`` object describes a delegation graph that covers all
+ * targets, distributing them uniformly over the delegated roles (i.e. bins)
+ * in the graph.
+ *
+ * The total number of bins is 2 to the power of the passed ``bit_length``.
+ *
+ * Bin names are the concatenation of the passed ``name_prefix`` and a
+ * zero-padded hex representation of the bin index separated by a hyphen.
+ *
+ * The passed ``keyids`` and ``threshold`` is used for each bin, and each bin
+ * is 'terminating'.
+ *
+ * For details: https://github.com/theupdateframework/taps/blob/master/tap15.md
+ */
+class SuccinctRoles extends Role {
+    constructor(opts) {
+        super(opts);
+        const { bitLength, namePrefix } = opts;
+        if (bitLength <= 0 || bitLength > 32) {
+            throw new error_1.ValueError('bitLength must be between 1 and 32');
+        }
+        this.bitLength = bitLength;
+        this.namePrefix = namePrefix;
+        // Calculate the suffix_len value based on the total number of bins in
+        // hex. If bit_length = 10 then number_of_bins = 1024 or bin names will
+        // have a suffix between "000" and "3ff" in hex and suffix_len will be 3
+        // meaning the third bin will have a suffix of "003".
+        this.numberOfBins = Math.pow(2, bitLength);
+        // suffix_len is calculated based on "number_of_bins - 1" as the name
+        // of the last bin contains the number "number_of_bins -1" as a suffix.
+        this.suffixLen = (this.numberOfBins - 1).toString(16).length;
+    }
+    equals(other) {
+        if (!(other instanceof SuccinctRoles)) {
+            return false;
+        }
+        return (super.equals(other) &&
+            this.bitLength === other.bitLength &&
+            this.namePrefix === other.namePrefix);
+    }
+    /***
+     * Calculates the name of the delegated role responsible for 'target_filepath'.
+     *
+     * The target at path ''target_filepath' is assigned to a bin by casting
+     * the left-most 'bit_length' of bits of the file path hash digest to
+     * int, using it as bin index between 0 and '2**bit_length - 1'.
+     *
+     * Args:
+     *  target_filepath: URL path to a target file, relative to a base
+     *  targets URL.
+     */
+    getRoleForTarget(targetFilepath) {
+        const hasher = crypto_1.default.createHash('sha256');
+        const hasherBuffer = hasher.update(targetFilepath).digest();
+        // can't ever need more than 4 bytes (32 bits).
+        const hashBytes = hasherBuffer.subarray(0, 4);
+        // Right shift hash bytes, so that we only have the leftmost
+        // bit_length bits that we care about.
+        const shiftValue = 32 - this.bitLength;
+        const binNumber = hashBytes.readUInt32BE() >>> shiftValue;
+        // Add zero padding if necessary and cast to hex the suffix.
+        const suffix = binNumber.toString(16).padStart(this.suffixLen, '0');
+        return `${this.namePrefix}-${suffix}`;
+    }
+    *getRoles() {
+        for (let i = 0; i < this.numberOfBins; i++) {
+            const suffix = i.toString(16).padStart(this.suffixLen, '0');
+            yield `${this.namePrefix}-${suffix}`;
+        }
+    }
+    /***
+     * Determines whether the given ``role_name`` is in one of
+     * the delegated roles that ``SuccinctRoles`` represents.
+     *
+     * Args:
+     *  role_name: The name of the role to check against.
+     */
+    isDelegatedRole(roleName) {
+        const desiredPrefix = this.namePrefix + '-';
+        if (!roleName.startsWith(desiredPrefix)) {
+            return false;
+        }
+        const suffix = roleName.slice(desiredPrefix.length, roleName.length);
+        if (suffix.length != this.suffixLen) {
+            return false;
+        }
+        // make sure the suffix is a hex string
+        if (!suffix.match(/^[0-9a-fA-F]+$/)) {
+            return false;
+        }
+        const num = parseInt(suffix, 16);
+        return 0 <= num && num < this.numberOfBins;
+    }
+    toJSON() {
+        const json = {
+            ...super.toJSON(),
+            bit_length: this.bitLength,
+            name_prefix: this.namePrefix,
+        };
+        return json;
+    }
+    static fromJSON(data) {
+        const { keyids, threshold, bit_length, name_prefix, ...rest } = data;
+        if (!utils_1.guard.isStringArray(keyids)) {
+            throw new TypeError('keyids must be an array of strings');
+        }
+        if (typeof threshold !== 'number') {
+            throw new TypeError('threshold must be a number');
+        }
+        if (typeof bit_length !== 'number') {
+            throw new TypeError('bit_length must be a number');
+        }
+        if (typeof name_prefix !== 'string') {
+            throw new TypeError('name_prefix must be a string');
+        }
+        return new SuccinctRoles({
+            keyIDs: keyids,
+            threshold,
+            bitLength: bit_length,
+            namePrefix: name_prefix,
+            unrecognizedFields: rest,
+        });
+    }
+}
+exports.SuccinctRoles = SuccinctRoles;
+
+
+/***/ }),
+
+/***/ 9392:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Root = void 0;
+const util_1 = __importDefault(__nccwpck_require__(3837));
+const base_1 = __nccwpck_require__(159);
+const error_1 = __nccwpck_require__(8448);
+const key_1 = __nccwpck_require__(6697);
+const role_1 = __nccwpck_require__(9393);
+const utils_1 = __nccwpck_require__(5688);
+/**
+ * A container for the signed part of root metadata.
+ *
+ * The top-level role and metadata file signed by the root keys.
+ * This role specifies trusted keys for all other top-level roles, which may further delegate trust.
+ */
+class Root extends base_1.Signed {
+    constructor(options) {
+        super(options);
+        this.type = base_1.MetadataKind.Root;
+        this.keys = options.keys || {};
+        this.consistentSnapshot = options.consistentSnapshot ?? true;
+        if (!options.roles) {
+            this.roles = role_1.TOP_LEVEL_ROLE_NAMES.reduce((acc, role) => ({
+                ...acc,
+                [role]: new role_1.Role({ keyIDs: [], threshold: 1 }),
+            }), {});
+        }
+        else {
+            const roleNames = new Set(Object.keys(options.roles));
+            if (!role_1.TOP_LEVEL_ROLE_NAMES.every((role) => roleNames.has(role))) {
+                throw new error_1.ValueError('missing top-level role');
+            }
+            this.roles = options.roles;
+        }
+    }
+    addKey(key, role) {
+        if (!this.roles[role]) {
+            throw new error_1.ValueError(`role ${role} does not exist`);
+        }
+        if (!this.roles[role].keyIDs.includes(key.keyID)) {
+            this.roles[role].keyIDs.push(key.keyID);
+        }
+        this.keys[key.keyID] = key;
+    }
+    equals(other) {
+        if (!(other instanceof Root)) {
+            return false;
+        }
+        return (super.equals(other) &&
+            this.consistentSnapshot === other.consistentSnapshot &&
+            util_1.default.isDeepStrictEqual(this.keys, other.keys) &&
+            util_1.default.isDeepStrictEqual(this.roles, other.roles));
+    }
+    toJSON() {
+        return {
+            _type: this.type,
+            spec_version: this.specVersion,
+            version: this.version,
+            expires: this.expires,
+            keys: keysToJSON(this.keys),
+            roles: rolesToJSON(this.roles),
+            consistent_snapshot: this.consistentSnapshot,
+            ...this.unrecognizedFields,
+        };
+    }
+    static fromJSON(data) {
+        const { unrecognizedFields, ...commonFields } = base_1.Signed.commonFieldsFromJSON(data);
+        const { keys, roles, consistent_snapshot, ...rest } = unrecognizedFields;
+        if (typeof consistent_snapshot !== 'boolean') {
+            throw new TypeError('consistent_snapshot must be a boolean');
+        }
+        return new Root({
+            ...commonFields,
+            keys: keysFromJSON(keys),
+            roles: rolesFromJSON(roles),
+            consistentSnapshot: consistent_snapshot,
+            unrecognizedFields: rest,
+        });
+    }
+}
+exports.Root = Root;
+function keysToJSON(keys) {
+    return Object.entries(keys).reduce((acc, [keyID, key]) => ({ ...acc, [keyID]: key.toJSON() }), {});
+}
+function rolesToJSON(roles) {
+    return Object.entries(roles).reduce((acc, [roleName, role]) => ({ ...acc, [roleName]: role.toJSON() }), {});
+}
+function keysFromJSON(data) {
+    let keys;
+    if (utils_1.guard.isDefined(data)) {
+        if (!utils_1.guard.isObjectRecord(data)) {
+            throw new TypeError('keys must be an object');
+        }
+        keys = Object.entries(data).reduce((acc, [keyID, keyData]) => ({
+            ...acc,
+            [keyID]: key_1.Key.fromJSON(keyID, keyData),
+        }), {});
+    }
+    return keys;
+}
+function rolesFromJSON(data) {
+    let roles;
+    if (utils_1.guard.isDefined(data)) {
+        if (!utils_1.guard.isObjectRecord(data)) {
+            throw new TypeError('roles must be an object');
+        }
+        roles = Object.entries(data).reduce((acc, [roleName, roleData]) => ({
+            ...acc,
+            [roleName]: role_1.Role.fromJSON(roleData),
+        }), {});
+    }
+    return roles;
+}
+
+
+/***/ }),
+
+/***/ 4222:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Signature = void 0;
+/**
+ * A container class containing information about a signature.
+ *
+ * Contains a signature and the keyid uniquely identifying the key used
+ * to generate the signature.
+ *
+ * Provide a `fromJSON` method to create a Signature from a JSON object.
+ */
+class Signature {
+    constructor(options) {
+        const { keyID, sig } = options;
+        this.keyID = keyID;
+        this.sig = sig;
+    }
+    toJSON() {
+        return {
+            keyid: this.keyID,
+            sig: this.sig,
+        };
+    }
+    static fromJSON(data) {
+        const { keyid, sig } = data;
+        if (typeof keyid !== 'string') {
+            throw new TypeError('keyid must be a string');
+        }
+        if (typeof sig !== 'string') {
+            throw new TypeError('sig must be a string');
+        }
+        return new Signature({
+            keyID: keyid,
+            sig: sig,
+        });
+    }
+}
+exports.Signature = Signature;
+
+
+/***/ }),
+
+/***/ 2326:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Snapshot = void 0;
+const util_1 = __importDefault(__nccwpck_require__(3837));
+const base_1 = __nccwpck_require__(159);
+const file_1 = __nccwpck_require__(1923);
+const utils_1 = __nccwpck_require__(5688);
+/**
+ * A container for the signed part of snapshot metadata.
+ *
+ * Snapshot contains information about all target Metadata files.
+ * A top-level role that specifies the latest versions of all targets metadata files,
+ * and hence the latest versions of all targets (including any dependencies between them) on the repository.
+ */
+class Snapshot extends base_1.Signed {
+    constructor(opts) {
+        super(opts);
+        this.type = base_1.MetadataKind.Snapshot;
+        this.meta = opts.meta || { 'targets.json': new file_1.MetaFile({ version: 1 }) };
+    }
+    equals(other) {
+        if (!(other instanceof Snapshot)) {
+            return false;
+        }
+        return super.equals(other) && util_1.default.isDeepStrictEqual(this.meta, other.meta);
+    }
+    toJSON() {
+        return {
+            _type: this.type,
+            meta: metaToJSON(this.meta),
+            spec_version: this.specVersion,
+            version: this.version,
+            expires: this.expires,
+            ...this.unrecognizedFields,
+        };
+    }
+    static fromJSON(data) {
+        const { unrecognizedFields, ...commonFields } = base_1.Signed.commonFieldsFromJSON(data);
+        const { meta, ...rest } = unrecognizedFields;
+        return new Snapshot({
+            ...commonFields,
+            meta: metaFromJSON(meta),
+            unrecognizedFields: rest,
+        });
+    }
+}
+exports.Snapshot = Snapshot;
+function metaToJSON(meta) {
+    return Object.entries(meta).reduce((acc, [path, metadata]) => ({
+        ...acc,
+        [path]: metadata.toJSON(),
+    }), {});
+}
+function metaFromJSON(data) {
+    let meta;
+    if (utils_1.guard.isDefined(data)) {
+        if (!utils_1.guard.isObjectRecord(data)) {
+            throw new TypeError('meta field is malformed');
+        }
+        else {
+            meta = Object.entries(data).reduce((acc, [path, metadata]) => ({
+                ...acc,
+                [path]: file_1.MetaFile.fromJSON(metadata),
+            }), {});
+        }
+    }
+    return meta;
+}
+
+
+/***/ }),
+
+/***/ 5799:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Targets = void 0;
+const util_1 = __importDefault(__nccwpck_require__(3837));
+const base_1 = __nccwpck_require__(159);
+const delegations_1 = __nccwpck_require__(1662);
+const file_1 = __nccwpck_require__(1923);
+const utils_1 = __nccwpck_require__(5688);
+// Container for the signed part of targets metadata.
+//
+// Targets contains verifying information about target files and also delegates
+// responsible to other Targets roles.
+class Targets extends base_1.Signed {
+    constructor(options) {
+        super(options);
+        this.type = base_1.MetadataKind.Targets;
+        this.targets = options.targets || {};
+        this.delegations = options.delegations;
+    }
+    addTarget(target) {
+        this.targets[target.path] = target;
+    }
+    equals(other) {
+        if (!(other instanceof Targets)) {
+            return false;
+        }
+        return (super.equals(other) &&
+            util_1.default.isDeepStrictEqual(this.targets, other.targets) &&
+            util_1.default.isDeepStrictEqual(this.delegations, other.delegations));
+    }
+    toJSON() {
+        const json = {
+            _type: this.type,
+            spec_version: this.specVersion,
+            version: this.version,
+            expires: this.expires,
+            targets: targetsToJSON(this.targets),
+            ...this.unrecognizedFields,
+        };
+        if (this.delegations) {
+            json.delegations = this.delegations.toJSON();
+        }
+        return json;
+    }
+    static fromJSON(data) {
+        const { unrecognizedFields, ...commonFields } = base_1.Signed.commonFieldsFromJSON(data);
+        const { targets, delegations, ...rest } = unrecognizedFields;
+        return new Targets({
+            ...commonFields,
+            targets: targetsFromJSON(targets),
+            delegations: delegationsFromJSON(delegations),
+            unrecognizedFields: rest,
+        });
+    }
+}
+exports.Targets = Targets;
+function targetsToJSON(targets) {
+    return Object.entries(targets).reduce((acc, [path, target]) => ({
+        ...acc,
+        [path]: target.toJSON(),
+    }), {});
+}
+function targetsFromJSON(data) {
+    let targets;
+    if (utils_1.guard.isDefined(data)) {
+        if (!utils_1.guard.isObjectRecord(data)) {
+            throw new TypeError('targets must be an object');
+        }
+        else {
+            targets = Object.entries(data).reduce((acc, [path, target]) => ({
+                ...acc,
+                [path]: file_1.TargetFile.fromJSON(path, target),
+            }), {});
+        }
+    }
+    return targets;
+}
+function delegationsFromJSON(data) {
+    let delegations;
+    if (utils_1.guard.isDefined(data)) {
+        if (!utils_1.guard.isObject(data)) {
+            throw new TypeError('delegations must be an object');
+        }
+        else {
+            delegations = delegations_1.Delegations.fromJSON(data);
+        }
+    }
+    return delegations;
+}
+
+
+/***/ }),
+
+/***/ 4042:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Timestamp = void 0;
+const base_1 = __nccwpck_require__(159);
+const file_1 = __nccwpck_require__(1923);
+const utils_1 = __nccwpck_require__(5688);
+/**
+ * A container for the signed part of timestamp metadata.
+ *
+ * A top-level that specifies the latest version of the snapshot role metadata file,
+ * and hence the latest versions of all metadata and targets on the repository.
+ */
+class Timestamp extends base_1.Signed {
+    constructor(options) {
+        super(options);
+        this.type = base_1.MetadataKind.Timestamp;
+        this.snapshotMeta = options.snapshotMeta || new file_1.MetaFile({ version: 1 });
+    }
+    equals(other) {
+        if (!(other instanceof Timestamp)) {
+            return false;
+        }
+        return super.equals(other) && this.snapshotMeta.equals(other.snapshotMeta);
+    }
+    toJSON() {
+        return {
+            _type: this.type,
+            spec_version: this.specVersion,
+            version: this.version,
+            expires: this.expires,
+            meta: { 'snapshot.json': this.snapshotMeta.toJSON() },
+            ...this.unrecognizedFields,
+        };
+    }
+    static fromJSON(data) {
+        const { unrecognizedFields, ...commonFields } = base_1.Signed.commonFieldsFromJSON(data);
+        const { meta, ...rest } = unrecognizedFields;
+        return new Timestamp({
+            ...commonFields,
+            snapshotMeta: snapshotMetaFromJSON(meta),
+            unrecognizedFields: rest,
+        });
+    }
+}
+exports.Timestamp = Timestamp;
+function snapshotMetaFromJSON(data) {
+    let snapshotMeta;
+    if (utils_1.guard.isDefined(data)) {
+        const snapshotData = data['snapshot.json'];
+        if (!utils_1.guard.isDefined(snapshotData) || !utils_1.guard.isObject(snapshotData)) {
+            throw new TypeError('missing snapshot.json in meta');
+        }
+        else {
+            snapshotMeta = file_1.MetaFile.fromJSON(snapshotData);
+        }
+    }
+    return snapshotMeta;
+}
+
+
+/***/ }),
+
+/***/ 7106:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.isObjectRecord = exports.isStringRecord = exports.isObjectArray = exports.isStringArray = exports.isObject = exports.isDefined = void 0;
+function isDefined(val) {
+    return val !== undefined;
+}
+exports.isDefined = isDefined;
+function isObject(value) {
+    return typeof value === 'object' && value !== null;
+}
+exports.isObject = isObject;
+function isStringArray(value) {
+    return Array.isArray(value) && value.every((v) => typeof v === 'string');
+}
+exports.isStringArray = isStringArray;
+function isObjectArray(value) {
+    return Array.isArray(value) && value.every(isObject);
+}
+exports.isObjectArray = isObjectArray;
+function isStringRecord(value) {
+    return (typeof value === 'object' &&
+        value !== null &&
+        Object.keys(value).every((k) => typeof k === 'string') &&
+        Object.values(value).every((v) => typeof v === 'string'));
+}
+exports.isStringRecord = isStringRecord;
+function isObjectRecord(value) {
+    return (typeof value === 'object' &&
+        value !== null &&
+        Object.keys(value).every((k) => typeof k === 'string') &&
+        Object.values(value).every((v) => typeof v === 'object' && v !== null));
+}
+exports.isObjectRecord = isObjectRecord;
+
+
+/***/ }),
+
+/***/ 5688:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.crypto = exports.guard = void 0;
+exports.guard = __importStar(__nccwpck_require__(7106));
+exports.crypto = __importStar(__nccwpck_require__(8430));
+
+
+/***/ }),
+
+/***/ 8725:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.getPublicKey = void 0;
+const crypto_1 = __importDefault(__nccwpck_require__(6113));
+const error_1 = __nccwpck_require__(8448);
+const oid_1 = __nccwpck_require__(8680);
+const ASN1_TAG_SEQUENCE = 0x30;
+const ANS1_TAG_BIT_STRING = 0x03;
+const NULL_BYTE = 0x00;
+const OID_EDDSA = '1.3.101.112';
+const OID_EC_PUBLIC_KEY = '1.2.840.10045.2.1';
+const OID_EC_CURVE_P256V1 = '1.2.840.10045.3.1.7';
+const PEM_HEADER = '-----BEGIN PUBLIC KEY-----';
+function getPublicKey(keyInfo) {
+    switch (keyInfo.keyType) {
+        case 'rsa':
+            return getRSAPublicKey(keyInfo);
+        case 'ed25519':
+            return getED25519PublicKey(keyInfo);
+        case 'ecdsa':
+        case 'ecdsa-sha2-nistp256':
+        case 'ecdsa-sha2-nistp384':
+            return getECDCSAPublicKey(keyInfo);
+        default:
+            throw new error_1.UnsupportedAlgorithmError(`Unsupported key type: ${keyInfo.keyType}`);
+    }
+}
+exports.getPublicKey = getPublicKey;
+function getRSAPublicKey(keyInfo) {
+    // Only support PEM-encoded RSA keys
+    if (!keyInfo.keyVal.startsWith(PEM_HEADER)) {
+        throw new error_1.CryptoError('Invalid key format');
+    }
+    const key = crypto_1.default.createPublicKey(keyInfo.keyVal);
+    switch (keyInfo.scheme) {
+        case 'rsassa-pss-sha256':
+            return {
+                key: key,
+                padding: crypto_1.default.constants.RSA_PKCS1_PSS_PADDING,
+            };
+        default:
+            throw new error_1.UnsupportedAlgorithmError(`Unsupported RSA scheme: ${keyInfo.scheme}`);
+    }
+}
+function getED25519PublicKey(keyInfo) {
+    let key;
+    // If key is already PEM-encoded we can just parse it
+    if (keyInfo.keyVal.startsWith(PEM_HEADER)) {
+        key = crypto_1.default.createPublicKey(keyInfo.keyVal);
+    }
+    else {
+        // If key is not PEM-encoded it had better be hex
+        if (!isHex(keyInfo.keyVal)) {
+            throw new error_1.CryptoError('Invalid key format');
+        }
+        key = crypto_1.default.createPublicKey({
+            key: ed25519.hexToDER(keyInfo.keyVal),
+            format: 'der',
+            type: 'spki',
+        });
+    }
+    return { key };
+}
+function getECDCSAPublicKey(keyInfo) {
+    let key;
+    // If key is already PEM-encoded we can just parse it
+    if (keyInfo.keyVal.startsWith(PEM_HEADER)) {
+        key = crypto_1.default.createPublicKey(keyInfo.keyVal);
+    }
+    else {
+        // If key is not PEM-encoded it had better be hex
+        if (!isHex(keyInfo.keyVal)) {
+            throw new error_1.CryptoError('Invalid key format');
+        }
+        key = crypto_1.default.createPublicKey({
+            key: ecdsa.hexToDER(keyInfo.keyVal),
+            format: 'der',
+            type: 'spki',
+        });
+    }
+    return { key };
+}
+const ed25519 = {
+    // Translates a hex key into a crypto KeyObject
+    // https://keygen.sh/blog/how-to-use-hexadecimal-ed25519-keys-in-node/
+    hexToDER: (hex) => {
+        const key = Buffer.from(hex, 'hex');
+        const oid = (0, oid_1.encodeOIDString)(OID_EDDSA);
+        // Create a byte sequence containing the OID and key
+        const elements = Buffer.concat([
+            Buffer.concat([
+                Buffer.from([ASN1_TAG_SEQUENCE]),
+                Buffer.from([oid.length]),
+                oid,
+            ]),
+            Buffer.concat([
+                Buffer.from([ANS1_TAG_BIT_STRING]),
+                Buffer.from([key.length + 1]),
+                Buffer.from([NULL_BYTE]),
+                key,
+            ]),
+        ]);
+        // Wrap up by creating a sequence of elements
+        const der = Buffer.concat([
+            Buffer.from([ASN1_TAG_SEQUENCE]),
+            Buffer.from([elements.length]),
+            elements,
+        ]);
+        return der;
+    },
+};
+const ecdsa = {
+    hexToDER: (hex) => {
+        const key = Buffer.from(hex, 'hex');
+        const bitString = Buffer.concat([
+            Buffer.from([ANS1_TAG_BIT_STRING]),
+            Buffer.from([key.length + 1]),
+            Buffer.from([NULL_BYTE]),
+            key,
+        ]);
+        const oids = Buffer.concat([
+            (0, oid_1.encodeOIDString)(OID_EC_PUBLIC_KEY),
+            (0, oid_1.encodeOIDString)(OID_EC_CURVE_P256V1),
+        ]);
+        const oidSequence = Buffer.concat([
+            Buffer.from([ASN1_TAG_SEQUENCE]),
+            Buffer.from([oids.length]),
+            oids,
+        ]);
+        // Wrap up by creating a sequence of elements
+        const der = Buffer.concat([
+            Buffer.from([ASN1_TAG_SEQUENCE]),
+            Buffer.from([oidSequence.length + bitString.length]),
+            oidSequence,
+            bitString,
+        ]);
+        return der;
+    },
+};
+const isHex = (key) => /^[0-9a-fA-F]+$/.test(key);
+
+
+/***/ }),
+
+/***/ 8680:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.encodeOIDString = void 0;
+const ANS1_TAG_OID = 0x06;
+function encodeOIDString(oid) {
+    const parts = oid.split('.');
+    // The first two subidentifiers are encoded into the first byte
+    const first = parseInt(parts[0], 10) * 40 + parseInt(parts[1], 10);
+    const rest = [];
+    parts.slice(2).forEach((part) => {
+        const bytes = encodeVariableLengthInteger(parseInt(part, 10));
+        rest.push(...bytes);
+    });
+    const der = Buffer.from([first, ...rest]);
+    return Buffer.from([ANS1_TAG_OID, der.length, ...der]);
+}
+exports.encodeOIDString = encodeOIDString;
+function encodeVariableLengthInteger(value) {
+    const bytes = [];
+    let mask = 0x00;
+    while (value > 0) {
+        bytes.unshift((value & 0x7f) | mask);
+        value >>= 7;
+        mask = 0x80;
+    }
+    return bytes;
+}
+
+
+/***/ }),
+
+/***/ 8430:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.verifySignature = void 0;
+const canonical_json_1 = __nccwpck_require__(9652);
+const crypto_1 = __importDefault(__nccwpck_require__(6113));
+const verifySignature = (metaDataSignedData, key, signature) => {
+    const canonicalData = Buffer.from((0, canonical_json_1.canonicalize)(metaDataSignedData));
+    return crypto_1.default.verify(undefined, canonicalData, key, Buffer.from(signature, 'hex'));
+};
+exports.verifySignature = verifySignature;
+
+
+/***/ }),
+
+/***/ 4515:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+var balanced = __nccwpck_require__(9417);
+
+module.exports = expandTop;
+
+var escSlash = '\0SLASH'+Math.random()+'\0';
+var escOpen = '\0OPEN'+Math.random()+'\0';
+var escClose = '\0CLOSE'+Math.random()+'\0';
+var escComma = '\0COMMA'+Math.random()+'\0';
+var escPeriod = '\0PERIOD'+Math.random()+'\0';
+
+function numeric(str) {
+  return parseInt(str, 10) == str
+    ? parseInt(str, 10)
+    : str.charCodeAt(0);
+}
+
+function escapeBraces(str) {
+  return str.split('\\\\').join(escSlash)
+            .split('\\{').join(escOpen)
+            .split('\\}').join(escClose)
+            .split('\\,').join(escComma)
+            .split('\\.').join(escPeriod);
+}
+
+function unescapeBraces(str) {
+  return str.split(escSlash).join('\\')
+            .split(escOpen).join('{')
+            .split(escClose).join('}')
+            .split(escComma).join(',')
+            .split(escPeriod).join('.');
+}
+
+
+// Basically just str.split(","), but handling cases
+// where we have nested braced sections, which should be
+// treated as individual members, like {a,{b,c},d}
+function parseCommaParts(str) {
+  if (!str)
+    return [''];
+
+  var parts = [];
+  var m = balanced('{', '}', str);
+
+  if (!m)
+    return str.split(',');
+
+  var pre = m.pre;
+  var body = m.body;
+  var post = m.post;
+  var p = pre.split(',');
+
+  p[p.length-1] += '{' + body + '}';
+  var postParts = parseCommaParts(post);
+  if (post.length) {
+    p[p.length-1] += postParts.shift();
+    p.push.apply(p, postParts);
+  }
+
+  parts.push.apply(parts, p);
+
+  return parts;
+}
+
+function expandTop(str) {
+  if (!str)
+    return [];
+
+  // I don't know why Bash 4.3 does this, but it does.
+  // Anything starting with {} will have the first two bytes preserved
+  // but *only* at the top level, so {},a}b will not expand to anything,
+  // but a{},b}c will be expanded to [a}c,abc].
+  // One could argue that this is a bug in Bash, but since the goal of
+  // this module is to match Bash's rules, we escape a leading {}
+  if (str.substr(0, 2) === '{}') {
+    str = '\\{\\}' + str.substr(2);
+  }
+
+  return expand(escapeBraces(str), true).map(unescapeBraces);
+}
+
+function embrace(str) {
+  return '{' + str + '}';
+}
+function isPadded(el) {
+  return /^-?0\d/.test(el);
+}
+
+function lte(i, y) {
+  return i <= y;
+}
+function gte(i, y) {
+  return i >= y;
+}
+
+function expand(str, isTop) {
+  var expansions = [];
+
+  var m = balanced('{', '}', str);
+  if (!m) return [str];
+
+  // no need to expand pre, since it is guaranteed to be free of brace-sets
+  var pre = m.pre;
+  var post = m.post.length
+    ? expand(m.post, false)
+    : [''];
+
+  if (/\$$/.test(m.pre)) {    
+    for (var k = 0; k < post.length; k++) {
+      var expansion = pre+ '{' + m.body + '}' + post[k];
+      expansions.push(expansion);
+    }
+  } else {
+    var isNumericSequence = /^-?\d+\.\.-?\d+(?:\.\.-?\d+)?$/.test(m.body);
+    var isAlphaSequence = /^[a-zA-Z]\.\.[a-zA-Z](?:\.\.-?\d+)?$/.test(m.body);
+    var isSequence = isNumericSequence || isAlphaSequence;
+    var isOptions = m.body.indexOf(',') >= 0;
+    if (!isSequence && !isOptions) {
+      // {a},b}
+      if (m.post.match(/,.*\}/)) {
+        str = m.pre + '{' + m.body + escClose + m.post;
+        return expand(str);
+      }
+      return [str];
+    }
+
+    var n;
+    if (isSequence) {
+      n = m.body.split(/\.\./);
+    } else {
+      n = parseCommaParts(m.body);
+      if (n.length === 1) {
+        // x{{a,b}}y ==> x{a}y x{b}y
+        n = expand(n[0], false).map(embrace);
+        if (n.length === 1) {
+          return post.map(function(p) {
+            return m.pre + n[0] + p;
+          });
+        }
+      }
+    }
+
+    // at this point, n is the parts, and we know it's not a comma set
+    // with a single entry.
+    var N;
+
+    if (isSequence) {
+      var x = numeric(n[0]);
+      var y = numeric(n[1]);
+      var width = Math.max(n[0].length, n[1].length)
+      var incr = n.length == 3
+        ? Math.abs(numeric(n[2]))
+        : 1;
+      var test = lte;
+      var reverse = y < x;
+      if (reverse) {
+        incr *= -1;
+        test = gte;
+      }
+      var pad = n.some(isPadded);
+
+      N = [];
+
+      for (var i = x; test(i, y); i += incr) {
+        var c;
+        if (isAlphaSequence) {
+          c = String.fromCharCode(i);
+          if (c === '\\')
+            c = '';
+        } else {
+          c = String(i);
+          if (pad) {
+            var need = width - c.length;
+            if (need > 0) {
+              var z = new Array(need + 1).join('0');
+              if (i < 0)
+                c = '-' + z + c.slice(1);
+              else
+                c = z + c;
+            }
+          }
+        }
+        N.push(c);
+      }
+    } else {
+      N = [];
+
+      for (var j = 0; j < n.length; j++) {
+        N.push.apply(N, expand(n[j], false));
+      }
+    }
+
+    for (var j = 0; j < N.length; j++) {
+      for (var k = 0; k < post.length; k++) {
+        var expansion = pre + N[j] + post[k];
+        if (!isTop || isSequence || expansion)
+          expansions.push(expansion);
+      }
+    }
+  }
+
+  return expansions;
+}
+
+
 
 /***/ }),
 
@@ -36165,12 +38173,12 @@ exports.toCertificateRequest = toCertificateRequest;
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.CAClient = void 0;
-const client_1 = __nccwpck_require__(3969);
 const error_1 = __nccwpck_require__(6274);
+const external_1 = __nccwpck_require__(9069);
 const format_1 = __nccwpck_require__(609);
 class CAClient {
     constructor(options) {
-        this.fulcio = new client_1.Fulcio({ baseURL: options.fulcioBaseURL });
+        this.fulcio = new external_1.Fulcio({ baseURL: options.fulcioBaseURL });
     }
     async createSigningCertificate(identityToken, publicKey, challenge) {
         const request = (0, format_1.toCertificateRequest)(identityToken, publicKey, challenge);
@@ -36459,14 +38467,225 @@ function verifyOIDs(cert, oids) {
         }
         const oid = expectedExtension.oid.id.join('.');
         const extension = cert.extension(oid);
-        return extension?.value.equals(expectedExtension.value);
+        // If the extension is not present, or there is no value, return false
+        const valueObj = extension?.valueObj;
+        if (!valueObj) {
+            return false;
+        }
+        // Check to see if this is a newer style extension with an embedded
+        // UTF8String, or an older style extension with a raw string
+        if (valueObj.subs.length > 0) {
+            return valueObj.subs[0].value.equals(expectedExtension.value);
+        }
+        else {
+            return valueObj.value.equals(expectedExtension.value);
+        }
     });
 }
 
 
 /***/ }),
 
-/***/ 7045:
+/***/ 3430:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.identityProviders = exports.artifactVerificationOptions = exports.createTLogClient = exports.createCAClient = exports.DEFAULT_REKOR_URL = exports.DEFAULT_FULCIO_URL = void 0;
+/*
+Copyright 2023 The Sigstore Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+const ca_1 = __nccwpck_require__(7021);
+const identity_1 = __importDefault(__nccwpck_require__(8761));
+const tlog_1 = __nccwpck_require__(2030);
+const sigstore = __importStar(__nccwpck_require__(8598));
+exports.DEFAULT_FULCIO_URL = 'https://fulcio.sigstore.dev';
+exports.DEFAULT_REKOR_URL = 'https://rekor.sigstore.dev';
+function createCAClient(options) {
+    return new ca_1.CAClient({
+        fulcioBaseURL: options.fulcioURL || exports.DEFAULT_FULCIO_URL,
+    });
+}
+exports.createCAClient = createCAClient;
+function createTLogClient(options) {
+    return new tlog_1.TLogClient({
+        rekorBaseURL: options.rekorURL || exports.DEFAULT_REKOR_URL,
+    });
+}
+exports.createTLogClient = createTLogClient;
+// Assembles the AtifactVerificationOptions from the supplied VerifyOptions.
+function artifactVerificationOptions(options) {
+    // The trusted signers are only used if the options contain a certificate
+    // issuer
+    let signers;
+    if (options.certificateIssuer) {
+        let san = undefined;
+        if (options.certificateIdentityEmail) {
+            san = {
+                type: sigstore.SubjectAlternativeNameType.EMAIL,
+                identity: {
+                    $case: 'value',
+                    value: options.certificateIdentityEmail,
+                },
+            };
+        }
+        else if (options.certificateIdentityURI) {
+            san = {
+                type: sigstore.SubjectAlternativeNameType.URI,
+                identity: {
+                    $case: 'value',
+                    value: options.certificateIdentityURI,
+                },
+            };
+        }
+        const oids = Object.entries(options.certificateOIDs || {}).map(([oid, value]) => ({
+            oid: { id: oid.split('.').map((s) => parseInt(s, 10)) },
+            value: Buffer.from(value),
+        }));
+        signers = {
+            $case: 'certificateIdentities',
+            certificateIdentities: {
+                identities: [
+                    {
+                        issuer: options.certificateIssuer,
+                        san: san,
+                        oids: oids,
+                    },
+                ],
+            },
+        };
+    }
+    // Construct the artifact verification options w/ defaults
+    return {
+        ctlogOptions: {
+            disable: false,
+            threshold: options.ctLogThreshold || 1,
+            detachedSct: false,
+        },
+        tlogOptions: {
+            disable: false,
+            threshold: options.tlogThreshold || 1,
+            performOnlineVerification: false,
+        },
+        signers,
+    };
+}
+exports.artifactVerificationOptions = artifactVerificationOptions;
+// Translates the IdenityProviderOptions into a list of Providers which
+// should be queried to retrieve an identity token.
+function identityProviders(options) {
+    const idps = [];
+    const token = options.identityToken;
+    // If an explicit identity token is provided, use that. Setup a dummy
+    // provider that just returns the token. Otherwise, setup the CI context
+    // provider and (optionally) the OAuth provider.
+    if (token) {
+        idps.push({ getToken: () => Promise.resolve(token) });
+    }
+    else {
+        idps.push(identity_1.default.ciContextProvider());
+        if (options.oidcIssuer && options.oidcClientID) {
+            idps.push(identity_1.default.oauthProvider({
+                issuer: options.oidcIssuer,
+                clientID: options.oidcClientID,
+                clientSecret: options.oidcClientSecret,
+                redirectURL: options.oidcRedirectURL,
+            }));
+        }
+    }
+    return idps;
+}
+exports.identityProviders = identityProviders;
+
+
+/***/ }),
+
+/***/ 6274:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.PolicyError = exports.InternalError = exports.ValidationError = exports.VerificationError = void 0;
+/*
+Copyright 2023 The Sigstore Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+/* eslint-disable @typescript-eslint/no-explicit-any */
+class BaseError extends Error {
+    constructor(message, cause) {
+        super(message);
+        this.name = this.constructor.name;
+        this.cause = cause;
+    }
+}
+class VerificationError extends BaseError {
+}
+exports.VerificationError = VerificationError;
+class ValidationError extends BaseError {
+}
+exports.ValidationError = ValidationError;
+class InternalError extends BaseError {
+}
+exports.InternalError = InternalError;
+class PolicyError extends BaseError {
+}
+exports.PolicyError = PolicyError;
+
+
+/***/ }),
+
+/***/ 5005:
 /***/ ((__unused_webpack_module, exports) => {
 
 "use strict";
@@ -36495,7 +38714,7 @@ exports.checkStatus = checkStatus;
 
 /***/ }),
 
-/***/ 7807:
+/***/ 8387:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
@@ -36522,7 +38741,7 @@ limitations under the License.
 */
 const make_fetch_happen_1 = __importDefault(__nccwpck_require__(9525));
 const util_1 = __nccwpck_require__(6901);
-const error_1 = __nccwpck_require__(7045);
+const error_1 = __nccwpck_require__(5005);
 /**
  * Fulcio API client.
  */
@@ -36554,13 +38773,13 @@ exports.Fulcio = Fulcio;
 
 /***/ }),
 
-/***/ 3969:
+/***/ 9069:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.Rekor = exports.Fulcio = void 0;
+exports.Rekor = exports.Fulcio = exports.HTTPError = void 0;
 /*
 Copyright 2022 The Sigstore Authors.
 
@@ -36576,15 +38795,17 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-var fulcio_1 = __nccwpck_require__(7807);
+var error_1 = __nccwpck_require__(5005);
+Object.defineProperty(exports, "HTTPError", ({ enumerable: true, get: function () { return error_1.HTTPError; } }));
+var fulcio_1 = __nccwpck_require__(8387);
 Object.defineProperty(exports, "Fulcio", ({ enumerable: true, get: function () { return fulcio_1.Fulcio; } }));
-var rekor_1 = __nccwpck_require__(8732);
+var rekor_1 = __nccwpck_require__(9047);
 Object.defineProperty(exports, "Rekor", ({ enumerable: true, get: function () { return rekor_1.Rekor; } }));
 
 
 /***/ }),
 
-/***/ 8732:
+/***/ 9047:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
@@ -36611,7 +38832,7 @@ limitations under the License.
 */
 const make_fetch_happen_1 = __importDefault(__nccwpck_require__(9525));
 const util_1 = __nccwpck_require__(6901);
-const error_1 = __nccwpck_require__(7045);
+const error_1 = __nccwpck_require__(5005);
 /**
  * Rekor API client.
  */
@@ -36707,52 +38928,6 @@ function entryFromResponse(data) {
 
 /***/ }),
 
-/***/ 6274:
-/***/ ((__unused_webpack_module, exports) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.PolicyError = exports.InternalError = exports.ValidationError = exports.VerificationError = void 0;
-/*
-Copyright 2023 The Sigstore Authors.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
-/* eslint-disable @typescript-eslint/no-explicit-any */
-class BaseError extends Error {
-    constructor(message, cause) {
-        super(message);
-        this.name = this.constructor.name;
-        this.cause = cause;
-    }
-}
-class VerificationError extends BaseError {
-}
-exports.VerificationError = VerificationError;
-class ValidationError extends BaseError {
-}
-exports.ValidationError = ValidationError;
-class InternalError extends BaseError {
-}
-exports.InternalError = InternalError;
-class PolicyError extends BaseError {
-}
-exports.PolicyError = PolicyError;
-
-
-/***/ }),
-
 /***/ 8225:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
@@ -36781,7 +38956,7 @@ limitations under the License.
 const make_fetch_happen_1 = __importDefault(__nccwpck_require__(9525));
 const util_1 = __nccwpck_require__(6901);
 // Collection of all the CI-specific providers we have implemented
-const providers = [getGHAToken];
+const providers = [getGHAToken, getEnv];
 /**
  * CIContextProvider is a composite identity provider which will iterate
  * over all of the CI-specific providers and return the token from the first
@@ -36821,6 +38996,16 @@ async function getGHAToken(audience) {
         },
     });
     return response.json().then((data) => data.value);
+}
+/**
+ * getEnv can retrieve an OIDC token from an environment variable.
+ * This matches the behavior of https://github.com/sigstore/cosign/tree/main/pkg/providers/envvar
+ */
+async function getEnv() {
+    if (!process.env.SIGSTORE_ID_TOKEN) {
+        return Promise.reject('no token available');
+    }
+    return process.env.SIGSTORE_ID_TOKEN;
 }
 
 
@@ -37283,10 +39468,33 @@ exports.Signer = Signer;
 /***/ }),
 
 /***/ 2021:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
 
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.createRekorEntry = exports.createDSSEEnvelope = void 0;
 /*
@@ -37304,16 +39512,10 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-const sigstore_1 = __nccwpck_require__(1111);
-const tlog_1 = __nccwpck_require__(2030);
+const config_1 = __nccwpck_require__(3430);
 const signature_1 = __nccwpck_require__(2787);
-const sigstore_2 = __nccwpck_require__(8598);
+const sigstore = __importStar(__nccwpck_require__(8598));
 const util_1 = __nccwpck_require__(6901);
-function createTLogClient(options) {
-    return new tlog_1.TLogClient({
-        rekorBaseURL: options.rekorURL || sigstore_1.DEFAULT_REKOR_URL,
-    });
-}
 async function createDSSEEnvelope(payload, payloadType, options) {
     // Pre-authentication encoding to be signed
     const paeBuffer = util_1.dsse.preAuthEncoding(payloadType, payload);
@@ -37329,19 +39531,19 @@ async function createDSSEEnvelope(payload, payloadType, options) {
             },
         ],
     };
-    return (0, sigstore_2.envelopeToJSON)(envelope);
+    return sigstore.Envelope.toJSON(envelope);
 }
 exports.createDSSEEnvelope = createDSSEEnvelope;
 // Accepts a signed DSSE envelope and a PEM-encoded public key to be added to the
 // transparency log. Returns a Sigstore bundle suitable for offline verification.
 async function createRekorEntry(dsseEnvelope, publicKey, options = {}) {
-    const envelope = (0, sigstore_2.envelopeFromJSON)(dsseEnvelope);
-    const tlog = createTLogClient(options);
+    const envelope = sigstore.Envelope.fromJSON(dsseEnvelope);
+    const tlog = (0, config_1.createTLogClient)(options);
     const sigMaterial = (0, signature_1.extractSignatureMaterial)(envelope, publicKey);
     const bundle = await tlog.createDSSEEntry(envelope, sigMaterial, {
         fetchOnConflict: true,
     });
-    return (0, sigstore_2.bundleToJSON)(bundle);
+    return sigstore.Bundle.toJSON(bundle);
 }
 exports.createRekorEntry = createRekorEntry;
 
@@ -37376,11 +39578,8 @@ var __importStar = (this && this.__importStar) || function (mod) {
     __setModuleDefault(result, mod);
     return result;
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.verify = exports.attest = exports.sign = exports.DEFAULT_REKOR_URL = exports.DEFAULT_FULCIO_URL = exports.utils = void 0;
+exports.DEFAULT_REKOR_URL = exports.DEFAULT_FULCIO_URL = exports.tuf = exports.utils = exports.verify = exports.attest = exports.sign = void 0;
 /*
 Copyright 2023 The Sigstore Authors.
 
@@ -37396,32 +39595,15 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-const ca_1 = __nccwpck_require__(7021);
-const identity_1 = __importDefault(__nccwpck_require__(8761));
+const config = __importStar(__nccwpck_require__(3430));
 const sign_1 = __nccwpck_require__(9884);
-const tlog_1 = __nccwpck_require__(2030);
 const tuf = __importStar(__nccwpck_require__(5143));
 const sigstore = __importStar(__nccwpck_require__(8598));
-const util_1 = __nccwpck_require__(6901);
 const verify_1 = __nccwpck_require__(7995);
-exports.utils = __importStar(__nccwpck_require__(2021));
-exports.DEFAULT_FULCIO_URL = 'https://fulcio.sigstore.dev';
-exports.DEFAULT_REKOR_URL = 'https://rekor.sigstore.dev';
-function createCAClient(options) {
-    return new ca_1.CAClient({
-        fulcioBaseURL: options.fulcioURL || exports.DEFAULT_FULCIO_URL,
-    });
-}
-function createTLogClient(options) {
-    return new tlog_1.TLogClient({
-        rekorBaseURL: options.rekorURL || exports.DEFAULT_REKOR_URL,
-    });
-}
-const tufCacheDir = util_1.appdata.appDataPath('sigstore-js');
 async function sign(payload, options = {}) {
-    const ca = createCAClient(options);
-    const tlog = createTLogClient(options);
-    const idps = configureIdentityProviders(options);
+    const ca = config.createCAClient(options);
+    const tlog = config.createTLogClient(options);
+    const idps = config.identityProviders(options);
     const signer = new sign_1.Signer({
         ca,
         tlog,
@@ -37432,9 +39614,9 @@ async function sign(payload, options = {}) {
 }
 exports.sign = sign;
 async function attest(payload, payloadType, options = {}) {
-    const ca = createCAClient(options);
-    const tlog = createTLogClient(options);
-    const idps = configureIdentityProviders(options);
+    const ca = config.createCAClient(options);
+    const tlog = config.createTLogClient(options);
+    const idps = config.identityProviders(options);
     const signer = new sign_1.Signer({
         ca,
         tlog,
@@ -37445,97 +39627,30 @@ async function attest(payload, payloadType, options = {}) {
 }
 exports.attest = attest;
 async function verify(bundle, payload, options = {}) {
-    const trustedRoot = await tuf.getTrustedRoot(tufCacheDir, {
+    const trustedRoot = await tuf.getTrustedRoot({
         mirrorURL: options.tufMirrorURL,
         rootPath: options.tufRootPath,
+        cachePath: options.tufCachePath,
     });
     const verifier = new verify_1.Verifier(trustedRoot, options.keySelector);
     const deserializedBundle = sigstore.bundleFromJSON(bundle);
-    const opts = collectArtifactVerificationOptions(options);
+    const opts = config.artifactVerificationOptions(options);
     return verifier.verify(deserializedBundle, opts, payload);
 }
 exports.verify = verify;
-// Translates the IdenityProviderOptions into a list of Providers which
-// should be queried to retrieve an identity token.
-function configureIdentityProviders(options) {
-    const idps = [];
-    const token = options.identityToken;
-    // If an explicit identity token is provided, use that. Setup a dummy
-    // provider that just returns the token. Otherwise, setup the CI context
-    // provider and (optionally) the OAuth provider.
-    if (token) {
-        idps.push({ getToken: () => Promise.resolve(token) });
-    }
-    else {
-        idps.push(identity_1.default.ciContextProvider());
-        if (options.oidcIssuer && options.oidcClientID) {
-            idps.push(identity_1.default.oauthProvider({
-                issuer: options.oidcIssuer,
-                clientID: options.oidcClientID,
-                clientSecret: options.oidcClientSecret,
-                redirectURL: options.oidcRedirectURL,
-            }));
-        }
-    }
-    return idps;
-}
-// Assembles the AtifactVerificationOptions from the supplied VerifyOptions.
-function collectArtifactVerificationOptions(options) {
-    // The trusted signers are only used if the options contain a certificate
-    // issuer
-    let signers;
-    if (options.certificateIssuer) {
-        let san = undefined;
-        if (options.certificateIdentityEmail) {
-            san = {
-                type: sigstore.SubjectAlternativeNameType.EMAIL,
-                identity: {
-                    $case: 'value',
-                    value: options.certificateIdentityEmail,
-                },
-            };
-        }
-        else if (options.certificateIdentityURI) {
-            san = {
-                type: sigstore.SubjectAlternativeNameType.URI,
-                identity: {
-                    $case: 'value',
-                    value: options.certificateIdentityURI,
-                },
-            };
-        }
-        const oids = Object.entries(options.certificateOIDs || {}).map(([oid, value]) => ({
-            oid: { id: oid.split('.').map((s) => parseInt(s, 10)) },
-            value: Buffer.from(value),
-        }));
-        signers = {
-            $case: 'certificateIdentities',
-            certificateIdentities: {
-                identities: [
-                    {
-                        issuer: options.certificateIssuer,
-                        san: san,
-                        oids: oids,
-                    },
-                ],
-            },
-        };
-    }
-    // Construct the artifact verification options w/ defaults
-    return {
-        ctlogOptions: {
-            disable: false,
-            threshold: options.ctLogThreshold || 1,
-            detachedSct: false,
-        },
-        tlogOptions: {
-            disable: false,
-            threshold: options.tlogThreshold || 1,
-            performOnlineVerification: false,
-        },
-        signers,
-    };
-}
+const tufUtils = {
+    getTarget: (path, options = {}) => {
+        return tuf.getTarget(path, {
+            mirrorURL: options.tufMirrorURL,
+            rootPath: options.tufRootPath,
+            cachePath: options.tufCachePath,
+        });
+    },
+};
+exports.tuf = tufUtils;
+exports.utils = __importStar(__nccwpck_require__(2021));
+exports.DEFAULT_FULCIO_URL = config.DEFAULT_FULCIO_URL;
+exports.DEFAULT_REKOR_URL = config.DEFAULT_REKOR_URL;
 
 
 /***/ }),
@@ -37675,14 +39790,13 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-const client_1 = __nccwpck_require__(3969);
-const error_1 = __nccwpck_require__(7045);
-const error_2 = __nccwpck_require__(6274);
+const error_1 = __nccwpck_require__(6274);
+const external_1 = __nccwpck_require__(9069);
 const sigstore_1 = __nccwpck_require__(8598);
 const format_1 = __nccwpck_require__(8810);
 class TLogClient {
     constructor(options) {
-        this.rekor = new client_1.Rekor({ baseURL: options.rekorBaseURL });
+        this.rekor = new external_1.Rekor({ baseURL: options.rekorBaseURL });
     }
     async createMessageSignatureEntry(digest, sigMaterial, options = {}) {
         const proposedEntry = (0, format_1.toProposedHashedRekordEntry)(digest, sigMaterial);
@@ -37708,11 +39822,11 @@ class TLogClient {
                     entry = await this.rekor.getEntry(uuid);
                 }
                 catch (err) {
-                    throw new error_2.InternalError('error fetching tlog entry', err);
+                    throw new error_1.InternalError('error fetching tlog entry', err);
                 }
             }
             else {
-                throw new error_2.InternalError('error creating tlog entry', err);
+                throw new error_1.InternalError('error creating tlog entry', err);
             }
         }
         return entry;
@@ -37720,7 +39834,7 @@ class TLogClient {
 }
 exports.TLogClient = TLogClient;
 function entryExistsError(value) {
-    return (value instanceof error_1.HTTPError &&
+    return (value instanceof external_1.HTTPError &&
         value.statusCode === 409 &&
         value.location !== undefined);
 }
@@ -38052,7 +40166,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.getTrustedRoot = void 0;
+exports.getTarget = exports.getTrustedRoot = void 0;
 /*
 Copyright 2023 The Sigstore Authors.
 
@@ -38072,20 +40186,27 @@ const fs_1 = __importDefault(__nccwpck_require__(7147));
 const path_1 = __importDefault(__nccwpck_require__(1017));
 const tuf_js_1 = __nccwpck_require__(9475);
 const sigstore = __importStar(__nccwpck_require__(8598));
+const util_1 = __nccwpck_require__(6901);
 const target_1 = __nccwpck_require__(9212);
 const TRUSTED_ROOT_TARGET = 'trusted_root.json';
-const DEFAULT_MIRROR_URL = 'https://sigstore-tuf-root.storage.googleapis.com';
+const DEFAULT_CACHE_DIR = util_1.appdata.appDataPath('sigstore-js');
+const DEFAULT_MIRROR_URL = 'https://tuf-repo-cdn.sigstore.dev';
 const DEFAULT_TUF_ROOT_PATH = '../../store/public-good-instance-root.json';
-async function getTrustedRoot(cachePath, options = {}) {
+async function getTrustedRoot(options = {}) {
+    const trustedRoot = await getTarget(TRUSTED_ROOT_TARGET, options);
+    return sigstore.TrustedRoot.fromJSON(JSON.parse(trustedRoot));
+}
+exports.getTrustedRoot = getTrustedRoot;
+async function getTarget(targetName, options = {}) {
+    const cachePath = options.cachePath || DEFAULT_CACHE_DIR;
     const tufRootPath = options.rootPath || __nccwpck_require__.ab + "public-good-instance-root.json";
     const mirrorURL = options.mirrorURL || DEFAULT_MIRROR_URL;
     initTufCache(cachePath, tufRootPath);
     const remote = initRemoteConfig(cachePath, mirrorURL);
     const repoClient = initClient(cachePath, remote);
-    const trustedRoot = await (0, target_1.getTarget)(repoClient, TRUSTED_ROOT_TARGET);
-    return sigstore.TrustedRoot.fromJSON(JSON.parse(trustedRoot));
+    return (0, target_1.readTarget)(repoClient, targetName);
 }
-exports.getTrustedRoot = getTrustedRoot;
+exports.getTarget = getTarget;
 // Initializes the TUF cache directory structure including the initial
 // root.json file. If the cache directory does not exist, it will be
 // created. If the targets directory does not exist, it will be created.
@@ -38143,7 +40264,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.getTarget = void 0;
+exports.readTarget = void 0;
 /*
 Copyright 2023 The Sigstore Authors.
 
@@ -38161,19 +40282,24 @@ limitations under the License.
 */
 const fs_1 = __importDefault(__nccwpck_require__(7147));
 const error_1 = __nccwpck_require__(6274);
+// Downloads and returns the specified target from the provided TUF Updater.
+async function readTarget(tuf, targetPath) {
+    const path = await getTargetPath(tuf, targetPath);
+    return new Promise((resolve, reject) => {
+        fs_1.default.readFile(path, 'utf-8', (err, data) => {
+            if (err) {
+                reject(new error_1.InternalError(`error reading target: ${err}`));
+            }
+            else {
+                resolve(data);
+            }
+        });
+    });
+}
+exports.readTarget = readTarget;
 // Returns the local path to the specified target. If the target is not yet
 // cached locally, the provided TUF Updater will be used to download and
 // cache the target.
-async function getTarget(tuf, targetPath) {
-    const path = await getTargetPath(tuf, targetPath);
-    try {
-        return fs_1.default.readFileSync(path, 'utf-8');
-    }
-    catch (err) {
-        throw new error_1.InternalError(`error reading trusted root: ${err}`);
-    }
-}
-exports.getTarget = getTarget;
 async function getTargetPath(tuf, target) {
     let targetInfo;
     try {
@@ -38245,7 +40371,7 @@ var __exportStar = (this && this.__exportStar) || function(m, exports) {
     for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.signingCertificate = exports.bundle = exports.isVerifiableTransparencyLogEntry = exports.isCAVerificationOptions = exports.isBundleWithCertificateChain = exports.isBundleWithVerificationMaterial = exports.envelopeFromJSON = exports.envelopeToJSON = exports.bundleFromJSON = exports.bundleToJSON = void 0;
+exports.signingCertificate = exports.bundle = exports.isVerifiableTransparencyLogEntry = exports.isCAVerificationOptions = exports.isBundleWithCertificateChain = exports.isBundleWithVerificationMaterial = exports.bundleFromJSON = void 0;
 /*
 Copyright 2023 The Sigstore Authors.
 
@@ -38268,7 +40394,6 @@ const validate_1 = __nccwpck_require__(6857);
 __exportStar(__nccwpck_require__(530), exports);
 __exportStar(__nccwpck_require__(2163), exports);
 __exportStar(__nccwpck_require__(6857), exports);
-exports.bundleToJSON = protobuf_specs_1.Bundle.toJSON;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const bundleFromJSON = (obj) => {
     const bundle = protobuf_specs_1.Bundle.fromJSON(obj);
@@ -38276,8 +40401,6 @@ const bundleFromJSON = (obj) => {
     return bundle;
 };
 exports.bundleFromJSON = bundleFromJSON;
-exports.envelopeToJSON = protobuf_specs_1.Envelope.toJSON;
-exports.envelopeFromJSON = protobuf_specs_1.Envelope.fromJSON;
 const BUNDLE_MEDIA_TYPE = 'application/vnd.dev.sigstore.bundle+json;version=0.1';
 // Type guard for narrowing a Bundle to a BundleWithVerificationMaterial
 function isBundleWithVerificationMaterial(bundle) {
@@ -40035,6 +42158,9 @@ class x509Extension {
     }
     get value() {
         return this.extnValueObj.value;
+    }
+    get valueObj() {
+        return this.extnValueObj;
     }
     get extnValueObj() {
         // The extnValue field will be the last element of the extension sequence
@@ -44214,13 +46340,35 @@ __exportStar(__nccwpck_require__(6484), exports);
 
 /***/ }),
 
+/***/ 9530:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.defaultConfig = void 0;
+exports.defaultConfig = {
+    maxRootRotations: 32,
+    maxDelegations: 32,
+    rootMaxLength: 512000,
+    timestampMaxLength: 16384,
+    snapshotMaxLength: 2000000,
+    targetsMaxLength: 5000000,
+    prefixTargetsWithHash: true,
+    fetchTimeout: 100000,
+    fetchRetries: 2,
+};
+
+
+/***/ }),
+
 /***/ 7040:
 /***/ ((__unused_webpack_module, exports) => {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.DownloadHTTPError = exports.DownloadLengthMismatchError = exports.DownloadError = exports.UnsupportedAlgorithmError = exports.CryptoError = exports.LengthOrHashMismatchError = exports.ExpiredMetadataError = exports.EqualVersionError = exports.BadVersionError = exports.UnsignedMetadataError = exports.RepositoryError = exports.PersistError = exports.RuntimeError = exports.ValueError = void 0;
+exports.DownloadHTTPError = exports.DownloadLengthMismatchError = exports.DownloadError = exports.ExpiredMetadataError = exports.EqualVersionError = exports.BadVersionError = exports.RepositoryError = exports.PersistError = exports.RuntimeError = exports.ValueError = void 0;
 // An error about insufficient values
 class ValueError extends Error {
 }
@@ -44237,10 +46385,6 @@ exports.PersistError = PersistError;
 class RepositoryError extends Error {
 }
 exports.RepositoryError = RepositoryError;
-// An error about metadata object with insufficient threshold of signatures.
-class UnsignedMetadataError extends RepositoryError {
-}
-exports.UnsignedMetadataError = UnsignedMetadataError;
 // An error for metadata that contains an invalid version number.
 class BadVersionError extends RepositoryError {
 }
@@ -44253,16 +46397,6 @@ exports.EqualVersionError = EqualVersionError;
 class ExpiredMetadataError extends RepositoryError {
 }
 exports.ExpiredMetadataError = ExpiredMetadataError;
-// An error while checking the length and hash values of an object.
-class LengthOrHashMismatchError extends RepositoryError {
-}
-exports.LengthOrHashMismatchError = LengthOrHashMismatchError;
-class CryptoError extends Error {
-}
-exports.CryptoError = CryptoError;
-class UnsupportedAlgorithmError extends CryptoError {
-}
-exports.UnsupportedAlgorithmError = UnsupportedAlgorithmError;
 //----- Download Errors -------------------------------------------------------
 // An error occurred while attempting to download a file.
 class DownloadError extends Error {
@@ -44293,7 +46427,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.Fetcher = exports.BaseFetcher = void 0;
+exports.DefaultFetcher = exports.BaseFetcher = void 0;
 const fs_1 = __importDefault(__nccwpck_require__(7147));
 const make_fetch_happen_1 = __importDefault(__nccwpck_require__(9525));
 const util_1 = __importDefault(__nccwpck_require__(3837));
@@ -44341,7 +46475,7 @@ class BaseFetcher {
     }
 }
 exports.BaseFetcher = BaseFetcher;
-class Fetcher extends BaseFetcher {
+class DefaultFetcher extends BaseFetcher {
     constructor(options = {}) {
         super();
         this.timeout = options.timeout;
@@ -44358,7 +46492,7 @@ class Fetcher extends BaseFetcher {
         return response.body;
     }
 }
-exports.Fetcher = Fetcher;
+exports.DefaultFetcher = DefaultFetcher;
 const writeBufferToStream = async (stream, buffer) => {
     return new Promise((resolve, reject) => {
         stream.write(buffer, (err) => {
@@ -44379,1394 +46513,13 @@ const writeBufferToStream = async (stream, buffer) => {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.Updater = exports.TargetFile = exports.BaseFetcher = void 0;
+exports.Updater = exports.BaseFetcher = exports.TargetFile = void 0;
+var models_1 = __nccwpck_require__(5833);
+Object.defineProperty(exports, "TargetFile", ({ enumerable: true, get: function () { return models_1.TargetFile; } }));
 var fetcher_1 = __nccwpck_require__(5991);
 Object.defineProperty(exports, "BaseFetcher", ({ enumerable: true, get: function () { return fetcher_1.BaseFetcher; } }));
-var file_1 = __nccwpck_require__(2277);
-Object.defineProperty(exports, "TargetFile", ({ enumerable: true, get: function () { return file_1.TargetFile; } }));
 var updater_1 = __nccwpck_require__(7977);
 Object.defineProperty(exports, "Updater", ({ enumerable: true, get: function () { return updater_1.Updater; } }));
-
-
-/***/ }),
-
-/***/ 2129:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.Signed = void 0;
-const util_1 = __importDefault(__nccwpck_require__(3837));
-const error_1 = __nccwpck_require__(7040);
-const utils_1 = __nccwpck_require__(4781);
-const SPECIFICATION_VERSION = ['1', '0', '31'];
-/***
- * A base class for the signed part of TUF metadata.
- *
- * Objects with base class Signed are usually included in a ``Metadata`` object
- * on the signed attribute. This class provides attributes and methods that
- * are common for all TUF metadata types (roles).
- */
-class Signed {
-    constructor(options) {
-        this.specVersion = options.specVersion || SPECIFICATION_VERSION.join('.');
-        const specList = this.specVersion.split('.');
-        if (!(specList.length === 2 || specList.length === 3) ||
-            !specList.every((item) => isNumeric(item))) {
-            throw new error_1.ValueError('Failed to parse specVersion');
-        }
-        // major version must match
-        if (specList[0] != SPECIFICATION_VERSION[0]) {
-            throw new error_1.ValueError('Unsupported specVersion');
-        }
-        this.expires = options.expires || new Date().toISOString();
-        this.version = options.version || 1;
-        this.unrecognizedFields = options.unrecognizedFields || {};
-    }
-    equals(other) {
-        if (!(other instanceof Signed)) {
-            return false;
-        }
-        return (this.specVersion === other.specVersion &&
-            this.expires === other.expires &&
-            this.version === other.version &&
-            util_1.default.isDeepStrictEqual(this.unrecognizedFields, other.unrecognizedFields));
-    }
-    isExpired(referenceTime) {
-        if (!referenceTime) {
-            referenceTime = new Date();
-        }
-        return referenceTime >= new Date(this.expires);
-    }
-    static commonFieldsFromJSON(data) {
-        const { spec_version, expires, version, ...rest } = data;
-        if (utils_1.guard.isDefined(spec_version) && !(typeof spec_version === 'string')) {
-            throw new TypeError('spec_version must be a string');
-        }
-        if (utils_1.guard.isDefined(expires) && !(typeof expires === 'string')) {
-            throw new TypeError('expires must be a string');
-        }
-        if (utils_1.guard.isDefined(version) && !(typeof version === 'number')) {
-            throw new TypeError('version must be a number');
-        }
-        return {
-            specVersion: spec_version,
-            expires,
-            version,
-            unrecognizedFields: rest,
-        };
-    }
-}
-exports.Signed = Signed;
-function isNumeric(str) {
-    return !isNaN(Number(str));
-}
-
-
-/***/ }),
-
-/***/ 1739:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.Delegations = void 0;
-const util_1 = __importDefault(__nccwpck_require__(3837));
-const error_1 = __nccwpck_require__(7040);
-const guard_1 = __nccwpck_require__(1858);
-const key_1 = __nccwpck_require__(5468);
-const role_1 = __nccwpck_require__(6912);
-/**
- * A container object storing information about all delegations.
- *
- * Targets roles that are trusted to provide signed metadata files
- * describing targets with designated pathnames and/or further delegations.
- */
-class Delegations {
-    constructor(options) {
-        this.keys = options.keys;
-        this.unrecognizedFields = options.unrecognizedFields || {};
-        if (options.roles) {
-            if (Object.keys(options.roles).some((roleName) => role_1.TOP_LEVEL_ROLE_NAMES.includes(roleName))) {
-                throw new error_1.ValueError('Delegated role name conflicts with top-level role name');
-            }
-        }
-        this.succinctRoles = options.succinctRoles;
-        this.roles = options.roles;
-    }
-    equals(other) {
-        if (!(other instanceof Delegations)) {
-            return false;
-        }
-        return (util_1.default.isDeepStrictEqual(this.keys, other.keys) &&
-            util_1.default.isDeepStrictEqual(this.roles, other.roles) &&
-            util_1.default.isDeepStrictEqual(this.unrecognizedFields, other.unrecognizedFields) &&
-            util_1.default.isDeepStrictEqual(this.succinctRoles, other.succinctRoles));
-    }
-    *rolesForTarget(targetPath) {
-        if (this.roles) {
-            for (const role of Object.values(this.roles)) {
-                if (role.isDelegatedPath(targetPath)) {
-                    yield { role: role.name, terminating: role.terminating };
-                }
-            }
-        }
-        else if (this.succinctRoles) {
-            yield {
-                role: this.succinctRoles.getRoleForTarget(targetPath),
-                terminating: true,
-            };
-        }
-    }
-    toJSON() {
-        const json = {
-            keys: keysToJSON(this.keys),
-            ...this.unrecognizedFields,
-        };
-        if (this.roles) {
-            json.roles = rolesToJSON(this.roles);
-        }
-        else if (this.succinctRoles) {
-            json.succinct_roles = this.succinctRoles.toJSON();
-        }
-        return json;
-    }
-    static fromJSON(data) {
-        const { keys, roles, succinct_roles, ...unrecognizedFields } = data;
-        let succinctRoles;
-        if ((0, guard_1.isObject)(succinct_roles)) {
-            succinctRoles = role_1.SuccinctRoles.fromJSON(succinct_roles);
-        }
-        return new Delegations({
-            keys: keysFromJSON(keys),
-            roles: rolesFromJSON(roles),
-            unrecognizedFields,
-            succinctRoles,
-        });
-    }
-}
-exports.Delegations = Delegations;
-function keysToJSON(keys) {
-    return Object.entries(keys).reduce((acc, [keyId, key]) => ({
-        ...acc,
-        [keyId]: key.toJSON(),
-    }), {});
-}
-function rolesToJSON(roles) {
-    return Object.values(roles).map((role) => role.toJSON());
-}
-function keysFromJSON(data) {
-    if (!(0, guard_1.isObjectRecord)(data)) {
-        throw new TypeError('keys is malformed');
-    }
-    return Object.entries(data).reduce((acc, [keyID, keyData]) => ({
-        ...acc,
-        [keyID]: key_1.Key.fromJSON(keyID, keyData),
-    }), {});
-}
-function rolesFromJSON(data) {
-    let roleMap;
-    if ((0, guard_1.isDefined)(data)) {
-        if (!(0, guard_1.isObjectArray)(data)) {
-            throw new TypeError('roles is malformed');
-        }
-        roleMap = data.reduce((acc, role) => {
-            const delegatedRole = role_1.DelegatedRole.fromJSON(role);
-            return {
-                ...acc,
-                [delegatedRole.name]: delegatedRole,
-            };
-        }, {});
-    }
-    return roleMap;
-}
-
-
-/***/ }),
-
-/***/ 2277:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.TargetFile = exports.MetaFile = void 0;
-const crypto_1 = __importDefault(__nccwpck_require__(6113));
-const util_1 = __importDefault(__nccwpck_require__(3837));
-const error_1 = __nccwpck_require__(7040);
-const guard_1 = __nccwpck_require__(1858);
-// A container with information about a particular metadata file.
-//
-// This class is used for Timestamp and Snapshot metadata.
-class MetaFile {
-    constructor(opts) {
-        if (opts.version <= 0) {
-            throw new error_1.ValueError('Metafile version must be at least 1');
-        }
-        if (opts.length !== undefined) {
-            validateLength(opts.length);
-        }
-        this.version = opts.version;
-        this.length = opts.length;
-        this.hashes = opts.hashes;
-        this.unrecognizedFields = opts.unrecognizedFields || {};
-    }
-    equals(other) {
-        if (!(other instanceof MetaFile)) {
-            return false;
-        }
-        return (this.version === other.version &&
-            this.length === other.length &&
-            util_1.default.isDeepStrictEqual(this.hashes, other.hashes) &&
-            util_1.default.isDeepStrictEqual(this.unrecognizedFields, other.unrecognizedFields));
-    }
-    verify(data) {
-        // Verifies that the given data matches the expected length.
-        if (this.length !== undefined) {
-            if (data.length !== this.length) {
-                throw new error_1.LengthOrHashMismatchError(`Expected length ${this.length} but got ${data.length}`);
-            }
-        }
-        // Verifies that the given data matches the supplied hashes.
-        if (this.hashes) {
-            Object.entries(this.hashes).forEach(([key, value]) => {
-                let hash;
-                try {
-                    hash = crypto_1.default.createHash(key);
-                }
-                catch (e) {
-                    throw new error_1.LengthOrHashMismatchError(`Hash algorithm ${key} not supported`);
-                }
-                const observedHash = hash.update(data).digest('hex');
-                if (observedHash !== value) {
-                    throw new error_1.LengthOrHashMismatchError(`Expected hash ${value} but got ${observedHash}`);
-                }
-            });
-        }
-    }
-    toJSON() {
-        const json = {
-            version: this.version,
-            ...this.unrecognizedFields,
-        };
-        if (this.length !== undefined) {
-            json.length = this.length;
-        }
-        if (this.hashes) {
-            json.hashes = this.hashes;
-        }
-        return json;
-    }
-    static fromJSON(data) {
-        const { version, length, hashes, ...rest } = data;
-        if (typeof version !== 'number') {
-            throw new TypeError('version must be a number');
-        }
-        if ((0, guard_1.isDefined)(length) && typeof length !== 'number') {
-            throw new TypeError('length must be a number');
-        }
-        if ((0, guard_1.isDefined)(hashes) && !(0, guard_1.isStringRecord)(hashes)) {
-            throw new TypeError('hashes must be string keys and values');
-        }
-        return new MetaFile({
-            version,
-            length,
-            hashes,
-            unrecognizedFields: rest,
-        });
-    }
-}
-exports.MetaFile = MetaFile;
-// Container for info about a particular target file.
-//
-// This class is used for Target metadata.
-class TargetFile {
-    constructor(opts) {
-        validateLength(opts.length);
-        this.length = opts.length;
-        this.path = opts.path;
-        this.hashes = opts.hashes;
-        this.unrecognizedFields = opts.unrecognizedFields || {};
-    }
-    get custom() {
-        const custom = this.unrecognizedFields['custom'];
-        if (!custom || Array.isArray(custom) || !(typeof custom === 'object')) {
-            return {};
-        }
-        return custom;
-    }
-    equals(other) {
-        if (!(other instanceof TargetFile)) {
-            return false;
-        }
-        return (this.length === other.length &&
-            this.path === other.path &&
-            util_1.default.isDeepStrictEqual(this.hashes, other.hashes) &&
-            util_1.default.isDeepStrictEqual(this.unrecognizedFields, other.unrecognizedFields));
-    }
-    async verify(stream) {
-        let observedLength = 0;
-        // Create a digest for each hash algorithm
-        const digests = Object.keys(this.hashes).reduce((acc, key) => {
-            try {
-                acc[key] = crypto_1.default.createHash(key);
-            }
-            catch (e) {
-                throw new error_1.LengthOrHashMismatchError(`Hash algorithm ${key} not supported`);
-            }
-            return acc;
-        }, {});
-        // Read stream chunk by chunk
-        for await (const chunk of stream) {
-            // Keep running tally of stream length
-            observedLength += chunk.length;
-            // Append chunk to each digest
-            Object.values(digests).forEach((digest) => {
-                digest.update(chunk);
-            });
-        }
-        // Verify length matches expected value
-        if (observedLength !== this.length) {
-            throw new error_1.LengthOrHashMismatchError(`Expected length ${this.length} but got ${observedLength}`);
-        }
-        // Verify each digest matches expected value
-        Object.entries(digests).forEach(([key, value]) => {
-            const expected = this.hashes[key];
-            const actual = value.digest('hex');
-            if (actual !== expected) {
-                throw new error_1.LengthOrHashMismatchError(`Expected hash ${expected} but got ${actual}`);
-            }
-        });
-    }
-    toJSON() {
-        return {
-            length: this.length,
-            hashes: this.hashes,
-            ...this.unrecognizedFields,
-        };
-    }
-    static fromJSON(path, data) {
-        const { length, hashes, ...rest } = data;
-        if (typeof length !== 'number') {
-            throw new TypeError('length must be a number');
-        }
-        if (!(0, guard_1.isStringRecord)(hashes)) {
-            throw new TypeError('hashes must have string keys and values');
-        }
-        return new TargetFile({
-            length,
-            path,
-            hashes,
-            unrecognizedFields: rest,
-        });
-    }
-}
-exports.TargetFile = TargetFile;
-// Check that supplied length if valid
-function validateLength(length) {
-    if (length < 0) {
-        throw new error_1.ValueError('Length must be at least 0');
-    }
-}
-
-
-/***/ }),
-
-/***/ 4885:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.Timestamp = exports.Targets = exports.Snapshot = exports.Root = exports.Metadata = void 0;
-var metadata_1 = __nccwpck_require__(9939);
-Object.defineProperty(exports, "Metadata", ({ enumerable: true, get: function () { return metadata_1.Metadata; } }));
-var root_1 = __nccwpck_require__(4653);
-Object.defineProperty(exports, "Root", ({ enumerable: true, get: function () { return root_1.Root; } }));
-var snapshot_1 = __nccwpck_require__(9378);
-Object.defineProperty(exports, "Snapshot", ({ enumerable: true, get: function () { return snapshot_1.Snapshot; } }));
-var targets_1 = __nccwpck_require__(9046);
-Object.defineProperty(exports, "Targets", ({ enumerable: true, get: function () { return targets_1.Targets; } }));
-var timestamp_1 = __nccwpck_require__(1713);
-Object.defineProperty(exports, "Timestamp", ({ enumerable: true, get: function () { return timestamp_1.Timestamp; } }));
-
-
-/***/ }),
-
-/***/ 5468:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.Key = void 0;
-const util_1 = __importDefault(__nccwpck_require__(3837));
-const error_1 = __nccwpck_require__(7040);
-const guard_1 = __nccwpck_require__(1858);
-const key_1 = __nccwpck_require__(6256);
-const signer = __importStar(__nccwpck_require__(2067));
-// A container class representing the public portion of a Key.
-class Key {
-    constructor(options) {
-        const { keyID, keyType, scheme, keyVal, unrecognizedFields } = options;
-        this.keyID = keyID;
-        this.keyType = keyType;
-        this.scheme = scheme;
-        this.keyVal = keyVal;
-        this.unrecognizedFields = unrecognizedFields || {};
-    }
-    // Verifies the that the metadata.signatures contains a signature made with
-    // this key and is correctly signed.
-    verifySignature(metadata) {
-        const signature = metadata.signatures[this.keyID];
-        if (!signature)
-            throw new error_1.UnsignedMetadataError('no signature for key found in metadata');
-        if (!this.keyVal.public)
-            throw new error_1.UnsignedMetadataError('no public key found');
-        const publicKey = (0, key_1.getPublicKey)({
-            keyType: this.keyType,
-            scheme: this.scheme,
-            keyVal: this.keyVal.public,
-        });
-        const signedData = metadata.signed.toJSON();
-        try {
-            if (!signer.verifySignature(signedData, publicKey, signature.sig)) {
-                throw new error_1.UnsignedMetadataError(`failed to verify ${this.keyID} signature`);
-            }
-        }
-        catch (error) {
-            if (error instanceof error_1.UnsignedMetadataError) {
-                throw error;
-            }
-            throw new error_1.UnsignedMetadataError(`failed to verify ${this.keyID} signature`);
-        }
-    }
-    equals(other) {
-        if (!(other instanceof Key)) {
-            return false;
-        }
-        return (this.keyID === other.keyID &&
-            this.keyType === other.keyType &&
-            this.scheme === other.scheme &&
-            util_1.default.isDeepStrictEqual(this.keyVal, other.keyVal) &&
-            util_1.default.isDeepStrictEqual(this.unrecognizedFields, other.unrecognizedFields));
-    }
-    toJSON() {
-        return {
-            keytype: this.keyType,
-            scheme: this.scheme,
-            keyval: this.keyVal,
-            ...this.unrecognizedFields,
-        };
-    }
-    static fromJSON(keyID, data) {
-        const { keytype, scheme, keyval, ...rest } = data;
-        if (typeof keytype !== 'string') {
-            throw new TypeError('keytype must be a string');
-        }
-        if (typeof scheme !== 'string') {
-            throw new TypeError('scheme must be a string');
-        }
-        if (!(0, guard_1.isStringRecord)(keyval)) {
-            throw new TypeError('keyval must be a string record');
-        }
-        return new Key({
-            keyID,
-            keyType: keytype,
-            scheme,
-            keyVal: keyval,
-            unrecognizedFields: rest,
-        });
-    }
-}
-exports.Key = Key;
-
-
-/***/ }),
-
-/***/ 9939:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.Metadata = void 0;
-const util_1 = __importDefault(__nccwpck_require__(3837));
-const error_1 = __nccwpck_require__(7040);
-const guard_1 = __nccwpck_require__(1858);
-const types_1 = __nccwpck_require__(9121);
-const root_1 = __nccwpck_require__(4653);
-const signature_1 = __nccwpck_require__(253);
-const snapshot_1 = __nccwpck_require__(9378);
-const targets_1 = __nccwpck_require__(9046);
-const timestamp_1 = __nccwpck_require__(1713);
-/***
- * A container for signed TUF metadata.
- *
- * Provides methods to convert to and from json, read and write to and
- * from JSON and to create and verify metadata signatures.
- *
- * ``Metadata[T]`` is a generic container type where T can be any one type of
- * [``Root``, ``Timestamp``, ``Snapshot``, ``Targets``]. The purpose of this
- * is to allow static type checking of the signed attribute in code using
- * Metadata::
- *
- * root_md = Metadata[Root].fromJSON("root.json")
- * # root_md type is now Metadata[Root]. This means signed and its
- * # attributes like consistent_snapshot are now statically typed and the
- * # types can be verified by static type checkers and shown by IDEs
- *
- * Using a type constraint is not required but not doing so means T is not a
- * specific type so static typing cannot happen. Note that the type constraint
- * ``[Root]`` is not validated at runtime (as pure annotations are not available
- * then).
- *
- * Apart from ``expires`` all of the arguments to the inner constructors have
- * reasonable default values for new metadata.
- */
-class Metadata {
-    constructor(signed, signatures, unrecognizedFields) {
-        this.signed = signed;
-        this.signatures = signatures || {};
-        this.unrecognizedFields = unrecognizedFields || {};
-    }
-    verifyDelegate(delegatedRole, delegatedMetadata) {
-        let role;
-        let keys = {};
-        switch (this.signed.type) {
-            case types_1.MetadataKind.Root:
-                keys = this.signed.keys;
-                role = this.signed.roles[delegatedRole];
-                break;
-            case types_1.MetadataKind.Targets:
-                if (!this.signed.delegations) {
-                    throw new error_1.ValueError(`No delegations found for ${delegatedRole}`);
-                }
-                keys = this.signed.delegations.keys;
-                if (this.signed.delegations.roles) {
-                    role = this.signed.delegations.roles[delegatedRole];
-                }
-                else if (this.signed.delegations.succinctRoles) {
-                    if (this.signed.delegations.succinctRoles.isDelegatedRole(delegatedRole)) {
-                        role = this.signed.delegations.succinctRoles;
-                    }
-                }
-                break;
-            default:
-                throw new TypeError('invalid metadata type');
-        }
-        if (!role) {
-            throw new error_1.ValueError(`no delegation found for ${delegatedRole}`);
-        }
-        const signingKeys = new Set();
-        role.keyIDs.forEach((keyID) => {
-            const key = keys[keyID];
-            // If we dont' have the key, continue checking other keys
-            if (!key) {
-                return;
-            }
-            try {
-                key.verifySignature(delegatedMetadata);
-                signingKeys.add(key.keyID);
-            }
-            catch (error) {
-                // continue
-            }
-        });
-        if (signingKeys.size < role.threshold) {
-            throw new error_1.UnsignedMetadataError(`${delegatedRole} was signed by ${signingKeys.size}/${role.threshold} keys`);
-        }
-    }
-    equals(other) {
-        if (!(other instanceof Metadata)) {
-            return false;
-        }
-        return (this.signed.equals(other.signed) &&
-            util_1.default.isDeepStrictEqual(this.signatures, other.signatures) &&
-            util_1.default.isDeepStrictEqual(this.unrecognizedFields, other.unrecognizedFields));
-    }
-    static fromJSON(type, data) {
-        const { signed, signatures, ...rest } = data;
-        if (!(0, guard_1.isDefined)(signed) || !(0, guard_1.isObject)(signed)) {
-            throw new TypeError('signed is not defined');
-        }
-        if (type !== signed._type) {
-            throw new error_1.ValueError(`expected '${type}', got ${signed['_type']}`);
-        }
-        let signedObj;
-        switch (type) {
-            case types_1.MetadataKind.Root:
-                signedObj = root_1.Root.fromJSON(signed);
-                break;
-            case types_1.MetadataKind.Timestamp:
-                signedObj = timestamp_1.Timestamp.fromJSON(signed);
-                break;
-            case types_1.MetadataKind.Snapshot:
-                signedObj = snapshot_1.Snapshot.fromJSON(signed);
-                break;
-            case types_1.MetadataKind.Targets:
-                signedObj = targets_1.Targets.fromJSON(signed);
-                break;
-            default:
-                throw new TypeError('invalid metadata type');
-        }
-        const sigMap = signaturesFromJSON(signatures);
-        return new Metadata(signedObj, sigMap, rest);
-    }
-}
-exports.Metadata = Metadata;
-function signaturesFromJSON(data) {
-    if (!(0, guard_1.isObjectArray)(data)) {
-        throw new TypeError('signatures is not an array');
-    }
-    return data.reduce((acc, sigData) => {
-        const signature = signature_1.Signature.fromJSON(sigData);
-        return { ...acc, [signature.keyID]: signature };
-    }, {});
-}
-
-
-/***/ }),
-
-/***/ 6912:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.SuccinctRoles = exports.DelegatedRole = exports.Role = exports.TOP_LEVEL_ROLE_NAMES = void 0;
-const crypto_1 = __importDefault(__nccwpck_require__(6113));
-const minimatch_1 = __importDefault(__nccwpck_require__(7259));
-const util_1 = __importDefault(__nccwpck_require__(3837));
-const error_1 = __nccwpck_require__(7040);
-const guard_1 = __nccwpck_require__(1858);
-exports.TOP_LEVEL_ROLE_NAMES = [
-    'root',
-    'targets',
-    'snapshot',
-    'timestamp',
-];
-/**
- * Container that defines which keys are required to sign roles metadata.
- *
- * Role defines how many keys are required to successfully sign the roles
- * metadata, and which keys are accepted.
- */
-class Role {
-    constructor(options) {
-        const { keyIDs, threshold, unrecognizedFields } = options;
-        if (hasDuplicates(keyIDs)) {
-            throw new error_1.ValueError('duplicate key IDs found');
-        }
-        if (threshold < 1) {
-            throw new error_1.ValueError('threshold must be at least 1');
-        }
-        this.keyIDs = keyIDs;
-        this.threshold = threshold;
-        this.unrecognizedFields = unrecognizedFields || {};
-    }
-    equals(other) {
-        if (!(other instanceof Role)) {
-            return false;
-        }
-        return (this.threshold === other.threshold &&
-            util_1.default.isDeepStrictEqual(this.keyIDs, other.keyIDs) &&
-            util_1.default.isDeepStrictEqual(this.unrecognizedFields, other.unrecognizedFields));
-    }
-    toJSON() {
-        return {
-            keyids: this.keyIDs,
-            threshold: this.threshold,
-            ...this.unrecognizedFields,
-        };
-    }
-    static fromJSON(data) {
-        const { keyids, threshold, ...rest } = data;
-        if (!(0, guard_1.isStringArray)(keyids)) {
-            throw new TypeError('keyids must be an array');
-        }
-        if (typeof threshold !== 'number') {
-            throw new TypeError('threshold must be a number');
-        }
-        return new Role({
-            keyIDs: keyids,
-            threshold,
-            unrecognizedFields: rest,
-        });
-    }
-}
-exports.Role = Role;
-function hasDuplicates(array) {
-    return new Set(array).size !== array.length;
-}
-/**
- * A container with information about a delegated role.
- *
- * A delegation can happen in two ways:
- *   - ``paths`` is set: delegates targets matching any path pattern in ``paths``
- *   - ``pathHashPrefixes`` is set: delegates targets whose target path hash
- *      starts with any of the prefixes in ``pathHashPrefixes``
- *
- *   ``paths`` and ``pathHashPrefixes`` are mutually exclusive: both cannot be
- *   set, at least one of them must be set.
- */
-class DelegatedRole extends Role {
-    constructor(opts) {
-        super(opts);
-        const { name, terminating, paths, pathHashPrefixes } = opts;
-        this.name = name;
-        this.terminating = terminating;
-        if (opts.paths && opts.pathHashPrefixes) {
-            throw new error_1.ValueError('paths and pathHashPrefixes are mutually exclusive');
-        }
-        this.paths = paths;
-        this.pathHashPrefixes = pathHashPrefixes;
-    }
-    equals(other) {
-        if (!(other instanceof DelegatedRole)) {
-            return false;
-        }
-        return (super.equals(other) &&
-            this.name === other.name &&
-            this.terminating === other.terminating &&
-            util_1.default.isDeepStrictEqual(this.paths, other.paths) &&
-            util_1.default.isDeepStrictEqual(this.pathHashPrefixes, other.pathHashPrefixes));
-    }
-    isDelegatedPath(targetFilepath) {
-        if (this.paths) {
-            return this.paths.some((pathPattern) => isTargetInPathPattern(targetFilepath, pathPattern));
-        }
-        if (this.pathHashPrefixes) {
-            const hasher = crypto_1.default.createHash('sha256');
-            const pathHash = hasher.update(targetFilepath).digest('hex');
-            return this.pathHashPrefixes.some((pathHashPrefix) => pathHash.startsWith(pathHashPrefix));
-        }
-        return false;
-    }
-    toJSON() {
-        const json = {
-            ...super.toJSON(),
-            name: this.name,
-            terminating: this.terminating,
-        };
-        if (this.paths) {
-            json.paths = this.paths;
-        }
-        if (this.pathHashPrefixes) {
-            json.path_hash_prefixes = this.pathHashPrefixes;
-        }
-        return json;
-    }
-    static fromJSON(data) {
-        const { keyids, threshold, name, terminating, paths, path_hash_prefixes, ...rest } = data;
-        if (!(0, guard_1.isStringArray)(keyids)) {
-            throw new TypeError('keyids must be an array of strings');
-        }
-        if (typeof threshold !== 'number') {
-            throw new TypeError('threshold must be a number');
-        }
-        if (typeof name !== 'string') {
-            throw new TypeError('name must be a string');
-        }
-        if (typeof terminating !== 'boolean') {
-            throw new TypeError('terminating must be a boolean');
-        }
-        if ((0, guard_1.isDefined)(paths) && !(0, guard_1.isStringArray)(paths)) {
-            throw new TypeError('paths must be an array of strings');
-        }
-        if ((0, guard_1.isDefined)(path_hash_prefixes) && !(0, guard_1.isStringArray)(path_hash_prefixes)) {
-            throw new TypeError('path_hash_prefixes must be an array of strings');
-        }
-        return new DelegatedRole({
-            keyIDs: keyids,
-            threshold,
-            name,
-            terminating,
-            paths,
-            pathHashPrefixes: path_hash_prefixes,
-            unrecognizedFields: rest,
-        });
-    }
-}
-exports.DelegatedRole = DelegatedRole;
-// JS version of Ruby's Array#zip
-const zip = (a, b) => a.map((k, i) => [k, b[i]]);
-function isTargetInPathPattern(target, pattern) {
-    const targetParts = target.split('/');
-    const patternParts = pattern.split('/');
-    if (patternParts.length != targetParts.length) {
-        return false;
-    }
-    return zip(targetParts, patternParts).every(([targetPart, patternPart]) => (0, minimatch_1.default)(targetPart, patternPart));
-}
-/**
- * Succinctly defines a hash bin delegation graph.
- *
- * A ``SuccinctRoles`` object describes a delegation graph that covers all
- * targets, distributing them uniformly over the delegated roles (i.e. bins)
- * in the graph.
- *
- * The total number of bins is 2 to the power of the passed ``bit_length``.
- *
- * Bin names are the concatenation of the passed ``name_prefix`` and a
- * zero-padded hex representation of the bin index separated by a hyphen.
- *
- * The passed ``keyids`` and ``threshold`` is used for each bin, and each bin
- * is 'terminating'.
- *
- * For details: https://github.com/theupdateframework/taps/blob/master/tap15.md
- */
-class SuccinctRoles extends Role {
-    constructor(opts) {
-        super(opts);
-        const { bitLength, namePrefix } = opts;
-        if (bitLength <= 0 || bitLength > 32) {
-            throw new error_1.ValueError('bitLength must be between 1 and 32');
-        }
-        this.bitLength = bitLength;
-        this.namePrefix = namePrefix;
-        // Calculate the suffix_len value based on the total number of bins in
-        // hex. If bit_length = 10 then number_of_bins = 1024 or bin names will
-        // have a suffix between "000" and "3ff" in hex and suffix_len will be 3
-        // meaning the third bin will have a suffix of "003".
-        this.numberOfBins = Math.pow(2, bitLength);
-        // suffix_len is calculated based on "number_of_bins - 1" as the name
-        // of the last bin contains the number "number_of_bins -1" as a suffix.
-        this.suffixLen = (this.numberOfBins - 1).toString(16).length;
-    }
-    equals(other) {
-        if (!(other instanceof SuccinctRoles)) {
-            return false;
-        }
-        return (super.equals(other) &&
-            this.bitLength === other.bitLength &&
-            this.namePrefix === other.namePrefix);
-    }
-    /***
-     * Calculates the name of the delegated role responsible for 'target_filepath'.
-     *
-     * The target at path ''target_filepath' is assigned to a bin by casting
-     * the left-most 'bit_length' of bits of the file path hash digest to
-     * int, using it as bin index between 0 and '2**bit_length - 1'.
-     *
-     * Args:
-     *  target_filepath: URL path to a target file, relative to a base
-     *  targets URL.
-     */
-    getRoleForTarget(targetFilepath) {
-        const hasher = crypto_1.default.createHash('sha256');
-        const hasherBuffer = hasher.update(targetFilepath).digest();
-        // can't ever need more than 4 bytes (32 bits).
-        const hashBytes = hasherBuffer.subarray(0, 4);
-        // Right shift hash bytes, so that we only have the leftmost
-        // bit_length bits that we care about.
-        const shiftValue = 32 - this.bitLength;
-        const binNumber = hashBytes.readUInt32BE() >>> shiftValue;
-        // Add zero padding if necessary and cast to hex the suffix.
-        const suffix = binNumber.toString(16).padStart(this.suffixLen, '0');
-        return `${this.namePrefix}-${suffix}`;
-    }
-    *getRoles() {
-        for (let i = 0; i < this.numberOfBins; i++) {
-            const suffix = i.toString(16).padStart(this.suffixLen, '0');
-            yield `${this.namePrefix}-${suffix}`;
-        }
-    }
-    /***
-     * Determines whether the given ``role_name`` is in one of
-     * the delegated roles that ``SuccinctRoles`` represents.
-     *
-     * Args:
-     *  role_name: The name of the role to check against.
-     */
-    isDelegatedRole(roleName) {
-        const desiredPrefix = this.namePrefix + '-';
-        if (!roleName.startsWith(desiredPrefix)) {
-            return false;
-        }
-        const suffix = roleName.slice(desiredPrefix.length, roleName.length);
-        if (suffix.length != this.suffixLen) {
-            return false;
-        }
-        // make sure the suffix is a hex string
-        if (!suffix.match(/^[0-9a-fA-F]+$/)) {
-            return false;
-        }
-        const num = parseInt(suffix, 16);
-        return 0 <= num && num < this.numberOfBins;
-    }
-    toJSON() {
-        const json = {
-            ...super.toJSON(),
-            bit_length: this.bitLength,
-            name_prefix: this.namePrefix,
-        };
-        return json;
-    }
-    static fromJSON(data) {
-        const { keyids, threshold, bit_length, name_prefix, ...rest } = data;
-        if (!(0, guard_1.isStringArray)(keyids)) {
-            throw new TypeError('keyids must be an array of strings');
-        }
-        if (typeof threshold !== 'number') {
-            throw new TypeError('threshold must be a number');
-        }
-        if (typeof bit_length !== 'number') {
-            throw new TypeError('bit_length must be a number');
-        }
-        if (typeof name_prefix !== 'string') {
-            throw new TypeError('name_prefix must be a string');
-        }
-        return new SuccinctRoles({
-            keyIDs: keyids,
-            threshold,
-            bitLength: bit_length,
-            namePrefix: name_prefix,
-            unrecognizedFields: rest,
-        });
-    }
-}
-exports.SuccinctRoles = SuccinctRoles;
-
-
-/***/ }),
-
-/***/ 4653:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.Root = void 0;
-const util_1 = __importDefault(__nccwpck_require__(3837));
-const error_1 = __nccwpck_require__(7040);
-const guard_1 = __nccwpck_require__(1858);
-const types_1 = __nccwpck_require__(9121);
-const base_1 = __nccwpck_require__(2129);
-const key_1 = __nccwpck_require__(5468);
-const role_1 = __nccwpck_require__(6912);
-/**
- * A container for the signed part of root metadata.
- *
- * The top-level role and metadata file signed by the root keys.
- * This role specifies trusted keys for all other top-level roles, which may further delegate trust.
- */
-class Root extends base_1.Signed {
-    constructor(options) {
-        super(options);
-        this.type = types_1.MetadataKind.Root;
-        this.keys = options.keys || {};
-        this.consistentSnapshot = options.consistentSnapshot ?? true;
-        if (!options.roles) {
-            this.roles = role_1.TOP_LEVEL_ROLE_NAMES.reduce((acc, role) => ({
-                ...acc,
-                [role]: new role_1.Role({ keyIDs: [], threshold: 1 }),
-            }), {});
-        }
-        else {
-            const roleNames = new Set(Object.keys(options.roles));
-            if (!role_1.TOP_LEVEL_ROLE_NAMES.every((role) => roleNames.has(role))) {
-                throw new error_1.ValueError('missing top-level role');
-            }
-            this.roles = options.roles;
-        }
-    }
-    equals(other) {
-        if (!(other instanceof Root)) {
-            return false;
-        }
-        return (super.equals(other) &&
-            this.consistentSnapshot === other.consistentSnapshot &&
-            util_1.default.isDeepStrictEqual(this.keys, other.keys) &&
-            util_1.default.isDeepStrictEqual(this.roles, other.roles));
-    }
-    toJSON() {
-        return {
-            spec_version: this.specVersion,
-            version: this.version,
-            expires: this.expires,
-            keys: keysToJSON(this.keys),
-            roles: rolesToJSON(this.roles),
-            consistent_snapshot: this.consistentSnapshot,
-            ...this.unrecognizedFields,
-        };
-    }
-    static fromJSON(data) {
-        const { unrecognizedFields, ...commonFields } = base_1.Signed.commonFieldsFromJSON(data);
-        const { keys, roles, consistent_snapshot, ...rest } = unrecognizedFields;
-        if (typeof consistent_snapshot !== 'boolean') {
-            throw new TypeError('consistent_snapshot must be a boolean');
-        }
-        return new Root({
-            ...commonFields,
-            keys: keysFromJSON(keys),
-            roles: rolesFromJSON(roles),
-            consistentSnapshot: consistent_snapshot,
-            unrecognizedFields: rest,
-        });
-    }
-}
-exports.Root = Root;
-function keysToJSON(keys) {
-    return Object.entries(keys).reduce((acc, [keyID, key]) => ({ ...acc, [keyID]: key.toJSON() }), {});
-}
-function rolesToJSON(roles) {
-    return Object.entries(roles).reduce((acc, [roleName, role]) => ({ ...acc, [roleName]: role.toJSON() }), {});
-}
-function keysFromJSON(data) {
-    let keys;
-    if ((0, guard_1.isDefined)(data)) {
-        if (!(0, guard_1.isObjectRecord)(data)) {
-            throw new TypeError('keys must be an object');
-        }
-        keys = Object.entries(data).reduce((acc, [keyID, keyData]) => ({
-            ...acc,
-            [keyID]: key_1.Key.fromJSON(keyID, keyData),
-        }), {});
-    }
-    return keys;
-}
-function rolesFromJSON(data) {
-    let roles;
-    if ((0, guard_1.isDefined)(data)) {
-        if (!(0, guard_1.isObjectRecord)(data)) {
-            throw new TypeError('roles must be an object');
-        }
-        roles = Object.entries(data).reduce((acc, [roleName, roleData]) => ({
-            ...acc,
-            [roleName]: role_1.Role.fromJSON(roleData),
-        }), {});
-    }
-    return roles;
-}
-
-
-/***/ }),
-
-/***/ 253:
-/***/ ((__unused_webpack_module, exports) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.Signature = void 0;
-/**
- * A container class containing information about a signature.
- *
- * Contains a signature and the keyid uniquely identifying the key used
- * to generate the signature.
- *
- * Provide a `fromJSON` method to create a Signature from a JSON object.
- */
-class Signature {
-    constructor(options) {
-        const { keyID, sig } = options;
-        this.keyID = keyID;
-        this.sig = sig;
-    }
-    static fromJSON(data) {
-        const { keyid, sig } = data;
-        if (typeof keyid !== 'string') {
-            throw new TypeError('keyid must be a string');
-        }
-        if (typeof sig !== 'string') {
-            throw new TypeError('sig must be a string');
-        }
-        return new Signature({
-            keyID: keyid,
-            sig: sig,
-        });
-    }
-}
-exports.Signature = Signature;
-
-
-/***/ }),
-
-/***/ 9378:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.Snapshot = void 0;
-const util_1 = __importDefault(__nccwpck_require__(3837));
-const guard_1 = __nccwpck_require__(1858);
-const types_1 = __nccwpck_require__(9121);
-const base_1 = __nccwpck_require__(2129);
-const file_1 = __nccwpck_require__(2277);
-/**
- * A container for the signed part of snapshot metadata.
- *
- * Snapshot contains information about all target Metadata files.
- * A top-level role that specifies the latest versions of all targets metadata files,
- * and hence the latest versions of all targets (including any dependencies between them) on the repository.
- */
-class Snapshot extends base_1.Signed {
-    constructor(opts) {
-        super(opts);
-        this.type = types_1.MetadataKind.Snapshot;
-        this.meta = opts.meta || { 'targets.json': new file_1.MetaFile({ version: 1 }) };
-    }
-    equals(other) {
-        if (!(other instanceof Snapshot)) {
-            return false;
-        }
-        return super.equals(other) && util_1.default.isDeepStrictEqual(this.meta, other.meta);
-    }
-    toJSON() {
-        return {
-            meta: metaToJSON(this.meta),
-            spec_version: this.specVersion,
-            version: this.version,
-            expires: this.expires,
-            ...this.unrecognizedFields,
-        };
-    }
-    static fromJSON(data) {
-        const { unrecognizedFields, ...commonFields } = base_1.Signed.commonFieldsFromJSON(data);
-        const { meta, ...rest } = unrecognizedFields;
-        return new Snapshot({
-            ...commonFields,
-            meta: metaFromJSON(meta),
-            unrecognizedFields: rest,
-        });
-    }
-}
-exports.Snapshot = Snapshot;
-function metaToJSON(meta) {
-    return Object.entries(meta).reduce((acc, [path, metadata]) => ({
-        ...acc,
-        [path]: metadata.toJSON(),
-    }), {});
-}
-function metaFromJSON(data) {
-    let meta;
-    if ((0, guard_1.isDefined)(data)) {
-        if (!(0, guard_1.isObjectRecord)(data)) {
-            throw new TypeError('meta field is malformed');
-        }
-        else {
-            meta = Object.entries(data).reduce((acc, [path, metadata]) => ({
-                ...acc,
-                [path]: file_1.MetaFile.fromJSON(metadata),
-            }), {});
-        }
-        return meta;
-    }
-}
-
-
-/***/ }),
-
-/***/ 9046:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.Targets = void 0;
-const util_1 = __importDefault(__nccwpck_require__(3837));
-const guard_1 = __nccwpck_require__(1858);
-const types_1 = __nccwpck_require__(9121);
-const base_1 = __nccwpck_require__(2129);
-const delegations_1 = __nccwpck_require__(1739);
-const file_1 = __nccwpck_require__(2277);
-// Container for the signed part of targets metadata.
-//
-// Targets contains verifying information about target files and also delegates
-// responsible to other Targets roles.
-class Targets extends base_1.Signed {
-    constructor(options) {
-        super(options);
-        this.type = types_1.MetadataKind.Targets;
-        this.targets = options.targets || {};
-        this.delegations = options.delegations;
-    }
-    equals(other) {
-        if (!(other instanceof Targets)) {
-            return false;
-        }
-        return (super.equals(other) &&
-            util_1.default.isDeepStrictEqual(this.targets, other.targets) &&
-            util_1.default.isDeepStrictEqual(this.delegations, other.delegations));
-    }
-    toJSON() {
-        const json = {
-            spec_version: this.specVersion,
-            version: this.version,
-            expires: this.expires,
-            targets: targetsToJSON(this.targets),
-            ...this.unrecognizedFields,
-        };
-        if (this.delegations) {
-            json.delegations = this.delegations.toJSON();
-        }
-        return json;
-    }
-    static fromJSON(data) {
-        const { unrecognizedFields, ...commonFields } = base_1.Signed.commonFieldsFromJSON(data);
-        const { targets, delegations, ...rest } = unrecognizedFields;
-        return new Targets({
-            ...commonFields,
-            targets: targetsFromJSON(targets),
-            delegations: delegationsFromJSON(delegations),
-            unrecognizedFields: rest,
-        });
-    }
-}
-exports.Targets = Targets;
-function targetsToJSON(targets) {
-    return Object.entries(targets).reduce((acc, [path, target]) => ({
-        ...acc,
-        [path]: target.toJSON(),
-    }), {});
-}
-function targetsFromJSON(data) {
-    let targets;
-    if ((0, guard_1.isDefined)(data)) {
-        if (!(0, guard_1.isObjectRecord)(data)) {
-            throw new TypeError('targets must be an object');
-        }
-        else {
-            targets = Object.entries(data).reduce((acc, [path, target]) => ({
-                ...acc,
-                [path]: file_1.TargetFile.fromJSON(path, target),
-            }), {});
-        }
-    }
-    return targets;
-}
-function delegationsFromJSON(data) {
-    let delegations;
-    if ((0, guard_1.isDefined)(data)) {
-        if (!(0, guard_1.isObject)(data)) {
-            throw new TypeError('delegations must be an object');
-        }
-        else {
-            delegations = delegations_1.Delegations.fromJSON(data);
-        }
-    }
-    return delegations;
-}
-
-
-/***/ }),
-
-/***/ 1713:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.Timestamp = void 0;
-const guard_1 = __nccwpck_require__(1858);
-const types_1 = __nccwpck_require__(9121);
-const base_1 = __nccwpck_require__(2129);
-const file_1 = __nccwpck_require__(2277);
-/**
- * A container for the signed part of timestamp metadata.
- *
- * A top-level that specifies the latest version of the snapshot role metadata file,
- * and hence the latest versions of all metadata and targets on the repository.
- */
-class Timestamp extends base_1.Signed {
-    constructor(options) {
-        super(options);
-        this.type = types_1.MetadataKind.Timestamp;
-        this.snapshotMeta = options.snapshotMeta || new file_1.MetaFile({ version: 1 });
-    }
-    equals(other) {
-        if (!(other instanceof Timestamp)) {
-            return false;
-        }
-        return super.equals(other) && this.snapshotMeta.equals(other.snapshotMeta);
-    }
-    toJSON() {
-        return {
-            spec_version: this.specVersion,
-            version: this.version,
-            expires: this.expires,
-            meta: { 'snapshot.json': this.snapshotMeta.toJSON() },
-            ...this.unrecognizedFields,
-        };
-    }
-    static fromJSON(data) {
-        const { unrecognizedFields, ...commonFields } = base_1.Signed.commonFieldsFromJSON(data);
-        const { meta, ...rest } = unrecognizedFields;
-        return new Timestamp({
-            ...commonFields,
-            snapshotMeta: snapshotMetaFromJSON(meta),
-            unrecognizedFields: rest,
-        });
-    }
-}
-exports.Timestamp = Timestamp;
-function snapshotMetaFromJSON(data) {
-    let snapshotMeta;
-    if ((0, guard_1.isDefined)(data)) {
-        const snapshotData = data['snapshot.json'];
-        if (!(0, guard_1.isDefined)(snapshotData) || !(0, guard_1.isObject)(snapshotData)) {
-            throw new TypeError('missing snapshot.json in meta');
-        }
-        else {
-            snapshotMeta = file_1.MetaFile.fromJSON(snapshotData);
-        }
-    }
-    return snapshotMeta;
-}
 
 
 /***/ }),
@@ -45778,9 +46531,8 @@ function snapshotMetaFromJSON(data) {
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.TrustedMetadataStore = void 0;
+const models_1 = __nccwpck_require__(5833);
 const error_1 = __nccwpck_require__(7040);
-const models_1 = __nccwpck_require__(4885);
-const types_1 = __nccwpck_require__(9121);
 class TrustedMetadataStore {
     constructor(rootData) {
         this.trustedSet = {};
@@ -45809,18 +46561,18 @@ class TrustedMetadataStore {
     }
     updateRoot(bytesBuffer) {
         const data = JSON.parse(bytesBuffer.toString('utf8'));
-        const newRoot = models_1.Metadata.fromJSON(types_1.MetadataKind.Root, data);
-        if (newRoot.signed.type != types_1.MetadataKind.Root) {
+        const newRoot = models_1.Metadata.fromJSON(models_1.MetadataKind.Root, data);
+        if (newRoot.signed.type != models_1.MetadataKind.Root) {
             throw new error_1.RepositoryError(`Expected 'root', got ${newRoot.signed.type}`);
         }
         // Client workflow 5.4: check for arbitrary software attack
-        this.root.verifyDelegate(types_1.MetadataKind.Root, newRoot);
+        this.root.verifyDelegate(models_1.MetadataKind.Root, newRoot);
         // Client workflow 5.5: check for rollback attack
         if (newRoot.signed.version != this.root.signed.version + 1) {
             throw new error_1.BadVersionError(`Expected version ${this.root.signed.version + 1}, got ${newRoot.signed.version}`);
         }
         // Check that new root is signed by self
-        newRoot.verifyDelegate(types_1.MetadataKind.Root, newRoot);
+        newRoot.verifyDelegate(models_1.MetadataKind.Root, newRoot);
         // Client workflow 5.7: set new root as trusted root
         this.trustedSet.root = newRoot;
         return newRoot;
@@ -45833,12 +46585,12 @@ class TrustedMetadataStore {
             throw new error_1.ExpiredMetadataError('Final root.json is expired');
         }
         const data = JSON.parse(bytesBuffer.toString('utf8'));
-        const newTimestamp = models_1.Metadata.fromJSON(types_1.MetadataKind.Timestamp, data);
-        if (newTimestamp.signed.type != types_1.MetadataKind.Timestamp) {
+        const newTimestamp = models_1.Metadata.fromJSON(models_1.MetadataKind.Timestamp, data);
+        if (newTimestamp.signed.type != models_1.MetadataKind.Timestamp) {
             throw new error_1.RepositoryError(`Expected 'timestamp', got ${newTimestamp.signed.type}`);
         }
         // Client workflow 5.4.2: check for arbitrary software attack
-        this.root.verifyDelegate(types_1.MetadataKind.Timestamp, newTimestamp);
+        this.root.verifyDelegate(models_1.MetadataKind.Timestamp, newTimestamp);
         if (this.timestamp) {
             // Prevent rolling back timestamp version
             // Client workflow 5.4.3.1: check for rollback attack
@@ -45881,12 +46633,12 @@ class TrustedMetadataStore {
             snapshotMeta.verify(bytesBuffer);
         }
         const data = JSON.parse(bytesBuffer.toString('utf8'));
-        const newSnapshot = models_1.Metadata.fromJSON(types_1.MetadataKind.Snapshot, data);
-        if (newSnapshot.signed.type != types_1.MetadataKind.Snapshot) {
+        const newSnapshot = models_1.Metadata.fromJSON(models_1.MetadataKind.Snapshot, data);
+        if (newSnapshot.signed.type != models_1.MetadataKind.Snapshot) {
             throw new error_1.RepositoryError(`Expected 'snapshot', got ${newSnapshot.signed.type}`);
         }
         // Client workflow 5.5.3: check for arbitrary software attack
-        this.root.verifyDelegate(types_1.MetadataKind.Snapshot, newSnapshot);
+        this.root.verifyDelegate(models_1.MetadataKind.Snapshot, newSnapshot);
         // version check against meta version (5.5.4) is deferred to allow old
         // snapshot to be used in rollback protection
         // Client workflow 5.5.5: check for rollback attack
@@ -45926,8 +46678,8 @@ class TrustedMetadataStore {
         // Client workflow 5.6.2: check against snapshot role's targets hash
         meta.verify(bytesBuffer);
         const data = JSON.parse(bytesBuffer.toString('utf8'));
-        const newDelegate = models_1.Metadata.fromJSON(types_1.MetadataKind.Targets, data);
-        if (newDelegate.signed.type != types_1.MetadataKind.Targets) {
+        const newDelegate = models_1.Metadata.fromJSON(models_1.MetadataKind.Targets, data);
+        if (newDelegate.signed.type != models_1.MetadataKind.Targets) {
             throw new error_1.RepositoryError(`Expected 'targets', got ${newDelegate.signed.type}`);
         }
         // Client workflow 5.6.3: check for arbitrary software attack
@@ -45947,11 +46699,11 @@ class TrustedMetadataStore {
     // Note that an expired initial root is still considered valid.
     loadTrustedRoot(bytesBuffer) {
         const data = JSON.parse(bytesBuffer.toString('utf8'));
-        const root = models_1.Metadata.fromJSON(types_1.MetadataKind.Root, data);
-        if (root.signed.type != types_1.MetadataKind.Root) {
+        const root = models_1.Metadata.fromJSON(models_1.MetadataKind.Root, data);
+        if (root.signed.type != models_1.MetadataKind.Root) {
             throw new error_1.RepositoryError(`Expected 'root', got ${root.signed.type}`);
         }
-        root.verifyDelegate(types_1.MetadataKind.Root, root);
+        root.verifyDelegate(models_1.MetadataKind.Root, root);
         this.trustedSet['root'] = root;
     }
     checkFinalTimestamp() {
@@ -46018,13 +46770,14 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Updater = void 0;
+const models_1 = __nccwpck_require__(5833);
 const fs = __importStar(__nccwpck_require__(7147));
 const path = __importStar(__nccwpck_require__(1017));
+const config_1 = __nccwpck_require__(9530);
 const error_1 = __nccwpck_require__(7040);
 const fetcher_1 = __nccwpck_require__(5991);
 const store_1 = __nccwpck_require__(7001);
-const config_1 = __nccwpck_require__(24);
-const types_1 = __nccwpck_require__(9121);
+const url = __importStar(__nccwpck_require__(5961));
 class Updater {
     constructor(options) {
         const { metadataDir, metadataBaseUrl, targetDir, targetBaseUrl, fetcher, config, } = options;
@@ -46032,12 +46785,12 @@ class Updater {
         this.metadataBaseUrl = metadataBaseUrl;
         this.targetDir = targetDir;
         this.targetBaseUrl = targetBaseUrl;
-        const data = this.loadLocalMetadata(types_1.MetadataKind.Root);
+        const data = this.loadLocalMetadata(models_1.MetadataKind.Root);
         this.trustedSet = new store_1.TrustedMetadataStore(data);
         this.config = { ...config_1.defaultConfig, ...config };
         this.fetcher =
             fetcher ||
-                new fetcher_1.Fetcher({
+                new fetcher_1.DefaultFetcher({
                     timeout: this.config.fetchTimeout,
                     retries: this.config.fetchRetries,
                 });
@@ -46046,7 +46799,7 @@ class Updater {
         await this.loadRoot();
         await this.loadTimestamp();
         await this.loadSnapshot();
-        await this.loadTargets(types_1.MetadataKind.Targets, types_1.MetadataKind.Root);
+        await this.loadTargets(models_1.MetadataKind.Targets, models_1.MetadataKind.Root);
     }
     // Returns the TargetFile instance with information for the given target path.
     //
@@ -46069,12 +46822,13 @@ class Updater {
         const consistentSnapshot = this.trustedSet.root.signed.consistentSnapshot;
         if (consistentSnapshot && this.config.prefixTargetsWithHash) {
             const hashes = Object.values(targetInfo.hashes);
-            const basename = path.basename(targetFilePath);
-            targetFilePath = `${hashes[0]}.${basename}`;
+            const { dir, base } = path.parse(targetFilePath);
+            const filename = `${hashes[0]}.${base}`;
+            targetFilePath = dir ? `${dir}/${filename}` : filename;
         }
-        const url = path.join(targetBaseUrl, targetFilePath);
+        const targetUrl = url.join(targetBaseUrl, targetFilePath);
         // Client workflow 5.7.3: download target file
-        await this.fetcher.downloadFile(url, targetInfo.length, async (fileName) => {
+        await this.fetcher.downloadFile(targetUrl, targetInfo.length, async (fileName) => {
             // Verify hashes and length of downloaded file
             await targetInfo.verify(fs.createReadStream(fileName));
             // Copy file to target path
@@ -46110,14 +46864,14 @@ class Updater {
         const lowerBound = rootVersion + 1;
         const upperBound = lowerBound + this.config.maxRootRotations;
         for (let version = lowerBound; version <= upperBound; version++) {
-            const url = path.join(this.metadataBaseUrl, `${version}.root.json`);
+            const rootUrl = url.join(this.metadataBaseUrl, `${version}.root.json`);
             try {
                 // Client workflow 5.3.3: download new root metadata file
-                const bytesData = await this.fetcher.downloadBytes(url, this.config.rootMaxLength);
+                const bytesData = await this.fetcher.downloadBytes(rootUrl, this.config.rootMaxLength);
                 // Client workflow 5.3.4 - 5.4.7
                 this.trustedSet.updateRoot(bytesData);
                 // Client workflow 5.3.8: persist root metadata file
-                this.persistMetadata(types_1.MetadataKind.Root, bytesData);
+                this.persistMetadata(models_1.MetadataKind.Root, bytesData);
             }
             catch (error) {
                 break;
@@ -46129,16 +46883,16 @@ class Updater {
     async loadTimestamp() {
         // Load local and remote timestamp metadata
         try {
-            const data = this.loadLocalMetadata(types_1.MetadataKind.Timestamp);
+            const data = this.loadLocalMetadata(models_1.MetadataKind.Timestamp);
             this.trustedSet.updateTimestamp(data);
         }
         catch (error) {
             // continue
         }
         //Load from remote (whether local load succeeded or not)
-        const url = path.join(this.metadataBaseUrl, `timestamp.json`);
+        const timestampUrl = url.join(this.metadataBaseUrl, 'timestamp.json');
         // Client workflow 5.4.1: download timestamp metadata file
-        const bytesData = await this.fetcher.downloadBytes(url, this.config.timestampMaxLength);
+        const bytesData = await this.fetcher.downloadBytes(timestampUrl, this.config.timestampMaxLength);
         try {
             // Client workflow 5.4.2 - 5.4.4
             this.trustedSet.updateTimestamp(bytesData);
@@ -46153,14 +46907,14 @@ class Updater {
             throw error;
         }
         // Client workflow 5.4.5: persist timestamp metadata
-        this.persistMetadata(types_1.MetadataKind.Timestamp, bytesData);
+        this.persistMetadata(models_1.MetadataKind.Timestamp, bytesData);
     }
     // Load local and remote snapshot metadata.
     // Client workflow 5.5: update snapshot role
     async loadSnapshot() {
         //Load local (and if needed remote) snapshot metadata
         try {
-            const data = this.loadLocalMetadata(types_1.MetadataKind.Snapshot);
+            const data = this.loadLocalMetadata(models_1.MetadataKind.Snapshot);
             this.trustedSet.updateSnapshot(data, true);
         }
         catch (error) {
@@ -46172,14 +46926,14 @@ class Updater {
             const version = this.trustedSet.root.signed.consistentSnapshot
                 ? snapshotMeta.version
                 : undefined;
-            const url = path.join(this.metadataBaseUrl, version ? `${version}.snapshot.json` : `snapshot.json`);
+            const snapshotUrl = url.join(this.metadataBaseUrl, version ? `${version}.snapshot.json` : 'snapshot.json');
             try {
                 // Client workflow 5.5.1: download snapshot metadata file
-                const bytesData = await this.fetcher.downloadBytes(url, maxLength);
+                const bytesData = await this.fetcher.downloadBytes(snapshotUrl, maxLength);
                 // Client workflow 5.5.2 - 5.5.6
                 this.trustedSet.updateSnapshot(bytesData);
                 // Client workflow 5.5.7: persist snapshot metadata file
-                this.persistMetadata(types_1.MetadataKind.Snapshot, bytesData);
+                this.persistMetadata(models_1.MetadataKind.Snapshot, bytesData);
             }
             catch (error) {
                 throw new error_1.RuntimeError(`Unable to load snapshot metadata error ${error}`);
@@ -46207,10 +46961,10 @@ class Updater {
             const version = this.trustedSet.root.signed.consistentSnapshot
                 ? metaInfo.version
                 : undefined;
-            const url = path.join(this.metadataBaseUrl, version ? `${version}.${role}.json` : `${role}.json`);
+            const metadataUrl = url.join(this.metadataBaseUrl, version ? `${version}.${role}.json` : `${role}.json`);
             try {
                 // Client workflow 5.6.1: download targets metadata file
-                const bytesData = await this.fetcher.downloadBytes(url, maxLength);
+                const bytesData = await this.fetcher.downloadBytes(metadataUrl, maxLength);
                 // Client workflow 5.6.2 - 5.6.6
                 this.trustedSet.updateDelegatedTargets(bytesData, role, parentRole);
                 // Client workflow 5.6.7: persist targets metadata file
@@ -46230,8 +46984,8 @@ class Updater {
         // is needed to load and verify the delegated targets metadata.
         const delegationsToVisit = [
             {
-                roleName: types_1.MetadataKind.Targets,
-                parentRoleName: types_1.MetadataKind.Root,
+                roleName: models_1.MetadataKind.Targets,
+                parentRoleName: models_1.MetadataKind.Root,
             },
         ];
         const visitedRoleNames = new Set();
@@ -46285,7 +47039,9 @@ class Updater {
         if (!this.targetDir) {
             throw new error_1.ValueError('Target directory not set');
         }
-        return path.join(this.targetDir, targetInfo.path);
+        // URL encode target path
+        const filePath = encodeURIComponent(targetInfo.path);
+        return path.join(this.targetDir, filePath);
     }
     async persistMetadata(metaDataName, bytesData) {
         try {
@@ -46298,391 +47054,6 @@ class Updater {
     }
 }
 exports.Updater = Updater;
-
-
-/***/ }),
-
-/***/ 24:
-/***/ ((__unused_webpack_module, exports) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.defaultConfig = void 0;
-exports.defaultConfig = {
-    maxRootRotations: 32,
-    maxDelegations: 32,
-    rootMaxLength: 512000,
-    timestampMaxLength: 16384,
-    snapshotMaxLength: 2000000,
-    targetsMaxLength: 5000000,
-    prefixTargetsWithHash: true,
-    fetchTimeout: 100000,
-    fetchRetries: 2,
-};
-
-
-/***/ }),
-
-/***/ 1858:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.isMetadataKind = exports.isObjectRecord = exports.isStringRecord = exports.isObjectArray = exports.isStringArray = exports.isObject = exports.isDefined = void 0;
-const types_1 = __nccwpck_require__(9121);
-function isDefined(val) {
-    return val !== undefined;
-}
-exports.isDefined = isDefined;
-function isObject(value) {
-    return typeof value === 'object' && value !== null;
-}
-exports.isObject = isObject;
-function isStringArray(value) {
-    return Array.isArray(value) && value.every((v) => typeof v === 'string');
-}
-exports.isStringArray = isStringArray;
-function isObjectArray(value) {
-    return Array.isArray(value) && value.every(isObject);
-}
-exports.isObjectArray = isObjectArray;
-function isStringRecord(value) {
-    return (typeof value === 'object' &&
-        value !== null &&
-        Object.keys(value).every((k) => typeof k === 'string') &&
-        Object.values(value).every((v) => typeof v === 'string'));
-}
-exports.isStringRecord = isStringRecord;
-function isObjectRecord(value) {
-    return (typeof value === 'object' &&
-        value !== null &&
-        Object.keys(value).every((k) => typeof k === 'string') &&
-        Object.values(value).every((v) => typeof v === 'object' && v !== null));
-}
-exports.isObjectRecord = isObjectRecord;
-function isMetadataKind(value) {
-    return (typeof value === 'string' &&
-        Object.values(types_1.MetadataKind).includes(value));
-}
-exports.isMetadataKind = isMetadataKind;
-
-
-/***/ }),
-
-/***/ 4781:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.types = exports.signer = exports.json = exports.guard = exports.config = void 0;
-exports.config = __importStar(__nccwpck_require__(24));
-exports.guard = __importStar(__nccwpck_require__(1858));
-exports.json = __importStar(__nccwpck_require__(592));
-exports.signer = __importStar(__nccwpck_require__(2067));
-exports.types = __importStar(__nccwpck_require__(9121));
-
-
-/***/ }),
-
-/***/ 592:
-/***/ ((__unused_webpack_module, exports) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.canonicalize = void 0;
-const QUOTATION_MARK = Buffer.from('"');
-const COMMA = Buffer.from(',');
-const COLON = Buffer.from(':');
-const LEFT_SQUARE_BRACKET = Buffer.from('[');
-const RIGHT_SQUARE_BRACKET = Buffer.from(']');
-const LEFT_CURLY_BRACKET = Buffer.from('{');
-const RIGHT_CURLY_BRACKET = Buffer.from('}');
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function canonicalize(object) {
-    let buffer = Buffer.from('');
-    if (object === null || typeof object !== 'object' || object.toJSON != null) {
-        // Primitives or toJSONable objects
-        if (typeof object === 'string') {
-            buffer = Buffer.concat([
-                buffer,
-                QUOTATION_MARK,
-                Buffer.from(object),
-                QUOTATION_MARK,
-            ]);
-        }
-        else {
-            buffer = Buffer.concat([buffer, Buffer.from(JSON.stringify(object))]);
-        }
-    }
-    else if (Array.isArray(object)) {
-        // Array - maintain element order
-        buffer = Buffer.concat([buffer, LEFT_SQUARE_BRACKET]);
-        let first = true;
-        object.forEach((element) => {
-            if (!first) {
-                buffer = Buffer.concat([buffer, COMMA]);
-            }
-            first = false;
-            // recursive call
-            buffer = Buffer.concat([buffer, canonicalize(element)]);
-        });
-        buffer = Buffer.concat([buffer, RIGHT_SQUARE_BRACKET]);
-    }
-    else {
-        // Object - Sort properties before serializing
-        buffer = Buffer.concat([buffer, LEFT_CURLY_BRACKET]);
-        let first = true;
-        Object.keys(object)
-            .sort()
-            .forEach((property) => {
-            if (!first) {
-                buffer = Buffer.concat([buffer, COMMA]);
-            }
-            first = false;
-            buffer = Buffer.concat([buffer, Buffer.from(JSON.stringify(property))]);
-            buffer = Buffer.concat([buffer, COLON]);
-            // recursive call
-            buffer = Buffer.concat([buffer, canonicalize(object[property])]);
-        });
-        buffer = Buffer.concat([buffer, RIGHT_CURLY_BRACKET]);
-    }
-    return buffer;
-}
-exports.canonicalize = canonicalize;
-
-
-/***/ }),
-
-/***/ 6256:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.getPublicKey = void 0;
-const crypto_1 = __importDefault(__nccwpck_require__(6113));
-const error_1 = __nccwpck_require__(7040);
-const oid_1 = __nccwpck_require__(7724);
-const ASN1_TAG_SEQUENCE = 0x30;
-const ANS1_TAG_BIT_STRING = 0x03;
-const NULL_BYTE = 0x00;
-const OID_EDDSA = '1.3.101.112';
-const OID_EC_PUBLIC_KEY = '1.2.840.10045.2.1';
-const OID_EC_CURVE_P256V1 = '1.2.840.10045.3.1.7';
-const PEM_HEADER = '-----BEGIN PUBLIC KEY-----';
-function getPublicKey(keyInfo) {
-    switch (keyInfo.keyType) {
-        case 'rsa':
-            return getRSAPublicKey(keyInfo);
-        case 'ed25519':
-            return getED25519PublicKey(keyInfo);
-        case 'ecdsa':
-        case 'ecdsa-sha2-nistp256':
-        case 'ecdsa-sha2-nistp384':
-            return getECDCSAPublicKey(keyInfo);
-        default:
-            throw new error_1.UnsupportedAlgorithmError(`Unsupported key type: ${keyInfo.keyType}`);
-    }
-}
-exports.getPublicKey = getPublicKey;
-function getRSAPublicKey(keyInfo) {
-    // Only support PEM-encoded RSA keys
-    if (!keyInfo.keyVal.startsWith(PEM_HEADER)) {
-        throw new error_1.CryptoError('Invalid key format');
-    }
-    const key = crypto_1.default.createPublicKey(keyInfo.keyVal);
-    switch (keyInfo.scheme) {
-        case 'rsassa-pss-sha256':
-            return {
-                key: key,
-                padding: crypto_1.default.constants.RSA_PKCS1_PSS_PADDING,
-            };
-        default:
-            throw new error_1.UnsupportedAlgorithmError(`Unsupported RSA scheme: ${keyInfo.scheme}`);
-    }
-}
-function getED25519PublicKey(keyInfo) {
-    let key;
-    // If key is already PEM-encoded we can just parse it
-    if (keyInfo.keyVal.startsWith(PEM_HEADER)) {
-        key = crypto_1.default.createPublicKey(keyInfo.keyVal);
-    }
-    else {
-        // If key is not PEM-encoded it had better be hex
-        if (!isHex(keyInfo.keyVal)) {
-            throw new error_1.CryptoError('Invalid key format');
-        }
-        key = crypto_1.default.createPublicKey({
-            key: ed25519.hexToDER(keyInfo.keyVal),
-            format: 'der',
-            type: 'spki',
-        });
-    }
-    return { key };
-}
-function getECDCSAPublicKey(keyInfo) {
-    let key;
-    // If key is already PEM-encoded we can just parse it
-    if (keyInfo.keyVal.startsWith(PEM_HEADER)) {
-        key = crypto_1.default.createPublicKey(keyInfo.keyVal);
-    }
-    else {
-        // If key is not PEM-encoded it had better be hex
-        if (!isHex(keyInfo.keyVal)) {
-            throw new error_1.CryptoError('Invalid key format');
-        }
-        key = crypto_1.default.createPublicKey({
-            key: ecdsa.hexToDER(keyInfo.keyVal),
-            format: 'der',
-            type: 'spki',
-        });
-    }
-    return { key };
-}
-const ed25519 = {
-    // Translates a hex key into a crypto KeyObject
-    // https://keygen.sh/blog/how-to-use-hexadecimal-ed25519-keys-in-node/
-    hexToDER: (hex) => {
-        const key = Buffer.from(hex, 'hex');
-        const oid = (0, oid_1.encodeOIDString)(OID_EDDSA);
-        // Create a byte sequence containing the OID and key
-        const elements = Buffer.concat([
-            Buffer.concat([
-                Buffer.from([ASN1_TAG_SEQUENCE]),
-                Buffer.from([oid.length]),
-                oid,
-            ]),
-            Buffer.concat([
-                Buffer.from([ANS1_TAG_BIT_STRING]),
-                Buffer.from([key.length + 1]),
-                Buffer.from([NULL_BYTE]),
-                key,
-            ]),
-        ]);
-        // Wrap up by creating a sequence of elements
-        const der = Buffer.concat([
-            Buffer.from([ASN1_TAG_SEQUENCE]),
-            Buffer.from([elements.length]),
-            elements,
-        ]);
-        return der;
-    },
-};
-const ecdsa = {
-    hexToDER: (hex) => {
-        const key = Buffer.from(hex, 'hex');
-        const bitString = Buffer.concat([
-            Buffer.from([ANS1_TAG_BIT_STRING]),
-            Buffer.from([key.length + 1]),
-            Buffer.from([NULL_BYTE]),
-            key,
-        ]);
-        const oids = Buffer.concat([
-            (0, oid_1.encodeOIDString)(OID_EC_PUBLIC_KEY),
-            (0, oid_1.encodeOIDString)(OID_EC_CURVE_P256V1),
-        ]);
-        const oidSequence = Buffer.concat([
-            Buffer.from([ASN1_TAG_SEQUENCE]),
-            Buffer.from([oids.length]),
-            oids,
-        ]);
-        // Wrap up by creating a sequence of elements
-        const der = Buffer.concat([
-            Buffer.from([ASN1_TAG_SEQUENCE]),
-            Buffer.from([oidSequence.length + bitString.length]),
-            oidSequence,
-            bitString,
-        ]);
-        return der;
-    },
-};
-const isHex = (key) => /^[0-9a-fA-F]+$/.test(key);
-
-
-/***/ }),
-
-/***/ 7724:
-/***/ ((__unused_webpack_module, exports) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.encodeOIDString = void 0;
-const ANS1_TAG_OID = 0x06;
-function encodeOIDString(oid) {
-    const parts = oid.split('.');
-    // The first two subidentifiers are encoded into the first byte
-    const first = parseInt(parts[0], 10) * 40 + parseInt(parts[1], 10);
-    const rest = [];
-    parts.slice(2).forEach((part) => {
-        const bytes = encodeVariableLengthInteger(parseInt(part, 10));
-        rest.push(...bytes);
-    });
-    const der = Buffer.from([first, ...rest]);
-    return Buffer.from([ANS1_TAG_OID, der.length, ...der]);
-}
-exports.encodeOIDString = encodeOIDString;
-function encodeVariableLengthInteger(value) {
-    const bytes = [];
-    let mask = 0x00;
-    while (value > 0) {
-        bytes.unshift((value & 0x7f) | mask);
-        value >>= 7;
-        mask = 0x80;
-    }
-    return bytes;
-}
-
-
-/***/ }),
-
-/***/ 2067:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.verifySignature = void 0;
-const crypto_1 = __importDefault(__nccwpck_require__(6113));
-const json_1 = __nccwpck_require__(592);
-const verifySignature = (metaDataSignedData, key, signature) => {
-    const canonicalData = (0, json_1.canonicalize)(metaDataSignedData) || '';
-    return crypto_1.default.verify(undefined, canonicalData, key, Buffer.from(signature, 'hex'));
-};
-exports.verifySignature = verifySignature;
 
 
 /***/ }),
@@ -46720,230 +47091,24 @@ const withTempDir = async (handler) => {
 
 /***/ }),
 
-/***/ 9121:
-/***/ ((__unused_webpack_module, exports) => {
+/***/ 5961:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.MetadataKind = void 0;
-var MetadataKind;
-(function (MetadataKind) {
-    MetadataKind["Root"] = "root";
-    MetadataKind["Timestamp"] = "timestamp";
-    MetadataKind["Snapshot"] = "snapshot";
-    MetadataKind["Targets"] = "targets";
-})(MetadataKind = exports.MetadataKind || (exports.MetadataKind = {}));
-
-
-/***/ }),
-
-/***/ 6245:
-/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
-
-var balanced = __nccwpck_require__(9417);
-
-module.exports = expandTop;
-
-var escSlash = '\0SLASH'+Math.random()+'\0';
-var escOpen = '\0OPEN'+Math.random()+'\0';
-var escClose = '\0CLOSE'+Math.random()+'\0';
-var escComma = '\0COMMA'+Math.random()+'\0';
-var escPeriod = '\0PERIOD'+Math.random()+'\0';
-
-function numeric(str) {
-  return parseInt(str, 10) == str
-    ? parseInt(str, 10)
-    : str.charCodeAt(0);
+exports.join = void 0;
+const url_1 = __nccwpck_require__(7310);
+function join(base, path) {
+    return new url_1.URL(ensureTrailingSlash(base) + removeLeadingSlash(path)).toString();
 }
-
-function escapeBraces(str) {
-  return str.split('\\\\').join(escSlash)
-            .split('\\{').join(escOpen)
-            .split('\\}').join(escClose)
-            .split('\\,').join(escComma)
-            .split('\\.').join(escPeriod);
+exports.join = join;
+function ensureTrailingSlash(path) {
+    return path.endsWith('/') ? path : path + '/';
 }
-
-function unescapeBraces(str) {
-  return str.split(escSlash).join('\\')
-            .split(escOpen).join('{')
-            .split(escClose).join('}')
-            .split(escComma).join(',')
-            .split(escPeriod).join('.');
+function removeLeadingSlash(path) {
+    return path.startsWith('/') ? path.slice(1) : path;
 }
-
-
-// Basically just str.split(","), but handling cases
-// where we have nested braced sections, which should be
-// treated as individual members, like {a,{b,c},d}
-function parseCommaParts(str) {
-  if (!str)
-    return [''];
-
-  var parts = [];
-  var m = balanced('{', '}', str);
-
-  if (!m)
-    return str.split(',');
-
-  var pre = m.pre;
-  var body = m.body;
-  var post = m.post;
-  var p = pre.split(',');
-
-  p[p.length-1] += '{' + body + '}';
-  var postParts = parseCommaParts(post);
-  if (post.length) {
-    p[p.length-1] += postParts.shift();
-    p.push.apply(p, postParts);
-  }
-
-  parts.push.apply(parts, p);
-
-  return parts;
-}
-
-function expandTop(str) {
-  if (!str)
-    return [];
-
-  // I don't know why Bash 4.3 does this, but it does.
-  // Anything starting with {} will have the first two bytes preserved
-  // but *only* at the top level, so {},a}b will not expand to anything,
-  // but a{},b}c will be expanded to [a}c,abc].
-  // One could argue that this is a bug in Bash, but since the goal of
-  // this module is to match Bash's rules, we escape a leading {}
-  if (str.substr(0, 2) === '{}') {
-    str = '\\{\\}' + str.substr(2);
-  }
-
-  return expand(escapeBraces(str), true).map(unescapeBraces);
-}
-
-function embrace(str) {
-  return '{' + str + '}';
-}
-function isPadded(el) {
-  return /^-?0\d/.test(el);
-}
-
-function lte(i, y) {
-  return i <= y;
-}
-function gte(i, y) {
-  return i >= y;
-}
-
-function expand(str, isTop) {
-  var expansions = [];
-
-  var m = balanced('{', '}', str);
-  if (!m) return [str];
-
-  // no need to expand pre, since it is guaranteed to be free of brace-sets
-  var pre = m.pre;
-  var post = m.post.length
-    ? expand(m.post, false)
-    : [''];
-
-  if (/\$$/.test(m.pre)) {    
-    for (var k = 0; k < post.length; k++) {
-      var expansion = pre+ '{' + m.body + '}' + post[k];
-      expansions.push(expansion);
-    }
-  } else {
-    var isNumericSequence = /^-?\d+\.\.-?\d+(?:\.\.-?\d+)?$/.test(m.body);
-    var isAlphaSequence = /^[a-zA-Z]\.\.[a-zA-Z](?:\.\.-?\d+)?$/.test(m.body);
-    var isSequence = isNumericSequence || isAlphaSequence;
-    var isOptions = m.body.indexOf(',') >= 0;
-    if (!isSequence && !isOptions) {
-      // {a},b}
-      if (m.post.match(/,.*\}/)) {
-        str = m.pre + '{' + m.body + escClose + m.post;
-        return expand(str);
-      }
-      return [str];
-    }
-
-    var n;
-    if (isSequence) {
-      n = m.body.split(/\.\./);
-    } else {
-      n = parseCommaParts(m.body);
-      if (n.length === 1) {
-        // x{{a,b}}y ==> x{a}y x{b}y
-        n = expand(n[0], false).map(embrace);
-        if (n.length === 1) {
-          return post.map(function(p) {
-            return m.pre + n[0] + p;
-          });
-        }
-      }
-    }
-
-    // at this point, n is the parts, and we know it's not a comma set
-    // with a single entry.
-    var N;
-
-    if (isSequence) {
-      var x = numeric(n[0]);
-      var y = numeric(n[1]);
-      var width = Math.max(n[0].length, n[1].length)
-      var incr = n.length == 3
-        ? Math.abs(numeric(n[2]))
-        : 1;
-      var test = lte;
-      var reverse = y < x;
-      if (reverse) {
-        incr *= -1;
-        test = gte;
-      }
-      var pad = n.some(isPadded);
-
-      N = [];
-
-      for (var i = x; test(i, y); i += incr) {
-        var c;
-        if (isAlphaSequence) {
-          c = String.fromCharCode(i);
-          if (c === '\\')
-            c = '';
-        } else {
-          c = String(i);
-          if (pad) {
-            var need = width - c.length;
-            if (need > 0) {
-              var z = new Array(need + 1).join('0');
-              if (i < 0)
-                c = '-' + z + c.slice(1);
-              else
-                c = z + c;
-            }
-          }
-        }
-        N.push(c);
-      }
-    } else {
-      N = [];
-
-      for (var j = 0; j < n.length; j++) {
-        N.push.apply(N, expand(n[j], false));
-      }
-    }
-
-    for (var j = 0; j < N.length; j++) {
-      for (var k = 0; k < post.length; k++) {
-        var expansion = pre + N[j] + post[k];
-        if (!isTop || isSequence || expansion)
-          expansions.push(expansion);
-      }
-    }
-  }
-
-  return expansions;
-}
-
 
 
 /***/ }),
@@ -50780,7 +50945,195 @@ module.exports = require("zlib");
 
 /***/ }),
 
-/***/ 7259:
+/***/ 3857:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+// translate the various posix character classes into unicode properties
+// this works across all unicode locales
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.parseClass = void 0;
+// { <posix class>: [<translation>, /u flag required, negated]
+const posixClasses = {
+    '[:alnum:]': ['\\p{L}\\p{Nl}\\p{Nd}', true],
+    '[:alpha:]': ['\\p{L}\\p{Nl}', true],
+    '[:ascii:]': ['\\x' + '00-\\x' + '7f', false],
+    '[:blank:]': ['\\p{Zs}\\t', true],
+    '[:cntrl:]': ['\\p{Cc}', true],
+    '[:digit:]': ['\\p{Nd}', true],
+    '[:graph:]': ['\\p{Z}\\p{C}', true, true],
+    '[:lower:]': ['\\p{Ll}', true],
+    '[:print:]': ['\\p{C}', true],
+    '[:punct:]': ['\\p{P}', true],
+    '[:space:]': ['\\p{Z}\\t\\r\\n\\v\\f', true],
+    '[:upper:]': ['\\p{Lu}', true],
+    '[:word:]': ['\\p{L}\\p{Nl}\\p{Nd}\\p{Pc}', true],
+    '[:xdigit:]': ['A-Fa-f0-9', false],
+};
+// only need to escape a few things inside of brace expressions
+// escapes: [ \ ] -
+const braceEscape = (s) => s.replace(/[[\]\\-]/g, '\\$&');
+// escape all regexp magic characters
+const regexpEscape = (s) => s.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
+// everything has already been escaped, we just have to join
+const rangesToString = (ranges) => ranges.join('');
+// takes a glob string at a posix brace expression, and returns
+// an equivalent regular expression source, and boolean indicating
+// whether the /u flag needs to be applied, and the number of chars
+// consumed to parse the character class.
+// This also removes out of order ranges, and returns ($.) if the
+// entire class just no good.
+const parseClass = (glob, position) => {
+    const pos = position;
+    /* c8 ignore start */
+    if (glob.charAt(pos) !== '[') {
+        throw new Error('not in a brace expression');
+    }
+    /* c8 ignore stop */
+    const ranges = [];
+    const negs = [];
+    let i = pos + 1;
+    let sawStart = false;
+    let uflag = false;
+    let escaping = false;
+    let negate = false;
+    let endPos = pos;
+    let rangeStart = '';
+    WHILE: while (i < glob.length) {
+        const c = glob.charAt(i);
+        if ((c === '!' || c === '^') && i === pos + 1) {
+            negate = true;
+            i++;
+            continue;
+        }
+        if (c === ']' && sawStart && !escaping) {
+            endPos = i + 1;
+            break;
+        }
+        sawStart = true;
+        if (c === '\\') {
+            if (!escaping) {
+                escaping = true;
+                i++;
+                continue;
+            }
+            // escaped \ char, fall through and treat like normal char
+        }
+        if (c === '[' && !escaping) {
+            // either a posix class, a collation equivalent, or just a [
+            for (const [cls, [unip, u, neg]] of Object.entries(posixClasses)) {
+                if (glob.startsWith(cls, i)) {
+                    // invalid, [a-[] is fine, but not [a-[:alpha]]
+                    if (rangeStart) {
+                        return ['$.', false, glob.length - pos, true];
+                    }
+                    i += cls.length;
+                    if (neg)
+                        negs.push(unip);
+                    else
+                        ranges.push(unip);
+                    uflag = uflag || u;
+                    continue WHILE;
+                }
+            }
+        }
+        // now it's just a normal character, effectively
+        escaping = false;
+        if (rangeStart) {
+            // throw this range away if it's not valid, but others
+            // can still match.
+            if (c > rangeStart) {
+                ranges.push(braceEscape(rangeStart) + '-' + braceEscape(c));
+            }
+            else if (c === rangeStart) {
+                ranges.push(braceEscape(c));
+            }
+            rangeStart = '';
+            i++;
+            continue;
+        }
+        // now might be the start of a range.
+        // can be either c-d or c-] or c<more...>] or c] at this point
+        if (glob.startsWith('-]', i + 1)) {
+            ranges.push(braceEscape(c + '-'));
+            i += 2;
+            continue;
+        }
+        if (glob.startsWith('-', i + 1)) {
+            rangeStart = c;
+            i += 2;
+            continue;
+        }
+        // not the start of a range, just a single character
+        ranges.push(braceEscape(c));
+        i++;
+    }
+    if (endPos < i) {
+        // didn't see the end of the class, not a valid class,
+        // but might still be valid as a literal match.
+        return ['', false, 0, false];
+    }
+    // if we got no ranges and no negates, then we have a range that
+    // cannot possibly match anything, and that poisons the whole glob
+    if (!ranges.length && !negs.length) {
+        return ['$.', false, glob.length - pos, true];
+    }
+    // if we got one positive range, and it's a single character, then that's
+    // not actually a magic pattern, it's just that one literal character.
+    // we should not treat that as "magic", we should just return the literal
+    // character. [_] is a perfectly valid way to escape glob magic chars.
+    if (negs.length === 0 &&
+        ranges.length === 1 &&
+        /^\\?.$/.test(ranges[0]) &&
+        !negate) {
+        const r = ranges[0].length === 2 ? ranges[0].slice(-1) : ranges[0];
+        return [regexpEscape(r), false, endPos - pos, false];
+    }
+    const sranges = '[' + (negate ? '^' : '') + rangesToString(ranges) + ']';
+    const snegs = '[' + (negate ? '' : '^') + rangesToString(negs) + ']';
+    const comb = ranges.length && negs.length
+        ? '(' + sranges + '|' + snegs + ')'
+        : ranges.length
+            ? sranges
+            : snegs;
+    return [comb, uflag, endPos - pos, true];
+};
+exports.parseClass = parseClass;
+//# sourceMappingURL=brace-expressions.js.map
+
+/***/ }),
+
+/***/ 5615:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.escape = void 0;
+/**
+ * Escape all magic characters in a glob pattern.
+ *
+ * If the {@link windowsPathsNoEscape | GlobOptions.windowsPathsNoEscape}
+ * option is used, then characters are escaped by wrapping in `[]`, because
+ * a magic character wrapped in a character class can only be satisfied by
+ * that exact character.  In this mode, `\` is _not_ escaped, because it is
+ * not interpreted as a magic character, but instead as a path separator.
+ */
+const escape = (s, { windowsPathsNoEscape = false, } = {}) => {
+    // don't need to escape +@! because we escape the parens
+    // that make those magic, and escaping ! as [!] isn't valid,
+    // because [!]] is a valid glob class meaning not ']'.
+    return windowsPathsNoEscape
+        ? s.replace(/[?*()[\]]/g, '[$&]')
+        : s.replace(/[?*()[\]\\]/g, '\\$&');
+};
+exports.escape = escape;
+//# sourceMappingURL=escape.js.map
+
+/***/ }),
+
+/***/ 153:
 /***/ (function(module, __unused_webpack_exports, __nccwpck_require__) {
 
 "use strict";
@@ -50788,13 +51141,13 @@ module.exports = require("zlib");
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
-const index_js_1 = __importDefault(__nccwpck_require__(4098));
+const index_js_1 = __importDefault(__nccwpck_require__(4878));
 module.exports = Object.assign(index_js_1.default, { default: index_js_1.default, minimatch: index_js_1.default });
 //# sourceMappingURL=index-cjs.js.map
 
 /***/ }),
 
-/***/ 4098:
+/***/ 4878:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
@@ -50803,7 +51156,11 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.Minimatch = exports.match = exports.makeRe = exports.braceExpand = exports.defaults = exports.filter = exports.GLOBSTAR = exports.sep = exports.minimatch = void 0;
+exports.unescape = exports.escape = exports.Minimatch = exports.match = exports.makeRe = exports.braceExpand = exports.defaults = exports.filter = exports.GLOBSTAR = exports.sep = exports.minimatch = void 0;
+const brace_expansion_1 = __importDefault(__nccwpck_require__(4515));
+const brace_expressions_js_1 = __nccwpck_require__(3857);
+const escape_js_1 = __nccwpck_require__(5615);
+const unescape_js_1 = __nccwpck_require__(6615);
 const minimatch = (p, pattern, options = {}) => {
     assertValidPattern(pattern);
     // shortcut: comments match nothing.
@@ -50866,20 +51223,21 @@ const qmarksTestNoExtDot = ([$0]) => {
     return (f) => f.length === len && f !== '.' && f !== '..';
 };
 /* c8 ignore start */
-const platform = typeof process === 'object' && process
+const defaultPlatform = (typeof process === 'object' && process
     ? (typeof process.env === 'object' &&
         process.env &&
         process.env.__MINIMATCH_TESTING_PLATFORM__) ||
         process.platform
-    : 'posix';
-const isWindows = platform === 'win32';
-const path = isWindows ? { sep: '\\' } : { sep: '/' };
+    : 'posix');
+const path = {
+    win32: { sep: '\\' },
+    posix: { sep: '/' },
+};
 /* c8 ignore stop */
-exports.sep = path.sep;
+exports.sep = defaultPlatform === 'win32' ? path.win32.sep : path.posix.sep;
 exports.minimatch.sep = exports.sep;
 exports.GLOBSTAR = Symbol('globstar **');
 exports.minimatch.GLOBSTAR = exports.GLOBSTAR;
-const brace_expansion_1 = __importDefault(__nccwpck_require__(6245));
 const plTypes = {
     '!': { open: '(?:(?!(?:', close: '))[^/]*?)' },
     '?': { open: '(?:', close: ')?' },
@@ -50927,6 +51285,8 @@ const defaults = (def) => {
                 return orig.defaults(ext(def, options)).Minimatch;
             }
         },
+        unescape: (s, options = {}) => orig.unescape(s, ext(def, options)),
+        escape: (s, options = {}) => orig.escape(s, ext(def, options)),
         filter: (pattern, options = {}) => orig.filter(pattern, ext(def, options)),
         defaults: (options) => orig.defaults(ext(def, options)),
         makeRe: (pattern, options = {}) => orig.makeRe(pattern, ext(def, options)),
@@ -50980,7 +51340,6 @@ const assertValidPattern = (pattern) => {
 // when it is the *only* thing in a path portion.  Otherwise, any series
 // of * is equivalent to a single *.  Globstar behavior is enabled by
 // default, and can be disabled by setting options.noglobstar.
-const SUBPARSE = Symbol('subparse');
 const makeRe = (pattern, options = {}) => new Minimatch(pattern, options).makeRe();
 exports.makeRe = makeRe;
 exports.minimatch.makeRe = exports.makeRe;
@@ -50996,9 +51355,8 @@ exports.match = match;
 exports.minimatch.match = exports.match;
 // replace stuff like \* with *
 const globUnescape = (s) => s.replace(/\\(.)/g, '$1');
-const charUnescape = (s) => s.replace(/\\([^-\]])/g, '$1');
+const globMagic = /[?*]|[+@!]\(.*?\)|\[|\]/;
 const regExpEscape = (s) => s.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
-const braExpEscape = (s) => s.replace(/[[\]\\]/g, '\\$&');
 class Minimatch {
     options;
     set;
@@ -51012,12 +51370,18 @@ class Minimatch {
     partial;
     globSet;
     globParts;
+    nocase;
+    isWindows;
+    platform;
+    windowsNoMagicRoot;
     regexp;
     constructor(pattern, options = {}) {
         assertValidPattern(pattern);
         options = options || {};
         this.options = options;
         this.pattern = pattern;
+        this.platform = options.platform || defaultPlatform;
+        this.isWindows = this.platform === 'win32';
         this.windowsPathsNoEscape =
             !!options.windowsPathsNoEscape || options.allowWindowsEscape === false;
         if (this.windowsPathsNoEscape) {
@@ -51030,11 +51394,28 @@ class Minimatch {
         this.comment = false;
         this.empty = false;
         this.partial = !!options.partial;
+        this.nocase = !!this.options.nocase;
+        this.windowsNoMagicRoot =
+            options.windowsNoMagicRoot !== undefined
+                ? options.windowsNoMagicRoot
+                : !!(this.isWindows && this.nocase);
         this.globSet = [];
         this.globParts = [];
         this.set = [];
         // make the set of regexps etc.
         this.make();
+    }
+    hasMagic() {
+        if (this.options.magicalBraces && this.set.length > 1) {
+            return true;
+        }
+        for (const pattern of this.set) {
+            for (const part of pattern) {
+                if (typeof part !== 'string')
+                    return true;
+            }
+        }
+        return false;
     }
     debug(..._) { }
     make() {
@@ -51052,73 +51433,46 @@ class Minimatch {
         // step 1: figure out negation, etc.
         this.parseNegate();
         // step 2: expand braces
-        this.globSet = this.braceExpand();
+        this.globSet = [...new Set(this.braceExpand())];
         if (options.debug) {
             this.debug = (...args) => console.error(...args);
         }
         this.debug(this.pattern, this.globSet);
-        // step 3: now we have a set, so turn each one into a series of path-portion
-        // matching patterns.
+        // step 3: now we have a set, so turn each one into a series of
+        // path-portion matching patterns.
         // These will be regexps, except in the case of "**", which is
         // set to the GLOBSTAR object for globstar behavior,
         // and will not contain any / characters
+        //
+        // First, we preprocess to make the glob pattern sets a bit simpler
+        // and deduped.  There are some perf-killing patterns that can cause
+        // problems with a glob walk, but we can simplify them down a bit.
         const rawGlobParts = this.globSet.map(s => this.slashSplit(s));
-        // consecutive globstars are an unncessary perf killer
-        // also, **/*/... is equivalent to */**/..., so swap all of those
-        // this turns a pattern like **/*/**/*/x into */*/**/x
-        // and a pattern like **/x/**/*/y becomes **/x/*/**/y
-        // the *later* we can push the **, the more efficient it is,
-        // because we can avoid having to do a recursive walk until
-        // the walked tree is as shallow as possible.
-        // Note that this is only true up to the last pattern, though, because
-        // a/*/** will only match a/b if b is a dir, but a/**/* will match a/b
-        // regardless, since it's "0 or more path segments" if it's not final.
-        if (this.options.noglobstar) {
-            // ** is * anyway
-            this.globParts = rawGlobParts;
-        }
-        else {
-            // do this swap BEFORE the reduce, so that we can turn a string
-            // of **/*/**/* into */*/**/** and then reduce the **'s into one
-            for (const parts of rawGlobParts) {
-                let swapped;
-                do {
-                    swapped = false;
-                    for (let i = 0; i < parts.length - 1; i++) {
-                        if (parts[i] === '*' && parts[i - 1] === '**') {
-                            parts[i] = '**';
-                            parts[i - 1] = '*';
-                            swapped = true;
-                        }
-                    }
-                } while (swapped);
-            }
-            this.globParts = rawGlobParts.map(parts => {
-                parts = parts.reduce((set, part) => {
-                    const prev = set[set.length - 1];
-                    if (part === '**' && prev === '**') {
-                        return set;
-                    }
-                    if (part === '..') {
-                        if (prev && prev !== '..' && prev !== '.' && prev !== '**') {
-                            set.pop();
-                            return set;
-                        }
-                    }
-                    set.push(part);
-                    return set;
-                }, []);
-                return parts.length === 0 ? [''] : parts;
-            });
-        }
+        this.globParts = this.preprocess(rawGlobParts);
         this.debug(this.pattern, this.globParts);
         // glob --> regexps
-        let set = this.globParts.map((s, _, __) => s.map(ss => this.parse(ss)));
+        let set = this.globParts.map((s, _, __) => {
+            if (this.isWindows && this.windowsNoMagicRoot) {
+                // check if it's a drive or unc path.
+                const isUNC = s[0] === '' &&
+                    s[1] === '' &&
+                    (s[2] === '?' || !globMagic.test(s[2])) &&
+                    !globMagic.test(s[3]);
+                const isDrive = /^[a-z]:/i.test(s[0]);
+                if (isUNC) {
+                    return [...s.slice(0, 4), ...s.slice(4).map(ss => this.parse(ss))];
+                }
+                else if (isDrive) {
+                    return [s[0], ...s.slice(1).map(ss => this.parse(ss))];
+                }
+            }
+            return s.map(ss => this.parse(ss));
+        });
         this.debug(this.pattern, set);
         // filter out everything that didn't compile properly.
         this.set = set.filter(s => s.indexOf(false) === -1);
         // do not treat the ? in UNC paths as magic
-        if (isWindows) {
+        if (this.isWindows) {
             for (let i = 0; i < this.set.length; i++) {
                 const p = this.set[i];
                 if (p[0] === '' &&
@@ -51131,6 +51485,276 @@ class Minimatch {
             }
         }
         this.debug(this.pattern, this.set);
+    }
+    // various transforms to equivalent pattern sets that are
+    // faster to process in a filesystem walk.  The goal is to
+    // eliminate what we can, and push all ** patterns as far
+    // to the right as possible, even if it increases the number
+    // of patterns that we have to process.
+    preprocess(globParts) {
+        // if we're not in globstar mode, then turn all ** into *
+        if (this.options.noglobstar) {
+            for (let i = 0; i < globParts.length; i++) {
+                for (let j = 0; j < globParts[i].length; j++) {
+                    if (globParts[i][j] === '**') {
+                        globParts[i][j] = '*';
+                    }
+                }
+            }
+        }
+        const { optimizationLevel = 1 } = this.options;
+        if (optimizationLevel >= 2) {
+            // aggressive optimization for the purpose of fs walking
+            globParts = this.firstPhasePreProcess(globParts);
+            globParts = this.secondPhasePreProcess(globParts);
+        }
+        else if (optimizationLevel >= 1) {
+            // just basic optimizations to remove some .. parts
+            globParts = this.levelOneOptimize(globParts);
+        }
+        else {
+            globParts = this.adjascentGlobstarOptimize(globParts);
+        }
+        return globParts;
+    }
+    // just get rid of adjascent ** portions
+    adjascentGlobstarOptimize(globParts) {
+        return globParts.map(parts => {
+            let gs = -1;
+            while (-1 !== (gs = parts.indexOf('**', gs + 1))) {
+                let i = gs;
+                while (parts[i + 1] === '**') {
+                    i++;
+                }
+                if (i !== gs) {
+                    parts.splice(gs, i - gs);
+                }
+            }
+            return parts;
+        });
+    }
+    // get rid of adjascent ** and resolve .. portions
+    levelOneOptimize(globParts) {
+        return globParts.map(parts => {
+            parts = parts.reduce((set, part) => {
+                const prev = set[set.length - 1];
+                if (part === '**' && prev === '**') {
+                    return set;
+                }
+                if (part === '..') {
+                    if (prev && prev !== '..' && prev !== '.' && prev !== '**') {
+                        set.pop();
+                        return set;
+                    }
+                }
+                set.push(part);
+                return set;
+            }, []);
+            return parts.length === 0 ? [''] : parts;
+        });
+    }
+    levelTwoFileOptimize(parts) {
+        if (!Array.isArray(parts)) {
+            parts = this.slashSplit(parts);
+        }
+        let didSomething = false;
+        do {
+            didSomething = false;
+            // <pre>/<e>/<rest> -> <pre>/<rest>
+            if (!this.preserveMultipleSlashes) {
+                for (let i = 1; i < parts.length - 1; i++) {
+                    const p = parts[i];
+                    // don't squeeze out UNC patterns
+                    if (i === 1 && p === '' && parts[0] === '')
+                        continue;
+                    if (p === '.' || p === '') {
+                        didSomething = true;
+                        parts.splice(i, 1);
+                        i--;
+                    }
+                }
+                if (parts[0] === '.' &&
+                    parts.length === 2 &&
+                    (parts[1] === '.' || parts[1] === '')) {
+                    didSomething = true;
+                    parts.pop();
+                }
+            }
+            // <pre>/<p>/../<rest> -> <pre>/<rest>
+            let dd = 0;
+            while (-1 !== (dd = parts.indexOf('..', dd + 1))) {
+                const p = parts[dd - 1];
+                if (p && p !== '.' && p !== '..' && p !== '**') {
+                    didSomething = true;
+                    parts.splice(dd - 1, 2);
+                    dd -= 2;
+                }
+            }
+        } while (didSomething);
+        return parts.length === 0 ? [''] : parts;
+    }
+    // First phase: single-pattern processing
+    // <pre> is 1 or more portions
+    // <rest> is 1 or more portions
+    // <p> is any portion other than ., .., '', or **
+    // <e> is . or ''
+    //
+    // **/.. is *brutal* for filesystem walking performance, because
+    // it effectively resets the recursive walk each time it occurs,
+    // and ** cannot be reduced out by a .. pattern part like a regexp
+    // or most strings (other than .., ., and '') can be.
+    //
+    // <pre>/**/../<p>/<p>/<rest> -> {<pre>/../<p>/<p>/<rest>,<pre>/**/<p>/<p>/<rest>}
+    // <pre>/<e>/<rest> -> <pre>/<rest>
+    // <pre>/<p>/../<rest> -> <pre>/<rest>
+    // **/**/<rest> -> **/<rest>
+    //
+    // **/*/<rest> -> */**/<rest> <== not valid because ** doesn't follow
+    // this WOULD be allowed if ** did follow symlinks, or * didn't
+    firstPhasePreProcess(globParts) {
+        let didSomething = false;
+        do {
+            didSomething = false;
+            // <pre>/**/../<p>/<p>/<rest> -> {<pre>/../<p>/<p>/<rest>,<pre>/**/<p>/<p>/<rest>}
+            for (let parts of globParts) {
+                let gs = -1;
+                while (-1 !== (gs = parts.indexOf('**', gs + 1))) {
+                    let gss = gs;
+                    while (parts[gss + 1] === '**') {
+                        // <pre>/**/**/<rest> -> <pre>/**/<rest>
+                        gss++;
+                    }
+                    // eg, if gs is 2 and gss is 4, that means we have 3 **
+                    // parts, and can remove 2 of them.
+                    if (gss > gs) {
+                        parts.splice(gs + 1, gss - gs);
+                    }
+                    let next = parts[gs + 1];
+                    const p = parts[gs + 2];
+                    const p2 = parts[gs + 3];
+                    if (next !== '..')
+                        continue;
+                    if (!p ||
+                        p === '.' ||
+                        p === '..' ||
+                        !p2 ||
+                        p2 === '.' ||
+                        p2 === '..') {
+                        continue;
+                    }
+                    didSomething = true;
+                    // edit parts in place, and push the new one
+                    parts.splice(gs, 1);
+                    const other = parts.slice(0);
+                    other[gs] = '**';
+                    globParts.push(other);
+                    gs--;
+                }
+                // <pre>/<e>/<rest> -> <pre>/<rest>
+                if (!this.preserveMultipleSlashes) {
+                    for (let i = 1; i < parts.length - 1; i++) {
+                        const p = parts[i];
+                        // don't squeeze out UNC patterns
+                        if (i === 1 && p === '' && parts[0] === '')
+                            continue;
+                        if (p === '.' || p === '') {
+                            didSomething = true;
+                            parts.splice(i, 1);
+                            i--;
+                        }
+                    }
+                    if (parts[0] === '.' &&
+                        parts.length === 2 &&
+                        (parts[1] === '.' || parts[1] === '')) {
+                        didSomething = true;
+                        parts.pop();
+                    }
+                }
+                // <pre>/<p>/../<rest> -> <pre>/<rest>
+                let dd = 0;
+                while (-1 !== (dd = parts.indexOf('..', dd + 1))) {
+                    const p = parts[dd - 1];
+                    if (p && p !== '.' && p !== '..' && p !== '**') {
+                        didSomething = true;
+                        const needDot = dd === 1 && parts[dd + 1] === '**';
+                        const splin = needDot ? ['.'] : [];
+                        parts.splice(dd - 1, 2, ...splin);
+                        if (parts.length === 0)
+                            parts.push('');
+                        dd -= 2;
+                    }
+                }
+            }
+        } while (didSomething);
+        return globParts;
+    }
+    // second phase: multi-pattern dedupes
+    // {<pre>/*/<rest>,<pre>/<p>/<rest>} -> <pre>/*/<rest>
+    // {<pre>/<rest>,<pre>/<rest>} -> <pre>/<rest>
+    // {<pre>/**/<rest>,<pre>/<rest>} -> <pre>/**/<rest>
+    //
+    // {<pre>/**/<rest>,<pre>/**/<p>/<rest>} -> <pre>/**/<rest>
+    // ^-- not valid because ** doens't follow symlinks
+    secondPhasePreProcess(globParts) {
+        for (let i = 0; i < globParts.length - 1; i++) {
+            for (let j = i + 1; j < globParts.length; j++) {
+                const matched = this.partsMatch(globParts[i], globParts[j], !this.preserveMultipleSlashes);
+                if (!matched)
+                    continue;
+                globParts[i] = matched;
+                globParts[j] = [];
+            }
+        }
+        return globParts.filter(gs => gs.length);
+    }
+    partsMatch(a, b, emptyGSMatch = false) {
+        let ai = 0;
+        let bi = 0;
+        let result = [];
+        let which = '';
+        while (ai < a.length && bi < b.length) {
+            if (a[ai] === b[bi]) {
+                result.push(which === 'b' ? b[bi] : a[ai]);
+                ai++;
+                bi++;
+            }
+            else if (emptyGSMatch && a[ai] === '**' && b[bi] === a[ai + 1]) {
+                result.push(a[ai]);
+                ai++;
+            }
+            else if (emptyGSMatch && b[bi] === '**' && a[ai] === b[bi + 1]) {
+                result.push(b[bi]);
+                bi++;
+            }
+            else if (a[ai] === '*' &&
+                b[bi] &&
+                (this.options.dot || !b[bi].startsWith('.')) &&
+                b[bi] !== '**') {
+                if (which === 'b')
+                    return false;
+                which = 'a';
+                result.push(a[ai]);
+                ai++;
+                bi++;
+            }
+            else if (b[bi] === '*' &&
+                a[ai] &&
+                (this.options.dot || !a[ai].startsWith('.')) &&
+                a[ai] !== '**') {
+                if (which === 'a')
+                    return false;
+                which = 'b';
+                result.push(b[bi]);
+                ai++;
+                bi++;
+            }
+            else {
+                return false;
+            }
+        }
+        // if we fall out of the loop, it means they two are identical
+        // as long as their lengths match
+        return a.length === b.length && result;
     }
     parseNegate() {
         if (this.nonegate)
@@ -51155,7 +51779,7 @@ class Minimatch {
         const options = this.options;
         // a UNC pattern like //?/c:/* can match a path like c:/x
         // and vice versa
-        if (isWindows) {
+        if (this.isWindows) {
             const fileUNC = file[0] === '' &&
                 file[1] === '' &&
                 file[2] === '?' &&
@@ -51188,6 +51812,12 @@ class Minimatch {
                     file = file.slice(3);
                 }
             }
+        }
+        // resolve and reduce . and .. portions in the file as well.
+        // dont' need to do the second phase, because it's only one string[]
+        const { optimizationLevel = 1 } = this.options;
+        if (optimizationLevel >= 2) {
+            file = this.levelTwoFileOptimize(file);
         }
         this.debug('matchOne', this, { file, pattern });
         this.debug('matchOne', file.length, pattern.length);
@@ -51336,50 +51966,44 @@ class Minimatch {
     braceExpand() {
         return (0, exports.braceExpand)(this.pattern, this.options);
     }
-    parse(pattern, isSub) {
+    parse(pattern) {
         assertValidPattern(pattern);
         const options = this.options;
         // shortcuts
-        if (pattern === '**') {
-            if (!options.noglobstar)
-                return exports.GLOBSTAR;
-            else
-                pattern = '*';
-        }
+        if (pattern === '**')
+            return exports.GLOBSTAR;
         if (pattern === '')
             return '';
         // far and away, the most common glob pattern parts are
         // *, *.*, and *.<ext>  Add a fast check method for those.
         let m;
         let fastTest = null;
-        if (isSub !== SUBPARSE) {
-            if ((m = pattern.match(starRE))) {
-                fastTest = options.dot ? starTestDot : starTest;
-            }
-            else if ((m = pattern.match(starDotExtRE))) {
-                fastTest = (options.nocase
-                    ? options.dot
-                        ? starDotExtTestNocaseDot
-                        : starDotExtTestNocase
-                    : options.dot
-                        ? starDotExtTestDot
-                        : starDotExtTest)(m[1]);
-            }
-            else if ((m = pattern.match(qmarksRE))) {
-                fastTest = (options.nocase
-                    ? options.dot
-                        ? qmarksTestNocaseDot
-                        : qmarksTestNocase
-                    : options.dot
-                        ? qmarksTestDot
-                        : qmarksTest)(m);
-            }
-            else if ((m = pattern.match(starDotStarRE))) {
-                fastTest = options.dot ? starDotStarTestDot : starDotStarTest;
-            }
-            else if ((m = pattern.match(dotStarRE))) {
-                fastTest = dotStarTest;
-            }
+        if ((m = pattern.match(starRE))) {
+            fastTest = options.dot ? starTestDot : starTest;
+        }
+        else if ((m = pattern.match(starDotExtRE))) {
+            fastTest = (options.nocase
+                ? options.dot
+                    ? starDotExtTestNocaseDot
+                    : starDotExtTestNocase
+                : options.dot
+                    ? starDotExtTestDot
+                    : starDotExtTest)(m[1]);
+        }
+        else if ((m = pattern.match(qmarksRE))) {
+            fastTest = (options.nocase
+                ? options.dot
+                    ? qmarksTestNocaseDot
+                    : qmarksTestNocase
+                : options.dot
+                    ? qmarksTestDot
+                    : qmarksTest)(m);
+        }
+        else if ((m = pattern.match(starDotStarRE))) {
+            fastTest = options.dot ? starDotStarTestDot : starDotStarTest;
+        }
+        else if ((m = pattern.match(dotStarRE))) {
+            fastTest = dotStarTest;
         }
         let re = '';
         let hasMagic = false;
@@ -51388,12 +52012,8 @@ class Minimatch {
         const patternListStack = [];
         const negativeLists = [];
         let stateChar = false;
-        let inClass = false;
-        let reClassStart = -1;
-        let classStart = -1;
-        let cs;
+        let uflag = false;
         let pl;
-        let sp;
         // . and .. never match anything that doesn't start with .,
         // even when options.dot is set.  However, if the pattern
         // starts with ., then traversal patterns can match.
@@ -51456,10 +52076,6 @@ class Minimatch {
                 }
                 /* c8 ignore stop */
                 case '\\':
-                    if (inClass && pattern.charAt(i + 1) === '-') {
-                        re += c;
-                        continue;
-                    }
                     clearStateChar();
                     escaping = true;
                     continue;
@@ -51471,15 +52087,6 @@ class Minimatch {
                 case '@':
                 case '!':
                     this.debug('%s\t%s %s %j <-- stateChar', pattern, i, re, c);
-                    // all of those are literals inside a class, except that
-                    // the glob [!a] means [^a] in regexp
-                    if (inClass) {
-                        this.debug('  in class');
-                        if (c === '!' && i === classStart + 1)
-                            c = '^';
-                        re += c;
-                        continue;
-                    }
                     // if we already have a stateChar, then it means
                     // that there was something like ** or +? in there.
                     // Handle the stateChar, then proceed with this one.
@@ -51493,10 +52100,6 @@ class Minimatch {
                         clearStateChar();
                     continue;
                 case '(': {
-                    if (inClass) {
-                        re += '(';
-                        continue;
-                    }
                     if (!stateChar) {
                         re += '\\(';
                         continue;
@@ -51523,7 +52126,7 @@ class Minimatch {
                 }
                 case ')': {
                     const plEntry = patternListStack[patternListStack.length - 1];
-                    if (inClass || !plEntry) {
+                    if (!plEntry) {
                         re += '\\)';
                         continue;
                     }
@@ -51542,7 +52145,7 @@ class Minimatch {
                 }
                 case '|': {
                     const plEntry = patternListStack[patternListStack.length - 1];
-                    if (inClass || !plEntry) {
+                    if (!plEntry) {
                         re += '\\|';
                         continue;
                     }
@@ -51559,67 +52162,27 @@ class Minimatch {
                 case '[':
                     // swallow any state-tracking char before the [
                     clearStateChar();
-                    if (inClass) {
-                        re += '\\' + c;
-                        continue;
+                    const [src, needUflag, consumed, magic] = (0, brace_expressions_js_1.parseClass)(pattern, i);
+                    if (consumed) {
+                        re += src;
+                        uflag = uflag || needUflag;
+                        i += consumed - 1;
+                        hasMagic = hasMagic || magic;
                     }
-                    inClass = true;
-                    classStart = i;
-                    reClassStart = re.length;
-                    re += c;
+                    else {
+                        re += '\\[';
+                    }
                     continue;
                 case ']':
-                    //  a right bracket shall lose its special
-                    //  meaning and represent itself in
-                    //  a bracket expression if it occurs
-                    //  first in the list.  -- POSIX.2 2.8.3.2
-                    if (i === classStart + 1 || !inClass) {
-                        re += '\\' + c;
-                        continue;
-                    }
-                    // split where the last [ was, make sure we don't have
-                    // an invalid re. if so, re-walk the contents of the
-                    // would-be class to re-translate any characters that
-                    // were passed through as-is
-                    // TODO: It would probably be faster to determine this
-                    // without a try/catch and a new RegExp, but it's tricky
-                    // to do safely.  For now, this is safe and works.
-                    cs = pattern.substring(classStart + 1, i);
-                    try {
-                        RegExp('[' + braExpEscape(charUnescape(cs)) + ']');
-                        // looks good, finish up the class.
-                        re += c;
-                    }
-                    catch (er) {
-                        // out of order ranges in JS are errors, but in glob syntax,
-                        // they're just a range that matches nothing.
-                        re = re.substring(0, reClassStart) + '(?:$.)'; // match nothing ever
-                    }
-                    hasMagic = true;
-                    inClass = false;
+                    re += '\\' + c;
                     continue;
                 default:
                     // swallow any state char that wasn't consumed
                     clearStateChar();
-                    if (reSpecials[c] && !(c === '^' && inClass)) {
-                        re += '\\';
-                    }
-                    re += c;
+                    re += regExpEscape(c);
                     break;
             } // switch
         } // for
-        // handle the case where we left a class open.
-        // "[abc" is valid, equivalent to "\[abc"
-        if (inClass) {
-            // split where the last [ was, and escape it
-            // this is a huge pita.  We now have to re-walk
-            // the contents of the would-be class to re-translate
-            // any characters that were passed through as-is
-            cs = pattern.slice(classStart + 1);
-            sp = this.parse(cs, SUBPARSE);
-            re = re.substring(0, reClassStart) + '\\[' + sp[0];
-            hasMagic = hasMagic || sp[1];
-        }
         // handle the case where we had a +( thing at the *end*
         // of the pattern.
         // each pattern list stack adds 3 chars, and we need to go through
@@ -51682,7 +52245,7 @@ class Minimatch {
                 cleanAfter = cleanAfter.replace(/\)[+*?]?/, '');
             }
             nlAfter = cleanAfter;
-            const dollar = nlAfter === '' && isSub !== SUBPARSE ? '(?:$|\\/)' : '';
+            const dollar = nlAfter === '' ? '(?:$|\\/)' : '';
             re = nlBefore + nlFirst + nlAfter + dollar + nlLast;
         }
         // if the re is not "" at this point, then we need to make sure
@@ -51694,10 +52257,6 @@ class Minimatch {
         if (addPatternStart) {
             re = patternStart() + re;
         }
-        // parsing just a piece of a larger pattern.
-        if (isSub === SUBPARSE) {
-            return [re, hasMagic];
-        }
         // if it's nocase, and the lcase/uppercase don't match, it's magic
         if (options.nocase && !hasMagic && !options.nocaseMagicOnly) {
             hasMagic = pattern.toUpperCase() !== pattern.toLowerCase();
@@ -51706,9 +52265,9 @@ class Minimatch {
         // unescape anything in it, though, so that it'll be
         // an exact match against a file etc.
         if (!hasMagic) {
-            return globUnescape(pattern);
+            return globUnescape(re);
         }
-        const flags = options.nocase ? 'i' : '';
+        const flags = (options.nocase ? 'i' : '') + (uflag ? 'u' : '');
         try {
             const ext = fastTest
                 ? {
@@ -51818,7 +52377,7 @@ class Minimatch {
         if (this.preserveMultipleSlashes) {
             return p.split('/');
         }
-        else if (isWindows && /^\/\/[^\/]+/.test(p)) {
+        else if (this.isWindows && /^\/\/[^\/]+/.test(p)) {
             // add an extra '' for the one we lose
             return ['', ...p.split(/\/+/)];
         }
@@ -51841,8 +52400,8 @@ class Minimatch {
         }
         const options = this.options;
         // windows: need to use /, not \
-        if (path.sep !== '/') {
-            f = f.split(path.sep).join('/');
+        if (this.isWindows) {
+            f = f.split('\\').join('/');
         }
         // treat the test path as a set of pathparts.
         const ff = this.slashSplit(f);
@@ -51886,8 +52445,47 @@ class Minimatch {
     }
 }
 exports.Minimatch = Minimatch;
+/* c8 ignore start */
+var escape_js_2 = __nccwpck_require__(5615);
+Object.defineProperty(exports, "escape", ({ enumerable: true, get: function () { return escape_js_2.escape; } }));
+var unescape_js_2 = __nccwpck_require__(6615);
+Object.defineProperty(exports, "unescape", ({ enumerable: true, get: function () { return unescape_js_2.unescape; } }));
+/* c8 ignore stop */
 exports.minimatch.Minimatch = Minimatch;
+exports.minimatch.escape = escape_js_1.escape;
+exports.minimatch.unescape = unescape_js_1.unescape;
 //# sourceMappingURL=index.js.map
+
+/***/ }),
+
+/***/ 6615:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.unescape = void 0;
+/**
+ * Un-escape a string that has been escaped with {@link escape}.
+ *
+ * If the {@link windowsPathsNoEscape} option is used, then square-brace
+ * escapes are removed, but not backslash escapes.  For example, it will turn
+ * the string `'[*]'` into `*`, but it will not turn `'\\*'` into `'*'`,
+ * becuase `\` is a path separator in `windowsPathsNoEscape` mode.
+ *
+ * When `windowsPathsNoEscape` is not set, then both brace escapes and
+ * backslash escapes are removed.
+ *
+ * Slashes (and backslashes in `windowsPathsNoEscape` mode) cannot be escaped
+ * or unescaped.
+ */
+const unescape = (s, { windowsPathsNoEscape = false, } = {}) => {
+    return windowsPathsNoEscape
+        ? s.replace(/\[([^\/\\])\]/g, '$1')
+        : s.replace(/((?!\\).|^)\[([^\/\\])\]/g, '$1$2').replace(/\\([^\/])/g, '$1');
+};
+exports.unescape = unescape;
+//# sourceMappingURL=unescape.js.map
 
 /***/ }),
 
@@ -53594,7 +54192,7 @@ var stringify = __nccwpck_require__(8409);
 var stringifyDocument = __nccwpck_require__(5225);
 var anchors = __nccwpck_require__(8459);
 var applyReviver = __nccwpck_require__(3412);
-var createNode = __nccwpck_require__(9652);
+var createNode = __nccwpck_require__(48);
 var directives = __nccwpck_require__(5400);
 
 class Document {
@@ -54069,7 +54667,7 @@ exports.applyReviver = applyReviver;
 
 /***/ }),
 
-/***/ 9652:
+/***/ 48:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
@@ -54398,7 +54996,7 @@ const prettifyError = (src, lc) => (error) => {
         let count = 1;
         const end = error.linePos[1];
         if (end && end.line === line && end.col > col) {
-            count = Math.min(end.col - col, 80 - ci);
+            count = Math.max(1, Math.min(end.col - col, 80 - ci));
         }
         const pointer = ' '.repeat(ci) + '^'.repeat(count);
         error.message += `:\n\n${lineStr}\n${pointer}\n`;
@@ -54606,7 +55204,7 @@ exports.Alias = Alias;
 "use strict";
 
 
-var createNode = __nccwpck_require__(9652);
+var createNode = __nccwpck_require__(48);
 var Node = __nccwpck_require__(1399);
 
 function collectionFromPath(schema, path, value) {
@@ -54839,7 +55437,7 @@ exports.isSeq = isSeq;
 "use strict";
 
 
-var createNode = __nccwpck_require__(9652);
+var createNode = __nccwpck_require__(48);
 var stringifyPair = __nccwpck_require__(4875);
 var addPairToJSMap = __nccwpck_require__(4676);
 var Node = __nccwpck_require__(1399);
@@ -57798,7 +58396,7 @@ exports.nullTag = nullTag;
 "use strict";
 
 
-var createNode = __nccwpck_require__(9652);
+var createNode = __nccwpck_require__(48);
 var Node = __nccwpck_require__(1399);
 var YAMLSeq = __nccwpck_require__(5161);
 
@@ -59307,7 +59905,7 @@ function stringifyFlowCollection({ comment, items }, ctx, { flowChars, itemInden
         }
     }
     if (comment) {
-        str += stringifyComment.lineComment(str, commentString(comment), indent);
+        str += stringifyComment.lineComment(str, indent, commentString(comment));
         if (onComment)
             onComment();
     }
@@ -59657,8 +60255,8 @@ exports.stringifyPair = stringifyPair;
 var Scalar = __nccwpck_require__(9338);
 var foldFlowLines = __nccwpck_require__(2889);
 
-const getFoldOptions = (ctx) => ({
-    indentAtStart: ctx.indentAtStart,
+const getFoldOptions = (ctx, isBlock) => ({
+    indentAtStart: isBlock ? ctx.indent.length : ctx.indentAtStart,
     lineWidth: ctx.options.lineWidth,
     minContentWidth: ctx.options.minContentWidth
 });
@@ -59771,7 +60369,7 @@ function doubleQuotedString(value, ctx) {
     str = start ? str + json.slice(start) : json;
     return implicitKey
         ? str
-        : foldFlowLines.foldFlowLines(str, indent, foldFlowLines.FOLD_QUOTED, getFoldOptions(ctx));
+        : foldFlowLines.foldFlowLines(str, indent, foldFlowLines.FOLD_QUOTED, getFoldOptions(ctx, false));
 }
 function singleQuotedString(value, ctx) {
     if (ctx.options.singleQuote === false ||
@@ -59783,7 +60381,7 @@ function singleQuotedString(value, ctx) {
     const res = "'" + value.replace(/'/g, "''").replace(/\n+/g, `$&\n${indent}`) + "'";
     return ctx.implicitKey
         ? res
-        : foldFlowLines.foldFlowLines(res, indent, foldFlowLines.FOLD_FLOW, getFoldOptions(ctx));
+        : foldFlowLines.foldFlowLines(res, indent, foldFlowLines.FOLD_FLOW, getFoldOptions(ctx, false));
 }
 function quotedString(value, ctx) {
     const { singleQuote } = ctx.options;
@@ -59881,7 +60479,7 @@ function blockString({ comment, type, value }, ctx, onComment, onChompKeep) {
         .replace(/(?:^|\n)([\t ].*)(?:([\n\t ]*)\n(?![\n\t ]))?/g, '$1$2') // more-indented lines aren't folded
         //                ^ more-ind. ^ empty     ^ capture next empty lines only at end of indent
         .replace(/\n+/g, `$&${indent}`);
-    const body = foldFlowLines.foldFlowLines(`${start}${value}${end}`, indent, foldFlowLines.FOLD_BLOCK, getFoldOptions(ctx));
+    const body = foldFlowLines.foldFlowLines(`${start}${value}${end}`, indent, foldFlowLines.FOLD_BLOCK, getFoldOptions(ctx, true));
     return `${header}\n${indent}${body}`;
 }
 function plainString(item, ctx, onComment, onChompKeep) {
@@ -59931,7 +60529,7 @@ function plainString(item, ctx, onComment, onChompKeep) {
     }
     return implicitKey
         ? str
-        : foldFlowLines.foldFlowLines(str, indent, foldFlowLines.FOLD_FLOW, getFoldOptions(ctx));
+        : foldFlowLines.foldFlowLines(str, indent, foldFlowLines.FOLD_FLOW, getFoldOptions(ctx, false));
 }
 function stringifyString(item, ctx, onComment, onChompKeep) {
     const { implicitKey, inFlow } = ctx;
@@ -60313,7 +60911,7 @@ module.exports = {"i8":"3.0.1"};
 /***/ ((module) => {
 
 "use strict";
-module.exports = {"i8":"1.2.0"};
+module.exports = {"i8":"1.3.2"};
 
 /***/ }),
 

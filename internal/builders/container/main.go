@@ -20,7 +20,7 @@ import (
 	"os"
 
 	// Enable the github OIDC auth provider.
-	_ "github.com/sigstore/cosign/pkg/providers/github"
+	_ "github.com/sigstore/cosign/v2/pkg/providers/github"
 
 	"github.com/spf13/cobra"
 )
