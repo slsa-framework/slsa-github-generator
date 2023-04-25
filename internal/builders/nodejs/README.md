@@ -315,8 +315,8 @@ methods.
 ### npm audit signatures
 
 The `npm` CLI includes an `audit signatures` command which will print
-information about the availability of registry signatures and SLSA
-attestations. This prints the number of projects that have verified SLSA
+information about the availability of registry signatures and SLSA attestations.
+This prints the number of installed dependency packages that have verified SLSA
 attestations that have passed the official npm registry's verification at
 package upload.
 
