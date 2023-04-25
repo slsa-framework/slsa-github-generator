@@ -3,6 +3,8 @@ name: verify-token schedule
 on:
   workflow_call:
 
+permissions: read-all
+
 env:
   GH_TOKEN: ${{ github.token }}
   ISSUE_REPOSITORY: ${{ github.repository }}
