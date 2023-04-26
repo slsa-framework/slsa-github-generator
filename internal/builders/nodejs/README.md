@@ -329,6 +329,10 @@ audited 1 package in 3s
 1 package has a verified attestation
 ```
 
+Note that the `npm audit signatures` command will succeed regardless of the
+presence of signatures or attestations. You will need to check that the output
+matches your expectations.
+
 ### slsa-verifier
 
 The `slsa-verifier` tool includes support for Node.js packages published on the
