@@ -101,6 +101,7 @@ e2e_verify_decoded_token() {
     _e2e_verify_query "$decoded_token" "ubuntu-latest" '.builder.runner_label'
     _e2e_verify_query "$decoded_token" "true" '.builder.rekor_log_public'
     _e2e_verify_query "$decoded_token" "./actions/build-artifacts-composite" '.tool.actions.build_artifacts.path'
+    _e2e_verify_query "$decoded_token" "${CHECKOUT_FETCH_DEPTH}" '.checkout.fetch_depth'
     _e2e_verify_query "$decoded_token" '{"name1":"value1","name2":"value2","name3":"value3","name4":"","name5":"value5","name6":"value6","private-repository":true}' '.tool.inputs'
 
     # GitHub's information.

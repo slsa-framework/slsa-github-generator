@@ -50,9 +50,9 @@ export interface rawTokenInterface {
   };
   source: {
     checkout: {
-      fetch_depth: number,
-    },
-  },
+      fetch_depth: number;
+    };
+  };
   github: githubObj;
   runner: runnerObj;
   image: imageObj;
