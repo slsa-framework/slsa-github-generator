@@ -25,7 +25,7 @@ node_modules/.installed: package.json package-lock.json
 #####################################################################
 
 .PHONY: unit-test
-unit-test: go-test ts-test
+unit-test: go-test ts-test ## Runs all unit tests.
 
 .PHONY: go-test
 go-test: ## Run Go unit tests.
@@ -35,7 +35,7 @@ go-test: ## Run Go unit tests.
 
 .PHONY: ts-test
 ts-test: ## Run TypeScript tests.
-	# Run unit tests for the generate-attestations action.
+	# Run unit tests for all TS actions where tests are found.
 	@set -e;\
 		PATHS=$$(find .github/actions/ actions/ -not -path '*/node_modules/*' -name __tests__ -type d | xargs dirname); \
 		for path in $$PATHS; do \
