@@ -117,8 +117,8 @@ This repository hosts the following builders:
    This builder builds and generates provenance for your [Go](https://go.dev/) projects. To use it,
    follow the [Go builder's README.md](internal/builders/go/README.md).
 2. [Node.js Builder SLSA Level 3](internal/builders/nodejs/README.md).
-   **Status**: WIP, [expected Beta release Apr 2023](https://github.com/slsa-framework/slsa-github-generator/milestone/8),
-   [expected GA release Jun 2023](https://github.com/slsa-framework/slsa-github-generator/milestone/17).
+   **Status**: [Beta since v1.6.0](https://github.com/slsa-framework/slsa-github-generator/milestone/8).
+   [Expected GA release Jun 2023](https://github.com/slsa-framework/slsa-github-generator/milestone/17).
 3. _Container Builder SLSA Level 3_. **Status**: [WIP, expected release by Jun 2023](https://github.com/slsa-framework/slsa-github-generator/milestone/5).
    This builder will build your container image and generate provenance. The generated provenance will be compatible with
    [cosign](https://github.com/sigstore/cosign)'s attestation format.

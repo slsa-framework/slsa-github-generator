@@ -45,15 +45,14 @@ tampered with.
 
 ## Development status
 
-The Node.js builder is currently under active development. The API could change
-while approaching an initial release. You can track progress towards Beta via
-[this milestone](https://github.com/slsa-framework/slsa-github-generator/milestone/8),
-and towards General Availability via
+The Node.js builder is currently in beta. The API could change while approaching
+a Generally Available (GA) release. You can track progress towards General
+Availability via
 [this milestone](https://github.com/slsa-framework/slsa-github-generator/milestone/17).
 
-If you would like to test the workflow early please
+Please try it out and
 [create an issue](https://github.com/slsa-framework/slsa-github-generator/issues/new)
-and let us know.
+to send us feedback!
 
 ## Generating Provenance
 
@@ -104,7 +103,6 @@ repository.
 jobs:
   build:
     permissions:
-      actions: read # for detecting the Github Actions environment.
       id-token: write # for creating OIDC tokens for signing.
       packages: write # for uploading attestations.
       contents: write # for uploading attestations.
