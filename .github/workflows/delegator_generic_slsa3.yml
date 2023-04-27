@@ -46,9 +46,9 @@ on:
       secret14:
       secret15:
         description: >
-          Optional secret.
+          Optional secrets.
 
-          This argument is passed, unchanged, to the builder's Action's `build-artifacts`.
+          The arguments are passed, unchanged, to the builder's Action's `build-artifacts`.
         required: false
         
 
