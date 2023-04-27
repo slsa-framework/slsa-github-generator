@@ -57,7 +57,7 @@ inputs:
 
       Example: field1, field2, field3
     type: string
-    required: true
+    required: false
 
 outputs:
   slsa-token:
