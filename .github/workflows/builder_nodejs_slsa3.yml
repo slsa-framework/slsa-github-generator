@@ -116,8 +116,6 @@ jobs:
   slsa-publish:
     needs: [slsa-run]
     if: ${{ inputs.npm-publish }}
-    permissions:
-      contents: write # For asset uploads. Optional
     runs-on: ubuntu-latest
     steps:
       - name: Set up Node environment
