@@ -31,17 +31,26 @@ on:
     # Secrets provided as arguments are passed as inputs to the callback Action.
     secrets:
       secret1:
-        description: >
-          Optional secret.
-
-          This argument is passed, unchanged, to the builder's Action's `build-artifacts`.
-        required: false
       secret2:
+      secret3:
+      secret4:
+      secret5:
+      secret6:
+      secret7:
+      secret8:
+      secret9:
+      secret10:
+      secret11:
+      secret12:
+      secret13:
+      secret14:
+      secret15:
         description: >
           Optional secret.
 
           This argument is passed, unchanged, to the builder's Action's `build-artifacts`.
         required: false
+        
 
     # Inputs provided as arguments are passed as inputs to the callback Action,
     # formatted as a map.
