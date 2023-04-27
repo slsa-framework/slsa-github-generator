@@ -50,7 +50,6 @@ on:
 
           The arguments are passed, unchanged, to the builder's Action's `build-artifacts`.
         required: false
-        
 
     # Inputs provided as arguments are passed as inputs to the callback Action,
     # formatted as a map.
