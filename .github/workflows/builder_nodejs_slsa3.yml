@@ -40,13 +40,21 @@ on:
         required: true
 
     outputs:
-      artifact-name:
+      package-download-name:
         description: "The name of the package artifact uploaded to the workflow run."
         value: ${{ fromJSON(jobs.slsa-run.outputs.build-artifacts-outputs).package-download-name }}
 
-      provenance-name:
+      package-file-name:
+        description: "The file name of the package tarball uploaded as an artifact."
+        value: ${{ fromJSON(jobs.slsa-run.outputs.build-artifacts-outputs).package-filename }}
+
+      provenance-download-name:
         description: "The name of the provenance attestation uploaded to the workflow run."
         value: ${{ jobs.slsa-run.outputs.attestations-download-name }}
+
+      provenance-file-name:
+        description: "The file name of the provenance attestation uploaded as an artifact."
+        value: ${{ fromJSON(jobs.slsa-run.outputs.build-artifacts-outputs).attestation-name }}
 
 jobs:
   slsa-setup:
