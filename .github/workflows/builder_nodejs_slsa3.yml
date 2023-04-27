@@ -42,7 +42,7 @@ on:
     outputs:
       artifact-name:
         description: "The name of the package artifact uploaded to the workflow run."
-        value: ${{ fromJSON(needs.slsa-run.outputs.build-artifacts-outputs).package-download-name }}
+        value: ${{ fromJSON(jobs.slsa-run.outputs.build-artifacts-outputs).package-download-name }}
 
       provenance-name:
         description: "The name of the provenance attestation uploaded to the workflow run."
