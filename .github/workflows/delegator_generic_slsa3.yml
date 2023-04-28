@@ -28,7 +28,7 @@ env:
 
 on:
   workflow_call:
-    # Secrets provided as arguments are passed as inputs to the callback Action.
+    # Optional secrets provided as arguments are passed as inputs to the callback Action.
     secrets:
       secret1:
       secret2:
@@ -45,11 +45,6 @@ on:
       secret13:
       secret14:
       secret15:
-        description: >
-          Optional secrets.
-
-          The arguments are passed, unchanged, to the builder's Action's `build-artifacts`.
-        required: false
 
     # Inputs provided as arguments are passed as inputs to the callback Action,
     # formatted as a map.
