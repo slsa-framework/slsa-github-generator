@@ -96,7 +96,7 @@ jobs:
         id: verify
         uses: slsa-framework/slsa-github-generator/.github/actions/verify-token@main
         with:
-          slsa-workflow-recipient: "delegator_low-perms_slsa3.yml"
+          slsa-workflow-recipient: "delegator_lowperms-generic_slsa3.yml"
           slsa-unverified-token: ${{ inputs.slsa-token }}
           output-predicate: ${{ env.SLSA_PREDICATE_FILE }}
 
