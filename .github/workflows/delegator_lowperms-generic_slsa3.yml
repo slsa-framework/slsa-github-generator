@@ -129,7 +129,7 @@ jobs:
       artifacts-layout-sha256: ${{ steps.upload.outputs.sha256 }}
     runs-on: ubuntu-latest
     permissions:
-      contents: read # For repo checkout.
+      contents: read # For repo checkout of private repos.
     steps:
       - name: debug
         env:
