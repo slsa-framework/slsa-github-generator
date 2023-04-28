@@ -48,6 +48,11 @@ export interface rawTokenInterface {
     runner_label: string;
     audience: string;
   };
+  source: {
+    checkout: {
+      fetch_depth: number;
+    };
+  };
   github: githubObj;
   runner: runnerObj;
   image: imageObj;
