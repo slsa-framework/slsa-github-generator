@@ -107,9 +107,7 @@ jobs:
     permissions:
       id-token: write # For signing.
       contents: read # For repo checkout.
-    # FIXME
-    # uses: slsa-framework/slsa-github-generator/.github/workflows/delegator_low-perms_slsa3.yml@main
-    uses: ianlewis/slsa-github-generator/.github/workflows/delegator_low-perms_slsa3.yml@low-perms-delegator
+    uses: slsa-framework/slsa-github-generator/.github/workflows/delegator_low-perms_slsa3.yml@main
     with:
       slsa-token: ${{ needs.slsa-setup.outputs.slsa-token }}
 
