@@ -84,13 +84,15 @@ jobs:
 
   # verify-token verifies the slsa token.
   verify-token:
+    runs-on: ubuntu-latest
+    needs: [rng]
+    permissions:
+      actions: read
     outputs:
       slsa-verified-token: ${{ steps.verify.outputs.slsa-verified-token }}
       tool-repository: ${{ steps.verify.outputs.tool-repository }}
       tool-ref: ${{ steps.verify.outputs.tool-ref }}
       predicate-sha256: ${{ steps.upload.outputs.sha256 }}
-    runs-on: ubuntu-latest
-    needs: [rng]
     steps:
       - name: Verify token
         id: verify
