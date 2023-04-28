@@ -31,6 +31,8 @@ async function run(): Promise<void> {
         INPUT_SLSA-BUILD-ACTION-PATH="./actions/build-artifacts-composite" \
         INPUT_SLSA-WORKFLOW-INPUTS="{\"name1\":\"value1\",\"name2\":\"value2\",\"name3\":\"value3\",\"name4\":\"value4\"}" \
         INPUT_SLSA-WORKFLOW-INPUTS-MASK="name2, name4" \
+        INPUT_SLSA-CHECKOUT-FETCH-DEPTH="2" \
+        INPUT_SLSA-VERSION="v1-rc1" \
         nodejs ./dist/index.js
     */
 
@@ -41,6 +43,7 @@ async function run(): Promise<void> {
     const workflowRecipient = core.getInput("slsa-workflow-recipient");
     const rekorLogPublic = core.getInput("slsa-rekor-log-public");
     const runnerLabel = core.getInput("slsa-runner-label");
+    const checkoutDepth = core.getInput("slsa-checkout-fetch-depth");
     const buildArtifactsActionPath = core.getInput("slsa-build-action-path");
     const workflowsInputsMask = core.getInput("slsa-workflow-masked-inputs");
     // The workflow inputs are represented as a JSON object theselves.
@@ -73,6 +76,13 @@ async function run(): Promise<void> {
         rekor_log_public: rekorLogPublic,
         runner_label: runnerLabel,
         audience: workflowRecipient,
+      },
+      source: {
+        checkout: {
+          fetch_depth: checkoutDepth,
+          // NOTE: we may add repository, ref, etc.
+        },
+        // TODO(#2043): add digests.
       },
       github: {
         actor_id: process.env.GITHUB_ACTOR_ID,

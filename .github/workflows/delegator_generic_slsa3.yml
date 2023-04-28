@@ -28,20 +28,23 @@ env:
 
 on:
   workflow_call:
-    # Secrets provided as arguments are passed as inputs to the callback Action.
+    # Optional secrets provided as arguments are passed as inputs to the callback Action.
     secrets:
       secret1:
-        description: >
-          Optional secret.
-
-          This argument is passed, unchanged, to the builder's Action's `build-artifacts`.
-        required: false
       secret2:
-        description: >
-          Optional secret.
-
-          This argument is passed, unchanged, to the builder's Action's `build-artifacts`.
-        required: false
+      secret3:
+      secret4:
+      secret5:
+      secret6:
+      secret7:
+      secret8:
+      secret9:
+      secret10:
+      secret11:
+      secret12:
+      secret13:
+      secret14:
+      secret15:
 
     # Inputs provided as arguments are passed as inputs to the callback Action,
     # formatted as a map.
@@ -164,6 +167,8 @@ jobs:
 
       - name: Checkout the project repository
         uses: slsa-framework/slsa-github-generator/.github/actions/secure-project-checkout@main
+        with:
+          fetch-depth: ${{ toJson(needs.verify-token.outputs.slsa-verified-token).source.checkout.fetch_depth }}
 
       # NOTE: This calls the Action defined in the slsa-token.
       - name: Build artifacts
@@ -174,6 +179,19 @@ jobs:
           slsa-layout-file: ../${{ env.SLSA_OUTPUTS_DIR }}/${{ env.SLSA_ARTIFACTS_FILE }}
           slsa-workflow-secret1: ${{ secrets.secret1 }}
           slsa-workflow-secret2: ${{ secrets.secret2 }}
+          slsa-workflow-secret3: ${{ secrets.secret3 }}
+          slsa-workflow-secret4: ${{ secrets.secret4 }}
+          slsa-workflow-secret5: ${{ secrets.secret5 }}
+          slsa-workflow-secret6: ${{ secrets.secret6 }}
+          slsa-workflow-secret7: ${{ secrets.secret7 }}
+          slsa-workflow-secret8: ${{ secrets.secret8 }}
+          slsa-workflow-secret9: ${{ secrets.secret9 }}
+          slsa-workflow-secret10: ${{ secrets.secret10 }}
+          slsa-workflow-secret11: ${{ secrets.secret11 }}
+          slsa-workflow-secret12: ${{ secrets.secret12 }}
+          slsa-workflow-secret13: ${{ secrets.secret13 }}
+          slsa-workflow-secret14: ${{ secrets.secret14 }}
+          slsa-workflow-secret15: ${{ secrets.secret15 }}
 
       - name: debug
         env:
