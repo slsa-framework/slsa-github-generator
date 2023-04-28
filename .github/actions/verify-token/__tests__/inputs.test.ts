@@ -245,6 +245,11 @@ function createToken(
       runner_label: "the label",
       audience: "the audience",
     },
+    source: {
+      checkout: {
+        fetch_depth: 3,
+      },
+    },
     github: {
       actor_id: "123",
       event_name: "workflow_dispatch",

@@ -37,6 +37,12 @@ inputs:
       - ubuntu-latest
     required: true
 
+  slsa-checkout-fetch-depth:
+    # Same argument to https://github.com/actions/checkout.
+    description: "Number of commits to fetch. 0 indicates all history for all branches and tags."
+    required: false
+    default: 1
+
   slsa-workflow-inputs:
     description: >
       A JSON object containing the inputs to the Tool Reusable Workflow (TRW).
