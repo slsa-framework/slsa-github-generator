@@ -126,8 +126,7 @@ jobs:
       artifacts-layout-sha256: ${{ steps.upload.outputs.sha256 }}
     runs-on: ubuntu-latest
     permissions:
-      # NOTE: ideally we should avoid these permissions for build systems that 'run' dependency code
-      # during 'compilation': e.g., npm's install scripts.
+      # TODO(#2076): Use dynamic GITHUB_TOKEN permissions.
       contents: write # For release assets.
       packages: write # For publishing to GitHub packages.
     steps:
