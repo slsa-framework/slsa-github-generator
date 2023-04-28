@@ -1,3 +1,17 @@
+# Copyright 2023 SLSA Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 name: SLSA Node.js builder
 
 permissions: {}
@@ -52,24 +66,6 @@ on:
         type: string
         default: "latest"
 
-      upload-assets:
-        description: >
-          If true, provenance is uploaded to a GitHub release for new tags.
-          When the workflow does not run on a new tag, such as on a `workflow_dispatch`,
-          the `upload-tag-name` argument must be provided as well.
-        required: false
-        type: boolean
-        default: true
-
-      upload-tag-name:
-        description: >
-          If non-empty and `upload-assets` is set to true, the provenance is uploaded to the GitHub
-          release identified by the tag name. If a workflow is run on a new tag and `upload-tag-name`
-          is non-empty, the new tag is ignored and the value of `upload-tag-name` is used instead to upload
-          the assets.
-        type: string
-        default: ""
-
     secrets:
       node-auth-token:
         description: "The npm registry auth token used to publish the package."
@@ -78,23 +74,14 @@ on:
     outputs:
       artifact-name:
         description: "The name of the package artifact uploaded to the workflow run."
-        value: ${{ jobs.slsa-publish.outputs.artifact-name }}
+        # NOTE: This is an untrusted value returned from the build. Technically
+        # the build could provide a package file that doesn't match the
+        # provenance but it would fail validation.
+        value: ${{ fromJSON(jobs.slsa-run.outputs.build-artifacts-outputs).package-download-name }}
 
       provenance-name:
         description: "The name of the provenance attestation uploaded to the workflow run."
-        value: ${{ jobs.slsa-publish.outputs.provenance-name }}
-
-      release-asset-name:
-        description: "The package asset name uploaded to the release (if upload-assets is true). e.g. sigstore-1.1.1.tgz"
-        value: ${{ jobs.slsa-publish.outputs.release-asset-name }}
-
-      release-id:
-        description: "The name of the release where the package tarball and provenance were uploaded (if upload-assets is true)."
-        value: ${{ jobs.slsa-publish.outputs.release-id }}
-
-      release-provenance-name:
-        description: "The provenance asset name uploaded to the release (if upload-assets is true). e.g. sigstore-1.1.1.intoto.jsonl"
-        value: ${{ jobs.slsa-publish.outputs.release-provenance-name }}
+        value: ${{ jobs.slsa-run.outputs.attestations-download-name }}
 
 jobs:
   slsa-setup:
@@ -108,35 +95,26 @@ jobs:
         id: generate
         uses: slsa-framework/slsa-github-generator/actions/delegator/setup-token@v1.6.0-rc.2
         with:
-          slsa-workflow-recipient: "delegator_generic_slsa3.yml"
+          slsa-workflow-recipient: "delegator_lowperms-generic_slsa3.yml"
           slsa-rekor-log-public: ${{ inputs.rekor-log-public }}
           slsa-runner-label: "ubuntu-latest"
           slsa-build-action-path: "./internal/nodejs-action"
           slsa-version: "v0.2"
-          # TODO(#1575): mask sensitive fields.
           slsa-workflow-inputs: ${{ toJson(inputs) }}
 
   slsa-run:
     needs: [slsa-setup]
     permissions:
       id-token: write # For signing.
-      contents: write # For asset uploads.
-      packages: write # For publishing to GitHub packages.
+      contents: read # For repo checkout of private repos.
+      actions: read # For getting workflow run on private repos.
     uses: slsa-framework/slsa-github-generator/.github/workflows/delegator_generic_slsa3.yml@v1.6.0-rc.2
     with:
       slsa-token: ${{ needs.slsa-setup.outputs.slsa-token }}
 
   slsa-publish:
     needs: [slsa-run]
-    outputs:
-      artifact-name: ${{ steps.generate-outputs.outputs.artifact-name }}
-      provenance-name: ${{ steps.generate-outputs.outputs.provenance-name }}
-      release-asset-name: ${{ steps.generate-outputs.outputs.release-asset-name }}
-      release-id: ${{ steps.generate-outputs.outputs.release-id }}
-      release-provenance-name: ${{ steps.generate-outputs.outputs.release-provenance-name }}
     if: ${{ inputs.npm-publish }}
-    permissions:
-      contents: write # For asset uploads. Optional
     runs-on: ubuntu-latest
     steps:
       - name: Set up Node environment
@@ -165,16 +143,8 @@ jobs:
           set-executable: false
 
       # TODO(#1680): verify the attestation before upload.
-      # - name: Verify attestations
-      #   env:
-      #     SLSA_ATTESTATION_DOWNLOAD_NAME: ${{ needs.slsa-run.outputs.attestations-download-name }}
-      #   run: |
-      #     echo "download from $SLSA_ATTESTATION_DOWNLOAD_NAME"
 
-      # TODO(#888): Publish to GitHub release.
-
-      # TODO(#1669): Publish to npm. Note that we need to upload our own bundle to npm.
-      # TODO(#1669): Use mainline version of npm
+      # TODO(#1897): Use upstream version of npm
       - name: Clone npm fork
         id: clone-fork
         env:
@@ -259,11 +229,11 @@ jobs:
           echo "access=${access}" >> "$GITHUB_OUTPUT"
           echo "dist-tag=${dist_tag}" >> "$GITHUB_OUTPUT"
 
-      # TODO(#1669): Use mainline version of npm
+      # TODO(#1897): Use upstream version of npm
       - name: Publish the package
         id: publish
         env:
-          ACCESS: ${{ inputs.access }}
+          ACCESS: ${{ steps.validate-outputs.outputs.access }}
           ATTESTATION_PATH: ${{ steps.validate-outputs.outputs.attestation-path }}
           DIST_TAG: ${{ steps.validate-outputs.outputs.dist-tag }}
           NODE_AUTH_TOKEN: ${{ secrets.node-auth-token }}
@@ -283,55 +253,3 @@ jobs:
           # that we can specify the provenance bundle.
           # NOTE: We don't quote $publish_flags because we are using word splitting to add the flags.
           "$(dirname "$(which node)")"/node_modules/npm/bin/npm publish "${PACKAGE_PATH}" ${publish_flags}
-
-      - name: Upload provenance new tag
-        id: release-new-tags
-        uses: softprops/action-gh-release@de2c0eb89ae2a093876385947365aca7b0e5f844 # v0.1.15
-        if: inputs.upload-assets && startsWith(github.ref, 'refs/tags/') && inputs.upload-tag-name == ''
-        with:
-          prerelease: ${{ inputs.prerelease }}
-          files: |
-            ${{ steps.validate-outputs.outputs.attestation-path }}
-            ${{ steps.validate-outputs.outputs.package-path }}
-          draft: ${{ inputs.draft-release }}
-
-      - name: Upload provenance tag name
-        id: release-tag-name
-        uses: softprops/action-gh-release@de2c0eb89ae2a093876385947365aca7b0e5f844 # v0.1.15
-        if: inputs.upload-assets && inputs.upload-tag-name != ''
-        with:
-          tag_name: "${{ inputs.upload-tag-name }}"
-          prerelease: ${{ inputs.prerelease }}
-          files: |
-            ${{ steps.validate-outputs.outputs.attestation-path }}
-            ${{ steps.validate-outputs.outputs.package-path }}
-          draft: ${{ inputs.draft-release }}
-
-      - name: Generate outputs
-        shell: bash
-        id: generate-outputs
-        env:
-          RELEASE_ID_NEW_TAGS: "${{ steps.release-new-tags.outputs.id }}"
-          RELEASE_ID_TAG_NAME: "${{ steps.release-tag-name.outputs.id }}"
-          UNTRUSTED_ARTIFACT_NAME: "${{ fromJSON(needs.slsa-run.outputs.build-artifacts-outputs).package-download-name }}"
-          PROVENANCE_NAME: "${{ needs.slsa-run.outputs.attestations-download-name }}"
-          ATTESTATION_PATH: "${{ steps.validate-outputs.outputs.attestation-path }}"
-          PACKAGE_PATH: "${{ steps.validate-outputs.outputs.package-path }}"
-        run: |
-          set -euo pipefail
-          # NOTE: release-id may be empty if npm-publish=true, upload-assets=false
-          release_id=""
-          if [[ -n "${RELEASE_ID_NEW_TAGS}" ]]; then
-            release_id="${RELEASE_ID_NEW_TAGS}"
-          elif [[ -n "${RELEASE_ID_TAG_NAME}" ]]; then
-            release_id="${RELEASE_ID_TAG_NAME}"
-          fi
-          echo "release-id=${release_id}" >> "$GITHUB_OUTPUT"
-
-          # NOTE: Re: UNTRUSTED: Technically the build could provide a package file that
-          # doesn't match the provenance but it would fail validation.
-          echo "artifact-name=${UNTRUSTED_ARTIFACT_NAME}" >> "$GITHUB_OUTPUT"
-          echo "provenance-name=${PROVENANCE_NAME}" >> "$GITHUB_OUTPUT"
-
-          echo "release-asset-name=$(basename ${ATTESTATION_PATH})" >> "$GITHUB_OUTPUT"
-          echo "release-provenance-name=$(basename ${PACKAGE_PATH})" >> "$GITHUB_OUTPUT"
