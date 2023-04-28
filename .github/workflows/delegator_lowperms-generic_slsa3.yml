@@ -87,7 +87,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [rng]
     permissions:
-      actions: read
+      actions: read # For getting workflow run on private repos.
     outputs:
       slsa-verified-token: ${{ steps.verify.outputs.slsa-verified-token }}
       tool-repository: ${{ steps.verify.outputs.tool-repository }}

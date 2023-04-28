@@ -107,6 +107,7 @@ jobs:
     permissions:
       id-token: write # For signing.
       contents: read # For repo checkout.
+      actions: read # For getting workflow run on private repos.
     # FIXME
     # uses: slsa-framework/slsa-github-generator/.github/workflows/delegator_lowperms-generic_slsa3.yml@main
     uses: ianlewis/slsa-github-generator/.github/workflows/delegator_lowperms-generic_slsa3.yml@low-perms-delegator
