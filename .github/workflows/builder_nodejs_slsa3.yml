@@ -148,7 +148,10 @@ jobs:
       - name: Clone npm fork
         id: clone-fork
         env:
-          NPM_GIT_SHA: bc657b76f09cbdd5801e360633898b14a4bbc5e8
+          # This points to the slsa-framework/npm-cli oob-provenance branch
+          # which contains patches to the v9.6.5 release of the npm cli.
+          NPM_REMOTE_URL: "https://github.com/slsa-framework/npm-cli.git"
+          NPM_GIT_SHA: "a9008fa54ec3afa3bb0848f1384896893757bcef"
         run: |
           set -euo pipefail
 
@@ -157,7 +160,7 @@ jobs:
           mkdir -p node_modules/npm
           cd node_modules/npm
           git init
-          git remote add origin https://github.com/ianlewis/cli.git
+          git remote add origin "${NPM_REMOTE_URL}"
 
           # Fetch and checkout oob-provenance branch at pinned digest.
           git fetch --depth 1 origin "${NPM_GIT_SHA}"
