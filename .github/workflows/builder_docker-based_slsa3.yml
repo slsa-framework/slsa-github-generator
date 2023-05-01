@@ -516,7 +516,7 @@ jobs:
         with:
           slsa-layout-file: "${{ needs.build.outputs.slsa-outputs-name }}"
           predicate-file: "predicate-${{ needs.rng.outputs.value }}"
-          predicate-type: "https://slsa.dev/provenance/v1.0?draft"
+          predicate-type: "https://slsa.dev/provenance/v1"
           output-folder: "attestations-${{ needs.rng.outputs.value }}"
 
       - name: Upload unsigned intoto attestations file for pull request
