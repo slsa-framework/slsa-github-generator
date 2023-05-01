@@ -148,7 +148,10 @@ jobs:
       - name: Clone npm fork
         id: clone-fork
         env:
-          NPM_GIT_SHA: bc657b76f09cbdd5801e360633898b14a4bbc5e8
+          # This points to the slsa-framework/npm-cli oob-provenance branch
+          # which contains patches to the v9.6.5 release of the npm cli.
+          NPM_REMOTE_URL: "https://github.com/slsa-framework/npm-cli.git"
+          NPM_GIT_SHA: "be87719832648731541cf6019c00320f479cafe5"
         run: |
           set -euo pipefail
 
@@ -157,7 +160,7 @@ jobs:
           mkdir -p node_modules/npm
           cd node_modules/npm
           git init
-          git remote add origin https://github.com/ianlewis/cli.git
+          git remote add origin "${NPM_REMOTE_URL}"
 
           # Fetch and checkout oob-provenance branch at pinned digest.
           git fetch --depth 1 origin "${NPM_GIT_SHA}"
@@ -252,4 +255,4 @@ jobs:
           # Run npm publish using npm fork. We are temporarily using a fork so
           # that we can specify the provenance bundle.
           # NOTE: We don't quote $publish_flags because we are using word splitting to add the flags.
-          "$(dirname "$(which node)")"/node_modules/npm/bin/npm publish "${PACKAGE_PATH}" ${publish_flags}
+          "$(dirname "$(which node)")"/node_modules/npm/bin/npm publish --loglevel verbose "${PACKAGE_PATH}" ${publish_flags}
