@@ -151,7 +151,7 @@ jobs:
           # This points to the slsa-framework/npm-cli oob-provenance branch
           # which contains patches to the v9.6.5 release of the npm cli.
           NPM_REMOTE_URL: "https://github.com/slsa-framework/npm-cli.git"
-          NPM_GIT_SHA: "a9008fa54ec3afa3bb0848f1384896893757bcef"
+          NPM_GIT_SHA: "52681adf9f0dc29a3ea7a0b1d287ecb5c80ef5a1"
         run: |
           set -euo pipefail
 
