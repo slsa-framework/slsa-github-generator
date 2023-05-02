@@ -1,0 +1,18 @@
+name: pre-submit delegators
+
+on:
+  pull_request:
+    branches: [main]
+  merge_group:
+  workflow_dispatch:
+
+permissions: read-all
+
+jobs:
+  checkout:
+    name: verify delegator workflows are the same
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
+      - name: Compare diff between the delegator workflows
+        run: ./.github/workflows/scripts/pre-submit.delegators/compare-diff.sh
