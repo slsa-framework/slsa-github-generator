@@ -283,7 +283,7 @@ End-to-end tests run daily in [github.com/slsa-framework/example-package/.github
    ```
 
 3. Update the version of the workflow
-   [slsa-framework/example-package/.github/workflows/e2e.generic.workflow_dispatch.main.adversarial-builder-binary.slsa3.yml#](https://github.com/slsa-framework/example-package/blob/main/.github/workflows/e2e.generic.workflow_dispatch.main.adversarial-builder-binary.slsa3.yml#)
+   [slsa-framework/example-package/.github/workflows/e2e.generic.workflow_dispatch.main.adversarial-builder-binary.slsa3.yml](https://github.com/slsa-framework/example-package/blob/main/.github/workflows/e2e.generic.workflow_dispatch.main.adversarial-builder-binary.slsa3.yml)
    with the `$BUILDER_TAG` to test.
 
 4. Trigger the test in
@@ -326,7 +326,7 @@ End-to-end tests run daily in [github.com/slsa-framework/example-package/.github
    ```
 
 3. Update the version of the workflow
-   [slsa-framework/example-package/.github/workflows/e2e.container.workflow_dispatch.main.adversarial-builder-binary.slsa3.yml#](https://github.com/slsa-framework/example-package/blob/main/.github/workflows/e2e.container.workflow_dispatch.main.adversarial-builder-binary.slsa3.yml)
+   [slsa-framework/example-package/.github/workflows/e2e.container.workflow_dispatch.main.adversarial-builder-binary.slsa3.yml](https://github.com/slsa-framework/example-package/blob/main/.github/workflows/e2e.container.workflow_dispatch.main.adversarial-builder-binary.slsa3.yml)
    with the `$BUILDER_TAG` to test.
 
 4. Trigger the test in
