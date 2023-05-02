@@ -1,15 +1,17 @@
-import { githubObj } from "./types";
+import { rawTokenInterface } from "./types";
 import * as core from "@actions/core";
 import { sigstore } from "sigstore";
 import * as child_process from "child_process";
 import * as tscommon from "tscommon";
 import * as github from "@actions/github";
 
-// createURI creates the fully qualified URI out of the repository
-export function createURI(repository: string, ref: string): string {
-  if (!repository) {
+// createTriggerURI creates the fully qualified URI out of the trigger repository.
+export function createTriggerURI(rawTokenObj: rawTokenInterface): string {
+  if (!rawTokenObj.github.repository) {
     throw new Error(`cannot create URI: repository undefined`);
   }
+  const repository = rawTokenObj.github.repository;
+  const ref = rawTokenObj.github.ref;
   let refVal = "";
   if (ref) {
     refVal = `@${ref}`;
@@ -17,14 +19,63 @@ export function createURI(repository: string, ref: string): string {
   return `git+https://github.com/${repository}${refVal}`;
 }
 
-// getWorkflowPath returns the workflow's path from the workflow_ref.
-export function getWorkflowPath(obj: githubObj): string {
+// createSourceURI creates the fully qualified URI out of the checked out repository.
+export function createSourceURI(rawTokenObj: rawTokenInterface): string {
+  if (!rawTokenObj.github.repository) {
+    throw new Error(`cannot create URI: repository undefined`);
+  }
+  const repository = rawTokenObj.github.repository;
+
+  // TRW may overwrite the commit sha to build.
+  // For example, users of JReleaser may push a commit
+  // before building. See discussion at
+  // https://github.com/slsa-framework/slsa-github-generator/issues/2043.
+  // If the TRW passed in a sha1, we don't know the ref
+  // so we never report it.
+  if (rawTokenObj.source.checkout.sha1) {
+    return `git+https://github.com/${repository}`;
+  }
+
+  let refVal = "";
+  if (rawTokenObj.github.ref) {
+    refVal = `@${rawTokenObj.github.ref}`;
+  }
+  return `git+https://github.com/${repository}${refVal}`;
+}
+
+// getTriggerSha1 returns the sha1 of the trigger repository.
+export function getTriggerSha1(rawTokenObj: rawTokenInterface): string {
+  return rawTokenObj.github.sha;
+}
+
+// getTriggerRepository returns the repository of the trigger.
+export function getTriggerRepository(rawTokenObj: rawTokenInterface): string {
+  return rawTokenObj.github.repository;
+}
+
+// getTriggerRef returns the ref of the trigger.
+export function getTriggerRef(rawTokenObj: rawTokenInterface): string {
+  return rawTokenObj.github.ref;
+}
+
+// getSourceSha1 returns the sha1 of the source that is checked out.
+export function getSourceSha1(rawTokenObj: rawTokenInterface): string {
+  // The checkout.sha1 takes precedence over the default GitHub event.
+  // TRW may overwrite the commit sha to build.
+  // For example, users of JReleaser may push a commit
+  // before building. See discussion at
+  // https://github.com/slsa-framework/slsa-github-generator/issues/2043.
+  return rawTokenObj.source.checkout.sha1 || rawTokenObj.github.sha;
+}
+
+// getTriggerPath returns the workflow's path from the workflow_ref.
+export function getTriggerPath(rawTokenObj: rawTokenInterface): string {
   // GITHUB_WORKFLOW_REF contains the repository name in the path. We will trim
   // it out.
   // e.g. 'octocat/hello-world/.github/workflows/my-workflow.yml@refs/heads/my_branch'
   // Strip off the repo name and git ref from the workflow path.
-  return obj.workflow_ref
-    .substring(`${obj.repository}/`.length)
+  return rawTokenObj.github.workflow_ref
+    .substring(`${rawTokenObj.github.repository}/`.length)
     .split("@", 1)[0];
 }
 
