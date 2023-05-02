@@ -1,4 +1,4 @@
-name: "Secure attestations download"
+name: "Secure attestations download for nodejs builder"
 description: "Download a set of attestations and verify their SHA256"
 inputs:
   name:
