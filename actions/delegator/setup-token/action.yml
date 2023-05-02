@@ -29,6 +29,10 @@ inputs:
     type: string
     required: true
 
+  slsa-checkout-sha1:
+    description: "The git commit to checkout the repository."
+    required: false
+
   slsa-runner-label:
     description: >
       The runner label to run the callback Action (`slsa-build-action-path`) on.

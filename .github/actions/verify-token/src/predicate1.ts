@@ -15,8 +15,14 @@ import * as github from "@actions/github";
 import * as tscommon from "tscommon";
 
 import { rawTokenInterface } from "./types";
-import { createURI, getWorkflowPath } from "./utils";
-import { SLSAPredicate, ArtifactReference } from "./slsatypes1";
+import {
+  createSourceURI,
+  getTriggerRepository,
+  getTriggerRef,
+  getSourceSha1,
+  getTriggerPath,
+} from "./utils";
+import { SLSAPredicate } from "./slsatypes1";
 
 const DELEGATOR_BUILD_TYPE_V0 =
   "https://github.com/slsa-framework/slsa-github-generator/delegator-generic@v0";
@@ -26,17 +32,13 @@ export async function createPredicate(
   toolURI: string,
   token: string
 ): Promise<SLSAPredicate> {
-  const callerRepo: string = createURI(
-    rawTokenObj.github.repository,
-    rawTokenObj.github.ref
-  );
-
-  const sourceRef: ArtifactReference = {
-    uri: callerRepo,
-    digest: {
-      sha1: rawTokenObj.github.sha,
-    },
-  };
+  // Trigger information.
+  const triggerPath: string = getTriggerPath(rawTokenObj);
+  const triggerRef: string = getTriggerRef(rawTokenObj);
+  const triggerRepository: string = getTriggerRepository(rawTokenObj);
+  // Source information.
+  const sourceURI: string = createSourceURI(rawTokenObj);
+  const sourceSha1: string = getSourceSha1(rawTokenObj);
 
   // NOTE: We get the triggering_actor_id from the workflow run via the API.
   // We can trust this value as we have validated the run_id (as much as we can
@@ -62,14 +64,12 @@ export async function createPredicate(
         // TODO(#1555): add support for generators.
         vars: {},
         // NOTE: This is equivalent to the v0.2 entryPoint.
+        // TODO(#2077): set workflow to '{}'?
         workflow: {
-          ref: rawTokenObj.github.ref,
-          repository: rawTokenObj.github.repository,
-          path: getWorkflowPath(rawTokenObj.github),
+          ref: triggerRef,
+          repository: triggerRepository,
+          path: triggerPath,
         },
-        // We only use source here because the source contained the source
-        // repository and the build configuration.
-        source: sourceRef,
       },
       internalParameters: {
         GITHUB_ACTOR_ID: rawTokenObj.github.actor_id,
@@ -93,6 +93,14 @@ export async function createPredicate(
         GITHUB_WORKFLOW_REF: rawTokenObj.github.workflow_ref,
         GITHUB_WORKFLOW_SHA: rawTokenObj.github.workflow_sha,
       },
+      resolvedDependencies: [
+        {
+          uri: sourceURI,
+          digest: {
+            gitCommit: sourceSha1,
+          },
+        },
+      ],
     },
     runDetails: {
       // TODO(https://github.com/slsa-framework/slsa-github-generator/issues/1504):

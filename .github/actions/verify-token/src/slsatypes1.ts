@@ -14,7 +14,7 @@ limitations under the License.
 export interface Builder {
   id: string;
   version?: string;
-  builderDependencies?: ArtifactReference[];
+  builderDependencies?: ResourceDescriptor[];
 }
 
 export interface DigestSet {
@@ -27,7 +27,7 @@ export interface Metadata {
   finishedOn?: Date;
 }
 
-export interface ArtifactReference {
+export interface ResourceDescriptor {
   uri: string;
   digest: DigestSet;
   localName?: string;
@@ -48,7 +48,7 @@ export interface BuildDefinition {
   internalParameters?: any;
 
   // resolvedDependencies are dependencies needed at build time.
-  resolvedDependencies?: ArtifactReference[];
+  resolvedDependencies?: ResourceDescriptor[];
 }
 
 export interface RunDetails {
@@ -56,7 +56,7 @@ export interface RunDetails {
 
   metadata: Metadata;
 
-  byproducts?: ArtifactReference[];
+  byproducts?: ResourceDescriptor[];
 }
 
 // SLSAPredicate is a SLSA v1.0-rc1 provenance predicate.
