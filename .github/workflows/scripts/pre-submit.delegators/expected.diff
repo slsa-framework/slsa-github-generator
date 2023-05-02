@@ -10,7 +10,9 @@
 <           slsa-workflow-recipient: "delegator_generic_slsa3.yml"
 ---
 >           slsa-workflow-recipient: "delegator_lowperms-generic_slsa3.yml"
-131,133d134
+131,133c135
 <       # TODO(#2076): Use dynamic GITHUB_TOKEN permissions.
 <       contents: write # To release assets.
 <       packages: write # To publish to GitHub packages.
+---
+>       contents: read # To checkout private repos.
