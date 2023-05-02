@@ -222,7 +222,7 @@ jobs:
     needs: [rng, verify-token, privacy-check, build-artifacts-ubuntu]
     outputs:
       attestations-download-name: "${{ needs.rng.outputs.value }}-slsa-attestations"
-      attestations-download-sha256: "${{ steps.upload.output.sha256 }}"
+      attestations-download-sha256: "${{ steps.upload.outputs.sha256 }}"
     permissions:
       id-token: write # Needed to sign
     runs-on: ubuntu-latest
