@@ -127,7 +127,7 @@ jobs:
       # NOTE: The attestation name has a rng value in it's name so we don't need to check for file collisions.
       - name: Download attestations
         id: attestation-download
-        uses: slsa-framework/slsa-github-generator/actions/nodejs/secure-attestations-download@main
+        uses: slsa-framework/slsa-github-generator/actions/nodejs/secure-attestations-download@feat/sec-upload-att
         with:
           name: ${{ needs.slsa-run.outputs.attestations-download-name }}
           sha256: ${{ needs.slsa-run.outputs.attestations-download-sha256 }}
