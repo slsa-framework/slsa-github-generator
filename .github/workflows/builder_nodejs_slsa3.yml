@@ -127,9 +127,10 @@ jobs:
       # NOTE: The attestation name has a rng value in it's name so we don't need to check for file collisions.
       - name: Download attestations
         id: attestation-download
-        uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
+        uses: slsa-framework/slsa-github-generator/actions/nodejs/secure-attestations-download@main
         with:
           name: ${{ needs.slsa-run.outputs.attestations-download-name }}
+          sha256: ${{ needs.slsa-run.outputs.attestations-download-sha256 }}
 
       # NOTE: secure-download-artifact ensures that the downloaded file doesn't overwrite an existing file.
       - name: Download package
