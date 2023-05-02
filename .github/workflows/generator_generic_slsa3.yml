@@ -72,12 +72,14 @@ on:
         required: false
         type: boolean
         default: false
-      # NOTE: `draft-release` flag has somewhat complicated logic.
-      # - "true" = set to prerelease (case-sensitive, new and existing)
-      # - any other non-empty value = set to regular release (new and existing)
-      # "" = no change for existing releases, false for new releases.
       draft-release:
-        description: "If true, the release is created as a draft. Defaults to false."
+        description: >
+          Boolean identifying the release as a draft.  If 'true' then the
+          created release is marked as a draft. If other non-empty value
+          then it is not marked as a draft.
+
+          The default is to not modify the draft setting for existing
+          releases, and false for new releases.
         required: false
         type: string
         default: ""

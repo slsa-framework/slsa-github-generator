@@ -74,17 +74,25 @@ on:
         required: false
         type: boolean
         default: false
-      # NOTE: `prerelease` and `draft-release` flags have somewhat complicated logic.
-      # - "true" = set to prerelease (case-sensitive, new and existing)
-      # - any other non-empty value = set to regular release (new and existing)
-      # "" = no change for existing releases, false for new releases.
       prerelease:
-        description: "Identify the release as a prerelease. Same as softprops/action-gh-release prerelease flag."
+        description: >
+          Boolean identifying the release as a prerelease.  If 'true' then the
+          created release is marked as a prerelease. If other non-empty value
+          then it is not marked as a prerelease.
+
+          The default is to not modify the prerelease setting for existing
+          releases, and false for new releases.
         required: false
         type: string
         default: ""
       draft-release:
-        description: "Identify the release as a draft. Same as softprops/action-gh-release draft flag."
+        description: >
+          Boolean identifying the release as a draft.  If 'true' then the
+          created release is marked as a draft. If other non-empty value
+          then it is not marked as a draft.
+
+          The default is to not modify the draft setting for existing
+          releases, and false for new releases.
         required: false
         type: string
         default: ""
