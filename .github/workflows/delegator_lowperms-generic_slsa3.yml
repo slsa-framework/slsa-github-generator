@@ -73,6 +73,13 @@ on:
           When run on other triggers, attestations are signed and have an "intoto.sigstore" extension.
         value: ${{ jobs.generate-provenance.outputs.attestations-download-name }}
 
+      attestations-download-sha256:
+        description: >
+          The sha256 digest of the attestations.
+
+          Users should verify the download against this digest to prevent tampering.
+        value: ${{ jobs.generate-provenance.outputs.attestations-download-sha256 }}
+
 jobs:
   # rng generates a random number to avoid name collision in artifacts
   # when multiple workflows run concurrently.
@@ -218,6 +225,7 @@ jobs:
     needs: [rng, verify-token, privacy-check, build-artifacts-ubuntu]
     outputs:
       attestations-download-name: "${{ needs.rng.outputs.value }}-slsa-attestations"
+      attestations-download-sha256: "${{ jobs.upload.output.sha256 }}"
     permissions:
       id-token: write # Needed to sign
     runs-on: ubuntu-latest
@@ -274,10 +282,9 @@ jobs:
           attestations: attestations
           output-folder: "${{ needs.rng.outputs.value }}-slsa-attestations"
 
-      # TODO(#1571): Upload securely so that it works on pull_request triggers for unsigned attestations.
       - name: Upload attestations
         id: upload
-        uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
+        uses: slsa-framework/slsa-github-generator/.github/actions/secure-upload-folder@main
         with:
           name: "${{ needs.rng.outputs.value }}-slsa-attestations"
           path: "${{ needs.rng.outputs.value }}-slsa-attestations"
