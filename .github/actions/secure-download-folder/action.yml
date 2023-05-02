@@ -17,7 +17,7 @@ runs:
   steps:
     - name: Compute a random value
       id: rng
-      uses: slsa-framework/slsa-github-generator/.github/actions/rng@main
+      uses: slsa-framework/slsa-github-generator/.github/actions/rng@v1.6.0-rc.3
 
     - name: Download the artifact
       uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
@@ -27,7 +27,7 @@ runs:
 
     - name: Compute the hash
       id: compute
-      uses: slsa-framework/slsa-github-generator/.github/actions/compute-sha256@main
+      uses: slsa-framework/slsa-github-generator/.github/actions/compute-sha256@v1.6.0-rc.3
       with:
         path: "${{ steps.rng.outputs.random }}/folder.tgz"
 
