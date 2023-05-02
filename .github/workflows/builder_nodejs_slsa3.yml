@@ -176,7 +176,6 @@ jobs:
         id: validate-outputs
         env:
           UNTRUSTED_ACCESS: ${{ inputs.access }}
-          ATTESTATION_DIR: ${{ needs.slsa-run.outputs.attestations-download-name }}
           UNTRUSTED_ATTESTATION_NAME: ${{ fromJSON(needs.slsa-run.outputs.build-artifacts-outputs).attestation-name }}
           UNTRUSTED_PACKAGE_FILENAME: ${{ fromJSON(needs.slsa-run.outputs.build-artifacts-outputs).package-filename }}
           UNTRUSTED_DIST_TAG: ${{ inputs.dist-tag }}
@@ -187,7 +186,7 @@ jobs:
           echo "GitHub workspace '${GITHUB_WORKSPACE}' resolved to '${github_workspace_realpath}'"
 
           # Verify the attestation path.
-          untrusted_attestation_realpath=$(realpath -e "${ATTESTATION_DIR}/${UNTRUSTED_ATTESTATION_NAME}.sigstore")
+          untrusted_attestation_realpath=$(realpath -e "${UNTRUSTED_ATTESTATION_NAME}.sigstore")
           echo "Attestation path resolved to '${untrusted_attestation_realpath}'"
           echo "Checking directory '${untrusted_attestation_realpath}' is a sub-directory of '${github_workspace_realpath}'"
           if [[ "${untrusted_attestation_realpath}" != "${github_workspace_realpath}" ]] && [[ ${untrusted_attestation_realpath} != ${github_workspace_realpath}/* ]]; then
