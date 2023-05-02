@@ -355,7 +355,13 @@ const utils_1 = __nccwpck_require__(918);
 const DELEGATOR_BUILD_TYPE_V0 = "https://github.com/slsa-framework/slsa-github-generator/delegator-generic@v0";
 function createPredicate(rawTokenObj, toolURI, token) {
     return __awaiter(this, void 0, void 0, function* () {
-        const callerRepo = (0, utils_1.createURI)(rawTokenObj.github.repository, rawTokenObj.github.ref);
+        // Trigger information.
+        const triggerPath = (0, utils_1.getTriggerPath)(rawTokenObj);
+        const triggerSha1 = (0, utils_1.getTriggerSha1)(rawTokenObj);
+        const triggerURI = (0, utils_1.createTriggerURI)(rawTokenObj);
+        // Source information.
+        const sourceURI = (0, utils_1.createSourceURI)(rawTokenObj);
+        const sourceSha1 = (0, utils_1.getSourceSha1)(rawTokenObj);
         // NOTE: We get the triggering_actor_id from the workflow run via the API.
         // We can trust this value as we have validated the run_id (as much as we can
         // trust the GitHub API on GitHub Actions anyway).
@@ -373,11 +379,11 @@ function createPredicate(rawTokenObj, toolURI, token) {
             buildType: DELEGATOR_BUILD_TYPE_V0,
             invocation: {
                 configSource: {
-                    uri: callerRepo,
+                    uri: triggerURI,
                     digest: {
-                        sha1: rawTokenObj.github.sha,
+                        sha1: triggerSha1,
                     },
-                    entryPoint: (0, utils_1.getWorkflowPath)(rawTokenObj.github),
+                    entryPoint: triggerPath,
                 },
                 parameters: {
                     // NOTE: the Map object needs to be converted to an object to serialize to JSON.
@@ -416,9 +422,9 @@ function createPredicate(rawTokenObj, toolURI, token) {
             },
             materials: [
                 {
-                    uri: callerRepo,
+                    uri: sourceURI,
                     digest: {
-                        sha1: rawTokenObj.github.sha,
+                        sha1: sourceSha1,
                     },
                 },
             ],
@@ -488,13 +494,13 @@ const utils_1 = __nccwpck_require__(918);
 const DELEGATOR_BUILD_TYPE_V0 = "https://github.com/slsa-framework/slsa-github-generator/delegator-generic@v0";
 function createPredicate(rawTokenObj, toolURI, token) {
     return __awaiter(this, void 0, void 0, function* () {
-        const callerRepo = (0, utils_1.createURI)(rawTokenObj.github.repository, rawTokenObj.github.ref);
-        const sourceRef = {
-            uri: callerRepo,
-            digest: {
-                sha1: rawTokenObj.github.sha,
-            },
-        };
+        // Trigger information.
+        const triggerPath = (0, utils_1.getTriggerPath)(rawTokenObj);
+        const triggerRef = (0, utils_1.getTriggerRef)(rawTokenObj);
+        const triggerRepository = (0, utils_1.getTriggerRepository)(rawTokenObj);
+        // Source information.
+        const sourceURI = (0, utils_1.createSourceURI)(rawTokenObj);
+        const sourceSha1 = (0, utils_1.getSourceSha1)(rawTokenObj);
         // NOTE: We get the triggering_actor_id from the workflow run via the API.
         // We can trust this value as we have validated the run_id (as much as we can
         // trust the GitHub API on GitHub Actions anyway).
@@ -518,14 +524,12 @@ function createPredicate(rawTokenObj, toolURI, token) {
                     // TODO(#1555): add support for generators.
                     vars: {},
                     // NOTE: This is equivalent to the v0.2 entryPoint.
+                    // TODO(#2077): set workflow to '{}'?
                     workflow: {
-                        ref: rawTokenObj.github.ref,
-                        repository: rawTokenObj.github.repository,
-                        path: (0, utils_1.getWorkflowPath)(rawTokenObj.github),
+                        ref: triggerRef,
+                        repository: triggerRepository,
+                        path: triggerPath,
                     },
-                    // We only use source here because the source contained the source
-                    // repository and the build configuration.
-                    source: sourceRef,
                 },
                 internalParameters: {
                     GITHUB_ACTOR_ID: rawTokenObj.github.actor_id,
@@ -548,6 +552,14 @@ function createPredicate(rawTokenObj, toolURI, token) {
                     GITHUB_WORKFLOW_REF: rawTokenObj.github.workflow_ref,
                     GITHUB_WORKFLOW_SHA: rawTokenObj.github.workflow_sha,
                 },
+                resolvedDependencies: [
+                    {
+                        uri: sourceURI,
+                        digest: {
+                            gitCommit: sourceSha1,
+                        },
+                    },
+                ],
             },
             runDetails: {
                 // TODO(https://github.com/slsa-framework/slsa-github-generator/issues/1504):
@@ -611,34 +623,83 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.fetchToolWorkflow = exports.parseCertificate = exports.asMap = exports.getWorkflowPath = exports.createURI = void 0;
+exports.fetchToolWorkflow = exports.parseCertificate = exports.asMap = exports.getTriggerPath = exports.getSourceSha1 = exports.getTriggerRef = exports.getTriggerRepository = exports.getTriggerSha1 = exports.createSourceURI = exports.createTriggerURI = void 0;
 const core = __importStar(__nccwpck_require__(2186));
 const child_process = __importStar(__nccwpck_require__(2081));
 const tscommon = __importStar(__nccwpck_require__(6634));
 const github = __importStar(__nccwpck_require__(5438));
-// createURI creates the fully qualified URI out of the repository
-function createURI(repository, ref) {
-    if (!repository) {
+// createTriggerURI creates the fully qualified URI out of the trigger repository.
+function createTriggerURI(rawTokenObj) {
+    if (!rawTokenObj.github.repository) {
         throw new Error(`cannot create URI: repository undefined`);
     }
+    const repository = rawTokenObj.github.repository;
+    const ref = rawTokenObj.github.ref;
     let refVal = "";
     if (ref) {
         refVal = `@${ref}`;
     }
     return `git+https://github.com/${repository}${refVal}`;
 }
-exports.createURI = createURI;
-// getWorkflowPath returns the workflow's path from the workflow_ref.
-function getWorkflowPath(obj) {
+exports.createTriggerURI = createTriggerURI;
+// createSourceURI creates the fully qualified URI out of the checked out repository.
+function createSourceURI(rawTokenObj) {
+    if (!rawTokenObj.github.repository) {
+        throw new Error(`cannot create URI: repository undefined`);
+    }
+    const repository = rawTokenObj.github.repository;
+    // TRW may overwrite the commit sha to build.
+    // For example, users of JReleaser may push a commit
+    // before building. See discussion at
+    // https://github.com/slsa-framework/slsa-github-generator/issues/2043.
+    // If the TRW passed in a sha1, we don't know the ref
+    // so we never report it.
+    if (rawTokenObj.source.checkout.sha1) {
+        return `git+https://github.com/${repository}`;
+    }
+    let refVal = "";
+    if (rawTokenObj.github.ref) {
+        refVal = `@${rawTokenObj.github.ref}`;
+    }
+    return `git+https://github.com/${repository}${refVal}`;
+}
+exports.createSourceURI = createSourceURI;
+// getTriggerSha1 returns the sha1 of the trigger repository.
+function getTriggerSha1(rawTokenObj) {
+    return rawTokenObj.github.sha;
+}
+exports.getTriggerSha1 = getTriggerSha1;
+// getTriggerRepository returns the repository of the trigger.
+function getTriggerRepository(rawTokenObj) {
+    return rawTokenObj.github.repository;
+}
+exports.getTriggerRepository = getTriggerRepository;
+// getTriggerRef returns the ref of the trigger.
+function getTriggerRef(rawTokenObj) {
+    return rawTokenObj.github.ref;
+}
+exports.getTriggerRef = getTriggerRef;
+// getSourceSha1 returns the sha1 of the source that is checked out.
+function getSourceSha1(rawTokenObj) {
+    // The checkout.sha1 takes precedence over the default GitHub event.
+    // TRW may overwrite the commit sha to build.
+    // For example, users of JReleaser may push a commit
+    // before building. See discussion at
+    // https://github.com/slsa-framework/slsa-github-generator/issues/2043.
+    return rawTokenObj.source.checkout.sha1 || rawTokenObj.github.sha;
+}
+exports.getSourceSha1 = getSourceSha1;
+// getTriggerPath returns the workflow's path from the workflow_ref.
+function getTriggerPath(rawTokenObj) {
     // GITHUB_WORKFLOW_REF contains the repository name in the path. We will trim
     // it out.
     // e.g. 'octocat/hello-world/.github/workflows/my-workflow.yml@refs/heads/my_branch'
     // Strip off the repo name and git ref from the workflow path.
-    return obj.workflow_ref
-        .substring(`${obj.repository}/`.length)
+    return rawTokenObj.github.workflow_ref
+        .substring(`${rawTokenObj.github.repository}/`.length)
         .split("@", 1)[0];
 }
-exports.getWorkflowPath = getWorkflowPath;
+exports.getTriggerPath = getTriggerPath;
 // This function takes an Object and
 // creates a Map. Both JSON.parse() and YAML.parse()
 // return Object for fields that are declared as Map, so we need
@@ -50587,34 +50648,83 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.fetchToolWorkflow = exports.parseCertificate = exports.asMap = exports.getWorkflowPath = exports.createURI = void 0;
+exports.fetchToolWorkflow = exports.parseCertificate = exports.asMap = exports.getTriggerPath = exports.getSourceSha1 = exports.getTriggerRef = exports.getTriggerRepository = exports.getTriggerSha1 = exports.createSourceURI = exports.createTriggerURI = void 0;
 const core = __importStar(__nccwpck_require__(2186));
 const child_process = __importStar(__nccwpck_require__(2081));
 const tscommon = __importStar(__nccwpck_require__(6634));
 const github = __importStar(__nccwpck_require__(5438));
-// createURI creates the fully qualified URI out of the repository
-function createURI(repository, ref) {
-    if (!repository) {
+// createTriggerURI creates the fully qualified URI out of the trigger repository.
+function createTriggerURI(rawTokenObj) {
+    if (!rawTokenObj.github.repository) {
         throw new Error(`cannot create URI: repository undefined`);
     }
+    const repository = rawTokenObj.github.repository;
+    const ref = rawTokenObj.github.ref;
     let refVal = "";
     if (ref) {
         refVal = `@${ref}`;
     }
     return `git+https://github.com/${repository}${refVal}`;
 }
-exports.createURI = createURI;
-// getWorkflowPath returns the workflow's path from the workflow_ref.
-function getWorkflowPath(obj) {
+exports.createTriggerURI = createTriggerURI;
+// createSourceURI creates the fully qualified URI out of the checked out repository.
+function createSourceURI(rawTokenObj) {
+    if (!rawTokenObj.github.repository) {
+        throw new Error(`cannot create URI: repository undefined`);
+    }
+    const repository = rawTokenObj.github.repository;
+    // TRW may overwrite the commit sha to build.
+    // For example, users of JReleaser may push a commit
+    // before building. See discussion at
+    // https://github.com/slsa-framework/slsa-github-generator/issues/2043.
+    // If the TRW passed in a sha1, we don't know the ref
+    // so we never report it.
+    if (rawTokenObj.source.checkout.sha1) {
+        return `git+https://github.com/${repository}`;
+    }
+    let refVal = "";
+    if (rawTokenObj.github.ref) {
+        refVal = `@${rawTokenObj.github.ref}`;
+    }
+    return `git+https://github.com/${repository}${refVal}`;
+}
+exports.createSourceURI = createSourceURI;
+// getTriggerSha1 returns the sha1 of the trigger repository.
+function getTriggerSha1(rawTokenObj) {
+    return rawTokenObj.github.sha;
+}
+exports.getTriggerSha1 = getTriggerSha1;
+// getTriggerRepository returns the repository of the trigger.
+function getTriggerRepository(rawTokenObj) {
+    return rawTokenObj.github.repository;
+}
+exports.getTriggerRepository = getTriggerRepository;
+// getTriggerRef returns the ref of the trigger.
+function getTriggerRef(rawTokenObj) {
+    return rawTokenObj.github.ref;
+}
+exports.getTriggerRef = getTriggerRef;
+// getSourceSha1 returns the sha1 of the source that is checked out.
+function getSourceSha1(rawTokenObj) {
+    // The checkout.sha1 takes precedence over the default GitHub event.
+    // TRW may overwrite the commit sha to build.
+    // For example, users of JReleaser may push a commit
+    // before building. See discussion at
+    // https://github.com/slsa-framework/slsa-github-generator/issues/2043.
+    return rawTokenObj.source.checkout.sha1 || rawTokenObj.github.sha;
+}
+exports.getSourceSha1 = getSourceSha1;
+// getTriggerPath returns the workflow's path from the workflow_ref.
+function getTriggerPath(rawTokenObj) {
     // GITHUB_WORKFLOW_REF contains the repository name in the path. We will trim
     // it out.
     // e.g. 'octocat/hello-world/.github/workflows/my-workflow.yml@refs/heads/my_branch'
     // Strip off the repo name and git ref from the workflow path.
-    return obj.workflow_ref
-        .substring(`${obj.repository}/`.length)
+    return rawTokenObj.github.workflow_ref
+        .substring(`${rawTokenObj.github.repository}/`.length)
         .split("@", 1)[0];
 }
-exports.getWorkflowPath = getWorkflowPath;
+exports.getTriggerPath = getTriggerPath;
 // This function takes an Object and
 // creates a Map. Both JSON.parse() and YAML.parse()
 // return Object for fields that are declared as Map, so we need

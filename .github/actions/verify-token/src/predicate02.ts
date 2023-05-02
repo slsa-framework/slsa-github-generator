@@ -14,7 +14,13 @@ limitations under the License.
 import * as github from "@actions/github";
 
 import { rawTokenInterface } from "./types";
-import { createURI, getWorkflowPath } from "./utils";
+import {
+  getTriggerSha1,
+  createTriggerURI,
+  getSourceSha1,
+  createSourceURI,
+  getTriggerPath,
+} from "./utils";
 import { SLSAPredicate } from "./slsatypes02";
 
 const DELEGATOR_BUILD_TYPE_V0 =
@@ -25,10 +31,13 @@ export async function createPredicate(
   toolURI: string,
   token: string
 ): Promise<SLSAPredicate> {
-  const callerRepo: string = createURI(
-    rawTokenObj.github.repository,
-    rawTokenObj.github.ref
-  );
+  // Trigger information.
+  const triggerPath: string = getTriggerPath(rawTokenObj);
+  const triggerSha1: string = getTriggerSha1(rawTokenObj);
+  const triggerURI: string = createTriggerURI(rawTokenObj);
+  // Source information.
+  const sourceURI: string = createSourceURI(rawTokenObj);
+  const sourceSha1: string = getSourceSha1(rawTokenObj);
 
   // NOTE: We get the triggering_actor_id from the workflow run via the API.
   // We can trust this value as we have validated the run_id (as much as we can
@@ -48,11 +57,11 @@ export async function createPredicate(
     buildType: DELEGATOR_BUILD_TYPE_V0,
     invocation: {
       configSource: {
-        uri: callerRepo,
+        uri: triggerURI,
         digest: {
-          sha1: rawTokenObj.github.sha,
+          sha1: triggerSha1,
         },
-        entryPoint: getWorkflowPath(rawTokenObj.github),
+        entryPoint: triggerPath,
       },
       parameters: {
         // NOTE: the Map object needs to be converted to an object to serialize to JSON.
@@ -92,9 +101,9 @@ export async function createPredicate(
     },
     materials: [
       {
-        uri: callerRepo,
+        uri: sourceURI,
         digest: {
-          sha1: rawTokenObj.github.sha,
+          sha1: sourceSha1,
         },
       },
     ],

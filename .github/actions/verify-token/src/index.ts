@@ -64,7 +64,6 @@ async function run(): Promise<void> {
     }
     const workflowRecipient = core.getInput("slsa-workflow-recipient");
     const unverifiedToken = core.getInput("slsa-unverified-token");
-
     const outputPredicate = core.getInput("output-predicate");
     if (!outputPredicate) {
       // detect if output predicate is null or empty string.

@@ -139,6 +139,7 @@ function createToken(
     source: {
       checkout: {
         fetch_depth: 3,
+        sha1: "abcdef",
       },
     },
     github: {
