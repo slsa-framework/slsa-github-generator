@@ -14,8 +14,7 @@
 
 name: SLSA builder delegator
 
-permissions:
-  contents: read
+permissions: {}
 
 defaults:
   run:
@@ -130,8 +129,8 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       # TODO(#2076): Use dynamic GITHUB_TOKEN permissions.
-      contents: write # For release assets.
-      packages: write # For publishing to GitHub packages.
+      contents: write # To release assets.
+      packages: write # To publish to GitHub packages.
     steps:
       - name: debug
         env:
