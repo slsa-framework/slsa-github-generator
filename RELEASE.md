@@ -424,7 +424,7 @@ This will trigger the [release workflow](https://github.com/slsa-framework/slsa-
 
 ### Final adversarial tests
 
-Re-run the [adversarial tests](#adversarial-builder-tests) using the final `$BUILDER_TAG` for the release. If any tests fail you will need to delete the release and address the issues.
+Re-run the [adversarial builder tests](#adversarial-builder-tests) using the final `$BUILDER_TAG` for the release. If any tests fail you will need to delete the release and address the issues.
 
 ### Reference Actions at main
 
