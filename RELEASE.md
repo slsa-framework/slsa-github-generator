@@ -153,8 +153,10 @@ There is one integration test we cannot easily test "live", so we need to simula
    ```yaml
    uses: $BUILDER_REPOSITORY/.github/actions/generate-builder@$BUILDER_TAG
    ```
+   
+8. Push the changes
 
-8. Create a release for the builders for this branch:
+9. Create a release for the builders for this branch:
 
    ```shell
    "$GH" release -R "$BUILDER_REPOSITORY" create "$BUILDER_TAG" --title "$BUILDER_TAG" --notes "pre-release tests for $BUILDER_TAG $(date)" --target "$BUILDER_REF"
