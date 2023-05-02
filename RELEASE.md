@@ -141,16 +141,16 @@ There is one integration test we cannot easily test "live", so we need to simula
    ```yaml
    uses: $BUILDER_REPOSITORY/.github/actions/generate-builder@$BUILDER_TAG
    ```
-   
-   For RC releases, set `testing: true`, otherwise `testing: false`
+
+   Add `testing: true` as an input.
 
 6. For the Generic generator, update the file `$BUILDER_REPOSITORY/main/.github/workflows/generator_generic_slsa3.yml`to:
 
    ```yaml
    uses: $BUILDER_REPOSITORY/.github/actions/generate-builder@$BUILDER_TAG
    ```
-   
-   For RC releases, set `testing: true`, otherwise `testing: false`
+
+   Add `testing: true` as an input.
 
 7. For the Container generator, update the file `$BUILDER_REPOSITORY/main/.github/workflows/generator_container_slsa3.yml`to:
 
@@ -158,7 +158,7 @@ There is one integration test we cannot easily test "live", so we need to simula
    uses: $BUILDER_REPOSITORY/.github/actions/generate-builder@$BUILDER_TAG
    ```
    
-   For RC releases, set `testing: true`, otherwise `testing: false`
+   Add `testing: true` as an input.
    
 8. Commit and push the changes
 
