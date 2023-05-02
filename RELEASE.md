@@ -157,9 +157,9 @@ There is one integration test we cannot easily test "live", so we need to simula
    ```yaml
    uses: $BUILDER_REPOSITORY/.github/actions/generate-builder@$BUILDER_TAG
    ```
-   
+
    Add `testing: true` as an input.
-   
+
 8. Commit and push the changes
 
 9. Create a release for the builders for this branch:
