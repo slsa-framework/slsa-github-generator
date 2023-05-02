@@ -27,7 +27,7 @@ inputs:
     type: boolean
     required: false
     default: false
-  # TODO(#2056): Remove testing input.
+  # NOTE: Used for adversarial tests during release. See RELEASE.md.
   testing:
     description: "Temporary flag used to support pre-submit testing. DO NOT USE"
     type: boolean
