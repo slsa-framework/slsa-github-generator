@@ -51,6 +51,7 @@ export interface rawTokenInterface {
   source: {
     checkout: {
       fetch_depth: number;
+      sha1: string;
     };
   };
   github: githubObj;
