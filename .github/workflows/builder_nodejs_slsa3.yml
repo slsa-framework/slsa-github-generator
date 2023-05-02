@@ -131,7 +131,6 @@ jobs:
         with:
           name: ${{ needs.slsa-run.outputs.attestations-download-name }}
           sha256: ${{ needs.slsa-run.outputs.attestations-download-sha256 }}
-          path: ${{ needs.slsa-run.outputs.attestations-download-name }}
 
       # NOTE: secure-download-artifact ensures that the downloaded file doesn't overwrite an existing file.
       - name: Download package
