@@ -129,8 +129,12 @@ jobs:
         id: attestation-download
         uses: laurentsimon/slsa-github-generator/actions/nodejs/secure-attestations-download@feat/sec-upload-att
         with:
+          # path defaults to current directory.
           name: ${{ needs.slsa-run.outputs.attestations-download-name }}
           sha256: ${{ needs.slsa-run.outputs.attestations-download-sha256 }}
+
+      - name: test
+        run: tree .
 
       # NOTE: secure-download-artifact ensures that the downloaded file doesn't overwrite an existing file.
       - name: Download package
@@ -180,7 +184,7 @@ jobs:
           UNTRUSTED_DIST_TAG: ${{ inputs.dist-tag }}
         run: |
           set -euo pipefail
-
+          tree .
           github_workspace_realpath=$(realpath -e "${GITHUB_WORKSPACE}")
           echo "GitHub workspace '${GITHUB_WORKSPACE}' resolved to '${github_workspace_realpath}'"
 
