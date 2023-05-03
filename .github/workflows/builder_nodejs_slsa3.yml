@@ -127,9 +127,11 @@ jobs:
       # NOTE: The attestation name has a rng value in it's name so we don't need to check for file collisions.
       - name: Download attestations
         id: attestation-download
-        uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
+        uses: slsa-framework/slsa-github-generator/actions/nodejs/secure-attestations-download@main
         with:
+          # NOTE: path defaults to current directory.
           name: ${{ needs.slsa-run.outputs.attestations-download-name }}
+          sha256: ${{ needs.slsa-run.outputs.attestations-download-sha256 }}
 
       # NOTE: secure-download-artifact ensures that the downloaded file doesn't overwrite an existing file.
       - name: Download package
@@ -174,7 +176,9 @@ jobs:
         id: validate-outputs
         env:
           UNTRUSTED_ACCESS: ${{ inputs.access }}
-          ATTESTATION_DIR: ${{ steps.attestation-download.outputs.download-path }}
+          # NOTE: the folder uploaded by the SRW was downloaded in the current directory in step 'attestation-download'.
+          # All the attestations are in the folder.
+          ATTESTATION_DIR: ${{ needs.slsa-run.outputs.attestations-download-name }}
           UNTRUSTED_ATTESTATION_NAME: ${{ fromJSON(needs.slsa-run.outputs.build-artifacts-outputs).attestation-name }}
           UNTRUSTED_PACKAGE_FILENAME: ${{ fromJSON(needs.slsa-run.outputs.build-artifacts-outputs).package-filename }}
           UNTRUSTED_DIST_TAG: ${{ inputs.dist-tag }}
