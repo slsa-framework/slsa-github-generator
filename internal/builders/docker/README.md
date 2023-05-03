@@ -256,7 +256,7 @@ as an [in-toto](https://in-toto.io/) statement with a SLSA predicate.
       }
     }
   ],
-  "predicateType": "https://slsa.dev/provenance/v1",
+  "predicateType": "https://slsa.dev/provenance/v1.0?draft",
   "predicate": {
     "buildDefinition": {
       "buildType": "https://slsa.dev/container-based-build/v0.1?draft",

@@ -142,11 +142,15 @@ There is one integration test we cannot easily test "live", so we need to simula
    uses: $BUILDER_REPOSITORY/.github/actions/generate-builder@$BUILDER_TAG
    ```
 
+   Add `testing: true` as an input.
+
 6. For the Generic generator, update the file `$BUILDER_REPOSITORY/main/.github/workflows/generator_generic_slsa3.yml`to:
 
    ```yaml
    uses: $BUILDER_REPOSITORY/.github/actions/generate-builder@$BUILDER_TAG
    ```
+
+   Add `testing: true` as an input.
 
 7. For the Container generator, update the file `$BUILDER_REPOSITORY/main/.github/workflows/generator_container_slsa3.yml`to:
 
@@ -154,7 +158,11 @@ There is one integration test we cannot easily test "live", so we need to simula
    uses: $BUILDER_REPOSITORY/.github/actions/generate-builder@$BUILDER_TAG
    ```
 
-8. Create a release for the builders for this branch:
+   Add `testing: true` as an input.
+
+8. Commit and push the changes
+
+9. Create a release for the builders for this branch:
 
    ```shell
    "$GH" release -R "$BUILDER_REPOSITORY" create "$BUILDER_TAG" --title "$BUILDER_TAG" --notes "pre-release tests for $BUILDER_TAG $(date)" --target "$BUILDER_REF"
@@ -275,7 +283,7 @@ End-to-end tests run daily in [github.com/slsa-framework/example-package/.github
    ```
 
 3. Update the version of the workflow
-   [slsa-framework/example-package/.github/workflows/e2e.generic.workflow_dispatch.main.adversarial-builder-binary.slsa3.yml#](https://github.com/slsa-framework/example-package/blob/main/.github/workflows/e2e.generic.workflow_dispatch.main.adversarial-builder-binary.slsa3.yml#)
+   [slsa-framework/example-package/.github/workflows/e2e.generic.workflow_dispatch.main.adversarial-builder-binary.slsa3.yml](https://github.com/slsa-framework/example-package/blob/main/.github/workflows/e2e.generic.workflow_dispatch.main.adversarial-builder-binary.slsa3.yml)
    with the `$BUILDER_TAG` to test.
 
 4. Trigger the test in
@@ -318,7 +326,7 @@ End-to-end tests run daily in [github.com/slsa-framework/example-package/.github
    ```
 
 3. Update the version of the workflow
-   [slsa-framework/example-package/.github/workflows/e2e.container.workflow_dispatch.main.adversarial-builder-binary.slsa3.yml#](https://github.com/slsa-framework/example-package/blob/main/.github/workflows/e2e.container.workflow_dispatch.main.adversarial-builder-binary.slsa3.yml)
+   [slsa-framework/example-package/.github/workflows/e2e.container.workflow_dispatch.main.adversarial-builder-binary.slsa3.yml](https://github.com/slsa-framework/example-package/blob/main/.github/workflows/e2e.container.workflow_dispatch.main.adversarial-builder-binary.slsa3.yml)
    with the `$BUILDER_TAG` to test.
 
 4. Trigger the test in
@@ -416,7 +424,7 @@ This will trigger the [release workflow](https://github.com/slsa-framework/slsa-
 
 ### Final adversarial tests
 
-Re-run the [adversarial tests](#adversarial-tests) using the final `$BUILDER_TAG` for the release. If any tests fail you will need to delete the release and address the issues.
+Re-run the [adversarial builder tests](#adversarial-builder-tests) using the final `$BUILDER_TAG` for the release. If any tests fail you will need to delete the release and address the issues.
 
 ### Reference Actions at main
 
