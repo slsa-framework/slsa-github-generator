@@ -37,7 +37,7 @@ import (
 	"strings"
 
 	intoto "github.com/in-toto/in-toto-golang/in_toto"
-	slsa1 "github.com/in-toto/in-toto-golang/in_toto/slsa_provenance/v1.0"
+	slsa1 "github.com/in-toto/in-toto-golang/in_toto/slsa_provenance/v1"
 
 	"github.com/slsa-framework/slsa-github-generator/internal/errors"
 	"github.com/slsa-framework/slsa-github-generator/internal/utils"
@@ -119,17 +119,19 @@ func (db *DockerBuild) CreateBuildDefinition() *slsa1.ProvenanceBuildDefinition 
 	}
 }
 
-// sourceArtifact returns the source repo and its digest as an instance of ArtifactReference.
-func sourceArtifact(config *DockerBuildConfig) slsa1.ArtifactReference {
-	return slsa1.ArtifactReference{
+// sourceArtifact returns the source repo and its digest as an instance of SLSA
+// v1 ResourceDescriptor.
+func sourceArtifact(config *DockerBuildConfig) slsa1.ResourceDescriptor {
+	return slsa1.ResourceDescriptor{
 		URI:    config.SourceRepo,
 		Digest: config.SourceDigest.ToMap(),
 	}
 }
 
-// builderImage returns the builder image as an instance of ArtifactReference.
-func builderImage(config *DockerBuildConfig) slsa1.ArtifactReference {
-	return slsa1.ArtifactReference{
+// builderImage returns the builder image as an instance of SLSA v1
+// ResourceDescriptor.
+func builderImage(config *DockerBuildConfig) slsa1.ResourceDescriptor {
+	return slsa1.ResourceDescriptor{
 		URI:    config.BuilderImage.ToString(),
 		Digest: config.BuilderImage.Digest.ToMap(),
 	}
