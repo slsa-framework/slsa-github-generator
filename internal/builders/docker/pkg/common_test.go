@@ -21,7 +21,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	slsa1 "github.com/in-toto/in-toto-golang/in_toto/slsa_provenance/v1.0"
+	slsa1 "github.com/in-toto/in-toto-golang/in_toto/slsa_provenance/v1"
 )
 
 func Test_BuildDefinition(t *testing.T) {
@@ -31,12 +31,12 @@ func Test_BuildDefinition(t *testing.T) {
 		t.Fatalf("%v", err)
 	}
 
-	wantSource := slsa1.ArtifactReference{
+	wantSource := slsa1.ResourceDescriptor{
 		URI:    "git+https://github.com/slsa-framework/slsa-github-generator@refs/heads/main",
 		Digest: map[string]string{"sha1": "cf5804b5c6f1a4b2a0b03401a487dfdfbe3a5f00"},
 	}
 
-	wantBuilderImage := slsa1.ArtifactReference{
+	wantBuilderImage := slsa1.ResourceDescriptor{
 		URI:    "bash@sha256:9e2ba52487d945504d250de186cb4fe2e3ba023ed2921dd6ac8b97ed43e76af9",
 		Digest: map[string]string{"sha256": "9e2ba52487d945504d250de186cb4fe2e3ba023ed2921dd6ac8b97ed43e76af9"},
 	}
