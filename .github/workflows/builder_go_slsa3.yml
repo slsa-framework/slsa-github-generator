@@ -75,15 +75,27 @@ on:
         type: boolean
         default: false
       prerelease:
-        description: "If true, GitHub Release is created as a pre-release."
+        description: >
+          Boolean identifying the release as a prerelease.  If 'true' then the
+          created release is marked as a prerelease. If other non-empty value
+          then it is not marked as a prerelease.
+
+          The default is to not modify the prerelease setting for existing
+          releases, and false for new releases.
         required: false
-        type: boolean
-        default: false
+        type: string
+        default: ""
       draft-release:
-        description: "If true, the release is created as a draft. Defaults to false."
+        description: >
+          Boolean identifying the release as a draft.  If 'true' then the
+          created release is marked as a draft. If other non-empty value
+          then it is not marked as a draft.
+
+          The default is to not modify the draft setting for existing
+          releases, and false for new releases.
         required: false
-        type: boolean
-        default: false
+        type: string
+        default: ""
     outputs:
       go-binary-name:
         description: "The name of the generated binary uploaded to the artifact registry."
@@ -365,22 +377,10 @@ jobs:
           path: "${{ needs.provenance.outputs.go-provenance-name }}"
           sha256: "${{ needs.provenance.outputs.go-provenance-sha256 }}"
 
-      - name: Upload provenance new tag
+      - name: Upload provenance
         uses: softprops/action-gh-release@de2c0eb89ae2a093876385947365aca7b0e5f844 # v0.1.15
-        if: inputs.upload-tag-name == ''
-        id: release-new-tags
         with:
-          prerelease: ${{ inputs.prerelease }}
-          files: |
-            ${{ needs.build-dry.outputs.go-binary-name }}
-            ${{ needs.provenance.outputs.go-provenance-name }}
-          draft: ${{ inputs.draft-release }}
-
-      - name: Upload provenance tag name
-        uses: softprops/action-gh-release@de2c0eb89ae2a093876385947365aca7b0e5f844 # v0.1.15
-        if: inputs.upload-tag-name != ''
-        with:
-          tag_name: "${{ inputs.upload-tag-name }}"
+          tag_name: ${{ inputs.upload-tag-name }}
           prerelease: ${{ inputs.prerelease }}
           files: |
             ${{ needs.build-dry.outputs.go-binary-name }}

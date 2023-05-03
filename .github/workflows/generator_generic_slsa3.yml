@@ -73,10 +73,16 @@ on:
         type: boolean
         default: false
       draft-release:
-        description: "If true, the release is created as a draft. Defaults to false."
+        description: >
+          Boolean identifying the release as a draft.  If 'true' then the
+          created release is marked as a draft. If other non-empty value
+          then it is not marked as a draft.
+
+          The default is to not modify the draft setting for existing
+          releases, and false for new releases.
         required: false
-        type: boolean
-        default: false
+        type: string
+        default: ""
     outputs:
       release-id:
         description: >
@@ -237,49 +243,19 @@ jobs:
           path: "${{ needs.generator.outputs.provenance-name }}"
           sha256: "${{ needs.generator.outputs.provenance-sha256 }}"
 
-      - name: Upload provenance new tag
+      - name: Upload provenance
         uses: softprops/action-gh-release@de2c0eb89ae2a093876385947365aca7b0e5f844 # v0.1.15
-        if: inputs.upload-tag-name == ''
-        id: release-new-tags
-        with:
-          draft: ${{ inputs.draft-release }}
-          files: |
-            ${{ needs.generator.outputs.provenance-name }}
-
-      - name: Upload provenance tag name
-        uses: softprops/action-gh-release@de2c0eb89ae2a093876385947365aca7b0e5f844 # v0.1.15
-        if: inputs.upload-tag-name != ''
-        id: release-tag-name
-        with:
-          draft: ${{ inputs.draft-release }}
-          tag_name: "${{ inputs.upload-tag-name }}"
-          files: |
-            ${{ needs.generator.outputs.provenance-name }}
-
-      - name: Output release ID
-        shell: bash
         id: release
-        env:
-          RELEASE_ID_NEW_TAGS: "${{ steps.release-new-tags.outputs.id }}"
-          RELEASE_ID_TAG_NAME: "${{ steps.release-tag-name.outputs.id }}"
-        run: |
-          set -euo pipefail
-          id=""
-          if [[ -n "$RELEASE_ID_NEW_TAGS" ]]; then
-            id="$RELEASE_ID_NEW_TAGS"
-          elif [[ -n "$RELEASE_ID_TAG_NAME" ]]; then
-            id="$RELEASE_ID_TAG_NAME"
-          else
-            # This should never happen (unless previous steps fail).
-            echo "internal error"
-            exit 1
-          fi
-          echo "id=$id" >> "$GITHUB_OUTPUT"
+        with:
+          draft: ${{ inputs.draft-release }}
+          tag_name: ${{ inputs.upload-tag-name }}
+          files: |
+            ${{ needs.generator.outputs.provenance-name }}
 
       - name: Final outcome
         id: final
         env:
-          SUCCESS: ${{ steps.checkout-builder.outcome != 'failure' && steps.download-prov.outcome != 'failure' && steps.release.outcome != 'failure' && steps.release-new-tags.outcome != 'failure' && steps.release-tag-name.outcome != 'failure' }}
+          SUCCESS: ${{ steps.checkout-builder.outcome != 'failure' && steps.download-prov.outcome != 'failure' && steps.release.outcome != 'failure' }}
         run: |
           echo "outcome=$([ "$SUCCESS" == "true" ] && echo "success" || echo "failure")" >> $GITHUB_OUTPUT
 
