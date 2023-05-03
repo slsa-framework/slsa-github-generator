@@ -177,7 +177,7 @@ jobs:
         env:
           UNTRUSTED_ACCESS: ${{ inputs.access }}
           # NOTE: the folder uploaded by the SRW was downloaded in the current directory in step 'attestation-download'.
-          # All the attestations are in in the folder.
+          # All the attestations are in the folder.
           ATTESTATION_DIR: ${{ needs.slsa-run.outputs.attestations-download-name }}
           UNTRUSTED_ATTESTATION_NAME: ${{ fromJSON(needs.slsa-run.outputs.build-artifacts-outputs).attestation-name }}
           UNTRUSTED_PACKAGE_FILENAME: ${{ fromJSON(needs.slsa-run.outputs.build-artifacts-outputs).package-filename }}
