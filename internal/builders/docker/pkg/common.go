@@ -15,7 +15,7 @@
 package pkg
 
 import (
-	slsa1 "github.com/in-toto/in-toto-golang/in_toto/slsa_provenance/v1.0"
+	slsa1 "github.com/in-toto/in-toto-golang/in_toto/slsa_provenance/v1"
 )
 
 // This file contains structs for the slsa provenance V1.0, and will be
@@ -41,10 +41,10 @@ const (
 // docker-based build.
 type DockerBasedExternalParameters struct {
 	// The source GitHub repo
-	Source slsa1.ArtifactReference `json:"source"`
+	Source slsa1.ResourceDescriptor `json:"source"`
 
 	// The Docker builder image
-	BuilderImage slsa1.ArtifactReference `json:"builderImage"`
+	BuilderImage slsa1.ResourceDescriptor `json:"builderImage"`
 
 	// Path to a configuration file relative to the root of the repository.
 	ConfigPath string `json:"configPath"`

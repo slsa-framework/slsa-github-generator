@@ -1,5 +1,5 @@
 import * as core from "@actions/core";
-import type { BuildDefinition, ArtifactReference } from "./predicate";
+import type { BuildDefinition, ResourceDescriptor } from "./predicate";
 import { generatePredicate } from "./predicate";
 import * as gh from "./github";
 import * as utils from "./utils";
@@ -52,7 +52,7 @@ async function run(): Promise<void> {
     const bd: BuildDefinition = JSON.parse(buffer.toString());
 
     // Get builder binary artifact reference.
-    const builderBinaryRef: ArtifactReference = {
+    const builderBinaryRef: ResourceDescriptor = {
       uri: binaryURI,
       digest: {
         sha256: binaryDigest,
