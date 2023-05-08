@@ -1,0 +1,77 @@
+name: "npm-publish"
+description: "Publish package and provenance to npm"
+inputs:
+  access:
+    description: "The package access level. Defaults to 'restricted' for scoped packages, 'public' for unscoped packages"
+    required: false
+    default: ""
+  dist-tag:
+    description: "The package dist-tag to attach. See `npm help dist-tag` for more information."
+    required: false
+    default: "latest"
+  node-auth-token:
+    description: "The npm registry auth token used to publish the package."
+    required: true
+  package-name:
+    description: "The artifact name for the package tarball."
+    required: true
+  package-sha256:
+    description: "The sha256 of the package tarball."
+    required: true
+  provenance-name:
+    description: "The artifact name for the package provenance."
+    required: true
+  provenance-sha256:
+    description: "The sha256 of the package provenance."
+    required: false
+runs:
+  using: "composite"
+  steps:
+    # TODO(#1897): Use upstream version of npm
+    - name: Setup npm
+      id: setup-npm
+      uses: slsa-framework/slsa-github-generator/actions/nodejs/setup-npm@main
+
+    - name: Compute a random value
+      id: rng
+      uses: slsa-framework/slsa-github-generator/.github/actions/rng@main
+
+    - name: Download tarball
+      uses: slsa-framework/slsa-github-generator/.github/actions/secure-download-folder@main
+      with:
+        name: ${{ inputs.package-name }}
+        path: "${{ steps.rng.outputs.random }}/package"
+        sha256: ${{ inputs.package-sha256 }}
+
+    - name: Download provenance
+      uses: slsa-framework/slsa-github-generator/actions/nodejs/secure-attestations-download@main
+      with:
+        name: ${{ inputs.provenance-name }}
+        path: "${{ steps.rng.outputs.random }}/provenance"
+        sha256: ${{ inputs.provenance-sha256 }}
+
+    # TODO(#1897): Use upstream version of npm
+    - name: Publish the package
+      id: publish
+      env:
+        NPM_PATH: ${{ steps.setup-npm.outputs.npm-path }}
+        ACCESS: ${{ inputs.access }}
+        PACKAGE_PATH: "${{ steps.rng.outputs.random }}/package/${{ inputs.package-name }}"
+        ATTESTATION_PATH: "${{ steps.rng.outputs.random }}/provenance/${{ inputs.provenance-name }}"
+        DIST_TAG: ${{ inputs.dist-tag }}
+        NODE_AUTH_TOKEN: ${{ inputs.node-auth-token }}
+      run: |
+        set -euo pipefail
+
+        publish_flags="--provenance ${ATTESTATION_PATH}"
+        if [[ "${ACCESS}" != "" ]]; then
+          publish_flags="${publish_flags} --access=${ACCESS}"
+        fi
+        if [[ "${DIST_TAG}" != "" ]]; then
+          publish_flags="${publish_flags} --tag=${DIST_TAG}"
+        fi
+
+        # Run npm publish using npm fork. We are temporarily using a fork so
+        # that we can specify the provenance bundle.
+        # NOTE: We don't quote $publish_flags because we are using word splitting to add the flags.
+        "${NPM_PATH}/npm" publish --loglevel verbose "${PACKAGE_PATH}" ${publish_flags}
