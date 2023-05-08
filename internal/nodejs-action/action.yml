@@ -26,6 +26,7 @@ inputs:
   slsa-workflow-secret13:
   slsa-workflow-secret14:
   slsa-workflow-secret15:
+
 outputs:
   attestation-name:
     description: "The name of the attestation in the generated layout file."
