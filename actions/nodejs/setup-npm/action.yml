@@ -4,6 +4,10 @@
 
 name: "setup-npm"
 description: "Install provenance-ready fork of npm"
+outputs:
+  npm-path:
+    description: "The directory where the npm binary is installed."
+    value: ${{ steps.clone-fork.outputs.npm-path }}
 runs:
   using: "composite"
   steps:
