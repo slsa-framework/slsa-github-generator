@@ -44,10 +44,10 @@ runs:
       uses: slsa-framework/slsa-github-generator/.github/actions/rng@main
 
     - name: Download tarball
-      uses: slsa-framework/slsa-github-generator/.github/actions/secure-download-folder@main
+      uses: slsa-framework/slsa-github-generator/.github/actions/secure-download-artifact@main
       with:
         name: ${{ inputs.package-name }}
-        path: "${{ steps.rng.outputs.random }}/package"
+        path: "${{ steps.rng.outputs.random }}/package/${{ inputs.package-name }}"
         sha256: ${{ inputs.package-sha256 }}
 
     - name: Download provenance
