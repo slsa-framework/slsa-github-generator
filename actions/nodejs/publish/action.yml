@@ -55,7 +55,7 @@ runs:
       uses: ianlewis/slsa-github-generator/.github/actions/secure-download-artifact@npm-publish-refactor
       with:
         name: ${{ inputs.package-download-name }}
-        path: "${{ steps.rng.outputs.random }}/package"
+        path: "${{ steps.rng.outputs.random }}/package/${{ inputs.package-name }}"
         sha256: ${{ inputs.package-download-sha256 }}
 
     - name: Download provenance

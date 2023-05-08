@@ -60,13 +60,13 @@ runs:
       uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
       with:
         name: "${{ inputs.name }}"
-        path: "${{ steps.validate-path.outputs.path }}"
+        path: "${{ steps.validate-path.outputs.trusted_path }}"
 
     - name: Compute the hash
       id: compute
       uses: slsa-framework/slsa-github-generator/.github/actions/compute-sha256@main
       with:
-        path: "${{ steps.validate-path.outputs.path }}"
+        path: "${{ steps.validate-path.outputs.trusted_path }}"
 
     # Note: this assumes to top-level re-usable workflow
     # has checkout'ed the builder repository using
@@ -75,7 +75,7 @@ runs:
       env:
         UNTRUSTED_EXPECTED_HASH: "${{ inputs.sha256 }}"
         UNTRUSTED_COMPUTED_HASH: "${{ steps.compute.outputs.sha256 }}"
-        TRUSTED_PATH: "${{ steps.validate-path.outputs.path }}"
+        TRUSTED_PATH: "${{ steps.validate-path.outputs.trusted_path }}"
         SET_EXECUTABLE: "${{ inputs.set-executable }}"
       shell: bash
       run: |
