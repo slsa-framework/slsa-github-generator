@@ -18,6 +18,7 @@ runs:
   using: "composite"
   steps:
     - name: Validate the artifact path
+      id: validate-path
       shell: bash
       env:
         UNTRUSTED_PATH: "${{ inputs.path }}"
@@ -51,16 +52,21 @@ runs:
           exit 5
         fi
 
+        # path has been validated. Explicitly trust it and set as an output.
+        trusted_path="${UNTRUSTED_PATH}"
+        echo "path=${trusted_path}" >> "${GITHUB_OUTPUT}"
+
     - name: Download the artifact
       uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
       with:
         name: "${{ inputs.name }}"
+        path: "${{ steps.validate-path.outputs.path }}"
 
     - name: Compute the hash
       id: compute
       uses: slsa-framework/slsa-github-generator/.github/actions/compute-sha256@main
       with:
-        path: "${{ inputs.path }}"
+        path: "${{ steps.validate-path.outputs.path }}"
 
     # Note: this assumes to top-level re-usable workflow
     # has checkout'ed the builder repository using
@@ -69,14 +75,14 @@ runs:
       env:
         UNTRUSTED_EXPECTED_HASH: "${{ inputs.sha256 }}"
         UNTRUSTED_COMPUTED_HASH: "${{ steps.compute.outputs.sha256 }}"
-        UNTRUSTED_PATH: "${{ inputs.path }}"
+        TRUSTED_PATH: "${{ steps.validate-path.outputs.path }}"
         SET_EXECUTABLE: "${{ inputs.set-executable }}"
       shell: bash
       run: |
         set -euo pipefail
 
-        if ! [[ -f "$UNTRUSTED_PATH" ]]; then
-          echo "File $UNTRUSTED_PATH not present"
+        if ! [[ -f "$TRUSTED_PATH" ]]; then
+          echo "File $TRUSTED_PATH not present"
           exit 5
         fi
 
@@ -88,6 +94,6 @@ runs:
         fi
         echo "hashes match"
         if [[ "$SET_EXECUTABLE" == "true" ]]; then
-          echo "Setting $UNTRUSTED_PATH as executable"
-          chmod u+x "$UNTRUSTED_PATH"
+          echo "Setting $TRUSTED_PATH as executable"
+          chmod u+x "$TRUSTED_PATH"
         fi
