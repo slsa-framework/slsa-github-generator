@@ -99,6 +99,10 @@ will assume you have an existing Github Actions workflow to build your project.
 This assumes that the `package.json` is in the root directory of your
 repository.
 
+The following reusable workflow call will build the package into a tarball and
+generate provenance attestations which will be uploaded as artifacts to the
+workflow run.
+
 ```yaml
 jobs:
   build:
@@ -114,12 +118,45 @@ jobs:
       node-auth-token: ${{ secrets.NPM_TOKEN }}
 ```
 
-The `run-scripts` are a set of comma separated build scripts to run before
-publishing the package. This scripts run in order.
+The `run-scripts` are a set of comma separated build scripts that are run to
+perform the build. This should include a step to install development
+dependencies, compile any code, run tests, etc. The scripts are run in the order
+they are listed.
 
-After the build scripts are run, the Node.js builder runs `npm publish` to
-publish your package to the npm registry. We provide a `node-auth-token` so
-that we can authenticate with `npmjs.com`.
+Once the build scripts are run, the Node.js builder creates a package tarball
+and provenance attestation which are uploaded as artifacts to the workflow run.
+
+After creating the package you can publish the package using the provided
+`nodejs/publish` action.
+
+```yaml
+  publish:
+    needs: [build]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up Node registry authentication
+        uses: actions/setup-node@64ed1c7eab4cce3362f8c340dee64e5eaeef8f7c # v3.6.0
+        with:
+          node-version: 18
+          registry-url: "https://registry.npmjs.org"
+
+    - name: publish
+       id: publish
+       uses: slsa-framework/slsa-github-generator/actions/nodejs/publish@7f4fdb871876c23e455853d694197440c5a91506 # v1.5.0
+       with:
+         access: public
+         node-auth-token: ${{ secrets.NPM_TOKEN }}
+         package-name: ${{ needs.build.outputs.package-name }}
+         package-download-name: ${{ needs.build.outputs.package-download-name }}
+         package-download-sha256: ${{ needs.build.outputs.package-download-sha256 }}
+         provenance-name: ${{ needs.build.outputs.provenance-name }}
+         provenance-download-name: ${{ needs.build.outputs.provenance-download-name }}
+         provenance-download-sha256: ${{ needs.build.outputs.provenance-download-sha256 }}
+```
+
+This action downloads the package tarball and provenance before running `npm
+publish` to publish your package to the npm registry. We provide a
+`node-auth-token` so that we can authenticate with `npmjs.com`.
 
 ### Referencing the Node.js builder
 
