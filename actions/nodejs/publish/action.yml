@@ -33,6 +33,13 @@ inputs:
 runs:
   using: "composite"
   steps:
+    - name: debug
+      id: publish
+      shell: bash
+      env:
+        INPUTS: ${{ toJSON(inputs) }}
+      run: echo "${INPUTS}"
+
     # TODO(#1897): Use upstream version of npm
     - name: Setup npm
       id: setup-npm
