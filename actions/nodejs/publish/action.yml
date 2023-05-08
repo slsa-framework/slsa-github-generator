@@ -15,19 +15,19 @@ inputs:
   package-name:
     description: "The file name for the package tarball in the artifact."
     required: true
-  package-artifact-name:
+  package-download-name:
     description: "The artifact name for the package tarball."
     required: true
-  package-artifact-sha256:
+  package-download-sha256:
     description: "The sha256 of the package tarball artifact."
     required: true
   provenance-name:
     description: "The file name for the package provenance in the artifact."
     required: true
-  provenance-artifact-name:
+  provenance-download-name:
     description: "The artifact name for the package provenance."
     required: true
-  provenance-artifact-sha256:
+  provenance-download-sha256:
     description: "The sha256 of the package provenance artifact."
     required: false
 runs:
@@ -46,16 +46,16 @@ runs:
     - name: Download tarball
       uses: slsa-framework/slsa-github-generator/.github/actions/secure-download-artifact@main
       with:
-        name: ${{ inputs.package-name }}
+        name: ${{ inputs.package-download-name }}
         path: "${{ steps.rng.outputs.random }}/package/${{ inputs.package-name }}"
-        sha256: ${{ inputs.package-sha256 }}
+        sha256: ${{ inputs.package-download-sha256 }}
 
     - name: Download provenance
       uses: slsa-framework/slsa-github-generator/actions/nodejs/secure-attestations-download@main
       with:
-        name: ${{ inputs.provenance-name }}
+        name: ${{ inputs.provenance-download-name }}
         path: "${{ steps.rng.outputs.random }}/provenance"
-        sha256: ${{ inputs.provenance-sha256 }}
+        sha256: ${{ inputs.provenance-download-sha256 }}
 
     # TODO(#1897): Use upstream version of npm
     - name: Publish the package
