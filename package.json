@@ -4,7 +4,7 @@
     "format": "markdownlint --dot --fix .",
     "markdown-toc": "markdown-toc --bullets='-' -i"
   },
-  "dependencies": {
+  "devDependencies": {
     "markdown-toc": "^1.2.0",
     "markdownlint-cli": "0.33.0",
     "sigstore": "^1.2.0"

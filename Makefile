@@ -145,3 +145,10 @@ yamllint: ## Runs the yamllint linter.
 			extraargs="-f github"; \
 		fi; \
 		yamllint --strict -c .yamllint.yaml . $$extraargs
+
+## Maintenance
+#####################################################################
+
+.PHONY: clean
+clean: ## Delete temporary files.
+	rm -rf node_modules
