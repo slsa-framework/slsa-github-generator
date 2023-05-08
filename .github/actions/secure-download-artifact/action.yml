@@ -28,11 +28,16 @@ runs:
         # Ensure no directory traversal.
         # NOTE: the actions/download-artifact Action only creates files
         # in the workspace directory, but this may change in the future.
+        # TODO(#1893): Consolidate directory traversal checks
         resolved_dir=$(readlink -m "$UNTRUSTED_PATH")
-        wd=$(readlink -m "$PWD")
-        if [[ "$resolved_dir" != "$wd"/* ]] && [[ "$resolved_dir" != "$wd" ]]; then
-          echo "Path is not in the current directory: $UNTRUSTED_PATH"
-          exit 1
+        wd=$(readlink -m "${GITHUB_WORKSPACE}")
+        if [[ "${resolved_dir}" != "${wd}"/* ]] && [[ "${resolved_dir}" != "${wd}" ]]; then
+          if [[ "${resolved_dir}" != "${RUNNER_TEMP}"/* ]] && [[ "${resolved_dir}" != "${RUNNER_TEMP}" ]]; then
+            if [[ "${resolved_dir}" != /tmp/* ]] && [[ "${resolved_dir}" != "/tmp" ]]; then
+              echo "Path is not in the workspace or temp directory: $UNTRUSTED_PATH"
+              exit 1
+            fi
+          fi
         fi
 
         # Check that the name of the path does not clash with the
