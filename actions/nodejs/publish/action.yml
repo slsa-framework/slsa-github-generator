@@ -13,16 +13,22 @@ inputs:
     description: "The npm registry auth token used to publish the package."
     required: true
   package-name:
+    description: "The file name for the package tarball in the artifact."
+    required: true
+  package-artifact-name:
     description: "The artifact name for the package tarball."
     required: true
-  package-sha256:
-    description: "The sha256 of the package tarball."
+  package-artifact-sha256:
+    description: "The sha256 of the package tarball artifact."
     required: true
   provenance-name:
+    description: "The file name for the package provenance in the artifact."
+    required: true
+  provenance-artifact-name:
     description: "The artifact name for the package provenance."
     required: true
-  provenance-sha256:
-    description: "The sha256 of the package provenance."
+  provenance-artifact-sha256:
+    description: "The sha256 of the package provenance artifact."
     required: false
 runs:
   using: "composite"
