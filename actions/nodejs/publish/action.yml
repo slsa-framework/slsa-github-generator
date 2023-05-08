@@ -72,16 +72,12 @@ runs:
       env:
         NPM_PATH: ${{ steps.setup-npm.outputs.npm-path }}
         ACCESS: ${{ inputs.access }}
-        PACKAGE_PATH: "${{ steps.rng.outputs.random }}-package/${{ inputs.package-name }}"
+        PACKAGE_PATH: "${{ steps.rng.outputs.random }}/${{ inputs.package-name }}"
         ATTESTATION_PATH: "${{ steps.rng.outputs.random }}-provenance/${{ inputs.provenance-download-name }}/${{ inputs.provenance-name }}"
         DIST_TAG: ${{ inputs.dist-tag }}
         NODE_AUTH_TOKEN: ${{ inputs.node-auth-token }}
-
-        DEBUG_PATH: "${{ steps.rng.outputs.random }}-provenance/${{ inputs.provenance-download-name }}"
       run: |
         set -euo pipefail
-
-        ls -lh "${DEBUG_PATH}"
 
         publish_flags="--provenance ${ATTESTATION_PATH}"
         if [[ "${ACCESS}" != "" ]]; then
@@ -91,7 +87,12 @@ runs:
           publish_flags="${publish_flags} --tag=${DIST_TAG}"
         fi
 
+        # NOTE: Use the absolute path to the tarball because npm tries to check
+        # a remote github.com repository if the "package spec" looks like it
+        # could be a "<owner>/<repo-name>" resulting in git errors.
+        package_abs_path=$(readlink -m "${PACKAGE_PATH}")
+
         # Run npm publish using npm fork. We are temporarily using a fork so
         # that we can specify the provenance bundle.
         # NOTE: We don't quote $publish_flags because we are using word splitting to add the flags.
-        "${NPM_PATH}/npm" publish --loglevel verbose "${PACKAGE_PATH}" ${publish_flags}
+        "${NPM_PATH}/npm" publish --loglevel verbose "${package_abs_path}" ${publish_flags}
