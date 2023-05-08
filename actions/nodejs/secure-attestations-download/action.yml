@@ -16,8 +16,7 @@ runs:
   using: "composite"
   steps:
     - name: Download the attestations
-      # uses: slsa-framework/slsa-github-generator/.github/actions/secure-download-folder@main
-      uses: ianlewis/slsa-github-generator/.github/actions/secure-download-folder@npm-publish-refactor
+      uses: slsa-framework/slsa-github-generator/.github/actions/secure-download-folder@main
       with:
         name: ${{ inputs.name }}
         path: ${{ inputs.path }}
