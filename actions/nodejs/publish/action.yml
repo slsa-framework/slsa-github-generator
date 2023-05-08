@@ -61,7 +61,7 @@ runs:
       uses: ianlewis/slsa-github-generator/actions/nodejs/secure-attestations-download@npm-publish-refactor
       with:
         name: ${{ inputs.provenance-download-name }}
-        path: "${{ steps.temp-dir.outputs.path }}/provenance"
+        path: "${{ steps.temp-dir.outputs.path }}"
         sha256: ${{ inputs.provenance-download-sha256 }}
 
     # TODO(#1897): Use upstream version of npm
