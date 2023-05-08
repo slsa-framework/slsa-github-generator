@@ -73,11 +73,11 @@ runs:
         NPM_PATH: ${{ steps.setup-npm.outputs.npm-path }}
         ACCESS: ${{ inputs.access }}
         PACKAGE_PATH: "${{ steps.rng.outputs.random }}-package/${{ inputs.package-name }}"
-        ATTESTATION_PATH: "${{ steps.rng.outputs.random }}-provenance/${{ inputs.provenance-name }}"
+        ATTESTATION_PATH: "${{ steps.rng.outputs.random }}-provenance/${{ inputs.provenance-download-name }}/${{ inputs.provenance-name }}"
         DIST_TAG: ${{ inputs.dist-tag }}
         NODE_AUTH_TOKEN: ${{ inputs.node-auth-token }}
 
-        DEBUG_PATH: "${{ steps.rng.outputs.random }}-provenance"
+        DEBUG_PATH: "${{ steps.rng.outputs.random }}-provenance/${{ inputs.provenance-download-name }}"
       run: |
         set -euo pipefail
 
