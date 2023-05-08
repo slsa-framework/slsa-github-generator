@@ -33,26 +33,17 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - name: debug
-      id: debug
-      shell: bash
-      env:
-        INPUTS: ${{ toJSON(inputs) }}
-      run: echo "${INPUTS}"
-
     # TODO(#1897): Use upstream version of npm
     - name: Setup npm
       id: setup-npm
-      # uses: slsa-framework/slsa-github-generator/actions/nodejs/setup-npm@main
-      uses: ianlewis/slsa-github-generator/actions/nodejs/setup-npm@npm-publish-refactor
+      uses: slsa-framework/slsa-github-generator/actions/nodejs/setup-npm@main
 
     - name: Compute a random value
       id: rng
       uses: slsa-framework/slsa-github-generator/.github/actions/rng@main
 
     - name: Download tarball
-      # uses: slsa-framework/slsa-github-generator/.github/actions/secure-download-artifact@main
-      uses: ianlewis/slsa-github-generator/.github/actions/secure-download-artifact@npm-publish-refactor
+      uses: slsa-framework/slsa-github-generator/.github/actions/secure-download-artifact@main
       with:
         name: ${{ inputs.package-download-name }}
         path: "${{ steps.rng.outputs.random }}-package/${{ inputs.package-name }}"
