@@ -54,6 +54,7 @@ runs:
     # TODO(#1897): Use upstream version of npm
     - name: Publish the package
       id: publish
+      shell: bash
       env:
         NPM_PATH: ${{ steps.setup-npm.outputs.npm-path }}
         ACCESS: ${{ inputs.access }}
