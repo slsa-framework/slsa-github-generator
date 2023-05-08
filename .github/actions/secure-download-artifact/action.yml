@@ -53,20 +53,22 @@ runs:
         fi
 
         # path has been validated. Explicitly trust it and set as an output.
-        trusted_path="${UNTRUSTED_PATH}"
-        echo "path=${trusted_path}" >> "${GITHUB_OUTPUT}"
+        file_path="${UNTRUSTED_PATH}"
+        folder_path="$(dirname ${UNTRUSTED_PATH})"
+        echo "file_path=${file_path}" >> "${GITHUB_OUTPUT}"
+        echo "folder_path=${folder_path}" >> "${GITHUB_OUTPUT}"
 
     - name: Download the artifact
       uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
       with:
         name: "${{ inputs.name }}"
-        path: "${{ steps.validate-path.outputs.trusted_path }}"
+        path: "${{ steps.validate-path.outputs.folder_path }}"
 
     - name: Compute the hash
       id: compute
       uses: slsa-framework/slsa-github-generator/.github/actions/compute-sha256@main
       with:
-        path: "${{ steps.validate-path.outputs.trusted_path }}"
+        path: "${{ steps.validate-path.outputs.file_path }}"
 
     # Note: this assumes to top-level re-usable workflow
     # has checkout'ed the builder repository using
@@ -75,7 +77,7 @@ runs:
       env:
         UNTRUSTED_EXPECTED_HASH: "${{ inputs.sha256 }}"
         UNTRUSTED_COMPUTED_HASH: "${{ steps.compute.outputs.sha256 }}"
-        TRUSTED_PATH: "${{ steps.validate-path.outputs.trusted_path }}"
+        TRUSTED_PATH: "${{ steps.validate-path.outputs.file_path }}"
         SET_EXECUTABLE: "${{ inputs.set-executable }}"
       shell: bash
       run: |
