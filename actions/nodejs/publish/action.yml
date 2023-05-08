@@ -34,7 +34,7 @@ runs:
   using: "composite"
   steps:
     - name: debug
-      id: publish
+      id: debug
       shell: bash
       env:
         INPUTS: ${{ toJSON(inputs) }}
