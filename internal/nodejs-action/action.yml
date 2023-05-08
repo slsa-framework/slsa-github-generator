@@ -4,24 +4,28 @@ description: SLSA3 Builder internal wrapper
 inputs:
   slsa-workflow-inputs:
     description: "All the inputs formatted as a JSON map"
-    type: string
     required: true
 
   slsa-layout-file:
     description: "Location to store the layout content"
-    type: string
     required: true
 
+  # Unused secret inputs.
   slsa-workflow-secret1:
-    description: "secret1 is unused"
-    type: string
-    required: false
-
   slsa-workflow-secret2:
-    description: "secret2 is unused"
-    type: string
-    required: false
-
+  slsa-workflow-secret3:
+  slsa-workflow-secret4:
+  slsa-workflow-secret5:
+  slsa-workflow-secret6:
+  slsa-workflow-secret7:
+  slsa-workflow-secret8:
+  slsa-workflow-secret9:
+  slsa-workflow-secret10:
+  slsa-workflow-secret11:
+  slsa-workflow-secret12:
+  slsa-workflow-secret13:
+  slsa-workflow-secret14:
+  slsa-workflow-secret15:
 outputs:
   attestation-name:
     description: "The name of the attestation in the generated layout file."
