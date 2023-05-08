@@ -68,10 +68,14 @@ runs:
         # Ensure no directory traversal.
         # Remove possible trailing '/'.
         resolved_dir=$(readlink -m "${UNTRUSTED_PATH}")
-        wd=$(readlink -m "$PWD")
-        if [[ "$resolved_dir" != "$wd"/* ]] && [[ "$resolved_dir" != "$wd" ]]; then
-          echo "Path is not in the current directory: ${UNTRUSTED_PATH}"
-          exit 1
+        wd=$(readlink -m "${GITHUB_WORKSPACE}")
+        if [[ "${wd}" != "" ]] && [[ "${resolved_dir}" != "${wd}"/* ]] && [[ "${resolved_dir}" != "${wd}" ]]; then
+          if [[ "${RUNNER_TEMP}" != "" ]] && [[ "${resolved_dir}" != "${RUNNER_TEMP}"/* ]] && [[ "${resolved_dir}" != "${RUNNER_TEMP}" ]]; then
+            if [[ "${resolved_dir}" != /tmp/* ]] && [[ "${resolved_dir}" != "/tmp" ]]; then
+              echo "Path is not in the current directory: ${UNTRUSTED_PATH}"
+              exit 1
+            fi
+          fi
         fi
 
         # Create the destination directory if it does not exist.
