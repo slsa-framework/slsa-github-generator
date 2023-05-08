@@ -45,7 +45,7 @@ runs:
       run: |
         set -euo pipefail
 
-        temp_dir=$(mkdir -d)
+        temp_dir=$(mktemp -d)
         echo "path=${temp_dir}" >>"${GITHUB_OUTPUT}"
 
     - name: Download tarball
