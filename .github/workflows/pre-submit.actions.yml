@@ -269,7 +269,6 @@ jobs:
           sha256: ${{ steps.upload-noroot.outputs.sha256 }}
 
       - name: Download to /tmp
-        id: download-tmp
         uses: ./.github/actions/secure-download-folder
         with:
           name: "${{ env.ARTIFACT_NAME }}"
@@ -277,7 +276,6 @@ jobs:
           sha256: ${{ steps.upload.outputs.sha256 }}
 
       - name: Download to RUNNER_TEMP
-        id: download-tmp
         uses: ./.github/actions/secure-download-folder
         with:
           name: "${{ env.ARTIFACT_NAME }}"
