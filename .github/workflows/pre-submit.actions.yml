@@ -275,11 +275,16 @@ jobs:
           path: "/tmp"
           sha256: ${{ steps.upload.outputs.sha256 }}
 
+      - name: Get RUNNER_TEMP
+        id: runner-temp
+        run: |
+          echo "runner_temp=${RUNNER_TEMP}" >>"${GITHUB_OUTPUT}"
+
       - name: Download to RUNNER_TEMP
         uses: ./.github/actions/secure-download-folder
         with:
           name: "${{ env.ARTIFACT_NAME }}"
-          path: "${{ env.RUNNER_TEMP }}"
+          path: "${{ steps.runner-temp.outputs.runner_temp }}"
           sha256: ${{ steps.upload.outputs.sha256 }}
 
       - name: Download incorrect hash
