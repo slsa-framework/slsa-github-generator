@@ -1,0 +1,23 @@
+name: "Secure attestations download for nodejs builder"
+description: "Download a set of attestations and verify their SHA256"
+inputs:
+  name:
+    description: "Artifact name. (Note: this is a name given to an upload, not the path or filename)."
+    required: true
+  path:
+    description: "The path to download the attestations into. (Must be under the GITHUB_WORKSPACE)"
+    required: false
+    default: "."
+  sha256:
+    description: "SHA256 of the file for verification."
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Download the attestations
+      uses: slsa-framework/slsa-github-generator/.github/actions/secure-download-folder@main
+      with:
+        name: ${{ inputs.name }}
+        path: ${{ inputs.path }}
+        sha256: ${{ inputs.sha256 }}

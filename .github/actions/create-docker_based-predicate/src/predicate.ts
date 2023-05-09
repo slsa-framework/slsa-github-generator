@@ -10,7 +10,7 @@ export type ApiWorkflowRun =
 export interface Builder {
   id: string;
   version?: string;
-  builderDependencies?: ArtifactReference[];
+  builderDependencies?: ResourceDescriptor[];
 }
 
 export interface DigestSet {
@@ -23,7 +23,7 @@ export interface Metadata {
   finishedOn?: Date;
 }
 
-export interface ArtifactReference {
+export interface ResourceDescriptor {
   uri: string;
   digest: DigestSet;
   localName?: string;
@@ -44,7 +44,7 @@ export interface BuildDefinition {
   internalParameters?: any;
 
   // resolvedDependencies are dependencies needed at build time.
-  resolvedDependencies?: ArtifactReference[];
+  resolvedDependencies?: ResourceDescriptor[];
 }
 
 export interface RunDetails {
@@ -52,7 +52,7 @@ export interface RunDetails {
 
   metadata: Metadata;
 
-  byproducts?: ArtifactReference[];
+  byproducts?: ResourceDescriptor[];
 }
 
 export interface SLSAv1Predicate {
@@ -65,7 +65,7 @@ export interface SLSAv1Predicate {
 
 export function generatePredicate(
   bd: BuildDefinition,
-  binaryRef: ArtifactReference,
+  binaryRef: ResourceDescriptor,
   jobWorkflowRef: string,
   currentRun: ApiWorkflowRun
 ): SLSAv1Predicate {

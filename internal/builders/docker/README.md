@@ -230,13 +230,13 @@ The `buildDefinition` contains the following fields:
 | Name                                          | Value                                                 | Description                                                                                                                                                                      |
 | --------------------------------------------- | ----------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `buildType`                                   | `"https://slsa.dev/container-based-build/v0.1?draft"` | Identifies the container-based build type.                                                                                                                                       |
-| `externalParameters.source`                   | `slsa.ArtifactReference`                              | An artifact reference specifying the location of the source repository.                                                                                                          |
-| `externalParameters.builderImage`             | `slsa.ArtifactReference`                              | An artifact reference specifying the container base image used to build the artifacts.                                                                                           |
+| `externalParameters.source`                   | `slsa.ResourceDescriptor`                              | An artifact reference specifying the location of the source repository.                                                                                                          |
+| `externalParameters.builderImage`             | `slsa.ResourceDescriptor`                              | An artifact reference specifying the container base image used to build the artifacts.                                                                                           |
 | `externalParameters.configPath`               | `".github/configs-docker/config.toml"`                | The location of the configuration file, relative to the root of the source repository.                                                                                           |
 | `externalParameters.buildConfig`              | JSON object                                           | An object describing the build configuration.                                                                                                                                    |
 | `externalParameters.buildConfig.ArtifactPath` | `"dist/**"`                                           | The path describing the output artifacts to attest to and upload.                                                                                                                |
 | `externalParameters.buildConfig.Command`      | `"["npm", "run", "all"]"`                             | The build command invoked in the container image to produce the output artifacts.                                                                                                |
-| `externalParameters.resolvedDependencies`     | `slsa.ArtifactReference`                              | An artifact reference specifying the binary used by the reusable workflow to build the artifact and generate the build definition. See the [CLI tool](#command-line-tool) below. |
+| `externalParameters.resolvedDependencies`     | `slsa.ResourceDescriptor`                              | An artifact reference specifying the binary used by the reusable workflow to build the artifact and generate the build definition. See the [CLI tool](#command-line-tool) below. |
 
 The [CLI tool](#command-line-tool) described in `externalParameters.resolvedDependencies` contains the `uri` of the source that was used to build the artifact (from this GitHub repository). The `digest` referes to the cryptographic digest of the built binary. Using this information, a verifier may download the source artifact from the GitHub releases inferred by the URI and verify its digest.
 
@@ -256,7 +256,7 @@ as an [in-toto](https://in-toto.io/) statement with a SLSA predicate.
       }
     }
   ],
-  "predicateType": "https://slsa.dev/provenance/v1",
+  "predicateType": "https://slsa.dev/provenance/v1.0",
   "predicate": {
     "buildDefinition": {
       "buildType": "https://slsa.dev/container-based-build/v0.1?draft",

@@ -99,13 +99,17 @@ will assume you have an existing Github Actions workflow to build your project.
 This assumes that the `package.json` is in the root directory of your
 repository.
 
+The following reusable workflow call will build the package into a tarball and
+generate provenance attestations which will be uploaded as artifacts to the
+workflow run.
+
 ```yaml
 jobs:
   build:
     permissions:
       id-token: write # for creating OIDC tokens for signing.
-      contents: read # For repo checkout of private repos.
-      actions: read # For getting workflow run on private repos.
+      packages: write # for uploading attestations.
+      contents: write # for uploading attestations.
     if: startsWith(github.ref, 'refs/tags/')
     uses: slsa-framework/slsa-github-generator/.github/workflows/builder_nodejs_slsa3.yml@v1.5.0
     with:
@@ -114,12 +118,45 @@ jobs:
       node-auth-token: ${{ secrets.NPM_TOKEN }}
 ```
 
-The `run-scripts` are a set of comma separated build scripts to run before
-publishing the package. This scripts run in order.
+The `run-scripts` are a set of comma separated build scripts that are run to
+perform the build. This should include a step to install development
+dependencies, compile any code, run tests, etc. The scripts are run in the order
+they are listed.
 
-After the build scripts are run, the Node.js builder runs `npm publish` to
-publish your package to the npm registry. We provide a `node-auth-token` so
-that we can authenticate with `npmjs.com`.
+Once the build scripts are run, the Node.js builder creates a package tarball
+and provenance attestation which are uploaded as artifacts to the workflow run.
+
+After creating the package you can publish the package using the provided
+`nodejs/publish` action.
+
+```yaml
+  publish:
+    needs: [build]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up Node registry authentication
+        uses: actions/setup-node@64ed1c7eab4cce3362f8c340dee64e5eaeef8f7c # v3.6.0
+        with:
+          node-version: 18
+          registry-url: "https://registry.npmjs.org"
+
+    - name: publish
+       id: publish
+       uses: slsa-framework/slsa-github-generator/actions/nodejs/publish@7f4fdb871876c23e455853d694197440c5a91506 # v1.5.0
+       with:
+         access: public
+         node-auth-token: ${{ secrets.NPM_TOKEN }}
+         package-name: ${{ needs.build.outputs.package-name }}
+         package-download-name: ${{ needs.build.outputs.package-download-name }}
+         package-download-sha256: ${{ needs.build.outputs.package-download-sha256 }}
+         provenance-name: ${{ needs.build.outputs.provenance-name }}
+         provenance-download-name: ${{ needs.build.outputs.provenance-download-name }}
+         provenance-download-sha256: ${{ needs.build.outputs.provenance-download-sha256 }}
+```
+
+This action downloads the package tarball and provenance before running `npm
+publish` to publish your package to the npm registry. We provide a
+`node-auth-token` so that we can authenticate with `npmjs.com`.
 
 ### Referencing the Node.js builder
 
@@ -187,6 +224,8 @@ Inputs:
 | rekor-log-public  | No       | false                                                            | Set to true to opt-in to posting to the public transparency log. Will generate an error if false for private repositories. This input has no effect for public repositories. See [Private Repositories](#private-repositories).<br>Default: `false` |
 | run-scripts       | No       |                                                                  | A comma separated ordered list of npm scripts to run before running `npm publish`. See [scripts](https://docs.npmjs.com/cli/v9/using-npm/scripts) for more information. \                                                                           |
 | dist-tag          | No       | latest                                                           | The package dist-tag to attach. See `npm help dist-tag` for more information on tags.                                                                                                                                                               |
+| `upload-assets`   | no       | true                                                             | If true the package tarball and provenance is uploaded to a GitHub release for new tags.                                                                                                                                                            |
+| `upload-tag-name` | no       |                                                                  | If specified and `upload-assets` is set to true, the package tarball and provenance will be uploaded to a Github release identified by the tag-name regardless of the triggering event.                                                             |
 
 Secrets:
 
@@ -198,10 +237,13 @@ Secrets:
 
 The Node.js builder produces the following outputs:
 
-| Name            | Description                                                          |
-| --------------- | -------------------------------------------------------------------- |
-| artifact-name   | The name of the package artifact uploaded to the workflow run.       |
-| provenance-name | The name of the provenance attestation uploaded to the workflow run. |
+| Name                    | Description                                                                                                    |
+| ----------------------- | -------------------------------------------------------------------------------------------------------------- |
+| artifact-name           | The name of the package artifact uploaded to the workflow run.                                                 |
+| provenance-name         | The name of the provenance attestation uploaded to the workflow run.                                           |
+| release-asset-name      | The package asset name uploaded to the release (if upload-assets is true). e.g. sigstore-1.1.1.tgz             |
+| release-id              | The name of the release where the package tarball and provenance were uploaded (if upload-assets is true).     |
+| release-provenance-name | The provenance asset name uploaded to the release (if upload-assets is true). e.g. sigstore-1.1.1.intoto.jsonl |
 
 ### Provenance Format
 

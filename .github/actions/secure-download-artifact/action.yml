@@ -18,6 +18,7 @@ runs:
   using: "composite"
   steps:
     - name: Validate the artifact path
+      id: validate-path
       shell: bash
       env:
         UNTRUSTED_PATH: "${{ inputs.path }}"
@@ -27,11 +28,16 @@ runs:
         # Ensure no directory traversal.
         # NOTE: the actions/download-artifact Action only creates files
         # in the workspace directory, but this may change in the future.
+        # TODO(#1893): Consolidate directory traversal checks
         resolved_dir=$(readlink -m "$UNTRUSTED_PATH")
-        wd=$(readlink -m "$PWD")
-        if [[ "$resolved_dir" != "$wd"/* ]] && [[ "$resolved_dir" != "$wd" ]]; then
-          echo "Path is not in the current directory: $UNTRUSTED_PATH"
-          exit 1
+        wd=$(readlink -m "${GITHUB_WORKSPACE}")
+        if [[ "${wd}" != "" ]] && [[ "${resolved_dir}" != "${wd}"/* ]] && [[ "${resolved_dir}" != "${wd}" ]]; then
+          if [[ "${RUNNER_TEMP}" != "" ]] && [[ "${resolved_dir}" != "${RUNNER_TEMP}"/* ]] && [[ "${resolved_dir}" != "${RUNNER_TEMP}" ]]; then
+            if [[ "${resolved_dir}" != /tmp/* ]] && [[ "${resolved_dir}" != "/tmp" ]]; then
+              echo "Path is not in the workspace or temp directory: $UNTRUSTED_PATH"
+              exit 1
+            fi
+          fi
         fi
 
         # Check that the name of the path does not clash with the
@@ -51,16 +57,23 @@ runs:
           exit 5
         fi
 
+        # path has been validated. Explicitly trust it and set as an output.
+        file_path="${UNTRUSTED_PATH}"
+        folder_path="$(dirname ${UNTRUSTED_PATH})"
+        echo "file_path=${file_path}" >> "${GITHUB_OUTPUT}"
+        echo "folder_path=${folder_path}" >> "${GITHUB_OUTPUT}"
+
     - name: Download the artifact
       uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
       with:
         name: "${{ inputs.name }}"
+        path: "${{ steps.validate-path.outputs.folder_path }}"
 
     - name: Compute the hash
       id: compute
-      uses: slsa-framework/slsa-github-generator/.github/actions/compute-sha256@v1.6.0-rc.3
+      uses: slsa-framework/slsa-github-generator/.github/actions/compute-sha256@main
       with:
-        path: "${{ inputs.path }}"
+        path: "${{ steps.validate-path.outputs.file_path }}"
 
     # Note: this assumes to top-level re-usable workflow
     # has checkout'ed the builder repository using
@@ -69,14 +82,14 @@ runs:
       env:
         UNTRUSTED_EXPECTED_HASH: "${{ inputs.sha256 }}"
         UNTRUSTED_COMPUTED_HASH: "${{ steps.compute.outputs.sha256 }}"
-        UNTRUSTED_PATH: "${{ inputs.path }}"
+        TRUSTED_PATH: "${{ steps.validate-path.outputs.file_path }}"
         SET_EXECUTABLE: "${{ inputs.set-executable }}"
       shell: bash
       run: |
         set -euo pipefail
 
-        if ! [[ -f "$UNTRUSTED_PATH" ]]; then
-          echo "File $UNTRUSTED_PATH not present"
+        if ! [[ -f "$TRUSTED_PATH" ]]; then
+          echo "File $TRUSTED_PATH not present"
           exit 5
         fi
 
@@ -88,6 +101,6 @@ runs:
         fi
         echo "hashes match"
         if [[ "$SET_EXECUTABLE" == "true" ]]; then
-          echo "Setting $UNTRUSTED_PATH as executable"
-          chmod u+x "$UNTRUSTED_PATH"
+          echo "Setting $TRUSTED_PATH as executable"
+          chmod u+x "$TRUSTED_PATH"
         fi

@@ -79,4 +79,4 @@ cat <<EOF | jq | tee "$SLSA_OUTPUTS_ARTIFACTS_FILE"
 }
 EOF
 
-echo "attestation-name=${attestation_name}" >>"$GITHUB_OUTPUT"
+echo "attestation-name=${attestation_name}.sigstore" >>"$GITHUB_OUTPUT"

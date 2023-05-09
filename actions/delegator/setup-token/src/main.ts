@@ -32,6 +32,7 @@ async function run(): Promise<void> {
         INPUT_SLSA-WORKFLOW-INPUTS="{\"name1\":\"value1\",\"name2\":\"value2\",\"name3\":\"value3\",\"name4\":\"value4\"}" \
         INPUT_SLSA-WORKFLOW-INPUTS-MASK="name2, name4" \
         INPUT_SLSA-CHECKOUT-FETCH-DEPTH="2" \
+        INPUT_SLSA-CHECKOUT-REPOSITORY-SHA1="abcdef" \
         INPUT_SLSA-VERSION="v1-rc1" \
         nodejs ./dist/index.js
     */
@@ -43,7 +44,9 @@ async function run(): Promise<void> {
     const workflowRecipient = core.getInput("slsa-workflow-recipient");
     const rekorLogPublic = core.getInput("slsa-rekor-log-public");
     const runnerLabel = core.getInput("slsa-runner-label");
+    // Checkout options.
     const checkoutDepth = core.getInput("slsa-checkout-fetch-depth");
+    const checkoutSha1 = core.getInput("slsa-checkout-sha1");
     const buildArtifactsActionPath = core.getInput("slsa-build-action-path");
     const workflowsInputsMask = core.getInput("slsa-workflow-masked-inputs");
     // The workflow inputs are represented as a JSON object theselves.
@@ -80,7 +83,7 @@ async function run(): Promise<void> {
       source: {
         checkout: {
           fetch_depth: checkoutDepth,
-          // NOTE: we may add repository, ref, etc.
+          sha1: checkoutSha1,
         },
         // TODO(#2043): add digests.
       },
