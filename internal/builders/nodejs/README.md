@@ -111,7 +111,7 @@ jobs:
       packages: write # for uploading attestations.
       contents: write # for uploading attestations.
     if: startsWith(github.ref, 'refs/tags/')
-    uses: slsa-framework/slsa-github-generator/.github/workflows/builder_nodejs_slsa3.yml@v1.5.0
+    uses: slsa-framework/slsa-github-generator/.github/workflows/builder_nodejs_slsa3.yml@v1.6.0
     with:
       run-scripts: "ci, build"
     secrets:

@@ -20,4 +20,4 @@ jobs:
       issues: write
     # NOTE: must call @main is required rather than using a "same repo" call so
     #       that the job_workflow_ref is correctly set to the reusable workflow.
-    uses: slsa-framework/slsa-github-generator/.github/workflows/e2e.verify-token.reusable.yml@v1.6.0-rc.3
+    uses: slsa-framework/slsa-github-generator/.github/workflows/e2e.verify-token.reusable.yml@v1.6.0
