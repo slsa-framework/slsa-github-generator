@@ -111,7 +111,7 @@ jobs:
       packages: write # for uploading attestations.
       contents: write # for uploading attestations.
     if: startsWith(github.ref, 'refs/tags/')
-    uses: slsa-framework/slsa-github-generator/.github/workflows/builder_nodejs_slsa3.yml@v1.5.0
+    uses: slsa-framework/slsa-github-generator/.github/workflows/builder_nodejs_slsa3.yml@v1.6.0
     with:
       run-scripts: "ci, build"
     secrets:
@@ -142,7 +142,7 @@ After creating the package you can publish the package using the provided
 
     - name: publish
        id: publish
-       uses: slsa-framework/slsa-github-generator/actions/nodejs/publish@7f4fdb871876c23e455853d694197440c5a91506 # v1.5.0
+       uses: slsa-framework/slsa-github-generator/actions/nodejs/publish@<git sha> # v1.6.0
        with:
          access: public
          node-auth-token: ${{ secrets.NPM_TOKEN }}

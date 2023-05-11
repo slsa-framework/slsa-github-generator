@@ -408,7 +408,7 @@ find .github/workflows/ .github/actions/ actions/ -name '*.yaml' -o -name '*.yml
 Likewise, update documentation with the following command:
 
 ```shell
-find . -name "*.md" -exec sed -i "s~\(uses: .*/slsa-github-generator/.*@\)v[0-9]\+\.[0-9]\+\.[0-9]\+\(-rc\.[0-9]\+\)~\1$BUILDER_TAG~g" {} +
+find . -name "*.md" -exec sed -i "s~\(uses: .*/slsa-github-generator/.*@\)v[0-9]\+\.[0-9]\+\.[0-9]\+\(-rc\.[0-9]\+\)\?~\1$BUILDER_TAG~g" {} +
 ```
 
 Send a PR with this update and add `#label:release ${BUILDER_TAG}` in the PR description.
