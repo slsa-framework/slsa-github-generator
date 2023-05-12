@@ -229,7 +229,7 @@ The Node.js builder produces the following outputs:
 | package-name               | The file name of the package tarball in the upload artifact.           |
 | package-download-name      | The name of the package artifact uploaded to the workflow run.         |
 | package-download-sha256    | The sha256 of the package artifact uploaded to the workflow run.       |
-| provenance-name            | The file name of the attestation upload artifact.                      |
+| provenance-name            | The file name of the provenance attestation upload artifact.           |
 | provenance-download-name   | The name of the provenance attestation uploaded to the workflow run.   |
 | provenance-download-sha256 | The sha256 of the provenance attestation uploaded to the workflow run. |
 
