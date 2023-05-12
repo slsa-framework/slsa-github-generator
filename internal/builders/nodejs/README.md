@@ -107,15 +107,13 @@ workflow run.
 jobs:
   build:
     permissions:
-      id-token: write # for creating OIDC tokens for signing.
-      packages: write # for uploading attestations.
-      contents: write # for uploading attestations.
+      id-token: write # For signing
+      contents: read # For repo checkout.
+      actions: read # For getting workflow run info.
     if: startsWith(github.ref, 'refs/tags/')
     uses: slsa-framework/slsa-github-generator/.github/workflows/builder_nodejs_slsa3.yml@v1.6.0
     with:
       run-scripts: "ci, build"
-    secrets:
-      node-auth-token: ${{ secrets.NPM_TOKEN }}
 ```
 
 The `run-scripts` are a set of comma separated build scripts that are run to
