@@ -1,0 +1,94 @@
+name: "npm-publish"
+description: "Publish package and provenance to npm"
+inputs:
+  access:
+    description: "The package access level. Defaults to 'restricted' for scoped packages, 'public' for unscoped packages"
+    required: false
+    default: ""
+  dist-tag:
+    description: "The package dist-tag to attach. See `npm help dist-tag` for more information."
+    required: false
+    default: "latest"
+  node-auth-token:
+    description: "The npm registry auth token used to publish the package."
+    required: true
+  package-name:
+    description: "The file name for the package tarball in the artifact."
+    required: true
+  package-download-name:
+    description: "The artifact name for the package tarball."
+    required: true
+  package-download-sha256:
+    description: "The sha256 of the package tarball artifact."
+    required: true
+  provenance-name:
+    description: "The file name for the package provenance in the artifact."
+    required: true
+  provenance-download-name:
+    description: "The artifact name for the package provenance."
+    required: true
+  provenance-download-sha256:
+    description: "The sha256 of the package provenance artifact."
+    required: false
+runs:
+  using: "composite"
+  steps:
+    # TODO(#1897): Use upstream version of npm
+    - name: Setup npm
+      id: setup-npm
+      uses: slsa-framework/slsa-github-generator/actions/nodejs/setup-npm@main
+
+    - name: Create temp dir
+      id: temp-dir
+      shell: bash
+      run: |
+        set -euo pipefail
+
+        temp_dir=$(mktemp -d)
+        echo "path=${temp_dir}" >>"${GITHUB_OUTPUT}"
+
+    - name: Download tarball
+      uses: slsa-framework/slsa-github-generator/.github/actions/secure-download-artifact@main
+      with:
+        name: ${{ inputs.package-download-name }}
+        path: "${{ steps.temp-dir.outputs.path }}/${{ inputs.package-name }}"
+        sha256: ${{ inputs.package-download-sha256 }}
+
+    - name: Download provenance
+      uses: slsa-framework/slsa-github-generator/actions/nodejs/secure-attestations-download@main
+      with:
+        name: ${{ inputs.provenance-download-name }}
+        path: "${{ steps.temp-dir.outputs.path }}"
+        sha256: ${{ inputs.provenance-download-sha256 }}
+
+    # TODO(#1897): Use upstream version of npm
+    - name: Publish the package
+      id: publish
+      shell: bash
+      env:
+        NPM_PATH: ${{ steps.setup-npm.outputs.npm-path }}
+        ACCESS: ${{ inputs.access }}
+        PACKAGE_PATH: "${{ steps.temp-dir.outputs.path }}/${{ inputs.package-name }}"
+        ATTESTATION_PATH: "${{ steps.temp-dir.outputs.path }}/${{ inputs.provenance-download-name }}/${{ inputs.provenance-name }}"
+        DIST_TAG: ${{ inputs.dist-tag }}
+        NODE_AUTH_TOKEN: ${{ inputs.node-auth-token }}
+      run: |
+        set -euo pipefail
+
+        publish_flags="--provenance ${ATTESTATION_PATH}"
+        if [[ "${ACCESS}" != "" ]]; then
+          publish_flags="${publish_flags} --access=${ACCESS}"
+        fi
+        if [[ "${DIST_TAG}" != "" ]]; then
+          publish_flags="${publish_flags} --tag=${DIST_TAG}"
+        fi
+
+        # NOTE: Use the absolute path to the tarball because npm tries to check
+        # a remote github.com repository if the "package spec" looks like it
+        # could be a "<owner>/<repo-name>" resulting in git errors.
+        package_abs_path=$(readlink -m "${PACKAGE_PATH}")
+
+        # Run npm publish using npm fork. We are temporarily using a fork so
+        # that we can specify the provenance bundle.
+        # NOTE: We don't quote $publish_flags because we are using word splitting to add the flags.
+        "${NPM_PATH}/npm" publish --loglevel verbose "${package_abs_path}" ${publish_flags}

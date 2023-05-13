@@ -37357,7 +37357,11 @@ class CAClient {
             return certificate.signedCertificateEmbeddedSct.chain.certificates;
         }
         catch (err) {
-            throw new error_1.InternalError('error creating signing certificate', err);
+            throw new error_1.InternalError({
+                code: 'CA_CREATE_SIGNING_CERTIFICATE_ERROR',
+                message: 'error creating signing certificate',
+                cause: err,
+            });
         }
     }
 }
@@ -37815,7 +37819,7 @@ exports.identityProviders = identityProviders;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.PolicyError = exports.InternalError = exports.ValidationError = exports.VerificationError = void 0;
+exports.InternalError = exports.PolicyError = exports.ValidationError = exports.VerificationError = void 0;
 /*
 Copyright 2023 The Sigstore Authors.
 
@@ -37845,12 +37849,16 @@ exports.VerificationError = VerificationError;
 class ValidationError extends BaseError {
 }
 exports.ValidationError = ValidationError;
-class InternalError extends BaseError {
-}
-exports.InternalError = InternalError;
 class PolicyError extends BaseError {
 }
 exports.PolicyError = PolicyError;
+class InternalError extends BaseError {
+    constructor({ code, message, cause, }) {
+        super(message, cause);
+        this.code = code;
+    }
+}
+exports.InternalError = InternalError;
 
 
 /***/ }),
@@ -38749,7 +38757,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.DEFAULT_REKOR_URL = exports.DEFAULT_FULCIO_URL = exports.tuf = exports.utils = exports.verify = exports.attest = exports.sign = void 0;
+exports.DEFAULT_REKOR_URL = exports.DEFAULT_FULCIO_URL = exports.tuf = exports.utils = exports.VerificationError = exports.ValidationError = exports.PolicyError = exports.InternalError = exports.verify = exports.attest = exports.sign = void 0;
 /*
 Copyright 2023 The Sigstore Authors.
 
@@ -38818,6 +38826,11 @@ const tufUtils = {
     },
 };
 exports.tuf = tufUtils;
+var error_1 = __nccwpck_require__(6274);
+Object.defineProperty(exports, "InternalError", ({ enumerable: true, get: function () { return error_1.InternalError; } }));
+Object.defineProperty(exports, "PolicyError", ({ enumerable: true, get: function () { return error_1.PolicyError; } }));
+Object.defineProperty(exports, "ValidationError", ({ enumerable: true, get: function () { return error_1.ValidationError; } }));
+Object.defineProperty(exports, "VerificationError", ({ enumerable: true, get: function () { return error_1.VerificationError; } }));
 exports.utils = __importStar(__nccwpck_require__(2021));
 exports.DEFAULT_FULCIO_URL = config.DEFAULT_FULCIO_URL;
 exports.DEFAULT_REKOR_URL = config.DEFAULT_REKOR_URL;
@@ -38992,11 +39005,19 @@ class TLogClient {
                     entry = await this.rekor.getEntry(uuid);
                 }
                 catch (err) {
-                    throw new error_1.InternalError('error fetching tlog entry', err);
+                    throw new error_1.InternalError({
+                        code: 'TLOG_FETCH_ENTRY_ERROR',
+                        message: 'error fetching tlog entry',
+                        cause: err,
+                    });
                 }
             }
             else {
-                throw new error_1.InternalError('error creating tlog entry', err);
+                throw new error_1.InternalError({
+                    code: 'TLOG_CREATE_ENTRY_ERROR',
+                    message: 'error creating tlog entry',
+                    cause: err,
+                });
             }
         }
         return entry;
@@ -39458,7 +39479,11 @@ async function readTarget(tuf, targetPath) {
     return new Promise((resolve, reject) => {
         fs_1.default.readFile(path, 'utf-8', (err, data) => {
             if (err) {
-                reject(new error_1.InternalError(`error reading target: ${err}`));
+                reject(new error_1.InternalError({
+                    code: 'TUF_READ_TARGET_ERROR',
+                    message: `error reading target ${path}`,
+                    cause: err,
+                }));
             }
             else {
                 resolve(data);
@@ -39476,10 +39501,17 @@ async function getTargetPath(tuf, target) {
         targetInfo = await tuf.refresh().then(() => tuf.getTargetInfo(target));
     }
     catch (err) {
-        throw new error_1.InternalError(`error refreshing TUF metadata: ${err}`);
+        throw new error_1.InternalError({
+            code: 'TUF_REFRESH_METADATA_ERROR',
+            message: 'error refreshing TUF metadata',
+            cause: err,
+        });
     }
     if (!targetInfo) {
-        throw new error_1.InternalError(`target ${target} not found`);
+        throw new error_1.InternalError({
+            code: 'TUF_FIND_TARGET_ERROR',
+            message: `target ${target} not found`,
+        });
     }
     let path = await tuf.findCachedTarget(targetInfo);
     // An empty path here means the target has not been cached locally, or is
@@ -39489,7 +39521,11 @@ async function getTargetPath(tuf, target) {
             path = await tuf.downloadTarget(targetInfo);
         }
         catch (err) {
-            throw new error_1.InternalError(`error downloading target: ${err}`);
+            throw new error_1.InternalError({
+                code: 'TUF_DOWNLOAD_TARGET_ERROR',
+                message: `error downloading target ${path}`,
+                cause: err,
+            });
         }
     }
     return path;
@@ -51539,7 +51575,7 @@ module.exports = {"i8":"3.0.1"};
 /***/ ((module) => {
 
 "use strict";
-module.exports = {"i8":"1.3.2"};
+module.exports = {"i8":"1.4.0"};
 
 /***/ }),
 
