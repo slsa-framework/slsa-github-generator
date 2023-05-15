@@ -26,6 +26,7 @@
     "tscommon": "file:../../../.github/actions/tscommon/tscommon-0.0.0.tgz"
   },
   "devDependencies": {
+    "@types/make-fetch-happen": "^10.0.1",
     "@types/node": "^18.11.9",
     "@typescript-eslint/eslint-plugin": "^5.45.0",
     "@typescript-eslint/parser": "^5.45.0",
