@@ -1,0 +1,127 @@
+# Copyright 2023 SLSA Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+name: Gradle builder
+inputs:
+  # BYOB-provided inputs
+  slsa-workflow-inputs:
+    # Inputs in JSON format.
+    description: 'All the onputs'
+    type: string
+    required: true
+  slsa-layout-file:
+    description: 'Location to store the layout content'
+    type: string
+    required: true
+  slsa-workflow-secret1:
+    description: 'secret1'
+    type: string
+    required: true
+  slsa-workflow-secret2:
+    description: 'secret2'
+    type: string
+    required: true
+
+on:
+  workflow_call:
+runs:
+  using: 'composite'
+  steps:
+    - uses: actions/checkout@v3
+    - name: Set up JDK
+      uses: actions/setup-java@v3
+      with:
+        distribution: temurin
+        java-version: ${{ fromJson(inputs.slsa-workflow-inputs).jdk-version }}
+    - name: Setup Gradle
+      uses: gradle/gradle-build-action@v2
+      with:
+        arguments: build -x test
+    - name: Put release artifacts in one directory
+      shell: bash
+      env:
+        SLSA_OUTPUTS_ARTIFACTS_FILE: ${{ inputs.slsa-layout-file }}
+        ARTIFACT_LIST: ${{ fromJson(inputs.slsa-workflow-inputs).artifact-list }}
+      run: |
+        find . -name "sigstore-java-*-javadoc.jar"
+        find . -name "*.jar"
+        echo finding lib
+        find . -name "lib"
+        mkdir release-files-for-slsa
+        GRADLE_VERSION=$(./gradlew properties -q | grep "version:" | awk '{print $2}')
+        ARTIFACT_LIST=\"${ARTIFACT_LIST}\"
+        echo $ARTIFACT_LIST
+        for i in ${ARTIFACT_LIST//,/ }
+        do
+          i=$(echo $i | sed 's/\"//')
+          # check if $i is empty
+          if [ -z "$i" ]
+          then
+                continue
+          fi
+          echo i: $i
+          PATH_WITH_VERSION="${i//GRADLE_VERSION/"$GRADLE_VERSION"}"
+
+          echo "$PATH_WITH_VERSION"
+          bn=$(basename -- $PATH_WITH_VERSION)
+          echo $bn
+          mv $PATH_WITH_VERSION release-files-for-slsa/$bn
+        done
+        
+        ls release-files-for-slsa
+    - name: Upload built artifacts from gradlew build
+      uses: actions/upload-artifact@v3
+      with:
+        path: ./release-files-for-slsa/*
+    - name: Make outputs
+      id: make-outputs
+      shell: bash
+      env:
+        SLSA_OUTPUTS_ARTIFACTS_FILE: ${{ inputs.slsa-layout-file }}
+      run: |
+        # "version" and "attestations" fields:
+        echo -e -n "{\n  \"version\": 1,\n  \"attestations\": [" >> "$SLSA_OUTPUTS_ARTIFACTS_FILE"
+
+        NUM_JAR_FILES=$(find ./release-files-for-slsa -type f | wc -l)
+        COUNTER=1
+        
+        # Add one attestation per .jar file:
+        find ./release-files-for-slsa -type f -print0 | while read -d $'\0' fname
+        do
+          
+          bn=$(basename -- $fname)
+          hash=$(sha256sum $fname | awk '{print $1}')
+          
+          echo -n "
+              {
+                \"name\": \"${bn}-attestation.intoto\",
+                \"subjects\": [
+                  { \"name\": \"${bn}\",
+                  \"digest\": { \"sha256\": \"${hash}\"  }
+                  }
+                ]
+              }" >> "$SLSA_OUTPUTS_ARTIFACTS_FILE"
+          
+          # Add comma between attestations and not after the last
+          if [[ "$COUNTER" != "$NUM_JAR_FILES" ]]; then
+            echo -n "," >> "$SLSA_OUTPUTS_ARTIFACTS_FILE"
+          fi
+          
+          COUNTER=$[$COUNTER +1]
+        done
+        
+        # Close "attestations" and "version":
+        echo -e "\n  ]" >> "$SLSA_OUTPUTS_ARTIFACTS_FILE"
+        echo "}" >> "$SLSA_OUTPUTS_ARTIFACTS_FILE"
+        cat "$SLSA_OUTPUTS_ARTIFACTS_FILE"

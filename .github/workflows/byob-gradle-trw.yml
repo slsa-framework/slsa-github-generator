@@ -1,0 +1,78 @@
+# Copyright 2023 SLSA Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+
+
+on:
+  workflow_call:
+    inputs:
+      name1:
+        description: "name 1"
+        required: false
+        type: string
+      name2:
+        description: "name 2"
+        required: false
+        type: string
+      rekor-log-public:
+        description: "private"
+        required: false
+        type: boolean
+        default: false
+      provenance-overwrite:
+        description: "overwrite provenance if already present"
+        required: false
+        type: boolean
+        default: false
+      release-tag: #test
+        description: "tag collision with dispatch event"
+        required: false
+        type: string
+        default: "v100"
+      artifact-list:
+        description: 'comma-separated list of paths to artifacts to be released. Use GRADLE_VERSION for the gradle version'
+        type: string
+        required: true
+      jdk-version:
+        description: 'The JDK version'
+        required: false
+        default: 17
+        type: number
+jobs:
+  slsa-setup:
+    permissions:
+      id-token: write # For token creation.
+    outputs:
+      slsa-token: ${{ steps.generate.outputs.slsa-token }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Generate the token
+        id: generate
+        uses: slsa-framework/slsa-github-generator/actions/delegator/setup-token@main
+        with:
+          slsa-workflow-recipient: "delegator_generic_slsa3.yml"
+          slsa-rekor-log-public: ${{ inputs.rekor-log-public }}
+          slsa-runner-label: "ubuntu-latest"
+          slsa-build-action-path: "./internal/builders/gradle"
+          slsa-workflow-inputs: ${{ toJson(inputs) }}
+  slsa-run:
+    needs: [slsa-setup]
+    permissions:
+      id-token: write # For signing.
+      contents: write # For asset uploads.
+      actions: read   # For the entrypoint.
+      packages: write
+    uses: slsa-framework/slsa-github-generator/.github/workflows/delegator_generic_slsa3.yml@main
+    with:
+      slsa-token: ${{ needs.slsa-setup.outputs.slsa-token }}
