@@ -115,14 +115,62 @@ describe("getTriggerSha1", () => {
       run_attempt: "",
       run_id: "",
       run_number: "",
-      sha: "abcde",
+      sha: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
       workflow_ref: "",
       workflow_sha: "",
     };
 
     const token = createToken(obj, "12345");
     const sha1 = getTriggerSha1(token);
-    expect(sha1).toEqual("abcde");
+    expect(sha1).toEqual("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
+  });
+
+  it("invalid length", () => {
+    const obj: githubObj = {
+      actor_id: "",
+      event_name: "",
+      event_payload_sha256: "",
+      ref: "",
+      ref_type: "",
+      repository: "",
+      repository_id: "",
+      repository_owner_id: "",
+      run_attempt: "",
+      run_id: "",
+      run_number: "",
+      sha: "aaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      workflow_ref: "",
+      workflow_sha: "",
+    };
+
+    expect(() => {
+      const token = createToken(obj, "12345");
+      const sha1 = getTriggerSha1(token);
+    }).toThrow();
+  });
+
+  it("invalid character", () => {
+    const obj: githubObj = {
+      actor_id: "",
+      event_name: "",
+      event_payload_sha256: "",
+      ref: "",
+      ref_type: "",
+      repository: "",
+      repository_id: "",
+      repository_owner_id: "",
+      run_attempt: "",
+      run_id: "",
+      run_number: "",
+      sha: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaZ",
+      workflow_ref: "",
+      workflow_sha: "",
+    };
+
+    expect(() => {
+      const token = createToken(obj, "12345");
+      const sha1 = getTriggerSha1(token);
+    }).toThrow();
   });
 });
 
@@ -190,14 +238,14 @@ describe("getSourceSha1", () => {
       run_attempt: "",
       run_id: "",
       run_number: "",
-      sha: "abcde",
+      sha: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
       workflow_ref: "",
       workflow_sha: "",
     };
 
     const token = createToken(obj, "");
     const sha1 = getSourceSha1(token);
-    expect(sha1).toEqual("abcde");
+    expect(sha1).toEqual("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
   });
 
   it("overwriten by TRW", () => {
@@ -213,14 +261,62 @@ describe("getSourceSha1", () => {
       run_attempt: "",
       run_id: "",
       run_number: "",
-      sha: "abcde",
+      sha: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
       workflow_ref: "",
       workflow_sha: "",
     };
 
-    const token = createToken(obj, "12345");
+    const token = createToken(obj, "1111111111111111111111111111111111111111");
     const sha1 = getSourceSha1(token);
-    expect(sha1).toEqual("12345");
+    expect(sha1).toEqual("1111111111111111111111111111111111111111");
+  });
+
+  it("invalid length", () => {
+    const obj: githubObj = {
+      actor_id: "",
+      event_name: "",
+      event_payload_sha256: "",
+      ref: "",
+      ref_type: "",
+      repository: "",
+      repository_id: "",
+      repository_owner_id: "",
+      run_attempt: "",
+      run_id: "",
+      run_number: "",
+      sha: "aa",
+      workflow_ref: "",
+      workflow_sha: "",
+    };
+
+    expect(() => {
+      const token = createToken(obj, "");
+      const sha1 = getSourceSha1(token);
+    }).toThrow();
+  });
+
+  it("invalid character", () => {
+    const obj: githubObj = {
+      actor_id: "",
+      event_name: "",
+      event_payload_sha256: "",
+      ref: "",
+      ref_type: "",
+      repository: "",
+      repository_id: "",
+      repository_owner_id: "",
+      run_attempt: "",
+      run_id: "",
+      run_number: "",
+      sha: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaZ",
+      workflow_ref: "",
+      workflow_sha: "",
+    };
+
+    expect(() => {
+      const token = createToken(obj, "");
+      const sha1 = getSourceSha1(token);
+    }).toThrow();
   });
 });
 
@@ -238,12 +334,12 @@ describe("createTriggerURI", () => {
       run_attempt: "",
       run_id: "",
       run_number: "",
-      sha: "abcde",
+      sha: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
       workflow_ref: "",
       workflow_sha: "",
     };
 
-    const token = createToken(obj, "12345");
+    const token = createToken(obj, "1111111111111111111111111111111111111111");
     const uri = createTriggerURI(token);
     expect(uri).toEqual("git+https://github.com/org/name@the-ref");
   });
@@ -260,12 +356,12 @@ describe("createTriggerURI", () => {
       run_attempt: "",
       run_id: "",
       run_number: "",
-      sha: "abcde",
+      sha: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
       workflow_ref: "",
       workflow_sha: "",
     };
 
-    const token = createToken(obj, "12345");
+    const token = createToken(obj, "1111111111111111111111111111111111111111");
     const uri = createTriggerURI(token);
     expect(uri).toEqual("git+https://github.com/org/name");
   });
@@ -285,7 +381,7 @@ describe("createSourceURI", () => {
       run_attempt: "",
       run_id: "",
       run_number: "",
-      sha: "abcde",
+      sha: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
       workflow_ref: "",
       workflow_sha: "",
     };
@@ -307,7 +403,7 @@ describe("createSourceURI", () => {
       run_attempt: "",
       run_id: "",
       run_number: "",
-      sha: "abcde",
+      sha: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
       workflow_ref: "",
       workflow_sha: "",
     };
@@ -329,12 +425,12 @@ describe("createSourceURI", () => {
       run_attempt: "",
       run_id: "",
       run_number: "",
-      sha: "abcde",
+      sha: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
       workflow_ref: "",
       workflow_sha: "",
     };
 
-    const token = createToken(obj, "12345");
+    const token = createToken(obj, "1111111111111111111111111111111111111111");
     const uri = createSourceURI(token);
     expect(uri).toEqual("git+https://github.com/org/name");
   });
@@ -351,12 +447,12 @@ describe("createSourceURI", () => {
       run_attempt: "",
       run_id: "",
       run_number: "",
-      sha: "abcde",
+      sha: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
       workflow_ref: "",
       workflow_sha: "",
     };
 
-    const token = createToken(obj, "12345");
+    const token = createToken(obj, "1111111111111111111111111111111111111111");
     const uri = createSourceURI(token);
     expect(uri).toEqual("git+https://github.com/org/name");
   });

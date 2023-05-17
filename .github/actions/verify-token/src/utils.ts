@@ -45,7 +45,9 @@ export function createSourceURI(rawTokenObj: rawTokenInterface): string {
 
 // getTriggerSha1 returns the sha1 of the trigger repository.
 export function getTriggerSha1(rawTokenObj: rawTokenInterface): string {
-  return rawTokenObj.github.sha;
+  const sha1 = rawTokenObj.github.sha;
+  validateSha1(sha1);
+  return sha1;
 }
 
 // getTriggerRepository returns the repository of the trigger.
@@ -58,6 +60,20 @@ export function getTriggerRef(rawTokenObj: rawTokenInterface): string {
   return rawTokenObj.github.ref;
 }
 
+function validateSha1(sha1: string): void {
+  // Length of sha1 in hex format must be 40.
+  if (sha1.length !== 40) {
+    throw new Error(`invalid sha1 length: ${sha1.length}`);
+  }
+
+  // Check if the string only contains alphanumerical characters
+  for (const c of sha1) {
+    if (!/[a-fA-F0-9]/.test(c)) {
+      throw new Error(`invalid sha1 contains unexected characters: ${sha1}`);
+    }
+  }
+}
+
 // getSourceSha1 returns the sha1 of the source that is checked out.
 export function getSourceSha1(rawTokenObj: rawTokenInterface): string {
   // The checkout.sha1 takes precedence over the default GitHub event.
@@ -65,7 +81,9 @@ export function getSourceSha1(rawTokenObj: rawTokenInterface): string {
   // For example, users of JReleaser may push a commit
   // before building. See discussion at
   // https://github.com/slsa-framework/slsa-github-generator/issues/2043.
-  return rawTokenObj.source.checkout.sha1 || rawTokenObj.github.sha;
+  const sha1 = rawTokenObj.source.checkout.sha1 || rawTokenObj.github.sha;
+  validateSha1(sha1);
+  return sha1;
 }
 
 // getTriggerPath returns the workflow's path from the workflow_ref.
