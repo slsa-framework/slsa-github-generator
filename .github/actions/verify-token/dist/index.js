@@ -38255,16 +38255,27 @@ const external_1 = __nccwpck_require__(9069);
 const format_1 = __nccwpck_require__(609);
 class CAClient {
     constructor(options) {
-        this.fulcio = new external_1.Fulcio({ baseURL: options.fulcioBaseURL });
+        this.fulcio = new external_1.Fulcio({
+            baseURL: options.fulcioBaseURL,
+            retry: options.retry,
+            timeout: options.timeout,
+        });
     }
     async createSigningCertificate(identityToken, publicKey, challenge) {
         const request = (0, format_1.toCertificateRequest)(identityToken, publicKey, challenge);
         try {
-            const certificate = await this.fulcio.createSigningCertificate(request);
-            return certificate.signedCertificateEmbeddedSct.chain.certificates;
+            const resp = await this.fulcio.createSigningCertificate(request);
+            // Return the first certificate in the chain, which is the signing
+            // certificate. Specifically not returning the rest of the chain to
+            // mitigate the risk of errors when verifying the certificate chain.
+            return resp.signedCertificateEmbeddedSct.chain.certificates.slice(0, 1);
         }
         catch (err) {
-            throw new error_1.InternalError('error creating signing certificate', err);
+            throw new error_1.InternalError({
+                code: 'CA_CREATE_SIGNING_CERTIFICATE_ERROR',
+                message: 'error creating signing certificate',
+                cause: err,
+            });
         }
     }
 }
@@ -38298,12 +38309,11 @@ limitations under the License.
 const error_1 = __nccwpck_require__(6274);
 const cert_1 = __nccwpck_require__(3669);
 const verify_1 = __nccwpck_require__(3812);
-function verifyChain(bundleCerts, certificateAuthorities) {
-    const certs = parseCerts(bundleCerts);
-    const signingCert = certs[0];
+function verifyChain(certificate, certificateAuthorities) {
+    const untrustedCert = cert_1.x509Certificate.parse(certificate.rawBytes);
     // Filter the list of certificate authorities to those which are valid for the
     // signing certificate's notBefore date.
-    const validCAs = filterCertificateAuthorities(certificateAuthorities, signingCert.notBefore);
+    const validCAs = filterCertificateAuthorities(certificateAuthorities, untrustedCert.notBefore);
     if (validCAs.length === 0) {
         throw new error_1.VerificationError('No valid certificate authorities');
     }
@@ -38313,9 +38323,9 @@ function verifyChain(bundleCerts, certificateAuthorities) {
         const trustedCerts = parseCerts(ca.certChain?.certificates || []);
         try {
             trustedChain = (0, verify_1.verifyCertificateChain)({
+                untrustedCert,
                 trustedCerts,
-                certs,
-                validAt: signingCert.notBefore,
+                validAt: untrustedCert.notBefore,
             });
             return true;
         }
@@ -38357,8 +38367,9 @@ const sct_1 = __nccwpck_require__(3456);
 const signer_1 = __nccwpck_require__(2244);
 function verifySigningCertificate(bundle, trustedRoot, options) {
     // Check that a trusted certificate chain can be found for the signing
-    // certificate in the bundle
-    const trustedChain = (0, chain_1.verifyChain)(bundle.verificationMaterial.content.x509CertificateChain.certificates, trustedRoot.certificateAuthorities);
+    // certificate in the bundle. Only the first certificate in the bundle's
+    // chain is used -- everything else must come from the trusted root.
+    const trustedChain = (0, chain_1.verifyChain)(bundle.verificationMaterial.content.x509CertificateChain.certificates[0], trustedRoot.certificateAuthorities);
     // Unless disabled, verify the SCTs in the signing certificate
     if (options.ctlogOptions.disable === false) {
         (0, sct_1.verifySCTs)(trustedChain, trustedRoot.ctlogs, options.ctlogOptions);
@@ -38595,7 +38606,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.identityProviders = exports.artifactVerificationOptions = exports.createTLogClient = exports.createCAClient = exports.DEFAULT_REKOR_URL = exports.DEFAULT_FULCIO_URL = void 0;
+exports.identityProviders = exports.artifactVerificationOptions = exports.createTSAClient = exports.createTLogClient = exports.createCAClient = exports.DEFAULT_TIMEOUT = exports.DEFAULT_RETRY = exports.DEFAULT_REKOR_URL = exports.DEFAULT_FULCIO_URL = void 0;
 /*
 Copyright 2023 The Sigstore Authors.
 
@@ -38614,21 +38625,34 @@ limitations under the License.
 const ca_1 = __nccwpck_require__(7021);
 const identity_1 = __importDefault(__nccwpck_require__(8761));
 const tlog_1 = __nccwpck_require__(2030);
+const tsa_1 = __nccwpck_require__(8880);
 const sigstore = __importStar(__nccwpck_require__(8598));
 exports.DEFAULT_FULCIO_URL = 'https://fulcio.sigstore.dev';
 exports.DEFAULT_REKOR_URL = 'https://rekor.sigstore.dev';
+exports.DEFAULT_RETRY = { retries: 2 };
+exports.DEFAULT_TIMEOUT = 5000;
 function createCAClient(options) {
     return new ca_1.CAClient({
         fulcioBaseURL: options.fulcioURL || exports.DEFAULT_FULCIO_URL,
+        retry: options.retry ?? exports.DEFAULT_RETRY,
+        timeout: options.timeout ?? exports.DEFAULT_TIMEOUT,
     });
 }
 exports.createCAClient = createCAClient;
 function createTLogClient(options) {
     return new tlog_1.TLogClient({
         rekorBaseURL: options.rekorURL || exports.DEFAULT_REKOR_URL,
+        retry: options.retry ?? exports.DEFAULT_RETRY,
+        timeout: options.timeout ?? exports.DEFAULT_TIMEOUT,
     });
 }
 exports.createTLogClient = createTLogClient;
+function createTSAClient(options) {
+    return options.tsaServerURL
+        ? new tsa_1.TSAClient({ tsaBaseURL: options.tsaServerURL })
+        : undefined;
+}
+exports.createTSAClient = createTSAClient;
 // Assembles the AtifactVerificationOptions from the supplied VerifyOptions.
 function artifactVerificationOptions(options) {
     // The trusted signers are only used if the options contain a certificate
@@ -38722,7 +38746,7 @@ exports.identityProviders = identityProviders;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.PolicyError = exports.InternalError = exports.ValidationError = exports.VerificationError = void 0;
+exports.InternalError = exports.PolicyError = exports.ValidationError = exports.VerificationError = void 0;
 /*
 Copyright 2023 The Sigstore Authors.
 
@@ -38752,12 +38776,16 @@ exports.VerificationError = VerificationError;
 class ValidationError extends BaseError {
 }
 exports.ValidationError = ValidationError;
-class InternalError extends BaseError {
-}
-exports.InternalError = InternalError;
 class PolicyError extends BaseError {
 }
 exports.PolicyError = PolicyError;
+class InternalError extends BaseError {
+    constructor({ code, message, cause, }) {
+        super(message, cause);
+        this.code = code;
+    }
+}
+exports.InternalError = InternalError;
 
 
 /***/ }),
@@ -38825,8 +38853,8 @@ const error_1 = __nccwpck_require__(5005);
 class Fulcio {
     constructor(options) {
         this.fetch = make_fetch_happen_1.default.defaults({
-            retry: { retries: 2 },
-            timeout: 5000,
+            retry: options.retry,
+            timeout: options.timeout,
             headers: {
                 'Content-Type': 'application/json',
                 'User-Agent': util_1.ua.getUserAgent(),
@@ -38856,7 +38884,7 @@ exports.Fulcio = Fulcio;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.Rekor = exports.Fulcio = exports.HTTPError = void 0;
+exports.TimestampAuthority = exports.Rekor = exports.Fulcio = exports.HTTPError = void 0;
 /*
 Copyright 2022 The Sigstore Authors.
 
@@ -38878,6 +38906,8 @@ var fulcio_1 = __nccwpck_require__(8387);
 Object.defineProperty(exports, "Fulcio", ({ enumerable: true, get: function () { return fulcio_1.Fulcio; } }));
 var rekor_1 = __nccwpck_require__(9047);
 Object.defineProperty(exports, "Rekor", ({ enumerable: true, get: function () { return rekor_1.Rekor; } }));
+var tsa_1 = __nccwpck_require__(1679);
+Object.defineProperty(exports, "TimestampAuthority", ({ enumerable: true, get: function () { return tsa_1.TimestampAuthority; } }));
 
 
 /***/ }),
@@ -38916,8 +38946,8 @@ const error_1 = __nccwpck_require__(5005);
 class Rekor {
     constructor(options) {
         this.fetch = make_fetch_happen_1.default.defaults({
-            retry: { retries: 2 },
-            timeout: 5000,
+            retry: options.retry,
+            timeout: options.timeout,
             headers: {
                 Accept: 'application/json',
                 'User-Agent': util_1.ua.getUserAgent(),
@@ -39001,6 +39031,61 @@ function entryFromResponse(data) {
         uuid,
     };
 }
+
+
+/***/ }),
+
+/***/ 1679:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.TimestampAuthority = void 0;
+/*
+Copyright 2023 The Sigstore Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+const make_fetch_happen_1 = __importDefault(__nccwpck_require__(9525));
+const util_1 = __nccwpck_require__(6901);
+const error_1 = __nccwpck_require__(5005);
+class TimestampAuthority {
+    constructor(options) {
+        this.fetch = make_fetch_happen_1.default.defaults({
+            retry: { retries: 2 },
+            timeout: 5000,
+            headers: {
+                'Content-Type': 'application/json',
+                'User-Agent': util_1.ua.getUserAgent(),
+            },
+        });
+        this.baseUrl = options.baseURL;
+    }
+    async createTimestamp(request) {
+        const url = `${this.baseUrl}/api/v1/timestamp`;
+        const response = await this.fetch(url, {
+            method: 'POST',
+            body: JSON.stringify(request),
+        });
+        (0, error_1.checkStatus)(response);
+        return response.buffer();
+    }
+}
+exports.TimestampAuthority = TimestampAuthority;
 
 
 /***/ }),
@@ -39464,19 +39549,45 @@ exports.sigstore = __importStar(__nccwpck_require__(1111));
 /***/ }),
 
 /***/ 9884:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
 
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Signer = void 0;
+const sigstore = __importStar(__nccwpck_require__(8598));
 const util_1 = __nccwpck_require__(6901);
 class Signer {
     constructor(options) {
         this.identityProviders = [];
         this.ca = options.ca;
         this.tlog = options.tlog;
+        this.tsa = options.tsa;
         this.identityProviders = options.identityProviders;
+        this.tlogUpload = options.tlogUpload ?? true;
         this.signer = options.signer || this.signWithEphemeralKey.bind(this);
     }
     async signBlob(payload) {
@@ -39484,8 +39595,18 @@ class Signer {
         const sigMaterial = await this.signer(payload);
         // Calculate artifact digest
         const digest = util_1.crypto.hash(payload);
-        // Create Rekor entry
-        return this.tlog.createMessageSignatureEntry(digest, sigMaterial);
+        // Create a Rekor entry (if tlogUpload is enabled)
+        const entry = this.tlogUpload
+            ? await this.tlog.createMessageSignatureEntry(digest, sigMaterial)
+            : undefined;
+        return sigstore.toMessageSignatureBundle({
+            digest,
+            signature: sigMaterial,
+            tlogEntry: entry,
+            timestamp: this.tsa
+                ? await this.tsa.createTimestamp(sigMaterial.signature)
+                : undefined,
+        });
     }
     async signAttestation(payload, payloadType) {
         // Pre-authentication encoding to be signed
@@ -39502,7 +39623,18 @@ class Signer {
                 },
             ],
         };
-        return this.tlog.createDSSEEntry(envelope, sigMaterial);
+        // Create a Rekor entry (if tlogUpload is enabled)
+        const entry = this.tlogUpload
+            ? await this.tlog.createDSSEEntry(envelope, sigMaterial)
+            : undefined;
+        return sigstore.toDSSEBundle({
+            envelope,
+            signature: sigMaterial,
+            tlogEntry: entry,
+            timestamp: this.tsa
+                ? await this.tsa.createTimestamp(sigMaterial.signature)
+                : undefined,
+        });
     }
     async signWithEphemeralKey(payload) {
         // Create emphemeral key pair
@@ -39617,8 +39749,13 @@ async function createRekorEntry(dsseEnvelope, publicKey, options = {}) {
     const envelope = sigstore.Envelope.fromJSON(dsseEnvelope);
     const tlog = (0, config_1.createTLogClient)(options);
     const sigMaterial = (0, signature_1.extractSignatureMaterial)(envelope, publicKey);
-    const bundle = await tlog.createDSSEEntry(envelope, sigMaterial, {
+    const entry = await tlog.createDSSEEntry(envelope, sigMaterial, {
         fetchOnConflict: true,
+    });
+    const bundle = sigstore.toDSSEBundle({
+        envelope,
+        signature: sigMaterial,
+        tlogEntry: entry,
     });
     return sigstore.Bundle.toJSON(bundle);
 }
@@ -39656,7 +39793,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.DEFAULT_REKOR_URL = exports.DEFAULT_FULCIO_URL = exports.tuf = exports.utils = exports.verify = exports.attest = exports.sign = void 0;
+exports.DEFAULT_REKOR_URL = exports.DEFAULT_FULCIO_URL = exports.tuf = exports.utils = exports.VerificationError = exports.ValidationError = exports.PolicyError = exports.InternalError = exports.verify = exports.attest = exports.sign = void 0;
 /*
 Copyright 2023 The Sigstore Authors.
 
@@ -39685,6 +39822,7 @@ async function sign(payload, options = {}) {
         ca,
         tlog,
         identityProviders: idps,
+        tlogUpload: options.tlogUpload,
     });
     const bundle = await signer.signBlob(payload);
     return sigstore.Bundle.toJSON(bundle);
@@ -39693,11 +39831,14 @@ exports.sign = sign;
 async function attest(payload, payloadType, options = {}) {
     const ca = config.createCAClient(options);
     const tlog = config.createTLogClient(options);
+    const tsa = config.createTSAClient(options);
     const idps = config.identityProviders(options);
     const signer = new sign_1.Signer({
         ca,
         tlog,
+        tsa,
         identityProviders: idps,
+        tlogUpload: options.tlogUpload,
     });
     const bundle = await signer.signAttestation(payload, payloadType);
     return sigstore.Bundle.toJSON(bundle);
@@ -39708,6 +39849,8 @@ async function verify(bundle, payload, options = {}) {
         mirrorURL: options.tufMirrorURL,
         rootPath: options.tufRootPath,
         cachePath: options.tufCachePath,
+        retry: options.retry ?? config.DEFAULT_RETRY,
+        timeout: options.timeout ?? config.DEFAULT_TIMEOUT,
     });
     const verifier = new verify_1.Verifier(trustedRoot, options.keySelector);
     const deserializedBundle = sigstore.bundleFromJSON(bundle);
@@ -39716,15 +39859,29 @@ async function verify(bundle, payload, options = {}) {
 }
 exports.verify = verify;
 const tufUtils = {
-    getTarget: (path, options = {}) => {
-        return tuf.getTarget(path, {
+    client: (options = {}) => {
+        const t = new tuf.TUFClient({
             mirrorURL: options.tufMirrorURL,
             rootPath: options.tufRootPath,
             cachePath: options.tufCachePath,
+            retry: options.retry ?? config.DEFAULT_RETRY,
+            timeout: options.timeout ?? config.DEFAULT_TIMEOUT,
         });
+        return t.refresh().then(() => t);
+    },
+    /*
+     * @deprecated Use tufUtils.client instead.
+     */
+    getTarget: (path, options = {}) => {
+        return tufUtils.client(options).then((t) => t.getTarget(path));
     },
 };
 exports.tuf = tufUtils;
+var error_1 = __nccwpck_require__(6274);
+Object.defineProperty(exports, "InternalError", ({ enumerable: true, get: function () { return error_1.InternalError; } }));
+Object.defineProperty(exports, "PolicyError", ({ enumerable: true, get: function () { return error_1.PolicyError; } }));
+Object.defineProperty(exports, "ValidationError", ({ enumerable: true, get: function () { return error_1.ValidationError; } }));
+Object.defineProperty(exports, "VerificationError", ({ enumerable: true, get: function () { return error_1.VerificationError; } }));
 exports.utils = __importStar(__nccwpck_require__(2021));
 exports.DEFAULT_FULCIO_URL = config.DEFAULT_FULCIO_URL;
 exports.DEFAULT_REKOR_URL = config.DEFAULT_REKOR_URL;
@@ -39869,21 +40026,22 @@ limitations under the License.
 */
 const error_1 = __nccwpck_require__(6274);
 const external_1 = __nccwpck_require__(9069);
-const sigstore_1 = __nccwpck_require__(8598);
 const format_1 = __nccwpck_require__(8810);
 class TLogClient {
     constructor(options) {
-        this.rekor = new external_1.Rekor({ baseURL: options.rekorBaseURL });
+        this.rekor = new external_1.Rekor({
+            baseURL: options.rekorBaseURL,
+            retry: options.retry,
+            timeout: options.timeout,
+        });
     }
     async createMessageSignatureEntry(digest, sigMaterial, options = {}) {
         const proposedEntry = (0, format_1.toProposedHashedRekordEntry)(digest, sigMaterial);
-        const entry = await this.createEntry(proposedEntry, options.fetchOnConflict);
-        return sigstore_1.bundle.toMessageSignatureBundle(digest, sigMaterial, entry);
+        return this.createEntry(proposedEntry, options.fetchOnConflict);
     }
     async createDSSEEntry(envelope, sigMaterial, options = {}) {
         const proposedEntry = (0, format_1.toProposedIntotoEntry)(envelope, sigMaterial);
-        const entry = await this.createEntry(proposedEntry, options.fetchOnConflict);
-        return sigstore_1.bundle.toDSSEBundle(envelope, sigMaterial, entry);
+        return this.createEntry(proposedEntry, options.fetchOnConflict);
     }
     async createEntry(proposedEntry, fetchOnConflict = false) {
         let entry;
@@ -39899,11 +40057,19 @@ class TLogClient {
                     entry = await this.rekor.getEntry(uuid);
                 }
                 catch (err) {
-                    throw new error_1.InternalError('error fetching tlog entry', err);
+                    throw new error_1.InternalError({
+                        code: 'TLOG_FETCH_ENTRY_ERROR',
+                        message: 'error fetching tlog entry',
+                        cause: err,
+                    });
                 }
             }
             else {
-                throw new error_1.InternalError('error creating tlog entry', err);
+                throw new error_1.InternalError({
+                    code: 'TLOG_CREATE_ENTRY_ERROR',
+                    message: 'error creating tlog entry',
+                    cause: err,
+                });
             }
         }
         return entry;
@@ -40211,6 +40377,57 @@ function filterTLogInstances(tlogInstances, logID, integratedTime) {
 
 /***/ }),
 
+/***/ 8880:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.TSAClient = void 0;
+/*
+Copyright 2022 The Sigstore Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+const error_1 = __nccwpck_require__(6274);
+const external_1 = __nccwpck_require__(9069);
+const util_1 = __nccwpck_require__(6901);
+class TSAClient {
+    constructor(options) {
+        this.tsa = new external_1.TimestampAuthority({ baseURL: options.tsaBaseURL });
+    }
+    async createTimestamp(signature) {
+        const request = {
+            artifactHash: util_1.crypto.hash(signature).toString('base64'),
+            hashAlgorithm: 'sha256',
+        };
+        try {
+            return await this.tsa.createTimestamp(request);
+        }
+        catch (err) {
+            throw new error_1.InternalError({
+                code: 'TSA_CREATE_TIMESTAMP_ERROR',
+                message: 'error creating timestamp',
+                cause: err,
+            });
+        }
+    }
+}
+exports.TSAClient = TSAClient;
+
+
+/***/ }),
+
 /***/ 5143:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
@@ -40243,7 +40460,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.getTarget = exports.getTrustedRoot = void 0;
+exports.TUFClient = exports.getTrustedRoot = void 0;
 /*
 Copyright 2023 The Sigstore Authors.
 
@@ -40270,20 +40487,28 @@ const DEFAULT_CACHE_DIR = util_1.appdata.appDataPath('sigstore-js');
 const DEFAULT_MIRROR_URL = 'https://tuf-repo-cdn.sigstore.dev';
 const DEFAULT_TUF_ROOT_PATH = '../../store/public-good-instance-root.json';
 async function getTrustedRoot(options = {}) {
-    const trustedRoot = await getTarget(TRUSTED_ROOT_TARGET, options);
+    const client = new TUFClient(options);
+    const trustedRoot = await client.getTarget(TRUSTED_ROOT_TARGET);
     return sigstore.TrustedRoot.fromJSON(JSON.parse(trustedRoot));
 }
 exports.getTrustedRoot = getTrustedRoot;
-async function getTarget(targetName, options = {}) {
-    const cachePath = options.cachePath || DEFAULT_CACHE_DIR;
-    const tufRootPath = options.rootPath || __nccwpck_require__.ab + "public-good-instance-root.json";
-    const mirrorURL = options.mirrorURL || DEFAULT_MIRROR_URL;
-    initTufCache(cachePath, tufRootPath);
-    const remote = initRemoteConfig(cachePath, mirrorURL);
-    const repoClient = initClient(cachePath, remote);
-    return (0, target_1.readTarget)(repoClient, targetName);
+class TUFClient {
+    constructor(options) {
+        const cachePath = options.cachePath || DEFAULT_CACHE_DIR;
+        const tufRootPath = options.rootPath || __nccwpck_require__.ab + "public-good-instance-root.json";
+        const mirrorURL = options.mirrorURL || DEFAULT_MIRROR_URL;
+        initTufCache(cachePath, tufRootPath);
+        const remote = initRemoteConfig(cachePath, mirrorURL);
+        this.updater = initClient(cachePath, remote, options);
+    }
+    async refresh() {
+        return this.updater.refresh();
+    }
+    getTarget(targetName) {
+        return (0, target_1.readTarget)(this.updater, targetName);
+    }
 }
-exports.getTarget = getTarget;
+exports.TUFClient = TUFClient;
 // Initializes the TUF cache directory structure including the initial
 // root.json file. If the cache directory does not exist, it will be
 // created. If the targets directory does not exist, it will be created.
@@ -40319,13 +40544,30 @@ function initRemoteConfig(rootDir, mirrorURL) {
     }
     return remoteConfig;
 }
-function initClient(cachePath, remote) {
+function initClient(cachePath, remote, options) {
     const baseURL = remote.mirror;
+    const config = {
+        fetchTimeout: options.timeout,
+    };
+    // tuf-js only supports a number for fetchRetries so we have to
+    // convert the boolean and object options to a number.
+    if (typeof options.retry !== 'undefined') {
+        if (typeof options.retry === 'number') {
+            config.fetchRetries = options.retry;
+        }
+        else if (typeof options.retry === 'object') {
+            config.fetchRetries = options.retry.retries;
+        }
+        else if (options.retry === true) {
+            config.fetchRetries = 1;
+        }
+    }
     return new tuf_js_1.Updater({
         metadataBaseUrl: baseURL,
         targetBaseUrl: `${baseURL}/targets`,
         metadataDir: cachePath,
         targetDir: path_1.default.join(cachePath, 'targets'),
+        config,
     });
 }
 
@@ -40365,7 +40607,11 @@ async function readTarget(tuf, targetPath) {
     return new Promise((resolve, reject) => {
         fs_1.default.readFile(path, 'utf-8', (err, data) => {
             if (err) {
-                reject(new error_1.InternalError(`error reading target: ${err}`));
+                reject(new error_1.InternalError({
+                    code: 'TUF_READ_TARGET_ERROR',
+                    message: `error reading target ${path}`,
+                    cause: err,
+                }));
             }
             else {
                 resolve(data);
@@ -40380,13 +40626,20 @@ exports.readTarget = readTarget;
 async function getTargetPath(tuf, target) {
     let targetInfo;
     try {
-        targetInfo = await tuf.refresh().then(() => tuf.getTargetInfo(target));
+        targetInfo = await tuf.getTargetInfo(target);
     }
     catch (err) {
-        throw new error_1.InternalError(`error refreshing TUF metadata: ${err}`);
+        throw new error_1.InternalError({
+            code: 'TUF_REFRESH_METADATA_ERROR',
+            message: 'error refreshing TUF metadata',
+            cause: err,
+        });
     }
     if (!targetInfo) {
-        throw new error_1.InternalError(`target ${target} not found`);
+        throw new error_1.InternalError({
+            code: 'TUF_FIND_TARGET_ERROR',
+            message: `target ${target} not found`,
+        });
     }
     let path = await tuf.findCachedTarget(targetInfo);
     // An empty path here means the target has not been cached locally, or is
@@ -40396,7 +40649,11 @@ async function getTargetPath(tuf, target) {
             path = await tuf.downloadTarget(targetInfo);
         }
         catch (err) {
-            throw new error_1.InternalError(`error downloading target: ${err}`);
+            throw new error_1.InternalError({
+                code: 'TUF_DOWNLOAD_TARGET_ERROR',
+                message: `error downloading target ${path}`,
+                cause: err,
+            });
         }
     }
     return path;
@@ -40448,7 +40705,7 @@ var __exportStar = (this && this.__exportStar) || function(m, exports) {
     for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.signingCertificate = exports.bundle = exports.isVerifiableTransparencyLogEntry = exports.isCAVerificationOptions = exports.isBundleWithCertificateChain = exports.isBundleWithVerificationMaterial = exports.bundleFromJSON = void 0;
+exports.signingCertificate = exports.toMessageSignatureBundle = exports.toDSSEBundle = exports.isVerifiableTransparencyLogEntry = exports.isCAVerificationOptions = exports.isBundleWithCertificateChain = exports.isBundleWithVerificationMaterial = exports.bundleFromJSON = void 0;
 /*
 Copyright 2023 The Sigstore Authors.
 
@@ -40503,16 +40760,20 @@ function isVerifiableTransparencyLogEntry(entry) {
         entry.kindVersion !== undefined);
 }
 exports.isVerifiableTransparencyLogEntry = isVerifiableTransparencyLogEntry;
-exports.bundle = {
-    toDSSEBundle: (envelope, signature, rekorEntry) => ({
+function toDSSEBundle({ envelope, signature, tlogEntry, timestamp, }) {
+    return {
         mediaType: BUNDLE_MEDIA_TYPE,
-        content: {
-            $case: 'dsseEnvelope',
-            dsseEnvelope: envelope,
-        },
-        verificationMaterial: toVerificationMaterial(signature, rekorEntry),
-    }),
-    toMessageSignatureBundle: (digest, signature, rekorEntry) => ({
+        content: { $case: 'dsseEnvelope', dsseEnvelope: envelope },
+        verificationMaterial: toVerificationMaterial({
+            signature,
+            tlogEntry,
+            timestamp,
+        }),
+    };
+}
+exports.toDSSEBundle = toDSSEBundle;
+function toMessageSignatureBundle({ digest, signature, tlogEntry, timestamp, }) {
+    return {
         mediaType: BUNDLE_MEDIA_TYPE,
         content: {
             $case: 'messageSignature',
@@ -40524,9 +40785,14 @@ exports.bundle = {
                 signature: signature.signature,
             },
         },
-        verificationMaterial: toVerificationMaterial(signature, rekorEntry),
-    }),
-};
+        verificationMaterial: toVerificationMaterial({
+            signature,
+            tlogEntry,
+            timestamp,
+        }),
+    };
+}
+exports.toMessageSignatureBundle = toMessageSignatureBundle;
 function toTransparencyLogEntry(entry) {
     const set = Buffer.from(entry.verification.signedEntryTimestamp, 'base64');
     const logID = Buffer.from(entry.logID, 'hex');
@@ -40550,13 +40816,15 @@ function toTransparencyLogEntry(entry) {
         canonicalizedBody: Buffer.from(entry.body, 'base64'),
     };
 }
-function toVerificationMaterial(signature, entry) {
+function toVerificationMaterial({ signature, tlogEntry, timestamp, }) {
     return {
         content: signature.certificates
             ? toVerificationMaterialx509CertificateChain(signature.certificates)
             : toVerificationMaterialPublicKey(signature.key.id || ''),
-        tlogEntries: [toTransparencyLogEntry(entry)],
-        timestampVerificationData: undefined,
+        tlogEntries: tlogEntry ? [toTransparencyLogEntry(tlogEntry)] : [],
+        timestampVerificationData: timestamp
+            ? toTimestampVerificationData(timestamp)
+            : undefined,
     };
 }
 function toVerificationMaterialx509CertificateChain(certificates) {
@@ -40571,6 +40839,11 @@ function toVerificationMaterialx509CertificateChain(certificates) {
 }
 function toVerificationMaterialPublicKey(hint) {
     return { $case: 'publicKey', publicKey: { hint } };
+}
+function toTimestampVerificationData(timestamp) {
+    return {
+        rfc3161Timestamps: [{ signedTimestamp: timestamp }],
+    };
 }
 function signingCertificate(bundle) {
     if (!isBundleWithCertificateChain(bundle)) {
@@ -41356,7 +41629,9 @@ class Verifier {
         if (sigstore.isBundleWithCertificateChain(bundle)) {
             this.verifySigningCertificate(bundle, options);
         }
-        this.verifyTLogEntries(bundle, options);
+        if (options.tlogOptions.disable === false) {
+            this.verifyTLogEntries(bundle, options);
+        }
     }
     // Performs bundle signature verification. Determines the type of the bundle
     // content and delegates to the appropriate signature verification function.
@@ -42503,15 +42778,15 @@ function verifyCertificateChain(opts) {
 exports.verifyCertificateChain = verifyCertificateChain;
 class CertificateChainVerifier {
     constructor(opts) {
-        this.certs = opts.certs;
+        this.untrustedCert = opts.untrustedCert;
         this.trustedCerts = opts.trustedCerts;
-        this.localCerts = dedupeCertificates([...opts.trustedCerts, ...opts.certs]);
+        this.localCerts = dedupeCertificates([
+            ...opts.trustedCerts,
+            opts.untrustedCert,
+        ]);
         this.validAt = opts.validAt || new Date();
     }
     verify() {
-        if (this.certs.length === 0) {
-            throw new error_1.VerificationError('No certificates provided');
-        }
         // Construct certificate path from leaf to root
         const certificatePath = this.sort();
         // Perform validation checks on each certificate in the path
@@ -42520,7 +42795,7 @@ class CertificateChainVerifier {
         return certificatePath;
     }
     sort() {
-        const leafCert = this.localCerts[this.localCerts.length - 1];
+        const leafCert = this.untrustedCert;
         // Construct all possible paths from the leaf
         let paths = this.buildPaths(leafCert);
         // Filter for paths which contain a trusted certificate
@@ -42531,7 +42806,9 @@ class CertificateChainVerifier {
         // Find the shortest of possible paths
         const path = paths.reduce((prev, curr) => prev.length < curr.length ? prev : curr);
         // Construct chain from shortest path
-        return [leafCert, ...path];
+        // Removes the last certificate in the path, which will be a second copy
+        // of the root certificate given that the root is self-signed.
+        return [leafCert, ...path].slice(0, -1);
     }
     // Recursively build all possible paths from the leaf to the root
     buildPaths(certificate) {
@@ -42602,8 +42879,8 @@ class CertificateChainVerifier {
         return issuers;
     }
     checkPath(path) {
-        if (path.length < 2) {
-            throw new error_1.VerificationError('Certificate chain must contain at least two certificates');
+        if (path.length < 1) {
+            throw new error_1.VerificationError('Certificate chain must contain at least one certificate');
         }
         // Check that all certificates are valid at the check date
         const validForDate = path.every((cert) => cert.validForDate(this.validAt));
@@ -42620,6 +42897,22 @@ class CertificateChainVerifier {
         for (let i = path.length - 2; i >= 0; i--) {
             if (!path[i].issuer.equals(path[i + 1].subject)) {
                 throw new error_1.VerificationError('Incorrect certificate name chaining');
+            }
+        }
+        // Check pathlength constraints
+        for (let i = 0; i < path.length; i++) {
+            const cert = path[i];
+            // If the certificate is a CA, check the path length
+            if (cert.extBasicConstraints?.isCA) {
+                const pathLength = cert.extBasicConstraints.pathLenConstraint;
+                // The path length, if set, indicates how many intermediate
+                // certificates (NOT including the leaf) are allowed to follow. The
+                // pathLength constraint of any intermediate CA certificate MUST be
+                // greater than or equal to it's own depth in the chain (with an
+                // adjustment for the leaf certificate)
+                if (pathLength !== undefined && pathLength < i - 1) {
+                    throw new error_1.VerificationError('Path length constraint exceeded');
+                }
             }
         }
     }
@@ -61053,7 +61346,7 @@ module.exports = {"i8":"3.0.1"};
 /***/ ((module) => {
 
 "use strict";
-module.exports = {"i8":"1.3.2"};
+module.exports = {"i8":"1.5.0"};
 
 /***/ }),
 
