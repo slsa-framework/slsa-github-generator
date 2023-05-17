@@ -54,10 +54,10 @@ e2e_verify_common_metadata() {
 # Verifies the materials include the GitHub repository.
 # $1: the attestation content
 e2e_verify_common_materials() {
-    # By default, we use the digest from the event.
+    # By default, we use the digest from the GitHub event.
     local digest="$GITHUB_SHA"
     if [[ -z "${CHECKOUT_SHA1}" ]]; then
-        # if the TRW provided a sha1 for checkout, the predicate should use it instead.
+        # If the TRW provided a sha1 for checkout, the predicate should use it instead.
         digest="${CHECKOUT_SHA1}"
     fi
     e2e_verify_predicate_materials "$1" "{\"uri\":\"git+https://github.com/$GITHUB_REPOSITORY@$GITHUB_REF\",\"digest\":{\"sha1\":\"$digest\"}}"

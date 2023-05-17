@@ -66,7 +66,7 @@ function validateSha1(sha1: string): void {
     throw new Error(`invalid sha1 length: ${sha1.length}`);
   }
 
-  // Check if the string only contains alphanumerical characters
+  // Check if the string only contains hexadecimal characters.
   for (const c of sha1) {
     if (!/[a-fA-F0-9]/.test(c)) {
       throw new Error(`invalid sha1 contains unexected characters: ${sha1}`);
