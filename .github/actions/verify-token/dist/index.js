@@ -682,15 +682,9 @@ function getTriggerRef(rawTokenObj) {
 }
 exports.getTriggerRef = getTriggerRef;
 function validateSha1(sha1) {
-    // Length of sha1 in hex format must be 40.
-    if (sha1.length !== 40) {
-        throw new Error(`invalid sha1 length: ${sha1.length}`);
-    }
-    // Check if the string only contains hexadecimal characters.
-    for (const c of sha1) {
-        if (!/[a-fA-F0-9]/.test(c)) {
-            throw new Error(`invalid sha1 contains unexected characters: ${sha1}`);
-        }
+    // 40 characters in hex format.
+    if (!/[a-fA-F0-9]{40}/.test(sha1)) {
+        throw new Error(`invalid sha1: ${sha1}`);
     }
 }
 // getSourceSha1 returns the sha1 of the source that is checked out.
@@ -51016,15 +51010,9 @@ function getTriggerRef(rawTokenObj) {
 }
 exports.getTriggerRef = getTriggerRef;
 function validateSha1(sha1) {
-    // Length of sha1 in hex format must be 40.
-    if (sha1.length !== 40) {
-        throw new Error(`invalid sha1 length: ${sha1.length}`);
-    }
-    // Check if the string only contains hexadecimal characters.
-    for (const c of sha1) {
-        if (!/[a-fA-F0-9]/.test(c)) {
-            throw new Error(`invalid sha1 contains unexected characters: ${sha1}`);
-        }
+    // 40 characters in hex format.
+    if (!/[a-fA-F0-9]{40}/.test(sha1)) {
+        throw new Error(`invalid sha1: ${sha1}`);
     }
 }
 // getSourceSha1 returns the sha1 of the source that is checked out.

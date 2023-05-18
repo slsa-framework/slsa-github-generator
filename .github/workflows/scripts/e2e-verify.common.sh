@@ -56,7 +56,7 @@ e2e_verify_common_metadata() {
 e2e_verify_common_materials() {
     # By default, we use the digest from the GitHub event.
     local digest="$GITHUB_SHA"
-    if [[ ! -z "${CHECKOUT_SHA1}" ]]; then
+    if [[ -n "${CHECKOUT_SHA1}" ]]; then
         # If the TRW provided a sha1 for checkout, the predicate should use it instead.
         digest="${CHECKOUT_SHA1}"
     fi

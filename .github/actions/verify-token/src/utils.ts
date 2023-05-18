@@ -61,16 +61,9 @@ export function getTriggerRef(rawTokenObj: rawTokenInterface): string {
 }
 
 function validateSha1(sha1: string): void {
-  // Length of sha1 in hex format must be 40.
-  if (sha1.length !== 40) {
-    throw new Error(`invalid sha1 length: ${sha1.length}`);
-  }
-
-  // Check if the string only contains hexadecimal characters.
-  for (const c of sha1) {
-    if (!/[a-fA-F0-9]/.test(c)) {
-      throw new Error(`invalid sha1 contains unexected characters: ${sha1}`);
-    }
+  // 40 characters in hex format.
+  if (!/[a-fA-F0-9]{40}/.test(sha1)) {
+    throw new Error(`invalid sha1: ${sha1}`);
   }
 }
 
