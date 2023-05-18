@@ -17,31 +17,18 @@
 on:
   workflow_call:
     inputs:
-      name1:
-        description: "name 1"
-        required: false
-        type: string
-      name2:
-        description: "name 2"
-        required: false
-        type: string
       rekor-log-public:
-        description: "private"
+        description: "Private"
         required: false
         type: boolean
         default: false
       provenance-overwrite:
-        description: "overwrite provenance if already present"
+        description: "Overwrite provenance if already present"
         required: false
         type: boolean
         default: false
-      release-tag: #test
-        description: "tag collision with dispatch event"
-        required: false
-        type: string
-        default: "v100"
       artifact-list:
-        description: 'comma-separated list of paths to artifacts to be released. Use GRADLE_VERSION for the gradle version'
+              description: "Comma-separated list of paths to artifacts to be released. Use GRADLE_VERSION for the gradle version, for example: 'artifact-GRADLE_VERSION-sources.jar'"
         type: string
         required: true
       jdk-version:
