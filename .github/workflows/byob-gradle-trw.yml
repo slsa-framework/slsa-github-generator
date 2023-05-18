@@ -32,7 +32,7 @@ on:
         type: string
         required: true
       jdk-version:
-        description: 'The JDK version'
+        description: "The JDK version"
         required: false
         default: 17
         type: number
