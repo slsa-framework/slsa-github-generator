@@ -48,7 +48,7 @@ jobs:
         id: generate
         uses: slsa-framework/slsa-github-generator/actions/delegator/setup-token@main
         with:
-          slsa-workflow-recipient: "delegator_generic_slsa3.yml"
+          slsa-workflow-recipient: "delegator_lowperms-generic_slsa3.yml"
           slsa-rekor-log-public: ${{ inputs.rekor-log-public }}
           slsa-runner-label: "ubuntu-latest"
           slsa-build-action-path: "./internal/builders/gradle"
@@ -57,9 +57,9 @@ jobs:
     needs: [slsa-setup]
     permissions:
       id-token: write # For signing.
-      contents: write # For asset uploads.
+      contents: read # For asset uploads.
       actions: read   # For the entrypoint.
       packages: write
-    uses: slsa-framework/slsa-github-generator/.github/workflows/delegator_generic_slsa3.yml@main
+    uses: slsa-framework/slsa-github-generator/.github/workflows/delegator_lowperms-generic_slsa3.yml@main
     with:
       slsa-token: ${{ needs.slsa-setup.outputs.slsa-token }}
