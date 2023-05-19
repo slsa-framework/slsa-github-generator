@@ -1,3 +1,5 @@
+#!/bin/bash
+
 mkdir release-files-for-slsa
 GRADLE_VERSION=$(./gradlew properties -q | grep "version:" | awk '{print $2}')
 
