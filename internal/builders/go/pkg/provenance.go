@@ -24,6 +24,8 @@ import (
 
 	intoto "github.com/in-toto/in-toto-golang/in_toto"
 	slsacommon "github.com/in-toto/in-toto-golang/in_toto/slsa_provenance/common"
+	slsa1 "github.com/in-toto/in-toto-golang/in_toto/slsa_provenance/v1"
+
 	"github.com/slsa-framework/slsa-github-generator/github"
 	"github.com/slsa-framework/slsa-github-generator/internal/utils"
 	"github.com/slsa-framework/slsa-github-generator/slsa"
@@ -150,22 +152,22 @@ func GenerateProvenance(name, digest, command, envs, workingDir string,
 	//
 	// NOTE: map is a reference so modifying invEnv modifies
 	// p.Predicate.Invocation.Environment.
-	invEnv, ok := p.Predicate.Invocation.Environment.(map[string]interface{})
+	invEnv, ok := p.Predicate.BuildDefinition.InternalParameters.(map[string]interface{})
 	if !ok {
-		panic(fmt.Sprintf("converting %T to map[string]interface{}", p.Predicate.Invocation.Environment))
+		panic(fmt.Sprintf("converting %T to map[string]interface{}", p.Predicate.BuildDefinition.InternalParameters))
 	}
 	invEnv["arch"] = os.Getenv("RUNNER_ARCH")
 	invEnv["os"] = os.Getenv("ImageOS")
 
 	// Add details about the runner's OS to the materials
-	runnerMaterials := slsacommon.ProvenanceMaterial{
+	runnerMaterials := slsa1.ResourceDescriptor{
 		// TODO: capture the digest here too
 		URI: fmt.Sprintf(
 			"https://github.com/actions/virtual-environments/releases/tag/%s/%s",
 			os.Getenv("ImageOS"), os.Getenv("ImageVersion"),
 		),
 	}
-	p.Predicate.Materials = append(p.Predicate.Materials, runnerMaterials)
+	p.Predicate.BuildDefinition.ResolvedDependencies = append(p.Predicate.BuildDefinition.ResolvedDependencies, runnerMaterials)
 
 	if utils.IsPresubmitTests() {
 		fmt.Println("Pre-submit tests detected. Skipping signing.")

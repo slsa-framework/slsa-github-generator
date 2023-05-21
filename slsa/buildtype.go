@@ -23,8 +23,7 @@ import (
 
 	intoto "github.com/in-toto/in-toto-golang/in_toto"
 	slsacommon "github.com/in-toto/in-toto-golang/in_toto/slsa_provenance/common"
-	slsa "github.com/in-toto/in-toto-golang/in_toto/slsa_provenance/v0.2"
-	slsa02 "github.com/in-toto/in-toto-golang/in_toto/slsa_provenance/v0.2"
+	slsa1 "github.com/in-toto/in-toto-golang/in_toto/slsa_provenance/v1"
 
 	"github.com/slsa-framework/slsa-github-generator/github"
 )
@@ -38,17 +37,11 @@ type BuildType interface {
 	// Subject returns a set of artifacts created by the build.
 	Subject(context.Context) ([]intoto.Subject, error)
 
-	// BuildConfig returns the buildConfig for this build type.
-	BuildConfig(context.Context) (interface{}, error)
+	// BuildDefinition returns the input to the build.
+	BuildDefinition(context.Context) (slsa1.ProvenanceBuildDefinition, error)
 
-	// Invocation returns an invocation for this build type.
-	Invocation(context.Context) (slsa02.ProvenanceInvocation, error)
-
-	// Materials returns materials as defined by this build type.
-	Materials(context.Context) ([]slsacommon.ProvenanceMaterial, error)
-
-	// Metadata returns a metadata about the build.
-	Metadata(context.Context) (*slsa02.ProvenanceMetadata, error)
+	// RunDetails returns the Details of the build execution.
+	RunDetails(context.Context) (slsa1.ProvenanceRunDetails, error)
 }
 
 // GithubActionsBuild is a basic build type for builders running in GitHub Actions.
@@ -58,10 +51,13 @@ type GithubActionsBuild struct {
 	subject []intoto.Subject
 }
 
-// WorkflowParameters contains parameters given to the workflow invocation.
-type WorkflowParameters struct {
+// WorkflowExternalParameters contains parameters given to the workflow invocation.
+type WorkflowExternalParameters struct {
 	// EventInputs is the inputs for the event that triggered the workflow.
 	EventInputs interface{} `json:"event_inputs,omitempty"`
+	EntryPoint  string      `json:"entry_point,omitempty"`
+	Source      string      `json:"source,omitempty"`
+	Config      string      `json:"config,omitempty"`
 }
 
 // NewGithubActionsBuild returns a new GithubActionsBuild that uses the
@@ -74,15 +70,50 @@ func NewGithubActionsBuild(s []intoto.Subject, c *github.WorkflowContext) *Githu
 	}
 }
 
+// BuildDefinition implements BuildType.BuildDefinition.
+func (b *GithubActionsBuild) BuildDefinition(ctx context.Context) (slsa1.ProvenanceBuildDefinition, error) {
+
+	resDependencies, err := b.resolvedDependencies(ctx)
+	if err != nil {
+		return slsa1.ProvenanceBuildDefinition{}, err
+	}
+
+	exParameters, err := b.externalParameters(ctx)
+	if err != nil {
+		return slsa1.ProvenanceBuildDefinition{}, err
+	}
+
+	inParameters, err := b.internalParameters(ctx)
+	if err != nil {
+		return slsa1.ProvenanceBuildDefinition{}, err
+	}
+
+	buildDefinition := slsa1.ProvenanceBuildDefinition{
+		ExternalParameters:   exParameters,
+		InternalParameters:   inParameters,
+		ResolvedDependencies: resDependencies,
+	}
+	return buildDefinition, nil
+}
+
+// RunDetails implements BuildType.RunDetails.
+func (b *GithubActionsBuild) RunDetails(ctx context.Context) (slsa1.ProvenanceRunDetails, error) {
+
+	metadata, err := b.Metadata(ctx)
+	if err != nil {
+		return slsa1.ProvenanceRunDetails{}, err
+	}
+
+	runDetails := slsa1.ProvenanceRunDetails{
+		BuildMetadata: metadata,
+	}
+
+	return runDetails, nil
+}
+
 // Subject implements BuildType.Subject.
 func (b *GithubActionsBuild) Subject(context.Context) ([]intoto.Subject, error) {
 	return b.subject, nil
-}
-
-// BuildConfig implements BuildType.BuildConfig.
-func (b *GithubActionsBuild) BuildConfig(context.Context) (interface{}, error) {
-	// The default build config is nil.
-	return nil, nil
 }
 
 func addEnvKeyString(m map[string]interface{}, k, v string) {
@@ -134,11 +165,27 @@ func (b *GithubActionsBuild) getEntryPoint(ctx context.Context) (string, error) 
 	return *wf.Path, nil
 }
 
-// Invocation implements BuildType.Invocation. An invocation is returned that
-// describes the workflow run.
-// TODO: Document the basic invocation format.
-func (b *GithubActionsBuild) Invocation(ctx context.Context) (slsa.ProvenanceInvocation, error) {
-	i := slsa.ProvenanceInvocation{}
+func (b *GithubActionsBuild) externalParameters(ctx context.Context) (interface{}, error) {
+	// ConfigSource
+	var externalParameters WorkflowExternalParameters
+	entryPoint, err := b.getEntryPoint(ctx)
+	if err != nil {
+		return externalParameters, fmt.Errorf("getting entrypoint: %w", err)
+	}
+
+	externalParameters.EntryPoint = entryPoint
+
+	externalParameters.Source = b.Context.RepositoryURI()
+
+	if b.Context.Event != nil {
+		// Parameters coming from the trigger event.
+		externalParameters.EventInputs = b.Context.Event["inputs"]
+	}
+
+	return externalParameters, nil
+}
+
+func (b *GithubActionsBuild) internalParameters(ctx context.Context) (interface{}, error) {
 
 	// Builder-controlled environment vars needed
 	// to reproduce the build.
@@ -186,13 +233,13 @@ func (b *GithubActionsBuild) Invocation(ctx context.Context) (slsa.ProvenanceInv
 
 	oidcClient, err := b.Clients.OIDCClient()
 	if err != nil {
-		return i, fmt.Errorf("oidc client: %w", err)
+		return map[string]interface{}{}, fmt.Errorf("oidc client: %w", err)
 	}
 
 	if oidcClient != nil {
 		t, err := oidcClient.Token(ctx, []string{b.Context.Repository})
 		if err != nil {
-			return i, err
+			return map[string]interface{}{}, err
 		}
 
 		// github_repository_id is the unique ID of the repository.
@@ -207,65 +254,49 @@ func (b *GithubActionsBuild) Invocation(ctx context.Context) (slsa.ProvenanceInv
 	}
 
 	// Set the env.
-	i.Environment = env
+	return env, nil
+}
 
-	// ConfigSource
-	entryPoint, err := b.getEntryPoint(ctx)
-	if err != nil {
-		return i, fmt.Errorf("getting entrypoint: %w", err)
+// ResolvedDependencies implements BuildType.ResolvedDependencies. It returns a list of ResourceDescriptor
+// that includes the repository that triggered the GitHub Actions workflow.
+func (b *GithubActionsBuild) resolvedDependencies(context.Context) ([]slsa1.ResourceDescriptor, error) {
+	var resources []slsa1.ResourceDescriptor
+	var targetResource slsa1.ResourceDescriptor
+	if b.Context.RepositoryURI() != "" {
+		targetResource.URI = b.Context.RepositoryURI()
 	}
 
-	i.ConfigSource.EntryPoint = entryPoint
-	i.ConfigSource.URI = b.Context.RepositoryURI()
 	if b.Context.SHA != "" {
-		i.ConfigSource.Digest = slsacommon.DigestSet{
+		targetResource.Digest = slsacommon.DigestSet{
 			"sha1": b.Context.SHA,
 		}
 	}
 
-	if b.Context.Event != nil {
-		// Parameters coming from the trigger event.
-		i.Parameters = WorkflowParameters{
-			EventInputs: b.Context.Event["inputs"],
-		}
+	if b.Context.RepositoryURI() != "" || b.Context.SHA != "" {
+		resources = append(resources, targetResource)
 	}
 
-	return i, nil
-}
-
-// Materials implements BuildType.Materials. It returns a list of materials
-// that includes the repository that triggered the GitHub Actions workflow.
-func (b *GithubActionsBuild) Materials(context.Context) ([]slsacommon.ProvenanceMaterial, error) {
-	var material []slsacommon.ProvenanceMaterial
-	if b.Context.RepositoryURI() != "" {
-		material = append(material, slsacommon.ProvenanceMaterial{
-			URI: b.Context.RepositoryURI(),
-			Digest: slsacommon.DigestSet{
-				"sha1": b.Context.SHA,
-			},
-		})
-	}
-	return material, nil
+	return resources, nil
 }
 
 // Metadata implements BuildType.Metadata. It specifies that parameters
 // are complete.
-func (b *GithubActionsBuild) Metadata(context.Context) (*slsa.ProvenanceMetadata, error) {
-	metadata := slsa.ProvenanceMetadata{}
+func (b *GithubActionsBuild) Metadata(context.Context) (slsa1.BuildMetadata, error) {
+	metadata := slsa1.BuildMetadata{}
 
-	metadata.BuildInvocationID = b.Context.RunID
+	metadata.InvocationID = b.Context.RunID
 	if b.Context.RunAttempt != "" {
 		// NOTE: RunID does not get updated on re-runs so we need to include RunAttempt.
-		metadata.BuildInvocationID = fmt.Sprintf("%s-%s", b.Context.RunID, b.Context.RunAttempt)
+		metadata.InvocationID = fmt.Sprintf("%s-%s", b.Context.RunID, b.Context.RunAttempt)
 	}
 
-	if b.Context.Event != nil {
-		// Parameters come from the trigger event.
-		// If we have the event then mark parameters as complete.
-		metadata.Completeness.Parameters = true
-	}
+	// if b.Context.Event != nil {
+	// 	// Parameters come from the trigger event.
+	// 	// If we have the event then mark parameters as complete.
+	// 	metadata.Completeness.Parameters = true
+	// }
 
-	return &metadata, nil
+	return metadata, nil
 }
 
 // WithClients overrides the build type's default client provider. This is

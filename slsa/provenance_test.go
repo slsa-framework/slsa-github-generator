@@ -8,7 +8,8 @@ import (
 	"github.com/google/go-cmp/cmp"
 	intoto "github.com/in-toto/in-toto-golang/in_toto"
 	slsacommon "github.com/in-toto/in-toto-golang/in_toto/slsa_provenance/common"
-	slsa02 "github.com/in-toto/in-toto-golang/in_toto/slsa_provenance/v0.2"
+	slsa1 "github.com/in-toto/in-toto-golang/in_toto/slsa_provenance/v1"
+
 	"github.com/slsa-framework/slsa-github-generator/github"
 )
 
@@ -25,8 +26,17 @@ func (*TestBuild) URI() string {
 	return testBuildType
 }
 
-func (*TestBuild) BuildConfig(context.Context) (interface{}, error) {
-	return testBuildConfig, nil
+func (tB *TestBuild) BuildDefinition(ctx context.Context) (slsa1.ProvenanceBuildDefinition, error) {
+	buildDefinition, err := tB.GithubActionsBuild.BuildDefinition(ctx)
+	if err != nil {
+		return slsa1.ProvenanceBuildDefinition{}, err
+	}
+
+	workflowBuildDef := buildDefinition.ExternalParameters.(WorkflowExternalParameters)
+	workflowBuildDef.Config = testBuildConfig
+	buildDefinition.ExternalParameters = workflowBuildDef
+
+	return buildDefinition, nil
 }
 
 func TestHostedActionsProvenance(t *testing.T) {
@@ -35,7 +45,7 @@ func TestHostedActionsProvenance(t *testing.T) {
 	testCases := []struct {
 		b        BuildType
 		token    *github.OIDCToken
-		expected *intoto.ProvenanceStatement
+		expected *intoto.ProvenanceStatementSLSA1
 		name     string
 	}{
 		{
@@ -47,19 +57,15 @@ func TestHostedActionsProvenance(t *testing.T) {
 				Audience: []string{""},
 				Expiry:   now.Add(1 * time.Hour),
 			},
-			expected: &intoto.ProvenanceStatement{
+			expected: &intoto.ProvenanceStatementSLSA1{
 				StatementHeader: intoto.StatementHeader{
 					Type:          intoto.StatementInTotoV01,
-					PredicateType: slsa02.PredicateSLSAProvenance,
+					PredicateType: slsa1.PredicateSLSAProvenance,
 				},
-				Predicate: slsa02.ProvenancePredicate{
-					Builder: slsacommon.ProvenanceBuilder{
-						ID: GithubHostedActionsBuilderID,
-					},
-					BuildType:   testBuildType,
-					BuildConfig: testBuildConfig,
-					Invocation: slsa02.ProvenanceInvocation{
-						Environment: map[string]interface{}{
+				Predicate: slsa1.ProvenancePredicate{
+					BuildDefinition: slsa1.ProvenanceBuildDefinition{
+						BuildType: testBuildType,
+						InternalParameters: map[string]interface{}{
 							"github_run_id":           "",
 							"github_run_attempt":      "",
 							"github_actor":            "",
@@ -72,8 +78,15 @@ func TestHostedActionsProvenance(t *testing.T) {
 							"github_run_number":       "",
 							"github_sha1":             "",
 						},
+						ExternalParameters: WorkflowExternalParameters{
+							Config: testBuildConfig,
+						},
 					},
-					Metadata: &slsa02.ProvenanceMetadata{},
+					RunDetails: slsa1.ProvenanceRunDetails{
+						Builder: slsa1.Builder{
+							ID: GithubHostedActionsBuilderID,
+						},
+					},
 				},
 			},
 		},
@@ -97,19 +110,16 @@ func TestHostedActionsProvenance(t *testing.T) {
 				Audience: []string{"hoge"},
 				Expiry:   now.Add(1 * time.Hour),
 			},
-			expected: &intoto.ProvenanceStatement{
+
+			expected: &intoto.ProvenanceStatementSLSA1{
 				StatementHeader: intoto.StatementHeader{
 					Type:          intoto.StatementInTotoV01,
-					PredicateType: slsa02.PredicateSLSAProvenance,
+					PredicateType: slsa1.PredicateSLSAProvenance,
 				},
-				Predicate: slsa02.ProvenancePredicate{
-					Builder: slsacommon.ProvenanceBuilder{
-						ID: GithubHostedActionsBuilderID,
-					},
-					BuildType:   testBuildType,
-					BuildConfig: testBuildConfig,
-					Invocation: slsa02.ProvenanceInvocation{
-						Environment: map[string]interface{}{
+				Predicate: slsa1.ProvenancePredicate{
+					BuildDefinition: slsa1.ProvenanceBuildDefinition{
+						BuildType: testBuildType,
+						InternalParameters: map[string]interface{}{
 							"github_run_id":           "12345",
 							"github_run_attempt":      "1",
 							"github_actor":            "user",
@@ -122,14 +132,24 @@ func TestHostedActionsProvenance(t *testing.T) {
 							"github_run_number":       "102937",
 							"github_sha1":             "abcde",
 						},
-						ConfigSource: slsa02.ConfigSource{
-							Digest: slsacommon.DigestSet{
-								"sha1": "abcde",
+						ExternalParameters: WorkflowExternalParameters{
+							Config: testBuildConfig,
+						},
+						ResolvedDependencies: []slsa1.ResourceDescriptor{
+							{
+								Digest: slsacommon.DigestSet{
+									"sha1": "abcde",
+								},
 							},
 						},
 					},
-					Metadata: &slsa02.ProvenanceMetadata{
-						BuildInvocationID: "12345-1",
+					RunDetails: slsa1.ProvenanceRunDetails{
+						Builder: slsa1.Builder{
+							ID: GithubHostedActionsBuilderID,
+						},
+						BuildMetadata: slsa1.BuildMetadata{
+							InvocationID: "12345-1",
+						},
 					},
 				},
 			},

@@ -20,8 +20,8 @@ import (
 	"regexp"
 
 	intoto "github.com/in-toto/in-toto-golang/in_toto"
-	slsacommon "github.com/in-toto/in-toto-golang/in_toto/slsa_provenance/common"
-	slsa02 "github.com/in-toto/in-toto-golang/in_toto/slsa_provenance/v0.2"
+
+	slsa1 "github.com/in-toto/in-toto-golang/in_toto/slsa_provenance/v1"
 )
 
 const (
@@ -50,7 +50,7 @@ func NewHostedActionsGenerator(bt BuildType) *HostedActionsGenerator {
 }
 
 // Generate generates an in-toto provenance statement in SLSA v0.2 format.
-func (g *HostedActionsGenerator) Generate(ctx context.Context) (*intoto.ProvenanceStatement, error) {
+func (g *HostedActionsGenerator) Generate(ctx context.Context) (*intoto.ProvenanceStatementSLSA1, error) {
 	// NOTE: Use buildType as the audience as that closely matches the intended
 	// recipient of the OIDC token.
 	// NOTE: GitHub doesn't allow github.com in the audience so remove it.
@@ -79,41 +79,27 @@ func (g *HostedActionsGenerator) Generate(ctx context.Context) (*intoto.Provenan
 		return nil, err
 	}
 
-	invocation, err := g.buildType.Invocation(ctx)
+	buildDefinition, err := g.buildType.BuildDefinition(ctx)
 	if err != nil {
 		return nil, err
 	}
+	buildDefinition.BuildType = g.buildType.URI()
 
-	buildConfig, err := g.buildType.BuildConfig(ctx)
+	runDetails, err := g.buildType.RunDetails(ctx)
 	if err != nil {
 		return nil, err
 	}
+	runDetails.Builder.ID = builderID
 
-	materials, err := g.buildType.Materials(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	metadata, err := g.buildType.Metadata(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	return &intoto.ProvenanceStatement{
+	return &intoto.ProvenanceStatementSLSA1{
 		StatementHeader: intoto.StatementHeader{
 			Type:          intoto.StatementInTotoV01,
-			PredicateType: slsa02.PredicateSLSAProvenance,
+			PredicateType: slsa1.PredicateSLSAProvenance,
 			Subject:       subject,
 		},
-		Predicate: slsa02.ProvenancePredicate{
-			BuildType: g.buildType.URI(),
-			Builder: slsacommon.ProvenanceBuilder{
-				ID: builderID,
-			},
-			Invocation:  invocation,
-			BuildConfig: buildConfig,
-			Materials:   materials,
-			Metadata:    metadata,
+		Predicate: slsa1.ProvenancePredicate{
+			BuildDefinition: buildDefinition,
+			RunDetails:      runDetails,
 		},
 	}, nil
 }
