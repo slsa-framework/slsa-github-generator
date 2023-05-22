@@ -66,7 +66,7 @@ function run() {
                 $ rm -f client.cert && rm -f predicate.json && \
                 env INPUT_SLSA-WORKFLOW-RECIPIENT="delegator_generic_slsa3.yml" \
                 INPUT_SLSA-UNVERIFIED-TOKEN="$(cat testdata/slsa-token)" \
-                INPUT_SLSA-VERSION="1.0-rc1" \
+                INPUT_SLSA-VERSION="v1.0" \
                 INPUT_TOKEN="$(echo $GH_TOKEN)" \
                 INPUT_OUTPUT-PREDICATE="predicate.json" \
                 GITHUB_EVENT_NAME="push" \
@@ -126,7 +126,7 @@ function run() {
             (0, validate_1.validateField)("version", rawTokenObj.version, 1);
             // Validate the slsaVersion
             (0, validate_1.validateFieldAnyOf)("slsaVersion", rawTokenObj.slsaVersion, [
-                "v1-rc1",
+                "v1.0",
                 "v0.2",
             ]);
             // Verify the context of the signature.
@@ -156,7 +156,7 @@ function run() {
             // NOTE: we create the predicate using the token with masked inputs.
             let predicateStr = "";
             switch (rawMaskedTokenObj.slsaVersion) {
-                case "v1-rc1": {
+                case "v1.0": {
                     const predicate_v1 = yield (0, predicate1_1.createPredicate)(rawMaskedTokenObj, toolURI, ghToken);
                     predicateStr = JSON.stringify(predicate_v1);
                     break;
