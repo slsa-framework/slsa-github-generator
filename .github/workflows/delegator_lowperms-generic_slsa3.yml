@@ -256,7 +256,7 @@ jobs:
         run: |
           case "$SLSA_VERSION" in
             "v0.2")
-              echo "predicate-type=https://slsa.dev/provenance/$" >> "$GITHUB_OUTPUT"
+              echo "predicate-type=https://slsa.dev/provenance/v0.2" >> "$GITHUB_OUTPUT"
               ;;
             "v1.0")
               echo "predicate-type=https://slsa.dev/provenance/v1" >> "$GITHUB_OUTPUT"
