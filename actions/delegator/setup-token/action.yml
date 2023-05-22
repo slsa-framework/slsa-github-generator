@@ -6,7 +6,7 @@ inputs:
   slsa-version:
     description: "The version of SLSA provenance format to output."
     required: false
-    default: "v1-rc1"
+    default: "v1.0"
 
   slsa-workflow-recipient:
     description: >
