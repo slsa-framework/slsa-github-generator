@@ -15,7 +15,7 @@ do
           
     echo -n "
         {
-          \"name\": \"${bn}-attestation.intoto\",
+          \"name\": \"${bn}.intoto\",
           \"subjects\": [
             { \"name\": \"${bn}\",
               \"digest\": { \"sha256\": \"${hash}\"  }
