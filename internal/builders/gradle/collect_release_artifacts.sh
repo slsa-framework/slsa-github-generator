@@ -7,6 +7,8 @@ GRADLE_VERSION=$(./gradlew properties -q | grep "version:" | awk '{print $2}')
 ARTIFACT_LIST=\"${ARTIFACT_LIST}\"
 for i in ${ARTIFACT_LIST//,/ }
 do
+    i="${i#"${i%%[![:space:]]*}"}" # trim leading whitespace                                                                                                                                                                                                                                                                                                                                         
+    i="${i%"${i##*[![:space:]]}"}" # trim trailing whitespace
     i=$(echo $i | sed 's/\"//')
     # Check if $i is empty
     if [ -z "$i" ]
