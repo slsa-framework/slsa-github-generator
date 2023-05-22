@@ -31,7 +31,7 @@ on:
     inputs:
       base64-subjects:
         description: "Artifacts for which to generate provenance, formatted the same as the output of sha256sum (SHA256 NAME\\n[...]) and base64 encoded."
-        required: false
+        required: true
         type: string
       upload-assets:
         description: >
