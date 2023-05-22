@@ -33,7 +33,7 @@ async function run(): Promise<void> {
         $ rm -f client.cert && rm -f predicate.json && \
         env INPUT_SLSA-WORKFLOW-RECIPIENT="delegator_generic_slsa3.yml" \
         INPUT_SLSA-UNVERIFIED-TOKEN="$(cat testdata/slsa-token)" \
-        INPUT_SLSA-VERSION="1.0-rc1" \
+        INPUT_SLSA-VERSION="v1.0" \
         INPUT_TOKEN="$(echo $GH_TOKEN)" \
         INPUT_OUTPUT-PREDICATE="predicate.json" \
         GITHUB_EVENT_NAME="push" \
@@ -102,7 +102,7 @@ async function run(): Promise<void> {
 
     // Validate the slsaVersion
     validateFieldAnyOf("slsaVersion", rawTokenObj.slsaVersion, [
-      "v1-rc1",
+      "v1.0",
       "v0.2",
     ]);
 
@@ -169,7 +169,7 @@ async function run(): Promise<void> {
     // NOTE: we create the predicate using the token with masked inputs.
     let predicateStr = "";
     switch (rawMaskedTokenObj.slsaVersion) {
-      case "v1-rc1": {
+      case "v1.0": {
         const predicate_v1 = await createPredicate_v1(
           rawMaskedTokenObj,
           toolURI,
