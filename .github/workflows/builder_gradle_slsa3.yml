@@ -18,7 +18,7 @@ on:
   workflow_call:
     inputs:
       rekor-log-public:
-        description: "Private"
+        description: "Allow publication of your repository name on the public Rekor log"
         required: false
         type: boolean
         default: false
