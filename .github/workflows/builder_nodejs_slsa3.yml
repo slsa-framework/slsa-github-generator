@@ -94,7 +94,7 @@ jobs:
           slsa-workflow-recipient: "delegator_lowperms-generic_slsa3.yml"
           slsa-rekor-log-public: ${{ inputs.rekor-log-public }}
           slsa-runner-label: "ubuntu-latest"
-          slsa-build-action-path: "./internal/nodejs-action"
+          slsa-build-action-path: "./internal/builders/nodejs"
           slsa-version: "v0.2"
           slsa-workflow-inputs: ${{ toJson(inputs) }}
 
