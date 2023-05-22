@@ -23,7 +23,7 @@ on:
         type: boolean
         default: false
       artifact-list:
-              description: "Comma-separated list of paths to artifacts to be released. Use GRADLE_VERSION for the gradle version, for example: 'artifact-GRADLE_VERSION-sources.jar'"
+        description: "Comma-separated list of paths to artifacts to be released. Use GRADLE_VERSION for the gradle version, for example: 'artifact-GRADLE_VERSION-sources.jar'"
         type: string
         required: true
       jdk-version:
@@ -55,6 +55,8 @@ jobs:
       contents: read # For asset uploads.
       actions: read   # For the entrypoint.
       packages: write
-    uses: slsa-framework/slsa-github-generator/.github/workflows/delegator_lowperms-generic_slsa3.yml@main # TODO(#2154): need to add support for uploading provenance and artifact to registry
+    uses: slsa-framework/slsa-github-generator/.github/workflows/delegator_lowperms-generic_slsa3.yml@main
     with:
       slsa-token: ${{ needs.slsa-setup.outputs.slsa-token }}
+
+  # TODO(#2154): need to add support for uploading provenance and artifact to registry
