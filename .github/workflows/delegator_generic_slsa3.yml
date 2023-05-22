@@ -255,8 +255,8 @@ jobs:
             "v0.2")
               echo "predicate-type=https://slsa.dev/provenance/v0.2" >> "$GITHUB_OUTPUT"
               ;;
-            "v1-rc1")
-              echo "predicate-type=https://slsa.dev/provenance/v1-rc1" >> "$GITHUB_OUTPUT"
+            "v1.0")
+              echo "predicate-type=https://slsa.dev/provenance/v1" >> "$GITHUB_OUTPUT"
               ;;
             *)
               >&2 echo "Error: unknown SLSA version: ${SLSA_VERSION}"
