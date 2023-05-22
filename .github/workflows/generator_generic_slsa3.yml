@@ -31,7 +31,15 @@ on:
     inputs:
       base64-subjects:
         description: "Artifacts for which to generate provenance, formatted the same as the output of sha256sum (SHA256 NAME\\n[...]) and base64 encoded."
-        required: true
+        required: false
+        type: string
+      bas64-subjects-filename:
+        description: "The filename containing the list of artifacts for which to generate provenance, formatted the same as the output of sha256sum (SHA256 NAME\\n[...]) and base64 encoded."
+        required: false
+        type: string
+      base64-subjects-filename-sha256:
+        description: "The sha256 (in hexadecimal) of the content of the 'bas64-subjects-filename' variable."
+        required: false
         type: string
       upload-assets:
         description: >

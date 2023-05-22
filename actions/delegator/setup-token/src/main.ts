@@ -33,12 +33,12 @@ async function run(): Promise<void> {
         INPUT_SLSA-WORKFLOW-INPUTS-MASK="name2, name4" \
         INPUT_SLSA-CHECKOUT-FETCH-DEPTH="2" \
         INPUT_SLSA-CHECKOUT-REPOSITORY-SHA1="abcdef" \
-        INPUT_SLSA-VERSION="v1-rc1" \
+        INPUT_SLSA-VERSION="v1" \
         nodejs ./dist/index.js
     */
 
     const slsaVersion = core.getInput("slsa-version");
-    if (!["v1-rc1", "v0.2"].includes(slsaVersion)) {
+    if (!["v1", "v0.2"].includes(slsaVersion)) {
       throw new Error(`Unsupported slsa-version: ${slsaVersion}`);
     }
     const workflowRecipient = core.getInput("slsa-workflow-recipient");
