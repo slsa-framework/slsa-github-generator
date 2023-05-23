@@ -7,7 +7,7 @@ NUM_JAR_FILES=$(find ./release-files-for-slsa -type f | wc -l)
 COUNTER=1
         
 # Add one attestation per .jar file:
-find ./release-files-for-slsa -type f -print0 | while read -d $'\0' fname
+find ./release-files-for-slsa -type f -print0 | while read -r -d $'\0' fname
 do
           
     bn=$(basename -- "$fname")
