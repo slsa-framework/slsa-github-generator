@@ -35,7 +35,7 @@ go-test: ## Run Go unit tests.
 
 .PHONY: ts-test
 ts-test: ## Run TypeScript tests.
-	# Run unit tests for all TS actions where tests are found.
+	@# Run unit tests for all TS actions where tests are found.
 	@set -e;\
 		PATHS=$$(find .github/actions/ actions/ -not -path '*/node_modules/*' -name __tests__ -type d | xargs dirname); \
 		for path in $$PATHS; do \
@@ -70,11 +70,20 @@ lint: markdownlint golangci-lint shellcheck eslint yamllint actionlint ## Run al
 
 .PHONY: actionlint
 actionlint: ## Runs the actionlint linter.
+	@# NOTE: We need to ignore config files used in tests.
 	@set -e;\
+		files=$$( \
+			find .github/workflows/ -type f \
+				\( \
+					-name '*.yaml' -o \
+					-name '*.yml' \
+				\) \
+				-not -iwholename '*/configs-*/*' \
+		); \
 		if [ "$(OUTPUT_FORMAT)" == "github" ]; then \
-			actionlint -format '{{range $$err := .}}::error file={{$$err.Filepath}},line={{$$err.Line}},col={{$$err.Column}}::{{$$err.Message}}%0A```%0A{{replace $$err.Snippet "\\n" "%0A"}}%0A```\n{{end}}' -ignore 'SC2016:'; \
+			actionlint -format '{{range $$err := .}}::error file={{$$err.Filepath}},line={{$$err.Line}},col={{$$err.Column}}::{{$$err.Message}}%0A```%0A{{replace $$err.Snippet "\\n" "%0A"}}%0A```\n{{end}}' -ignore 'SC2016:' $${files}; \
 		else \
-			actionlint; \
+			actionlint $${files}; \
 		fi
 
 .PHONY: markdownlint

@@ -266,13 +266,14 @@ jobs:
         id: build-gen
         working-directory: __PROJECT_CHECKOUT_DIR__
         env:
+          GITHUB_TOKEN: "${{ github.token }}"
           CONFIG_FILE: "${{ inputs.config-file }}"
           UNTRUSTED_ENVS: "${{ inputs.evaluated-envs }}"
           UNTRUSTED_BINARY_NAME: "${{ needs.build-dry.outputs.go-binary-name }}"
         run: |
           set -euo pipefail
 
-          echo "::stop-commands::`echo -n ${{ github.token }} | sha256sum | head -c 64`"
+          echo "::stop-commands::$(echo -n "${GITHUB_TOKEN}" | sha256sum | head -c 64)"
 
           echo "$GITHUB_WORKSPACE/$BUILDER_BINARY" build "$CONFIG_FILE" "$UNTRUSTED_ENVS"
           # Note: We need to provide the asbolute path to the output binary.
