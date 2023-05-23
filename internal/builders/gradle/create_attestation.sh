@@ -26,11 +26,11 @@ do
         }" >> "$SLSA_OUTPUTS_ARTIFACTS_FILE"
           
     # Add comma between attestations and not after the last
-    if [[ "$COUNTER" != "$NUM_JAR_FILES" ]]; then
+    if [[ "$counter" != "$num_jar_files" ]]; then
       echo -n "," >> "$SLSA_OUTPUTS_ARTIFACTS_FILE"
     fi
          
-    COUNTER=$[$COUNTER +1]
+    counter=$[$counter +1]
 done
         
 # Close "attestations" and "version":
