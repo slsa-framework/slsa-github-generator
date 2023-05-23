@@ -10,7 +10,7 @@ COUNTER=1
 find ./release-files-for-slsa -type f -print0 | while read -d $'\0' fname
 do
           
-    bn=$(basename -- $fname)
+    bn=$(basename -- "$fname")
     hash=$(sha256sum "$fname" | awk '{print $1}')
           
     echo -n "
