@@ -15,14 +15,6 @@ import * as tscommon from "tscommon";
 import { githubObj, rawTokenInterface } from "../src/types";
 import { asMap } from "../src/utils";
 
-export function validateSupportedTrigger(events: string[]): void {
-  validateFieldAnyOf(
-    "GITHUB_EVENT_NAME",
-    process.env.GITHUB_EVENT_NAME,
-    events
-  );
-}
-
 export function validateGitHubFields(gho: githubObj): void {
   // actor_id
   validateField("github.actor_id", gho.actor_id, process.env.GITHUB_ACTOR_ID);
