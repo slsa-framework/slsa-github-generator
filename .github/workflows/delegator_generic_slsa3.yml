@@ -98,7 +98,6 @@ jobs:
       tool-repository: ${{ steps.verify.outputs.tool-repository }}
       tool-ref: ${{ steps.verify.outputs.tool-ref }}
       predicate-sha256: ${{ steps.upload.outputs.sha256 }}
-      builder-interface-type: "builder"
 
     steps:
       - name: Verify token
@@ -108,6 +107,7 @@ jobs:
           slsa-workflow-recipient: "delegator_generic_slsa3.yml"
           slsa-unverified-token: ${{ inputs.slsa-token }}
           output-predicate: ${{ env.SLSA_PREDICATE_FILE }}
+          builder-interface-type: "builder"
 
       - name: Upload predicate
         id: upload
