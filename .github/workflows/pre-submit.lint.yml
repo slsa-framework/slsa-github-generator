@@ -77,7 +77,7 @@ jobs:
           set -euo pipefail
 
           # Install actionlint
-          curl -sSLo actionlint.tar.gz "https://github.com/rhysd/actionlint/releases/download/v${ACTIONLINT_VERSION}/actionlint_${ACTIONLINT_VERSION}_linux_amd64.tar.xz"
+          curl -sSLo actionlint.tar.gz "https://github.com/rhysd/actionlint/releases/download/v${ACTIONLINT_VERSION}/actionlint_${ACTIONLINT_VERSION}_linux_amd64.tar.gz"
           echo "actionlint checksum is $(sha256sum actionlint.tar.gz | awk '{ print $1 }')"
           echo "expected checksum is $ACTIONLINT_CHECKSUM"
           echo "$ACTIONLINT_CHECKSUM  actionlint.tar.gz" | sha256sum --strict --check --status || exit -2
