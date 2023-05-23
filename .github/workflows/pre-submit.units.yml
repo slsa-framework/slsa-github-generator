@@ -58,8 +58,8 @@ jobs:
         run: |
           set -euo pipefail
 
-          # The first sha in SHA256SUM.md is the latest verifier release sha
-          expected_sha=$(grep -m 1  -w -o -e '[0-9a-f]\{64\}' verifier/SHA256SUM.md)
+          # The first sha in SHA256SUM.md for slsa-verifier-linux-amd64 is the latest verifier release sha
+          expected_sha=$(grep -m 1  -w -o -e '[0-9a-f]\{64\} *slsa-verifier-linux-amd64' SHA256SUM.md | awk '{ print $1 }')
           echo "$expected_sha"
 
           # The first vX.Y.Z in SHA256SUM.md is the latest verifier release version
