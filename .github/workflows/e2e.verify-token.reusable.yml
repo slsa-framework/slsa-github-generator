@@ -131,7 +131,7 @@ jobs:
           slsa-unverified-token: ${{ needs.setup-token.outputs.valid-token }}
           slsa-workflow-recipient: "delegator_generic_slsa3.yml"
           output-predicate: predicate.json
-          builder-interface-type: "generator" # test the generator predicate generation.
+          builder-interface-type: "generator" # Test the generator predicate generation.
       - env:
           VERIFIED_TOKEN: ${{ steps.verify.outputs.slsa-verified-token }}
           TOOL_REPOSITORY: ${{ steps.verify.outputs.tool-repository }}

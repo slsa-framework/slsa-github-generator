@@ -103,6 +103,9 @@ _e2e_verify_presence() {
 }
 
 e2e_verify_predicate_v1_buildDefinition_externalParameters_workflow() {
+    if [[ -z "${BUILDER_INTERFACE_TYPE:-}" ]]; then
+        return 0
+    fi
     if [[ "${BUILDER_INTERFACE_TYPE}" == "builder" ]]; then
         return 0
     fi

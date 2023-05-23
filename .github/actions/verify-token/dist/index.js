@@ -96,7 +96,7 @@ function run() {
             }
             const builderInterfaceType = core.getInput("builder-interface-type");
             if (!builderInterfaceType) {
-                // Detect if output builder-interface-type is null or empty string.
+                // Detect if builder-interface-type is null or empty string.
                 throw new Error("builder-interface-type must be supplied");
             }
             // Validate builderInterfaceType.
