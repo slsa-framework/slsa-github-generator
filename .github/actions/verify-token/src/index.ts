@@ -62,11 +62,20 @@ async function run(): Promise<void> {
     if (!ghToken) {
       throw new Error("token not provided");
     }
+    const builderInterfaceType = core.getInput("builder-interface-type", {
+      required: true,
+    });
+    // Validate builderInterfaceType.
+    validateFieldAnyOf("builder-interface-type", builderInterfaceType, [
+      "generator",
+      "builder",
+    ]);
+    const isGenerator = builderInterfaceType === "generator";
     const workflowRecipient = core.getInput("slsa-workflow-recipient");
     const unverifiedToken = core.getInput("slsa-unverified-token");
     const outputPredicate = core.getInput("output-predicate");
     if (!outputPredicate) {
-      // detect if output predicate is null or empty string.
+      // Detect if output predicate is null or empty string.
       throw new Error("output-predicate must be supplied");
     }
 
@@ -173,7 +182,8 @@ async function run(): Promise<void> {
         const predicate_v1 = await createPredicate_v1(
           rawMaskedTokenObj,
           toolURI,
-          ghToken
+          ghToken,
+          isGenerator
         );
         predicateStr = JSON.stringify(predicate_v1);
         break;
@@ -183,6 +193,7 @@ async function run(): Promise<void> {
           rawMaskedTokenObj,
           toolURI,
           ghToken
+          // NOTE: no differences between generator and builder.
         );
         predicateStr = JSON.stringify(predicate_v02);
         break;

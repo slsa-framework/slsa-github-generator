@@ -110,12 +110,13 @@ jobs:
     needs: [setup-token]
     steps:
       - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
-      - id: verify
+      - id: verify-builder
         uses: ./.github/actions/verify-token
         with:
           slsa-unverified-token: ${{ needs.setup-token.outputs.valid-token }}
           slsa-workflow-recipient: "delegator_generic_slsa3.yml"
           output-predicate: predicate.json
+          builder-interface-type: "builder"
       - env:
           VERIFIED_TOKEN: ${{ steps.verify.outputs.slsa-verified-token }}
           TOOL_REPOSITORY: ${{ steps.verify.outputs.tool-repository }}
@@ -123,6 +124,22 @@ jobs:
           PREDICATE: predicate.json
           CHECKOUT_FETCH_DEPTH: 4
           CHECKOUT_SHA1: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          BUILDER_INTERFACE_TYPE: "builder"
+      - id: verify-generator
+        uses: ./.github/actions/verify-token
+        with:
+          slsa-unverified-token: ${{ needs.setup-token.outputs.valid-token }}
+          slsa-workflow-recipient: "delegator_generic_slsa3.yml"
+          output-predicate: predicate.json
+          builder-interface-type: "generator" # Test the generator predicate generation.
+      - env:
+          VERIFIED_TOKEN: ${{ steps.verify.outputs.slsa-verified-token }}
+          TOOL_REPOSITORY: ${{ steps.verify.outputs.tool-repository }}
+          TOOL_REF: ${{ steps.verify.outputs.tool-ref }}
+          PREDICATE: predicate.json
+          CHECKOUT_FETCH_DEPTH: 4
+          CHECKOUT_SHA1: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          BUILDER_INTERFACE_TYPE: "generator"
         run: ./.github/workflows/scripts/schedule.actions/verify-verified-token.sh
       - id: verify-mismatch-recipient
         uses: ./.github/actions/verify-token
@@ -131,6 +148,7 @@ jobs:
           slsa-unverified-token: ${{ steps.verify.outputs.slsa-verified-token }}
           slsa-workflow-recipient: "elegator_generic_slsa3.yml"
           output-predicate: mismatch-recipient-predicate.json
+          builder-interface-type: "builder"
       - id: verify-mismatch-token
         uses: ./.github/actions/verify-token
         continue-on-error: true
@@ -138,6 +156,7 @@ jobs:
           slsa-unverified-token: aGVsbG8K
           slsa-workflow-recipient: "delegator_generic_slsa3.yml"
           output-predicate: mismatch-token-predicate.json
+          builder-interface-type: "builder"
       - id: verify-invalid-mask
         uses: ./.github/actions/verify-token
         continue-on-error: true
@@ -146,6 +165,7 @@ jobs:
           slsa-unverified-token: ${{ needs.setup-token.outputs.invalid-mask-token }}
           slsa-workflow-recipient: "delegator_generic_slsa3.yml"
           output-predicate: invalid-mask-predicate.json
+          builder-interface-type: "builder"
       - id: verify-invalid-sha1
         uses: ./.github/actions/verify-token
         continue-on-error: true
@@ -154,6 +174,7 @@ jobs:
           slsa-unverified-token: ${{ needs.setup-token.outputs.invalid-sha1-token }}
           slsa-workflow-recipient: "delegator_generic_slsa3.yml"
           output-predicate: invalid-sha1-predicate.json
+          builder-interface-type: "builder"
       - env:
           SUCCESS: ${{ steps.verify-mismatch-recipient.outcome == 'failure' && steps.verify-mismatch-token.outcome == 'failure' && steps.verify-invalid-mask.outcome == 'failure' && steps.verify-invalid-sha1.outcome == 'failure' }}
         run: |

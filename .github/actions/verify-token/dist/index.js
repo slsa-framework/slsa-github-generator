@@ -94,11 +94,20 @@ function run() {
             if (!ghToken) {
                 throw new Error("token not provided");
             }
+            const builderInterfaceType = core.getInput("builder-interface-type", {
+                required: true,
+            });
+            // Validate builderInterfaceType.
+            (0, validate_1.validateFieldAnyOf)("builder-interface-type", builderInterfaceType, [
+                "generator",
+                "builder",
+            ]);
+            const isGenerator = builderInterfaceType === "generator";
             const workflowRecipient = core.getInput("slsa-workflow-recipient");
             const unverifiedToken = core.getInput("slsa-unverified-token");
             const outputPredicate = core.getInput("output-predicate");
             if (!outputPredicate) {
-                // detect if output predicate is null or empty string.
+                // Detect if output predicate is null or empty string.
                 throw new Error("output-predicate must be supplied");
             }
             if (tscommon.safeExistsSync(outputPredicate)) {
@@ -157,12 +166,14 @@ function run() {
             let predicateStr = "";
             switch (rawMaskedTokenObj.slsaVersion) {
                 case "v1.0": {
-                    const predicate_v1 = yield (0, predicate1_1.createPredicate)(rawMaskedTokenObj, toolURI, ghToken);
+                    const predicate_v1 = yield (0, predicate1_1.createPredicate)(rawMaskedTokenObj, toolURI, ghToken, isGenerator);
                     predicateStr = JSON.stringify(predicate_v1);
                     break;
                 }
                 case "v0.2": {
-                    const predicate_v02 = yield (0, predicate02_1.createPredicate)(rawMaskedTokenObj, toolURI, ghToken);
+                    const predicate_v02 = yield (0, predicate02_1.createPredicate)(rawMaskedTokenObj, toolURI, ghToken
+                    // NOTE: no differences between generator and builder.
+                    );
                     predicateStr = JSON.stringify(predicate_v02);
                     break;
                 }
@@ -492,7 +503,7 @@ const github = __importStar(__nccwpck_require__(5438));
 const tscommon = __importStar(__nccwpck_require__(6634));
 const utils_1 = __nccwpck_require__(918);
 const DELEGATOR_BUILD_TYPE_V0 = "https://github.com/slsa-framework/slsa-github-generator/delegator-generic@v0";
-function createPredicate(rawTokenObj, toolURI, token) {
+function createPredicate(rawTokenObj, toolURI, token, isGenerator) {
     return __awaiter(this, void 0, void 0, function* () {
         // Trigger information.
         const triggerPath = (0, utils_1.getTriggerPath)(rawTokenObj);
@@ -515,22 +526,7 @@ function createPredicate(rawTokenObj, toolURI, token) {
         const predicate = {
             buildDefinition: {
                 buildType: DELEGATOR_BUILD_TYPE_V0,
-                externalParameters: {
-                    // Inputs to the TRW, which define the interface of the builder for the
-                    // BYOB framework. Some of these values may be masked by the TRW.
-                    // NOTE: the Map object needs to be converted to an object to serialize to JSON.
-                    inputs: Object.fromEntries(rawTokenObj.tool.inputs),
-                    // Variables are always empty for BYOB / builders.
-                    // TODO(#1555): add support for generators.
-                    vars: {},
-                    // NOTE: This is equivalent to the v0.2 entryPoint.
-                    // TODO(#2077): set workflow to '{}'?
-                    workflow: {
-                        ref: triggerRef,
-                        repository: `git+https://github.com/${triggerRepository}`,
-                        path: triggerPath,
-                    },
-                },
+                externalParameters: {},
                 internalParameters: {
                     GITHUB_ACTOR_ID: rawTokenObj.github.actor_id,
                     GITHUB_EVENT_NAME: rawTokenObj.github.event_name,
@@ -572,6 +568,31 @@ function createPredicate(rawTokenObj, toolURI, token) {
                 },
             },
         };
+        // Construct the predicate according to the type of builder.
+        if (isGenerator) {
+            predicate.buildDefinition.externalParameters = {
+                workflow: {
+                    ref: triggerRef,
+                    repository: `git+https://github.com/${triggerRepository}`,
+                    path: triggerPath,
+                },
+                // TODO(#1555): record the vars.
+                vars: {},
+                // TODO(#2164): record the inputs, depending on the type of trigger events.
+                inputs: {},
+            };
+        }
+        else {
+            // NOTE: the workflow information is available in the internalParameters.GITHUB_WORKFLOW_REF.
+            predicate.buildDefinition.externalParameters = {
+                // Inputs to the TRW, which define the interface of the builder for the
+                // BYOB framework. Some of these values may be masked by the TRW.
+                // NOTE: the Map object needs to be converted to an object to serialize to JSON.
+                inputs: Object.fromEntries(rawTokenObj.tool.inputs),
+                // Variables are always empty for BYOB / builders.
+                vars: {},
+            };
+        }
         // Put GitHub event payload into internalParameters.
         // TODO(github.com/slsa-framework/slsa-github-generator/issues/1575): Redact sensitive information.
         // NOTE: Contents of event_path have been pre-validated.
