@@ -4,8 +4,8 @@ mkdir release-files-for-slsa
 GRADLE_VERSION=$(./gradlew properties -q | grep "version:" | awk '{print $2}')
 
 # Move artifacts from the user-supplied artifact list
-IFS=',' read -ra ARTIFACT_ARRAY <<< "$ARTIFACT_LIST"
-for i in "${ARTIFACT_ARRAY[@]}"
+IFS=',' read -ra artifact_array <<< "$ARTIFACT_LIST"
+for i in "${artifact_array[@]}"
 do
     i="${i#"${i%%[![:space:]]*}"}" # trim leading whitespace                                                                                                                                                                                                                                                                                                                                         
     i="${i%"${i##*[![:space:]]}"}" # trim trailing whitespace
