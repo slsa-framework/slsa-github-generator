@@ -3,8 +3,8 @@
 # "version" and "attestations" fields:
 echo -e -n "{\n  \"version\": 1,\n  \"attestations\": [" >> "$SLSA_OUTPUTS_ARTIFACTS_FILE"
 
-NUM_JAR_FILES=$(find ./release-files-for-slsa -type f | wc -l)
-COUNTER=1
+num_jar_files=$(find ./release-files-for-slsa -type f | wc -l)
+counter=1
         
 # Add one attestation per .jar file:
 find ./release-files-for-slsa -type f -print0 | while read -r -d $'\0' fname
