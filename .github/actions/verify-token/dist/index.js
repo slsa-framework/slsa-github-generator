@@ -66,7 +66,7 @@ function run() {
                 $ rm -f client.cert && rm -f predicate.json && \
                 env INPUT_SLSA-WORKFLOW-RECIPIENT="delegator_generic_slsa3.yml" \
                 INPUT_SLSA-UNVERIFIED-TOKEN="$(cat testdata/slsa-token)" \
-                INPUT_SLSA-VERSION="1.0-rc1" \
+                INPUT_SLSA-VERSION="v1.0" \
                 INPUT_TOKEN="$(echo $GH_TOKEN)" \
                 INPUT_OUTPUT-PREDICATE="predicate.json" \
                 GITHUB_EVENT_NAME="push" \
@@ -126,7 +126,7 @@ function run() {
             (0, validate_1.validateField)("version", rawTokenObj.version, 1);
             // Validate the slsaVersion
             (0, validate_1.validateFieldAnyOf)("slsaVersion", rawTokenObj.slsaVersion, [
-                "v1-rc1",
+                "v1.0",
                 "v0.2",
             ]);
             // Verify the context of the signature.
@@ -156,7 +156,7 @@ function run() {
             // NOTE: we create the predicate using the token with masked inputs.
             let predicateStr = "";
             switch (rawMaskedTokenObj.slsaVersion) {
-                case "v1-rc1": {
+                case "v1.0": {
                     const predicate_v1 = yield (0, predicate1_1.createPredicate)(rawMaskedTokenObj, toolURI, ghToken);
                     predicateStr = JSON.stringify(predicate_v1);
                     break;
@@ -527,7 +527,7 @@ function createPredicate(rawTokenObj, toolURI, token) {
                     // TODO(#2077): set workflow to '{}'?
                     workflow: {
                         ref: triggerRef,
-                        repository: triggerRepository,
+                        repository: `git+https://github.com/${triggerRepository}`,
                         path: triggerPath,
                     },
                 },
@@ -666,7 +666,9 @@ function createSourceURI(rawTokenObj) {
 exports.createSourceURI = createSourceURI;
 // getTriggerSha1 returns the sha1 of the trigger repository.
 function getTriggerSha1(rawTokenObj) {
-    return rawTokenObj.github.sha;
+    const sha1 = rawTokenObj.github.sha;
+    validateSha1(sha1);
+    return sha1;
 }
 exports.getTriggerSha1 = getTriggerSha1;
 // getTriggerRepository returns the repository of the trigger.
@@ -679,6 +681,12 @@ function getTriggerRef(rawTokenObj) {
     return rawTokenObj.github.ref;
 }
 exports.getTriggerRef = getTriggerRef;
+function validateSha1(sha1) {
+    // 40 characters in hex format.
+    if (!/[a-fA-F0-9]{40}/.test(sha1)) {
+        throw new Error(`invalid sha1: ${sha1}`);
+    }
+}
 // getSourceSha1 returns the sha1 of the source that is checked out.
 function getSourceSha1(rawTokenObj) {
     // The checkout.sha1 takes precedence over the default GitHub event.
@@ -686,7 +694,9 @@ function getSourceSha1(rawTokenObj) {
     // For example, users of JReleaser may push a commit
     // before building. See discussion at
     // https://github.com/slsa-framework/slsa-github-generator/issues/2043.
-    return rawTokenObj.source.checkout.sha1 || rawTokenObj.github.sha;
+    const sha1 = rawTokenObj.source.checkout.sha1 || rawTokenObj.github.sha;
+    validateSha1(sha1);
+    return sha1;
 }
 exports.getSourceSha1 = getSourceSha1;
 // getTriggerPath returns the workflow's path from the workflow_ref.
@@ -50984,7 +50994,9 @@ function createSourceURI(rawTokenObj) {
 exports.createSourceURI = createSourceURI;
 // getTriggerSha1 returns the sha1 of the trigger repository.
 function getTriggerSha1(rawTokenObj) {
-    return rawTokenObj.github.sha;
+    const sha1 = rawTokenObj.github.sha;
+    validateSha1(sha1);
+    return sha1;
 }
 exports.getTriggerSha1 = getTriggerSha1;
 // getTriggerRepository returns the repository of the trigger.
@@ -50997,6 +51009,12 @@ function getTriggerRef(rawTokenObj) {
     return rawTokenObj.github.ref;
 }
 exports.getTriggerRef = getTriggerRef;
+function validateSha1(sha1) {
+    // 40 characters in hex format.
+    if (!/[a-fA-F0-9]{40}/.test(sha1)) {
+        throw new Error(`invalid sha1: ${sha1}`);
+    }
+}
 // getSourceSha1 returns the sha1 of the source that is checked out.
 function getSourceSha1(rawTokenObj) {
     // The checkout.sha1 takes precedence over the default GitHub event.
@@ -51004,7 +51022,9 @@ function getSourceSha1(rawTokenObj) {
     // For example, users of JReleaser may push a commit
     // before building. See discussion at
     // https://github.com/slsa-framework/slsa-github-generator/issues/2043.
-    return rawTokenObj.source.checkout.sha1 || rawTokenObj.github.sha;
+    const sha1 = rawTokenObj.source.checkout.sha1 || rawTokenObj.github.sha;
+    validateSha1(sha1);
+    return sha1;
 }
 exports.getSourceSha1 = getSourceSha1;
 // getTriggerPath returns the workflow's path from the workflow_ref.

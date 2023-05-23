@@ -67,7 +67,7 @@ export async function createPredicate(
         // TODO(#2077): set workflow to '{}'?
         workflow: {
           ref: triggerRef,
-          repository: triggerRepository,
+          repository: `git+https://github.com/${triggerRepository}`,
           path: triggerPath,
         },
       },

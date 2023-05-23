@@ -18,6 +18,7 @@ jobs:
     outputs:
       valid-token: ${{ steps.verify.outputs.slsa-token }}
       invalid-mask-token: ${{ steps.verify-invalid-mask.outputs.slsa-token }}
+      invalid-sha1-token: ${{ steps.verify-invalid-sha1.outputs.slsa-token }}
     steps:
       # NOTE: to test this workflow on a dev branch, use:
       # curl -s -X POST -H "Accept: application/vnd.github.v3+json" \
@@ -37,10 +38,12 @@ jobs:
           # The Action should trim the spaces automatically.
           slsa-workflow-masked-inputs: name2, name4,name6
           slsa-checkout-fetch-depth: 4
+          slsa-checkout-sha1: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
       - id: verify
         env:
           SLSA_TOKEN: ${{ steps.setup.outputs.slsa-token }}
           CHECKOUT_FETCH_DEPTH: 4
+          CHECKOUT_SHA1: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
         run: |
           set -euo pipefail
           ./.github/workflows/scripts/schedule.actions/verify-setup-token.sh
@@ -55,11 +58,32 @@ jobs:
           slsa-build-action-path: "./actions/build-artifacts-composite"
           slsa-workflow-inputs: '{"name1":"value1","name2":"value2","name3":"value3","name4":"","name5":"value5","name6":"value6","private-repository":true}'
           slsa-workflow-masked-inputs: name2, name4,name7 # name7 does not exist in the inputs.
-          # NOTE: no fetch-depth input provided.
+          # NOTE: no fetch-depth or sha1 input provided.
       - id: verify-invalid-mask
         env:
           SLSA_TOKEN: ${{ steps.setup-invalid-mask.outputs.slsa-token }}
           CHECKOUT_FETCH_DEPTH: 1 # The default checkout depth is 1.
+        run: |
+          set -euo pipefail
+          ./.github/workflows/scripts/schedule.actions/verify-setup-token.sh
+          echo "slsa-token=$SLSA_TOKEN" >> "$GITHUB_OUTPUT"
+
+      - id: setup-invalid-sha1
+        uses: ./actions/delegator/setup-token
+        with:
+          slsa-workflow-recipient: "delegator_generic_slsa3.yml"
+          slsa-rekor-log-public: true
+          slsa-runner-label: "ubuntu-latest"
+          slsa-build-action-path: "./actions/build-artifacts-composite"
+          slsa-workflow-inputs: '{"name1":"value1","name2":"value2","name3":"value3","name4":"","name5":"value5","name6":"value6","private-repository":true}'
+          slsa-workflow-masked-inputs: name2, name4,name7 # name7 does not exist in the inputs.
+          slsa-checkout-sha1: "aaaaa" # short input.
+          # NOTE: no fetch-depth input provided.
+      - id: verify-invalid-sha1
+        env:
+          SLSA_TOKEN: ${{ steps.setup-invalid-sha1.outputs.slsa-token }}
+          CHECKOUT_FETCH_DEPTH: 1 # The default checkout depth is 1.
+          CHECKOUT_SHA1: "aaaaa"
         run: |
           set -euo pipefail
           ./.github/workflows/scripts/schedule.actions/verify-setup-token.sh
@@ -84,6 +108,7 @@ jobs:
           TOOL_REF: ${{ steps.verify.outputs.tool-ref }}
           PREDICATE: predicate.json
           CHECKOUT_FETCH_DEPTH: 4
+          CHECKOUT_SHA1: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
         run: ./.github/workflows/scripts/schedule.actions/verify-verified-token.sh
       - id: verify-mismatch-recipient
         uses: ./.github/actions/verify-token
@@ -107,8 +132,16 @@ jobs:
           slsa-unverified-token: ${{ needs.setup-token.outputs.invalid-mask-token }}
           slsa-workflow-recipient: "delegator_generic_slsa3.yml"
           output-predicate: invalid-mask-predicate.json
+      - id: verify-invalid-sha1
+        uses: ./.github/actions/verify-token
+        continue-on-error: true
+        with:
+          # sha1 is too short so it should trigger an error.
+          slsa-unverified-token: ${{ needs.setup-token.outputs.invalid-sha1-token }}
+          slsa-workflow-recipient: "delegator_generic_slsa3.yml"
+          output-predicate: invalid-sha1-predicate.json
       - env:
-          SUCCESS: ${{ steps.verify-mismatch-recipient.outcome == 'failure' && steps.verify-mismatch-token.outcome == 'failure' && steps.verify-invalid-mask.outcome == 'failure' }}
+          SUCCESS: ${{ steps.verify-mismatch-recipient.outcome == 'failure' && steps.verify-mismatch-token.outcome == 'failure' && steps.verify-invalid-mask.outcome == 'failure' && steps.verify-invalid-sha1.outcome == 'failure' }}
         run: |
           [ "$SUCCESS" == "true" ]
       # TODO(1419): Add more tests that manipulate the token.

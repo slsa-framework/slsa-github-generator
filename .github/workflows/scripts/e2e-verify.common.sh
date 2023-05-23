@@ -54,7 +54,13 @@ e2e_verify_common_metadata() {
 # Verifies the materials include the GitHub repository.
 # $1: the attestation content
 e2e_verify_common_materials() {
-    e2e_verify_predicate_materials "$1" "{\"uri\":\"git+https://github.com/$GITHUB_REPOSITORY@$GITHUB_REF\",\"digest\":{\"sha1\":\"$GITHUB_SHA\"}}"
+    # By default, we use the digest from the GitHub event.
+    local digest="$GITHUB_SHA"
+    if [[ -n "${CHECKOUT_SHA1:-}" ]]; then
+        # If the TRW provided a sha1 for checkout, the predicate should use it instead.
+        digest="${CHECKOUT_SHA1}"
+    fi
+    e2e_verify_predicate_materials "$1" "{\"uri\":\"git+https://github.com/$GITHUB_REPOSITORY@$GITHUB_REF\",\"digest\":{\"sha1\":\"$digest\"}}"
 }
 
 # Verifies common fields of the SLSA v1.0 predicate.
@@ -102,6 +108,7 @@ e2e_verify_decoded_token() {
     _e2e_verify_query "$decoded_token" "true" '.builder.rekor_log_public'
     _e2e_verify_query "$decoded_token" "./actions/build-artifacts-composite" '.tool.actions.build_artifacts.path'
     _e2e_verify_query "$decoded_token" "${CHECKOUT_FETCH_DEPTH}" '.source.checkout.fetch_depth'
+    _e2e_verify_query "$decoded_token" "${CHECKOUT_SHA1}" '.source.checkout.sha1'
     _e2e_verify_query "$decoded_token" '{"name1":"value1","name2":"value2","name3":"value3","name4":"","name5":"value5","name6":"value6","private-repository":true}' '.tool.inputs'
 
     # GitHub's information.

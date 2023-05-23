@@ -128,28 +128,28 @@ After creating the package you can publish the package using the provided
 `nodejs/publish` action.
 
 ```yaml
-  publish:
-    needs: [build]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Set up Node registry authentication
-        uses: actions/setup-node@64ed1c7eab4cce3362f8c340dee64e5eaeef8f7c # v3.6.0
-        with:
-          node-version: 18
-          registry-url: "https://registry.npmjs.org"
+publish:
+  needs: [build]
+  runs-on: ubuntu-latest
+  steps:
+    - name: Set up Node registry authentication
+      uses: actions/setup-node@64ed1c7eab4cce3362f8c340dee64e5eaeef8f7c # v3.6.0
+      with:
+        node-version: 18
+        registry-url: "https://registry.npmjs.org"
 
     - name: publish
-       id: publish
-       uses: slsa-framework/slsa-github-generator/actions/nodejs/publish@<git sha> # v1.6.0
-       with:
-         access: public
-         node-auth-token: ${{ secrets.NPM_TOKEN }}
-         package-name: ${{ needs.build.outputs.package-name }}
-         package-download-name: ${{ needs.build.outputs.package-download-name }}
-         package-download-sha256: ${{ needs.build.outputs.package-download-sha256 }}
-         provenance-name: ${{ needs.build.outputs.provenance-name }}
-         provenance-download-name: ${{ needs.build.outputs.provenance-download-name }}
-         provenance-download-sha256: ${{ needs.build.outputs.provenance-download-sha256 }}
+      id: publish
+      uses: slsa-framework/slsa-github-generator/actions/nodejs/publish@<git sha> # v1.6.0
+      with:
+        access: public
+        node-auth-token: ${{ secrets.NPM_TOKEN }}
+        package-name: ${{ needs.build.outputs.package-name }}
+        package-download-name: ${{ needs.build.outputs.package-download-name }}
+        package-download-sha256: ${{ needs.build.outputs.package-download-sha256 }}
+        provenance-name: ${{ needs.build.outputs.provenance-name }}
+        provenance-download-name: ${{ needs.build.outputs.provenance-download-name }}
+        provenance-download-sha256: ${{ needs.build.outputs.provenance-download-sha256 }}
 ```
 
 This action downloads the package tarball and provenance before running `npm

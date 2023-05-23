@@ -12,7 +12,10 @@ inputs:
     default: ${{ github.token }}
   go-version:
     description: "The Go version to use, as expected by https://github.com/actions/setup-go."
-    required: true
+    required: false
+  go-version-file:
+    description: "Path to the go.mod or go.work file."
+    required: false
 
 runs:
   using: "composite"
@@ -26,7 +29,20 @@ runs:
         token: ${{ inputs.token }}
         path: ${{ inputs.path }}
 
+    - name: Validate Go version.
+      shell: bash
+      env:
+        GO_VERSION: ${{ inputs.go-version }}
+        GO_VERSION_FILE: ${{ inputs.go-version-file }}
+      run: |
+        set -euo pipefail
+        if [ "${GO_VERSION}" == "" ] && [ "${GO_VERSION_FILE}" == "" ]; then
+            echo "::error::One of go-version or go-version-file should be specified."
+            exit 1
+        fi
+
     - name: Set up Go environment
       uses: actions/setup-go@4d34df0c2316fe8122ab82dc22947d607c0c91f9 # v4.0.0
       with:
         go-version: ${{ inputs.go-version }}
+        go-version-file: ${{ inputs.go-version-file }}

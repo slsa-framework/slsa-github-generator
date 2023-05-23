@@ -1,9 +1,16 @@
 # CHANGELOG
 
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
 <!-- markdown-toc --bullets="-" -i CHANGELOG.md -->
 
 <!-- toc -->
 
+- [Unreleased](#unreleased)
+  - [X.Y.Z: Go builder](#xyz-go-builder)
 - [v1.6.0](#v160)
   - [Summary of changes](#summary-of-changes)
     - [Go builder](#go-builder)
@@ -71,7 +78,21 @@
 
 <!-- tocstop -->
 
-<!-- Information on the next release will be added here. -->
+## Unreleased
+
+<!--
+Information on the next release will be added here.
+
+Use the format "X.Y.Z: Go builder" etc. for format headers to avoid header name
+duplication."
+-->
+
+### X.Y.Z: Go builder
+
+- **Added**: A new
+  [go-version-file](https://github.com/slsa-framework/slsa-github-generator/blob/main/internal/builders/go/README.md#workflow-inputs)
+  input was added. This allows you to specify a go.mod file in order to track
+  which version of Go is used for your project.
 
 ## v1.6.0
 
