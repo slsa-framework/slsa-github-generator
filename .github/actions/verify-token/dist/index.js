@@ -931,14 +931,28 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.validateFieldNonEmpty = exports.validateFieldStartsWith = exports.validateField = exports.validateFieldAnyOf = exports.validateAndMaskInputs = exports.validateGitHubFields = void 0;
+exports.validateFieldNonEmpty = exports.validateFieldStartsWith = exports.validateField = exports.validateFieldAnyOf = exports.validateAndMaskInputs = exports.validateGitHubFields = exports.validateSupportedTrigger = void 0;
 const tscommon = __importStar(__nccwpck_require__(6634));
 const utils_1 = __nccwpck_require__(1314);
+function validateSupportedTrigger(events) {
+    validateFieldAnyOf("GITHUB_EVENT_NAME", process.env.GITHUB_EVENT_NAME, events);
+}
+exports.validateSupportedTrigger = validateSupportedTrigger;
 function validateGitHubFields(gho) {
     // actor_id
     validateField("github.actor_id", gho.actor_id, process.env.GITHUB_ACTOR_ID);
     // event_name
     validateField("github.event_name", gho.event_name, process.env.GITHUB_EVENT_NAME);
+    // Validate the event. Only events in
+    // https://github.com/slsa-framework/github-actions-buildtypes/tree/main/workflow/v1
+    // are supported.
+    validateFieldAnyOf("GITHUB_EVENT_NAME", process.env.GITHUB_EVENT_NAME, [
+        "create",
+        "deployment",
+        "release",
+        "push",
+        "workflow_dispatch",
+    ]);
     // event_payload_sha256
     const eventPath = process.env.GITHUB_EVENT_PATH || "";
     // NOTE: validate GITHUB_EVENT_PATH is non-empty to provide a better error

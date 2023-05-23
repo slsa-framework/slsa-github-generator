@@ -15,8 +15,12 @@ import * as tscommon from "tscommon";
 import { githubObj, rawTokenInterface } from "../src/types";
 import { asMap } from "../src/utils";
 
-export function validateSupportedTrigger(events: string[] ): void{
-  validateFieldAnyOf("GITHUB_EVENT_NAME", process.env.GITHUB_EVENT_NAME, events);
+export function validateSupportedTrigger(events: string[]): void {
+  validateFieldAnyOf(
+    "GITHUB_EVENT_NAME",
+    process.env.GITHUB_EVENT_NAME,
+    events
+  );
 }
 
 export function validateGitHubFields(gho: githubObj): void {
@@ -30,8 +34,15 @@ export function validateGitHubFields(gho: githubObj): void {
     process.env.GITHUB_EVENT_NAME
   );
 
+  // Validate the event. Only events in
+  // https://github.com/slsa-framework/github-actions-buildtypes/tree/main/workflow/v1
+  // are supported.
   validateFieldAnyOf("GITHUB_EVENT_NAME", process.env.GITHUB_EVENT_NAME, [
-    "create", "deployment", "release", "push", "workflow_dispatch"
+    "create",
+    "deployment",
+    "release",
+    "push",
+    "workflow_dispatch",
   ]);
 
   // event_payload_sha256
