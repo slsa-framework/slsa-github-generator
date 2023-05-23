@@ -60,7 +60,7 @@ runs:
       env:
         SLSA_OUTPUTS_ARTIFACTS_FILE: ${{ inputs.slsa-layout-file }}
         ARTIFACT_LIST: ${{ fromJson(inputs.slsa-workflow-inputs).artifact-list }}
-      run: source ./../__TOOL_ACTION_DIR__/collect_release_artifacts.sh
+      run: ./../__TOOL_ACTION_DIR__/collect_release_artifacts.sh
     - name: Upload built artifacts from gradlew build
       uses: actions/upload-artifact@v3
       with:
