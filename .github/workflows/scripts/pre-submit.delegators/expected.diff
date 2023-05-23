@@ -9,13 +9,11 @@ Unexpected differences between the delegator workflows
 > name: SLSA low-permission builder delegator
 77a82
 > 
-101d105
-< 
-107c111
+106c111
 <           slsa-workflow-recipient: "delegator_generic_slsa3.yml"
 ---
 >           slsa-workflow-recipient: "delegator_lowperms-generic_slsa3.yml"
-139,141c143
+138,140c143
 <       # TODO(#2076): Use dynamic GITHUB_TOKEN permissions.
 <       contents: write # To release assets.
 <       packages: write # To publish to GitHub packages.
