@@ -31,8 +31,8 @@ jobs:
         with:
           go-version-file: "go.mod"
       - env:
-          GOLANGCI_LINT_VERSION: "1.51.2"
-          GOLANGCI_LINT_CHECKSUM: "4de479eb9d9bc29da51aec1834e7c255b333723d38dbd56781c68e5dddc6a90b"
+          GOLANGCI_LINT_VERSION: "1.52.2"
+          GOLANGCI_LINT_CHECKSUM: "c9cf72d12058a131746edd409ed94ccd578fbd178899d1ed41ceae3ce5f54501"
         run: |
           set -euo pipefail
 
