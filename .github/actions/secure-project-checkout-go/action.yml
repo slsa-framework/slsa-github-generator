@@ -30,6 +30,7 @@ runs:
         path: ${{ inputs.path }}
 
     - name: Validate Go version.
+      shell: bash
       env:
         GO_VERSION: ${{ inputs.go-version }}
         GO_VERSION_FILE: ${{ inputs.go-version-file }}
