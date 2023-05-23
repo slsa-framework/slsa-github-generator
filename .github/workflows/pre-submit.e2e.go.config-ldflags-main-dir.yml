@@ -22,10 +22,11 @@ jobs:
       - id: ldflags
         run: |
           set -euo pipefail
-
-          echo "version=-X main.gitVersion=v1.2.3" >> "$GITHUB_OUTPUT"
-          echo "commit=-X main.gitCommit=abcdef" >> "$GITHUB_OUTPUT"
-          echo "branch=-X main.gitBranch=main" >> "$GITHUB_OUTPUT"
+          {
+            echo "version=-X main.gitVersion=v1.2.3"
+            echo "commit=-X main.gitCommit=abcdef"
+            echo "branch=-X main.gitBranch=main"
+          } >> "$GITHUB_OUTPUT"
 
   build:
     needs: [args]

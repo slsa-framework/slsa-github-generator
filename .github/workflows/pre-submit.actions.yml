@@ -252,9 +252,10 @@ jobs:
 
       - name: Cleanup workspace
         run: |
+          set -euo pipefail
           # NOTE: We don't remove DOWNLOAD_FOLDER_NAME to ensure that download-existing-file fails.
           rm -rf "${UPLOAD_FOLDER_NAME}"
-          rm -rf $(dirname "${UPLOAD_FOLDER_NO_ROOT_NAME}") $(dirname "${DOWNLOAD_FOLDER_NO_ROOT_NAME}")
+          rm -rf "$(dirname "${UPLOAD_FOLDER_NO_ROOT_NAME}")" "$(dirname "${DOWNLOAD_FOLDER_NO_ROOT_NAME}")"
 
       - name: Download locally
         uses: ./.github/actions/secure-download-folder
@@ -498,7 +499,7 @@ jobs:
         uses: ./.github/actions/detect-workflow-js
       - uses: ./.github/actions/generate-builder
         with:
-          repository: ${{ steps.detect.output.repository }}
+          repository: ${{ steps.detect.outputs.repository }}
           ref: ${{ steps.detect.outputs.ref }}
           # TODO(#2056): Use v1.6.0 release
           builder-ref: "refs/tags/v1.6.0-rc.1"
@@ -527,23 +528,23 @@ jobs:
           OUTPUT_FOLDER: attestations
         run: |
           set -euo pipefail
-          ls $OUTPUT_FOLDER
-          artifact11=$(jq -r '.subject[0].name' $OUTPUT_FOLDER/attestation1.intoto)
+          ls "$OUTPUT_FOLDER"
+          artifact11=$(jq -r '.subject[0].name' "$OUTPUT_FOLDER/attestation1.intoto")
           if [[ $artifact11 != "artifact11" ]]; then
             echo "expected artifact11 name"
             exit 2
           fi
-          digest11=$(jq -r '.subject[0].digest["sha256"]' $OUTPUT_FOLDER/attestation1.intoto)
+          digest11=$(jq -r '.subject[0].digest["sha256"]' "$OUTPUT_FOLDER/attestation1.intoto")
           if [[ $digest11 != "deadbeaf" ]]; then
             echo "expected deadbeaf digest"
             exit 2
           fi
-          artifact21=$(jq -r '.subject[0].name' $OUTPUT_FOLDER/attestation2.intoto)
+          artifact21=$(jq -r '.subject[0].name' "$OUTPUT_FOLDER/attestation2.intoto")
           if [[ $artifact21 != "artifact21" ]]; then
             echo "expected artifact21 name"
             exit 2
           fi
-          digest21=$(jq -r '.subject[0].digest["sha256"]' $OUTPUT_FOLDER/attestation2.intoto)
+          digest21=$(jq -r '.subject[0].digest["sha256"]' "$OUTPUT_FOLDER/attestation2.intoto")
           if [[ $digest21 != "deadbeat" ]]; then
             echo "expected deadbeat digest"
             exit 2

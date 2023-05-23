@@ -34,8 +34,9 @@ jobs:
       # TODO: Add subject verification. This only verifies the signature on the DSSE envelope.
       - name: run verify
         run: |
+          set -euo pipefail
           for file in outputs/*; do
-            ./node_modules/.bin/sigstore verify $file
+            ./node_modules/.bin/sigstore verify "$file"
           done
 
   if-succeed:
