@@ -1,3 +1,6 @@
+# Ignore the .git directory (for markdownlint)
+.git
+
 # Binaries for programs and plugins
 *.exe
 *.exe~
