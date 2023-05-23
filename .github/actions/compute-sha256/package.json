@@ -8,7 +8,7 @@
     "build": "tsc",
     "format": "prettier --write '**/*.ts'",
     "format-check": "prettier --check '**/*.ts'",
-    "package": "ncc build --source-map",
+    "package": "ncc build --external encoding --source-map",
     "lint": "eslint --max-warnings 0 src/**/*.ts",
     "all": "npm run format && npm run lint && npm run build && npm run package"
   },
