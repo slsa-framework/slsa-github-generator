@@ -31,7 +31,11 @@ inputs:
     default: ${{ github.token }}
 
   output-predicate:
-    description: "The filename to place the output SLSA predicate based on the verified token"
+    description: "The filename to place the output SLSA predicate based on the verified token."
+    required: true
+
+  builder-interface-type:
+    description: "The type of the builder. One of [generator, builder]."
     required: true
 
 outputs:
