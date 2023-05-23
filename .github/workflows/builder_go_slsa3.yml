@@ -51,7 +51,11 @@ on:
     inputs:
       go-version:
         description: "The go version to use."
-        required: true
+        required: false
+        type: string
+      go-version-file:
+        description: "The go version to use."
+        required: false
         type: string
       upload-assets:
         description: >
@@ -198,6 +202,7 @@ jobs:
         with:
           path: __PROJECT_CHECKOUT_DIR__
           go-version: ${{ inputs.go-version }}
+          go-version-file: ${{ inputs.go-version-file }}
 
       - name: Download builder
         uses: ./__BUILDER_CHECKOUT_DIR__/.github/actions/secure-download-artifact
@@ -244,6 +249,7 @@ jobs:
         with:
           path: __PROJECT_CHECKOUT_DIR__
           go-version: ${{ inputs.go-version }}
+          go-version-file: ${{ inputs.go-version-file }}
 
       - name: Download builder
         uses: ./__BUILDER_CHECKOUT_DIR__/.github/actions/secure-download-artifact
