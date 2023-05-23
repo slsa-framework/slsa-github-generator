@@ -46,6 +46,7 @@ jobs:
           slsa-runner-label: "ubuntu-latest"
           slsa-build-action-path: "./internal/builders/gradle"
           slsa-workflow-inputs: ${{ toJson(inputs) }}
+
   slsa-run:
     needs: [slsa-setup]
     permissions:
