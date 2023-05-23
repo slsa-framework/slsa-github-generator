@@ -17,9 +17,9 @@ do
     fi
     
     # Replace 'GRADLE_VERSION' with $GRADLE_VERSION
-    PATH_WITH_VERSION="${i//GRADLE_VERSION/"$GRADLE_VERSION"}"
+    path_with_version="${i//GRADLE_VERSION/"$GRADLE_VERSION"}"
 
     # Move the file
-    bn=$(basename -- $PATH_WITH_VERSION)
-    mv $PATH_WITH_VERSION release-files-for-slsa/$bn
+    bn=$(basename -- $path_with_version)
+    mv $path_with_version release-files-for-slsa/$bn
 done
