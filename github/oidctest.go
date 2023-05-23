@@ -32,7 +32,7 @@ type jsonToken struct {
 type testKeySet struct{}
 
 // VerifySignature implements oidc.KeySet.VerifySignature.
-func (ks *testKeySet) VerifySignature(ctx context.Context, jwt string) ([]byte, error) {
+func (ks *testKeySet) VerifySignature(_ context.Context, jwt string) ([]byte, error) {
 	// NOTE: Doesn't actually verify, just parses out the payload from the token.
 	parts := strings.Split(jwt, ".")
 	if len(parts) < 2 {
