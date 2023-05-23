@@ -70,4 +70,4 @@ runs:
       shell: bash
       env:
         SLSA_OUTPUTS_ARTIFACTS_FILE: ${{ inputs.slsa-layout-file }}
-      run: source ./../__TOOL_ACTION_DIR__/create_attestation.sh
+      run: ./../__TOOL_ACTION_DIR__/create_attestation.sh
