@@ -15,6 +15,10 @@ import * as tscommon from "tscommon";
 import { githubObj, rawTokenInterface } from "../src/types";
 import { asMap } from "../src/utils";
 
+export function validateSupportedTrigger(events: string[] ): void{
+  validateFieldAnyOf("GITHUB_EVENT_NAME", process.env.GITHUB_EVENT_NAME, events);
+}
+
 export function validateGitHubFields(gho: githubObj): void {
   // actor_id
   validateField("github.actor_id", gho.actor_id, process.env.GITHUB_ACTOR_ID);
@@ -25,6 +29,10 @@ export function validateGitHubFields(gho: githubObj): void {
     gho.event_name,
     process.env.GITHUB_EVENT_NAME
   );
+
+  validateFieldAnyOf("GITHUB_EVENT_NAME", process.env.GITHUB_EVENT_NAME, [
+    "create", "deployment", "release", "push", "workflow_dispatch"
+  ]);
 
   // event_payload_sha256
   const eventPath = process.env.GITHUB_EVENT_PATH || "";
