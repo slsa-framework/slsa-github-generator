@@ -11,7 +11,8 @@ for i in "${artifact_array[@]}"
 do
     i="${i#"${i%%[![:space:]]*}"}" # trim leading whitespace                                                                                                                                                                                                                                                                                                                                         
     i="${i%"${i##*[![:space:]]}"}" # trim trailing whitespace
-    i=$(echo $i | sed 's/\"//')
+    # shellcheck disable=SC2001
+    i=$(echo "$i" | sed 's/\"//') 
     # Check if $i is empty
     if [ -z "$i" ]
     then

@@ -30,7 +30,7 @@ do
       echo -n "," >> "$SLSA_OUTPUTS_ARTIFACTS_FILE"
     fi
          
-    counter="$[$counter +1]"
+    counter="$((counter +1))"
 done
         
 # Close "attestations" and "version":
