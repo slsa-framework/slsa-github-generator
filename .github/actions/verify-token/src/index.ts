@@ -62,11 +62,7 @@ async function run(): Promise<void> {
     if (!ghToken) {
       throw new Error("token not provided");
     }
-    const builderInterfaceType = core.getInput("builder-interface-type");
-    if (!builderInterfaceType) {
-      // Detect if builder-interface-type is null or empty string.
-      throw new Error("builder-interface-type must be supplied");
-    }
+    const builderInterfaceType = core.getInput("builder-interface-type", {required: true});
     // Validate builderInterfaceType.
     validateFieldAnyOf("builder-interface-type", builderInterfaceType, [
       "generator",

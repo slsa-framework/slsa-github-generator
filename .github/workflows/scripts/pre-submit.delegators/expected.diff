@@ -1,4 +1,3 @@
-Unexpected differences between the delegator workflows
 15c15,19
 < name: SLSA builder delegator
 ---
