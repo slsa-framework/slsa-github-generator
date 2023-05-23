@@ -36,7 +36,7 @@ runs:
       run: |
         set -euo pipefail
         if [ "${GO_VERSION}" == "" ] && [ "${GO_VERSION_FILE}" == "" ]; then
-            echo "::error::One of go-version or go-version file should be specified."
+            echo "::error::One of go-version or go-version-file should be specified."
             exit 1
         fi
 
