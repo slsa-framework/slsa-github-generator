@@ -51,7 +51,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
-      - env:
+      - name: shellcheck
+        env:
           SHELLCHECK_VERSION: "0.8.0"
           SHELLCHECK_CHECKSUM: "ab6ee1b178f014d1b86d1e24da20d1139656c8b0ed34d2867fbb834dad02bf0a"
         run: |
@@ -66,9 +67,25 @@ jobs:
           tar xf shellcheck.tar.gz
           mv "shellcheck-v$SHELLCHECK_VERSION/shellcheck" /usr/local/bin
 
-          # Run shellcheck and output github actions commands.
-          # See: https://docs.github.com/en/actions/using-workflows/workflow-commands-for-github-actions
           make shellcheck
+
+      - name: actionlint
+        env:
+          ACTIONLINT_VERSION: "1.6.24"
+          ACTIONLINT_CHECKSUM: "3c5818744143a5d6754edd3dcc4c2b32c9dfcdd3bb30e0e108fb5e5c505262d4"
+        run: |
+          set -euo pipefail
+
+          # Install actionlint
+          curl -sSLo actionlint.tar.gz "https://github.com/rhysd/actionlint/releases/download/v${ACTIONLINT_VERSION}/actionlint_${ACTIONLINT_VERSION}_linux_amd64.tar.xz"
+          echo "actionlint checksum is $(sha256sum actionlint.tar.gz | awk '{ print $1 }')"
+          echo "expected checksum is $ACTIONLINT_CHECKSUM"
+          echo "$ACTIONLINT_CHECKSUM  actionlint.tar.gz" | sha256sum --strict --check --status || exit -2
+
+          tar xf actionlint.tar.gz
+          mv ./actionlint /usr/local/bin
+
+          make actionlint
 
   yamllint:
     runs-on: ubuntu-latest

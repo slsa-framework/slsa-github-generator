@@ -66,7 +66,16 @@ markdown-toc: node_modules/.installed ## Runs markdown-toc on markdown files.
 #####################################################################
 
 .PHONY: lint
-lint: markdownlint golangci-lint shellcheck eslint yamllint ## Run all linters.
+lint: markdownlint golangci-lint shellcheck eslint yamllint actionlint ## Run all linters.
+
+.PHONY: actionlint
+actionlint: ## Runs the actionlint linter.
+	@set -e;\
+		if [ "$(OUTPUT_FORMAT)" == "github" ]; then \
+			actionlint -format '{{range $$err := .}}::error file={{$$err.Filepath}},line={{$$err.Line}},col={{$$err.Column}}::{{$$err.Message}}%0A```%0A{{replace $$err.Snippet "\\n" "%0A"}}%0A```\n{{end}}' -ignore 'SC2016:'; \
+		else \
+			actionlint; \
+		fi
 
 .PHONY: markdownlint
 markdownlint: node_modules/.installed ## Runs the markdownlint linter.
