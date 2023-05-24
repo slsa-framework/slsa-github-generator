@@ -156,7 +156,7 @@ basenames of the matching files.
 ### Workflow Inputs
 
 The [container-based
-workflow](https://github.com/slsa-framework/slsa-github-generator/blob/main/.github/workflows/builder_docker-based_slsa3.yml)
+workflow](https://github.com/slsa-framework/slsa-github-generator/blob/main/.github/workflows/builder_container-based_slsa3.yml)
 accepts the following inputs:
 
 Inputs:
@@ -206,7 +206,7 @@ jobs:
       contents: write # To upload assets to release.
       actions: read # To read the workflow path.
     needs: args
-    uses: slsa-framework/slsa-github-generator/.github/workflows/builder_docker-based_slsa3.yml@v1.6.0
+    uses: slsa-framework/slsa-github-generator/.github/workflows/builder_container-based_slsa3.yml@v1.6.0
     with:
       builder-image: "bash"
       builder-digest: "sha256:9e2ba52487d945504d250de186cb4fe2e3ba023ed2921dd6ac8b97ed43e76af9"
@@ -216,7 +216,7 @@ jobs:
 ### Workflow Outputs
 
 The [container-based
-workflow](https://github.com/slsa-framework/slsa-github-generator/blob/main/.github/workflows/builder_docker-based_slsa3.yml) produces the following outputs:
+workflow](https://github.com/slsa-framework/slsa-github-generator/blob/main/.github/workflows/builder_container-based_slsa3.yml) produces the following outputs:
 
 | Name                         | Description                                                                                                                                                                                                                                             |
 | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -297,8 +297,8 @@ as an [in-toto](https://in-toto.io/) statement with a SLSA predicate.
         "GITHUB_RUN_ID": 4310284899,
         "GITHUB_RUN_NUMBER": 50,
         "GITHUB_SHA": "ca220e54c07b6fcdd758184a12c132ee3ae531f1",
-        "GITHUB_WORKFLOW": ".github/workflows/e2e.docker-based.workflow_dispatch.main.default.slsa3.yml",
-        "GITHUB_WORKFLOW_REF": "slsa-framework/example-package/.github/workflows/e2e.docker-based.workflow_dispatch.main.default.slsa3.yml@refs/heads/main",
+        "GITHUB_WORKFLOW": ".github/workflows/e2e.container-based.workflow_dispatch.main.default.slsa3.yml",
+        "GITHUB_WORKFLOW_REF": "slsa-framework/example-package/.github/workflows/e2e.container-based.workflow_dispatch.main.default.slsa3.yml@refs/heads/main",
         "GITHUB_WORKFLOW_SHA": "ca220e54c07b6fcdd758184a12c132ee3ae531f1",
         "IMAGE_OS": "ubuntu22",
         "IMAGE_VERSION": "20230227.2",
@@ -313,7 +313,7 @@ as an [in-toto](https://in-toto.io/) statement with a SLSA predicate.
     },
     "runDetails": {
       "builder": {
-        "id": "https://github.com/slsa-framework/slsa-github-generator/.github/workflows/builder_docker-based_slsa3.yml@refs/tags/v1.5.0"
+        "id": "https://github.com/slsa-framework/slsa-github-generator/.github/workflows/builder_container-based_slsa3.yml@refs/tags/v1.5.0"
       },
       "metadata": {
         "invocationId": "https://github.com/slsa-framework/example-package/actions/runs/4310284899/attempts/1"

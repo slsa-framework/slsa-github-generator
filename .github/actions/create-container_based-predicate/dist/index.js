@@ -199,13 +199,13 @@ function run() {
                 INPUT_BINARY-SHA256="0982432e54df5f3eb6b25c6c1ae77a45c242ad5a81a485c1fc225ae5ac472be3" \
                 INPUT_BINARY-URI="git+https://github.com/asraa/slsa-github-generator@refs/heads/refs/heads/main" \
                 INPUT_TOKEN="$(gh auth token)" \
-                INPUT_BUILDER-ID="https://github.com/asraa/slsa-github-generator/.github/workflows/builder_docker-baed_slsa3.yml@refs/tags/v0.0.1" \
+                INPUT_BUILDER-ID="https://github.com/asraa/slsa-github-generator/.github/workflows/builder_container-based_slsa3.yml@refs/tags/v0.0.1" \
                 GITHUB_EVENT_NAME="workflow_dispatch" \
                 GITHUB_RUN_ATTEMPT="1" \
                 GITHUB_RUN_ID="4128571590" \
                 GITHUB_RUN_NUMBER="38" \
-                GITHUB_WORKFLOW="pre-submit e2e docker-based default" \
-                GITHUB_WORKFLOW_REF="asraa/slsa-github-generator/.github/workflows/pre-submit.e2e.docker-based.default.yml@refs/heads/main" \
+                GITHUB_WORKFLOW="pre-submit e2e container-based default" \
+                GITHUB_WORKFLOW_REF="asraa/slsa-github-generator/.github/workflows/pre-submit.e2e.container-based.default.yml@refs/heads/main" \
                 GITHUB_SHA="97f1bfd54b02d1c7b632da907676a7d30d2efc02" \
                 GITHUB_REPOSITORY="asraa/slsa-github-generator" \
                 GITHUB_REPOSITORY_ID="479129389" \
