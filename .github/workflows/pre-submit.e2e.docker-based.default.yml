@@ -63,4 +63,4 @@ jobs:
       - env:
           BINARY: ${{ steps.build.outputs.name }}
           PROVENANCE: ${{ steps.build.outputs.name }}.intoto
-        run: ./.github/workflows/scripts/pre-submit.e2e.docker-based.default.sh
+        run: ./.github/workflows/scripts/pre-submit.e2e.container-based.default.sh
