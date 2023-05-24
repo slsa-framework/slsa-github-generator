@@ -1,4 +1,18 @@
-#!/usr/bin/env bash
+#!/bin/bash -eu
+#
+# Copyright 2023 SLSA Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 source "./.github/workflows/scripts/e2e-assert.sh"
 
@@ -88,8 +102,17 @@ _e2e_verify_presence() {
     assert_not_empty "${name}" "${query} should not be empty"
 }
 
-e2e_verify_predicate_v1_buildDefinition_externalParameters_workflow_path() {
-    _e2e_verify_query "$1" "$2" '.buildDefinition.externalParameters.workflow.path'
+e2e_verify_predicate_v1_buildDefinition_externalParameters_workflow() {
+    if [[ -z "${BUILDER_INTERFACE_TYPE:-}" ]]; then
+        return 0
+    fi
+    if [[ "${BUILDER_INTERFACE_TYPE}" == "builder" ]]; then
+        return 0
+    fi
+
+    _e2e_verify_query "$1" "$2" ".buildDefinition.externalParameters.workflow.path"
+    _e2e_verify_query "$1" "$3" ".buildDefinition.externalParameters.workflow.ref"
+    _e2e_verify_query "$1" "$4" ".buildDefinition.externalParameters.workflow.repository"
 }
 
 e2e_verify_predicate_v1_buildDefinition_externalParameters_source() {

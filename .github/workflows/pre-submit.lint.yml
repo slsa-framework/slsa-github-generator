@@ -1,3 +1,17 @@
+# Copyright 2023 SLSA Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 name: Lint
 
 on:
@@ -23,6 +37,19 @@ jobs:
           node-version: 16
       - run: make markdownlint
 
+  markdown-toc:
+    name: markdown-toc
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup Node.js 16
+        uses: actions/setup-node@64ed1c7eab4cce3362f8c340dee64e5eaeef8f7c # v3.6.0
+        with:
+          node-version: 16
+      - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
+      - run: make markdown-toc
+      - name: markdown-toc
+        run: ./.github/workflows/scripts/pre-submit.markdown/markdown-toc.sh
+
   golangci-lint:
     runs-on: ubuntu-latest
     steps:
@@ -31,8 +58,8 @@ jobs:
         with:
           go-version-file: "go.mod"
       - env:
-          GOLANGCI_LINT_VERSION: "1.51.2"
-          GOLANGCI_LINT_CHECKSUM: "4de479eb9d9bc29da51aec1834e7c255b333723d38dbd56781c68e5dddc6a90b"
+          GOLANGCI_LINT_VERSION: "1.52.2"
+          GOLANGCI_LINT_CHECKSUM: "c9cf72d12058a131746edd409ed94ccd578fbd178899d1ed41ceae3ce5f54501"
         run: |
           set -euo pipefail
 
@@ -110,3 +137,24 @@ jobs:
         with:
           node-version: 16
       - run: make eslint
+
+  autogen:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
+      - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
+        with:
+          repository: mbrukman/autogen
+          ref: 9026b78e17573b5dda4bff79033c352443551dc5
+          path: autogen
+      - run: |
+          echo "${GITHUB_WORKSPACE}/autogen" >> "${GITHUB_PATH}"
+      - run: make autogen
+      - name: check diff
+        run: |
+          set -euo pipefail
+          if [ "$(GIT_PAGER="cat" git diff --ignore-space-at-eol | wc -l)" -gt "0" ]; then
+              echo "Detected license header changes.  See status below:"
+              GIT_PAGER="cat" git diff
+              exit 1
+          fi

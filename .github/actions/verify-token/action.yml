@@ -1,3 +1,17 @@
+# Copyright 2023 SLSA Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 name: Verify a token
 
 description: "Verify a token"
@@ -17,7 +31,11 @@ inputs:
     default: ${{ github.token }}
 
   output-predicate:
-    description: "The filename to place the output SLSA predicate based on the verified token"
+    description: "The filename to place the output SLSA predicate based on the verified token."
+    required: true
+
+  builder-interface-type:
+    description: "The type of the builder. One of [generator, builder]."
     required: true
 
 outputs:
