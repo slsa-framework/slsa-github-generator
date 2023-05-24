@@ -124,9 +124,9 @@ jobs:
           builder-interface-type: "builder"
 
       - env:
-          VERIFIED_TOKEN: ${{ steps.verify.outputs.slsa-verified-token }}
-          TOOL_REPOSITORY: ${{ steps.verify.outputs.tool-repository }}
-          TOOL_REF: ${{ steps.verify.outputs.tool-ref }}
+          VERIFIED_TOKEN: ${{ steps.verify-builder.outputs.slsa-verified-token }}
+          TOOL_REPOSITORY: ${{ steps.verify-builder.outputs.tool-repository }}
+          TOOL_REF: ${{ steps.verify-builder.outputs.tool-ref }}
           PREDICATE: predicate.json
           CHECKOUT_FETCH_DEPTH: 4
           CHECKOUT_SHA1: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
