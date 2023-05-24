@@ -30,7 +30,8 @@ const DELEGATOR_BUILD_TYPE_V0 =
 export async function createPredicate(
   rawTokenObj: rawTokenInterface,
   toolURI: string,
-  token: string
+  token: string,
+  isGenerator: boolean
 ): Promise<SLSAPredicate> {
   // Trigger information.
   const triggerPath: string = getTriggerPath(rawTokenObj);
@@ -55,22 +56,7 @@ export async function createPredicate(
   const predicate: SLSAPredicate = {
     buildDefinition: {
       buildType: DELEGATOR_BUILD_TYPE_V0,
-      externalParameters: {
-        // Inputs to the TRW, which define the interface of the builder for the
-        // BYOB framework. Some of these values may be masked by the TRW.
-        // NOTE: the Map object needs to be converted to an object to serialize to JSON.
-        inputs: Object.fromEntries(rawTokenObj.tool.inputs),
-        // Variables are always empty for BYOB / builders.
-        // TODO(#1555): add support for generators.
-        vars: {},
-        // NOTE: This is equivalent to the v0.2 entryPoint.
-        // TODO(#2077): set workflow to '{}'?
-        workflow: {
-          ref: triggerRef,
-          repository: `git+https://github.com/${triggerRepository}`,
-          path: triggerPath,
-        },
-      },
+      externalParameters: {},
       internalParameters: {
         GITHUB_ACTOR_ID: rawTokenObj.github.actor_id,
         GITHUB_EVENT_NAME: rawTokenObj.github.event_name,
@@ -113,6 +99,31 @@ export async function createPredicate(
       },
     },
   };
+
+  // Construct the predicate according to the type of builder.
+  if (isGenerator) {
+    predicate.buildDefinition.externalParameters = {
+      workflow: {
+        ref: triggerRef,
+        repository: `git+https://github.com/${triggerRepository}`,
+        path: triggerPath,
+      },
+      // TODO(#1555): record the vars.
+      vars: {},
+      // TODO(#2164): record the inputs, depending on the type of trigger events.
+      inputs: {},
+    };
+  } else {
+    // NOTE: the workflow information is available in the internalParameters.GITHUB_WORKFLOW_REF.
+    predicate.buildDefinition.externalParameters = {
+      // Inputs to the TRW, which define the interface of the builder for the
+      // BYOB framework. Some of these values may be masked by the TRW.
+      // NOTE: the Map object needs to be converted to an object to serialize to JSON.
+      inputs: Object.fromEntries(rawTokenObj.tool.inputs),
+      // Variables are always empty for BYOB / builders.
+      vars: {},
+    };
+  }
 
   // Put GitHub event payload into internalParameters.
   // TODO(github.com/slsa-framework/slsa-github-generator/issues/1575): Redact sensitive information.
