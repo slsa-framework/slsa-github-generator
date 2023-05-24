@@ -26,6 +26,17 @@ export function validateGitHubFields(gho: githubObj): void {
     process.env.GITHUB_EVENT_NAME
   );
 
+  // Validate the event. Only events in
+  // https://github.com/slsa-framework/github-actions-buildtypes/tree/main/workflow/v1
+  // are supported.
+  validateFieldAnyOf("GITHUB_EVENT_NAME", process.env.GITHUB_EVENT_NAME, [
+    "create",
+    "deployment",
+    "release",
+    "push",
+    "workflow_dispatch",
+  ]);
+
   // event_payload_sha256
   const eventPath = process.env.GITHUB_EVENT_PATH || "";
   // NOTE: validate GITHUB_EVENT_PATH is non-empty to provide a better error
