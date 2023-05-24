@@ -75,10 +75,7 @@ func VerifyAttestationPath(path string) error {
 	if !strings.HasSuffix(path, "intoto.jsonl") {
 		return errors.Errorf(&ErrInvalidPath{}, "invalid suffix: %q. Must be .intoto.jsonl", path)
 	}
-	if err := PathIsUnderCurrentDirectory(path); err != nil {
-		return err
-	}
-	return nil
+	return PathIsUnderCurrentDirectory(path)
 }
 
 // CreateNewFileUnderCurrentDirectory create a new file under the current directory

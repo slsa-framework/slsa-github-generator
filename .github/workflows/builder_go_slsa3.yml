@@ -1,3 +1,17 @@
+# Copyright 2023 SLSA Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 # Copyright The GOSST team.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -266,13 +280,14 @@ jobs:
         id: build-gen
         working-directory: __PROJECT_CHECKOUT_DIR__
         env:
+          GITHUB_TOKEN: "${{ github.token }}"
           CONFIG_FILE: "${{ inputs.config-file }}"
           UNTRUSTED_ENVS: "${{ inputs.evaluated-envs }}"
           UNTRUSTED_BINARY_NAME: "${{ needs.build-dry.outputs.go-binary-name }}"
         run: |
           set -euo pipefail
 
-          echo "::stop-commands::`echo -n ${{ github.token }} | sha256sum | head -c 64`"
+          echo "::stop-commands::$(echo -n "${GITHUB_TOKEN}" | sha256sum | head -c 64)"
 
           echo "$GITHUB_WORKSPACE/$BUILDER_BINARY" build "$CONFIG_FILE" "$UNTRUSTED_ENVS"
           # Note: We need to provide the asbolute path to the output binary.

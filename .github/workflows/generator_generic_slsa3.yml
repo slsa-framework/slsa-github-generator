@@ -128,7 +128,8 @@ jobs:
         env:
           SUCCESS: ${{ steps.detect.outcome != 'failure' }}
         run: |
-          echo "outcome=$([ "$SUCCESS" == "true" ] && echo "success" || echo "failure")" >> $GITHUB_OUTPUT
+          set -euo pipefail
+          echo "outcome=$([ "$SUCCESS" == "true" ] && echo "success" || echo "failure")" >> "$GITHUB_OUTPUT"
 
   # generator builds the generator binary and runs it to generate SLSA
   # provenance.
@@ -177,13 +178,13 @@ jobs:
           UNTRUSTED_DEPRECATED_ATTESTATION_NAME: "${{ inputs.attestation-name }}"
         run: |
           set -euo pipefail
-          untrusted_provenance_name=""
+          untrusted_prov_name=""
           if [ "$UNTRUSTED_PROVENANCE_NAME" != "" ]; then
-            untrusted_provenance_name="$UNTRUSTED_PROVENANCE_NAME"
+            untrusted_prov_name="$UNTRUSTED_PROVENANCE_NAME"
           else
             if [ "$UNTRUSTED_DEPRECATED_ATTESTATION_NAME" != "" ]; then
               echo "WARNING: deprecated attestation-name was used. Use provenance-name instead."
-              untrusted_provenance_name="$UNTRUSTED_DEPRECATED_ATTESTATION_NAME"
+              untrusted_prov_name="$UNTRUSTED_DEPRECATED_ATTESTATION_NAME"
             fi
           fi
           # Create and sign provenance.
@@ -194,7 +195,7 @@ jobs:
           # number of subjects based on in-toto attestation bundle file naming conventions.
           # See: https://github.com/in-toto/attestation/blob/main/spec/bundle.md#file-naming-convention
           # NOTE: The attest commmand outputs the provenance-name and provenance-sha256
-          "$GITHUB_WORKSPACE/$BUILDER_BINARY" attest --subjects "${UNTRUSTED_SUBJECTS}" -g "$untrusted_provenance_name"
+          "$GITHUB_WORKSPACE/$BUILDER_BINARY" attest --subjects "${UNTRUSTED_SUBJECTS}" -g "$untrusted_prov_name"
 
       - name: Upload the signed provenance
         id: upload-prov
@@ -211,7 +212,8 @@ jobs:
         env:
           SUCCESS: ${{ steps.generate-builder.outcome != 'failure' && steps.sign-prov.outcome != 'failure' && steps.upload-prov.outcome != 'failure' }}
         run: |
-          echo "outcome=$([ "$SUCCESS" == "true" ] && echo "success" || echo "failure")" >> $GITHUB_OUTPUT
+          set -euo pipefail
+          echo "outcome=$([ "$SUCCESS" == "true" ] && echo "success" || echo "failure")" >> "$GITHUB_OUTPUT"
 
   # upload-assets uploads provenance to the release
   # if github.ref is a tag and `upload-assets` is true.
@@ -257,7 +259,8 @@ jobs:
         env:
           SUCCESS: ${{ steps.checkout-builder.outcome != 'failure' && steps.download-prov.outcome != 'failure' && steps.release.outcome != 'failure' }}
         run: |
-          echo "outcome=$([ "$SUCCESS" == "true" ] && echo "success" || echo "failure")" >> $GITHUB_OUTPUT
+          set -euo pipefail
+          echo "outcome=$([ "$SUCCESS" == "true" ] && echo "success" || echo "failure")" >> "$GITHUB_OUTPUT"
 
   # final fails or succeeds based on the value of `inputs.continue-on-error`
   # and the outcome of previous jobs.
@@ -275,5 +278,6 @@ jobs:
           SUCCESS: ${{ needs.detect-env.outputs.outcome != 'failure' && needs.generator.outputs.outcome != 'failure' && needs.upload-assets.outputs.outcome != 'failure' }}
           CONTINUE: ${{ inputs.continue-on-error }}
         run: |
-          echo "outcome=$([ "$SUCCESS" == "true" ] && echo "success" || echo "failure")" >> $GITHUB_OUTPUT
+          set -euo pipefail
+          echo "outcome=$([ "$SUCCESS" == "true" ] && echo "success" || echo "failure")" >> "$GITHUB_OUTPUT"
           [ "$CONTINUE" == "true" ] || [ "$SUCCESS" == "true" ] || exit 27

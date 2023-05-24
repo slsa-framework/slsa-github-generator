@@ -101,7 +101,8 @@ jobs:
         env:
           SUCCESS: ${{ steps.detect.outcome != 'failure' }}
         run: |
-          echo "outcome=$([ "$SUCCESS" == "true" ] && echo "success" || echo "failure")" >> $GITHUB_OUTPUT
+          set -euo pipefail
+          echo "outcome=$([ "$SUCCESS" == "true" ] && echo "success" || echo "failure")" >> "$GITHUB_OUTPUT"
 
   # generator builds the generator binary and runs it to generate SLSA
   # provenance.
@@ -217,7 +218,8 @@ jobs:
         env:
           SUCCESS: ${{ steps.generate-builder.outcome != 'failure' && steps.cosign-install.outcome != 'failure' && steps.login.outcome != 'failure' && steps.sign-prov.outcome != 'failure' }}
         run: |
-          echo "outcome=$([ "$SUCCESS" == "true" ] && echo "success" || echo "failure")" >> $GITHUB_OUTPUT
+          set -euo pipefail
+          echo "outcome=$([ "$SUCCESS" == "true" ] && echo "success" || echo "failure")" >> "$GITHUB_OUTPUT"
 
   # final fails or succeeds based on the value of `inputs.continue-on-error`
   # and the outcome of previous jobs.
@@ -235,5 +237,6 @@ jobs:
           SUCCESS: ${{ needs.detect-env.outputs.outcome != 'failure' && needs.generator.outputs.outcome != 'failure' }}
           CONTINUE: ${{ inputs.continue-on-error }}
         run: |
-          echo "outcome=$([ "$SUCCESS" == "true" ] && echo "success" || echo "failure")" >> $GITHUB_OUTPUT
+          set -euo pipefail
+          echo "outcome=$([ "$SUCCESS" == "true" ] && echo "success" || echo "failure")" >> "$GITHUB_OUTPUT"
           [ "$CONTINUE" == "true" ] || [ "$SUCCESS" == "true" ] || exit 27

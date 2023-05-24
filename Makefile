@@ -1,3 +1,17 @@
+# Copyright 2023 SLSA Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 SHELL := /bin/bash
 OUTPUT_FORMAT ?= $(shell if [ "${GITHUB_ACTIONS}" == "true" ]; then echo "github"; else echo ""; fi)
 
@@ -35,7 +49,7 @@ go-test: ## Run Go unit tests.
 
 .PHONY: ts-test
 ts-test: ## Run TypeScript tests.
-	# Run unit tests for all TS actions where tests are found.
+	@# Run unit tests for all TS actions where tests are found.
 	@set -e;\
 		PATHS=$$(find .github/actions/ actions/ -not -path '*/node_modules/*' -name __tests__ -type d | xargs dirname); \
 		for path in $$PATHS; do \
@@ -44,6 +58,35 @@ ts-test: ## Run TypeScript tests.
 
 ## Tools
 #####################################################################
+
+COPYRIGHT ?= "SLSA Authors"
+LICENSE ?= apache
+
+.PHONY: autogen
+autogen: ## Runs autogen on code files.
+	@set -euo pipefail; \
+		code_files=$$( \
+			find . -type f \
+				\( \
+					-name '*.go' -o \
+					-name '*.ts' -o \
+					-name '*.sh' -o \
+					-name '*.yaml' -o \
+					-name '*.yml' -o \
+					-name 'Makefile' \
+				\) \
+				-not -iwholename '*/.git/*' \
+				-not -iwholename '*/vendor/*' \
+				-not -iwholename '*/node_modules/*' \
+		); \
+		for filename in $${code_files}; do \
+			if ! ( head "$${filename}" | grep -iL $(COPYRIGHT) > /dev/null ); then \
+				echo $${filename}; \
+				cd $$(dirname "$${filename}"); \
+				autogen -i --no-code --no-tlc -c $(COPYRIGHT) -l $(LICENSE) $$(basename "$${filename}"); \
+				cd - > /dev/null; \
+			fi; \
+		done
 
 .PHONY: markdown-toc
 markdown-toc: node_modules/.installed ## Runs markdown-toc on markdown files.
@@ -66,7 +109,25 @@ markdown-toc: node_modules/.installed ## Runs markdown-toc on markdown files.
 #####################################################################
 
 .PHONY: lint
-lint: markdownlint golangci-lint shellcheck eslint yamllint ## Run all linters.
+lint: markdownlint golangci-lint shellcheck eslint yamllint actionlint ## Run all linters.
+
+.PHONY: actionlint
+actionlint: ## Runs the actionlint linter.
+	@# NOTE: We need to ignore config files used in tests.
+	@set -e;\
+		files=$$( \
+			find .github/workflows/ -type f \
+				\( \
+					-name '*.yaml' -o \
+					-name '*.yml' \
+				\) \
+				-not -iwholename '*/configs-*/*' \
+		); \
+		if [ "$(OUTPUT_FORMAT)" == "github" ]; then \
+			actionlint -format '{{range $$err := .}}::error file={{$$err.Filepath}},line={{$$err.Line}},col={{$$err.Column}}::{{$$err.Message}}%0A```%0A{{replace $$err.Snippet "\\n" "%0A"}}%0A```\n{{end}}' -ignore 'SC2016:' $${files}; \
+		else \
+			actionlint $${files}; \
+		fi
 
 .PHONY: markdownlint
 markdownlint: node_modules/.installed ## Runs the markdownlint linter.

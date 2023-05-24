@@ -1,3 +1,17 @@
+# Copyright 2023 SLSA Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 name: "Generate the builder"
 description: "Build or fetch the builder binary"
 inputs:
@@ -76,8 +90,8 @@ runs:
         # release binaries when the compile-builder input is false.
         VERIFIER_REPOSITORY: slsa-framework/slsa-verifier # The repository to download the pre-built verifier binary from.
         VERIFIER_RELEASE_BINARY: slsa-verifier-linux-amd64 # The name of the verifier binary in the release assets.
-        VERIFIER_RELEASE_BINARY_SHA256: 8aaf12ce7691ca203c2ab000cbbc68140112acb3d08c4d338c06eb125dfd6b10 # The expected hash of the verifier binary.
-        VERIFIER_RELEASE: v2.2.0 # The version of the verifier to download.
+        VERIFIER_RELEASE_BINARY_SHA256: ea687149d658efecda64d69da999efb84bb695a3212f29548d4897994027172d # The expected hash of the verifier binary.
+        VERIFIER_RELEASE: v2.3.0 # The version of the verifier to download.
 
         COMPILE_BUILDER: "${{ inputs.compile-builder }}"
         # NOTE: If a builder reference is specified, then we will download this version of the builder.

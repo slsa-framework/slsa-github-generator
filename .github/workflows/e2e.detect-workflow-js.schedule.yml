@@ -1,3 +1,17 @@
+# Copyright 2023 SLSA Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 name: schedule detect-workflow-js
 
 on:
@@ -28,6 +42,7 @@ jobs:
           REF: ${{ steps.detect.outputs.ref }}
           WORKFLOW: ${{ steps.detect.outputs.workflow }}
         run: |
+          set -euo pipefail
           if [[ "${REPO}" != "${GITHUB_REPOSITORY}" ]]; then
             echo "expected ${GITHUB_REPOSITORY}, got ${REPO}"
             exit 1
@@ -40,9 +55,9 @@ jobs:
           fi
           # When calling this action from a caller workflow, this will be
           # the caller workflow.
-          workflow=$(echo "${GITHUB_WORKFLOW_REF}" | cut -d '@' -f1 | cut -d '/' -f3-)
-          if [[ "${WORKFLOW}" != "${workflow}" ]]; then
-            echo "expected ${workflow}, got ${WORKFLOW}"
+          workflow_name=$(echo "${GITHUB_WORKFLOW_REF}" | cut -d '@' -f1 | cut -d '/' -f3-)
+          if [[ "${WORKFLOW}" != "${workflow_name}" ]]; then
+            echo "expected ${workflow_name}, got ${WORKFLOW}"
             exit 1
           fi
 
