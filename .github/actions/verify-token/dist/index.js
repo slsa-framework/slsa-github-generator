@@ -939,6 +939,16 @@ function validateGitHubFields(gho) {
     validateField("github.actor_id", gho.actor_id, process.env.GITHUB_ACTOR_ID);
     // event_name
     validateField("github.event_name", gho.event_name, process.env.GITHUB_EVENT_NAME);
+    // Validate the event. Only events in
+    // https://github.com/slsa-framework/github-actions-buildtypes/tree/main/workflow/v1
+    // are supported.
+    validateFieldAnyOf("GITHUB_EVENT_NAME", process.env.GITHUB_EVENT_NAME, [
+        "create",
+        "deployment",
+        "release",
+        "push",
+        "workflow_dispatch",
+    ]);
     // event_payload_sha256
     const eventPath = process.env.GITHUB_EVENT_PATH || "";
     // NOTE: validate GITHUB_EVENT_PATH is non-empty to provide a better error
