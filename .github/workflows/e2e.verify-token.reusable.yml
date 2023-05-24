@@ -123,15 +123,15 @@ jobs:
           output-predicate: predicate.json
           builder-interface-type: "builder"
 
-      # TODO(1419): Fix test step.
-      # - env:
-      #     VERIFIED_TOKEN: ${{ steps.verify.outputs.slsa-verified-token }}
-      #     TOOL_REPOSITORY: ${{ steps.verify.outputs.tool-repository }}
-      #     TOOL_REF: ${{ steps.verify.outputs.tool-ref }}
-      #     PREDICATE: predicate.json
-      #     CHECKOUT_FETCH_DEPTH: 4
-      #     CHECKOUT_SHA1: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
-      #     BUILDER_INTERFACE_TYPE: "builder"
+      - env:
+          VERIFIED_TOKEN: ${{ steps.verify.outputs.slsa-verified-token }}
+          TOOL_REPOSITORY: ${{ steps.verify.outputs.tool-repository }}
+          TOOL_REF: ${{ steps.verify.outputs.tool-ref }}
+          PREDICATE: predicate.json
+          CHECKOUT_FETCH_DEPTH: 4
+          CHECKOUT_SHA1: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          BUILDER_INTERFACE_TYPE: "builder"
+        run: ./.github/workflows/scripts/schedule.actions/verify-verified-token.sh
 
       - id: verify-generator
         uses: ./.github/actions/verify-token
