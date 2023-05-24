@@ -1,17 +1,3 @@
-// Copyright 2023 SLSA Authors
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//      http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-
 import { create } from "domain";
 
 const core = require("@actions/core");
@@ -139,7 +125,7 @@ describe("detectWorkflowFromContext", () => {
               ref: "refs/pull/3669/merge",
             },
             {
-              path: "slsa-framework/slsa-github-generator/.github/workflows/builder_container-based_slsa3.yml@v1.5.0",
+              path: "slsa-framework/slsa-github-generator/.github/workflows/builder_docker-based_slsa3.yml@v1.5.0",
               sha: "7f4fdb871876c23e455853d694197440c5a91506",
               ref: "refs/tags/v1.5.0",
             },
@@ -153,7 +139,7 @@ describe("detectWorkflowFromContext", () => {
     );
     expect(repo).toBe("slsa-framework/slsa-github-generator");
     expect(ref).toBe("refs/tags/v1.5.0");
-    expect(workflow).toBe(".github/workflows/builder_container-based_slsa3.yml");
+    expect(workflow).toBe(".github/workflows/builder_docker-based_slsa3.yml");
   });
 
   it("multiple workflows", async () => {
@@ -167,7 +153,7 @@ describe("detectWorkflowFromContext", () => {
               ref: "refs/tags/v1.5.0",
             },
             {
-              path: "slsa-framework/slsa-github-generator/.github/workflows/builder_container-based_slsa3.yml@v1.5.0",
+              path: "slsa-framework/slsa-github-generator/.github/workflows/builder_docker-based_slsa3.yml@v1.5.0",
               sha: "7f4fdb871876c23e455853d694197440c5a91506",
               ref: "refs/tags/v1.5.0",
             },
@@ -181,7 +167,7 @@ describe("detectWorkflowFromContext", () => {
     );
     expect(repo).toBe("slsa-framework/slsa-github-generator");
     expect(ref).toBe("refs/tags/v1.5.0");
-    expect(workflow).toBe(".github/workflows/builder_container-based_slsa3.yml");
+    expect(workflow).toBe(".github/workflows/builder_docker-based_slsa3.yml");
   });
 
   it("multiple workflows mismatch", async () => {
@@ -195,7 +181,7 @@ describe("detectWorkflowFromContext", () => {
               ref: "refs/tags/v1.5.0",
             },
             {
-              path: "fork/slsa-github-generator/.github/workflows/builder_container-based_slsa3.yml@v1.5.0",
+              path: "fork/slsa-github-generator/.github/workflows/builder_docker-based_slsa3.yml@v1.5.0",
               sha: "7f4fdb871876c23e455853d694197440c5a91506",
               ref: "refs/tags/v1.5.0",
             },
@@ -214,10 +200,10 @@ describe("detectWorkflowFromContext", () => {
         data: {
           event: "pull_request",
           head_sha: "088d04f305bd32ad4594d82e8c1571507acf03d5",
-          path: ".github/workflows/pre-submit.e2e.builder_container-based.default.yml",
+          path: ".github/workflows/pre-submit.e2e.docker-based.default.yml",
           referenced_workflows: [
             {
-              path: "slsa-framework/slsa-github-generator/.github/workflows/builder_container-based_slsa3.yml@9929152897cce5842f58221572911e18dd937808",
+              path: "slsa-framework/slsa-github-generator/.github/workflows/builder_docker-based_slsa3.yml@9929152897cce5842f58221572911e18dd937808",
               sha: "9929152897cce5842f58221572911e18dd937808",
               ref: "refs/pull/3669/merge",
             },
@@ -240,7 +226,7 @@ describe("detectWorkflowFromContext", () => {
     expect(repo).toBe("asraa/slsa-github-generator");
     expect(ref).toBe("088d04f305bd32ad4594d82e8c1571507acf03d5");
     expect(workflow).toBe(
-      ".github/workflows/pre-submit.e2e.container-based.default.yml"
+      ".github/workflows/pre-submit.e2e.docker-based.default.yml"
     );
   });
 });
