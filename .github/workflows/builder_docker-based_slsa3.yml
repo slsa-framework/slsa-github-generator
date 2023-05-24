@@ -277,7 +277,7 @@ jobs:
             --source-repo "git+https://github.com/${GITHUB_REPOSITORY}${REF}" \
             --verbose
 
-          echo "build-definition-name=build-definition.json" >> $GITHUB_OUTPUT
+          echo "build-definition-name=build-definition.json" >> "$GITHUB_OUTPUT"
 
       - name: Upload the build definition file
         id: upload
@@ -356,7 +356,6 @@ jobs:
           echo "login to ${untrusted_registry}"
           docker login "${untrusted_registry}" -u "${username}" -p "${password}"
 
-
       - name: Checkout builder repository
         uses: slsa-framework/slsa-github-generator/.github/actions/secure-builder-checkout@main
         with:
@@ -406,7 +405,7 @@ jobs:
             --git-commit-digest "sha1:${GITHUB_SHA}" \
             --source-repo "git+https://github.com/${GITHUB_REPOSITORY}${REF}" \
             --subjects-path subjects.json \
-            --output-folder /tmp/build-outputs-${RNG} \
+            --output-folder "/tmp/build-outputs-${RNG}" \
             --verbose
           "${GITHUB_WORKSPACE}/${BUILDER_BINARY}" build \
             --build-config-path "${CONFIG_PATH}" \
@@ -414,11 +413,11 @@ jobs:
             --git-commit-digest "sha1:${GITHUB_SHA}" \
             --source-repo "git+https://github.com/${GITHUB_REPOSITORY}${REF}" \
             --subjects-path subjects.json \
-            --output-folder /tmp/build-outputs-${RNG} \
+            --output-folder "/tmp/build-outputs-${RNG}" \
             --verbose
 
           # Construct attestation filename.
-          FILENAME=${PROVENANCE_NAME}
+          FILENAME="${PROVENANCE_NAME}"
           length=$(jq length subjects.json)
           if [[ -z "${FILENAME}" ]]; then
             if [[ "$length" == "1" ]]; then
@@ -449,8 +448,8 @@ jobs:
           cat DATA > output-template.json
 
           jq --argjson subjects "$(<subjects.json)" '.attestations[0].subjects += $subjects' output-template.json > "${GITHUB_WORKSPACE}"/slsa-layout.json
-          echo "slsa-outputs-name=slsa-layout.json" >> $GITHUB_OUTPUT
-          echo "build-outputs-name=build-outputs-${RNG}" >> $GITHUB_OUTPUT
+          echo "slsa-outputs-name=slsa-layout.json" >> "$GITHUB_OUTPUT"
+          echo "build-outputs-name=build-outputs-${RNG}" >> "$GITHUB_OUTPUT"
 
       - name: Upload the SLSA outputs file
         id: upload

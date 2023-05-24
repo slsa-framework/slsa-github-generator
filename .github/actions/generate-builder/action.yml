@@ -90,8 +90,8 @@ runs:
         # release binaries when the compile-builder input is false.
         VERIFIER_REPOSITORY: slsa-framework/slsa-verifier # The repository to download the pre-built verifier binary from.
         VERIFIER_RELEASE_BINARY: slsa-verifier-linux-amd64 # The name of the verifier binary in the release assets.
-        VERIFIER_RELEASE_BINARY_SHA256: 8aaf12ce7691ca203c2ab000cbbc68140112acb3d08c4d338c06eb125dfd6b10 # The expected hash of the verifier binary.
-        VERIFIER_RELEASE: v2.2.0 # The version of the verifier to download.
+        VERIFIER_RELEASE_BINARY_SHA256: ea687149d658efecda64d69da999efb84bb695a3212f29548d4897994027172d # The expected hash of the verifier binary.
+        VERIFIER_RELEASE: v2.3.0 # The version of the verifier to download.
 
         COMPILE_BUILDER: "${{ inputs.compile-builder }}"
         # NOTE: If a builder reference is specified, then we will download this version of the builder.

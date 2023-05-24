@@ -53,9 +53,10 @@ jobs:
       - name: Get build artifact
         id: build
         run: |
+          set -euo pipefail
           name=$(find outputs/ -type f | head -1)
-          cp $name .
-          echo "name=$(basename $name)" >> $GITHUB_OUTPUT
+          cp "$name" .
+          echo "name=$(basename "$name")" >> "$GITHUB_OUTPUT"
       - uses: actions/download-artifact@e9ef242655d12993efdcda9058dee2db83a2cb9b
         with:
           name: ${{ needs.build-docker-based.outputs.attestations-download-name }}

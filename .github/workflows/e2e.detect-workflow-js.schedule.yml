@@ -42,6 +42,7 @@ jobs:
           REF: ${{ steps.detect.outputs.ref }}
           WORKFLOW: ${{ steps.detect.outputs.workflow }}
         run: |
+          set -euo pipefail
           if [[ "${REPO}" != "${GITHUB_REPOSITORY}" ]]; then
             echo "expected ${GITHUB_REPOSITORY}, got ${REPO}"
             exit 1
@@ -54,9 +55,9 @@ jobs:
           fi
           # When calling this action from a caller workflow, this will be
           # the caller workflow.
-          workflow=$(echo "${GITHUB_WORKFLOW_REF}" | cut -d '@' -f1 | cut -d '/' -f3-)
-          if [[ "${WORKFLOW}" != "${workflow}" ]]; then
-            echo "expected ${workflow}, got ${WORKFLOW}"
+          workflow_name=$(echo "${GITHUB_WORKFLOW_REF}" | cut -d '@' -f1 | cut -d '/' -f3-)
+          if [[ "${WORKFLOW}" != "${workflow_name}" ]]; then
+            echo "expected ${workflow_name}, got ${WORKFLOW}"
             exit 1
           fi
 
