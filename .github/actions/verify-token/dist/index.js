@@ -581,6 +581,9 @@ function createPredicate(rawTokenObj, toolURI, token, isGenerator) {
                 // TODO(#2164): record the inputs, depending on the type of trigger events.
                 inputs: {},
             };
+            // Throw an error for now. We have no generators using v1.0 yet
+            // and it's not supported in the slsa-verifier.
+            throw new Error("not supported: #2164, #1555");
         }
         else {
             // NOTE: the workflow information is available in the internalParameters.GITHUB_WORKFLOW_REF.
