@@ -124,7 +124,7 @@ func loadBuildDefinitionFromFile(path string) (*slsa1.ProvenanceBuildDefinition,
 
 func getAnnotations(annotation map[string]interface{}) (map[string]string, error) {
 	var annotations map[string]string
-	annotationBytes, err := json.Marshal(annotations)
+	annotationBytes, err := json.Marshal(annotation)
 	fmt.Println(string(annotationBytes))
 	if err != nil {
 		return nil, fmt.Errorf("could not marshal annotations: %w", err)
