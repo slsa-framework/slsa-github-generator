@@ -123,9 +123,8 @@ func (db *DockerBuild) CreateBuildDefinition() *slsa1.ProvenanceBuildDefinition 
 // sourceArtifact returns the source repo and its digest as an instance of ResourceDescriptor.
 func sourceArtifact(config *DockerBuildConfig) slsa1.ResourceDescriptor {
 	return slsa1.ResourceDescriptor{
-		URI:         config.SourceRepo,
-		Digest:      config.SourceDigest.ToMap(),
-		Annotations: map[string]interface{}{"source": "true"},
+		URI:    config.SourceRepo,
+		Digest: config.SourceDigest.ToMap(),
 	}
 }
 

@@ -34,4 +34,4 @@ e2e_verify_predicate_v1_buildDefinition_buildType "$PREDICATE_CONTENT" "https://
 # Verify source: note that the source ref in the uri for pull request events is omitted,
 # the source digest is present. Checking out at a pull request merge reference is not
 # supported.
-e2e_verify_predicate_v1_buildDefinition_externalParameters_source "$PREDICATE_CONTENT" "{\"uri\":\"git+https://github.com/$GITHUB_REPOSITORY\",\"digest\":{\"sha1\":\"$GITHUB_SHA\"},\"annotations\":{\"source\":\"true\"}}}"
+e2e_verify_predicate_v1_buildDefinition_externalParameters_source "$PREDICATE_CONTENT" "{\"uri\":\"git+https://github.com/$GITHUB_REPOSITORY\",\"digest\":{\"sha1\":\"$GITHUB_SHA\"}}"
