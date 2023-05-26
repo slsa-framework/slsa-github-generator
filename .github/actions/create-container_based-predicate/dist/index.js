@@ -93,8 +93,8 @@ function addGitHubParameters(predicate, currentRun) {
     internalParams.GITHUB_RUN_ID = ctx.runId;
     internalParams.GITHUB_RUN_NUMBER = ctx.runNumber;
     internalParams.GITHUB_SHA = ctx.sha;
-    internalParams.GITHUB_TRIGGERING_ACTOR_ID = (currentRun.triggering_actor &&
-        String(currentRun.triggering_actor.id));
+    internalParams.GITHUB_TRIGGERING_ACTOR_ID =
+        currentRun.triggering_actor && String(currentRun.triggering_actor.id);
     internalParams.GITHUB_WORKFLOW = ctx.workflow;
     internalParams.GITHUB_WORKFLOW_REF = env.GITHUB_WORKFLOW_REF || "";
     internalParams.GITHUB_WORKFLOW_SHA = env.GITHUB_WORKFLOW_SHA || "";
