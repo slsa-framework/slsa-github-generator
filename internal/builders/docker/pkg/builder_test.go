@@ -176,7 +176,7 @@ func Test_inspectArtifacts(t *testing.T) {
 
 	s1 := intoto.Subject{
 		Name:   "build-definition.json",
-		Digest: map[string]string{"sha256": "b1c74863007166aadca8ff54a0e647047696bee38e8e8a25a1290f494e3abc46"},
+		Digest: map[string]string{"sha256": "387b1dca2ab5020fa84272a576433029016d972536502b94615a1c52244a7728"},
 	}
 	s2 := intoto.Subject{
 		Name:   "config.toml",
@@ -185,7 +185,7 @@ func Test_inspectArtifacts(t *testing.T) {
 
 	s3 := intoto.Subject{
 		Name:   "slsa1-provenance.json",
-		Digest: map[string]string{"sha256": "f472aaf04468ae881ab502f1f02f23476fe0d4dbb7a8a4b5d3eae9b2843e2ecd"},
+		Digest: map[string]string{"sha256": "4d2bd4f16a123f231b132fe619a4559a1d5c2d13c5b024b3de789743ec4a0ea4"},
 	}
 
 	s4 := intoto.Subject{
@@ -226,7 +226,7 @@ func Test_inspectArtifactsNoRoot(t *testing.T) {
 
 	s1 := intoto.Subject{
 		Name:   "build-definition.json",
-		Digest: map[string]string{"sha256": "b1c74863007166aadca8ff54a0e647047696bee38e8e8a25a1290f494e3abc46"},
+		Digest: map[string]string{"sha256": "387b1dca2ab5020fa84272a576433029016d972536502b94615a1c52244a7728"},
 	}
 	s2 := intoto.Subject{
 		Name:   "config.toml",
@@ -235,7 +235,7 @@ func Test_inspectArtifactsNoRoot(t *testing.T) {
 
 	s3 := intoto.Subject{
 		Name:   "slsa1-provenance.json",
-		Digest: map[string]string{"sha256": "f472aaf04468ae881ab502f1f02f23476fe0d4dbb7a8a4b5d3eae9b2843e2ecd"},
+		Digest: map[string]string{"sha256": "4d2bd4f16a123f231b132fe619a4559a1d5c2d13c5b024b3de789743ec4a0ea4"},
 	}
 
 	s4 := intoto.Subject{

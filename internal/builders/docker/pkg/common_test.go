@@ -32,8 +32,9 @@ func Test_BuildDefinition(t *testing.T) {
 	}
 
 	wantSource := slsa1.ResourceDescriptor{
-		URI:    "git+https://github.com/slsa-framework/slsa-github-generator@refs/heads/main",
-		Digest: map[string]string{"sha1": "cf5804b5c6f1a4b2a0b03401a487dfdfbe3a5f00"},
+		URI:         "git+https://github.com/slsa-framework/slsa-github-generator@refs/heads/main",
+		Digest:      map[string]string{"sha1": "cf5804b5c6f1a4b2a0b03401a487dfdfbe3a5f00"},
+		Annotations: map[string]interface{}{"source": string("true")},
 	}
 
 	wantBuilderImage := slsa1.ResourceDescriptor{
@@ -55,6 +56,9 @@ func Test_BuildDefinition(t *testing.T) {
 					"config.toml",
 				},
 			},
+		},
+		ResolvedDependencies: []slsa1.ResourceDescriptor{
+			wantSource,
 		},
 	}
 
@@ -93,8 +97,41 @@ func loadBuildDefinitionFromFile(path string) (*slsa1.ProvenanceBuildDefinition,
 	if err := json.Unmarshal(epBytes, &containerEp); err != nil {
 		return nil, fmt.Errorf("could not unmarshal the JSON file in %q as a ContainerBasedExternalParameters: %w", path, err)
 	}
+	sourceAnnotations, err := getAnnotations(containerEp.Source.Annotations)
+	if err != nil {
+		return nil, fmt.Errorf("could not marshal the source annotations in %q: %w", path, err)
+	}
+	for k, v := range sourceAnnotations {
+		containerEp.Source.Annotations[k] = v
+	}
 
 	bd.ExternalParameters = containerEp
 
+	// unmarshal annotations into a string-string map.
+	for i, dep := range bd.ResolvedDependencies {
+		annotations, err := getAnnotations(dep.Annotations)
+		if err != nil {
+			return nil, fmt.Errorf("could not marshal the annotations in %q: %w", path, err)
+
+		}
+		for k, v := range annotations {
+			bd.ResolvedDependencies[i].Annotations[k] = v
+		}
+	}
+
 	return &bd, nil
+}
+
+func getAnnotations(annotation map[string]interface{}) (map[string]string, error) {
+	var annotations map[string]string
+	annotationBytes, err := json.Marshal(annotations)
+	fmt.Println(string(annotationBytes))
+	if err != nil {
+		return nil, fmt.Errorf("could not marshal annotations: %w", err)
+
+	}
+	if err := json.Unmarshal(annotationBytes, &annotations); err != nil {
+		return nil, fmt.Errorf("could not unmarshal annotations as a string-string annotation: %w", err)
+	}
+	return annotations, nil
 }

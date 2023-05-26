@@ -5,6 +5,9 @@
             "uri": "git+https://github.com/slsa-framework/slsa-github-generator@refs/heads/main",
             "digest": {
                 "sha1": "cf5804b5c6f1a4b2a0b03401a487dfdfbe3a5f00"
+            },
+            "annotations": {
+                "source": "true"
             }
         },
         "builderImage": {
@@ -22,5 +25,16 @@
             ]
         },
         "configPath": "internal/builders/docker/testdata/config.toml"
-    }
+    },
+    "resolvedDependencies": [
+        {
+            "uri": "git+https://github.com/slsa-framework/slsa-github-generator@refs/heads/main",
+            "digest": {
+                "sha1": "cf5804b5c6f1a4b2a0b03401a487dfdfbe3a5f00"
+            },
+            "annotations": {
+                "source": "true"
+            }
+        }
+    ]
 }

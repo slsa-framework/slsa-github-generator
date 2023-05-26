@@ -111,19 +111,21 @@ func (db *DockerBuild) CreateBuildDefinition() *slsa1.ProvenanceBuildDefinition 
 		Config:       *db.buildConfig,
 	}
 
-	// Currently we don't have any SystemParameters or ResolvedDependencies.
-	// So these fields are left empty.
+	// Currently we don't have any SystemParameters, so this fields is left empty.
 	return &slsa1.ProvenanceBuildDefinition{
 		BuildType:          ContainerBasedBuildType,
 		ExternalParameters: ep,
+		// The source repository is also added as a resolved dependency.
+		ResolvedDependencies: []slsa1.ResourceDescriptor{sourceArtifact(db.config)},
 	}
 }
 
 // sourceArtifact returns the source repo and its digest as an instance of ResourceDescriptor.
 func sourceArtifact(config *DockerBuildConfig) slsa1.ResourceDescriptor {
 	return slsa1.ResourceDescriptor{
-		URI:    config.SourceRepo,
-		Digest: config.SourceDigest.ToMap(),
+		URI:         config.SourceRepo,
+		Digest:      config.SourceDigest.ToMap(),
+		Annotations: map[string]interface{}{"source": "true"},
 	}
 }
 
