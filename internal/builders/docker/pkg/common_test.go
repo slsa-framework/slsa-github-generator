@@ -56,6 +56,9 @@ func Test_BuildDefinition(t *testing.T) {
 				},
 			},
 		},
+		ResolvedDependencies: []slsa1.ResourceDescriptor{
+			wantSource,
+		},
 	}
 
 	if diff := cmp.Diff(got, want); diff != "" {
