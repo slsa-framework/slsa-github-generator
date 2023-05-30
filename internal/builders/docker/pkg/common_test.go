@@ -43,7 +43,7 @@ func Test_BuildDefinition(t *testing.T) {
 
 	want := &slsa1.ProvenanceBuildDefinition{
 		BuildType: "https://slsa.dev/container-based-build/v0.1?draft",
-		ExternalParameters: DockerBasedExternalParameters{
+		ExternalParameters: ContainerBasedExternalParameters{
 			Source:       wantSource,
 			BuilderImage: wantBuilderImage,
 			ConfigPath:   "internal/builders/docker/testdata/config.toml",
@@ -55,6 +55,9 @@ func Test_BuildDefinition(t *testing.T) {
 					"config.toml",
 				},
 			},
+		},
+		ResolvedDependencies: []slsa1.ResourceDescriptor{
+			wantSource,
 		},
 	}
 
@@ -89,12 +92,12 @@ func loadBuildDefinitionFromFile(path string) (*slsa1.ProvenanceBuildDefinition,
 		return nil, fmt.Errorf("could not marshal the external params in %q: %w", path, err)
 	}
 
-	var dockerEp DockerBasedExternalParameters
-	if err := json.Unmarshal(epBytes, &dockerEp); err != nil {
-		return nil, fmt.Errorf("could not unmarshal the JSON file in %q as a DockerBasedExternalParameters: %w", path, err)
+	var containerEp ContainerBasedExternalParameters
+	if err := json.Unmarshal(epBytes, &containerEp); err != nil {
+		return nil, fmt.Errorf("could not unmarshal the JSON file in %q as a ContainerBasedExternalParameters: %w", path, err)
 	}
 
-	bd.ExternalParameters = dockerEp
+	bd.ExternalParameters = containerEp
 
 	return &bd, nil
 }

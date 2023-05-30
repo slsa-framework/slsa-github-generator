@@ -12,8 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-name: "Create docker-based SLSA predicate"
-description: "Creates a docker-based SLSA predicate given a BuildDefinition."
+name: "Create container-based SLSA predicate"
+description: "Creates a container-based SLSA predicate given a BuildDefinition."
 inputs:
   build-definition:
     description: 'A JSON file describing the SLSA BuildDefinition'

@@ -1,6 +1,6 @@
-# Docker-based predicate creation
+# Container-based predicate creation
 
-Creates a docker-based SLSA predicate given a BuildDefinition.
+Creates a container-based SLSA predicate given a BuildDefinition.
 
 ## How to build this action in development
 

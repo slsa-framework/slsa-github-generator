@@ -82,27 +82,23 @@ function addGitHubParameters(predicate, currentRun) {
     }
     const internalParams = predicate.buildDefinition.internalParameters;
     // Put GitHub context and env vars into internalParameters.
+    internalParams.GITHUB_ACTOR_ID = String(((_a = currentRun.actor) === null || _a === void 0 ? void 0 : _a.id) || "");
     internalParams.GITHUB_EVENT_NAME = ctx.eventName;
-    internalParams.GITHUB_JOB = ctx.job;
     internalParams.GITHUB_REF = ctx.ref;
-    internalParams.GITHUB_BASE_REF = env.GITHUB_BASE_REF || "";
     internalParams.GITHUB_REF_TYPE = env.GITHUB_REF_TYPE || "";
     internalParams.GITHUB_REPOSITORY = env.GITHUB_REPOSITORY || "";
+    internalParams.GITHUB_REPOSITORY_ID = String(currentRun.repository.id || "");
+    internalParams.GITHUB_REPOSITORY_OWNER_ID = String(currentRun.repository.owner.id || "");
     internalParams.GITHUB_RUN_ATTEMPT = env.GITHUB_RUN_ATTEMPT || "";
     internalParams.GITHUB_RUN_ID = ctx.runId;
     internalParams.GITHUB_RUN_NUMBER = ctx.runNumber;
     internalParams.GITHUB_SHA = ctx.sha;
+    internalParams.GITHUB_TRIGGERING_ACTOR_ID =
+        currentRun.triggering_actor && String(currentRun.triggering_actor.id);
     internalParams.GITHUB_WORKFLOW = ctx.workflow;
     internalParams.GITHUB_WORKFLOW_REF = env.GITHUB_WORKFLOW_REF || "";
     internalParams.GITHUB_WORKFLOW_SHA = env.GITHUB_WORKFLOW_SHA || "";
-    internalParams.IMAGE_OS = env.ImageOS || "";
-    internalParams.IMAGE_VERSION = env.ImageVersion || "";
-    internalParams.RUNNER_ARCH = env.RUNNER_ARCH || "";
-    internalParams.RUNNER_NAME = env.RUNNER_NAME || "";
-    internalParams.RUNNER_OS = env.RUNNER_OS || "";
-    internalParams.GITHUB_ACTOR_ID = String(((_a = currentRun.actor) === null || _a === void 0 ? void 0 : _a.id) || "");
-    internalParams.GITHUB_REPOSITORY_ID = String(currentRun.repository.id || "");
-    internalParams.GITHUB_REPOSITORY_OWNER_ID = String(currentRun.repository.owner.id || "");
+    internalParams.GITHUB_BASE_REF = env.GITHUB_BASE_REF || "";
     // Put GitHub event payload into internalParameters.
     // TODO(github.com/slsa-framework/slsa-github-generator/issues/1575): Redact sensitive information.
     if (env.GITHUB_EVENT_PATH) {
@@ -199,13 +195,13 @@ function run() {
                 INPUT_BINARY-SHA256="0982432e54df5f3eb6b25c6c1ae77a45c242ad5a81a485c1fc225ae5ac472be3" \
                 INPUT_BINARY-URI="git+https://github.com/asraa/slsa-github-generator@refs/heads/refs/heads/main" \
                 INPUT_TOKEN="$(gh auth token)" \
-                INPUT_BUILDER-ID="https://github.com/asraa/slsa-github-generator/.github/workflows/builder_docker-baed_slsa3.yml@refs/tags/v0.0.1" \
+                INPUT_BUILDER-ID="https://github.com/asraa/slsa-github-generator/.github/workflows/builder_container-based_slsa3.yml@refs/tags/v0.0.1" \
                 GITHUB_EVENT_NAME="workflow_dispatch" \
                 GITHUB_RUN_ATTEMPT="1" \
                 GITHUB_RUN_ID="4128571590" \
                 GITHUB_RUN_NUMBER="38" \
-                GITHUB_WORKFLOW="pre-submit e2e docker-based default" \
-                GITHUB_WORKFLOW_REF="asraa/slsa-github-generator/.github/workflows/pre-submit.e2e.docker-based.default.yml@refs/heads/main" \
+                GITHUB_WORKFLOW="pre-submit e2e container-based default" \
+                GITHUB_WORKFLOW_REF="asraa/slsa-github-generator/.github/workflows/pre-submit.e2e.container-based.default.yml@refs/heads/main" \
                 GITHUB_SHA="97f1bfd54b02d1c7b632da907676a7d30d2efc02" \
                 GITHUB_REPOSITORY="asraa/slsa-github-generator" \
                 GITHUB_REPOSITORY_ID="479129389" \
@@ -286,6 +282,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.generatePredicate = void 0;
 const github_1 = __nccwpck_require__(5928);
 function generatePredicate(bd, binaryRef, jobWorkflowRef, currentRun) {
+    var _a;
     let pred = {
         buildDefinition: bd,
         runDetails: {
@@ -298,7 +295,7 @@ function generatePredicate(bd, binaryRef, jobWorkflowRef, currentRun) {
         },
     };
     // Add the builder binary to the resolved dependencies.
-    pred.buildDefinition.resolvedDependencies = [binaryRef];
+    (_a = pred.buildDefinition.resolvedDependencies) === null || _a === void 0 ? void 0 : _a.concat([binaryRef]);
     // Update the parameters with the GH context, including workflow
     // inputs.
     pred = (0, github_1.addGitHubParameters)(pred, currentRun);

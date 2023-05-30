@@ -22,9 +22,9 @@ import (
 // replaced once the format is finalized.
 
 const (
-	// DockerBasedBuildType is type for container-based builds.
+	// ContainerBasedBuildType is type for container-based builds.
 	// TODO(#1191): Update to the final BuildType URI.
-	DockerBasedBuildType = "https://slsa.dev/container-based-build/v0.1?draft"
+	ContainerBasedBuildType = "https://slsa.dev/container-based-build/v0.1?draft"
 	// SourceKey is the lookup key for source repository in ExternalParameters.
 	SourceKey = "source"
 	// BuilderImageKey is the lookup key for builder image in ExternalParameters.
@@ -37,9 +37,9 @@ const (
 	CommandKey = "command"
 )
 
-// DockerBasedExternalParameters is a representation of the top level inputs to a
-// docker-based build.
-type DockerBasedExternalParameters struct {
+// ContainerBasedExternalParameters is a representation of the top level inputs to a
+// container-based build.
+type ContainerBasedExternalParameters struct {
 	// The source GitHub repo
 	Source slsa1.ResourceDescriptor `json:"source"`
 
