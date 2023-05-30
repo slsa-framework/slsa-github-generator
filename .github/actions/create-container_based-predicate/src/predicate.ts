@@ -85,9 +85,9 @@ export function generatePredicate(
 ): SLSAv1Predicate {
   // Add the builder binary to the resolved dependencies.
   if (!bd.resolvedDependencies) {
-    bd.resolvedDependencies = [binaryRef]
+    bd.resolvedDependencies = [binaryRef];
   } else {
-    bd.resolvedDependencies = bd.resolvedDependencies.concat([binaryRef])
+    bd.resolvedDependencies = bd.resolvedDependencies.concat([binaryRef]);
   }
 
   let pred: SLSAv1Predicate = {
