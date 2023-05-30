@@ -95,7 +95,7 @@ export function generatePredicate(
     },
   };
   // Add the builder binary to the resolved dependencies.
-  pred.buildDefinition.resolvedDependencies = [binaryRef];
+  pred.buildDefinition.resolvedDependencies?.concat([binaryRef]);
 
   // Update the parameters with the GH context, including workflow
   // inputs.

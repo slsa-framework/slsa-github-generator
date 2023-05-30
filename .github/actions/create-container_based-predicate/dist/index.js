@@ -82,27 +82,23 @@ function addGitHubParameters(predicate, currentRun) {
     }
     const internalParams = predicate.buildDefinition.internalParameters;
     // Put GitHub context and env vars into internalParameters.
+    internalParams.GITHUB_ACTOR_ID = String(((_a = currentRun.actor) === null || _a === void 0 ? void 0 : _a.id) || "");
     internalParams.GITHUB_EVENT_NAME = ctx.eventName;
-    internalParams.GITHUB_JOB = ctx.job;
     internalParams.GITHUB_REF = ctx.ref;
-    internalParams.GITHUB_BASE_REF = env.GITHUB_BASE_REF || "";
     internalParams.GITHUB_REF_TYPE = env.GITHUB_REF_TYPE || "";
     internalParams.GITHUB_REPOSITORY = env.GITHUB_REPOSITORY || "";
+    internalParams.GITHUB_REPOSITORY_ID = String(currentRun.repository.id || "");
+    internalParams.GITHUB_REPOSITORY_OWNER_ID = String(currentRun.repository.owner.id || "");
     internalParams.GITHUB_RUN_ATTEMPT = env.GITHUB_RUN_ATTEMPT || "";
     internalParams.GITHUB_RUN_ID = ctx.runId;
     internalParams.GITHUB_RUN_NUMBER = ctx.runNumber;
     internalParams.GITHUB_SHA = ctx.sha;
+    internalParams.GITHUB_TRIGGERING_ACTOR_ID =
+        currentRun.triggering_actor && String(currentRun.triggering_actor.id);
     internalParams.GITHUB_WORKFLOW = ctx.workflow;
     internalParams.GITHUB_WORKFLOW_REF = env.GITHUB_WORKFLOW_REF || "";
     internalParams.GITHUB_WORKFLOW_SHA = env.GITHUB_WORKFLOW_SHA || "";
-    internalParams.IMAGE_OS = env.ImageOS || "";
-    internalParams.IMAGE_VERSION = env.ImageVersion || "";
-    internalParams.RUNNER_ARCH = env.RUNNER_ARCH || "";
-    internalParams.RUNNER_NAME = env.RUNNER_NAME || "";
-    internalParams.RUNNER_OS = env.RUNNER_OS || "";
-    internalParams.GITHUB_ACTOR_ID = String(((_a = currentRun.actor) === null || _a === void 0 ? void 0 : _a.id) || "");
-    internalParams.GITHUB_REPOSITORY_ID = String(currentRun.repository.id || "");
-    internalParams.GITHUB_REPOSITORY_OWNER_ID = String(currentRun.repository.owner.id || "");
+    internalParams.GITHUB_BASE_REF = env.GITHUB_BASE_REF || "";
     // Put GitHub event payload into internalParameters.
     // TODO(github.com/slsa-framework/slsa-github-generator/issues/1575): Redact sensitive information.
     if (env.GITHUB_EVENT_PATH) {
@@ -286,6 +282,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.generatePredicate = void 0;
 const github_1 = __nccwpck_require__(5928);
 function generatePredicate(bd, binaryRef, jobWorkflowRef, currentRun) {
+    var _a;
     let pred = {
         buildDefinition: bd,
         runDetails: {
@@ -298,7 +295,7 @@ function generatePredicate(bd, binaryRef, jobWorkflowRef, currentRun) {
         },
     };
     // Add the builder binary to the resolved dependencies.
-    pred.buildDefinition.resolvedDependencies = [binaryRef];
+    (_a = pred.buildDefinition.resolvedDependencies) === null || _a === void 0 ? void 0 : _a.concat([binaryRef]);
     // Update the parameters with the GH context, including workflow
     // inputs.
     pred = (0, github_1.addGitHubParameters)(pred, currentRun);
