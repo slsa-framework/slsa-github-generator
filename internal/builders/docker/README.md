@@ -15,8 +15,10 @@ from the [generic artifact workflow](../generic/README.md) as it performs the
 build as well as generates the provenance. This workflow uses a distinct build
 type that provides the full details on the build process.
 
-**NOTE**:
-This workflow is currently pending [release](https://github.com/slsa-framework/slsa-github-generator/milestone/4). For stable testing, use the following reusable workflow that uses the same inputs and outputs documented below.
+**NOTE**: This workflow is currently pending
+[release](https://github.com/slsa-framework/slsa-github-generator/milestone/4).
+For stable testing, use the following reusable workflow that uses the same
+inputs and outputs documented below.
 
 ```yaml
 uses: slsa-framework/slsa-github-generator/.github/workflows/builder_docker-based_slsa3.yml@v1.6.0
