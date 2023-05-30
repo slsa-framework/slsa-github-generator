@@ -25,18 +25,32 @@ on:
       artifact-list:
         description: "Comma-separated list of paths to artifacts to be released. Use PROJECT_VERSION for the release version, for example: 'artifact-PROJECT_VERSION-sources.jar'"
         type: string
-        required: true
+        required: false
       jdk-version:
         description: "The JDK version"
         required: false
         default: 17
         type: number
+
+    outputs:
+      provenance-name:
+        description: "The file name of the attestation upload artifact."
+        # NOTE: This is an "untrusted" value returned from the build.
+        value: "${{ fromJSON(jobs.slsa-run.outputs.build-artifacts-outputs).attestation-name }}"
+
+      provenance-download-name:
+        description: "The name of the provenance attestation uploaded to the workflow run."
+        value: "${{ jobs.slsa-run.outputs.attestations-download-name }}"
+
+      provenance-download-sha256:
+        description: "The sha256 of the provenance attestation uploaded to the workflow run."
+        value: "${{ jobs.slsa-run.outputs.attestations-download-sha256 }}"
 jobs:
   slsa-setup:
     permissions:
       id-token: write # For token creation.
     outputs:
-      slsa-token: ${{ steps.generate.outputs.slsa-token }}
+      slsa-token: "${{ steps.generate.outputs.slsa-token }}"
     runs-on: ubuntu-latest
     steps:
       - name: Generate the token
@@ -44,20 +58,20 @@ jobs:
         uses: slsa-framework/slsa-github-generator/actions/delegator/setup-generic@main
         with:
           slsa-workflow-recipient: "delegator_lowperms-generic_slsa3.yml"
-          slsa-rekor-log-public: ${{ inputs.rekor-log-public }}
+          slsa-rekor-log-public: "${{ inputs.rekor-log-public }}"
           slsa-runner-label: "ubuntu-latest"
           slsa-build-action-path: "./internal/builders/maven"
-          slsa-workflow-inputs: ${{ toJson(inputs) }}
+          slsa-workflow-inputs: "${{ toJson(inputs) }}"
 
   slsa-run:
-    needs: [slsa-setup]
+    needs: slsa-setup
     permissions:
       id-token: write # For signing.
       contents: read # For asset uploads.
       actions: read # For the entrypoint.
       packages: write # To publish to GitHub packages.
-    uses: slsa-framework/slsa-github-generator/.github/workflows/delegator_lowperms-generic_slsa3.yml@main
+    uses: AdamKorcz/slsa-github-generator/.github/workflows/delegator_lowperms-generic_slsa3.yml@maven2
     with:
-      slsa-token: ${{ needs.slsa-setup.outputs.slsa-token }}
+      slsa-token: "${{ needs.slsa-setup.outputs.slsa-token }}"
 
   # TODO(#2154): need to add support for uploading provenance and artifact to registry

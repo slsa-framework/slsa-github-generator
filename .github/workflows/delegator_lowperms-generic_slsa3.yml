@@ -221,6 +221,13 @@ jobs:
         with:
           name: "${{ needs.rng.outputs.value }}-${{ env.SLSA_ARTIFACTS_FILE }}"
           path: "${{ env.SLSA_ARTIFACTS_FILE }}"
+      
+      - name: Upload target insecurely
+        id: upload-target-insecurely        
+        uses: actions/upload-artifact@v3
+        with:
+          name: target
+          path: target
 
   # generate-provenance generates and signs the provenance.
   generate-provenance:
@@ -289,6 +296,14 @@ jobs:
         uses: slsa-framework/slsa-github-generator/.github/actions/secure-upload-folder@main
         with:
           name: "${{ needs.rng.outputs.value }}-slsa-attestations"
+          path: "${{ needs.rng.outputs.value }}-slsa-attestations"
+             
+          
+      - name: Upload predicates insecurely
+        id: upload-predicates-insecurely        
+        uses: actions/upload-artifact@v3
+        with:
+          name: slsa-attestations
           path: "${{ needs.rng.outputs.value }}-slsa-attestations"
 
   # cleanup deletes internal artifacts used by the delegator workflow

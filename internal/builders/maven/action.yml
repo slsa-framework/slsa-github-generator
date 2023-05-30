@@ -53,20 +53,6 @@ runs:
         java-version: ${{ fromJson(inputs.slsa-workflow-inputs).jdk-version }}
     - name: Run mvn package
       shell: bash
-      run: mvn package
-    - name: Put release artifacts in one directory
-      shell: bash
       env:
         SLSA_OUTPUTS_ARTIFACTS_FILE: ${{ inputs.slsa-layout-file }}
-        ARTIFACT_LIST: ${{ fromJson(inputs.slsa-workflow-inputs).artifact-list }}
-      run: ./../__TOOL_ACTION_DIR__/collect_release_artifacts.sh
-    - name: Upload built artifacts
-      uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
-      with:
-        path: ./release-files-for-slsa/*
-    - name: Make outputs
-      id: make-outputs
-      shell: bash
-      env:
-        SLSA_OUTPUTS_ARTIFACTS_FILE: ${{ inputs.slsa-layout-file }}
-      run: ./../__TOOL_CHECKOUT_DIR__/internal/builders/gradle/create_attestation.sh
+      run: cd plugin && mvn clean install && cd .. && mvn package
