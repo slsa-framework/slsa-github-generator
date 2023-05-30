@@ -15,6 +15,15 @@ from the [generic artifact workflow](../generic/README.md) as it performs the
 build as well as generates the provenance. This workflow uses a distinct build
 type that provides the full details on the build process.
 
+**NOTE**:
+This workflow is currently pending [release](https://github.com/slsa-framework/slsa-github-generator/milestone/4). For stable testing, use the following reusable workflow that uses the same inputs and outputs documented below.
+
+```yaml
+uses: slsa-framework/slsa-github-generator/.github/workflows/builder_docker-based_slsa3.yml@v1.6.0
+```
+
+This is compatible with the `slsa-verifier` version 2.6.x.
+
 ---
 
 <!-- markdown-toc --bullets="-" -i README.md -->
@@ -118,15 +127,8 @@ are fully supported and tested:
 
 - `schedule`
 - Manual run via `workflow_dispatch`
-
-<!--
-
-TODO(https://github.com/slsa-framework/slsa-github-generator/issues/1656):
-Support artifact and provenance upload to a release.
 - `push` (including new tags)
 - `release`
-
--->
 
 In practice, most triggers should work. For events that do not have access to
 the `id-token: write` permission, like `pull_request`, the workflow will run the
@@ -236,7 +238,7 @@ The `buildDefinition` contains the following fields:
 | `externalParameters.buildConfig`              | JSON object                                           | An object describing the build configuration.                                                                                                                                    |
 | `externalParameters.buildConfig.ArtifactPath` | `"dist/**"`                                           | The path describing the output artifacts to attest to and upload.                                                                                                                |
 | `externalParameters.buildConfig.Command`      | `"["npm", "run", "all"]"`                             | The build command invoked in the container image to produce the output artifacts.                                                                                                |
-| `externalParameters.resolvedDependencies`     | `slsa.ResourceDescriptor`                              | An artifact reference specifying the binary used by the reusable workflow to build the artifact and generate the build definition. See the [CLI tool](#command-line-tool) below. |
+| `externalParameters.resolvedDependencies`     | `slsa.ResourceDescriptor`                              | Contains the artifact reference specifying the resolved source and the binary used by the reusable workflow to build the artifact and generate the build definition. See the [CLI tool](#command-line-tool) below. |
 
 The [CLI tool](#command-line-tool) described in `externalParameters.resolvedDependencies` contains the `uri` of the source that was used to build the artifact (from this GitHub repository). The `digest` referes to the cryptographic digest of the built binary. Using this information, a verifier may download the source artifact from the GitHub releases inferred by the URI and verify its digest.
 
@@ -281,34 +283,36 @@ as an [in-toto](https://in-toto.io/) statement with a SLSA predicate.
       },
       "resolvedDependencies": [
         {
-          "uri": "git+https://github.com/slsa-framework/slsa-github-generator@refs/tags/v1.5.0",
+          "uri": "git+https://github.com/asraa/slsa-on-github-test@refs/heads/main",
           "digest": {
-            "sha256": "f590fb74e36c9ed8026cceab415a5bebab9bdf3268ace6bd4765c4361c4415c1"
+            "sha1": "c35e20e93ad5465899c12ce71cd6253d6e28fb15"
+          }
+        },
+        {
+          "uri": "git+https://github.com/asraa/slsa-github-generator@refs/tags/v1.6.0",
+          "digest": {
+            "sha256": "6ea80f1d7ca237eb390b2ce10a383cee229be8d084cee2af9bd1f55f87e28541"
           }
         }
       ],
-      "systemParameters": {
+      "internalParameters": {
+        "GITHUB_ACTOR_ID": "5194569",
         "GITHUB_EVENT_NAME": "workflow_dispatch",
-        "GITHUB_JOB": "provenance",
         "GITHUB_REF": "refs/heads/main",
         "GITHUB_REF_TYPE": "branch",
-        "GITHUB_REPOSITORY": "slsa-framework/example-package",
+        "GITHUB_REPOSITORY": "asraa/slsa-on-github-test",
+        "GITHUB_REPOSITORY_ID": "501395242",
+        "GITHUB_REPOSITORY_OWNER_ID": "5194569",
         "GITHUB_RUN_ATTEMPT": "1",
-        "GITHUB_RUN_ID": 4310284899,
-        "GITHUB_RUN_NUMBER": 50,
-        "GITHUB_SHA": "ca220e54c07b6fcdd758184a12c132ee3ae531f1",
-        "GITHUB_WORKFLOW": ".github/workflows/e2e.container-based.workflow_dispatch.main.default.slsa3.yml",
-        "GITHUB_WORKFLOW_REF": "slsa-framework/example-package/.github/workflows/e2e.container-based.workflow_dispatch.main.default.slsa3.yml@refs/heads/main",
-        "GITHUB_WORKFLOW_SHA": "ca220e54c07b6fcdd758184a12c132ee3ae531f1",
-        "IMAGE_OS": "ubuntu22",
-        "IMAGE_VERSION": "20230227.2",
-        "RUNNER_ARCH": "X64",
-        "RUNNER_NAME": "GitHub Actions 9",
-        "RUNNER_OS": "Linux",
-        "GITHUB_ACTOR_ID": "41898282",
-        "GITHUB_REPOSITORY_ID": "486325809",
-        "GITHUB_REPOSITORY_OWNER_ID": "80431187",
-        "GITHUB_EVENT_PAYLOAD": {}
+        "GITHUB_RUN_ID": 5125704193,
+        "GITHUB_RUN_NUMBER": 6,
+        "GITHUB_SHA": "c35e20e93ad5465899c12ce71cd6253d6e28fb15",
+        "GITHUB_TRIGGERING_ACTOR_ID": "5194569",
+        "GITHUB_WORKFLOW": ".github/workflows/go-builder.yml",
+        "GITHUB_WORKFLOW_REF": "asraa/slsa-on-github-test/.github/workflows/go-builder.yml@refs/heads/main",
+        "GITHUB_WORKFLOW_SHA": "c35e20e93ad5465899c12ce71cd6253d6e28fb15",
+        "GITHUB_BASE_REF": "",
+        "GITHUB_EVENT_PAYLOAD": {},
       }
     },
     "runDetails": {
