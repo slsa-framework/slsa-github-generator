@@ -125,6 +125,12 @@ export async function createPredicate(
       inputs: Object.fromEntries(rawTokenObj.tool.inputs),
       // Variables are always empty for BYOB / builders.
       vars: {},
+      source: {
+        uri: sourceURI,
+        digest: {
+          gitCommit: sourceSha1,
+        },
+      },
     };
   }
 

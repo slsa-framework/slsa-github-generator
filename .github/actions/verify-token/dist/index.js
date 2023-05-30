@@ -594,6 +594,12 @@ function createPredicate(rawTokenObj, toolURI, token, isGenerator) {
                 inputs: Object.fromEntries(rawTokenObj.tool.inputs),
                 // Variables are always empty for BYOB / builders.
                 vars: {},
+                source: {
+                    uri: sourceURI,
+                    digest: {
+                        gitCommit: sourceSha1,
+                    },
+                },
             };
         }
         // Put GitHub event payload into internalParameters.

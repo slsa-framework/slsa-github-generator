@@ -146,3 +146,12 @@ e2e_verify_predicate_v1_runDetails_builder_id() {
 e2e_verify_predicate_v1_runDetails_metadata_invocationId() {
     _e2e_verify_query "$1" "$2" '.runDetails.metadata.invocationId'
 }
+
+e2e_get_source_sha1() {
+    local digest="$GITHUB_SHA"
+    if [[ -n "${CHECKOUT_SHA1:-}" ]]; then
+        # If the TRW provided a sha1 for checkout, the predicate should use it instead.
+        digest="${CHECKOUT_SHA1}"
+    fi
+    echo "$digest"
+}

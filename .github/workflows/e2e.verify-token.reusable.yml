@@ -31,6 +31,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       valid-token: ${{ steps.verify.outputs.slsa-token }}
+      valid-token-sha1: ${{ steps.verify-sha1.outputs.slsa-token }}
       invalid-mask-token: ${{ steps.verify-invalid-mask.outputs.slsa-token }}
       invalid-sha1-token: ${{ steps.verify-invalid-sha1.outputs.slsa-token }}
     steps:
@@ -53,11 +54,33 @@ jobs:
           # The Action should trim the spaces automatically.
           slsa-workflow-masked-inputs: name2, name4,name6
           slsa-checkout-fetch-depth: 4
-          slsa-checkout-sha1: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
 
       - id: verify
         env:
           SLSA_TOKEN: ${{ steps.setup.outputs.slsa-token }}
+          CHECKOUT_FETCH_DEPTH: 4
+        run: |
+          set -euo pipefail
+          ./.github/workflows/scripts/schedule.actions/verify-setup-token.sh
+          echo "slsa-token=$SLSA_TOKEN" >> "$GITHUB_OUTPUT"
+
+      - id: setup-sha1
+        uses: ./actions/delegator/setup-token
+        with:
+          slsa-workflow-recipient: "delegator_generic_slsa3.yml"
+          slsa-rekor-log-public: true
+          slsa-runner-label: "ubuntu-latest"
+          slsa-build-action-path: "./actions/build-artifacts-composite"
+          slsa-workflow-inputs: '{"name1":"value1","name2":"value2","name3":"value3","name4":"","name5":"value5","name6":"value6","private-repository":true}'
+          # name4 has empty value and won't be obfuscated even though it's in the list.
+          # The Action should trim the spaces automatically.
+          slsa-workflow-masked-inputs: name2, name4,name6
+          slsa-checkout-fetch-depth: 4
+          slsa-checkout-sha1: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+
+      - id: verify-sha1
+        env:
+          SLSA_TOKEN: ${{ steps.setup-sha1.outputs.slsa-token }}
           CHECKOUT_FETCH_DEPTH: 4
           CHECKOUT_SHA1: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
         run: |
@@ -125,6 +148,23 @@ jobs:
 
       - env:
           VERIFIED_TOKEN: ${{ steps.verify-builder.outputs.slsa-verified-token }}
+          TOOL_REPOSITORY: ${{ steps.verify-builder.outputs.tool-repository }}
+          TOOL_REF: ${{ steps.verify-builder.outputs.tool-ref }}
+          PREDICATE: predicate.json
+          CHECKOUT_FETCH_DEPTH: 4
+          BUILDER_INTERFACE_TYPE: "builder"
+        run: ./.github/workflows/scripts/schedule.actions/verify-verified-token.sh
+
+      - id: verify-builder-sha1
+        uses: ./.github/actions/verify-token
+        with:
+          slsa-unverified-token: ${{ needs.setup-token.outputs.valid-token-sha1 }}
+          slsa-workflow-recipient: "delegator_generic_slsa3.yml"
+          output-predicate: predicate.json
+          builder-interface-type: "builder"
+
+      - env:
+          VERIFIED_TOKEN: ${{ steps.verify-builder-sha1.outputs.slsa-verified-token }}
           TOOL_REPOSITORY: ${{ steps.verify-builder.outputs.tool-repository }}
           TOOL_REF: ${{ steps.verify-builder.outputs.tool-ref }}
           PREDICATE: predicate.json
