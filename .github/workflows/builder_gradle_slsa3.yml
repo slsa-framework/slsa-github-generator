@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+permissions: {}
+
 on:
   workflow_call:
     inputs:
@@ -53,7 +55,7 @@ jobs:
       id-token: write # For signing.
       contents: read # For asset uploads.
       actions: read   # For the entrypoint.
-      packages: write
+      packages: write # To publish to GitHub packages.
     uses: slsa-framework/slsa-github-generator/.github/workflows/delegator_lowperms-generic_slsa3.yml@main
     with:
       slsa-token: ${{ needs.slsa-setup.outputs.slsa-token }}
