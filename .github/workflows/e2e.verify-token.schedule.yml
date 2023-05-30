@@ -20,7 +20,7 @@ on:
     - cron: "0 4 * * *"
   workflow_dispatch:
 
-permissions: read-all
+permissions: {}
 
 env:
   GH_TOKEN: ${{ github.token }}
