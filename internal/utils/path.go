@@ -127,6 +127,7 @@ func CreateNewFileUnderDirectory(path, dir string, flag int) (io.Writer, error) 
 	return fp, nil
 }
 
+// SafeReadFile checks for directory traversal before reading the given file.
 func SafeReadFile(path string) ([]byte, error) {
 	if err := PathIsUnderCurrentDirectory(path); err != nil {
 		return nil, errors.Errorf(&ErrInternal{}, "PathIsUnderCurrentDirectory: %v", err)
