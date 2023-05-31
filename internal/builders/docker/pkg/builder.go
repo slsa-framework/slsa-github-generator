@@ -104,18 +104,19 @@ func NewBuilderWithGitFetcher(config *DockerBuildConfig) (*Builder, error) {
 // CreateBuildDefinition creates a BuildDefinition from the DockerBuildConfig
 // and BuildConfig in this DockerBuild.
 func (db *DockerBuild) CreateBuildDefinition() *slsa1.ProvenanceBuildDefinition {
-	ep := DockerBasedExternalParameters{
+	ep := ContainerBasedExternalParameters{
 		Source:       sourceArtifact(db.config),
 		BuilderImage: builderImage(db.config),
 		ConfigPath:   db.config.BuildConfigPath,
 		Config:       *db.buildConfig,
 	}
 
-	// Currently we don't have any SystemParameters or ResolvedDependencies.
-	// So these fields are left empty.
+	// Currently we don't have any SystemParameters, so this fields is left empty.
 	return &slsa1.ProvenanceBuildDefinition{
-		BuildType:          DockerBasedBuildType,
+		BuildType:          ContainerBasedBuildType,
 		ExternalParameters: ep,
+		// The source repository is also added as a resolved dependency.
+		ResolvedDependencies: []slsa1.ResourceDescriptor{sourceArtifact(db.config)},
 	}
 }
 
@@ -190,15 +191,15 @@ func runDockerRun(db *DockerBuild) error {
 	}
 
 	buildDef := db.CreateBuildDefinition()
-	dockerEp, ok := buildDef.ExternalParameters.(DockerBasedExternalParameters)
+	containerEp, ok := buildDef.ExternalParameters.(ContainerBasedExternalParameters)
 	if !ok {
-		return fmt.Errorf("expected docker-based external parameters")
+		return fmt.Errorf("expected container-based external parameters")
 	}
 
 	var args []string
 	args = append(args, "run")
 	args = append(args, defaultDockerRunFlags...)
-	args = append(args, dockerEp.BuilderImage.URI)
+	args = append(args, containerEp.BuilderImage.URI)
 	args = append(args, db.buildConfig.Command...)
 	cmd := exec.Command("docker", args...)
 
@@ -622,9 +623,9 @@ func ParseProvenance(bytes []byte) (*ProvenanceStatementSLSA1, error) {
 	}
 
 	// ExternalParameters is an interface in slsa1.ProvenancePredicate, so we
-	// marshal and unmarshal it as an instance of DockerBasedExternalParameters
+	// marshal and unmarshal it as an instance of ContainerBasedExternalParameters
 	// to be able to use the actual type.
-	var ep DockerBasedExternalParameters
+	var ep ContainerBasedExternalParameters
 	b, err := json.Marshal(statement.Predicate.BuildDefinition.ExternalParameters)
 	if err != nil {
 		return nil, fmt.Errorf("could not marshal map into JSON bytes: %v", err)
@@ -642,9 +643,9 @@ func ParseProvenance(bytes []byte) (*ProvenanceStatementSLSA1, error) {
 // ToDockerBuildConfig creates an instance of DockerBuildConfig using the
 // external parameters in this provenance.
 func (p *ProvenanceStatementSLSA1) ToDockerBuildConfig(forceCheckout bool) (*DockerBuildConfig, error) {
-	ep, ok := p.Predicate.BuildDefinition.ExternalParameters.(DockerBasedExternalParameters)
+	ep, ok := p.Predicate.BuildDefinition.ExternalParameters.(ContainerBasedExternalParameters)
 	if !ok {
-		return nil, fmt.Errorf("failed to cast ExternalParameters to DockerBasedExternalParameters")
+		return nil, fmt.Errorf("failed to cast ExternalParameters to ContainerBasedExternalParameters")
 	}
 
 	di, err := validateDockerImage(ep.BuilderImage.URI)

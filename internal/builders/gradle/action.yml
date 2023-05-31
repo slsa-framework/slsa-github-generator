@@ -1,0 +1,73 @@
+# Copyright 2023 SLSA Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+name: Gradle builder
+inputs:
+  # BYOB-provided inputs
+  slsa-workflow-inputs:
+    # Inputs in JSON format.
+    description: 'All the onputs'
+    type: string
+    required: true
+  slsa-layout-file:
+    description: 'Location to store the layout content'
+    type: string
+    required: true
+  slsa-workflow-secret1: {}
+  slsa-workflow-secret2: {}
+  slsa-workflow-secret3: {}
+  slsa-workflow-secret4: {}
+  slsa-workflow-secret5: {}
+  slsa-workflow-secret6: {}
+  slsa-workflow-secret7: {}
+  slsa-workflow-secret8: {}
+  slsa-workflow-secret9: {}
+  slsa-workflow-secret10: {}
+  slsa-workflow-secret11: {}
+  slsa-workflow-secret12: {}
+  slsa-workflow-secret13: {}
+  slsa-workflow-secret14: {}
+  slsa-workflow-secret15: {}
+
+on:
+  workflow_call:
+runs:
+  using: 'composite'
+  steps:
+    - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v 3.5.2
+    - name: Set up JDK
+      uses: actions/setup-java@5ffc13f4174014e2d4d4572b3d74c3fa61aeb2c2 # v 3.11.0
+      with:
+        distribution: temurin
+        java-version: ${{ fromJson(inputs.slsa-workflow-inputs).jdk-version }}
+    - name: Setup Gradle
+      uses: gradle/gradle-build-action@749f47bda3e44aa060e82d7b3ef7e40d953bd629 # v2.4.2
+      with:
+        arguments: build -x test
+    - name: Put release artifacts in one directory
+      shell: bash
+      env:
+        SLSA_OUTPUTS_ARTIFACTS_FILE: ${{ inputs.slsa-layout-file }}
+        ARTIFACT_LIST: ${{ fromJson(inputs.slsa-workflow-inputs).artifact-list }}
+      run: ./../__TOOL_ACTION_DIR__/collect_release_artifacts.sh
+    - name: Upload built artifacts from gradlew build
+      uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
+      with:
+        path: ./release-files-for-slsa/*
+    - name: Make outputs
+      id: make-outputs
+      shell: bash
+      env:
+        SLSA_OUTPUTS_ARTIFACTS_FILE: ${{ inputs.slsa-layout-file }}
+      run: ./../__TOOL_ACTION_DIR__/create_attestation.sh

@@ -92,7 +92,7 @@ jobs:
       config-file: .github/workflows/configs-go/config-release.yml
       compile-builder: true
 
-  # Docker-based builder.
+  # Docker builder.
   docker-builder:
     needs: [pre-release-refs]
     permissions:

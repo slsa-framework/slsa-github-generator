@@ -15,7 +15,7 @@
 package main
 
 // This file contains definitions of the subcommands of the
-// `slsa-docker-based-generator` command.
+// `slsa-container-based-generator` command.
 
 import (
 	"encoding/json"

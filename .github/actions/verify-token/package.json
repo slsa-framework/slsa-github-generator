@@ -24,7 +24,7 @@
   "dependencies": {
     "@actions/core": "^1.10.0",
     "@actions/github": "^5.1.1",
-    "@octokit/webhooks-types": "^6.9.0",
+    "@octokit/webhooks-types": "^7.0.0",
     "sigstore": "^1.1.1",
     "tscommon": "file:../tscommon/tscommon-0.0.0.tgz",
     "yaml": "^2.2.1"

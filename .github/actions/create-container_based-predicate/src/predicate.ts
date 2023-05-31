@@ -83,6 +83,13 @@ export function generatePredicate(
   jobWorkflowRef: string,
   currentRun: ApiWorkflowRun
 ): SLSAv1Predicate {
+  // Add the builder binary to the resolved dependencies.
+  if (!bd.resolvedDependencies) {
+    bd.resolvedDependencies = [binaryRef];
+  } else {
+    bd.resolvedDependencies = bd.resolvedDependencies.concat([binaryRef]);
+  }
+
   let pred: SLSAv1Predicate = {
     buildDefinition: bd,
     runDetails: {
@@ -94,8 +101,6 @@ export function generatePredicate(
       },
     },
   };
-  // Add the builder binary to the resolved dependencies.
-  pred.buildDefinition.resolvedDependencies = [binaryRef];
 
   // Update the parameters with the GH context, including workflow
   // inputs.
