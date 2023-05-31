@@ -17,7 +17,7 @@ name: verify-token schedule
 on:
   workflow_call:
 
-permissions: read-all
+permissions: {}
 
 env:
   GH_TOKEN: ${{ github.token }}
