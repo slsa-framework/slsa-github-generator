@@ -119,7 +119,7 @@ This repository hosts the following builders:
 2. [Node.js Builder SLSA Level 3](internal/builders/nodejs/README.md).
    **Status**: [Beta since v1.6.0](https://github.com/slsa-framework/slsa-github-generator/milestone/8).
    [Expected GA release Jun 2023](https://github.com/slsa-framework/slsa-github-generator/milestone/17).
-3. _Container-based Builder SLSA Level 3_. **Status**: [WIP, expected release by Jun 2023](https://github.com/slsa-framework/slsa-github-generator/milestone/4). This builder will build arbitrary artifacts by executing a user-supplied container image.
+3. _Container-based Builder SLSA Level 3_. **Status**: [Beta release since v1.7.0](https://github.com/slsa-framework/slsa-github-generator/milestone/4). This builder will build arbitrary artifacts by executing a user-supplied container image.
 4. _Container Builder SLSA Level 3_. **Status**: [WIP](https://github.com/slsa-framework/slsa-github-generator/milestone/5).
    This builder will build your container image and generate provenance. The generated provenance will be compatible with
    [cosign](https://github.com/sigstore/cosign)'s attestation format.
