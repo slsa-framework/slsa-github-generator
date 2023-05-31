@@ -282,7 +282,13 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.generatePredicate = void 0;
 const github_1 = __nccwpck_require__(5928);
 function generatePredicate(bd, binaryRef, jobWorkflowRef, currentRun) {
-    var _a;
+    // Add the builder binary to the resolved dependencies.
+    if (!bd.resolvedDependencies) {
+        bd.resolvedDependencies = [binaryRef];
+    }
+    else {
+        bd.resolvedDependencies = bd.resolvedDependencies.concat([binaryRef]);
+    }
     let pred = {
         buildDefinition: bd,
         runDetails: {
@@ -294,8 +300,6 @@ function generatePredicate(bd, binaryRef, jobWorkflowRef, currentRun) {
             },
         },
     };
-    // Add the builder binary to the resolved dependencies.
-    (_a = pred.buildDefinition.resolvedDependencies) === null || _a === void 0 ? void 0 : _a.concat([binaryRef]);
     // Update the parameters with the GH context, including workflow
     // inputs.
     pred = (0, github_1.addGitHubParameters)(pred, currentRun);
