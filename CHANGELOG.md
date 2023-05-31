@@ -10,7 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 <!-- toc -->
 
 - [Unreleased](#unreleased)
-  - [X.Y.Z: Go builder](#xyz-go-builder)
+- [1.7.0](#170)
+  - [1.7.0: Go builder](#170-go-builder)
 - [v1.6.0](#v160)
   - [Summary of changes](#summary-of-changes)
     - [Go builder](#go-builder)
@@ -87,7 +88,11 @@ Use the format "X.Y.Z: Go builder" etc. for format headers to avoid header name
 duplication."
 -->
 
-### X.Y.Z: Go builder
+## 1.7.0
+
+This release includes the first beta release of the [Container-based builder](https://github.com/slsa-framework/slsa-github-generator/tree/v1.7.0/internal/builders/docker). The Container-based builder provides a GitHub Actions reusable workflow that can be used to invoke a container image with a user-specified command to generate an artifact and SLSA Build L3 compliant provenance.
+
+### 1.7.0: Go builder
 
 - **Added**: A new
   [go-version-file](https://github.com/slsa-framework/slsa-github-generator/blob/main/internal/builders/go/README.md#workflow-inputs)
