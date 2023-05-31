@@ -15,6 +15,7 @@
 package main
 
 import (
+	"bytes"
 	"crypto/sha256"
 	"encoding/hex"
 	"flag"
@@ -22,7 +23,6 @@ import (
 	"io"
 	"os"
 	"os/exec"
-	"path/filepath"
 
 	"github.com/slsa-framework/slsa-github-generator/github"
 	"github.com/slsa-framework/slsa-github-generator/signing/sigstore"
@@ -98,7 +98,7 @@ func runProvenanceGeneration(subject, digest, commands, envs, workingDir, rekor 
 		return err
 	}
 
-	h, err := computeSHA256(filename)
+	h, err := computeSHA256(attBytes)
 	if err != nil {
 		return err
 	}
@@ -154,16 +154,9 @@ func main() {
 	}
 }
 
-func computeSHA256(filePath string) (string, error) {
-	file, err := os.Open(filepath.Clean(filePath))
-	if err != nil {
-		return "", err
-	}
-
-	defer file.Close()
-
+func computeSHA256(data []byte) (string, error) {
 	hash := sha256.New()
-	if _, err := io.Copy(hash, file); err != nil {
+	if _, err := io.Copy(hash, bytes.NewReader(data)); err != nil {
 		return "", err
 	}
 	return hex.EncodeToString(hash.Sum(nil)), nil

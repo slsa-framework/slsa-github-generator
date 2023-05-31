@@ -139,6 +139,9 @@ func VerifyCmd(check func(error)) *cobra.Command {
 }
 
 func verifyProvenance(provenancePath string) error {
+	// Note: We can use os.ReadFile here directly without checking for directory
+	// traversal. This is a verification tool, and not used by the build
+	// workflows.
 	bytes, err := os.ReadFile(provenancePath)
 	if err != nil {
 		return fmt.Errorf("reading provenance file: %w", err)
