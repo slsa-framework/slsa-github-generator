@@ -86,7 +86,7 @@ func NewDockerBuildConfig(io *InputOptions) (*DockerBuildConfig, error) {
 		return nil, err
 	}
 
-	if err = validatePath(io.BuildConfigPath); err != nil {
+	if err = utils.PathIsUnderCurrentDirectory(io.BuildConfigPath); err != nil {
 		return nil, fmt.Errorf("invalid build config path: %v", err)
 	}
 
@@ -144,14 +144,6 @@ func validateDockerImage(image string) (*DockerImage, error) {
 	return &dockerImage, nil
 }
 
-func validatePath(path string) error {
-	err := utils.PathIsUnderCurrentDirectory(path)
-	if err != nil {
-		return fmt.Errorf("path (%q) is not in the current directory", path)
-	}
-	return nil
-}
-
 // ToMap returns this instance as a mapping between the algorithm and value.
 func (d *Digest) ToMap() map[string]string {
 	return map[string]string{d.Alg: d.Value}
@@ -168,14 +160,18 @@ func (dbc *DockerBuildConfig) LoadBuildConfigFromFile() (*BuildConfig, error) {
 // not exposed. The corresponding method LoadBuildConfigFromFile must be called
 // on an instance of DockerBuildConfig which has a validated BuildConfigPath.
 func loadBuildConfigFromFile(path string) (*BuildConfig, error) {
-	tomlTree, err := toml.LoadFile(path)
+	tomlFile, err := utils.SafeReadFile(path)
 	if err != nil {
 		return nil, fmt.Errorf("couldn't load toml file: %v", err)
+	}
+	tomlTree, err := toml.LoadBytes(tomlFile)
+	if err != nil {
+		return nil, fmt.Errorf("couldn't create toml tree: %v", err)
 	}
 
 	config := BuildConfig{}
 	if err := tomlTree.Unmarshal(&config); err != nil {
-		return nil, fmt.Errorf("couldn't ubmarshal toml file: %v", err)
+		return nil, fmt.Errorf("couldn't unmarshal toml file: %v", err)
 	}
 
 	return &config, nil

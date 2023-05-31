@@ -126,3 +126,10 @@ func CreateNewFileUnderDirectory(path, dir string, flag int) (io.Writer, error) 
 
 	return fp, nil
 }
+
+func SafeReadFile(path string) ([]byte, error) {
+	if err := PathIsUnderCurrentDirectory(path); err != nil {
+		return nil, errors.Errorf(&ErrInternal{}, "PathIsUnderCurrentDirectory: %v", err)
+	}
+	return os.ReadFile(path)
+}
