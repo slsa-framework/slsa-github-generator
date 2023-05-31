@@ -160,11 +160,11 @@ func (dbc *DockerBuildConfig) LoadBuildConfigFromFile() (*BuildConfig, error) {
 // not exposed. The corresponding method LoadBuildConfigFromFile must be called
 // on an instance of DockerBuildConfig which has a validated BuildConfigPath.
 func loadBuildConfigFromFile(path string) (*BuildConfig, error) {
-	tomlFile, err := utils.SafeReadFile(path)
+	tomlBytes, err := utils.SafeReadFile(path)
 	if err != nil {
 		return nil, fmt.Errorf("couldn't load toml file: %v", err)
 	}
-	tomlTree, err := toml.LoadBytes(tomlFile)
+	tomlTree, err := toml.LoadBytes(tomlBytes)
 	if err != nil {
 		return nil, fmt.Errorf("couldn't create toml tree: %v", err)
 	}
