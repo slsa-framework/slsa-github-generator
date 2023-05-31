@@ -111,11 +111,12 @@ func (db *DockerBuild) CreateBuildDefinition() *slsa1.ProvenanceBuildDefinition 
 		Config:       *db.buildConfig,
 	}
 
-	// Currently we don't have any SystemParameters or ResolvedDependencies.
-	// So these fields are left empty.
+	// Currently we don't have any SystemParameters, so this fields is left empty.
 	return &slsa1.ProvenanceBuildDefinition{
 		BuildType:          ContainerBasedBuildType,
 		ExternalParameters: ep,
+		// The source repository is also added as a resolved dependency.
+		ResolvedDependencies: []slsa1.ResourceDescriptor{sourceArtifact(db.config)},
 	}
 }
 

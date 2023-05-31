@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-name: Gradle builder
+name: Maven builder
 inputs:
   # BYOB-provided inputs
   slsa-workflow-inputs:
@@ -51,17 +51,16 @@ runs:
       with:
         distribution: temurin
         java-version: ${{ fromJson(inputs.slsa-workflow-inputs).jdk-version }}
-    - name: Setup Gradle
-      uses: gradle/gradle-build-action@749f47bda3e44aa060e82d7b3ef7e40d953bd629 # v2.4.2
-      with:
-        arguments: build -x test
+    - name: Run mvn package
+      shell: bash
+      run: mvn package
     - name: Put release artifacts in one directory
       shell: bash
       env:
         SLSA_OUTPUTS_ARTIFACTS_FILE: ${{ inputs.slsa-layout-file }}
         ARTIFACT_LIST: ${{ fromJson(inputs.slsa-workflow-inputs).artifact-list }}
       run: ./../__TOOL_ACTION_DIR__/collect_release_artifacts.sh
-    - name: Upload built artifacts from gradlew build
+    - name: Upload built artifacts
       uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
       with:
         path: ./release-files-for-slsa/*
@@ -70,4 +69,4 @@ runs:
       shell: bash
       env:
         SLSA_OUTPUTS_ARTIFACTS_FILE: ${{ inputs.slsa-layout-file }}
-      run: ./../__TOOL_ACTION_DIR__/create_attestation.sh
+      run: ./../__TOOL_CHECKOUT_DIR__/internal/builders/gradle/create_attestation.sh
