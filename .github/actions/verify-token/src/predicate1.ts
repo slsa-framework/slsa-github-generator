@@ -81,6 +81,7 @@ export async function createPredicate(
       },
       resolvedDependencies: [
         {
+          name: "sourceRepo"
           uri: sourceURI,
           digest: {
             gitCommit: sourceSha1,
