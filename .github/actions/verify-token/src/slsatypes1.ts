@@ -44,7 +44,7 @@ export interface ResourceDescriptor {
   content?: Uint8Array; // content is bytes.
   downloadLocation?: string;
   mediaType?: string;
-  annotations?: { [key: string]: string };
+  annotations?: { [key: string]: object };
 }
 
 export interface BuildDefinition {
