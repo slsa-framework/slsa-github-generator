@@ -550,7 +550,6 @@ function createPredicate(rawTokenObj, toolURI, token, isGenerator) {
                 },
                 resolvedDependencies: [
                     {
-                        name: "sourceRepo",
                         uri: sourceURI,
                         digest: {
                             gitCommit: sourceSha1,
