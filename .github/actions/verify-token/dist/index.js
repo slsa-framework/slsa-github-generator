@@ -583,7 +583,7 @@ function createPredicate(rawTokenObj, toolURI, token, isGenerator) {
             };
             // Throw an error for now. We have no generators using v1.0 yet
             // and it's not supported in the slsa-verifier.
-            throw new Error("not supported: #2164, #1555");
+            throw new Error("not supported: #2164, #1555, #2202, #2186");
         }
         else {
             // NOTE: the workflow information is available in the internalParameters.GITHUB_WORKFLOW_REF.
