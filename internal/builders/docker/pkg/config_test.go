@@ -15,14 +15,31 @@
 package pkg
 
 import (
+	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
 )
 
 func Test_LoadBuildConfigFromFile(t *testing.T) {
+	// Execute this function from docker/ instead of pkg/ so that the testdata config
+	// is in the current dir.
+	wd, err := os.Getwd()
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() {
+		if err := os.Chdir(wd); err != nil {
+			t.Fatal(err)
+		}
+	})
+	if err := os.Chdir(filepath.Dir(wd)); err != nil {
+		t.Fatal(err)
+	}
+
 	dbc := DockerBuildConfig{
-		BuildConfigPath: "../testdata/config.toml",
+		BuildConfigPath: "testdata/config.toml",
 	}
 	got, err := dbc.LoadBuildConfigFromFile()
 	if err != nil {

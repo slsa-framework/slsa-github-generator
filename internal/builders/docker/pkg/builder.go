@@ -543,7 +543,7 @@ func inspectAndWriteArtifacts(pattern, outputFolder, root string) ([]intoto.Subj
 
 	var subjects []intoto.Subject
 	for _, path := range matches {
-		data, err := os.ReadFile(path)
+		data, err := utils.SafeReadFile(path)
 		if err != nil {
 			return nil, fmt.Errorf("couldn't read file %q: %v", path, err)
 		}

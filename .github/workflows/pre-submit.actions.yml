@@ -71,7 +71,7 @@ jobs:
           - .github/actions/generate-attestations
           - .github/actions/sign-attestations
           - .github/actions/create-container_based-predicate
-          - ./actions/delegator/setup-token
+          - ./actions/delegator/setup-generic
           - .github/actions/verify-token
           - .github/actions/detect-workflow-js
     steps:
