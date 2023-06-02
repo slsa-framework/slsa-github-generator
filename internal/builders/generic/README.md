@@ -459,7 +459,7 @@ generate SLSA3 provenance by updating your existing workflow with the steps indi
 2. Build your project and release it:
 
    ```yaml
-     # project specific build instructions
+   # project specific build instructions
    - name: Build
      run: |
        make build
@@ -467,10 +467,10 @@ generate SLSA3 provenance by updating your existing workflow with the steps indi
    - name: Run JReleaser
      uses: jreleaser/release-action@f2226e009ec9445383677f56482ca3181d649bcc # branch=v2
      with:
-         arguments: full-release
+       arguments: full-release
      env:
-         JRELEASER_PROJECT_VERSION: 1.2.3 # value supplied as input or read from sources
-         JRELEASER_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+       JRELEASER_PROJECT_VERSION: 1.2.3 # value supplied as input or read from sources
+       JRELEASER_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
    ```
 
 3. Add a step to generate the provenance subjects as shown below:
@@ -523,29 +523,29 @@ jobs:
       - name: Run JReleaser
         uses: jreleaser/release-action@f2226e009ec9445383677f56482ca3181d649bcc # branch=v2
         with:
-            arguments: full-release
+          arguments: full-release
         env:
-            JRELEASER_PROJECT_VERSION: 1.2.3 # value supplied as input or read from sources
-            JRELEASER_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          JRELEASER_PROJECT_VERSION: 1.2.3 # value supplied as input or read from sources
+          JRELEASER_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Generate subject
         shell: bash
         id: slsa
         run: |
-            echo "hashes=$(cat out/jreleaser/checksums/checksums_sha256.txt | base64 -w0)" >> "$GITHUB_OUTPUT"
-            echo "tagname=$(grep tagName out/jreleaser/output.properties | awk -F'=' '{print $2}')" >> "$GITHUB_OUTPUT"
+          echo "hashes=$(cat out/jreleaser/checksums/checksums_sha256.txt | base64 -w0)" >> "$GITHUB_OUTPUT"
+          echo "tagname=$(grep tagName out/jreleaser/output.properties | awk -F'=' '{print $2}')" >> "$GITHUB_OUTPUT"
 
   provenance:
-      needs: [release]
-      permissions:
-          actions: read # To read the workflow path.
-          id-token: write # To sign the provenance.
-          contents: write # To add assets to a release.
-      uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.6.0
-      with:
-          base64-subjects: ${{ needs.release.outputs.hashes }}
-          upload-assets: true # upload to a new release
-          upload-tag-name: ${{ needs.release.outputs.tagname }}
+    needs: [release]
+    permissions:
+      actions: read # To read the workflow path.
+      id-token: write # To sign the provenance.
+      contents: write # To add assets to a release.
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.6.0
+    with:
+      base64-subjects: ${{ needs.release.outputs.hashes }}
+      upload-assets: true # upload to a new release
+      upload-tag-name: ${{ needs.release.outputs.tagname }}
 ```
 
 ### Provenance for Bazel

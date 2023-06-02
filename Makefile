@@ -59,7 +59,7 @@ ts-test: ## Run TypeScript tests.
 #####################################################################
 
 .PHONY: format
-format: yaml-format ts-format go-format ## Runs all code formatters.
+format: yaml-format md-format ts-format go-format ## Runs all code formatters.
 
 .PHONY: yaml-format
 yaml-format: node_modules/.installed ## Runs code formatter for YAML files.
@@ -75,6 +75,19 @@ yaml-format: node_modules/.installed ## Runs code formatter for YAML files.
 				-not -iwholename '*/node_modules/*' \
 		); \
 		for path in $$yml_files; do \
+			./node_modules/.bin/prettier --write $$path; \
+		done;
+
+.PHONY: md-format
+md-format: node_modules/.installed ## Runs code formatter for Markdown files.
+	@set -e;\
+		md_files=$$( \
+			find . -type f -name '*.md' \
+				-not -iwholename '*/.git/*' \
+				-not -iwholename '*/vendor/*' \
+				-not -iwholename '*/node_modules/*' \
+		); \
+		for path in $$md_files; do \
 			./node_modules/.bin/prettier --write $$path; \
 		done;
 
