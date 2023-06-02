@@ -26,4 +26,4 @@ goos: linux
 goarch: amd64
 binary: binary-{{ .Os }}-{{ .Arch }}
 ldflags:
-  - 'something-{{ .Env.ELSE }}'
+  - "something-{{ .Env.ELSE }}"
