@@ -80,6 +80,7 @@ jobs:
         env:
           SLSA_TOKEN: ${{ steps.setup-invalid-mask.outputs.slsa-token }}
           CHECKOUT_FETCH_DEPTH: 1 # The default checkout depth is 1.
+          CHECKOUT_SHA1: ""
         run: |
           set -euo pipefail
           ./.github/workflows/scripts/schedule.actions/verify-setup-generic.sh

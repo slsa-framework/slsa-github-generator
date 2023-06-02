@@ -46,15 +46,15 @@ export function updateSLSAToken(
   slsaToken.tool.inputs = asMap<string | number | boolean>(
     slsaToken.tool.inputs
   );
-  if (!workflow.on) {
-    throw new Error("no 'on' field");
-  }
-  if (!workflow.on.workflow_call) {
+
+  // NOTE: We need to check the presence of workflow_call but it could be empty
+  // (e.g. no inputs).
+  if (workflow.on?.workflow_call === undefined) {
     throw new Error("no 'workflow_call' field");
   }
 
   // No inputs field defined.
-  if (!workflow.on.workflow_call.inputs) {
+  if (!workflow.on?.workflow_call?.inputs) {
     core.info("no input defined in the workflow");
     ret.tool.inputs = new Map();
     return ret;
