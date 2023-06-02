@@ -33,6 +33,23 @@ on:
     );
   });
 
+  it("no inputs", async () => {
+    const inputs = JSON.parse("{}");
+    const token = createToken(inputs);
+    const content = `
+on:
+  workflow_call:
+  
+permissions: {}
+  
+`;
+    const ret = updateSLSAToken(content, token);
+    expect(ret.tool.inputs).toEqual(
+      new Map<string, string | number | boolean>()
+    );
+  });
+
+
   it("remove bool", async () => {
     const inputs = JSON.parse(
       '{"name1": "value1", "name2": 2, "name3": "", "name4": true}'

@@ -16,6 +16,19 @@ name: verify-token schedule
 
 on:
   workflow_call:
+    # NOTE: these inputs are not used. They are present
+    # to test the verify-token Action because it verifies
+    # consistency between the passed inputs' names and
+    # the workflow's inputs' names.
+    inputs:
+      name1:
+      name2:
+      name3:
+      name4:
+      name5:
+      name6:
+      name1:
+      private-repository:
 
 permissions: {}
 
