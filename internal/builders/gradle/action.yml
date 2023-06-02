@@ -17,11 +17,11 @@ inputs:
   # BYOB-provided inputs
   slsa-workflow-inputs:
     # Inputs in JSON format.
-    description: "All the onputs"
+    description: 'All the onputs'
     type: string
     required: true
   slsa-layout-file:
-    description: "Location to store the layout content"
+    description: 'Location to store the layout content'
     type: string
     required: true
   slsa-workflow-secret1: {}
@@ -43,7 +43,7 @@ inputs:
 on:
   workflow_call:
 runs:
-  using: "composite"
+  using: 'composite'
   steps:
     - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v 3.5.2
     - name: Set up JDK

@@ -12,19 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-name: "Sign Attestations"
-description: "Signs in-toto attestations with Sigstore signing"
+name: 'Sign Attestations'
+description: 'Signs in-toto attestations with Sigstore signing'
 inputs:
   attestations:
-    description: "Folder of attestations to sign"
+    description: 'Folder of attestations to sign'
     required: true
   payload-type:
-    description: "The in-toto payload type of the attestations"
+    description: 'The in-toto payload type of the attestations'
     required: false
-    default: "application/vnd.in-toto+json"
+    default: 'application/vnd.in-toto+json'
   output-folder:
-    description: "Output folder to place attestations"
+    description: 'Output folder to place attestations'
     required: true
 runs:
-  using: "node16"
-  main: "dist/index.js"
+  using: 'node16'
+  main: 'dist/index.js'

@@ -22,7 +22,7 @@ inputs:
       An example is to use `${RNG}-artifact`.
     required: true
   path:
-    description: "Path to the folder"
+    description: 'Path to the folder'
     required: true
 outputs:
   sha256:

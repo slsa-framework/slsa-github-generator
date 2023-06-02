@@ -23,8 +23,7 @@ describe("generatePredicate", () => {
   beforeEach(() => {
     jest.resetModules();
     process.env = {
-      GITHUB_WORKFLOW_REF:
-        "asraa/slsa-github-generator/.github/workflows/pre-submit.e2e.container-based.default.yml@refs/heads/main",
+      GITHUB_WORKFLOW_REF: "asraa/slsa-github-generator/.github/workflows/pre-submit.e2e.container-based.default.yml@refs/heads/main"
     };
   });
 
@@ -39,8 +38,7 @@ describe("generatePredicate", () => {
     const builderBinaryRef = {
       uri: "git+https://github.com/slsa-framework/example-builder",
       digest: {
-        sha256:
-          "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        sha256: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
       },
     };
 
@@ -52,38 +50,34 @@ describe("generatePredicate", () => {
         full_name: "slsa-framework/example-source",
         id: 123,
         owner: {
-          id: 456,
-        },
+          id: 456
+        }
       },
       actor: {
-        id: 456,
+        id: 456
       },
       triggering_actor: {
-        id: 456,
-      },
-    };
+        id: 456
+      }
+    }
 
     const source = {
-      uri: "git+https://github.com/slsa-framework/example-source",
-      digest: {
-        sha1: "97f1bfd54b02d1c7b632da907676a7d30d2efc02",
-      },
-    };
+      "uri": "git+https://github.com/slsa-framework/example-source",
+      "digest": {
+        "sha1": "97f1bfd54b02d1c7b632da907676a7d30d2efc02"
+      }
+    }
 
     const bd = {
       buildType: "https://slsa.dev/container-based-build/v0.1?draft",
       externalParameters: {
-        source: source,
+        "source": source
       },
-      resolvedDependencies: [source],
-    };
+      resolvedDependencies: [source]
+    }
 
-    const pred = predicate.generatePredicate(
-      bd,
-      builderBinaryRef,
-      jobWorkflowRef,
-      currentRun
-    ) as types.SLSAv1Predicate;
+
+    const pred = predicate.generatePredicate(bd, builderBinaryRef, jobWorkflowRef, currentRun) as types.SLSAv1Predicate;
 
     expect(pred.runDetails.builder.id).toBe(jobWorkflowRef);
     expect(pred.buildDefinition.resolvedDependencies).toHaveLength(2);

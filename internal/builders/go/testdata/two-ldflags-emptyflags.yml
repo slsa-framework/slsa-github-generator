@@ -20,9 +20,10 @@ env:
 
 flags:
 
+
 goos: linux
 goarch: amd64
 binary: binary-{{ .Os }}-{{ .Arch }}
 ldflags:
-  - "{{ .Env.VERSION_LDFLAGS }}"
-  - "something-{{ .Env.ELSE }}"
+  - '{{ .Env.VERSION_LDFLAGS }}'
+  - 'something-{{ .Env.ELSE }}'
