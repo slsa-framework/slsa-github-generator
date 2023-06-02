@@ -17,9 +17,8 @@ name: verify-token schedule
 on:
   workflow_call:
     # NOTE: these inputs are not used. They are present
-    # to test the verify-token Action because it verifies
-    # consistency between the passed inputs' names and
-    # the workflow's inputs' names.
+    # because the verify-token Action expects them
+    # from the calling workflow.
     inputs:
       name1:
       name2:
