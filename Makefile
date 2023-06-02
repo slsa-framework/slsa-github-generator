@@ -46,7 +46,6 @@ go-test: ## Run Go unit tests.
 	go mod vendor
 	go test -mod=vendor -v ./...
 
-
 .PHONY: ts-test
 ts-test: ## Run TypeScript tests.
 	@# Run unit tests for all TS actions where tests are found.
@@ -58,6 +57,47 @@ ts-test: ## Run TypeScript tests.
 
 ## Tools
 #####################################################################
+
+.PHONY: format
+format: yaml-format ts-format go-format ## Runs all code formatters.
+
+.PHONY: yaml-format
+yaml-format: node_modules/.installed ## Runs code formatter for YAML files.
+	@set -e;\
+		yml_files=$$( \
+			find . -type f \
+				\( \
+					-name '*.yml' -o \
+					-name '*.yaml' \
+				\) \
+				-not -iwholename '*/.git/*' \
+				-not -iwholename '*/vendor/*' \
+				-not -iwholename '*/node_modules/*' \
+		); \
+		for path in $$yml_files; do \
+			./node_modules/.bin/prettier --write $$path; \
+		done;
+
+.PHONY: ts-format
+ts-format: ## Runs code formatter for TypeScript files.
+	@set -e;\
+		actions_paths=$$(find .github/actions/ actions/ -not -path '*/node_modules/*' -name package.json -type f | xargs dirname); \
+		for path in $$actions_paths; do \
+			make -C $$path format; \
+		done
+
+.PHONY: go-format
+go-format: ## Runs code formatter for Go files.
+	@set -e;\
+		go_files=$$( \
+			find . -type f -name '*.go' \
+				-not -iwholename '*/.git/*' \
+				-not -iwholename '*/vendor/*' \
+				-not -iwholename '*/node_modules/*' \
+		); \
+		for path in $$go_files; do \
+			gofumpt -w $$path; \
+		done;
 
 COPYRIGHT ?= "SLSA Authors"
 LICENSE ?= apache
