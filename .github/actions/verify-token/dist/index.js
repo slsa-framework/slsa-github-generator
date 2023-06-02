@@ -272,17 +272,17 @@ function filterWorkflowInputs(slsaToken, ghToken, repoName, hash, workflowPath) 
 }
 exports.filterWorkflowInputs = filterWorkflowInputs;
 function updateSLSAToken(content, slsaToken) {
+    var _a, _b, _c;
     const ret = Object.create(slsaToken);
     const workflow = YAML.parse(content);
     slsaToken.tool.inputs = (0, utils_1.asMap)(slsaToken.tool.inputs);
-    if (!workflow.on) {
-        throw new Error("no 'on' field");
-    }
-    if (!workflow.on.workflow_call) {
+    // NOTE: We need to check the presence of workflow_call but it could be empty
+    // (e.g. no inputs).
+    if (((_a = workflow.on) === null || _a === void 0 ? void 0 : _a.workflow_call) === undefined) {
         throw new Error("no 'workflow_call' field");
     }
     // No inputs field defined.
-    if (!workflow.on.workflow_call.inputs) {
+    if (!((_c = (_b = workflow.on) === null || _b === void 0 ? void 0 : _b.workflow_call) === null || _c === void 0 ? void 0 : _c.inputs)) {
         core.info("no input defined in the workflow");
         ret.tool.inputs = new Map();
         return ret;
