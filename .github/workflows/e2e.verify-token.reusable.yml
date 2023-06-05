@@ -16,6 +16,24 @@ name: verify-token schedule
 
 on:
   workflow_call:
+    # NOTE: these inputs are not used. They are present
+    # because the verify-token Action expects them
+    # from the calling workflow.
+    inputs:
+      name1:
+        type: string
+      name2:
+        type: string
+      name3:
+        type: string
+      name4:
+        type: string
+      name5:
+        type: string
+      name6:
+        type: string
+      private-repository:
+        type: boolean
 
 permissions: {}
 
