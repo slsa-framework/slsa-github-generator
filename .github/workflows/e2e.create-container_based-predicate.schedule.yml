@@ -48,8 +48,7 @@ jobs:
         # workflow context, we must update the source references.
         run: |
           bdTemplate="internal/builders/docker/testdata/build-definition.json"
-          jq  -r --arg GITHUB_SHA "$GITHUB_SHA" '.externalParameters.source.digest.sha1 = $GITHUB_SHA' "${bdTemplate}" > build-definition.json
-          jq  -r --arg GITHUB_SHA "$GITHUB_SHA" '.resolvedDependencies[0].source.digest.sha1 = $GITHUB_SHA' "${bdTemplate}" > build-definition.json
+          jq  -r --arg GITHUB_SHA "$GITHUB_SHA" '.externalParameters.source.digest.sha1 = $GITHUB_SHA | .resolvedDependencies[0].digest.sha1 = $GITHUB_SHA' "${bdTemplate}" > build-definition.json
       - name: Create predicate
         id: predicate
         uses: ./.github/actions/create-container_based-predicate
