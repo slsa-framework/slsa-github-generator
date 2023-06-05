@@ -1,12 +1,15 @@
 {
   "scripts": {
-    "lint": "markdownlint --dot .",
-    "format": "markdownlint --dot --fix .",
+    "format-yaml": "prettier --write '**/*.yml'  '**/*.yaml'",
+    "format-yaml-check": "prettier --check   '**/*.yml'  '**/*.yaml'",
+    "markdownlint": "markdownlint --dot .",
+    "markdownlint-fix": "markdownlint --dot --fix .",
     "markdown-toc": "markdown-toc --bullets='-' -i"
   },
   "devDependencies": {
     "markdown-toc": "^1.2.0",
     "markdownlint-cli": "0.34.0",
+    "prettier": "^2.8.8",
     "sigstore": "^1.2.0"
   }
 }

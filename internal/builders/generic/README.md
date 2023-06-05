@@ -1317,9 +1317,10 @@ function.
 ```yaml
 provenance:
   needs: [build]
-  matrix:
-    color: ["red", "blue", "green"]
-    flavor: ["mint", "vanilla"]
+  strategy:
+    matrix:
+      color: ["red", "blue", "green"]
+      flavor: ["mint", "vanilla"]
   permissions:
     actions: read # To read the workflow path.
     id-token: write # To sign the provenance.
@@ -1361,6 +1362,10 @@ jobs:
 
   provenance:
     needs: [build]
+    strategy:
+      matrix:
+        color: ["red", "blue", "green"]
+        flavor: ["mint", "vanilla"]
     permissions:
       actions: read # To read the workflow path.
       id-token: write # To sign the provenance.
