@@ -48,7 +48,7 @@ runs:
     # checkout ourselves.
 
     - name: Setup Bazelisk
-      uses: bazelbuild/setup-bazelisk@70e3e87d4ca23cdbe5439685fb6d2018d69be1e5 # v1.17.0
+      uses: bazelbuild/setup-bazelisk@95c9bf48d0c570bb3e28e57108f3450cd67c1a44 # v2.0.0
 
     - id: build
       env:
