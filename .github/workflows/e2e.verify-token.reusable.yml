@@ -33,7 +33,7 @@ on:
       name6:
         type: string
       private-repository:
-        type: bool
+        type: boolean
 
 permissions: {}
 
