@@ -1,0 +1,83 @@
+# Copyright 2023 SLSA Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+name: SLSA3 Bazel Builder internal wrapper
+description: SLSA3 Bazel Builder internal wrapper
+
+inputs:
+  slsa-workflow-inputs:
+    description: "All the inputs formatted as a JSON map"
+    required: true
+
+  slsa-layout-file:
+    description: "Location to store the layout content"
+    required: true
+
+  # Unused secret inputs.
+  slsa-workflow-secret1: {}
+  slsa-workflow-secret2: {}
+  slsa-workflow-secret3: {}
+  slsa-workflow-secret4: {}
+  slsa-workflow-secret5: {}
+  slsa-workflow-secret6: {}
+  slsa-workflow-secret7: {}
+  slsa-workflow-secret8: {}
+  slsa-workflow-secret9: {}
+  slsa-workflow-secret10: {}
+  slsa-workflow-secret11: {}
+  slsa-workflow-secret12: {}
+  slsa-workflow-secret13: {}
+  slsa-workflow-secret14: {}
+  slsa-workflow-secret15: {}
+
+runs:
+  using: "composite"
+  steps:
+    # NOTE: the repository is already cloned by the caller, so there's no need to
+    # checkout ourselves.
+
+    - name: Setup Bazelisk
+      uses: bazelbuild/setup-bazelisk@70e3e87d4ca23cdbe5439685fb6d2018d69be1e5 # v1.17.0
+
+    - id: build
+      env:
+        TARGETS: ${{ fromJson(inputs.slsa-workflow-inputs).targets }}
+        FLAGS: ${{ fromJson(inputs.slsa-workflow-inputs).flags }}
+      shell: bash
+      run: ./../__TOOL_ACTION_DIR__/build.sh
+
+    # rng generates a random number to avoid name collision in artifacts
+    # when multiple workflows run concurrently.
+    - name: Generate random 16-byte value (32-char hex encoded)
+      id: rng
+      uses: slsa-framework/slsa-github-generator/.github/actions/rng@main
+
+    - uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
+      with:
+        name: "${{ steps.rng.outputs.random }}-binaries"
+        path: "./binaries" #path-to-artifact(s)
+        if-no-files-found: error
+        retention-days: 5
+
+    # NOTE: Here we create a JSON file that describes the attestations we want
+    #       to create. Each attestation will be created as a separate file,
+    #       each with the subjects specified. This allows complicated release
+    #       pipelines that output many artifacts to organize the attestations
+    #       for those artifacts in a flexible way.
+    - name: Generate layout file
+      id: generate-layout
+      env:
+        SLSA_OUTPUTS_ARTIFACTS_FILE: ${{ inputs.slsa-layout-file }}
+      shell: bash
+      run: ./../__TOOL_ACTION_DIR__/generate-layout.sh
