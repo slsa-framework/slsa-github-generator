@@ -18,11 +18,11 @@ set -euo pipefail
 
 mkdir binaries
 
-bazel build "$FLAGS" "$TARGETS"
+bazel build "${FLAGS}" "${TARGETS}"
 
 echo "built correctly"
 
-IFS=' ' read -r -a targets <<< "$TARGETS"
+IFS=' ' read -r -a targets <<< "${TARGETS}"
 for TARGET in "${targets[@]}"; do
   echo "start loop"
   CD_PATH=${TARGET%:*}
