@@ -47,6 +47,13 @@ package: action ## Builds the distribution package.
 clean:
 	rm -rf dist lib node_modules
 
+## Tools
+#####################################################################
+
+.PHONY: format
+format: node_modules/.installed ## Formats code.
+	npm run format
+
 ## Testing
 #####################################################################
 
