@@ -50,7 +50,7 @@ async function run(): Promise<void> {
         const bundleStr = JSON.stringify(bundle);
         const outputPath = path.join(
           outputFolder,
-          `${path.basename(fpath)}.sigstore`
+          `${path.basename(fpath)}.jsonl`
         );
         // We detect path traversal for outputPath in safeWriteFileSync.
         tscommon.safeWriteFileSync(outputPath, bundleStr);
