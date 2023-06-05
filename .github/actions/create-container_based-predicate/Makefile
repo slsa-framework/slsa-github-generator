@@ -47,6 +47,13 @@ package: action ## Builds the distribution package.
 clean:
 	rm -rf dist lib node_modules
 
+## Tools
+#####################################################################
+
+.PHONY: format
+format: node_modules/.installed ## Formats code.
+	npm run format
+
 ## Testing
 #####################################################################
 
@@ -58,4 +65,5 @@ unit-test: node_modules/.installed ## Runs all unit tests.
 
 .PHONY: lint
 lint: node_modules/.installed ## Runs eslint.
+	npm run format-check
 	npm run lint
