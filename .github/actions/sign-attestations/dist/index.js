@@ -84,7 +84,7 @@ function run() {
                     const buffer = tscommon.safeReadFileSync(fpath);
                     const bundle = yield sigstore_1.sigstore.attest(buffer, payloadType, signOptions);
                     const bundleStr = JSON.stringify(bundle);
-                    const outputPath = path.join(outputFolder, `${path.basename(fpath)}.sigstore`);
+                    const outputPath = path.join(outputFolder, `${path.basename(fpath)}.intoto.jsonl`);
                     // We detect path traversal for outputPath in safeWriteFileSync.
                     tscommon.safeWriteFileSync(outputPath, bundleStr);
                     core.debug(`Wrote signed attestation to '${outputPath}.`);
