@@ -166,7 +166,7 @@ id: build
     token: ${{ inputs.slsa-workflow-secret2 || github.token }}
 ```
 
-Note that the `./../__TOOL_CHECKOUT_DIR__` is the path where the TRW repository is checked out by the BYOB framework, so it's accessible locally.
+Note that the `./../__TOOL_CHECKOUT_DIR__` is the path where the TRW repository is checked out by the BYOB framework, so it's accessible locally. You can then call your existing action at the path `./../__TOOL_CHECKOUT_DIR__/path/to/action` where `/path/to/action` is the path to your action's `action.yml` relative to the repository root. In the above example, we are assuming our `action.yml` is defined in the repository root.
 Notice how we populate the token field: If the user has not passed a value to `inputs.slsa-workflow-secret2`, we default to using the GitHub token `github.token`.
 
 #### Generation of Metadata Layout File
