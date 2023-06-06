@@ -115,7 +115,7 @@ Let's go through the parameters:
  - `slsa-workflow-recipient` is the name of the SRW we are initializing. This is the workflow that we will call to run the build in our example.
  - `slsa-rekor-log-public` is simply the same as the TRW's `slsa-rekor-log-public` input, so we just set the value with the TRW's value.
  - `slsa-runner-label` is the runner label to run the build on. We currently only support ubuntu runners, but we will add support for other runners in the future.
- - `slsa-build-action-path` is the path to the TRW Callback Action (TCA), relative to the root of the repository.
+ - `slsa-build-action-path` is the path to our TCA, relative to the root of the repository.
  - `slsa-workflow-inputs` are the inputs to the TRW, which the provenance will attest to. These inputs are also provided to the TCA by the BYOB framework.
  - `slsa-workflow-masked-inputs` is a list of comma separated field names that are redacted from the generated SLSA provenance. In this example, we're telling the TRW that the username input should be redacted. Any TRW `secrets` are separate from `inputs` and thus are automatically excluded from the provenance.
 
