@@ -139,7 +139,7 @@ slsa-run:
 
 In addition to the token, we also [provide the secrets](https://github.com/laurentsimon/byob-doc/blob/main/.github/workflows/builder_example_slsa3.yml#L118-L120). Up to 15 secrets are supported.
 
-### TRW Callback Action
+### Creating a TCA
 The call above will run the SRW and invoke the callback Action, so let's see how to define it now. The Action code is available under [internal/callback_action](https://github.com/laurentsimon/byob-doc/blob/main/internal/callback_action/).
 
 #### Inputs
