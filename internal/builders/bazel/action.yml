@@ -71,8 +71,8 @@ runs:
         if-no-files-found: error
         retention-days: 5
         
-   - name: Echo statement
-     run: echo "Artifacts uploaded successfully"
+    - name: Echo statement
+      run: echo "Artifacts uploaded successfully"
 
     # NOTE: Here we create a JSON file that describes the attestations we want
     #       to create. Each attestation will be created as a separate file,
