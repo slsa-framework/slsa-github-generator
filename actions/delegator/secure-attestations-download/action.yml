@@ -30,7 +30,7 @@ runs:
   using: "composite"
   steps:
     - name: Download the attestations
-      uses: slsa-framework/slsa-github-generator/.github/actions/secure-download-folder@v1.7.0-rc.0
+      uses: slsa-framework/slsa-github-generator/.github/actions/secure-download-folder@main
       with:
         name: ${{ inputs.name }}
         path: ${{ inputs.path }}

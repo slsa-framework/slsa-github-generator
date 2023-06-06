@@ -50,7 +50,7 @@ runs:
     # TODO(#1897): Use upstream version of npm
     - name: Setup npm
       id: setup-npm
-      uses: slsa-framework/slsa-github-generator/actions/nodejs/setup-npm@v1.7.0-rc.0
+      uses: slsa-framework/slsa-github-generator/actions/nodejs/setup-npm@main
 
     - name: Create temp dir
       id: temp-dir
@@ -62,14 +62,14 @@ runs:
         echo "path=${temp_dir}" >>"${GITHUB_OUTPUT}"
 
     - name: Download tarball
-      uses: slsa-framework/slsa-github-generator/.github/actions/secure-download-artifact@v1.7.0-rc.0
+      uses: slsa-framework/slsa-github-generator/.github/actions/secure-download-artifact@main
       with:
         name: ${{ inputs.package-download-name }}
         path: "${{ steps.temp-dir.outputs.path }}/${{ inputs.package-name }}"
         sha256: ${{ inputs.package-download-sha256 }}
 
     - name: Download provenance
-      uses: slsa-framework/slsa-github-generator/actions/nodejs/secure-attestations-download@v1.7.0-rc.0
+      uses: slsa-framework/slsa-github-generator/actions/nodejs/secure-attestations-download@main
       with:
         name: ${{ inputs.provenance-download-name }}
         path: "${{ steps.temp-dir.outputs.path }}"
