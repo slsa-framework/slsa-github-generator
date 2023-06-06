@@ -63,7 +63,7 @@ The "Tool Callback Action" (TCA) is the Action that is invoked by the BYOB frame
 The [slsa-github-generator](https://github.com/slsa-framework/slsa-github-generator) repository hosts the code for the BYOB framework maintained by the OpenSSF SLSA tooling team. There are two main components you will use for your integration.
 
 #### SLSA Setup Action (SSA)
-This [Action](https://github.com/slsa-framework/slsa-github-generator/tree/main/actions/delegator/setup-generic) is used to initialize the BYOB framework. It returns a so-called "SLSA token" which is a required input to the SRW invocation:
+This [Action](https://github.com/slsa-framework/slsa-github-generator/tree/main/actions/delegator/setup-generic) is used to initialize the BYOB framework. It returns a so-called "SLSA token" which is used in later steps:
 ```yaml
 - uses: slsa-framework/slsa-github-generator/actions/delegator/setup-generic@v1.7.0
 ```
