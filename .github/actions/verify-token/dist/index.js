@@ -552,7 +552,7 @@ function createPredicate(rawTokenObj, toolURI, token, isGenerator) {
                     {
                         uri: sourceURI,
                         digest: {
-                            gitCommit: sourceSha1,
+                            sha1: sourceSha1,
                         },
                     },
                 ],

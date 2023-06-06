@@ -83,7 +83,7 @@ export async function createPredicate(
         {
           uri: sourceURI,
           digest: {
-            gitCommit: sourceSha1,
+            sha1: sourceSha1,
           },
         },
       ],
