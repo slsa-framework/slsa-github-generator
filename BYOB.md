@@ -153,7 +153,7 @@ The inputs to the TCA are [pre-defined](https://github.com/laurentsimon/byob-doc
 We [declare the same outputs](https://github.com/laurentsimon/byob-doc/blob/main/internal/callback_action/action.yml#L41-L47) as the existing Actions. These outputs are made available to the TRW by the BYOB framework. They [may be returned by the TRW to the PW](https://github.com/laurentsimon/byob-doc/blob/main/.github/workflows/builder_example_slsa3.yml#L61-L67).
 
 #### Invocation of Existing Action
-We [invoke the existing Action](https://github.com/laurentsimon/byob-doc/blob/main/internal/callback_action/action.yml#L57-L65) as a local Action and pass it the inputs by extracting them from the `slsa-workflow-inputs` argument:
+We [invoke the existing Action](https://github.com/laurentsimon/byob-doc/blob/main/internal/callback_action/action.yml#L57-L65) by its path and pass it the inputs by extracting them from the `slsa-workflow-inputs` argument:
 
 ```yaml
 uses: ./../__TOOL_CHECKOUT_DIR__
