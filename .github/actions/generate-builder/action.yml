@@ -62,7 +62,7 @@ runs:
   using: "composite"
   steps:
     - name: Checkout builder repository
-      uses: slsa-framework/slsa-github-generator/.github/actions/secure-builder-checkout@main
+      uses: slsa-framework/slsa-github-generator/.github/actions/secure-builder-checkout@v1.7.0-rc.1
       with:
         repository: ${{ inputs.repository }}
         ref: ${{ inputs.ref }}
