@@ -72,6 +72,7 @@ runs:
         retention-days: 5
         
     - name: Echo statement
+      shell: bash
       run: echo "Artifacts uploaded successfully"
 
     # NOTE: Here we create a JSON file that describes the attestations we want
