@@ -37358,10 +37358,16 @@ class CAClient {
         const request = (0, format_1.toCertificateRequest)(identityToken, publicKey, challenge);
         try {
             const resp = await this.fulcio.createSigningCertificate(request);
+            // Account for the fact that the response may contain either a
+            // signedCertificateEmbeddedSct or a signedCertificateDetachedSct.
+            const cert = resp.signedCertificateEmbeddedSct
+                ? resp.signedCertificateEmbeddedSct
+                : resp.signedCertificateDetachedSct;
             // Return the first certificate in the chain, which is the signing
             // certificate. Specifically not returning the rest of the chain to
             // mitigate the risk of errors when verifying the certificate chain.
-            return resp.signedCertificateEmbeddedSct.chain.certificates.slice(0, 1);
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+            return cert.chain.certificates.slice(0, 1);
         }
         catch (err) {
             throw new error_1.InternalError({
@@ -37742,7 +37748,11 @@ function createTLogClient(options) {
 exports.createTLogClient = createTLogClient;
 function createTSAClient(options) {
     return options.tsaServerURL
-        ? new tsa_1.TSAClient({ tsaBaseURL: options.tsaServerURL })
+        ? new tsa_1.TSAClient({
+            tsaBaseURL: options.tsaServerURL,
+            retry: options.retry ?? exports.DEFAULT_RETRY,
+            timeout: options.timeout ?? exports.DEFAULT_TIMEOUT,
+        })
         : undefined;
 }
 exports.createTSAClient = createTSAClient;
@@ -38159,8 +38169,8 @@ const error_1 = __nccwpck_require__(5005);
 class TimestampAuthority {
     constructor(options) {
         this.fetch = make_fetch_happen_1.default.defaults({
-            retry: { retries: 2 },
-            timeout: 5000,
+            retry: options.retry,
+            timeout: options.timeout,
             headers: {
                 'Content-Type': 'application/json',
                 'User-Agent': util_1.ua.getUserAgent(),
@@ -39497,7 +39507,11 @@ const external_1 = __nccwpck_require__(9069);
 const util_1 = __nccwpck_require__(6901);
 class TSAClient {
     constructor(options) {
-        this.tsa = new external_1.TimestampAuthority({ baseURL: options.tsaBaseURL });
+        this.tsa = new external_1.TimestampAuthority({
+            baseURL: options.tsaBaseURL,
+            retry: options.retry,
+            timeout: options.timeout,
+        });
     }
     async createTimestamp(signature) {
         const request = {
@@ -51858,7 +51872,7 @@ module.exports = {"i8":"3.0.1"};
 /***/ ((module) => {
 
 "use strict";
-module.exports = {"i8":"1.5.0"};
+module.exports = {"i8":"1.5.2"};
 
 /***/ }),
 

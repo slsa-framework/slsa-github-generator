@@ -162,10 +162,21 @@ func Test_GitClient_invalidSourceRef(t *testing.T) {
 
 func Test_inspectArtifacts(t *testing.T) {
 	// Note: If the files in ../testdata/ change, this test must be updated.
-	pattern := "../testdata/*"
+	pattern := "testdata/*"
 	out := t.TempDir()
+
 	wd, err := os.Getwd()
 	if err != nil {
+		t.Fatal(err)
+	}
+	// Execute this function from docker/ instead of pkg/ so that the testdata
+	// folder is in the current dir.
+	t.Cleanup(func() {
+		if err := os.Chdir(wd); err != nil {
+			t.Fatal(err)
+		}
+	})
+	if err := os.Chdir(filepath.Dir(wd)); err != nil {
 		t.Fatal(err)
 	}
 
@@ -257,6 +268,21 @@ func (testFetcher) Fetch() (*RepoCheckoutInfo, error) {
 }
 
 func Test_Builder_SetUpBuildState(t *testing.T) {
+	wd, err := os.Getwd()
+	if err != nil {
+		t.Fatal(err)
+	}
+	// Execute this function from docker/ instead of pkg/ so that the testdata config
+	// is in the current dir.
+	t.Cleanup(func() {
+		if err := os.Chdir(wd); err != nil {
+			t.Fatal(err)
+		}
+	})
+	if err := os.Chdir(filepath.Dir(wd)); err != nil {
+		t.Fatal(err)
+	}
+
 	config := DockerBuildConfig{
 		SourceRepo:   "git+https://github.com/project-oak/transparent-release",
 		SourceDigest: Digest{Alg: "sha1", Value: "cf5804b5c6f1a4b2a0b03401a487dfdfbe3a5f00"},
@@ -264,7 +290,7 @@ func Test_Builder_SetUpBuildState(t *testing.T) {
 			Name:   "bash",
 			Digest: Digest{Alg: "sha256", Value: "9e2ba52487d945504d250de186cb4fe2e3ba023ed2921dd6ac8b97ed43e76af9"},
 		},
-		BuildConfigPath: "../testdata/config.toml",
+		BuildConfigPath: "testdata/config.toml",
 	}
 
 	f := testFetcher{}

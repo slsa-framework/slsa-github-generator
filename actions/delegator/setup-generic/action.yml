@@ -12,9 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-name: setup token
+name: generic setup
 
-description: "Create a SLSA token for the delegated workflow"
+description: "Create a SLSA token for the delegated generic workflows"
 
 inputs:
   slsa-version:
