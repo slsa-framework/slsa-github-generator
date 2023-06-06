@@ -40,7 +40,7 @@ do
         }" >> "$SLSA_OUTPUTS_ARTIFACTS_FILE"
           
     # Add comma between attestations and not after the last
-    if [[ "$counter" != "$num_jar_files" ]]; then
+    if [[ "$counter" != "$num_binary_files" ]]; then
       echo -n "," >> "$SLSA_OUTPUTS_ARTIFACTS_FILE"
     fi
          
