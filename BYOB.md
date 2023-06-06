@@ -74,7 +74,7 @@ The SRW acts as the build's orchestrator. It calls the TCA, generates provenance
 ```yaml
 - uses: slsa-framework/slsa-github-generator/.github/workflow/delegator_generic_slsa3.yml@v1.7.0
   with:
-    slsa-token: <output-of-setup>
+    slsa-token: ${{ needs.slsa-setup.outputs.slsa-token }}
 ```
 
 ## Integration Steps
