@@ -42,20 +42,20 @@ On the left, the end-user project workflow (PW) is depicted. The PW is hosted in
 - uses: npm/builder/.github/workflows/slsa.3.yml@v1.7.0
 ```
 
-The example snippet shows the invocation of a builder with path '/.github/workflows/slsa.3.yml' from the GitHub's org "npm/builder" repository.
+The example snippet shows the invocation of a builder with path `.github/workflows/slsa.3.yml` from the GitHub's `npm/builder` repository.
 
 ## Tool Repository
 
 This is the tool repository hosting the builder invoked by PWs. The repository contains two components:
 
 ### Tool Reusable Workflow (TRW)
-The "Tool Reusable Workflow" (TRW) is the SLSA compliant builder that wraps the original TA. End users' PWs invoke the TRW to build their artifacts. The TRW file must be created as part of the integration.
+The "Tool Reusable Workflow" (TRW) is the SLSA compliant builder that will "wrap" an existing Action. End users' PWs invoke the TRW to build their artifacts. The TRW workflow file must be created as part of the integration.
 
 ### Tool Callback Action (TCA)
-The "Tool Callback Action" (TCA) is the Action that is invoked by the integration in an isolated GitHub job. The TCA is also hosted in the tool repository. The TCA's role is threefold:
-Set the environment. For example, if the builder wants to build Go projects, the TCA would install the Go compiler. 
-Call an Action that already exists in the repository. For example, if the builder wants to make the GoReleaser Action SLSA compliant, the TCA would call the existing GoReleaser Action after it has set up the environment.
-Output attestation metadata (name, binaries and hashes) that are used by the framework.
+The "Tool Callback Action" (TCA) is the Action that is invoked by the BYOB framework in an isolated GitHub job. The TCA is also hosted in the tool repository. The TCA's role is threefold:
+ - Set the environment. For example, if the builder wants to build Go projects, the TCA would install the Go compiler. 
+ - Call an Action that already exists in the repository. For example, if the builder wants to make the GoReleaser Action SLSA compliant, the TCA would call the existing GoReleaser Action after it has set up the environment.
+ - Output attestation metadata (name, binaries and hashes) that are used by the framework.
 
 ## SLSA GitHub Repository
 The [slsa-github-generator](todo:link) repository hosts the code for the BYOB framework maintained by the OpenSSF SLSA tooling team.
