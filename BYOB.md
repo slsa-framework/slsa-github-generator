@@ -56,7 +56,7 @@ The "Tool Reusable Workflow" (TRW) is the SLSA compliant builder that will "wrap
 #### Tool Callback Action (TCA)
 The "Tool Callback Action" (TCA) is the Action that is invoked by the BYOB framework in an isolated GitHub job. The TCA is also hosted in the tool repository. The TCA's role is threefold:
  - Set the environment. For example, if the builder wants to build Go projects, the TCA would install the Go compiler. 
- - Call an Action that already exists in the repository. For example, if the builder wants to make the GoReleaser Action SLSA compliant, the TCA would call the existing GoReleaser Action after it has set up the environment.
+ - Call your existing Action. For example, if the builder wants to make the GoReleaser Action SLSA compliant, the TCA would call the existing `goreleaser/goreleaser-action` after it has set up the environment.
  - Output attestation metadata (name, binaries and hashes) that are used by the framework.
 
 ### SLSA GitHub Repository
