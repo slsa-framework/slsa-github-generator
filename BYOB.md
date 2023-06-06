@@ -24,6 +24,7 @@
     - [Invocation of Existing Action](#invocation-of-existing-action)
     - [Generation of Metadata Layout File](#generation-of-metadata-layout-file)
   - [Upload Attestations](#upload-attestations)
+- [Provenance Example](#provenance-example)
 - [Other Delegators](#other-delegators)
 - [Hardening](#hardening)
 
@@ -96,10 +97,10 @@ Unlike Actions, secrets are defined under a separate [secrets section](https://g
 The outputs from the TCA may be returned to the PW as well. To do this, use the [outputs section](https://github.com/laurentsimon/byob-doc/blob/main/.github/workflows/builder_example_slsa3.yml#L61-L67). There are [other outputs set](https://github.com/laurentsimon/byob-doc/blob/main/.github/workflows/builder_example_slsa3.yml#L69-L75) as well in our example: Those provide metadata about the built artifacts and their provenance, and we will discuss them in [Section: Upload Attestations](#upload-attestations).
 
 ### Important Notes
-One key difference between the Action and reusable workflow is isolation. The SRW runs on a different VM than the TRW; and the TRW runs on a different VM from the PW. This means that the artifact built by the TCA (which is managed by the SRW) is not accessible directly by the TRW. The SRW needs to share these files with the TRW; which may also share them with the PW. We will see in the following sections how to do that. The [TRW outputs](https://github.com/laurentsimon/byob-doc/blob/main/.github/workflows/builder_example_slsa3.yml#L69-L88) provides the metadata necessary to download these files, and we will discuss them in [Section xxx](todo:link).
+One key difference between the Action and reusable workflow is isolation. The SRW runs on a different VM than the TRW; and the TRW runs on a different VM from the PW. This means that the artifact built by the TCA (which is managed by the SRW) is not accessible directly by the TRW. The SRW needs to share these files with the TRW; which may also share them with the PW. We will see in the following sections how to do that. The [TRW outputs](https://github.com/laurentsimon/byob-doc/blob/main/.github/workflows/builder_example_slsa3.yml#L69-L88) provides the metadata necessary to download these files, and we will discuss them in [Section: Upload Attestations](#upload-attestations).
 
 ## SRW Setup
-To initialize the SRW framework, you need to invoke a SLSA Setup Action (SSA). These Actions are declared under the [SLSA repo's actions/delegator/setup-*](https://github.com/slsa-framework/slsa-github-generator/tree/main/actions/delegator) folder. For our example, we will use the [setup-generic Action](https://github.com/slsa-framework/slsa-github-generator/tree/main/actions/delegator/setup-generic). The [relevant code](https://github.com/laurentsimon/byob-doc/blob/main/.github/workflows/builder_example_slsa3.yml#L91-L107) calls the SSA as follows:
+To initialize the SRW framework, the TRW must invoke a SLSA Setup Action (SSA). These Actions are declared under the [SLSA repo's actions/delegator/setup-*](https://github.com/slsa-framework/slsa-github-generator/tree/main/actions/delegator). For our example, we will use the [setup-generic Action](https://github.com/slsa-framework/slsa-github-generator/tree/main/actions/delegator/setup-generic). The [relevant code](https://github.com/laurentsimon/byob-doc/blob/main/.github/workflows/builder_example_slsa3.yml#L91-L107) calls the SSA as follows:
 
 ```yaml
 uses: slsa-framework/slsa-github-generator/actions/delegator/setup-generic@v1.7.0
@@ -113,12 +114,12 @@ uses: slsa-framework/slsa-github-generator/actions/delegator/setup-generic@v1.7.
 ```
 
 Let's go through the parameters:
- - slsa-workflow-recipient is the name of the SRW we are initializing for. This is the workflow that we will call to run the build in our example.
-- slsa-rekor-log-public is simply the same as the TRW 'slsa-rekor-log-public' input ,so we just set the value with the TW's corresponding value.
-- slsa-runner-label is the runner label to run the build on. We currently only support ubuntu runners, but we will add support for other runners in the future.
-- slsa-build-action-path is the path to the TRW Callback Action (TCA), relative to the root of the repository.
-- slsa-workflow-inputs are the inputs to the TRW, which the provenance will attest to. These inputs are also relayed to the TCA.
-- slsa-workflow-masked-inputs is a list of comma separated field names that are redacted from the generated SLSA provenance. In this example, we're telling the TRW that the username input should be redacted.
+ - `slsa-workflow-recipient` is the name of the SRW we are initializing. This is the workflow that we will call to run the build in our example.
+ - `slsa-rekor-log-public` is simply the same as the TRW's `slsa-rekor-log-public` input, so we just set the value with the TRW's value.
+ - `slsa-runner-label` is the runner label to run the build on. We currently only support ubuntu runners, but we will add support for other runners in the future.
+ - `slsa-build-action-path` is the path to the TRW Callback Action (TCA), relative to the root of the repository.
+ - `slsa-workflow-inputs` are the inputs to the TRW, which the provenance will attest to. These inputs are also provided to the TCA by the BYOB framework.
+ - `slsa-workflow-masked-inputs` is a list of comma separated field names that are redacted from the generated SLSA provenance. In this example, we're telling the TRW that the username input should be redacted.
 
 ## SRW Invocation
 Once we have initialize the SRW, we [call the SRW](https://github.com/laurentsimon/byob-doc/blob/main/.github/workflows/builder_example_slsa3.yml#L109-L122):
@@ -141,19 +142,20 @@ slsa-run:
 In addition to the token, we also [provide the secrets](https://github.com/laurentsimon/byob-doc/blob/main/.github/workflows/builder_example_slsa3.yml#L118-L120). Up to 15 secrets are supported.
 
 ## TRW Callback Action
-The call above will run the SRW and invoke the callback Action, so let's see how to define it now. The Action ode is available under [internal/callback_action](https://github.com/laurentsimon/byob-doc/blob/main/internal/callback_action/).
+The call above will run the SRW and invoke the callback Action, so let's see how to define it now. The Action code is available under [internal/callback_action](https://github.com/laurentsimon/byob-doc/blob/main/internal/callback_action/).
 
 ### Inputs
-The inputs to the [TCA are pre-defined](https://github.com/laurentsimon/byob-doc/blob/main/internal/callback_action/action.yml#L6-L14), so you just have to follow their definition:
-slsa-workflow-inputs contains a JSON object with a list of key-value pairs for the inputs provided by the [TRW to the SSA during initialization ](https://github.com/laurentsimon/byob-doc/blob/main/.github/workflows/builder_example_slsa3.yml#L106). We will see shortly how to use these values.
-slsa-layout-file: a path to a file containing the layout to generate the attestation. This is an expected output. We will see shortly how the format for this file.
-slsa-workflow-secretX, where X from '1' to '15'. These contain the secrets that the TRW [provided to the SRW during invocation](https://github.com/laurentsimon/byob-doc/blob/main/.github/workflows/builder_example_slsa3.yml#L118-L120). Unused secrets [should be defined as unused](https://github.com/laurentsimon/byob-doc/blob/main/internal/callback_action/action.yml#L26-L39). 
+The inputs to the TCA are [pre-defined](https://github.com/laurentsimon/byob-doc/blob/main/internal/callback_action/action.yml#L6-L14), so you just have to follow their definition:
+
+ - `slsa-workflow-inputs` contains a JSON object with a list of key-value pairs for the inputs provided by the [TRW to the SSA during initialization ](https://github.com/laurentsimon/byob-doc/blob/main/.github/workflows/builder_example_slsa3.yml#L106). We will see shortly how to use these values.
+ - `slsa-layout-file` is a path to a file containing the layout to generate the attestation. We will see shortly how the format for this file.
+ - `slsa-workflow-secretX`, where X from '1' to '15'. These contain the secrets that the TRW [provides to the SRW during invocation](https://github.com/laurentsimon/byob-doc/blob/main/.github/workflows/builder_example_slsa3.yml#L118-L120). Unused secrets [should be defined as unused](https://github.com/laurentsimon/byob-doc/blob/main/internal/callback_action/action.yml#L26-L39). 
 
 ### Outputs
-We [declare the same outputs](https://github.com/laurentsimon/byob-doc/blob/main/internal/callback_action/action.yml#L41-L47) as the existing Actions. These outputs are available to the TRW and [may be returned by the TRW to the PW](https://github.com/laurentsimon/byob-doc/blob/main/.github/workflows/builder_example_slsa3.yml#L61-L67), as is the case in our TRW.
+We [declare the same outputs](https://github.com/laurentsimon/byob-doc/blob/main/internal/callback_action/action.yml#L41-L47) as the existing Actions. These outputs are made available to the TRW by the BYOB framework. They [may be returned by the TRW to the PW](https://github.com/laurentsimon/byob-doc/blob/main/.github/workflows/builder_example_slsa3.yml#L61-L67).
 
 ### Invocation of Existing Action
-We [invoke the existing Action](https://github.com/laurentsimon/byob-doc/blob/main/internal/callback_action/action.yml#L57-L65) as a local Action and pass it the inputs by extracting them from the slsa-workflow-inputs argument:
+We [invoke the existing Action](https://github.com/laurentsimon/byob-doc/blob/main/internal/callback_action/action.yml#L57-L65) as a local Action and pass it the inputs by extracting them from the `slsa-workflow-inputs` argument:
 
 ```yaml
 uses: ./../__TOOL_CHECKOUT_DIR__
@@ -166,21 +168,21 @@ id: build
     token: ${{ inputs.slsa-workflow-secret2 || github.token }}
 ```
 
-Note that the `./../__TOOL_CHECKOUT_DIR__` is the path where the TRW repository is checked out by the framework, so it's accessible locally.
+Note that the `./../__TOOL_CHECKOUT_DIR__` is the path where the TRW repository is checked out by the BYOB framework, so it's accessible locally.
 Notice how we populate the token field: If the user has not passed a value to `inputs.slsa-workflow-secret2`, we default to using the GitHub token `github.token`.
 
 ### Generation of Metadata Layout File
-The last thing to do in the TCA is to [generate the metadata file](https://github.com/laurentsimon/byob-doc/blob/main/internal/callback_action/action.yml#L67-L73) to indicate to the BYOB platform which files to attest to, and which attestations to generate. You can ask the platform to generate several attestations, each attestation to one or more generated files. The snippet below shows the generation of a single attestation attestation to a single file:
+The last thing to do in the TCA is to [generate the metadata file](https://github.com/laurentsimon/byob-doc/blob/main/internal/callback_action/action.yml#L67-L73) to indicate to the BYOB platform which files to attest to, and which attestations to generate. You can ask the platform to generate several attestations, each attestating to one or more artifacts. The snippet below shows the generation of a single attestation attesting to a single built artifact `my-artifact`:
 
 ```json
 {
   "version": 1,
   "attestations": [
     {
-      "name": "<artifact>.intoto",
+      "name": "my-artifact.intoto",
       "subjects": [
         {
-          "name": "<artifact>",
+          "name": "my-artifact",
           "digest": {
             "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
           }
@@ -192,9 +194,12 @@ The last thing to do in the TCA is to [generate the metadata file](https://githu
 ```
 
 ## Upload Attestations
-In a final ["publish" job](https://github.com/laurentsimon/byob-doc/blob/main/.github/workflows/builder_example_slsa3.yml#L110-L141), we may [download the attestations](https://github.com/laurentsimon/byob-doc/blob/main/.github/workflows/builder_example_slsa3.yml#L117C19-L121) and do whatever we'd like with them. We may [upload them as release assets to a GitHub release](https://github.com/laurentsimon/byob-doc/blob/main/.github/workflows/builder_example_slsa3.yml#L123-L141), or upload them to a registry, etc. 
+In a final ["publish" job](https://github.com/laurentsimon/byob-doc/blob/main/.github/workflows/builder_example_slsa3.yml#L110-L141) of the TRW, we [download the attestations](https://github.com/laurentsimon/byob-doc/blob/main/.github/workflows/builder_example_slsa3.yml#L117C19-L121) and do whatever we'd like with them. In our example, we [upload them as release assets to a GitHub release](https://github.com/laurentsimon/byob-doc/blob/main/.github/workflows/builder_example_slsa3.yml#L123-L141). You may instead upload them to a registry, etc. 
 
-Also think about [returning the attestation to the PW](https://github.com/laurentsimon/byob-doc/blob/main/.github/workflows/builder_example_slsa3.yml#L69-L75) in case they want to use them themselves. If you return the attestations as output, we encourage you to create a 'secure-download-attestation' Action for your users, e.g. under a download folder in your repository. See an example [here](https://github.com/laurentsimon/byob-doc/blob/main/download/attestation/action.yml).
+Also think about [returning the attestation to the PW](https://github.com/laurentsimon/byob-doc/blob/main/.github/workflows/builder_example_slsa3.yml#L69-L75) in case end-users want to use the attestations themselves. If you do so, we encourage you to create a [secure-download-attestation(https://github.com/laurentsimon/byob-doc/blob/main/download/attestation/action.yml) Action for your users, e.g. under a download folder in your repository. This will improve user experience as they won't have to be aware of the SLSA repository and its framework.
+
+# Provenance Example
+TODO
 
 # Other Delegators
 TODO(Non-low perms)
