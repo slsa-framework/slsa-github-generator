@@ -18,6 +18,11 @@ set -euo pipefail
 
 mkdir binaries
 
+echo ${PWD}
+echo $(ls)
+
+tree
+
 bazel build "${FLAGS}" "${TARGETS}"
 
 echo "built correctly"
