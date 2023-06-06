@@ -31,14 +31,14 @@
 
 # Design Overview
 
-TODO: add diagram
+TODO(add diagram)
 
 The diagram above depicts the different components of the BYOB framework.
 
 ## Project Workflow (PW)
 On the left, the end-user project workflow (PW) is depicted. The PW is hosted in the repository that wants to build an artifact. As part of a build, the PW invokes the SLSA compliant builder defined by the TRW:
 
-```json
+```yaml
 - uses: npm/builder/.github/workflows/slsa.3.yml@v1.7.0
 ```
 
@@ -62,7 +62,7 @@ The [slsa-github-generator](todo:link) repository hosts the code for the BYOB fr
 
 ### SLSA Setup Action (SSA)
 This [Action](todo:link-to-action) is used to initialize the BYOB framework. It returns a so-called "SLSA token" which is a required input to the SRW invocation:
-```json
+```yaml
 - uses: slsa-framework/slsa-github-generator/actions/delegator/setup-generic@v1.7.0
 ...
 - uses: slsa-framework/slsa-github-generator/.github/workflow/delegator_generic_slsa3.yml@v1.7.0
@@ -73,7 +73,7 @@ This [Action](todo:link-to-action) is used to initialize the BYOB framework. It 
 ### SLSA Reusable Workflow (SRW)
 The SRW acts as the build's orchestrator. It calls the TCA, invokes internal components to generate provenance, and returns the provenance to its TRW caller. A TRW would typically call the SRW as follows:
 
-```json
+```yaml
 - uses: slsa-framework/slsa-github-generator/.github/workflow/delegator_generic_slsa3.yml@v1.2.3
 ```
 
@@ -101,15 +101,15 @@ One key difference between the Action and reusable workflow is isolation. The SR
 ## SRW Setup
 To initialize the SRW framework, you need to invoke a SLSA Setup Action (SSA). These Actions are declared under the [SLSA repo's actions/delegator/setup-*](https://github.com/slsa-framework/slsa-github-generator/tree/main/actions/delegator) folder. For our example, we will use the [setup-generic Action](https://github.com/slsa-framework/slsa-github-generator/tree/main/actions/delegator/setup-generic). The [relevant code](https://github.com/laurentsimon/byob-doc/blob/main/.github/workflows/builder_example_slsa3.yml#L91-L107) calls the SSA as follows:
 
-```json
+```yaml
 uses: slsa-framework/slsa-github-generator/actions/delegator/setup-generic@v1.7.0
-        with:
-          slsa-workflow-recipient: "delegator_generic_slsa3.yml"
-          slsa-rekor-log-public: ${{ inputs.rekor-log-public }}
-          slsa-runner-label: "ubuntu-latest"
-          slsa-build-action-path: "./internal/callback_action"
-          slsa-workflow-inputs: ${{ toJson(inputs) }}
-          slsa-workflow-masked-inputs: username
+  with:
+    slsa-workflow-recipient: "delegator_generic_slsa3.yml"
+    slsa-rekor-log-public: ${{ inputs.rekor-log-public }}
+    slsa-runner-label: "ubuntu-latest"
+    slsa-build-action-path: "./internal/callback_action"
+    slsa-workflow-inputs: ${{ toJson(inputs) }}
+    slsa-workflow-masked-inputs: username
 ```
 
 Let's go through the parameters:
@@ -123,7 +123,7 @@ Let's go through the parameters:
 ## SRW Invocation
 Once we have initialize the SRW, we [call the SRW](https://github.com/laurentsimon/byob-doc/blob/main/.github/workflows/builder_example_slsa3.yml#L109-L122):
 
-```json
+```yaml
 slsa-run:
     needs: [slsa-setup]
     permissions:
@@ -155,6 +155,7 @@ We [declare the same outputs](https://github.com/laurentsimon/byob-doc/blob/main
 ### Invocation of Existing Action
 We [invoke the existing Action](https://github.com/laurentsimon/byob-doc/blob/main/internal/callback_action/action.yml#L57-L65) as a local Action and pass it the inputs by extracting them from the slsa-workflow-inputs argument:
 
+```yaml
 uses: ./../__TOOL_CHECKOUT_DIR__
 id: build
   with:
@@ -163,7 +164,7 @@ id: build
     username: ${{ fromJson(inputs.slsa-workflow-inputs).username }}
     password: ${{ inputs.slsa-workflow-secret1 }}
     token: ${{ inputs.slsa-workflow-secret2 || github.token }}
-
+```
 
 Note that the `./../__TOOL_CHECKOUT_DIR__` is the path where the TRW repository is checked out by the framework, so it's accessible locally.
 Notice how we populate the token field: If the user has not passed a value to `inputs.slsa-workflow-secret2`, we default to using the GitHub token `github.token`.
