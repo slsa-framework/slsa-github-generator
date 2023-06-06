@@ -170,7 +170,7 @@ Note that the `./../__TOOL_CHECKOUT_DIR__` is the path where the TRW repository 
 Notice how we populate the token field: If the user has not passed a value to `inputs.slsa-workflow-secret2`, we default to using the GitHub token `github.token`.
 
 #### Generation of Metadata Layout File
-The last thing to do in the TCA is to [generate the metadata file](https://github.com/laurentsimon/byob-doc/blob/main/internal/callback_action/action.yml#L67-L73) to indicate to the BYOB platform which files to attest to, and which attestations to generate. You can ask the platform to generate several attestations, each attestating to one or more artifacts. The snippet below indicates of a single attestation attesting to a single built artifact `my-artifact`. When the BYOB framework generates the attetation, it will add an extension to it, e.g. `.sigstore` or `.intoto.jsonl` depending on the format used.
+The last thing to do in the TCA is to [generate the metadata layout file](https://github.com/laurentsimon/byob-doc/blob/main/internal/callback_action/action.yml#L67-L73) to indicate to the BYOB platform which files to attest to, and which attestations to generate. You can ask the platform to generate several attestations, each attestating to one or more artifacts. The snippet below indicates a single attestation attesting to a single built artifact `my-artifact`. When the BYOB framework generates the attestation, it will add an extension to it, e.g. `.sigstore` or `.intoto.jsonl` depending on the format used.
 
 ```json
 {
