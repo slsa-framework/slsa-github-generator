@@ -23,7 +23,7 @@ echo $(ls)
 
 tree
 
-bazel build "${FLAGS}" "${TARGETS}"
+bazel build ${FLAGS} ${TARGETS}
 
 echo "built correctly"
 
