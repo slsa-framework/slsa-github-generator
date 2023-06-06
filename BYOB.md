@@ -146,7 +146,7 @@ The call above will run the SRW and invoke the callback Action, so let's see how
 The inputs to the TCA are [pre-defined](https://github.com/laurentsimon/byob-doc/blob/main/internal/callback_action/action.yml#L6-L14), so you just have to follow their definition:
 
  - `slsa-workflow-inputs` contains a JSON object with a list of key-value pairs for the inputs provided by the [TRW to the SSA during initialization ](https://github.com/laurentsimon/byob-doc/blob/main/.github/workflows/builder_example_slsa3.yml#L106). We will see shortly how to use these values.
- - `slsa-layout-file` is a path to a file containing the layout to generate the attestation. We will see shortly how the format for this file.
+ - `slsa-layout-file` is a path to a file where we will write a layout for generating the attestation. We will see shortly how the format for this file.
  - `slsa-workflow-secretX`, where X is the number '1' to '15'. These contain the secrets that the TRW [provides to the SRW during invocation](https://github.com/laurentsimon/byob-doc/blob/main/.github/workflows/builder_example_slsa3.yml#L118-L120). Unused secrets [should be clearly marked as unused](https://github.com/laurentsimon/byob-doc/blob/main/internal/callback_action/action.yml#L26-L39). 
 
 #### Outputs
