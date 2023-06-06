@@ -70,7 +70,6 @@ This [Action](todo:link-to-action) is used to initialize the BYOB framework. It 
 The SRW acts as the build's orchestrator. It calls the TCA, invokes internal components to generate provenance, and returns the provenance to its TRW caller. A TRW would typically call the SRW as follows:
 
 ```yaml
-...
 - uses: slsa-framework/slsa-github-generator/.github/workflow/delegator_generic_slsa3.yml@v1.7.0
   with:
     slsa-token: <output-of-setup>
@@ -78,7 +77,7 @@ The SRW acts as the build's orchestrator. It calls the TCA, invokes internal com
 
 # Integration Steps
 
-In this example, we will assume there is an existing [GitHub Action](https://github.com/laurentsimon/byob-doc/blob/main/action.yml) which builds an artifact. The builder is fairly simple: it just echos the parameters into the artifact. It also takes a username and password to retrieve / push information from a remote registry. The full action.yml is available [here](https://github.com/laurentsimon/byob-doc/blob/main/action.yml).
+In this example, we will assume there is an existing [GitHub Action](https://github.com/laurentsimon/byob-doc/blob/main/action.yml) which builds an artifact. The Action is fairly simple: it just [echos the parameters into the artifact](https://github.com/laurentsimon/byob-doc/blob/main/action.yml#L58). It also takes a [username, password and token](https://github.com/laurentsimon/byob-doc/blob/main/action.yml#L31-L34) to retrieve / push information from a remote registry. It outputs the [name of the built artifact and the status of the build](https://github.com/laurentsimon/byob-doc/blob/main/action.yml#L35-L41). See the full [action.yml](https://github.com/laurentsimon/byob-doc/blob/main/action.yml).
 
 ## TRW inputs
 The first step for our integration is to create our TRW file and define its inputs. The inputs should mirror those of the existing Action.
