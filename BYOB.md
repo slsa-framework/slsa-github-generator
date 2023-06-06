@@ -124,17 +124,17 @@ Once we have initialize the SRW, we [call the SRW](https://github.com/laurentsim
 
 ```yaml
 slsa-run:
-    needs: [slsa-setup]
-    permissions:
-      id-token: write # For signing.
-      contents: read # For asset uploads.
-      actions: read # For the entrypoint.
-    uses: slsa-framework/slsa-github-generator/.github/workflows/delegator_generic_slsa3.yml@v1.7.0
-    with:
-      slsa-token: ${{ needs.slsa-setup.outputs.slsa-token }}
-    secrets:
-      secret1: ${{ inputs.password }}
-      secret2: ${{ inputs.token }}
+  needs: [slsa-setup]
+  permissions:
+    id-token: write # For signing.
+    contents: read # For asset uploads.
+    actions: read # For the entrypoint.
+  uses: slsa-framework/slsa-github-generator/.github/workflows/delegator_generic_slsa3.yml@v1.7.0
+  with:
+    slsa-token: ${{ needs.slsa-setup.outputs.slsa-token }}
+  secrets:
+    secret1: ${{ inputs.password }}
+    secret2: ${{ inputs.token }}
 ```
 
 In addition to the token, we also [provide the secrets](https://github.com/laurentsimon/byob-doc/blob/main/.github/workflows/builder_example_slsa3.yml#L118-L120). Up to 15 secrets are supported.
