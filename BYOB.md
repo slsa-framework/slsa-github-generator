@@ -177,7 +177,7 @@ The last thing to do in the TCA is to [generate the metadata file](https://githu
   "version": 1,
   "attestations": [
     {
-      "name": "my-artifact.intoto",
+      "name": "my-artifact",
       "subjects": [
         {
           "name": "my-artifact",
