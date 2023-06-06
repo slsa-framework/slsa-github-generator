@@ -77,7 +77,6 @@ This [Action](https://github.com/slsa-framework/slsa-github-generator/tree/main/
 ```
 
 #### SLSA Reusable Workflow (SRW)
-
 The SRW acts as the build's orchestrator. It calls the TCA, generates provenance, and returns the provenance to its TRW caller. A TRW would typically call the SRW as follows:
 
 ```yaml
