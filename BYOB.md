@@ -253,7 +253,7 @@ The first thing to do is to use a "low permission SRW". The SRW we used in our o
 
 #### Update TCA
 
-The next thing to do is to [remove the feature that uploads assets to the GitHub release](https://github.com/laurentsimon/byob-doc/blob/v0.0.1/action.yml#L67-L78), frmo the existing Action. Next, let's update the TCA to securely share the built artifacts with the TRW. (The TRW will later be updated to upload / publish the artifacts).
+The next thing to do is to [_not_ uploads asset to the GitHub release](https://github.com/laurentsimon/byob-doc/blob/v0.0.1/action.yml#L67-L78) within the existing Action. Next, let's update the TCA to securely share the built artifacts with the TRW. (The TRW will later be updated to publish the artifacts).
 
 - [Generate a random value](https://github.com/laurentsimon/byob-doc/blob/main/internal/callback_action/action.yml#L73-L78) to unique name your artifact. This is necessary to avoid name collisions if multiple builders run concurrently. This could be concurrent runs of our builder, or someone else's builder.
 - [Create a folder with all the generated artifacts](https://github.com/laurentsimon/byob-doc/blob/main/internal/callback_action/action.yml#L80-L90). In our case, we build a single artifact.
