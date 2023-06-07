@@ -30,7 +30,16 @@ on:
         description: "Flags for the bazel build command"
         required: false
         type: string
-        default: "" 
+        default: ""
+    outputs:
+      attestations-download-sha256:
+        description: >
+          The sha256 digest of the attestations.
+
+          Users should verify the download against this digest to prevent tampering.
+        value: ${{ jobs.slsa-run.attestations-download-sha256 }}
+    
+  
 jobs:
   slsa-setup:
     permissions:
@@ -51,11 +60,17 @@ jobs:
 
   slsa-run:
     needs: [slsa-setup]
+    outputs:
+      attestations-download-sha256: "${{ steps.upload.outputs.sha256 }}"
     permissions:
       id-token: write # For signing.
       contents: read # For asset uploads.
       actions: read   # For the entrypoint.
       packages: write # To publish to GitHub packages.
-    uses: slsa-framework/slsa-github-generator/.github/workflows/delegator_lowperms-generic_slsa3.yml@main
-    with:
-      slsa-token: ${{ needs.slsa-setup.outputs.slsa-token }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Upload
+        id: upload
+        uses: slsa-framework/slsa-github-generator/.github/workflows/delegator_lowperms-generic_slsa3.yml@main
+        with:
+          slsa-token: ${{ needs.slsa-setup.outputs.slsa-token }}
