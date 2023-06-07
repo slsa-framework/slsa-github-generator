@@ -249,7 +249,7 @@ The first thing to do is to use a "low permission SRW". The SRW we used in our o
 
 - Update the [`slsa-workflow-receipient` argument to the SSA](https://github.com/laurentsimon/byob-doc/blob/main/.github/workflows/builder_example_slsa3.yml#L89) to `delegator_lowperms-generic_slsa3.yml`.
 - Update your SRW call to use [slsa-framework/slsa-github-generator/.github/workflows/delegator_generic_slsa3.yml@@v1.7.0](https://github.com/laurentsimon/byob-doc/blob/main/.github/workflows/builder_example_slsa3.yml#L103)
-- Update the [permissions you pass to the SRW](https://github.com/laurentsimon/byob-doc/blob/main/.github/workflows/builder_example_slsa3.yml#L99-L102), by removing ~~packages: write~~ and updating the contents permission to `contents: read`.
+- Update the [permissions you pass to the SRW](https://github.com/laurentsimon/byob-doc/blob/main/.github/workflows/builder_example_slsa3.yml#L99-L102), by removing ~~`packages: write`~~ and updating the contents permission to `contents: read`.
 
 #### Update TCA
 
