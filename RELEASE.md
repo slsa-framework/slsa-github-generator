@@ -18,10 +18,12 @@ This is a document to describe the release process for the slsa-github-generator
     - [Go builder verifier test](#go-builder-verifier-test)
     - [Generic generator verifier test](#generic-generator-verifier-test)
     - [Container generator verifier test](#container-generator-verifier-test)
+    - [Container-based builder verifier test](#container-based-builder-verifier-test)
   - [Adversarial builder tests](#adversarial-builder-tests)
     - [Adversarial Go builder](#adversarial-go-builder)
     - [Adversarial generic generator](#adversarial-generic-generator)
     - [Adversarial container generator](#adversarial-container-generator)
+    - [Adversarial container-based builder](#adversarial-container-based-builder)
   - [Finalize release candidate](#finalize-release-candidate)
   - [Code Freeze](#code-freeze)
 - [Finalize release](#finalize-release)
@@ -160,9 +162,17 @@ There is one integration test we cannot easily test "live", so we need to simula
 
    Add `testing: true` as an input.
 
-8. Commit and push the changes
+8. For the Container-based generator, update the file `$BUILDER_REPOSITORY/main/.github/workflows/builder_container-based_slsa3.yml`to:
 
-9. Create a release for the builders for this branch:
+   ```yaml
+   uses: $BUILDER_REPOSITORY/.github/actions/generate-builder@$BUILDER_TAG
+   ```
+
+   Add `testing: true` as an input.
+
+9. Commit and push the changes
+
+10. Create a release for the builders for this branch:
 
    ```shell
    "$GH" release -R "$BUILDER_REPOSITORY" create "$BUILDER_TAG" --title "$BUILDER_TAG" --notes "pre-release tests for $BUILDER_TAG $(date)" --target "$BUILDER_REF"
@@ -212,6 +222,25 @@ There is one integration test we cannot easily test "live", so we need to simula
 
 2. Run the test manually via the GitHub UX in
    [https://github.com/slsa-framework/example-package/actions/workflows/e2e.container.workflow_dispatch.main.adversarial-verifier-binary.slsa3.yml](https://github.com/slsa-framework/example-package/actions/workflows/e2e.container.workflow_dispatch.main.adversarial-verifier-binary.slsa3.yml)
+   by cliking `Run Workflow`.
+
+3. Verify the run fails with log message:
+
+   ```text
+   verifier hash computed is 5891b5b522d5df086d0ff0b110fbd9d21bb4fc7163af34d08286a2e846f6be03
+   Error: Process completed with exit code 4.
+   ```
+
+#### Container-based builder verifier test
+
+1. Edit the file [slsa-framework/example-package/.github/workflows/e2e.container-based.workflow_dispatch.main.adversarial-verifier-binary.slsa3.yml](https://github.com/slsa-framework/example-package/blob/main/.github/workflows/e2e.container-based.workflow_dispatch.main.adversarial-verifier-binary.slsa3.yml) by using `$BUILDER_REPOSITORY` and `$BUILDER_TAG`:
+
+   ```yaml
+   uses: $BUILDER_REPOSITORY/.github/workflows/builder_container-based_slsa3.yml@$BUILDER_TAG
+   ```
+
+2. Run the test manually via the GitHub UX in
+   [https://github.com/slsa-framework/example-package/actions/workflows/e2e.container-based.workflow_dispatch.main.adversarial-verifier-binary.slsa3.yml](https://github.com/slsa-framework/example-package/actions/workflows/e2e.container-based.workflow_dispatch.main.adversarial-verifier-binary.slsa3.yml)
    by cliking `Run Workflow`.
 
 3. Verify the run fails with log message:
@@ -346,6 +375,49 @@ End-to-end tests run daily in [github.com/slsa-framework/example-package/.github
    ```shell
    mv slsa-generator-container-linux-amd64-"$BUILDER_TAG".original slsa-generator-container-linux-amd64
    "$GH" release -R slsa-framework/slsa-github-generator upload "$BUILDER_TAG" slsa-generator-container-linux-amd64  --clobber
+   ```
+
+6. Re-run the workflow above and verify that it succeeds. (TODO: https://github.com/slsa-framework/slsa-github-generator/issues/116).
+
+   If it does not, delete the release, fix the bug and re-start the release process at the top of this page.
+
+#### Adversarial container-based builder
+
+1. Make sure you have downloaded the `$BUILDER_TAG` builder's binary locally `slsa-builder-docker-linux-amd64`, either via the web UI or via:
+
+   ```shell
+   "$GH" release -R slsa-framework/slsa-github-generator download "$BUILDER_TAG" -p "slsa-builder-docker-linux-amd64"
+   mv slsa-builder-docker-linux-amd64 slsa-builder-docker-linux-amd64-"$BUILDER_TAG".original
+   ```
+
+2. Upload a different binary to the assets:
+
+   ```shell
+   echo hello > slsa-builder-docker-linux-amd64
+   "$GH" release -R slsa-framework/slsa-github-generator upload "$BUILDER_TAG" slsa-builder-docker-linux-amd64  --clobber
+   ```
+
+3. Update the version of the workflow
+   [slsa-framework/example-package/.github/workflows/e2e.container-based.workflow_dispatch.main.adversarial-builder-binary.slsa3.yml](https://github.com/slsa-framework/example-package/blob/main/.github/workflows/e2e.container-based.workflow_dispatch.main.adversarial-builder-binary.slsa3.yml)
+   with the `$BUILDER_TAG` to test.
+
+4. Trigger the test in
+   [slsa-framework/example-package/actions/workflows/e2e.container-based.workflow_dispatch.main.adversarial-builder-binary.slsa3.yml](https://github.com/slsa-framework/example-package/actions/workflows/e2e.container-based.workflow_dispatch.main.adversarial-builder-binary.slsa3.yml)
+   by cliking `Run workflow`. Verify that it fails, with a message:
+
+   ```shell
+   verifier hash computed is 60c91c9d5b9a059e37ac46da316f20c81da335b5d00e1f74d03dd50f819694bd
+   verifier hash verification has passed
+   ...
+   FAILED: SLSA verification failed: expected hash '5891b5b522d5df086d0ff0b110fbd9d21bb4fc7163af34d08286a2e846f6be03', got 'e8af48495ca3c5a7737b4a34322afc7e95a85cf1457a37473fb81cff9b4f0d05': binary artifact hash does not match provenance subject
+   Error: Process completed with exit code 6.
+   ```
+
+5. If the test above failed with the expected message, re-upload the original binary back to the assets, e.g. via:
+
+   ```shell
+   mv slsa-builder-docker-linux-amd64-"$BUILDER_TAG".original slsa-builder-docker-linux-amd64
+   "$GH" release -R slsa-framework/slsa-github-generator upload "$BUILDER_TAG" slsa-builder-docker-linux-amd64  --clobber
    ```
 
 6. Re-run the workflow above and verify that it succeeds. (TODO: https://github.com/slsa-framework/slsa-github-generator/issues/116).
