@@ -253,9 +253,9 @@ The first thing to do is to use a "low permission SRW". The SRW we used in our o
 
 #### Update TCA
 
-The next thing to do is to [_not_ uploads asset to the GitHub release](https://github.com/laurentsimon/byob-doc/blob/v0.0.1/action.yml#L67-L78) within the existing Action. Next, let's update the TCA to securely share the built artifacts with the TRW. (The TRW will later be updated to publish the artifacts).
+The next thing to do is to [_not_ uploads asset to the GitHub release](https://github.com/laurentsimon/byob-doc/blob/v0.0.1/action.yml#L67-L78) within the existing Action and update the TCA to securely share the built artifacts with the TRW. (The TRW will later be updated to publish the artifacts). To update the TCA:
 
-- [Generate a random value](https://github.com/laurentsimon/byob-doc/blob/main/internal/callback_action/action.yml#L73-L78) to unique name your artifact. This is necessary to avoid name collisions if multiple builders run concurrently. This could be concurrent runs of our builder, or someone else's builder.
+- [Generate a random value](https://github.com/laurentsimon/byob-doc/blob/main/internal/callback_action/action.yml#L73-L78) to unique name your artifact. This is necessary to avoid name collisions if multiple builders run concurrently. This could be concurrent runs of your builder, or someone else's builder.
 - [Create a folder with all the generated artifacts](https://github.com/laurentsimon/byob-doc/blob/main/internal/callback_action/action.yml#L80-L90). In our case, we build a single artifact.
 - [Securely share the built artifacts with the TRW](https://github.com/laurentsimon/byob-doc/blob/main/internal/callback_action/action.yml#L92-L98). For this you need to use the [secure-upload-download Action](https://github.com/slsa-framework/slsa-github-generator/tree/main/actions/delegator/secure-upload-folder). This Action uploads the entire folder and returns the sha256 digest as its output, which we will use during download. It's important to note that the "artifact name" refers to the unique name given to the object shared with the TRW, and can be different from the artifact filename our TCA built.
 - [Add outputs to return the name and digest of the uploaded artifact](https://github.com/laurentsimon/byob-doc/blob/main/internal/callback_action/action.yml#L48-L53).
@@ -264,14 +264,14 @@ The next thing to do is to [_not_ uploads asset to the GitHub release](https://g
 
 Now we need to download the artifact and publish it in the TRW. Do do that, follow the steps:
 
-- [Download the artifacts](https://github.com/laurentsimon/byob-doc/blob/main/.github/workflows/builder_example_slsa3.yml#L142-L149) uploaded TCA.
+- [Download the artifacts](https://github.com/laurentsimon/byob-doc/blob/main/.github/workflows/builder_example_slsa3.yml#L142-L149) uploaded by the TCA.
 - [Publish the artifacts](https://github.com/laurentsimon/byob-doc/blob/main/.github/workflows/builder_example_slsa3.yml#L151-L168).
 
 ### Best SDLC Practices
 
-It is important you follow best development practices for your code, including your TRW, TCA and existing Action. In particular, think of:
+It is important you follow best development practices for your code, including your TRW, TCA and existing Action. In particular:
 
 - Harden your CI, e.g., declare your workflow permissions to `read-only`.
-- Pin your depenencies by hash, to avoid dependency confusin attacks and improve inncidence response.
+- Pin your depenencies by hash, to avoid dependency confusion attacks and speed up incidence response.
 - If you download binaries, verify their SLSA provenance before running them.
 - Install or use a tool like [OSSF Scorecard](https://github.com/ossf/scorecard) to verify you're comprehensively looking at your SDLC.
