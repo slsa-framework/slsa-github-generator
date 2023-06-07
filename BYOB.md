@@ -145,7 +145,8 @@ slsa-run:
   needs: [slsa-setup]
   permissions:
     id-token: write # For signing.
-    contents: read # For asset uploads.
+    contents: write # For asset uploads.
+    packages: write # For package uploads.
     actions: read # For the entrypoint.
   uses: slsa-framework/slsa-github-generator/.github/workflows/delegator_generic_slsa3.yml@v1.7.0
   with:
