@@ -43,7 +43,7 @@ TODO(add diagram)
 On the left, the end-user project workflow (PW) is depicted. The PW is hosted in the repository that wants to build an artifact. As part of a build, the PW invokes the SLSA compliant builder defined by the TRW:
 
 ```yaml
-- uses: npm/builder/.github/workflows/slsa.3.yml@v1.7.0
+- uses: npm/builder/.github/workflows/slsa.3.yml@main
 ```
 
 The example snippet shows the invocation of a builder with path `.github/workflows/slsa.3.yml` from the GitHub's `npm/builder` repository.
@@ -73,7 +73,7 @@ The [slsa-github-generator](https://github.com/slsa-framework/slsa-github-genera
 This [Action](https://github.com/slsa-framework/slsa-github-generator/tree/main/actions/delegator/setup-generic) is used to initialize the BYOB framework. It returns a so-called "SLSA token" which is used in later steps:
 
 ```yaml
-- uses: slsa-framework/slsa-github-generator/actions/delegator/setup-generic@v1.7.0
+- uses: slsa-framework/slsa-github-generator/actions/delegator/setup-generic@main
 ```
 
 #### SLSA Reusable Workflow (SRW)
@@ -81,7 +81,7 @@ This [Action](https://github.com/slsa-framework/slsa-github-generator/tree/main/
 The SRW acts as the build's orchestrator. It calls the TCA, generates provenance, and returns the provenance to its TRW caller. A TRW would typically call the SRW as follows:
 
 ```yaml
-- uses: slsa-framework/slsa-github-generator/.github/workflow/delegator_generic_slsa3.yml@v1.7.0
+- uses: slsa-framework/slsa-github-generator/.github/workflow/delegator_generic_slsa3.yml@main
   with:
     slsa-token: ${{ needs.slsa-setup.outputs.slsa-token }}
 ```
@@ -117,7 +117,7 @@ One key difference between the Action and reusable workflow is isolation. The SR
 To initialize the SRW framework, the TRW must invoke a SLSA Setup Action (SSA). These Actions are declared under the [SLSA repo's actions/delegator/setup-*](https://github.com/slsa-framework/slsa-github-generator/tree/main/actions/delegator). For our example, we will use the [setup-generic Action](https://github.com/slsa-framework/slsa-github-generator/tree/main/actions/delegator/setup-generic). The [relevant code](https://github.com/laurentsimon/byob-doc/blob/main/.github/workflows/builder_example_slsa3.yml#L91-L107) calls the SSA as follows:
 
 ```yaml
-uses: slsa-framework/slsa-github-generator/actions/delegator/setup-generic@v1.7.0
+uses: slsa-framework/slsa-github-generator/actions/delegator/setup-generic@main
   with:
     slsa-workflow-recipient: "delegator_generic_slsa3.yml"
     slsa-rekor-log-public: ${{ inputs.rekor-log-public }}
@@ -148,7 +148,7 @@ slsa-run:
     contents: write # For asset uploads.
     packages: write # For package uploads.
     actions: read # For the entrypoint.
-  uses: slsa-framework/slsa-github-generator/.github/workflows/delegator_generic_slsa3.yml@v1.7.0
+  uses: slsa-framework/slsa-github-generator/.github/workflows/delegator_generic_slsa3.yml@main
   with:
     slsa-token: ${{ needs.slsa-setup.outputs.slsa-token }}
   secrets:
