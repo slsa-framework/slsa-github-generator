@@ -31,14 +31,20 @@ on:
         required: false
         type: string
         default: ""
+        
     outputs:
-      attestations-download-sha256:
+      attestations-download-name:
         description: >
-          The sha256 digest of the attestations.
+          Name of the artifact to download all the attestations.
 
-          Users should verify the download against this digest to prevent tampering.
-        value: ${{ jobs.slsa-run.attestations-download-sha256 }}
-    
+          When run on a `pull_request` trigger, attestations are not signed and have an ".intoto" extension.
+          When run on other triggers, attestations are signed and have an "intoto.sigstore" extension.
+        value: ${{ jobs.generate-provenance.outputs.attestations-download-name }}
+      
+      # This contains all the ouputs of the callback Action, formatted as a map.
+      build-artifacts-outputs:
+        description: "The outputs from the build-artitacts Action, unchanged."
+        value: ${{ jobs.build-artifacts-ubuntu.outputs.outputs }}
   
 jobs:
   slsa-setup:
@@ -61,7 +67,8 @@ jobs:
   slsa-run:
     needs: [slsa-setup]
     outputs:
-      attestations-download-sha256: "${{ steps.upload.outputs.sha256 }}"
+      attestations-download-name: "${{ steps.upload.outputs.attestations-download-name }}"
+      build-artifacts-outputs: ${{ steps.upload.outputs.build-artifacts-outputs }}
     permissions:
       id-token: write # For signing.
       contents: read # For asset uploads.
