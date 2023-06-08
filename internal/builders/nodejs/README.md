@@ -203,7 +203,7 @@ Only the following [event types] are supported:
 `pull_request`, please tell us about your use case on
 [issue #358](https://github.com/slsa-framework/slsa-github-generator/issues/358). If
 you have an issue in all other triggers please submit a
-t[new issue](https://github.com/slsa-framework/slsa-github-generator/issues/new/choose).
+[new issue](https://github.com/slsa-framework/slsa-github-generator/issues/new/choose).
 
 [event types]: https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows
 [`create`]: https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#create
