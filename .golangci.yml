@@ -107,12 +107,12 @@ linters-settings:
           - "github.com/go-openapi"
 
           # Approved packages.
-          - "github.com/spf13/cobra"
-          - "github.com/coreos/go-oidc"
-          - "github.com/pelletier/go-toml"
+          - "github.com/spf13/cobra" # For CLI
+          - "github.com/coreos/go-oidc" # For verifying OIDC tokens.
+
+          # Allowed packages in container-based builder.
+          - "github.com/pelletier/go-toml" # For container-based builder config.
         deny:
-          # - pkg: "github.com/google/go-cmp"
-          #   desc: Please don't use go-cmp for non-test code.
           - pkg: "reflect"
             desc: Please don't use reflect package
           - pkg: "unsafe"
@@ -124,9 +124,10 @@ linters-settings:
           # This is an exception for the container-based builder to allow it to use go-cmp.
           # TODO(#2247): Don't allow go-cmp in non-test code.
           - "!**/internal/builders/docker/commands.go"
+          # NOTE: test code is allowed to use github.com/google/go-cmp (there is no
+          #       deny for it) but non-test code is not.
           - "!$test"
         deny:
-          # NOTE: This is listed as a deny rule because github.com/google is allowed.
           - pkg: "github.com/google/go-cmp"
             desc: Please don't use go-cmp for non-test code.
 
