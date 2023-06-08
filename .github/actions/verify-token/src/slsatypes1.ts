@@ -17,6 +17,11 @@ export interface Builder {
   builderDependencies?: ResourceDescriptor[];
 }
 
+/**
+ * DigestSet implements an in-toto version v1.0 DigestSet.
+ *
+ * See: https://github.com/in-toto/attestation/blob/main/spec/v1/digest_set.md
+ */
 export interface DigestSet {
   [key: string]: string;
 }
@@ -27,12 +32,19 @@ export interface Metadata {
   finishedOn?: Date;
 }
 
+/**
+ * ResourceDescriptor implements an in-toto version v1.0 ResourceDescriptor.
+ *
+ * See: https://github.com/in-toto/attestation/blob/main/spec/v1/resource_descriptor.md
+ */
 export interface ResourceDescriptor {
-  uri: string;
-  digest: DigestSet;
-  localName?: string;
+  name?: string;
+  uri?: string;
+  digest?: DigestSet;
+  content?: Uint8Array; // content is bytes.
   downloadLocation?: string;
   mediaType?: string;
+  annotations?: { [key: string]: object };
 }
 
 export interface BuildDefinition {
