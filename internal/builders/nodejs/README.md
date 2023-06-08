@@ -190,21 +190,28 @@ name information is tracked on [issue #372](https://github.com/slsa-framework/sl
 
 ### Supported Triggers
 
-The following [GitHub trigger
-events](https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows)
-are fully supported and tested:
+Only the following [event types] are supported:
 
-- `schedule`
-- `push` (including new tags)
-- `release`
-- Manual run via `workflow_dispatch`
+| Supported event type  | Event description                          |
+| --------------------- | ------------------------------------------ |
+| [`create`]            | Creation of a git tag or branch.           |
+| [`deployment`]        | Creation of a deployment.                  |
+| [`release`]           | Creation or update of a GitHub release.    |
+| [`push`]              | Creation or update of a git tag or branch. |
+| [`workflow_dispatch`] | Manual trigger of a workflow.              |
 
-However, in practice, most triggers should work with the exception of
-`pull_request`. If you would like support for `pull_request`, please tell us
-about your use case on
+`pull_request` events are currently not supported. If you would like support for
+`pull_request`, please tell us about your use case on
 [issue #358](https://github.com/slsa-framework/slsa-github-generator/issues/358). If
 you have an issue in all other triggers please submit a
-[new issue](https://github.com/slsa-framework/slsa-github-generator/issues/new/choose).
+t[new issue](https://github.com/slsa-framework/slsa-github-generator/issues/new/choose).
+
+[event types]: https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows
+[`create`]: https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#create
+[`deployment`]: https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#deployment
+[`release`]: https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#release
+[`push`]: https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#push
+[`workflow_dispatch`]: https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#workflow_dispatch
 
 ### Workflow Inputs
 
