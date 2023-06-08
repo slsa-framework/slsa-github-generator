@@ -25,9 +25,6 @@ workflow the "Bazel builder" from now on.
   - [Workflow Outputs](#workflow-outputs)
   - [Provenance Format](#provenance-format)
   - [Provenance Example](#provenance-example)
-- [Verification](#verification)
-  - [npm audit signatures](#npm-audit-signatures)
-  - [slsa-verifier](#slsa-verifier)
 
 <!-- tocstop -->
 
