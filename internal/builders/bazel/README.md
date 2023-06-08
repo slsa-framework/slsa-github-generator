@@ -179,7 +179,7 @@ SLSA v1 predicate.
 
 | Name           | Value                                                          | Description                                                                                    |
 | -------------- | -------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
-| `subject.name` | Package url ([purl](https://github.com/package-url/purl-spec)) | The subject identifies the package in [purl](https://github.com/package-url/purl-spec) format. |
+| `subject.name` | Artifact Name | The subject identifies the artifact built by the builder. The provenance attests the build process for the artifact listed.                     |
 
 The project generates SLSA v1 provenance predicate with the following values.
 
