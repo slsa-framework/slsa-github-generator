@@ -172,17 +172,16 @@ The Bazel builder produces the following outputs:
 
 ### Provenance Format
 
-**Look into to double check**
 
 
 Provenance is generated as an [in-toto](https://in-toto.io/) statement with a
-SLSA v0.2 predicate.
+SLSA v1 predicate.
 
 | Name           | Value                                                          | Description                                                                                    |
 | -------------- | -------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
 | `subject.name` | Package url ([purl](https://github.com/package-url/purl-spec)) | The subject identifies the package in [purl](https://github.com/package-url/purl-spec) format. |
 
-The project generates SLSA v0.2 provenance predicate with the following values.
+The project generates SLSA v1 provenance predicate with the following values.
 
 | Name                         | Value                                                                                                                  | Description                                                                                                                                                                                                            |
 | ---------------------------- | ---------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -191,8 +190,6 @@ The project generates SLSA v0.2 provenance predicate with the following values.
 | `metadata.buildInvocationID` | `"[run_id]-[run_attempt]"`                                                                                             | The GitHub Actions [`run_id`](https://docs.github.com/en/actions/learn-github-actions/contexts#github-context) does not update when a workflow is re-run. Run attempt is added to make the build invocation ID unique. |
 
 ### Provenance Example
-
-DOUBLE CHECK IF SAME
 
 The following is an example of the generated provenance.
 
