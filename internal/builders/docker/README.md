@@ -15,16 +15,8 @@ from the [generic artifact workflow](../generic/README.md) as it performs the
 build as well as generates the provenance. This workflow uses a distinct build
 type that provides the full details on the build process.
 
-**NOTE**: This workflow is currently pending
-[release](https://github.com/slsa-framework/slsa-github-generator/milestone/4).
-For stable testing, use the following reusable workflow that uses the same
-inputs and outputs documented below.
-
-```yaml
-uses: slsa-framework/slsa-github-generator/.github/workflows/builder_docker-based_slsa3.yml@v1.6.0
-```
-
-This is compatible with the `slsa-verifier` version 2.6.x.
+**NOTE**: This workflow is currently in
+[beta testing](https://github.com/slsa-framework/slsa-github-generator/milestone/4).
 
 ---
 
@@ -210,7 +202,7 @@ jobs:
       contents: write # To upload assets to release.
       actions: read # To read the workflow path.
     needs: args
-    uses: slsa-framework/slsa-github-generator/.github/workflows/builder_container-based_slsa3.yml@v1.6.0
+    uses: slsa-framework/slsa-github-generator/.github/workflows/builder_container-based_slsa3.yml@v1.7.0
     with:
       builder-image: "bash"
       builder-digest: "sha256:9e2ba52487d945504d250de186cb4fe2e3ba023ed2921dd6ac8b97ed43e76af9"
