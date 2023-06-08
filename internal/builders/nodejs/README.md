@@ -195,7 +195,6 @@ Only the following [event types] are supported:
 | Supported event type  | Event description                          |
 | --------------------- | ------------------------------------------ |
 | [`create`]            | Creation of a git tag or branch.           |
-| [`deployment`]        | Creation of a deployment.                  |
 | [`release`]           | Creation or update of a GitHub release.    |
 | [`push`]              | Creation or update of a git tag or branch. |
 | [`workflow_dispatch`] | Manual trigger of a workflow.              |
@@ -208,7 +207,6 @@ t[new issue](https://github.com/slsa-framework/slsa-github-generator/issues/new/
 
 [event types]: https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows
 [`create`]: https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#create
-[`deployment`]: https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#deployment
 [`release`]: https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#release
 [`push`]: https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#push
 [`workflow_dispatch`]: https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#workflow_dispatch
