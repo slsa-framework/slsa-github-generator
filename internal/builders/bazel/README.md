@@ -97,7 +97,7 @@ The `targets` are a set of space separated build targets to be built.
 Once the targets are built, the Bazel builder creates a folder for the artifacts
 and another for the provenance attestations which are uploaded as artifacts to the workflow run.
 
-### Referencing the Node.js builder
+### Referencing the Bazel builder
 
 At present, the builder **MUST** be referenced by a tag of the form `@vX.Y.Z`,
 because the build will fail if you reference it via a shorter tag like `@vX.Y`
