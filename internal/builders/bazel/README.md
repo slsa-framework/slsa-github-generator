@@ -201,77 +201,185 @@ The following is an example of the generated provenance.
   "_type": "https://in-toto.io/Statement/v0.1",
   "subject": [
     {
-      "name": "pkg:npm/%40ianlewis/actions-test@0.1.77",
+      "name": "fib",
       "digest": {
-        "sha512": "3bbabe6803f7f9fd8a22dd3e85ae015664a75f277459d3bc2fc6aacd7054eb8af432188d92fca653af49460f9209562c0d298b959b169db98d369c4dcfe8406e"
+        "sha256": "caaadba2846905ac477c777e96a636e1c2e067fdf6fed90ec9eeca4df18d6ed9"
       }
     }
   ],
-  "predicateType": "https://slsa.dev/provenance/v0.2",
+  "predicateType": "https://slsa.dev/provenance/v1",
   "predicate": {
-    "builder": {
-      "id": "https://github.com/slsa-framework/slsa-github-generator/.github/workflows/builder_nodejs_slsa3.yml@refs/tags/v1.5.0"
-    },
-    "buildType": "https://github.com/slsa-framework/slsa-github-generator/delegator-generic@v0",
-    "invocation": {
-      "configSource": {
-        "uri": "git+https://github.com/ianlewis/actions-test@refs/tags/v0.1.77",
-        "digest": {
-          "sha1": "04c0efe26488a0c5ca8f4404c41c4b96b6e9cf91"
-        },
-        "entryPoint": ".github/workflows/nodejs.yml"
-      },
-      "parameters": {
+    "buildDefinition": {
+      "buildType": "https://github.com/slsa-framework/slsa-github-generator/delegator-generic@v0",
+      "externalParameters": {
         "inputs": {
-          "access": "",
-          "directory": "nodejs",
-          "node-version": "16",
-          "node-version-file": "",
           "rekor-log-public": false,
-          "run-scripts": "build",
-          "dist-tag": "latest"
+          "targets": "//src:fib //src:hello",
+          "flags": "--strip=always"
+        },
+        "vars": {}
+      },
+      "internalParameters": {
+        "GITHUB_ACTOR_ID": "78953604",
+        "GITHUB_EVENT_NAME": "workflow_dispatch",
+        "GITHUB_REF": "refs/heads/main",
+        "GITHUB_REF_TYPE": "branch",
+        "GITHUB_REPOSITORY": "enteraga6/cc_user_test",
+        "GITHUB_REPOSITORY_ID": "647514313",
+        "GITHUB_REPOSITORY_OWNER_ID": "78953604",
+        "GITHUB_RUN_ATTEMPT": "1",
+        "GITHUB_RUN_ID": "5214546713",
+        "GITHUB_RUN_NUMBER": "1",
+        "GITHUB_SHA": "5d50da9ec44535cafb2e1e8bc250484983c7d0b6",
+        "GITHUB_TRIGGERING_ACTOR_ID": "78953604",
+        "GITHUB_WORKFLOW_REF": "enteraga6/cc_user_test/.github/workflows/flag_test.yml@refs/heads/main",
+        "GITHUB_WORKFLOW_SHA": "5d50da9ec44535cafb2e1e8bc250484983c7d0b6",
+        "GITHUB_EVENT_PAYLOAD": {
+          "inputs": null,
+          "ref": "refs/heads/main",
+          "repository": {
+            "allow_forking": true,
+            "archive_url": "https://api.github.com/repos/enteraga6/cc_user_test/{archive_format}{/ref}",
+            "archived": false,
+            "assignees_url": "https://api.github.com/repos/enteraga6/cc_user_test/assignees{/user}",
+            "blobs_url": "https://api.github.com/repos/enteraga6/cc_user_test/git/blobs{/sha}",
+            "branches_url": "https://api.github.com/repos/enteraga6/cc_user_test/branches{/branch}",
+            "clone_url": "https://github.com/enteraga6/cc_user_test.git",
+            "collaborators_url": "https://api.github.com/repos/enteraga6/cc_user_test/collaborators{/collaborator}",
+            "comments_url": "https://api.github.com/repos/enteraga6/cc_user_test/comments{/number}",
+            "commits_url": "https://api.github.com/repos/enteraga6/cc_user_test/commits{/sha}",
+            "compare_url": "https://api.github.com/repos/enteraga6/cc_user_test/compare/{base}...{head}",
+            "contents_url": "https://api.github.com/repos/enteraga6/cc_user_test/contents/{+path}",
+            "contributors_url": "https://api.github.com/repos/enteraga6/cc_user_test/contributors",
+            "created_at": "2023-05-31T00:27:44Z",
+            "default_branch": "main",
+            "deployments_url": "https://api.github.com/repos/enteraga6/cc_user_test/deployments",
+            "description": null,
+            "disabled": false,
+            "downloads_url": "https://api.github.com/repos/enteraga6/cc_user_test/downloads",
+            "events_url": "https://api.github.com/repos/enteraga6/cc_user_test/events",
+            "fork": false,
+            "forks": 0,
+            "forks_count": 0,
+            "forks_url": "https://api.github.com/repos/enteraga6/cc_user_test/forks",
+            "full_name": "enteraga6/cc_user_test",
+            "git_commits_url": "https://api.github.com/repos/enteraga6/cc_user_test/git/commits{/sha}",
+            "git_refs_url": "https://api.github.com/repos/enteraga6/cc_user_test/git/refs{/sha}",
+            "git_tags_url": "https://api.github.com/repos/enteraga6/cc_user_test/git/tags{/sha}",
+            "git_url": "git://github.com/enteraga6/cc_user_test.git",
+            "has_discussions": false,
+            "has_downloads": true,
+            "has_issues": true,
+            "has_pages": false,
+            "has_projects": true,
+            "has_wiki": true,
+            "homepage": null,
+            "hooks_url": "https://api.github.com/repos/enteraga6/cc_user_test/hooks",
+            "html_url": "https://github.com/enteraga6/cc_user_test",
+            "id": 647514313,
+            "is_template": false,
+            "issue_comment_url": "https://api.github.com/repos/enteraga6/cc_user_test/issues/comments{/number}",
+            "issue_events_url": "https://api.github.com/repos/enteraga6/cc_user_test/issues/events{/number}",
+            "issues_url": "https://api.github.com/repos/enteraga6/cc_user_test/issues{/number}",
+            "keys_url": "https://api.github.com/repos/enteraga6/cc_user_test/keys{/key_id}",
+            "labels_url": "https://api.github.com/repos/enteraga6/cc_user_test/labels{/name}",
+            "language": "C++",
+            "languages_url": "https://api.github.com/repos/enteraga6/cc_user_test/languages",
+            "license": null,
+            "merges_url": "https://api.github.com/repos/enteraga6/cc_user_test/merges",
+            "milestones_url": "https://api.github.com/repos/enteraga6/cc_user_test/milestones{/number}",
+            "mirror_url": null,
+            "name": "cc_user_test",
+            "node_id": "R_kgDOJphIyQ",
+            "notifications_url": "https://api.github.com/repos/enteraga6/cc_user_test/notifications{?since,all,participating}",
+            "open_issues": 0,
+            "open_issues_count": 0,
+            "owner": {
+              "avatar_url": "https://avatars.githubusercontent.com/u/78953604?v=4",
+              "events_url": "https://api.github.com/users/enteraga6/events{/privacy}",
+              "followers_url": "https://api.github.com/users/enteraga6/followers",
+              "following_url": "https://api.github.com/users/enteraga6/following{/other_user}",
+              "gists_url": "https://api.github.com/users/enteraga6/gists{/gist_id}",
+              "gravatar_id": "",
+              "html_url": "https://github.com/enteraga6",
+              "id": 78953604,
+              "login": "enteraga6",
+              "node_id": "MDQ6VXNlcjc4OTUzNjA0",
+              "organizations_url": "https://api.github.com/users/enteraga6/orgs",
+              "received_events_url": "https://api.github.com/users/enteraga6/received_events",
+              "repos_url": "https://api.github.com/users/enteraga6/repos",
+              "site_admin": false,
+              "starred_url": "https://api.github.com/users/enteraga6/starred{/owner}{/repo}",
+              "subscriptions_url": "https://api.github.com/users/enteraga6/subscriptions",
+              "type": "User",
+              "url": "https://api.github.com/users/enteraga6"
+            },
+            "private": false,
+            "pulls_url": "https://api.github.com/repos/enteraga6/cc_user_test/pulls{/number}",
+            "pushed_at": "2023-06-08T18:28:37Z",
+            "releases_url": "https://api.github.com/repos/enteraga6/cc_user_test/releases{/id}",
+            "size": 13,
+            "ssh_url": "git@github.com:enteraga6/cc_user_test.git",
+            "stargazers_count": 0,
+            "stargazers_url": "https://api.github.com/repos/enteraga6/cc_user_test/stargazers",
+            "statuses_url": "https://api.github.com/repos/enteraga6/cc_user_test/statuses/{sha}",
+            "subscribers_url": "https://api.github.com/repos/enteraga6/cc_user_test/subscribers",
+            "subscription_url": "https://api.github.com/repos/enteraga6/cc_user_test/subscription",
+            "svn_url": "https://github.com/enteraga6/cc_user_test",
+            "tags_url": "https://api.github.com/repos/enteraga6/cc_user_test/tags",
+            "teams_url": "https://api.github.com/repos/enteraga6/cc_user_test/teams",
+            "topics": [],
+            "trees_url": "https://api.github.com/repos/enteraga6/cc_user_test/git/trees{/sha}",
+            "updated_at": "2023-05-31T00:36:58Z",
+            "url": "https://api.github.com/repos/enteraga6/cc_user_test",
+            "visibility": "public",
+            "watchers": 0,
+            "watchers_count": 0,
+            "web_commit_signoff_required": false
+          },
+          "sender": {
+            "avatar_url": "https://avatars.githubusercontent.com/u/78953604?v=4",
+            "events_url": "https://api.github.com/users/enteraga6/events{/privacy}",
+            "followers_url": "https://api.github.com/users/enteraga6/followers",
+            "following_url": "https://api.github.com/users/enteraga6/following{/other_user}",
+            "gists_url": "https://api.github.com/users/enteraga6/gists{/gist_id}",
+            "gravatar_id": "",
+            "html_url": "https://github.com/enteraga6",
+            "id": 78953604,
+            "login": "enteraga6",
+            "node_id": "MDQ6VXNlcjc4OTUzNjA0",
+            "organizations_url": "https://api.github.com/users/enteraga6/orgs",
+            "received_events_url": "https://api.github.com/users/enteraga6/received_events",
+            "repos_url": "https://api.github.com/users/enteraga6/repos",
+            "site_admin": false,
+            "starred_url": "https://api.github.com/users/enteraga6/starred{/owner}{/repo}",
+            "subscriptions_url": "https://api.github.com/users/enteraga6/subscriptions",
+            "type": "User",
+            "url": "https://api.github.com/users/enteraga6"
+          },
+          "workflow": ".github/workflows/flag_test.yml"
         }
       },
-      "environment": {
-        "GITHUB_ACTOR_ID": "49289",
-        "GITHUB_EVENT_NAME": "push",
-        "GITHUB_REF": "refs/tags/v0.1.77",
-        "GITHUB_REF_TYPE": "tag",
-        "GITHUB_REPOSITORY": "ianlewis/actions-test",
-        "GITHUB_REPOSITORY_ID": "474793590",
-        "GITHUB_REPOSITORY_OWNER_ID": "49289",
-        "GITHUB_RUN_ATTEMPT": "1",
-        "GITHUB_RUN_ID": "4527998016",
-        "GITHUB_RUN_NUMBER": "64",
-        "GITHUB_SHA": "04c0efe26488a0c5ca8f4404c41c4b96b6e9cf91",
-        "GITHUB_TRIGGERING_ACTOR_ID": "49289",
-        "GITHUB_WORKFLOW_REF": "ianlewis/actions-test/.github/workflows/nodejs.yml@refs/tags/v0.1.77",
-        "GITHUB_WORKFLOW_SHA": "04c0efe26488a0c5ca8f4404c41c4b96b6e9cf91",
-        "IMAGE_OS": "ubuntu22",
-        "IMAGE_VERSION": "20230317.1",
-        "RUNNER_ARCH": "X64",
-        "RUNNER_NAME": "GitHub Actions 12",
-        "RUNNER_OS": "Linux"
-      }
-    },
-    "metadata": {
-      "buildInvocationId": "4527998016-1",
-      "completeness": {
-        "parameters": true
-      }
-    },
-    "materials": [
-      {
-        "uri": "git+https://github.com/ianlewis/actions-test@refs/tags/v0.1.77",
-        "digest": {
-          "sha1": "04c0efe26488a0c5ca8f4404c41c4b96b6e9cf91"
+      "resolvedDependencies": [
+        {
+          "uri": "git+https://github.com/enteraga6/cc_user_test@refs/heads/main",
+          "digest": {
+            "gitCommit": "5d50da9ec44535cafb2e1e8bc250484983c7d0b6"
+          }
         }
+      ]
+    },
+    "runDetails": {
+      "builder": {
+        "id": "https://github.com/enteraga6/slsa-github-generator/.github/workflows/builder_bazel_slsa3.yml@refs/heads/bazel-builder"
+      },
+      "metadata": {
+        "invocationId": "https://github.com/enteraga6/cc_user_test/actions/runs/5214546713/attempts/1"
       }
-    ]
+    }
   }
 }
 ```
 
 ## Verification
-
 TODO
