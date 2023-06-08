@@ -48,6 +48,7 @@ runs:
     # checkout ourselves.
 
     - name: Setup Bazelisk
+      id: bazelisk
       uses: bazelbuild/setup-bazelisk@v2
 
     - id: build
@@ -64,6 +65,7 @@ runs:
       uses: slsa-framework/slsa-github-generator/.github/actions/rng@main
 
     - name: Generate Artifacts
+      id: generate-artifacts
       uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
       with:
         name: "${{ steps.rng.outputs.random }}-binaries"
@@ -72,6 +74,7 @@ runs:
         retention-days: 5
   
     - name: Echo statement
+      id: confirm
       shell: bash
       run: echo "Artifacts uploaded successfully"
 
