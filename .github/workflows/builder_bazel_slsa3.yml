@@ -66,18 +66,14 @@ jobs:
 
   slsa-run:
     needs: [slsa-setup]
-    outputs:
-      attestations-download-name: "${{ steps.upload.outputs.attestations-download-name }}"
-      build-artifacts-outputs: ${{ steps.upload.outputs.build-artifacts-outputs }}
+#     outputs:
+#       attestations-download-name: "${{ steps.upload.outputs.attestations-download-name }}"
+#       build-artifacts-outputs: ${{ steps.upload.outputs.build-artifacts-outputs }}
     permissions:
       id-token: write # For signing.
       contents: read # For asset uploads.
       actions: read   # For the entrypoint.
       packages: write # To publish to GitHub packages.
-    runs-on: ubuntu-latest
-    steps:
-      - name: Upload
-        id: upload
-        uses: slsa-framework/slsa-github-generator/.github/workflows/delegator_lowperms-generic_slsa3.yml@main
-        with:
-          slsa-token: ${{ needs.slsa-setup.outputs.slsa-token }}
+    uses: slsa-framework/slsa-github-generator/.github/workflows/delegator_lowperms-generic_slsa3.yml@main
+    with:
+      slsa-token: ${{ needs.slsa-setup.outputs.slsa-token }}
