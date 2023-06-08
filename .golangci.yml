@@ -92,83 +92,44 @@ linters:
 linters-settings:
   depguard:
     rules:
+      all:
+        files:
+          - $all
+        allow:
+          - $gostd
+
+          # Approved orgs.
+          - "github.com/slsa-framework"
+          - "github.com/in-toto"
+          - "github.com/google"
+          - "github.com/sigstore"
+          - "github.com/secure-systems-lab"
+          - "github.com/go-openapi"
+
+          # Approved packages.
+          - "github.com/spf13/cobra"
+          - "github.com/coreos/go-oidc"
+          - "github.com/pelletier/go-toml"
+        deny:
+          # - pkg: "github.com/google/go-cmp"
+          #   desc: Please don't use go-cmp for non-test code.
+          - pkg: "reflect"
+            desc: Please don't use reflect package
+          - pkg: "unsafe"
+            desc: Please don't use unsafe package
+
       main:
         files:
           - $all
-          - "!$test"
+          # This is an exception for the container-based builder to allow it to use go-cmp.
+          # TODO(#2247): Don't allow go-cmp in non-test code.
           - "!**/internal/builders/docker/commands.go"
-        allow:
-          - $gostd
-
-          # Approved orgs.
-          - "github.com/slsa-framework"
-          - "github.com/in-toto"
-          - "github.com/google"
-          - "github.com/sigstore"
-          - "github.com/secure-systems-lab"
-          - "github.com/go-openapi"
-
-          # Approved packages.
-          - "github.com/spf13/cobra"
-          - "github.com/coreos/go-oidc"
-          - "github.com/pelletier/go-toml"
+          - "!$test"
         deny:
+          # NOTE: This is listed as a deny rule because github.com/google is allowed.
           - pkg: "github.com/google/go-cmp"
             desc: Please don't use go-cmp for non-test code.
-          - pkg: "reflect"
-            desc: Please don't use reflect package
-          - pkg: "unsafe"
-            desc: Please don't use unsafe package
 
-      # This is an exception for the container-based builder to allow it to use go-cmp.
-      # TODO(#2247): Don't allow go-cmp in non-test code.
-      container_based:
-        files:
-          - "**/internal/builders/docker/commands.go"
-          - "!$test"
-        allow:
-          - $gostd
-
-          # Approved orgs.
-          - "github.com/slsa-framework"
-          - "github.com/in-toto"
-          - "github.com/google"
-          - "github.com/sigstore"
-          - "github.com/secure-systems-lab"
-          - "github.com/go-openapi"
-
-          # Approved packages.
-          - "github.com/spf13/cobra"
-          - "github.com/coreos/go-oidc"
-          - "github.com/pelletier/go-toml"
-        deny:
-          - pkg: "reflect"
-            desc: Please don't use reflect package
-          - pkg: "unsafe"
-            desc: Please don't use unsafe package
-      test:
-        files:
-          - $test
-        allow:
-          - $gostd
-
-          # Approved orgs.
-          - "github.com/slsa-framework"
-          - "github.com/in-toto"
-          - "github.com/google"
-          - "github.com/sigstore"
-          - "github.com/secure-systems-lab"
-          - "github.com/go-openapi"
-
-          # Approved packages.
-          - "github.com/spf13/cobra"
-          - "github.com/coreos/go-oidc"
-          - "github.com/pelletier/go-toml"
-        deny:
-          - pkg: "reflect"
-            desc: Please don't use reflect package
-          - pkg: "unsafe"
-            desc: Please don't use unsafe package
   errcheck:
     check-type-assertions: true
     check-blank: true
