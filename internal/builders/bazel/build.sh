@@ -24,9 +24,9 @@ BUILD_TARGETS="${TARGETS}"
 bazel build "${BUILD_FLAGS}" "${BUILD_TARGETS}"
 
 IFS=' ' read -r -a targets <<< "${BUILD_TARGETS}"
-for TARGET in "${targets[@]}"; do
-  CD_PATH=${TARGET%:*}
+for CURR_TARGET in "${targets[@]}"; do
+  CD_PATH=${CURR_TARGET%:*}
   CD_PATH=${CD_PATH////}
-  BINARY_NAME=${TARGET#*:}
+  BINARY_NAME=${CURR_TARGET#*:}
   cp "bazel-bin/$CD_PATH/$BINARY_NAME" ./binaries
 done
