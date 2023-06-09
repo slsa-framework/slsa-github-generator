@@ -18,11 +18,14 @@ set -euo pipefail
 
 mkdir binaries
 
+# Transfer flags and targets to their respective arrays
 IFS=' ' read -r -a BUILD_FLAGS <<< "${FLAGS}"
 IFS=' ' read -r -a BUILD_TARGETS <<< "${TARGETS}"
 
+# Build with respect to entire arrays of flags and targets
 bazel build "${BUILD_FLAGS[@]}" "${BUILD_TARGETS[@]}"
 
+# Using target string, copy artifact to binaries dir
 for CURR_TARGET in "${BUILD_TARGETS[@]}"; do
   CD_PATH=${CURR_TARGET%:*}
   CD_PATH=${CD_PATH////}
