@@ -18,6 +18,8 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
+	"fmt"
 	"io"
 	"net/http"
 	"net/url"
@@ -26,8 +28,6 @@ import (
 	"time"
 
 	"github.com/coreos/go-oidc/v3/oidc"
-
-	"github.com/slsa-framework/slsa-github-generator/internal/errors"
 )
 
 var defaultActionsProviderURL = "https://token.actions.githubusercontent.com"
@@ -61,30 +61,22 @@ type OIDCToken struct {
 	Audience []string
 }
 
-// errURLError indicates the OIDC server URL is invalid.
-type errURLError struct {
-	errors.WrappableError
-}
+var (
+	// errURLError indicates the OIDC server URL is invalid.
+	errURLError = errors.New("url")
 
-// errRequestError indicates an error requesting the token from the issuer.
-type errRequestError struct {
-	errors.WrappableError
-}
+	// errRequestError indicates an error requesting the token from the issuer.
+	errRequestError = errors.New("http request")
 
-// errToken indicates an error in the format of the token.
-type errToken struct {
-	errors.WrappableError
-}
+	// errToken indicates an error in the format of the token.
+	errToken = errors.New("token")
 
-// errClaims indicates an error in the claims of the token.
-type errClaims struct {
-	errors.WrappableError
-}
+	// errClaims indicates an error in the claims of the token.
+	errClaims = errors.New("claims")
 
-// errVerify indicates an error in the token verification process.
-type errVerify struct {
-	errors.WrappableError
-}
+	// errVerify indicates an error in the token verification process.
+	errVerify = errors.New("verify")
+)
 
 // OIDCClient is a client for the GitHub OIDC provider.
 type OIDCClient struct {
@@ -104,9 +96,9 @@ func NewOIDCClient() (*OIDCClient, error) {
 	requestURL := os.Getenv(requestURLEnvKey)
 	parsedURL, err := url.ParseRequestURI(requestURL)
 	if err != nil {
-		return nil, errors.Errorf(
-			&errURLError{},
-			"invalid request URL %q: %w; does your workflow have `id-token: write` scope?",
+		return nil, fmt.Errorf(
+			"%w: invalid request URL %q: %w; does your workflow have `id-token: write` scope?",
+			errURLError,
 			requestURL, err,
 		)
 	}
@@ -144,23 +136,23 @@ func (c *OIDCClient) requestToken(ctx context.Context, audience []string) ([]byt
 	// Request the token.
 	req, err := http.NewRequest("GET", c.newRequestURL(audience), nil)
 	if err != nil {
-		return nil, errors.Errorf(&errRequestError{}, "creating request: %w", err)
+		return nil, fmt.Errorf("%w: creating request: %w", errRequestError, err)
 	}
 	req.Header.Add("Authorization", "bearer "+c.bearerToken)
 	req = req.WithContext(ctx)
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return nil, errors.Errorf(&errRequestError{}, "request: %w", err)
+		return nil, fmt.Errorf("%w: %w", errRequestError, err)
 	}
 	defer resp.Body.Close()
 
 	// Read the response.
 	b, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, errors.Errorf(&errRequestError{}, "reading response: %w", err)
+		return nil, fmt.Errorf("%w: reading response: %w", errRequestError, err)
 	}
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		return nil, errors.Errorf(&errRequestError{}, "response: %s: %s", resp.Status, string(b))
+		return nil, fmt.Errorf("%w: response: %s: %s", errRequestError, resp.Status, string(b))
 	}
 	return b, nil
 }
@@ -172,7 +164,7 @@ func (c *OIDCClient) decodePayload(b []byte) (string, error) {
 	}
 	decoder := json.NewDecoder(bytes.NewReader(b))
 	if err := decoder.Decode(&payload); err != nil {
-		return "", errors.Errorf(&errToken{}, "parsing JSON: %w", err)
+		return "", fmt.Errorf("%w: parsing JSON: %w", errToken, err)
 	}
 	return payload.Value, nil
 }
@@ -182,17 +174,17 @@ func (c *OIDCClient) verifyToken(ctx context.Context, audience []string, payload
 	// Verify the token.
 	verifier, err := c.verifierFunc(ctx)
 	if err != nil {
-		return nil, errors.Errorf(&errVerify{}, "creating verifier: %w", err)
+		return nil, fmt.Errorf("%w: creating verifier: %w", errVerify, err)
 	}
 
 	t, err := verifier.Verify(ctx, payload)
 	if err != nil {
-		return nil, errors.Errorf(&errVerify{}, "could not verify token: %w", err)
+		return nil, fmt.Errorf("%w: could not verify token: %w", errVerify, err)
 	}
 
 	// Verify the audience received is the one we requested.
 	if !compareStringSlice(audience, t.Audience) {
-		return nil, errors.Errorf(&errVerify{}, "audience not equal %q != %q", audience, t.Audience)
+		return nil, fmt.Errorf("%w: audience not equal %q != %q", errVerify, audience, t.Audience)
 	}
 
 	return t, nil
@@ -205,7 +197,7 @@ func (c *OIDCClient) decodeToken(token *oidc.IDToken) (*OIDCToken, error) {
 	t.Expiry = token.Expiry
 
 	if err := token.Claims(&t); err != nil {
-		return nil, errors.Errorf(&errToken{}, "getting claims: %w", err)
+		return nil, fmt.Errorf("%w: getting claims: %w", errToken, err)
 	}
 
 	return &t, nil
@@ -214,16 +206,16 @@ func (c *OIDCClient) decodeToken(token *oidc.IDToken) (*OIDCToken, error) {
 func (c *OIDCClient) verifyClaims(token *OIDCToken) error {
 	// Verify some of the fields we expect to populate the provenance.
 	if token.RepositoryID == "" {
-		return errors.Errorf(&errClaims{}, "repository ID is empty")
+		return fmt.Errorf("%w: repository ID is empty", errClaims)
 	}
 	if token.RepositoryOwnerID == "" {
-		return errors.Errorf(&errClaims{}, "repository owner ID is empty")
+		return fmt.Errorf("%w: repository owner ID is empty", errClaims)
 	}
 	if token.ActorID == "" {
-		return errors.Errorf(&errClaims{}, "actor ID is empty")
+		return fmt.Errorf("%w: actor ID is empty", errClaims)
 	}
 	if token.JobWorkflowRef == "" {
-		return errors.Errorf(&errClaims{}, "job workflow ref is empty")
+		return fmt.Errorf("%w: job workflow ref is empty", errClaims)
 	}
 	return nil
 }
