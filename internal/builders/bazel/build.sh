@@ -18,13 +18,19 @@ set -euo pipefail
 
 mkdir binaries
 
-#empty string and empty arr in absh 2 diff
-#test -z
+BUILD_FLAGS="${FLAGS}"
+BUILD_TARGETS="${TARGETS}"
 
-IFS=' ' read -r -a BUILD_FLAGS <<< "${FLAGS}"
-IFS=' ' read -r -a BUILD_TARGETS <<< "${TARGETS}"
+echo ${BUILD_FLAGS}
+echo ${BUILD_TARGETS}
 
-bazel build "${BUILD_FLAGS[@]}" "${BUILD_TARGETS[@]}"
+BUILD_FLAGS="${BUILD_FLAGS}"
+BUILD_TARGETS="${BUILD_TARGETS}"
+
+echo ${BUILD_FLAGS}
+echo ${BUILD_TARGETS}
+
+bazel build "${BUILD_FLAGS}" "${BUILD_TARGETS}"
 
 IFS=' ' read -r -a ARR_TARGETS <<< "${BUILD_TARGETS}"
 for CURR_TARGET in "${ARR_TARGETS[@]}"; do
