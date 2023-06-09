@@ -24,7 +24,7 @@ mkdir binaries
 IFS=' ' read -r -a BUILD_FLAGS <<< "${FLAGS}"
 IFS=' ' read -r -a BUILD_TARGETS <<< "${TARGETS}"
 
-bazel build ${BUILD_FLAGS[@]} ${BUILD_TARGETS[@]}
+bazel build "${BUILD_FLAGS[@]}" "${BUILD_TARGETS[@]}"
 
 IFS=' ' read -r -a ARR_TARGETS <<< "${BUILD_TARGETS}"
 for CURR_TARGET in "${ARR_TARGETS[@]}"; do
