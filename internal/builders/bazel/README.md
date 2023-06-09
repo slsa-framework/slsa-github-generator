@@ -56,7 +56,7 @@ artifact(s) and generate the provenance.
 
 ### Getting Started
 
-Let's assume you have a Bazel project includes a
+Let's assume you have a Bazel project which includes a
 [WORKSPACE file](https://bazel.build/reference/glossary#workspace-file)
 at the root of your repository as well as one or more
 [BUILD files](https://bazel.build/reference/glossary#build-file). Also included
