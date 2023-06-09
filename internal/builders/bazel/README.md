@@ -1,11 +1,11 @@
 # Generation of SLSA3+ provenance for Bazel builds
 
-This document explains how to generate SLSA provenance for Bazel packages.
+This document explains how to generate SLSA provenance for Bazel artifact(s).
 
 This can be done by adding a step to your Github Actions workflow to call a
 [reusable
 workflow](https://docs.github.com/en/actions/using-workflows/reusing-workflows)
-to build the package and generate SLSA provenance. We'll call this
+to build the artifact(s) and generate SLSA provenance. We'll call this
 workflow the "Bazel builder" from now on.
 
 ---
@@ -34,7 +34,7 @@ workflow the "Bazel builder" from now on.
 
 Using the Bazel builder will generate a non-forgeable attestation to the
 Bazel build artifacts produced using the identity of the GitHub workflow. This can be used to
-create a positive attestation to a package coming from your repository.
+create a positive attestation to an artifact coming from your repository.
 
 That means that once your users verify the artifact they have downloaded they can
 be sure that it was created by your repository's workflow and hasn't been
