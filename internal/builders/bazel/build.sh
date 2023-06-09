@@ -23,8 +23,8 @@ BUILD_TARGETS="${TARGETS}"
 
 bazel build "${BUILD_FLAGS}" "${BUILD_TARGETS}"
 
-IFS=' ' read -r -a targets <<< "${BUILD_TARGETS}"
-for CURR_TARGET in "${targets[@]}"; do
+IFS=' ' read -r -a ARR_TARGETS <<< "${BUILD_TARGETS}"
+for CURR_TARGET in "${ARR_TARGETS[@]}"; do
   CD_PATH=${CURR_TARGET%:*}
   CD_PATH=${CD_PATH////}
   BINARY_NAME=${CURR_TARGET#*:}
