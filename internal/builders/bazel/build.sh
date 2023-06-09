@@ -23,7 +23,6 @@ IFS=' ' read -r -a BUILD_TARGETS <<< "${TARGETS}"
 
 bazel build "${BUILD_FLAGS[@]}" "${BUILD_TARGETS[@]}"
 
-# IFS=' ' read -r -a ARR_TARGETS <<< "${BUILD_TARGETS}"
 for CURR_TARGET in "${BUILD_TARGETS[@]}"; do
   CD_PATH=${CURR_TARGET%:*}
   CD_PATH=${CD_PATH////}
