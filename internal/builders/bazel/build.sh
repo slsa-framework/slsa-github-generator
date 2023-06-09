@@ -18,8 +18,8 @@ set -euo pipefail
 
 mkdir binaries
 
-BUILD_FLAGS=($FLAGS)
-BUILD_TARGETS=($TARGETS)
+IFS=' ' read -r -a BUILD_FLAGS <<< "${FLAGS}"
+IFS=' ' read -r -a BUILD_TARGETS <<< "${TARGETS}"
 
 bazel build "${BUILD_FLAGS[@]}" "${BUILD_TARGETS[@]}"
 
