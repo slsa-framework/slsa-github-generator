@@ -40,11 +40,6 @@ on:
           When run on a `pull_request` trigger, attestations are not signed and have an ".intoto" extension.
           When run on other triggers, attestations are signed and have an "intoto.sigstore" extension.
         value: ${{ jobs.slsa-run.outputs.attestations-download-name }}
-      
-      # This contains all the ouputs of the callback Action, formatted as a map.
-#       build-artifacts-outputs:
-#         description: "The outputs from the build-artitacts Action, unchanged."
-#         value: ${{ jobs.slsa-run.outputs.outputs }}
   
 jobs:
   slsa-setup:
