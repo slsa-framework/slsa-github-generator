@@ -71,7 +71,7 @@ will assume you have an existing Github Actions workflow to build your project.
 This assumes that the files above are in the root directory of your
 repository.
 
-We also define the targets to be built as 'target1' and 'target2', and
+We also define the targets to be built as 'fib' and 'hello', and
 we define the flag of the build to be '--strip=always'
 
 The following reusable workflow call will build the targets and upload the artifacts into a .zip and
@@ -86,9 +86,9 @@ jobs:
       contents: read # For repo checkout.
       actions: read # For getting workflow run info.
     if: startsWith(github.ref, 'refs/tags/')
-    uses: slsa-framework/slsa-github-generator/.github/workflows/builder_bazel_slsa3.yml@v1.6.0
+    uses: slsa-framework/slsa-github-generator/.github/workflows/builder_bazel_slsa3.yml@v1.7.0
     with:
-      targets: "//src:target1 //src:target2"
+      targets: "//src:fib //src:hello"
       flags: "--strip=always"
 ```
 
@@ -172,22 +172,20 @@ The Bazel builder produces the following outputs:
 
 
 Provenance is generated as an [in-toto](https://in-toto.io/) statement with a
-SLSA v1 predicate.
+SLSA v1.0 predicate.
 
 | Name           | Value                                                          | Description                                                                                    |
 | -------------- | -------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
 | `subject.name` | Artifact Name | The subject identifies the artifact built by the builder. The provenance attests the build process for the artifact listed.                     |
 
-The project generates SLSA v1 provenance predicate with the following values.
-
-NEED TO FIX BELOW FOR V1
-
+The project generates SLSA v1.0 provenance predicate with the following values.
 
 | Name                         | Value                                                                                                                  | Description                                                                                                                                                                                                            |
 | ---------------------------- | ---------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `builder.id`                 | `https://github.com/slsa-framework/slsa-github-generator/.github/workflows/builder_nodejs_slsa3.yml@refs/tags/v1.5.0"` | Identifies the Bazel builder                                                                                                                                                                                         |
-| `buildType`                  | `"https://github.com/slsa-framework/slsa-github-generator/delegator-generic@v0"`                                       | Identifies a the GitHub Actions build.                                                                                                                                                                                 |
-| `metadata.buildInvocationID` | `"[run_id]-[run_attempt]"`                                                                                             | The GitHub Actions [`run_id`](https://docs.github.com/en/actions/learn-github-actions/contexts#github-context) does not update when a workflow is re-run. Run attempt is added to make the build invocation ID unique. |
+| `runDetails.builder.id`      | `https://github.com/slsa-framework/slsa-github-generator/.github/workflows/builder_bazel_slsa3.yml@refs/tags/v1.7.0"`  | Identifies the Bazel builder                                                                                                                                                                                           |
+| `buildDefinition.buildType`  | `"https://github.com/slsa-framework/slsa-github-generator/delegator-generic@v0"`                                       | Identifies a the GitHub Actions build.                                                                                                                                                                                 |
+| `runDetails.metadata.invocationID` | `"[run_id]-[run_attempt]"`                                                                                       | The GitHub Actions [`run_id`](https://docs.github.com/en/actions/learn-github-actions/contexts#github-context) does not update when a workflow is re-run. Run attempt is added to make the build invocation ID unique. |
+| `externalParameters.inputs   | User Inputted Values                                                                                                   | Identifies the inputs to the Bazel Builder that were passed in                                                                                                                                                         |
 
 ### Provenance Example
 
@@ -254,6 +252,3 @@ The following is an example of the generated provenance.
   }
 }
 ```
-
-## Verification
-TODO
