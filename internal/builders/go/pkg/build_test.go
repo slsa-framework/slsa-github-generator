@@ -26,36 +26,36 @@ import (
 )
 
 func errEnvVariableNameEmptyFunc(t *testing.T, got error) {
-	want := &errEnvVariableNameEmpty{}
-	if !errors.As(got, &want) {
+	want := errEnvVariableNameEmpty
+	if !errors.Is(got, want) {
 		t.Fatalf("unexpected error: %v", cmp.Diff(got, want, cmpopts.EquateErrors()))
 	}
 }
 
 func errUnsupportedArgumentsFunc(t *testing.T, got error) {
-	want := &errUnsupportedArguments{}
-	if !errors.As(got, &want) {
+	want := errUnsupportedArguments
+	if !errors.Is(got, want) {
 		t.Fatalf("unexpected error: %v", cmp.Diff(got, want, cmpopts.EquateErrors()))
 	}
 }
 
 func errInvalidEnvArgumentFunc(t *testing.T, got error) {
-	want := &errInvalidEnvArgument{}
-	if !errors.As(got, &want) {
+	want := errInvalidEnvArgument
+	if !errors.Is(got, want) {
 		t.Fatalf("unexpected error: %v", cmp.Diff(got, want, cmpopts.EquateErrors()))
 	}
 }
 
 func errEnvVariableNameNotAllowedFunc(t *testing.T, got error) {
-	want := &errEnvVariableNameNotAllowed{}
-	if !errors.As(got, &want) {
+	want := errEnvVariableNameNotAllowed
+	if !errors.Is(got, want) {
 		t.Fatalf("unexpected error: %v", cmp.Diff(got, want, cmpopts.EquateErrors()))
 	}
 }
 
 func errInvalidFilenameFunc(t *testing.T, got error) {
-	want := &errInvalidFilename{}
-	if !errors.As(got, &want) {
+	want := errInvalidFilename
+	if !errors.Is(got, want) {
 		t.Fatalf("unexpected error: %v", cmp.Diff(got, want, cmpopts.EquateErrors()))
 	}
 }
