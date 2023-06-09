@@ -23,22 +23,22 @@ import (
 )
 
 func errInvalidDirectoryFunc(t *testing.T, got error) {
-	want := &ErrInvalidDirectory{}
-	if !errors.As(got, &want) {
+	want := ErrInvalidDirectory
+	if !errors.Is(got, want) {
 		t.Fatalf("unexpected error: %v", cmp.Diff(got, want, cmpopts.EquateErrors()))
 	}
 }
 
 func errUnsupportedVersionFunc(t *testing.T, got error) {
-	want := &ErrUnsupportedVersion{}
-	if !errors.As(got, &want) {
+	want := ErrUnsupportedVersion
+	if !errors.Is(got, want) {
 		t.Fatalf("unexpected error: %v", cmp.Diff(got, want, cmpopts.EquateErrors()))
 	}
 }
 
 func errInvalidEnvironmentVariableFunc(t *testing.T, got error) {
-	want := &ErrInvalidEnvironmentVariable{}
-	if !errors.As(got, &want) {
+	want := ErrInvalidEnvironmentVariable
+	if !errors.Is(got, want) {
 		t.Fatalf("unexpected error: %v", cmp.Diff(got, want, cmpopts.EquateErrors()))
 	}
 }

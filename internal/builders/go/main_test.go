@@ -51,22 +51,22 @@ func checkWorkingDir(t *testing.T, wd, expected string) {
 }
 
 func errInvalidDirectoryFunc(t *testing.T, got error) {
-	want := &pkg.ErrInvalidDirectory{}
-	if !errors.As(got, &want) {
+	want := pkg.ErrInvalidDirectory
+	if !errors.Is(got, want) {
 		t.Fatalf("unexpected error: %v", cmp.Diff(got, want, cmpopts.EquateErrors()))
 	}
 }
 
 func errUnsupportedVersionFunc(t *testing.T, got error) {
-	want := &pkg.ErrUnsupportedVersion{}
-	if !errors.As(got, &want) {
+	want := pkg.ErrUnsupportedVersion
+	if !errors.Is(got, want) {
 		t.Fatalf("unexpected error: %v", cmp.Diff(got, want, cmpopts.EquateErrors()))
 	}
 }
 
 func errInvalidEnvironmentVariableFunc(t *testing.T, got error) {
-	want := &pkg.ErrInvalidEnvironmentVariable{}
-	if !errors.As(got, &want) {
+	want := pkg.ErrInvalidEnvironmentVariable
+	if !errors.Is(got, want) {
 		t.Fatalf("unexpected error: %v", cmp.Diff(got, want, cmpopts.EquateErrors()))
 	}
 }
