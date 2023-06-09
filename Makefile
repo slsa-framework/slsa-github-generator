@@ -203,7 +203,7 @@ markdownlint: node_modules/.installed ## Runs the markdownlint linter.
 			done <<< "$$(./node_modules/.bin/markdownlint --dot --json . 2>&1 | jq -c '.[]')"; \
 			exit "$${exit_code}"; \
 		else \
-			npm run lint; \
+			npm run markdownlint; \
 		fi
 
 .PHONY: golangci-lint
