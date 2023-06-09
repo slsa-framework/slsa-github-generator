@@ -31,6 +31,7 @@ on:
         required: false
         type: string
         default: ""
+
     outputs:
       attestations-download-name:
         description: >
@@ -38,7 +39,7 @@ on:
 
           When run on a `pull_request` trigger, attestations are not signed and have an ".intoto" extension.
           When run on other triggers, attestations are signed and have an "intoto.sigstore" extension.
-        value: ${{ jobs.slsa-run.outputs.attestations-download-name }} 
+        value: ${{ jobs.slsa-run.outputs.attestations-download-name }}
 jobs:
   slsa-setup:
     permissions:

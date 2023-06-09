@@ -72,7 +72,7 @@ runs:
         path: "./binaries" # path-to-artifact(s)
         if-no-files-found: error
         retention-days: 5
-  
+
     - name: Echo statement
       id: confirm
       shell: bash
