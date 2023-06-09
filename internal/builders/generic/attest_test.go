@@ -398,8 +398,7 @@ func Test_attestCmd_invalid_path(t *testing.T) {
 		if err != nil {
 			got, want := err, utils.ErrInvalidPath
 			if !errors.Is(got, want) {
-				t.Fatalf("expected %v but got %v", utils.ErrInvalidPath, err)
-				t.Fatalf("expected error, got: %v, want: %v", got, want)
+				t.Fatalf("unexpected error, got: %v, want: %v", got, want)
 			}
 			// Check should exit the program so we skip the rest of the test if we got the expected error.
 			t.SkipNow()

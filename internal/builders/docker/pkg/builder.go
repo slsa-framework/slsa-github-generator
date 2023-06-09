@@ -341,7 +341,9 @@ func (c *GitClient) verifyRefAndCommit() (bool, error) {
 		lastCommitID := strings.TrimSpace(string(lastCommitIDBytes))
 
 		if lastCommitID != c.sourceDigest.Value {
-			return false, fmt.Errorf("%w: the repo is already checked out at a different commit (%q)", errGitCommitMismatch, lastCommitID)
+			return false, fmt.Errorf(
+				"%w: the repo is already checked out at a different commit (%q)",
+				errGitCommitMismatch, lastCommitID)
 		}
 	}
 
