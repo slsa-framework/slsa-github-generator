@@ -31,7 +31,7 @@ do
           
     echo -n "
         {
-          \"name\": \"${bn}.build.slsa\",
+          \"name\": \"${bn}.intoto\",
           \"subjects\": [
             { \"name\": \"${bn}\",
               \"digest\": { \"sha256\": \"${hash}\"  }
