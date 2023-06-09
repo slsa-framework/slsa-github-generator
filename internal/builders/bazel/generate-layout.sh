@@ -21,14 +21,14 @@ echo -e -n "{\n  \"version\": 1,\n  \"attestations\": [" >> "$SLSA_OUTPUTS_ARTIF
 
 num_binary_files=$(find ./binaries -type f | wc -l)
 counter=1
-        
+
 # Add one attestation per binary:
 find ./binaries -type f -print0 | while read -r -d $'\0' fname
 do
-          
+
     bn=$(basename -- "$fname")
     hash=$(sha256sum "$fname" | awk '{print $1}')
-          
+
     echo -n "
         {
           \"name\": \"${bn}.intoto\",
@@ -38,15 +38,15 @@ do
             }
           ]
         }" >> "$SLSA_OUTPUTS_ARTIFACTS_FILE"
-          
+
     # Add comma between attestations and not after the last
     if [[ "$counter" != "$num_binary_files" ]]; then
       echo -n "," >> "$SLSA_OUTPUTS_ARTIFACTS_FILE"
     fi
-         
+
     counter="$((counter +1))"
 done
-        
+
 # Close "attestations" and "version":
 echo -e "\n  ]" >> "$SLSA_OUTPUTS_ARTIFACTS_FILE"
 echo "}" >> "$SLSA_OUTPUTS_ARTIFACTS_FILE"

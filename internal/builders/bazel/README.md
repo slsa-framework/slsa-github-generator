@@ -169,8 +169,6 @@ The Bazel builder produces the following outputs:
 
 ### Provenance Format
 
-
-
 Provenance is generated as an [in-toto](https://in-toto.io/) statement with a
 SLSA v1.0 predicate.
 
