@@ -18,7 +18,7 @@ set -euo pipefail
 
 mkdir binaries
 
-bazel build ${FLAGS} ${TARGETS}
+bazel build ""${FLAGS}"" ""${TARGETS}""
 
 IFS=' ' read -r -a targets <<< "${TARGETS}"
 for TARGET in "${targets[@]}"; do
