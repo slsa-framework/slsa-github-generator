@@ -43,8 +43,14 @@ unit-test: go-test ts-test ## Runs all unit tests.
 
 .PHONY: go-test
 go-test: ## Run Go unit tests.
-	go mod vendor
-	go test -mod=vendor -v ./...
+	@ # NOTE: go test builds packages even if there are no tests.
+	@set -e;\
+		go mod vendor; \
+		extraargs=""; \
+		if [ "$(OUTPUT_FORMAT)" == "github" ]; then \
+			extraargs="-v"; \
+		fi; \
+		go test -mod=vendor $$extraeargs ./...
 
 .PHONY: ts-test
 ts-test: ## Run TypeScript tests.
@@ -197,7 +203,7 @@ markdownlint: node_modules/.installed ## Runs the markdownlint linter.
 			done <<< "$$(./node_modules/.bin/markdownlint --dot --json . 2>&1 | jq -c '.[]')"; \
 			exit "$${exit_code}"; \
 		else \
-			npm run lint; \
+			npm run markdownlint; \
 		fi
 
 .PHONY: golangci-lint
