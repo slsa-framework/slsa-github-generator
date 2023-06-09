@@ -122,6 +122,9 @@ func CreateNewFileUnderDirectory(path, dir string, flag int) (io.Writer, error) 
 	// Ensure we never overwrite an existing file.
 	fp, err := os.OpenFile(filepath.Clean(fullPath), flag|os.O_CREATE|os.O_EXCL, 0o600)
 	if err != nil {
+		if errors.Is(err, os.ErrPermission) || errors.Is(err, os.ErrExist) || errors.Is(err, os.ErrNotExist) {
+			return nil, fmt.Errorf("%w: os.OpenFile(): %w", ErrInvalidPath, err)
+		}
 		return nil, fmt.Errorf("%w: os.OpenFile(): %w", ErrInternal, err)
 	}
 
