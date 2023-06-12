@@ -33,7 +33,7 @@ on:
         default: ""
 
     outputs:
-      attestations-download-name:
+      provenance-download-name:
         description: >
           Name of the artifact to download all the attestations.
 
