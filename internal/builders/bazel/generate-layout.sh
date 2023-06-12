@@ -25,7 +25,6 @@ counter=1
 # Add one attestation per binary:
 find ./binaries -type f -print0 | while read -r -d $'\0' fname
 do
-
     bn=$(basename -- "$fname")
     hash=$(sha256sum "$fname" | awk '{print $1}')
 
