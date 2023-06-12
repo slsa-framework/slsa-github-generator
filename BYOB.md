@@ -27,9 +27,9 @@
 - [Provenance Example](#provenance-example)
 - [Hardening](#hardening)
   - [Least Privileged TCA](#least-privileged-tca)
-  - [Low-Permission SRW](#low-permission-srw)
-  - [Update TCA](#update-tca)
-  - [Update TRW](#update-trw)
+    - [Low-Permission SRW](#low-permission-srw)
+    - [Update TCA](#update-tca)
+    - [Update TRW](#update-trw)
   - [Best SDLC Practices](#best-sdlc-practices)
 
 <!-- tocstop -->
