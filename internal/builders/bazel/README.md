@@ -42,8 +42,7 @@ tampered with.
 
 ## Development status
 
-The Bazel builder is currently in beta. The API could change while approaching
-a Generally Available (GA) release.
+The Bazel builder is currently in development.
 
 Please try it out and
 [create an issue](https://github.com/slsa-framework/slsa-github-generator/issues/new)
