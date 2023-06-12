@@ -17,6 +17,7 @@ package main
 import (
 	"bytes"
 	"encoding/base64"
+	"errors"
 	"os"
 	"path/filepath"
 	"testing"
@@ -26,7 +27,6 @@ import (
 	intoto "github.com/in-toto/in-toto-golang/in_toto"
 	slsacommon "github.com/in-toto/in-toto-golang/in_toto/slsa_provenance/common"
 
-	"github.com/slsa-framework/slsa-github-generator/internal/errors"
 	"github.com/slsa-framework/slsa-github-generator/internal/testutil"
 	"github.com/slsa-framework/slsa-github-generator/internal/utils"
 	"github.com/slsa-framework/slsa-github-generator/slsa"
@@ -39,29 +39,29 @@ const (
 // TestParseSubjects tests the parseSubjects function.
 func TestParseSubjects(t *testing.T) {
 	errNoNameFunc := func(got error) {
-		want := &errNoName{}
-		if !errors.As(got, &want) {
+		want := errSubjectName
+		if !errors.Is(got, want) {
 			t.Fatalf("unexpected error: %v", cmp.Diff(got, want, cmpopts.EquateErrors()))
 		}
 	}
 
 	errShaFunc := func(got error) {
-		want := &errSha{}
-		if !errors.As(got, &want) {
+		want := errSha
+		if !errors.Is(got, want) {
 			t.Fatalf("unexpected error: %v", cmp.Diff(got, want, cmpopts.EquateErrors()))
 		}
 	}
 
 	errDuplicateSubjectFunc := func(got error) {
-		want := &errDuplicateSubject{}
-		if !errors.As(got, &want) {
+		want := errDuplicateSubject
+		if !errors.Is(got, want) {
 			t.Fatalf("unexpected error: %v", cmp.Diff(got, want, cmpopts.EquateErrors()))
 		}
 	}
 
 	errBase64Func := func(got error) {
-		want := &errBase64{}
-		if !errors.As(got, &want) {
+		want := errBase64
+		if !errors.Is(got, want) {
 			t.Fatalf("unexpected error: %v", cmp.Diff(got, want, cmpopts.EquateErrors()))
 		}
 	}
@@ -200,8 +200,8 @@ func TestParseSubjects(t *testing.T) {
 					tc.err(err)
 				}
 
-				if want, got := tc.expected, s; !cmp.Equal(want, got) {
-					t.Errorf("unexpected subjects, want: %#v, got: %#v", want, got)
+				if got, want := s, tc.expected; !cmp.Equal(want, got) {
+					t.Errorf("unexpected subjects, got: %#v, want: %#v", got, want)
 				}
 			}
 		})
@@ -348,9 +348,9 @@ func Test_attestCmd_invalid_extension(t *testing.T) {
 	// A custom check function that checks the error type is the expected error type.
 	check := func(err error) {
 		if err != nil {
-			errInvalidPath := &utils.ErrInvalidPath{}
-			if !errors.As(err, &errInvalidPath) {
-				t.Fatalf("expected %v but got %v", &utils.ErrInvalidPath{}, err)
+			got, want := err, utils.ErrInvalidPath
+			if !errors.Is(got, want) {
+				t.Fatalf("expected error, got: %v, want: %v", got, want)
 			}
 			// Check should exit the program so we skip the rest of the test if we got the expected error.
 			t.SkipNow()
@@ -396,9 +396,9 @@ func Test_attestCmd_invalid_path(t *testing.T) {
 	// A custom check function that checks the error type is the expected error type.
 	check := func(err error) {
 		if err != nil {
-			errInvalidPath := &utils.ErrInvalidPath{}
-			if !errors.As(err, &errInvalidPath) {
-				t.Fatalf("expected %v but got %v", &utils.ErrInvalidPath{}, err)
+			got, want := err, utils.ErrInvalidPath
+			if !errors.Is(got, want) {
+				t.Fatalf("unexpected error, got: %v, want: %v", got, want)
 			}
 			// Check should exit the program so we skip the rest of the test if we got the expected error.
 			t.SkipNow()

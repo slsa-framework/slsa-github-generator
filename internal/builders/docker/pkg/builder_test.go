@@ -15,6 +15,7 @@
 package pkg
 
 import (
+	"errors"
 	"os"
 	"path/filepath"
 	"strings"
@@ -23,8 +24,6 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	intoto "github.com/in-toto/in-toto-golang/in_toto"
-
-	"github.com/slsa-framework/slsa-github-generator/internal/errors"
 )
 
 func Test_CreateBuildDefinition(t *testing.T) {
@@ -74,9 +73,9 @@ func Test_GitClient_verifyOrFetchRepo(t *testing.T) {
 	}
 
 	// We expect it to fail at verifyCommit
-	want := &errGitCommitMismatch{}
-	err = gc.verifyOrFetchRepo()
-	checkError(t, err, want)
+	if got, want := gc.verifyOrFetchRepo(), errGitCommitMismatch; !errors.Is(got, want) {
+		t.Errorf("unexpected error: %v", cmp.Diff(got, want, cmpopts.EquateErrors()))
+	}
 }
 
 func Test_GitClient_fetchSourcesFromGitRepo(t *testing.T) {
@@ -102,9 +101,9 @@ func Test_GitClient_fetchSourcesFromGitRepo(t *testing.T) {
 	}
 
 	// We expect the checkout to fail
-	want := &errGitCheckout{}
-	err = gc.fetchSourcesFromGitRepo()
-	checkError(t, err, want)
+	if got, want := gc.fetchSourcesFromGitRepo(), errGitCheckout; !errors.Is(got, want) {
+		t.Errorf("unexpected error: %v", cmp.Diff(got, want, cmpopts.EquateErrors()))
+	}
 
 	// Cleanup
 	gc.cleanupAllFiles()
@@ -361,10 +360,4 @@ func loadProvenance(t *testing.T) ProvenanceStatementSLSA1 {
 		t.Fatalf("Parsing the provenance file: %v", err)
 	}
 	return *provenance
-}
-
-func checkError[T error](t *testing.T, got error, want T) {
-	if !errors.As(got, &want) {
-		t.Errorf("unexpected error: %v", cmp.Diff(got, want, cmpopts.EquateErrors()))
-	}
 }
