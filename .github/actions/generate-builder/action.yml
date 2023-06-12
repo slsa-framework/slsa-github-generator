@@ -73,6 +73,7 @@ runs:
       with:
         error_message: "Repository is private. The workflow has halted in order to keep the repository name from being exposed in the public transparency log. Set 'private-repository' to override."
         override: ${{ inputs.allow-private-repository }}
+        token: ${{ inputs.token }}
 
     - name: Set up Go environment
       uses: actions/setup-go@4d34df0c2316fe8122ab82dc22947d607c0c91f9 # v4.0.0
