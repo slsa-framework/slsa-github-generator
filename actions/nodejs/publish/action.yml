@@ -97,12 +97,12 @@ runs:
         set -euo pipefail
 
         # FIXME: use bash arrays for flags.
-        publish_flags="--provenance-file ${ATTESTATION_PATH}"
+        publish_flags=("--provenance-file=${ATTESTATION_PATH}")
         if [[ "${ACCESS}" != "" ]]; then
-          publish_flags="${publish_flags} --access=${ACCESS}"
+          publish_flags+=("--access=${ACCESS}")
         fi
         if [[ "${DIST_TAG}" != "" ]]; then
-          publish_flags="${publish_flags} --tag=${DIST_TAG}"
+          publish_flags=("--tag=${DIST_TAG}")
         fi
 
         # NOTE: Use the absolute path to the tarball because npm tries to check
@@ -110,5 +110,4 @@ runs:
         # could be a "<owner>/<repo-name>" resulting in git errors.
         package_abs_path=$(readlink -m "${PACKAGE_PATH}")
 
-        # NOTE: We don't quote $publish_flags because we are using word splitting to add the flags.
-        npm publish --loglevel verbose "${package_abs_path}" ${publish_flags}
+        npm publish --loglevel verbose "${package_abs_path}" "${publish_flags[@]}"
