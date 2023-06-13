@@ -23,7 +23,11 @@ on:
         type: boolean
         default: false
       targets:
-        description: "Artifacts to build"
+        description: >
+          Artifacts to build with Bazel. In the form of //src/path:target
+
+          Artifacts are space seperated. An example input looks like the following:
+          "//src/path1:target1 //src/path2:target2"
         required: true
         type: string
       flags:
