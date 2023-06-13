@@ -96,6 +96,10 @@ runs:
       run: |
         set -euo pipefail
 
+        # Install npm 9.7.1 which includes support for --provenance-file.
+        npm install -g npm@9.7.1
+
+        # Print the npm version.
         npm version
 
         # FIXME: use bash arrays for flags.
