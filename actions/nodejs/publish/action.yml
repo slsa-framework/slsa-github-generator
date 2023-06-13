@@ -96,6 +96,8 @@ runs:
       run: |
         set -euo pipefail
 
+        npm version
+
         # FIXME: use bash arrays for flags.
         publish_flags=("--provenance-file=${ATTESTATION_PATH}")
         if [[ "${ACCESS}" != "" ]]; then
