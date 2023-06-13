@@ -118,7 +118,7 @@ One key difference between the Action and reusable workflow is isolation. The SR
 
 ### SRW Setup
 
-To initialize the SRW framework, the TRW must invoke a SLSA Setup Action (SSA). These Actions are declared under the [SLSA repo's actions/delegator/setup-*](https://github.com/slsa-framework/slsa-github-generator/blob/v0.0.1/actions/delegator). For our example, we will use the [setup-generic Action](https://github.com/slsa-framework/slsa-github-generator/blob/v0.0.1/actions/delegator/setup-generic). The [relevant code](https://github.com/laurentsimon/byob-doc/blob/main/.github/workflows/builder_example_slsa3.yml#L91-L107) calls the SSA as follows:
+To initialize the SRW framework, the TRW must invoke the [setup-generic](https://github.com/slsa-framework/slsa-github-generator/blob/v0.0.1/actions/delegator/setup-generic). The [relevant code](https://github.com/laurentsimon/byob-doc/blob/main/.github/workflows/builder_example_slsa3.yml#L91-L107) calls the SSA as follows:
 
 ```yaml
 uses: slsa-framework/slsa-github-generator/actions/delegator/setup-generic@main
