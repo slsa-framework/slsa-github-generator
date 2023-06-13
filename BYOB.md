@@ -273,5 +273,5 @@ It is important you follow best development practices for your code, including y
 
 - Harden your CI, e.g., set your [top-level workflow permissions](https://docs.github.com/en/actions/using-jobs/assigning-permissions-to-jobs#example-assigning-permissions-to-github_token) to `read-only`.
 - Pin your depenencies by hash, to avoid dependency confusion attacks and speed up incidence response.
-- If you download binaries, verify their SLSA provenance before running them.
+- If you download binaries, verify their SLSA provenance before running them. Use the [`installer`](https://github.com/slsa-framework/slsa-verifier/tree/main/actions/installer) action to install and use `slsa-verifier`.
 - Install or use a tool like [OSSF Scorecard](https://github.com/ossf/scorecard) to verify you're comprehensively looking at your SDLC.
