@@ -239,7 +239,7 @@ In the example of [Section: Integration Steps](#integration-steps), we assumed t
 
 - `contents: write` token permissions: to upload GitHub assets to GitHub releases. This also grants the Action the ability to push code to the PW repository.
 - `packages: write`: to upload a package on GitHub registry.
-- passwords: to log in a registry to publish a package.
+- `secrets`: used to log into a registry to publish a package
 
 Building an artifact or a package includes downloading dependencies. Every once in a while, dependencies built into a final package may turn out to be malicious. In these rare cases, the PW maintainers and its downstream users will start an incidence response to determine what systems may have been compromised by a rogue dependency. In certain ecosystems like npm or python, depenencies _may_ run arbitrary code as part of the build process, which means they have access to sensitive passwords and the permissions granted to the TCA. To reduce the consequences of a rogue dependency, we recommend following the principle of least privilege, and only give the minimal permissions to the TCA. Let's see how to update our initial integration to do that.
 
