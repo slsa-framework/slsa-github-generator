@@ -271,7 +271,7 @@ Now we need to download the artifact and publish it from the TRW. Do do that, fo
 
 It is important you follow best development practices for your code, including your TRW, TCA and existing Action. In particular:
 
-- Harden your CI, e.g., declare your workflow permissions to `read-only`.
+- Harden your CI, e.g., set your [top-level workflow permissions](https://docs.github.com/en/actions/using-jobs/assigning-permissions-to-jobs#example-assigning-permissions-to-github_token) to `read-only`.
 - Pin your depenencies by hash, to avoid dependency confusion attacks and speed up incidence response.
 - If you download binaries, verify their SLSA provenance before running them.
 - Install or use a tool like [OSSF Scorecard](https://github.com/ossf/scorecard) to verify you're comprehensively looking at your SDLC.
