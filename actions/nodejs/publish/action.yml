@@ -104,7 +104,7 @@ runs:
           publish_flags+=("--access=${ACCESS}")
         fi
         if [[ "${DIST_TAG}" != "" ]]; then
-          publish_flags=("--tag=${DIST_TAG}")
+          publish_flags+=("--tag=${DIST_TAG}")
         fi
 
         # NOTE: Use the absolute path to the tarball because npm tries to check
