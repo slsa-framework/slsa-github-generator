@@ -70,7 +70,7 @@ digest=$(echo "${integrity_digest}" | cut -d'-' -f2- | base64 -d | od -A n -v -t
 
 # NOTE: the name of the attestation should be configurable.
 filename=$(echo "${PACK_JSON}" | jq -r '.[0].filename')
-attestation_name="${filename%.*}.intoto"
+attestation_name="${filename%.*}"
 cat <<EOF | jq | tee "$SLSA_OUTPUTS_ARTIFACTS_FILE"
 {
   "version": 1,
