@@ -237,7 +237,7 @@ If you've made it thus far, congratulations! You have built a SLSA3 compliant bu
 
 In the example of [Section: Integration Steps](#integration-steps), we assumed that the existing Action released assets on GitHub. This is a common feature across build / release Actions. Depending on the use case, this requires the Action to have access to:
 
-- `contents: write` token permissions: to upload GitHub assets to GitHub releases. This also grants the Action the ability to push code to the PW repository.
+- `contents: write`: token permissions: to upload GitHub assets to GitHub releases. This also grants the Action the ability to push code to the PW repository.
 - `packages: write`: to upload a package on GitHub registry.
 - `secrets`: used to log into a registry to publish a package
 
