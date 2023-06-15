@@ -26,6 +26,14 @@ inputs:
   node-auth-token:
     description: "The npm registry auth token used to publish the package."
     required: true
+  node-version:
+    description: "Version Spec of the version to use. Examples: 12.x, 10.15.1, >=10.15.0."
+    required: false
+    type: string
+  node-version-file:
+    description: "File containing the version Spec of the version to use.  Examples: .nvmrc, .node-version, .tool-versions."
+    required: false
+    type: string
   package-name:
     description: "The file name for the package tarball in the artifact."
     required: true
@@ -47,17 +55,17 @@ inputs:
 runs:
   using: "composite"
   steps:
-    # TODO(#1897): Use upstream version of npm
-    - name: Setup npm
-      id: setup-npm
-      uses: slsa-framework/slsa-github-generator/actions/nodejs/setup-npm@main
+    - name: Setup Node
+      uses: actions/setup-node@64ed1c7eab4cce3362f8c340dee64e5eaeef8f7c # v3.6.0
+      with:
+        node-version: ${{ inputs.node-version }}
+        node-version-file: ${{ inputs.node-version-file }}
 
     - name: Create temp dir
       id: temp-dir
       shell: bash
       run: |
         set -euo pipefail
-
         temp_dir=$(mktemp -d)
         echo "path=${temp_dir}" >>"${GITHUB_OUTPUT}"
 
@@ -80,7 +88,6 @@ runs:
       id: publish
       shell: bash
       env:
-        NPM_PATH: ${{ steps.setup-npm.outputs.npm-path }}
         ACCESS: ${{ inputs.access }}
         PACKAGE_PATH: "${{ steps.temp-dir.outputs.path }}/${{ inputs.package-name }}"
         ATTESTATION_PATH: "${{ steps.temp-dir.outputs.path }}/${{ inputs.provenance-download-name }}/${{ inputs.provenance-name }}"
@@ -89,12 +96,18 @@ runs:
       run: |
         set -euo pipefail
 
-        publish_flags="--provenance ${ATTESTATION_PATH}"
+        # Install npm 9.7.1 which includes support for --provenance-file.
+        npm install -g npm@9.7.1
+
+        # Print the npm version.
+        npm version
+
+        publish_flags=("--provenance-file=${ATTESTATION_PATH}")
         if [[ "${ACCESS}" != "" ]]; then
-          publish_flags="${publish_flags} --access=${ACCESS}"
+          publish_flags+=("--access=${ACCESS}")
         fi
         if [[ "${DIST_TAG}" != "" ]]; then
-          publish_flags="${publish_flags} --tag=${DIST_TAG}"
+          publish_flags+=("--tag=${DIST_TAG}")
         fi
 
         # NOTE: Use the absolute path to the tarball because npm tries to check
@@ -102,7 +115,4 @@ runs:
         # could be a "<owner>/<repo-name>" resulting in git errors.
         package_abs_path=$(readlink -m "${PACKAGE_PATH}")
 
-        # Run npm publish using npm fork. We are temporarily using a fork so
-        # that we can specify the provenance bundle.
-        # NOTE: We don't quote $publish_flags because we are using word splitting to add the flags.
-        "${NPM_PATH}/npm" publish --loglevel verbose "${package_abs_path}" ${publish_flags}
+        npm publish --loglevel verbose "${package_abs_path}" "${publish_flags[@]}"
