@@ -63,7 +63,7 @@ runs:
     - name: Generate random 16-byte value (32-char hex encoded)
       id: rng
       uses: slsa-framework/slsa-github-generator/.github/actions/rng@main
-      
+
     # TODO(#2276): Use secure upload folder Action
     - name: Generate Artifacts
       id: generate-artifacts
