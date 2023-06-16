@@ -61,7 +61,9 @@ jobs:
           slsa-rekor-log-public: ${{ inputs.rekor-log-public }}
           slsa-runner-label: "ubuntu-latest"
           slsa-build-action-path: "./internal/builders/bazel"
-          slsa-workflow-inputs: ${{ toJson(inputs) }}
+          slsa-workflow-inputs: ${{ toJson(inputs) }}'
+          slsa-workflow-masked-inputs: username
+
 
   slsa-run:
     needs: [slsa-setup]
