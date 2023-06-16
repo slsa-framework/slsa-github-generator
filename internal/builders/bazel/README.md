@@ -91,7 +91,9 @@ jobs:
       flags: "--strip=always"
 ```
 
-The `targets` are a set of space separated build targets to be built.
+The `targets` are a set of space separated build targets to be built. The targets are assume to
+be referenced from the root of the directory. Because of this the each target inputted should be referenced
+as `//path/from/root/to/target:your_target`. 
 
 Once the targets are built, the Bazel builder creates a folder for the artifacts
 and another for the provenance attestations which are uploaded as artifacts to the workflow run.
