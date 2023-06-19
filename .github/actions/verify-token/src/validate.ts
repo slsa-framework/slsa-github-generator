@@ -31,7 +31,8 @@ export function validateGitHubFields(gho: githubObj): void {
   // are supported.
   validateFieldAnyOf("GITHUB_EVENT_NAME", process.env.GITHUB_EVENT_NAME, [
     "create",
-    "deployment",
+    // TODO(github.com/slsa-framework/github-actions-buildtypes/issues/6): Revisit the deployment event type.
+    // "deployment",
     "release",
     "push",
     "workflow_dispatch",
