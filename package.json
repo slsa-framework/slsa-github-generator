@@ -8,7 +8,7 @@
   },
   "devDependencies": {
     "markdown-toc": "^1.2.0",
-    "markdownlint-cli": "0.34.0",
+    "markdownlint-cli": "0.35.0",
     "prettier": "^2.8.8",
     "sigstore": "^1.2.0"
   }
