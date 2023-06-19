@@ -91,9 +91,7 @@ jobs:
       flags: "--strip=always"
 ```
 
-The `targets` are a set of space separated build targets to be built. The targets are assume to
-be referenced from the root of the directory. Because of this the each target inputted should be referenced
-as `//path/from/root/to/target:your_target`.
+The `targets` are a set of space separated build targets to be built. Each target must include the `//` workspace root identifier and package target identifier (`:your_target`). Because of this each target should be of the form `//path/from/root/to/target:your_target`.
 
 Once the targets are built, the Bazel builder creates a folder for the artifacts
 and another for the provenance attestations which are uploaded as artifacts to the workflow run.
@@ -132,21 +130,26 @@ name information is tracked on [issue #372](https://github.com/slsa-framework/sl
 
 ### Supported Triggers
 
-The following [GitHub trigger
-events](https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows)
-are fully supported and tested:
+Only the following [event types] are supported:
 
-- `schedule`
-- `push` (including new tags)
-- `release`
-- Manual run via `workflow_dispatch`
+| Supported event type  | Event description                          |
+| --------------------- | ------------------------------------------ |
+| [`create`]            | Creation of a git tag or branch.           |
+| [`release`]           | Creation or update of a GitHub release.    |
+| [`push`]              | Creation or update of a git tag or branch. |
+| [`workflow_dispatch`] | Manual trigger of a workflow.              |
 
-However, in practice, most triggers should work with the exception of
-`pull_request`. If you would like support for `pull_request`, please tell us
-about your use case on
+`pull_request` events are currently not supported. If you would like support for
+`pull_request`, please tell us about your use case on
 [issue #358](https://github.com/slsa-framework/slsa-github-generator/issues/358). If
 you have an issue in all other triggers please submit a
 [new issue](https://github.com/slsa-framework/slsa-github-generator/issues/new/choose).
+
+[event types]: https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows
+[`create`]: https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#create
+[`release`]: https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#release
+[`push`]: https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#push
+[`workflow_dispatch`]: https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#workflow_dispatch
 
 ### Workflow Inputs
 

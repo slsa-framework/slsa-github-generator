@@ -39,6 +39,6 @@ for CURR_TARGET in "${BUILD_TARGETS[@]}"; do
   # "//src/internal:fib" --> "fib"
   BINARY_NAME=${CURR_TARGET#*:}
 
-  #Copy the binary to artifact directory, binaries
+  # Copy the binary to artifact directory, binaries
   cp "bazel-bin/$CD_PATH/$BINARY_NAME" ./binaries
 done
