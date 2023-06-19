@@ -17,7 +17,7 @@ package slsa
 import (
 	"context"
 
-	githubapi "github.com/google/go-github/v52/github"
+	githubapi "github.com/google/go-github/v53/github"
 
 	"github.com/slsa-framework/slsa-github-generator/github"
 )
