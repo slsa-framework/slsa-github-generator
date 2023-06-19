@@ -56,7 +56,7 @@ outputs:
 
   package-sha256:
     description: "The sha256 digest of the package file."
-    value: ${{ steps.sha.outputs.sha256 }}
+    value: ${{ steps.upload.outputs.sha256 }}
 
 runs:
   using: "composite"
@@ -74,12 +74,6 @@ runs:
         # NOTE: cache-dependency-path needs to be validated to be a subdirectory of GITHUB_WORKSPACE.
         # cache-dependency-path:
 
-    # NOTE: the default npm lists incorrect filenames in the output of 'npm pack --json'. This is fixed in later versions.
-    - id: update-npm
-      shell: bash
-      run: |
-        npm install -g npm@9.5.0
-
     - id: build
       env:
         UNTRUSTED_DIRECTORY: ${{ fromJson(inputs.slsa-workflow-inputs).directory }}
@@ -87,23 +81,17 @@ runs:
       shell: bash
       run: ./../__TOOL_ACTION_DIR__/build.sh
 
-    - id: sha
-      uses: slsa-framework/slsa-github-generator/.github/actions/compute-sha256@main
-      with:
-        path: ${{ steps.build.outputs.file-path }}
-
     # rng generates a random number to avoid name collision in artifacts
     # when multiple workflows run concurrently.
     - name: Generate random 16-byte value (32-char hex encoded)
       id: rng
       uses: slsa-framework/slsa-github-generator/.github/actions/rng@main
 
-    - uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
+    - uses: slsa-framework/slsa-github-generator/.github/actions/secure-upload-artifact@main
+      id: upload
       with:
         name: "${{ steps.rng.outputs.random }}-package.tgz"
         path: ${{ steps.build.outputs.file-path }}
-        if-no-files-found: error
-        retention-days: 5
 
     # NOTE: Here we create a JSON file that describes the attestations we want
     #       to create. Each attestation will be created as a separate file,

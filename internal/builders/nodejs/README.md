@@ -82,9 +82,13 @@ field. This should match the repository used to run the Node.js builder.
   "files": ["/dist"],
   "scripts": {
     "ci": "npm ci",
-    "build": "tsc"
+    "build": "tsc",
+    "test": "jest"
   },
   "devDependencies": {
+    "@types/jest": "^29.4.0",
+    "jest": "^29.4.3",
+    "ts-jest": "^29.0.5",
     "typescript": "^4.8.4"
   },
   "repository": {
@@ -113,7 +117,7 @@ jobs:
     if: startsWith(github.ref, 'refs/tags/')
     uses: slsa-framework/slsa-github-generator/.github/workflows/builder_nodejs_slsa3.yml@v1.7.0
     with:
-      run-scripts: "ci, build"
+      run-scripts: "ci, test, build"
 ```
 
 The `run-scripts` are a set of comma separated build scripts that are run to

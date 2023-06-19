@@ -25,8 +25,12 @@
     - [Generation of Metadata Layout File](#generation-of-metadata-layout-file)
   - [Upload Attestations](#upload-attestations)
 - [Provenance Example](#provenance-example)
-- [Other Delegators](#other-delegators)
 - [Hardening](#hardening)
+  - [Least Privileged TCA](#least-privileged-tca)
+    - [Low-Permission SRW](#low-permission-srw)
+    - [Update TCA](#update-tca)
+    - [Update TRW](#update-trw)
+  - [Best SDLC Practices](#best-sdlc-practices)
 
 <!-- tocstop -->
 
@@ -36,7 +40,7 @@ The Build Your Own Builder (BYOB) framework makes it simple to make an existing 
 
 The diagram below depicts the different components of the BYOB framework.
 
-TODO(add diagram)
+The Build Your Own Builder (BYOB) framework makes it simple to make an existing GitHub Acton SLSA3 compliant. By delegating orchestration and provenance generation to the BYOB framework., you need not be aware of reusable workflows, signing, intoto, Sigstore and other shenanigans.
 
 ### Project Workflow (PW)
 
@@ -70,7 +74,7 @@ The [slsa-github-generator](https://github.com/slsa-framework/slsa-github-genera
 
 #### SLSA Setup Action (SSA)
 
-This [Action](https://github.com/slsa-framework/slsa-github-generator/tree/main/actions/delegator/setup-generic) is used to initialize the BYOB framework. It returns a so-called "SLSA token" which is used in later steps:
+The [setup-generic](https://github.com/slsa-framework/slsa-github-generator/blob/v0.0.1/actions/delegator/setup-generic) Action is used to initialize the BYOB framework. It returns a so-called "SLSA token" which is used in later steps:
 
 ```yaml
 - uses: slsa-framework/slsa-github-generator/actions/delegator/setup-generic@main
@@ -88,7 +92,7 @@ The SRW acts as the build's orchestrator. It calls the TCA, generates provenance
 
 ## Integration Steps
 
-In this example, we will assume there is an existing [GitHub Action](https://github.com/laurentsimon/byob-doc/blob/main/action.yml) which builds an artifact. The Action is fairly simple: it just [echos the parameters into the artifact](https://github.com/laurentsimon/byob-doc/blob/main/action.yml#L58). It also takes a [username, password and token](https://github.com/laurentsimon/byob-doc/blob/main/action.yml#L31-L34) to retrieve / push information from a remote registry. It outputs the [name of the built artifact and the status of the build](https://github.com/laurentsimon/byob-doc/blob/main/action.yml#L35-L41). See the full [action.yml](https://github.com/laurentsimon/byob-doc/blob/main/action.yml).
+In this example, we will assume there is an existing [GitHub Action](https://github.com/laurentsimon/byob-doc/blob/main/action.yml) which builds an artifact. The Action is fairly simple: it just [echos the parameters into the artifact](https://github.com/laurentsimon/byob-doc/blob/main/action.yml#L58). It also takes a [username, password and token](https://github.com/laurentsimon/byob-doc/blob/main/action.yml#L31-L34) to retrieve / push information from a remote registry. Like popular release Actions, it [releases the built artifact to GitHub releases](https://github.com/laurentsimon/byob-doc/blob/main/action.yml#L67-L78). It outputs the [name of the built artifact and the status of the build](https://github.com/laurentsimon/byob-doc/blob/main/action.yml#L35-L41). See the full [action.yml](https://github.com/laurentsimon/byob-doc/blob/main/action.yml).
 
 ### TRW inputs
 
@@ -114,7 +118,7 @@ One key difference between the Action and reusable workflow is isolation. The SR
 
 ### SRW Setup
 
-To initialize the SRW framework, the TRW must invoke a SLSA Setup Action (SSA). These Actions are declared under the [SLSA repo's actions/delegator/setup-*](https://github.com/slsa-framework/slsa-github-generator/tree/main/actions/delegator). For our example, we will use the [setup-generic Action](https://github.com/slsa-framework/slsa-github-generator/tree/main/actions/delegator/setup-generic). The [relevant code](https://github.com/laurentsimon/byob-doc/blob/main/.github/workflows/builder_example_slsa3.yml#L91-L107) calls the SSA as follows:
+To initialize the SRW framework, the TRW must invoke the [setup-generic](https://github.com/slsa-framework/slsa-github-generator/blob/v0.0.1/actions/delegator/setup-generic). The [relevant code](https://github.com/laurentsimon/byob-doc/blob/main/.github/workflows/builder_example_slsa3.yml#L91-L107) calls the SSA as follows:
 
 ```yaml
 uses: slsa-framework/slsa-github-generator/actions/delegator/setup-generic@main
@@ -194,7 +198,7 @@ Notice how we populate the token field: If the user has not passed a value to `i
 
 #### Generation of Metadata Layout File
 
-The last thing to do in the TCA is to [generate the metadata layout file](https://github.com/laurentsimon/byob-doc/blob/main/internal/callback_action/action.yml#L67-L73) to indicate to the BYOB platform which files to attest to, and which attestations to generate. You can ask the platform to generate several attestations, each attestating to one or more artifacts. The snippet below indicates a single attestation attesting to a single built artifact `my-artifact`. When the BYOB framework generates the attestation, it will add an extension to it, e.g. `.sigstore` or `.intoto.jsonl` depending on the format used.
+The last thing to do in the TCA is to [generate the metadata layout file](https://github.com/laurentsimon/byob-doc/blob/main/internal/callback_action/action.yml#L67-L73) to indicate to the BYOB platform which files to attest to, and which attestations to generate. You can ask the platform to generate several attestations, each attestating to one or more artifacts. The snippet below indicates a single attestation attesting to a single built artifact `my-artifact`. When the BYOB framework generates the attestation, it will add the `.build.slsa` extension to it.
 
 ```json
 {
@@ -219,16 +223,55 @@ The last thing to do in the TCA is to [generate the metadata layout file](https:
 
 In a final ["publish" job](https://github.com/laurentsimon/byob-doc/blob/main/.github/workflows/builder_example_slsa3.yml#L110-L141) of the TRW, we [download the attestations](https://github.com/laurentsimon/byob-doc/blob/main/.github/workflows/builder_example_slsa3.yml#L117C19-L121) and do whatever we'd like with them. In our example, we [upload them as release assets to a GitHub release](https://github.com/laurentsimon/byob-doc/blob/main/.github/workflows/builder_example_slsa3.yml#L123-L141). You may instead upload them to a registry, etc.
 
-Also think about [returning the attestation to the PW](https://github.com/laurentsimon/byob-doc/blob/main/.github/workflows/builder_example_slsa3.yml#L69-L75) in case end-users want to publish the artifacts and attestations themselves. If you do so, we encourage you to create a [secure-download-attestation(https://github.com/laurentsimon/byob-doc/blob/main/download/attestation/action.yml) Action for your users, e.g. under a download folder in your repository. This will improve user experience as they won't have to be aware of the SLSA repository and its framework.
+Also think about [returning the attestation to the PW](https://github.com/laurentsimon/byob-doc/blob/main/.github/workflows/builder_example_slsa3.yml#L69-L75) in case end-users want to publish the artifacts and attestations themselves. If you do so, we encourage you to create a [secure-download-attestation](https://github.com/laurentsimon/byob-doc/blob/main/download/attestation/action.yml) Action for your users, e.g. under a download folder in your repository. This will improve user experience as they won't have to be aware of the SLSA repository and its framework.
 
 ## Provenance Example
 
 TODO
 
-## Other Delegators
-
-TODO(Non-low perms)
-
 ## Hardening
 
-TODO(Scorecard, pin actions and dependencies, verify provenance when downloading binary, etc, Use low-perm)
+If you've made it thus far, congratulations! You have built a SLSA3 compliant builder. In this section, we provide additional guidance and tips to harden your implementation.
+
+### Least Privileged TCA
+
+In the example of [Section: Integration Steps](#integration-steps), we assumed that the existing Action released assets on GitHub. This is a common feature across build / release Actions. Depending on the use case, this requires the Action to have access to:
+
+- `contents: write`: token permissions: to upload GitHub assets to GitHub releases. This also grants the Action the ability to push code to the PW repository.
+- `packages: write`: to upload a package on GitHub registry.
+- `secrets`: used to log into a registry to publish a package
+
+Building an artifact or a package includes downloading dependencies. Every once in a while, dependencies built into a final package may turn out to be malicious. In these rare cases, the PW maintainers and its downstream users will start an incidence response to determine what systems may have been compromised by a rogue dependency. In certain ecosystems like npm or python, dependencies _may_ run arbitrary code as part of the build process, which means they have access to sensitive passwords and the permissions granted to the TCA. To reduce the consequences of a rogue dependency, we recommend following the principle of least privilege, and only give the minimal permissions to the TCA. Let's see how to update our initial integration to do that.
+
+#### Low-Permission SRW
+
+The first thing to do is to use a "low permission SRW". The SRW we used in our original integration is [delegator_generic_slsa3.yml](delegator_generic_slsa3.yml), which calls the TCA with the [permissions for pushing release assets and publishing packages](https://github.com/slsa-framework/slsa-github-generator/blob/main/.github/workflows/delegator_generic_slsa3.yml#L137-L140). In order to reduce the number of permissions the TCA is called with, we recommend you use [delegator_lowperms-generic_slsa3.yml](https://github.com/slsa-framework/slsa-github-generator/blob/main/.github/workflows/delegator_lowperms-generic_slsa3.yml) instead. This workflow does _not_ give the TCA the dangerous permissions above, and [only gives it `contents: read`](https://github.com/slsa-framework/slsa-github-generator/blob/main/.github/workflows/delegator_lowperms-generic_slsa3.yml#L142-L143) for repository read access. To update your integration:
+
+- Update the [`slsa-workflow-receipient` argument to the SSA](https://github.com/laurentsimon/byob-doc/blob/main/.github/workflows/builder_example_slsa3.yml#L89) to `delegator_lowperms-generic_slsa3.yml`.
+- Update your SRW call to use [delegator_lowperms-generic_slsa3.yml](https://github.com/laurentsimon/byob-doc/blob/main/.github/workflows/builder_example_slsa3.yml#L102).
+- Update the [permissions you pass to the SRW](https://github.com/laurentsimon/byob-doc/blob/main/.github/workflows/builder_example_slsa3.yml#L99-L102), by removing `packages: write` and updating the contents permission to `contents: read`.
+
+#### Update TCA
+
+The next thing to do is to [_not_ uploads asset to the GitHub release](https://github.com/laurentsimon/byob-doc/blob/v0.0.1/action.yml#L67-L78) within the existing Action and update the TCA to securely share the built artifacts with the TRW. (The TRW will later be updated to publish the artifacts). To update the TCA:
+
+- [Generate a random value](https://github.com/laurentsimon/byob-doc/blob/main/internal/callback_action/action.yml#L73-L78) to uniquely name your artifact. This is necessary to avoid name collisions if multiple builders run concurrently. This could be concurrent runs of your builder, or someone else's builder.
+- [Create a folder with all the generated artifacts](https://github.com/laurentsimon/byob-doc/blob/main/internal/callback_action/action.yml#L80-L90). In our case, we build a single artifact.
+- [Securely share the built artifacts with the TRW](https://github.com/laurentsimon/byob-doc/blob/main/internal/callback_action/action.yml#L92-L98). For this you need to use the [secure-upload-folder Action](https://github.com/slsa-framework/slsa-github-generator/tree/main/actions/delegator/secure-upload-folder). This Action uploads the entire folder and returns the sha256 digest as its output, which we will use during download. It's important to note that the "artifact name" refers to the unique name given to the object shared with the TRW, and can be different from the artifact filename our TCA built.
+- [Add outputs to return the name and digest of the uploaded artifact](https://github.com/laurentsimon/byob-doc/blob/main/internal/callback_action/action.yml#L48-L53).
+
+#### Update TRW
+
+Now we need to download the artifact and publish it from the TRW. Do do that, follow the steps:
+
+- [Download the artifacts](https://github.com/laurentsimon/byob-doc/blob/main/.github/workflows/builder_example_slsa3.yml#L142-L149) uploaded by the TCA.
+- [Publish the artifacts](https://github.com/laurentsimon/byob-doc/blob/main/.github/workflows/builder_example_slsa3.yml#L151-L168).
+
+### Best SDLC Practices
+
+It is important you follow best development practices for your code, including your TRW, TCA and existing Action. In particular:
+
+- Harden your CI, e.g., set your [top-level workflow permissions](https://docs.github.com/en/actions/using-jobs/assigning-permissions-to-jobs#example-assigning-permissions-to-github_token) to `read-only`.
+- Pin your depenencies by hash except the [delegator workflow](https://github.com/slsa-framework/slsa-github-generator/tree/main#referencing-slsa-builders-and-generators), to avoid dependency confusion attacks and speed up incidence response.
+- If you download binaries, verify their SLSA provenance before running them. Use the [`installer`](https://github.com/slsa-framework/slsa-verifier/tree/main/actions/installer) action to install and use `slsa-verifier`.
+- Install or use a tool like [OSSF Scorecard](https://github.com/ossf/scorecard) to verify you're comprehensively looking at your SDLC.
