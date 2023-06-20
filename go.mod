@@ -3,7 +3,7 @@ module github.com/slsa-framework/slsa-github-generator
 go 1.20
 
 require (
-	github.com/coreos/go-oidc/v3 v3.5.0
+	github.com/coreos/go-oidc/v3 v3.6.0
 	github.com/go-openapi/strfmt v0.21.7
 	github.com/go-openapi/swag v0.22.3
 	github.com/google/go-cmp v0.5.9
