@@ -33,14 +33,12 @@ export FILES_SET
 
 # Using target string, copy artifact to binaries dir
 for CURR_TARGET in "${BUILD_TARGETS[@]}"; do
-
   # Uses a Starlark expression to pass new line seperated list of files produced by targets into the set of files
-  (bazel cquery --output=starlark --starlark:expr="'\n'.join([f.path for f in target.files.to_list()])" "$CURR_TARGET" 2>/dev/null) | 
-    while read -r file; do
-      echo "$file"
-      # Key value is target path, value we do not care about and is set to constant "1"
-      FILES_SET["${file}"]="1"
-  done
+  while read -r file; do
+    echo "$file"
+    # Key value is target path, value we do not care about and is set to constant "1"
+    FILES_SET["${file}"]="1"
+  done <<< (bazel cquery --output=starlark --starlark:expr="'\n'.join([f.path for f in target.files.to_list()])" "$CURR_TARGET" 2>/dev/null) 
 done
 
 echo "first loop complete"
