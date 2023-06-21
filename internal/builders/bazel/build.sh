@@ -27,25 +27,11 @@ bazel build "${BUILD_FLAGS[@]}" "${BUILD_TARGETS[@]}"
 
 # Using target string, copy artifact to binaries dir
 for CURR_TARGET in "${BUILD_TARGETS[@]}"; do
-  # Take out the first two // in CURR_TARGET
-  # "//src/internal:fib" --> "src/internal:fib"
-  # CD_PATH=$(echo "$CURR_TARGET" | cut -d'/' -f3-)
 
-  # Removes field after and including the colon
-  # "src/internal:fib" --> "src/internal"
-  # CD_PATH=$(echo "$CD_PATH" | cut -d':' -f1)
-
-  # Removes everything up to and including the first colon
-  # "//src/internal:fib" --> "fib"
-  # BINARY_NAME=${CURR_TARGET#*:}
-
-  # Copy the binary to artifact directory, binaries
-  # cp "bazel-bin/$CD_PATH/$BINARY_NAME" ./binaries
-
-  # Outputs the needed files (and runfiles) from target to files array
+  # Uses a Starlark expression to pass new line seperated list of files produced by targets into the array files
   mapfile -t files < <(bazel cquery --output=starlark --starlark:expr="'\n'.join([f.path for f in target.files.to_list()])" "$CURR_TARGET" 2>/dev/null)
 
-  # Copy needed files
+  # Copy files
   for file in "${files[@]}"; do
     cp "$file" ./binaries
   done
