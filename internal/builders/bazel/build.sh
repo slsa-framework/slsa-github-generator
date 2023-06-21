@@ -29,7 +29,7 @@ bazel build "${BUILD_FLAGS[@]}" "${BUILD_TARGETS[@]}"
 declare -A FILES_SET
 
 # Allows the modifications from sub-shell loops
-export FILES_SET
+# export FILES_SET
 
 # Using target string, copy artifact to binaries dir
 for CURR_TARGET in "${BUILD_TARGETS[@]}"; do
