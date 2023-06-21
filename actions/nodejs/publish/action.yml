@@ -96,7 +96,7 @@ runs:
         set -euo pipefail
 
         temp_dir=$(mktemp -d)
-        cd "$(temp_dir)"
+        cd "${temp_dir}"
 
         # Install npm >9.7.0 which includes support for --provenance-file.
         # This installs locally in the temp directory.
