@@ -33,6 +33,16 @@ for CURR_TARGET in "${BUILD_TARGETS[@]}"; do
 
   # Copy files into downloadable artifact directory
   for file in "${files[@]}"; do
+    
+    # Double copying file leads to error in
+    # if [[ ! -f ./binaries/"$file" ]]
+    # then
+    
+    ls ~/binaries
     cp "$file" ./binaries
+    ls ~/binaries
+
+    # else
+      # file="$file"
   done
 done
