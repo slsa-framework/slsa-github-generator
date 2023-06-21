@@ -83,7 +83,6 @@ runs:
         path: "${{ steps.temp-dir.outputs.path }}"
         sha256: ${{ inputs.provenance-download-sha256 }}
 
-    # TODO(#1897): Use upstream version of npm
     - name: Publish the package
       id: publish
       shell: bash
@@ -96,11 +95,19 @@ runs:
       run: |
         set -euo pipefail
 
-        # Install npm 9.7.1 which includes support for --provenance-file.
-        npm install -g npm@9.7.1
+        temp_dir=$(mktemp -d)
+        cd "$(temp_dir)"
+
+        # Install npm >9.7.0 which includes support for --provenance-file.
+        # This installs locally in the temp directory.
+        npm install npm@^9.7.0
 
         # Print the npm version.
-        npm version
+        echo "** Installed local version of npm**"
+        ./node_modules/.bin/npm version
+
+        # Return to the working directory.
+        cd -
 
         publish_flags=("--provenance-file=${ATTESTATION_PATH}")
         if [[ "${ACCESS}" != "" ]]; then
@@ -115,4 +122,4 @@ runs:
         # could be a "<owner>/<repo-name>" resulting in git errors.
         package_abs_path=$(readlink -m "${PACKAGE_PATH}")
 
-        npm publish --loglevel verbose "${package_abs_path}" "${publish_flags[@]}"
+        $(temp_dir)/node_modules/.bin/npm publish --loglevel verbose "${package_abs_path}" "${publish_flags[@]}"
