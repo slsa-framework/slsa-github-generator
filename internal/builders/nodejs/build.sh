@@ -16,6 +16,9 @@
 
 set -euo pipefail
 
+echo "** Using the following npm version **"
+npm version
+
 if [ "${GITHUB_WORKSPACE}" == "" ]; then
     echo "\$GITHUB_WORKSPACE is empty."
     exit 1
@@ -49,10 +52,21 @@ done
 echo "** Running 'npm pack' **"
 pack_json=$(npm pack --json | tee pack.json | jq -c)
 jq <pack.json
-ls -lh .
 echo "pack_json=$pack_json" >>"$GITHUB_OUTPUT"
 
 filename=$(echo "$pack_json" | jq -r '.[0].filename')
+if [ ! -f "${filename}" ]; then
+    echo "** ${filename} not found. **"
+    ls -lh
+    # NOTE: Some versions of npm pack --json returns a filename that is incorrect
+    # attempt to determine the name by converting the package name and version
+    # into the filename '<namespace>-<name>-<version>.tgz'.
+    package_name=$(cut -d "=" -f 2 <<<"$(npm run env | grep "npm_package_name")")
+    package_version=$(cut -d "=" -f 2 <<<"$(npm run env | grep "npm_package_version")")
+    filename="$(echo "${package_name}" | sed 's/^@//' | sed 's/\//-/g')-${package_version}.tgz"
+    echo "** Trying ${filename}... **"
+fi
+
 # NOTE: Get the absolute path of the file since we could be in a subdirectory.
 resolved_filename=$(realpath -e "$filename")
 
