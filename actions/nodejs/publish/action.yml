@@ -122,4 +122,4 @@ runs:
         # could be a "<owner>/<repo-name>" resulting in git errors.
         package_abs_path=$(readlink -m "${PACKAGE_PATH}")
 
-        $(temp_dir)/node_modules/.bin/npm publish --loglevel verbose "${package_abs_path}" "${publish_flags[@]}"
+        "${temp_dir}/node_modules/.bin/npm" publish --loglevel verbose "${package_abs_path}" "${publish_flags[@]}"
