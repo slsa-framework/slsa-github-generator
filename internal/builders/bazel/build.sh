@@ -43,10 +43,16 @@ for CURR_TARGET in "${BUILD_TARGETS[@]}"; do
   done
 done
 
+echo "first loop complete"
+echo ""
+echo "below is output of file set:"
 echo "${!FILES_SET[@]}"
+echo ""
+echo "starting copy loop"
+echo ""
 
 # Copy set of unique targets to binaries, without !, would give values not keys
 for file in "${!FILES_SET[@]}"; do
   echo "$file"
-  cp "$file" ./binaries
+  cp -L "$file" ./binaries
 done
