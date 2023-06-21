@@ -38,9 +38,9 @@ for CURR_TARGET in "${BUILD_TARGETS[@]}"; do
     # if [[ ! -f ./binaries/"$file" ]]
     # then
     
-    ls ~/binaries
+    ls ./binaries
     cp "$file" ./binaries
-    ls ~/binaries
+    ls ./binaries
 
     # else
       # file="$file"
