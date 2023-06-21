@@ -25,26 +25,21 @@ IFS=' ' read -r -a BUILD_TARGETS <<< "${TARGETS}"
 # Build with respect to entire arrays of flags and targets
 bazel build "${BUILD_FLAGS[@]}" "${BUILD_TARGETS[@]}"
 
+# Use associative array as a set to increase efficency in avoiding double copying the target
+declare -A FILES_SET
+
 # Using target string, copy artifact to binaries dir
 for CURR_TARGET in "${BUILD_TARGETS[@]}"; do
 
-  # Uses a Starlark expression to pass new line seperated list of files produced by targets into the array files
-  mapfile -t files < <(bazel cquery --output=starlark --starlark:expr="'\n'.join([f.path for f in target.files.to_list()])" "$CURR_TARGET" 2>/dev/null)
-  echo "$CURR_TARGET"
-  echo "start"
-  # Copy files into downloadable artifact directory
-  for file in "${files[@]}"; do
-    
-    # Double copying file leads to error in
-    # if [[ ! -f ./binaries/"$file" ]]
-    # then
-    
-    ls ./binaries
-    cp "$file" ./binaries
-    ls ./binaries
-    echo " "
-    echo " "
-    # else
-      # file="$file"
+  # Uses a Starlark expression to pass new line seperated list of files produced by targets into the set of files
+  (bazel cquery --output=starlark --starlark:expr="'\n'.join([f.path for f in target.files.to_list()])" "$CURR_TARGET" 2>/dev/null) | 
+    while read file; do
+      # Key value is target path, value we do not care about and is set to constant "1"
+      FILES_SET["${file}"]="1"
   done
+done
+
+# Copy set of unique targets to binaries, without !, would give values not keys
+for file in "${!FILES_SET[@]}"; do
+  cp "$file" ./binaries
 done
