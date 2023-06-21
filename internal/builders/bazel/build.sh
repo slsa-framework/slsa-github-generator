@@ -30,7 +30,8 @@ for CURR_TARGET in "${BUILD_TARGETS[@]}"; do
 
   # Uses a Starlark expression to pass new line seperated list of files produced by targets into the array files
   mapfile -t files < <(bazel cquery --output=starlark --starlark:expr="'\n'.join([f.path for f in target.files.to_list()])" "$CURR_TARGET" 2>/dev/null)
-
+  echo "$CURR_TARGET"
+  echo "start"
   # Copy files into downloadable artifact directory
   for file in "${files[@]}"; do
     
@@ -41,7 +42,8 @@ for CURR_TARGET in "${BUILD_TARGETS[@]}"; do
     ls ./binaries
     cp "$file" ./binaries
     ls ./binaries
-
+    echo " "
+    echo " "
     # else
       # file="$file"
   done
