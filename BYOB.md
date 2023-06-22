@@ -122,7 +122,7 @@ One key difference between the Action and reusable workflow is isolation. The SR
 
 ### SRW Setup
 
-To initialize the SRW framework, the TRW must invoke the [setup-generic](https://github.com/slsa-framework/slsa-github-generator/blob/main/actions/delegator/setup-generic). The [relevant code](https://github.com/laurentsimon/byob-doc/tree/v0.0.1/.github/workflows/builder_example_slsa3.yml#L91-L107) calls the SSA as follows:
+To initialize the SRW framework, the TRW must invoke the [setup-generic](https://github.com/slsa-framework/slsa-github-generator/blob/main/actions/delegator/setup-generic/action.yml). The [relevant code](https://github.com/laurentsimon/byob-doc/blob/v0.0.1/.github/workflows/builder_example_slsa3.yml#L85-L94) calls the SSA as follows:
 
 ```yaml
 uses: slsa-framework/slsa-github-generator/actions/delegator/setup-generic@v1.8.0
@@ -146,7 +146,7 @@ Let's go through the parameters:
 
 ### SRW Invocation
 
-Once we have initialized the SRW, we [call the SRW](https://github.com/laurentsimon/byob-doc/tree/v0.0.1/.github/workflows/builder_example_slsa3.yml#L109-L122):
+Once we have initialized the SRW, we [call the SRW](https://github.com/laurentsimon/byob-doc/blob/v0.0.1/.github/workflows/builder_example_slsa3.yml#L96-L108):
 
 ```yaml
 slsa-run:
@@ -174,9 +174,9 @@ The call above will run the SRW and invoke the callback Action, so let's see how
 
 The inputs to the TCA are [pre-defined](https://github.com/laurentsimon/byob-doc/tree/v0.0.1/internal/callback_action/action.yml#L6-L14), so you just have to follow their definition:
 
-- `slsa-workflow-inputs` contains a JSON object with a list of key-value pairs for the inputs provided by the [TRW to the SSA during initialization](https://github.com/laurentsimon/byob-doc/tree/v0.0.1/.github/workflows/builder_example_slsa3.yml#L106). We will see shortly how to use these values.
+- `slsa-workflow-inputs` contains a JSON object with a list of key-value pairs for the inputs provided by the [TRW to the SSA during initialization](https://github.com/laurentsimon/byob-doc/blob/v0.0.1/.github/workflows/builder_example_slsa3.yml#L93). We will see shortly how to use these values.
 - `slsa-layout-file` is a path to a file where we will write a layout for generating the attestation. We will see shortly how the format for this file.
-- `slsa-workflow-secretX`, where X is the number '1' to '15'. These contain the secrets that the TRW [provides to the SRW during invocation](https://github.com/laurentsimon/byob-doc/tree/v0.0.1/.github/workflows/builder_example_slsa3.yml#L118-L120). Unused secrets [should be clearly marked as unused](https://github.com/laurentsimon/byob-doc/tree/v0.0.1/internal/callback_action/action.yml#L26-L39).
+- `slsa-workflow-secretX`, where X is the number '1' to '15'. These contain the secrets that the TRW [provides to the SRW during invocation](https://github.com/laurentsimon/byob-doc/blob/v0.0.1/.github/workflows/builder_example_slsa3.yml#L106-L108). Unused secrets [should be clearly marked as unused](https://github.com/laurentsimon/byob-doc/tree/v0.0.1/internal/callback_action/action.yml#L26-L39).
 
 #### Outputs
 
@@ -274,15 +274,15 @@ The first thing to do is to use a "low permission SRW". The SRW we used in our o
 
 - Update the [`slsa-workflow-receipient` argument to the SSA](https://github.com/laurentsimon/byob-doc/tree/v0.0.2/.github/workflows/builder_example_slsa3.yml#L89) to `delegator_lowperms-generic_slsa3.yml`.
 - Update your SRW call to use [delegator_lowperms-generic_slsa3.yml](https://github.com/laurentsimon/byob-doc/tree/v0.0.2/.github/workflows/builder_example_slsa3.yml#L102).
-- Update the [permissions you pass to the SRW](https://github.com/laurentsimon/byob-doc/tree/v0.0.2/.github/workflows/builder_example_slsa3.yml#L99-L102), by removing `packages: write` and updating the contents permission to `contents: read`.
+- Update the [permissions you pass to the SRW](https://github.com/laurentsimon/byob-doc/tree/v0.0.2/.github/workflows/builder_example_slsa3.yml#L99-L101), by removing `packages: write` and updating the contents permission to `contents: read`.
 
 #### Update TCA
 
 The next thing to do is to [_not_ uploads asset to the GitHub release](https://github.com/laurentsimon/byob-doc/blob/v0.0.1/action.yml#L67-L78) within the existing Action and update the TCA to securely share the built artifacts with the TRW. (The TRW will later be updated to publish the artifacts). To update the TCA:
 
-- [Generate a random value](https://github.com/laurentsimon/byob-doc/tree/v0.0.2/internal/callback_action/action.yml#L73-L78) to uniquely name your artifact. This is necessary to avoid name collisions if multiple builders run concurrently. This could be concurrent runs of your builder, or someone else's builder.
-- [Create a folder with all the generated artifacts](https://github.com/laurentsimon/byob-doc/tree/v0.0.2/internal/callback_action/action.yml#L80-L90). In our case, we build a single artifact.
-- [Securely share the built artifacts with the TRW](https://github.com/laurentsimon/byob-doc/tree/v0.0.2/internal/callback_action/action.yml#L92-L98). For this you need to use the [secure-upload-folder Action](https://github.com/slsa-framework/slsa-github-generator/tree/main/actions/delegator/secure-upload-folder). This Action uploads the entire folder and returns the sha256 digest as its output, which we will use during download. It's important to note that the "artifact name" refers to the unique name given to the object shared with the TRW, and can be different from the artifact filename our TCA built.
+- [Generate a random value](https://github.com/laurentsimon/byob-doc/tree/v0.0.2/internal/callback_action/action.yml#L81-L86) to uniquely name your artifact. This is necessary to avoid name collisions if multiple builders run concurrently. This could be concurrent runs of your builder, or someone else's builder.
+- [Create a folder with all the generated artifacts](https://github.com/laurentsimon/byob-doc/tree/v0.0.2/internal/callback_action/action.yml#L88-L98). In our case, we build a single artifact.
+- [Securely share the built artifacts with the TRW](https://github.com/laurentsimon/byob-doc/tree/v0.0.2/internal/callback_action/action.yml#L100-L106). For this you need to use the [secure-upload-folder Action](https://github.com/slsa-framework/slsa-github-generator/tree/main/actions/delegator/secure-upload-folder). This Action uploads the entire folder and returns the sha256 digest as its output, which we will use during download. It's important to note that the "artifact name" refers to the unique name given to the object shared with the TRW, and can be different from the artifact filename our TCA built.
 - [Add outputs to return the name and digest of the uploaded artifact](https://github.com/laurentsimon/byob-doc/tree/v0.0.2/internal/callback_action/action.yml#L48-L53).
 
 #### Update TRW
