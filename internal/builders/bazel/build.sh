@@ -19,29 +19,30 @@ set -euo pipefail
 mkdir binaries
 
 # Transfer flags and targets to their respective arrays
-IFS=' ' read -r -a BUILD_FLAGS <<< "${FLAGS}"
-IFS=' ' read -r -a BUILD_TARGETS <<< "${TARGETS}"
+IFS=' ' read -r -a build_flags <<< "${FLAGS}"
+IFS=' ' read -r -a build_targets <<< "${TARGETS}"
 
 # Build with respect to entire arrays of flags and targets
-bazel build "${BUILD_FLAGS[@]}" "${BUILD_TARGETS[@]}"
+bazel build "${build_flags[@]}" "${build_targets[@]}"
 
 # Use associative array as a set to increase efficency in avoiding double copying the target
-declare -A FILES_SET
+declare -A files_set
 
 # Using target string, copy artifact(s) to binaries dir
-for CURR_TARGET in "${BUILD_TARGETS[@]}"; do
+for curr_target in "${build_targets[@]}"; do
   # Get file(s) generated from build with respect to the target
-  bazel_generated=$(bazel cquery --output=starlark --starlark:expr="'\n'.join([f.path for f in target.files.to_list()])" "$CURR_TARGET" 2>/dev/null)
+  bazel_generated=$(bazel cquery --output=starlark --starlark:expr="'\n'.join([f.path for f in target.files.to_list()])" "$curr_target" 2>/dev/null)
   
   # Uses a Starlark expression to pass new line seperated list of file(s) into the set of files
   while read -r file; do
     # Key value is target path, value we do not care about and is set to constant "1"
-    FILES_SET["${file}"]="1"
+    files_set["${file}"]="1"
   done <<< "$bazel_generated"
 done
 
 # Copy set of unique targets to binaries. Without !, it would give values not keys
-for file in "${!FILES_SET[@]}"; do
+# TODO(Issue #2331): switch copy to binaries to a temp dir
+for file in "${!files_set[@]}"; do
   # Remove the symbolic link and copy
   cp -L "$file" ./binaries
 done
