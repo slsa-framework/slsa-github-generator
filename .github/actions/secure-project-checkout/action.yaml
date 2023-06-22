@@ -67,6 +67,13 @@ runs:
           checkout_sha="${CHECKOUT_SHA1}"
         fi
 
+        # Verify that the sha is correctly formatted.
+        regex="^[a-fA-F0-9]{40}$"
+        if [[ ! "$checkout_sha" =~ $regex ]]; then
+            echo "invalid sha: $checkout_sha"
+            exit 1
+        fi
+
         # Note: For pull requests, the `$GITHUB_SHA` corresponds to the
         # merge commit that GitHub automatically creates.
         # It is consistent with what the checkout Actions pulls.
