@@ -73,7 +73,7 @@ SLSA provenance on GitHub for your projects. The generated provenance meets the
 [provenance generation](https://slsa.dev/spec/v1.0/requirements#provenance-generation)
 and [isolation](https://slsa.dev/spec/v1.0/requirements#isolation-strength)
 requirements for [SLSA Build level 3 and above](https://slsa.dev/spec/v1.0/levels).
-- tools to help you build a SLSA builder on GitHub using the [Build-Your-Own-Builder](#build-your-own-builder) framework. With this framework, you can "wrap" an existing GitHub Action into a SLSA builder. The SLSA builder will generate non-forgeable provenance meeting the
+- tools for building a SLSA builder on GitHub using the [Build-Your-Own-Builder](#build-your-own-builder) framework. With this framework, you can "wrap" an existing GitHub Action into a SLSA builder. The SLSA builder will generate non-forgeable provenance meeting the
 [provenance generation](https://slsa.dev/spec/v1.0/requirements#provenance-generation)
 and [isolation](https://slsa.dev/spec/v1.0/requirements#isolation-strength)
 requirements for [SLSA Build level 3 and above](https://slsa.dev/spec/v1.0/levels).
