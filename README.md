@@ -170,7 +170,7 @@ A command line example is provided in [slsa-framework/slsa-verifier#example](htt
 
 ## Build Your Own Builder
 
-If you want to build your own builder, use the [BYOB framework](BYOB.md). The framework lets you create your own SLSA3 builder on GitHub. For example, you can wrap an existing GitHub Action intoto a SLSA3 builder. For verification, you users can use the [slsa-verifier](#verification-of-provenance).
+If you want to build your own builder, use the [BYOB framework](BYOB.md). The framework lets you create your own SLSA3 builder on GitHub. For example, you can wrap an existing GitHub Action intoto a SLSA3 builder. For verification, your users can use the [slsa-verifier](#verification-of-provenance).
 
 ## Technical design
 
