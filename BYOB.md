@@ -78,7 +78,7 @@ The [slsa-github-generator](https://github.com/slsa-framework/slsa-github-genera
 
 #### SLSA Setup Action (SSA)
 
-The [setup-generic](https://github.com/slsa-framework/slsa-github-generator/blob/v0.0.1/actions/delegator/setup-generic) Action is used to initialize the BYOB framework. It returns a so-called "SLSA token" which is used in later steps:
+The [setup-generic](https://github.com/slsa-framework/slsa-github-generator/blob/main/actions/delegator/setup-generic) Action is used to initialize the BYOB framework. It returns a so-called "SLSA token" which is used in later steps:
 
 ```yaml
 - uses: slsa-framework/slsa-github-generator/actions/delegator/setup-generic@v1.8.0
@@ -122,7 +122,7 @@ One key difference between the Action and reusable workflow is isolation. The SR
 
 ### SRW Setup
 
-To initialize the SRW framework, the TRW must invoke the [setup-generic](https://github.com/slsa-framework/slsa-github-generator/blob/v0.0.1/actions/delegator/setup-generic). The [relevant code](https://github.com/laurentsimon/byob-doc/tree/v0.0.1/.github/workflows/builder_example_slsa3.yml#L91-L107) calls the SSA as follows:
+To initialize the SRW framework, the TRW must invoke the [setup-generic](https://github.com/slsa-framework/slsa-github-generator/blob/main/actions/delegator/setup-generic). The [relevant code](https://github.com/laurentsimon/byob-doc/tree/v0.0.1/.github/workflows/builder_example_slsa3.yml#L91-L107) calls the SSA as follows:
 
 ```yaml
 uses: slsa-framework/slsa-github-generator/actions/delegator/setup-generic@v1.8.0
