@@ -22,6 +22,36 @@ mkdir binaries
 IFS=' ' read -r -a build_flags <<< "${FLAGS}"
 IFS=' ' read -r -a build_targets <<< "${TARGETS}"
 
+# Ended up being a todo and some scratch notes
+#
+# Todo: add java flag with it as well but now for testing let it be
+#       need to add java flag in external workflow
+#       cool thing is with this flag it only pertains to java compile
+#       can still build C++ targets with this
+#       so then how would logic work with the flags and cases
+#       well if target is _deploy.jar then u know its java
+#       else use other logic which works for C++ and Python
+#       that would work because building target_deploy.jar still builds runscript target.sh
+#       sounds like a plan
+if [[ "${NEEDS-RUNFILES}" ]]
+then
+  # Todo: decide if make additionaljdk name concrete or if user input
+  build_flags+="--java_runtime_version=additionaljdk"
+fi
+
+# Todo: Create the logic for runfiles
+#
+# 3 Cases to consider
+#
+# Case 1: C++ or Python --> just need to mkdir for artifact pass runfiles into it
+#
+# Case 2: If Java --> need to build with _deploy.jar ending
+#            then --> Get target.sh run script and target_deploy.jar
+#            then --> pass these things into artifact dir
+#            then --> can run run-script with --singlejar flag
+#
+# Case 3: Custom rulesets --> could potentially support, Java, C++, Python highest priority
+
 # Build with respect to entire arrays of flags and targets
 bazel build "${build_flags[@]}" "${build_targets[@]}"
 
