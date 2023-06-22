@@ -66,13 +66,17 @@ native GitHub projects. It allows projects to generate
 [SLSA provenance](https://slsa.dev/provenance/) safely and accurately using
 [GitHub Actions](https://github.com/features/actions).
 
-Specifically, this repository contain:
+Specifically, this repository contains:
+
 - tools for generating non-forgeable
 SLSA provenance on GitHub for your projects. The generated provenance meets the
 [provenance generation](https://slsa.dev/spec/v1.0/requirements#provenance-generation)
 and [isolation](https://slsa.dev/spec/v1.0/requirements#isolation-strength)
 requirements for [SLSA Build level 3 and above](https://slsa.dev/spec/v1.0/levels).
-- tools to help you build a SLSA builder on GitHub using the [Build-Your-Own-Builder](#build-your-own-builder) framework. With this framework, you can "wrap" an existing GitHub Action into a SLSA builder. The SLSA builder will generate non-forgeable provenance meeting [SLSA Build level 3 and above](https://slsa.dev/spec/v1.0/levels).
+- tools to help you build a SLSA builder on GitHub using the [Build-Your-Own-Builder](#build-your-own-builder) framework. With this framework, you can "wrap" an existing GitHub Action into a SLSA builder. The SLSA builder will generate non-forgeable provenance meeting the
+[provenance generation](https://slsa.dev/spec/v1.0/requirements#provenance-generation)
+and [isolation](https://slsa.dev/spec/v1.0/requirements#isolation-strength)
+requirements for [SLSA Build level 3 and above](https://slsa.dev/spec/v1.0/levels).
 
 While slsa-github-generator can help you achieve SLSA Build level 3, use of the provided
 [GitHub Actions reusable workflows](https://docs.github.com/en/actions/using-workflows/reusing-workflows)
