@@ -25,6 +25,7 @@
   - [Installation](#installation)
   - [Inputs](#inputs)
   - [Command line examples](#command-line-examples)
+- [Build Your Own Builder](#build-your-own-builder)
 - [Technical design](#technical-design)
   - [Specifications](#specifications)
   - [Provenance format](#provenance-format)
@@ -65,8 +66,14 @@ native GitHub projects. It allows projects to generate
 [SLSA provenance](https://slsa.dev/provenance/) safely and accurately using
 [GitHub Actions](https://github.com/features/actions).
 
-Specifically, this repository contains tools for generating non-forgeable
-SLSA provenance on GitHub that meets the
+Specifically, this repository contains:
+
+- tools for generating non-forgeable
+SLSA provenance on GitHub for your projects. The generated provenance meets the
+[provenance generation](https://slsa.dev/spec/v1.0/requirements#provenance-generation)
+and [isolation](https://slsa.dev/spec/v1.0/requirements#isolation-strength)
+requirements for [SLSA Build level 3 and above](https://slsa.dev/spec/v1.0/levels).
+- tools for building a SLSA builder on GitHub using the [Build-Your-Own-Builder](#build-your-own-builder) framework. With this framework, you can "wrap" an existing GitHub Action into a SLSA builder. The SLSA builder will generate non-forgeable provenance meeting the
 [provenance generation](https://slsa.dev/spec/v1.0/requirements#provenance-generation)
 and [isolation](https://slsa.dev/spec/v1.0/requirements#isolation-strength)
 requirements for [SLSA Build level 3 and above](https://slsa.dev/spec/v1.0/levels).
@@ -160,6 +167,10 @@ The inputs of the verifier are described in [slsa-framework/slsa-verifier#availa
 ### Command line examples
 
 A command line example is provided in [slsa-framework/slsa-verifier#example](https://github.com/slsa-framework/slsa-verifier#example).
+
+## Build Your Own Builder
+
+If you want to build your own builder, use the [BYOB framework](BYOB.md). The framework lets you create your own SLSA3 builder on GitHub. For example, you can wrap an existing GitHub Action intoto a SLSA3 builder. For verification, your users can use the [slsa-verifier](#verification-of-provenance).
 
 ## Technical design
 

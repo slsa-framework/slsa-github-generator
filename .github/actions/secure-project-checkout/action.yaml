@@ -16,6 +16,11 @@ name: "secure-project-checkout"
 description: "Checkout a project and verify its commit sha"
 
 inputs:
+  checkout-sha1:
+    description: "The sha1 to checkout."
+    required: false
+    default: ""
+
   fetch-depth:
     # Same argument to https://github.com/actions/checkout.
     description: "Number of commits to fetch. 0 indicates all history for all branches and tags."
@@ -38,6 +43,7 @@ runs:
       uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
       with:
         fetch-depth: ${{ inputs.fetch-depth }}
+        ref: ${{ inputs.checkout-sha1 }}
         # Different from default actions/checkout which defaults to `true`.
         persist-credentials: false
         token: ${{ inputs.token }}
@@ -47,20 +53,34 @@ runs:
       shell: bash
       env:
         CONTEXT: "${{ toJSON(github) }}"
+        CHECKOUT_SHA1: "${{ inputs.checkout-sha1 }}"
       working-directory: "${{ inputs.path }}"
       run: |
         set -euo pipefail
 
         git_sha="$(git log -1 --format='%H')"
-        github_sha="$GITHUB_SHA"
+        # By default, we clone at the sha indicated by the GitHub event.
+        checkout_sha="$GITHUB_SHA"
 
-        # Note: For pull requests, the `github_sha` corresponds to the
+        # If the user provided a sha, we use it instead.
+        if [[ -n "${CHECKOUT_SHA1:-}" ]]; then
+          checkout_sha="${CHECKOUT_SHA1}"
+        fi
+
+        # Verify that the sha is correctly formatted.
+        regex="^[a-fA-F0-9]{40}$"
+        if [[ ! "$checkout_sha" =~ $regex ]]; then
+            echo "invalid sha: $checkout_sha"
+            exit 1
+        fi
+
+        # Note: For pull requests, the `$GITHUB_SHA` corresponds to the
         # merge commit that GitHub automatically creates.
         # It is consistent with what the checkout Actions pulls.
         # https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows.
 
-        if [[ "$git_sha" != "$github_sha" ]]; then
-            echo "mismatch git sha \"$git_sha\" != \"$github_sha\""
+        if [[ "$git_sha" != "$checkout_sha" ]]; then
+            echo "mismatch git sha \"$git_sha\" != \"$checkout_sha\""
             echo "GitHub context:"
             echo "$CONTEXT"
             echo
