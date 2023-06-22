@@ -35,6 +35,15 @@ on:
         required: false
         type: string
         default: ""
+      needs-runfiles:
+        description: >
+          A boolean input that if true will package the artifact's runfiles along with the artifact.
+          
+          If this flag is not set, then the artifact itself will be uploaded without any corresponding runfiles
+          that Bazel generates for it during the build process.
+        required: false
+        type: boolean
+        default: false
 
     outputs:
       provenance-download-name:
