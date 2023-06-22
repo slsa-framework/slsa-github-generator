@@ -175,6 +175,7 @@ jobs:
         uses: slsa-framework/slsa-github-generator/.github/actions/secure-project-checkout@main
         with:
           fetch-depth: ${{ fromJson(needs.verify-token.outputs.slsa-verified-token).source.checkout.fetch_depth }}
+          checkout-sha1: ${{ fromJson(needs.verify-token.outputs.slsa-verified-token).source.checkout.sha1 }}
 
       # NOTE: This calls the Action defined in the slsa-token.
       - name: Build artifacts
