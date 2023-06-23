@@ -32,8 +32,8 @@ set -euo pipefail
 
 # Get the raw package name and scope from the output of `npm pack --json`
 # This name is of the form '<scope>/<package name>'
-raw_package_scope=$(echo "${PACK_JSON}" | jq -r '.[0].name' | cut -d'/' -f1)
-raw_package_name=$(echo "${PACK_JSON}" | jq -r '.[0].name' | cut -d'/' -f2)
+raw_package_scope=$(echo "${PACKAGE_NAME:-}" | cut -d'/' -f1)
+raw_package_name=$(echo "${PACKAGE_NAME:-}" | cut -d'/' -f2)
 if [ "${raw_package_name}" == "" ]; then
     raw_package_name="${raw_package_scope}"
     raw_package_scope=""
@@ -45,7 +45,7 @@ package_name=$(echo "\"${raw_package_name}\"" | jq -r '. | @uri')
 # version is URL(percent) encoded. This is the version from the project's
 # package.json and could be a commit, or any string by the user. It does not
 # actually have to be a version number and is not validated as such by npm.
-package_version=$(echo "${PACK_JSON}" | jq -r '.[0].version | @uri')
+package_version=$(echo "${PACKAGE_VERSION:-}" | jq -r '. | @uri')
 
 package_id="${package_name}@${package_version}"
 if [ "${package_scope}" != "" ]; then
@@ -59,7 +59,7 @@ subject_name="pkg:npm/${package_id}"
 #
 # For example:
 #   sha512-geEornsf879/Ygi9byQq/mpYboMcIKiGUxJ+RgHM3DCxqnOx15ttF5FparP/ZSITHTLM39MWVhW9qPa4XxtuSg==
-integrity_digest=$(echo "${PACK_JSON}" | jq -r '.[0].integrity')
+integrity_digest=${PACKAGE_INTEGRITY:-}
 
 # We will parse out the checksum hash algorithm used.
 # NOTE: ensure lowercase just to make sure.
@@ -69,9 +69,9 @@ alg=$(echo "${integrity_digest}" | cut -d'-' -f1 | tr '[:upper:]' '[:lower:]')
 digest=$(echo "${integrity_digest}" | cut -d'-' -f2- | base64 -d | od -A n -v -t x1 | tr -d ' \n')
 
 # NOTE: the name of the attestation should be configurable.
-filename=$(echo "${PACK_JSON}" | jq -r '.[0].filename')
+filename=${PACKAGE_FILENAME:-}
 attestation_name="${filename%.*}"
-cat <<EOF | jq | tee "$SLSA_OUTPUTS_ARTIFACTS_FILE"
+cat <<EOF | jq | tee "${SLSA_OUTPUTS_ARTIFACTS_FILE}"
 {
   "version": 1,
   "attestations":
@@ -93,4 +93,4 @@ cat <<EOF | jq | tee "$SLSA_OUTPUTS_ARTIFACTS_FILE"
 }
 EOF
 
-echo "attestation-name=${attestation_name}.build.slsa" >>"$GITHUB_OUTPUT"
+echo "attestation-name=${attestation_name}.build.slsa" >>"${GITHUB_OUTPUT}"
