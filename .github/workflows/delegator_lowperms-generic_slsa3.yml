@@ -221,13 +221,6 @@ jobs:
         with:
           name: "${{ needs.rng.outputs.value }}-${{ env.SLSA_ARTIFACTS_FILE }}"
           path: "${{ env.SLSA_ARTIFACTS_FILE }}"
-      
-      - name: Upload target insecurely
-        id: upload-target-insecurely        
-        uses: actions/upload-artifact@v3
-        with:
-          name: target
-          path: target
 
   # generate-provenance generates and signs the provenance.
   generate-provenance:

@@ -79,6 +79,7 @@ jobs:
           SLSA_DIR: "${{ inputs.provenance-download-name }}"
         run: |
           ls target
+          find -name "*.into*"
           # Build and run custom plugin
           cd plugin && mvn clean install && cd ..
           # Re-indexing the secondary jar files for deploy
