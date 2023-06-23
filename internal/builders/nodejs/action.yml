@@ -101,10 +101,10 @@ runs:
     - name: Generate layout file
       id: generate-layout
       env:
-        SLSA_OUTPUTS_ARTIFACTS_FILE: ${{ inputs.slsa-layout-file }}
-        PACKAGE_NAME: ${{ steps.build.outputs.package-name }}
-        PACKAGE_VERSION: ${{ steps.build.outputs.package-version }}
-        PACKAGE_INTEGRITY: ${{ steps.build.outputs.package-integrity }}
-        PACKAGE_FILENAME: ${{ steps.build.outputs.package-filename }}
+        SLSA_OUTPUTS_ARTIFACTS_FILE: "${{ inputs.slsa-layout-file }}"
+        PACKAGE_NAME: "${{ steps.build.outputs.package-name }}"
+        PACKAGE_VERSION: "${{ steps.build.outputs.package-version }}"
+        PACKAGE_INTEGRITY: "${{ steps.build.outputs.package-integrity }}"
+        PACKAGE_FILENAME: "${{ steps.build.outputs.package-filename }}"
       shell: bash
       run: ./../__TOOL_ACTION_DIR__/generate-layout.sh
