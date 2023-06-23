@@ -57,7 +57,7 @@ runs:
         SLSA_OUTPUTS_ARTIFACTS_FILE: ${{ inputs.slsa-layout-file }}
       run: cd plugin && mvn clean install && cd .. && mvn package
     - name: Upload target insecurely
-      id: upload-target-insecurely     
+      id: upload-target-insecurely
       uses: actions/upload-artifact@v3
       with:
         name: target
