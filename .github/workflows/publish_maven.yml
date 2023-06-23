@@ -88,10 +88,10 @@ jobs:
           VERSION=$(mvn org.apache.maven.plugins:maven-help-plugin:3.2.0:evaluate -Dexpression=project.version -q -DforceStdout)
           ARTIFACTID=$(mvn org.apache.maven.plugins:maven-help-plugin:3.2.0:evaluate -Dexpression=project.artifactId -q -DforceStdout)
           # Reset the environment variables add in the base provenance
-          FILES="slsa-attestations/${ARTIFACTID}-${VERSION}.jar.intoto.sigstore"
-          TYPES=sigstore
-          CLASSIFIERS=jar.intoto
-          # Find all necessary built jar files and attach them to the enviornment variable deploy
+          FILES="slsa-attestations/${ARTIFACTID}-${VERSION}.jar.intoto.build.slsa"
+          TYPES=slsa
+          CLASSIFIERS=jar.intoto.build
+          # Find all necessary built jar files and attach them to the environment variable deploy
           for name in $(find ./ -name "${ARTIFACTID}-${VERSION}-*.jar")
           do
             TARGET=$(echo "${name}" | rev | cut -d\- -f1 | rev)
@@ -100,11 +100,11 @@ jobs:
             CLASSIFIERS=$CLASSIFIERS,${TARGET%.*}
           done
           # Find all generated provenance files and attach them the the envionrment variable for deploy
-          for name in $(find ./ -name "${ARTIFACTID}-${VERSION}-*.jar.intoto.sigstore")
+          for name in $(find ./ -name "${ARTIFACTID}-${VERSION}-*.jar.intoto.build.slsa")
           do
             TARGET=$(echo "${name}" | rev | cut -d\- -f1 | rev)
             FILES=$FILES,$name
-            TYPES=$TYPES",sigstore"
+            TYPES=$TYPES",slsa"
             CLASSIFIERS=$CLASSIFIERS,${TARGET::-9}
           done
           # Sign and deploy the files to the ossrh remote repository
