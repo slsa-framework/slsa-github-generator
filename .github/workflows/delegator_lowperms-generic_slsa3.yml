@@ -296,11 +296,10 @@ jobs:
         uses: slsa-framework/slsa-github-generator/.github/actions/secure-upload-folder@main
         with:
           name: "${{ needs.rng.outputs.value }}-slsa-attestations"
-          path: "${{ needs.rng.outputs.value }}-slsa-attestations"
-             
-          
+          path: "${{ needs.rng.outputs.value }}-slsa-attestations" 
+
       - name: Upload predicates insecurely
-        id: upload-predicates-insecurely        
+        id: upload-predicates-insecurely 
         uses: actions/upload-artifact@v3
         with:
           name: slsa-attestations
