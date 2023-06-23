@@ -52,7 +52,7 @@ outputs:
 
   package-filename:
     description: "The filename of the package tarball in the package artifact."
-    value: ${{ steps.build.outputs.filename }}
+    value: ${{ steps.build.outputs.package-filename }}
 
   package-sha256:
     description: "The sha256 digest of the package file."
@@ -102,6 +102,9 @@ runs:
       id: generate-layout
       env:
         SLSA_OUTPUTS_ARTIFACTS_FILE: ${{ inputs.slsa-layout-file }}
-        PACK_JSON: ${{ steps.build.outputs.pack_json }}
+        PACKAGE_NAME: ${{ steps.build.outputs.package-name }}
+        PACKAGE_VERSION: ${{ steps.build.outputs.package-version }}
+        PACKAGE_INTEGRITY: ${{ steps.build.outputs.package-integrity }}
+        PACKAGE_FILENAME: ${{ steps.build.outputs.package-filename }}
       shell: bash
       run: ./../__TOOL_ACTION_DIR__/generate-layout.sh
