@@ -45,7 +45,7 @@ package_name=$(echo "\"${raw_package_name}\"" | jq -r '. | @uri')
 # version is URL(percent) encoded. This is the version from the project's
 # package.json and could be a commit, or any string by the user. It does not
 # actually have to be a version number and is not validated as such by npm.
-package_version=$(echo "${PACKAGE_VERSION:-}" | jq -r '. | @uri')
+package_version=$(echo "\"${PACKAGE_VERSION:-}\"" | jq -r '. | @uri')
 
 package_id="${package_name}@${package_version}"
 if [ "${package_scope}" != "" ]; then
@@ -59,7 +59,7 @@ subject_name="pkg:npm/${package_id}"
 #
 # For example:
 #   sha512-geEornsf879/Ygi9byQq/mpYboMcIKiGUxJ+RgHM3DCxqnOx15ttF5FparP/ZSITHTLM39MWVhW9qPa4XxtuSg==
-integrity_digest=${PACKAGE_INTEGRITY:-}
+integrity_digest="${PACKAGE_INTEGRITY:-}"
 
 # We will parse out the checksum hash algorithm used.
 # NOTE: ensure lowercase just to make sure.
