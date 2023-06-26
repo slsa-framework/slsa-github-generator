@@ -56,6 +56,7 @@ runs:
         TARGETS: ${{ fromJson(inputs.slsa-workflow-inputs).targets }}
         FLAGS: ${{ fromJson(inputs.slsa-workflow-inputs).flags }}
         NEEDS-RUNFILES: ${{ fromJson(inputs.slsa-workflow-inputs).needs-runfiles }}
+        INCLUDES-JAVA: ${{ fromJson(inputs.slsa-workflow-inputs).includes-java }}
       shell: bash
       run: ./../__TOOL_ACTION_DIR__/build.sh
 
