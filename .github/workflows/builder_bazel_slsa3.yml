@@ -44,6 +44,15 @@ on:
         required: false
         type: boolean
         default: false
+      includes-java:
+        description: >
+          A boolean input that if true will add the build flag "--java_runtime_version=myjdk".
+          
+          If this flag is not set, then the build process will not be able to generate a JAR that can run
+          standalone through adding the flag --singlejar on the run script for the JAR that is also generated.
+        required: false
+        type: boolean
+        default: false
 
     outputs:
       provenance-download-name:
