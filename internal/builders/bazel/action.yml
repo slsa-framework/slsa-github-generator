@@ -61,7 +61,7 @@ runs:
     - name: Set Env Var $JAVA_HOME
       shell: bash
       run: |
-        ::set-env name=JAVA_HOME::$JAVA_HOME
+        export JAVA_HOME="$JAVA_HOME"
 
     - id: build
       env:
