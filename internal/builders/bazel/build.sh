@@ -107,7 +107,7 @@ else # Upload the artfiacts as standalone pieces, no folders
 fi
 
 # From runfile loops --> unique targets and runfiles to copy
-if [[ "${#targets_set[@]}" -ne 0 ]]
+if [[ "${#targets_set[@]}" != 0 ]]
 then
   for unique_target in "${!targets_set[@]}"; do
     # Removes everything up to and including the first colon
@@ -120,7 +120,8 @@ then
     # Copy the target and runfiles
     target_path=$(bazel cquery --output=starlark --starlark:expr="'\n'.join([f.path for f in target.files.to_list()])" "$curr_target" 2>/dev/null)
     cp -L target_path "./binaries/$binary_name"
-    
+
+    # if runfiles dir exists
     if [[ -d target_path+=".runfiles" ]]
     then
       target_runfiles=$target_path+=".runfiles"
