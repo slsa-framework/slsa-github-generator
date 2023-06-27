@@ -93,6 +93,9 @@ jobs:
 
 The `targets` are a set of space separated build targets to be built. Each target must include the `//` workspace root identifier and package target identifier (`:your_target`). Because of this each target should be of the form `//path/from/root/to/target:your_target`.
 
+Targets can also be referred to with general glob patterns such as `//src/...` or `//src/internal:all`. Note however, that support for artifacts that
+require runfiles is still currently in development and not available at this time. Progress for runfile support is currently being tracked [here](https://github.com/slsa-framework/slsa-github-generator/issues/2332).
+
 Once the targets are built, the Bazel builder creates a folder for the artifacts
 and another for the provenance attestations which are uploaded as artifacts to the workflow run.
 

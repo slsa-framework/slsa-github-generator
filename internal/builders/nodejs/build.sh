@@ -52,23 +52,29 @@ done
 echo "** Running 'npm pack' **"
 pack_json=$(npm pack --json | tee pack.json | jq -c)
 jq <pack.json
-echo "pack_json=$pack_json" >>"$GITHUB_OUTPUT"
 
-filename=$(echo "$pack_json" | jq -r '.[0].filename')
-if [ ! -f "${filename}" ]; then
-    echo "** ${filename} not found. **"
+package_filename=$(echo "$pack_json" | jq -r '.[0].filename')
+package_name=$(echo "${pack_json}" | jq -r '.[0].name')
+package_version=$(echo "${pack_json}" | jq -r '.[0].version')
+package_integrity=$(echo "${pack_json}" | jq -r '.[0].integrity')
+if [ ! -f "${package_filename}" ]; then
+    echo "** ${package_filename} not found. **"
     ls -lh
     # NOTE: Some versions of npm pack --json returns a filename that is incorrect
     # attempt to determine the name by converting the package name and version
     # into the filename '<namespace>-<name>-<version>.tgz'.
     package_name=$(cut -d "=" -f 2 <<<"$(npm run env | grep "npm_package_name")")
-    package_version=$(cut -d "=" -f 2 <<<"$(npm run env | grep "npm_package_version")")
-    filename="$(echo "${package_name}" | sed 's/^@//' | sed 's/\//-/g')-${package_version}.tgz"
-    echo "** Trying ${filename}... **"
+    package_filename="$(echo "${package_name}" | sed 's/^@//' | sed 's/\//-/g')-${package_version}.tgz"
+    echo "** Trying ${package_filename}... **"
 fi
 
 # NOTE: Get the absolute path of the file since we could be in a subdirectory.
-resolved_filename=$(realpath -e "$filename")
+resolved_filename=$(realpath -e "${package_filename}")
 
-echo "file-path=${resolved_filename}" >>"$GITHUB_OUTPUT"
-echo "filename=${filename}" >>"$GITHUB_OUTPUT"
+{
+    echo "file-path=${resolved_filename}"
+    echo "package-filename=${package_filename}"
+    echo "package-name=${package_name}"
+    echo "package-version=${package_version}"
+    echo "package-integrity=${package_integrity}"
+}>>"$GITHUB_OUTPUT"

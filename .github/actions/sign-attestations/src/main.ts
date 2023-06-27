@@ -58,8 +58,8 @@ async function run(): Promise<void> {
       }
     }
   } catch (error) {
-    if (error instanceof Error) {
-      core.setFailed(error.message);
+    if (error instanceof sigstore.InternalError) {
+      core.setFailed(`${error}: ${error.cause}`);
     } else {
       core.setFailed(`Unexpected error: ${error}`);
     }
