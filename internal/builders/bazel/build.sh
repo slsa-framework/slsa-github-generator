@@ -146,5 +146,6 @@ fi
 # TODO(Issue #2331): switch copy to binaries to a temp dir
 for file in "${!files_set[@]}"; do
   # Remove the symbolic link and copy
-  cp -L "$file" ./binaries
+  # think i need to check to see if file path is already in binaries because of potential double intersection with JARs
+  cp -Lr "$file" ./binaries
 done
