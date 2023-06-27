@@ -53,6 +53,19 @@ on:
         required: false
         type: boolean
         default: false
+      user-java-distribution:
+        description: The Java distribution to setup to build artifacts with.
+        default: "oracle"
+        type: string
+        required: false
+      user-java-version:
+        description: >
+          The Java version to setup to build artifacts with.
+          
+          Supports major versions 8, 11, 16, 17, and other versions also.
+        default: "11"
+        type: string
+        required: false
 
     outputs:
       provenance-download-name:
