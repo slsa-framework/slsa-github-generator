@@ -48,7 +48,6 @@ cat WORKSPACE
 bazel build "${build_flags[@]}" "${build_targets[@]}"
 
 # Use associative array as a set to increase efficency in avoiding double copying the target
-set -u #enable nounset to check empty sets
 declare -A files_set
 declare -A targets_set
 
@@ -108,8 +107,11 @@ else # Upload the artfiacts as standalone pieces, no folders
 fi
 
 # From runfile loops --> unique targets and runfiles to copy
-if [[ ! -z "${#targets_set[@]}" ]]
+#TODO: replace checking without perm change
+set +u #enable nounset to check empty sets
+if [[ "${#targets_set[@]}" -ne 0  ]]
 then
+  set -u # disable now
   for unique_target in "${!targets_set[@]}"; do
     # Removes everything up to and including the first colon
     # "//src/internal:fib" --> "fib"
