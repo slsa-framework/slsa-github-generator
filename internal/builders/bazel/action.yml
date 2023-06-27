@@ -63,11 +63,11 @@ runs:
       run: |
         export JAVA_HOME="$JAVA_HOME"
         echo "tree before"
-        tree
+        tree -a
         echo " "
         echo "tree after cd"
         cd $JAVA_HOME
-        tree
+        tree -a
         # TODO: try inputting JAVA_HOME to WORKSPACE file
 
     - id: build
