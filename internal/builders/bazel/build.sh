@@ -108,7 +108,7 @@ else # Upload the artfiacts as standalone pieces, no folders
 fi
 
 # From runfile loops --> unique targets and runfiles to copy
-if [[ ! -z "${#targets_set[@]}"]]
+if [[ ! -z "${#targets_set[@]}" ]]
 then
   for unique_target in "${!targets_set[@]}"; do
     # Removes everything up to and including the first colon
