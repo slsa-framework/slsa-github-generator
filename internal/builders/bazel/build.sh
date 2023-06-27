@@ -58,7 +58,7 @@ then
     # Removes everything up to and including the first colon
     # "//src/internal:fib" --> "fib"
     binary_name=${curr_target#*:}
-    
+    echo "$binary_name"
     # Logic for Java Targets
     if [[ "$binary_name" == *"_deploy.jar"* ]] 
     then
