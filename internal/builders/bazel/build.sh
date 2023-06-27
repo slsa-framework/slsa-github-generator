@@ -67,7 +67,8 @@ then
     
       # Output is for binary_name.jar
       bazel_generated=$(bazel cquery --output=starlark --starlark:expr="'\n'.join([f.path for f in target.files.to_list()])" "$curr_target" 2>/dev/null)
-      
+
+      #TODO: dont need while here just one output from bazel cquery
       # Uses a Starlark expression to pass new line seperated list of file(s) into the set of files
       while read -r file; do
         # Key value is target path, value we do not care about and is set to constant "1"
