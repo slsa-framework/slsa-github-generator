@@ -48,6 +48,7 @@ cat WORKSPACE
 bazel build "${build_flags[@]}" "${build_targets[@]}"
 
 # Use associative array as a set to increase efficency in avoiding double copying the target
+set -u #enable nounset to check empty sets
 declare -A files_set
 declare -A targets_set
 
