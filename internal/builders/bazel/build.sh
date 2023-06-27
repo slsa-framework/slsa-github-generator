@@ -75,7 +75,7 @@ then
       done <<< "$bazel_generated"
 
       #Add the artifact & runfile dir to set of files
-      files_set["./binaries/$binary_name"]="1"
+      #files_set["./binaries/$binary_name"]="1" #already added to binaries dont need to cp again
       
     else # Logic for other targets needing runfiles
 
