@@ -22,53 +22,103 @@ mkdir binaries
 IFS=' ' read -r -a build_flags <<< "${FLAGS}"
 IFS=' ' read -r -a build_targets <<< "${TARGETS}"
 
-# Ended up being a todo and some scratch notes
-#
-# Todo: add java flag with it as well but now for testing let it be
-#       need to add java flag in external workflow
-#       cool thing is with this flag it only pertains to java compile
-#       can still build C++ targets with this
-#       so then how would logic work with the flags and cases
-#       well if target is _deploy.jar then u know its java
-#       else use other logic which works for C++ and Python
-#       that would work because building target_deploy.jar still builds runscript target.sh
-#       sounds like a plan
-if [[ "${NEEDS-RUNFILES}" ]]
+if [[ "${INCLUDES-JAVA}" ]]
 then
-  # Todo: decide if make additionaljdk name concrete or if user input
-  build_flags+="--java_runtime_version=additionaljdk"
+  build_flags+="--java_runtime_version=myjdk"
 fi
-
-# Todo: Create the logic for runfiles
-#
-# 3 Cases to consider
-#
-# Case 1: C++ or Python --> just need to mkdir for artifact pass runfiles into it
-#
-# Case 2: If Java --> need to build with _deploy.jar ending
-#            then --> Get target.sh run script and target_deploy.jar
-#            then --> pass these things into artifact dir
-#            then --> can run run-script with --singlejar flag
-#
-# Case 3: Custom rulesets --> could potentially support, Java, C++, Python highest priority
 
 # Build with respect to entire arrays of flags and targets
 bazel build "${build_flags[@]}" "${build_targets[@]}"
 
 # Use associative array as a set to increase efficency in avoiding double copying the target
 declare -A files_set
+declare -A targets_set
 
-# Using target string, copy artifact(s) to binaries dir
-for curr_target in "${build_targets[@]}"; do
-  # Get file(s) generated from build with respect to the target
-  bazel_generated=$(bazel cquery --output=starlark --starlark:expr="'\n'.join([f.path for f in target.files.to_list()])" "$curr_target" 2>/dev/null)
+# Create folders for each artifact and include the runfiles in that dir
+if [[ "${NEEDS-RUNFILES}" ]]
+then
+  for curr_target in "${build_targets[@]}"; do
+    # Removes everything up to and including the first colon
+    # "//src/internal:fib" --> "fib"
+    binary_name=${curr_target#*:}
+    
+    # Logic for Java Targets
+    if [[ "$binary_name" == *"_deploy.jar"* ]] 
+    then
+      # Create dir for artifact and its runfiles
+      mkdir "./binaries/$binary_name"
+    
+      # Two outputs are binary_name.jar and binary_name.sh
+      bazel_generated=$(bazel cquery --output=starlark --starlark:expr="'\n'.join([f.path for f in target.files.to_list()])" "$curr_target" 2>/dev/null)
+      
+      # Uses a Starlark expression to pass new line seperated list of file(s) into the set of files
+      while read -r file; do
+        # Key value is target path, value we do not care about and is set to constant "1"
+        cp -L "$file" "./binaries/$binary_name"
+      done <<< "$bazel_generated"
+
+      #Add the artifact & runfile dir to set of files
+      files_set["./binaries/$binary_name"]="1"
+      
+    else # Logic for other targets needing runfiles
+
+      # Run cquery twice and transfer targets in case of generic glob patterns such as "//src/..." that intersect with other targets
+      bazel_generated=$(bazel cquery --output=starlark --starlark:expr="'\n'.join([f.path for f in target.files.to_list()])" "$curr_target" 2>/dev/null)
+      
+      # Uses a Starlark expression to pass new line seperated list of targets into the set of targets
+      while read -r target; do
+        # Key value is target path, value we do not care about and is set to constant "1"
+        targets_set["${target}"]="1"
+      done <<< "$bazel_generated"  
+    fi
+  done
   
-  # Uses a Starlark expression to pass new line seperated list of file(s) into the set of files
-  while read -r file; do
-    # Key value is target path, value we do not care about and is set to constant "1"
-    files_set["${file}"]="1"
-  done <<< "$bazel_generated"
-done
+else # Upload the artfiacts as standalone pieces, no folders
+
+  # Using target string, copy artifact(s) to binaries dir
+  for curr_target in "${build_targets[@]}"; do
+    # Get file(s) generated from build with respect to the target
+    bazel_generated=$(bazel cquery --output=starlark --starlark:expr="'\n'.join([f.path for f in target.files.to_list()])" "$curr_target" 2>/dev/null)
+    
+    # Uses a Starlark expression to pass new line seperated list of file(s) into the set of files
+    while read -r file; do
+      # Key value is target path, value we do not care about and is set to constant "1"
+      files_set["${file}"]="1"
+    done <<< "$bazel_generated"
+  done
+  
+fi
+
+# From runfile loops --> unique targets and runfiles to copy
+if [[ "${#targets_set[@]}" -ne 0 ]]
+then
+  for unique_target in "${!targets_set[@]}"; do
+    # Removes everything up to and including the first colon
+    # "//src/internal:fib" --> "fib"
+    binary_name=${unique_target#*:}
+    
+    # Create dir for artifact and its runfiles
+    mkdir "./binaries/$binary_name"
+
+    # Copy the target and runfiles
+    target_path=$(bazel cquery --output=starlark --starlark:expr="'\n'.join([f.path for f in target.files.to_list()])" "$curr_target" 2>/dev/null)
+    cp -L target_path "./binaries/$binary_name"
+    
+    if [[ -d (target_path+=".runfiles") ]]
+    then
+      target_runfiles=$target_path+=".runfiles"
+      cp -Lr "$target_runfiles" "./binaries/$binary_name"
+      cd "./binaries/$binary_name/$binary_name.runfiles/"
+      
+      # Unneeded and can contain unwanted symbolic links
+      rm -rf _main/external
+      rm -rf MANIFEST
+      rm -rf _repo_mapping  
+      
+      # Go back to the old dir
+      cd -
+  done
+fi
 
 # Copy set of unique targets to binaries. Without !, it would give values not keys
 # TODO(Issue #2331): switch copy to binaries to a temp dir
