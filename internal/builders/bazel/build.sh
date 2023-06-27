@@ -33,7 +33,7 @@ then
 
   java_rule="
   load(\"@bazel_tools//tools/jdk:local_java_repository.bzl\", \"local_java_repository\")
-
+  \n
   local_java_repository(
     name = \"myjdk\",
     java_home = \"$JAVA_HOME\",
