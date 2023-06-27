@@ -58,12 +58,14 @@ then
     # Removes everything up to and including the first colon
     # "//src/internal:fib" --> "fib"
     binary_name=${curr_target#*:}
+    run_script_name=$(echo $binary_name | awk -F'_deploy.jar' '{print $1}')
+    echo "$run_script_name"
     echo "$binary_name"
     # Logic for Java Targets
     if [[ "$binary_name" == *"_deploy.jar"* ]] 
     then
       # Create dir for artifact and its runfiles
-      mkdir "./binaries/$binary_name"
+      mkdir "./binaries/$run_script_name"
     
       # Output is for binary_name.jar
       bazel_generated=$(bazel cquery --output=starlark --starlark:expr="'\n'.join([f.path for f in target.files.to_list()])" "$curr_target" 2>/dev/null)
@@ -72,10 +74,17 @@ then
       # Uses a Starlark expression to pass new line seperated list of file(s) into the set of files
       while read -r file; do
         # Key value is target path, value we do not care about and is set to constant "1"
-        cp -Lr "$file" "./binaries/$binary_name"
+        cp -Lr "$file" "./binaries/$run_script_name"
         
         run_script_path=$(echo $file | awk -F'_deploy.jar' '{print $1}')
-        run_script_name=$(echo $binary_name | awk -F'_deploy.jar' '{print $1}')
+
+        if [! -z "$USER-LOCAL-JAVABIN"]
+        then
+          # Configure runscript such that it will run on user's machine
+          # TODO: maybe ask Bazel if they can input a flag for this
+          # Or should there be a wrapper script around the wrapper script with the flag?
+          sed -i '46i JAVABIN="$USER-LOCAL-JAVABIN"' FILE
+        fi
         cp -L "$run_script_path" "./binaries/$run_script_name"
       done <<< "$bazel_generated"
 
