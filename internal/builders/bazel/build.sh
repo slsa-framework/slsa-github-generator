@@ -39,7 +39,7 @@ then
     java_home = \"$JAVA_HOME\",
   )"
 
-  echo "java_rule" >> ./WORKSPACE
+  echo "$java_rule" >> ./WORKSPACE
 fi
 
 # Debug
