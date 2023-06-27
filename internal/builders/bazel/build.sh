@@ -31,14 +31,12 @@ then
   echo "$JAVA_HOME"
   echo "$PWD"
 
-  java_rule="
-  local_java_repository(
+  java_rule="local_java_repository(
     name = \"myjdk\",
     java_home = \"$JAVA_HOME\",
   )"
 
   echo "load(\"@bazel_tools//tools/jdk:local_java_repository.bzl\", \"local_java_repository\")" >> ./WORKSPACE
-  echo "" >> ./WORKSPACE
   echo "$java_rule" >> ./WORKSPACE
   
 fi
