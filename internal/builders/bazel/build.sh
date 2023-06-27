@@ -25,6 +25,8 @@ IFS=' ' read -r -a build_targets <<< "${TARGETS}"
 if [[ "${INCLUDES-JAVA}" ]]
 then
   build_flags+="--java_runtime_version=myjdk"
+  echo "$JAVA_HOME"
+  echo "$PWD"
 fi
 
 # Build with respect to entire arrays of flags and targets
