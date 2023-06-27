@@ -64,6 +64,7 @@ runs:
         export JAVA_HOME="$JAVA_HOME"
         cd $JAVA_HOME
         tree
+        # TODO: try inputting JAVA_HOME to WORKSPACE file
 
     - id: build
       env:
