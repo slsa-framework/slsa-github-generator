@@ -62,6 +62,10 @@ runs:
       shell: bash
       run: |
         export JAVA_HOME="$JAVA_HOME"
+        echo "tree before"
+        tree
+        echo " "
+        echo "tree after cd"
         cd $JAVA_HOME
         tree
         # TODO: try inputting JAVA_HOME to WORKSPACE file
