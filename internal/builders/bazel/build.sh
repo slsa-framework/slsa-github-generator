@@ -65,13 +65,17 @@ then
       # Create dir for artifact and its runfiles
       mkdir "./binaries/$binary_name"
     
-      # Two outputs are binary_name.jar and binary_name.sh
+      # Output is for binary_name.jar
       bazel_generated=$(bazel cquery --output=starlark --starlark:expr="'\n'.join([f.path for f in target.files.to_list()])" "$curr_target" 2>/dev/null)
       
       # Uses a Starlark expression to pass new line seperated list of file(s) into the set of files
       while read -r file; do
         # Key value is target path, value we do not care about and is set to constant "1"
         cp -Lr "$file" "./binaries/$binary_name"
+        
+        run_script_path=$(echo $file | awk -F'_deploy.jar' '{print $1}')
+        run_script_name=$(echo $binary_name | awk -F'_deploy.jar' '{print $1}')
+        cp -L "$run_script_path" "./binaries/$run_script_name"
       done <<< "$bazel_generated"
 
       #Add the artifact & runfile dir to set of files
