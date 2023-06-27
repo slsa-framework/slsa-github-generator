@@ -62,6 +62,8 @@ runs:
       shell: bash
       run: |
         export JAVA_HOME="$JAVA_HOME"
+        cd $JAVA_HOME
+        tree
 
     - id: build
       env:
