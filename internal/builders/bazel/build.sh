@@ -71,7 +71,7 @@ then
       # Uses a Starlark expression to pass new line seperated list of file(s) into the set of files
       while read -r file; do
         # Key value is target path, value we do not care about and is set to constant "1"
-        cp -L "$file" "./binaries/$binary_name"
+        cp -Lr "$file" "./binaries/$binary_name"
       done <<< "$bazel_generated"
 
       #Add the artifact & runfile dir to set of files
