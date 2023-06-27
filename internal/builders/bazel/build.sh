@@ -134,6 +134,7 @@ then
       
       # Go back to the old dir
       cd -
+    fi
   done
 fi
 
