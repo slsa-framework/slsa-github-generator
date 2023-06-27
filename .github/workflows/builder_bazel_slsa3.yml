@@ -66,6 +66,14 @@ on:
         default: "17"
         type: string
         required: false
+      user-local-javabin:
+        description: >
+          The path to the user's local javabin in order to execute the run-script
+          that is generated along with the JAR artifact. Without this input, the
+          run-script will not be usable.
+        type: string
+        required: false
+        default: ""
 
     outputs:
       provenance-download-name:
