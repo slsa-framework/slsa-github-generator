@@ -50,6 +50,12 @@ runs:
     - name: Setup Bazelisk
       id: bazelisk
       uses: bazelbuild/setup-bazelisk@95c9bf48d0c570bb3e28e57108f3450cd67c1a44 # v2.0.0
+    - name: Setup Java
+      id: java
+      uses: actions/setup-java/5ffc13f4174014e2d4d4572b3d74c3fa61aeb2c2 # v3.11.0
+      with:
+        distribution: "${{ fromJson(inputs.slsa-workflow-inputs).user-java-distribution }}"
+        java-version: "${{ fromJson(inputs.slsa-workflow-inputs).user-java-version }}"
 
     - id: build
       env:
