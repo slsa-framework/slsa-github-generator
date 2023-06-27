@@ -31,7 +31,7 @@ do
           
     echo -n "
         {
-          \"name\": \"${bn}.intoto\",
+          \"name\": \"${bn}\",
           \"subjects\": [
             { \"name\": \"${bn}\",
               \"digest\": { \"sha256\": \"${hash}\"  }
