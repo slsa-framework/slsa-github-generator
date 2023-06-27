@@ -22,12 +22,28 @@ mkdir binaries
 IFS=' ' read -r -a build_flags <<< "${FLAGS}"
 IFS=' ' read -r -a build_targets <<< "${TARGETS}"
 
+# debug
+cat WORKSPACE
+
 if [[ "${INCLUDES-JAVA}" ]]
 then
   build_flags+="--java_runtime_version=myjdk"
   echo "$JAVA_HOME"
   echo "$PWD"
+
+  java_rule="
+  load(\"@bazel_tools//tools/jdk:local_java_repository.bzl\", \"local_java_repository\")
+
+  local_java_repository(
+    name = \"myjdk\",
+    java_home = \"$JAVA_HOME\",
+  )"
+
+  echo "java_rule" >> ./WORKSPACE
 fi
+
+# Debug
+cat WORKSPACE
 
 # Build with respect to entire arrays of flags and targets
 bazel build "${build_flags[@]}" "${build_targets[@]}"
