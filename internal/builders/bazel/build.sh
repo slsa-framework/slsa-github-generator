@@ -27,7 +27,7 @@ IFS=' ' read -r -a build_targets <<< "${TARGETS}"
 # and add Github Runner Java rule to WORKSPACE
 if [[ "${INCLUDES_JAVA}" ]]
 then
-  build_flags+="--java_runtime_version=myjdk"
+  build_flags+=("--java_runtime_version=myjdk")
 
   java_rule="local_java_repository(
     name = \"myjdk\",
@@ -64,7 +64,7 @@ for input in "${build_targets[@]}"; do
     then
       # Build Java target to deploy.
       bazel build "${build_flags[@]}" "${target}_deploy.jar"
-      inputs_set["${target}_deploy.jar"]="1"
+      targets_set["${target}_deploy.jar"]="1"
     else
       # Build target regularly.
       bazel build "${build_flags[@]}" "$target"
@@ -111,7 +111,7 @@ for curr_target in "${!targets_set[@]}"; do
     # Get the path the to run-script associated with the {$curr_target}_deploy.jar
     # If the user inputted the path to their local JAVABIN insert that into the run-script to define it.
     # Inputting a local path to JAVABIN is needed or else run-script will not work as it points to Github Runner JAVABIN
-    run_script_path=$(echo $file | awk -F'_deploy.jar' '{print $1}')
+    run_script_path=$(echo "$file" | awk -F'_deploy.jar' '{print $1}')
     if [[ ! -z "${USER_LOCAL_JAVABIN}" ]]
     then
       # Insert user's JAVABIN as env var to define it at beginning of run-script.
