@@ -138,7 +138,7 @@ then
     # Removes everything up to and including the last /
     # "./binaries/bazel-out/k8-fastbuild/bin/src/fib --> "fib"
     echo $unique_target
-    binary_name=$(basename unique_target)
+    binary_name=$(basename "$unique_target")
     echo $binary_name
     # Create dir for artifact and its runfiles
     mkdir "./binaries/$binary_name"
