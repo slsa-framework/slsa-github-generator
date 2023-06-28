@@ -50,12 +50,10 @@ declare -A targets_set
 ################################################
 
 for input in "${build_targets[@]}"; do
-  echo "$input"
   
   # Using bazel query extracts all targets from a glob pattern.
   # Thus we can change Java targets to their _deploy.jar target.
   for target in $(bazel query "$input"); do
-    echo "$target"
 
     # Check to see if the target is a Java target. If it is the output is a Java target.
     # Note: targets that already have the _deploy.jar suffix will have no output from the query
@@ -108,7 +106,7 @@ for curr_target in "${!targets_set[@]}"; do
     file="$bazel_generated"
     cp -Lr "$file" "./binaries/$run_script_name"
     
-    # TODO: Create wrapper script to take in any local JAVABIN on input, and not from user's Github Workflow.
+    # TODO: Create wrapper script to take in any local JAVABIN on input, and not from user's Github Workflow?
     # Get the path the to run-script associated with the {$curr_target}_deploy.jar
     # If the user inputted the path to their local JAVABIN insert that into the run-script to define it.
     # Inputting a local path to JAVABIN is needed or else run-script will not work as it points to Github Runner JAVABIN
@@ -167,7 +165,6 @@ for curr_target in "${!targets_set[@]}"; do
         fi
       done <<< "$bazel_generated"
 
-      
     ################################################
     #                                              #
     #   Logic for NON-Runfile-Needing Targets      #
