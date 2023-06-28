@@ -147,7 +147,7 @@ then
     # target_path=$(bazel cquery --output=starlark --starlark:expr="'\n'.join([f.path for f in target.files.to_list()])" "$unique_target" 2>/dev/null)
     # echo "$target_path"
     # echo "^"
-    cp -L "$unique_target "./binaries/$binary_name"
+    cp -L "$unique_target" "./binaries/$binary_name"
 
     # if runfiles dir exists
     if [[ -d target_path+=".runfiles" ]]
