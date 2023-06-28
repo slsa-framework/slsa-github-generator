@@ -45,7 +45,22 @@ fi
 cat WORKSPACE
 
 # Build with respect to entire arrays of flags and targets
-bazel build "${build_flags[@]}" "${build_targets[@]}"
+#bazel build "${build_flags[@]}" "${build_targets[@]}"
+
+# Could this query be slow? Maybe add input-flag for generic glob patterns?
+for input in "${build_targets[@]}"; do
+  for target in $(bazel query "$target"); do
+    output=$(bazel query "kind(java_binary, $target)" 2>/dev/null)
+    if [[ -n "$output" ]]
+    then
+      # target is a java target
+      bazel build "${build_flags[@]}" "${target}_deploy.jar"
+    else
+      # target is not a bazel target
+      bazel build "${build_flags[@]}" "$target"
+    fi
+  done
+done
 
 # Use associative array as a set to increase efficency in avoiding double copying the target
 declare -A files_set
