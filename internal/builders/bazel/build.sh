@@ -83,7 +83,7 @@ then
           # Configure runscript such that it will run on user's machine
           # TODO: maybe ask Bazel if they can input a flag for this
           # Or should there be a wrapper script around the wrapper script with the flag?
-          sed -i '46i JAVABIN="$USER-LOCAL-JAVABIN"' FILE
+          sed -i '46i JAVABIN="$USER-LOCAL-JAVABIN"' "$run_script_path"
         fi
         cp -L "$run_script_path" "./binaries/$run_script_name"
       done <<< "$bazel_generated"
