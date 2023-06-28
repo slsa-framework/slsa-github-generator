@@ -49,7 +49,9 @@ cat WORKSPACE
 
 # Could this query be slow? Maybe add input-flag for generic glob patterns?
 for input in "${build_targets[@]}"; do
+  echo "$input"
   for target in $(bazel query "$target"); do
+    echo "$target"
     output=$(bazel query "kind(java_binary, $target)" 2>/dev/null)
     if [[ -n "$output" ]]
     then
