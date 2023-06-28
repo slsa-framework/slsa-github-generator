@@ -25,7 +25,7 @@ IFS=' ' read -r -a build_targets <<< "${TARGETS}"
 # debug
 cat WORKSPACE
 
-if [[ "${INCLUDES-JAVA}" ]]
+if [[ "${INCLUDES_JAVA}" ]]
 then
   build_flags+="--java_runtime_version=myjdk"
   echo "$JAVA_HOME"
@@ -38,7 +38,7 @@ then
 
   echo "load(\"@bazel_tools//tools/jdk:local_java_repository.bzl\", \"local_java_repository\")" >> ./WORKSPACE
   echo "$java_rule" >> ./WORKSPACE
-  
+
 fi
 
 # Debug
@@ -52,7 +52,7 @@ declare -A files_set
 declare -A targets_set
 
 # Create folders for each artifact and include the runfiles in that dir
-if [[ "${NEEDS-RUNFILES}" ]]
+if [[ "${NEEDS_RUNFILES}" ]]
 then
   for curr_target in "${build_targets[@]}"; do
     # Removes everything up to and including the first colon
@@ -62,11 +62,11 @@ then
     echo "$run_script_name"
     echo "$binary_name"
     # Logic for Java Targets
-    if [[ "$binary_name" == *"_deploy.jar"* ]] 
+    if [[ "$binary_name" == *"_deploy.jar"* ]]
     then
       # Create dir for artifact and its runfiles
       mkdir "./binaries/$run_script_name"
-    
+
       # Output is for binary_name.jar
       bazel_generated=$(bazel cquery --output=starlark --starlark:expr="'\n'.join([f.path for f in target.files.to_list()])" "$curr_target" 2>/dev/null)
 
@@ -75,49 +75,49 @@ then
       while read -r file; do
         # Key value is target path, value we do not care about and is set to constant "1"
         cp -Lr "$file" "./binaries/$run_script_name"
-        
+
         run_script_path=$(echo $file | awk -F'_deploy.jar' '{print $1}')
 
-        if [[ ! -z "${USER-LOCAL-JAVABIN}" ]]
+        if [[ ! -z "${USER_LOCAL_JAVABIN}" ]]
         then
           # Configure runscript such that it will run on user's machine
           # TODO: maybe ask Bazel if they can input a flag for this
           # Or should there be a wrapper script around the wrapper script with the flag?
-          sed -i '46i JAVABIN="$USER-LOCAL-JAVABIN"' "$run_script_path"
+          sed -i "46i JAVABIN=$USER_LOCAL_JAVABIN" "$run_script_path"
         fi
         cp -L "$run_script_path" "./binaries/$run_script_name"
       done <<< "$bazel_generated"
 
       #Add the artifact & runfile dir to set of files
       #files_set["./binaries/$binary_name"]="1" #already added to binaries dont need to cp again
-      
+
     else # Logic for other targets needing runfiles
 
       # Run cquery twice and transfer targets in case of generic glob patterns such as "//src/..." that intersect with other targets
       bazel_generated=$(bazel cquery --output=starlark --starlark:expr="'\n'.join([f.path for f in target.files.to_list()])" "$curr_target" 2>/dev/null)
-      
+
       # Uses a Starlark expression to pass new line seperated list of targets into the set of targets
       while read -r target; do
         # Key value is target path, value we do not care about and is set to constant "1"
         targets_set["${target}"]="1"
-      done <<< "$bazel_generated"  
+      done <<< "$bazel_generated"
     fi
   done
-  
+
 else # Upload the artfiacts as standalone pieces, no folders
 
   # Using target string, copy artifact(s) to binaries dir
   for curr_target in "${build_targets[@]}"; do
     # Get file(s) generated from build with respect to the target
     bazel_generated=$(bazel cquery --output=starlark --starlark:expr="'\n'.join([f.path for f in target.files.to_list()])" "$curr_target" 2>/dev/null)
-    
+
     # Uses a Starlark expression to pass new line seperated list of file(s) into the set of files
     while read -r file; do
       # Key value is target path, value we do not care about and is set to constant "1"
       files_set["${file}"]="1"
     done <<< "$bazel_generated"
   done
-  
+
 fi
 
 # From runfile loops --> unique targets and runfiles to copy
@@ -130,7 +130,7 @@ then
     # Removes everything up to and including the first colon
     # "//src/internal:fib" --> "fib"
     binary_name=${unique_target#*:}
-    
+
     # Create dir for artifact and its runfiles
     mkdir "./binaries/$binary_name"
 
@@ -144,12 +144,12 @@ then
       target_runfiles=$target_path+=".runfiles"
       cp -Lr "$target_runfiles" "./binaries/$binary_name"
       cd "./binaries/$binary_name/$binary_name.runfiles/"
-      
+
       # Unneeded and can contain unwanted symbolic links
       rm -rf _main/external
       rm -rf MANIFEST
-      rm -rf _repo_mapping  
-      
+      rm -rf _repo_mapping
+
       # Go back to the old dir
       cd -
     fi
