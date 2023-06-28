@@ -57,14 +57,15 @@ for input in "${build_targets[@]}"; do
   for target in $(bazel query "$input"); do
     echo "$target"
 
-    # Check to see if the target is a Java target. If it is the output
-    # will be the Java target.
+    # Check to see if the target is a Java target. If it is the output is a Java target.
+    # Note: targets that already have the _deploy.jar suffix will have no output from the query
     output=$(bazel query "kind(java_binary, $target)" 2>/dev/null)
+    
+    # If there is a Java target without _deploy.jar suffix, add suffix, build and add to target set.
     if [[ -n "$output" ]]
     then
-      # Build Java target to deploy.
       bazel build "${build_flags[@]}" "${target}_deploy.jar"
-      targets_set["${target}_deploy.jar"]="1"
+      targets_set["${target}_deploy.jar"]="1"    
     else
       # Build target regularly.
       bazel build "${build_flags[@]}" "$target"
@@ -75,7 +76,7 @@ done
 
 ################################################
 #                                              #
-#      Generate and Copy Needed Artifacts      #
+#    Copy Needed Artifacts To Binaries Dir     #
 #                                              #
 ################################################
 
@@ -114,7 +115,7 @@ for curr_target in "${!targets_set[@]}"; do
     run_script_path=$(echo "$file" | awk -F'_deploy.jar' '{print $1}')
     if [[ ! -z "${USER_LOCAL_JAVABIN}" ]]
     then
-      # Insert user's JAVABIN as env var to define it at beginning of run-script.
+      # Insert user's JAVABIN as env var to define it at beginning of run-script, specifically at Line 46 after comments.
       sed -i "46i JAVABIN=$USER_LOCAL_JAVABIN" "$run_script_path"
     fi
     
