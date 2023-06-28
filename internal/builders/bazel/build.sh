@@ -145,6 +145,8 @@ then
 
     # Copy the target and runfiles
     target_path=$(bazel cquery --output=starlark --starlark:expr="'\n'.join([f.path for f in target.files.to_list()])" "$curr_target" 2>/dev/null)
+    echo "$target_path"
+    echo "^"
     cp -L "$target_path" "./binaries/$binary_name"
 
     # if runfiles dir exists
