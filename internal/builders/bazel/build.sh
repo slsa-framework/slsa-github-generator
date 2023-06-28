@@ -94,7 +94,7 @@ for curr_target in "${!targets_set[@]}"; do
   if [[ "$binary_name" == *"_deploy.jar"* ]]
   then
     # Uses _deploy.jar as a field seperator and grabs the field before it.
-    run_script_name=$(echo $binary_name | awk -F'_deploy.jar' '{print $1}')
+    run_script_name=$(echo "$binary_name" | awk -F'_deploy.jar' '{print $1}')
 
     # Create dir for artifact and its runfiles
     mkdir "./binaries/$run_script_name"
@@ -111,7 +111,7 @@ for curr_target in "${!targets_set[@]}"; do
     # If the user inputted the path to their local JAVABIN insert that into the run-script to define it.
     # Inputting a local path to JAVABIN is needed or else run-script will not work as it points to Github Runner JAVABIN
     run_script_path=$(echo "$file" | awk -F'_deploy.jar' '{print $1}')
-    if [[ ! -z "${USER_LOCAL_JAVABIN}" ]]
+    if [[ -n "${USER_LOCAL_JAVABIN}" ]]
     then
       # Insert user's JAVABIN as env var to define it at beginning of run-script, specifically at Line 46 after comments.
       sed -i "46i JAVABIN=$USER_LOCAL_JAVABIN" "$run_script_path"
