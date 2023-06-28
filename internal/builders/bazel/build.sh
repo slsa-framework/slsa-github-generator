@@ -25,7 +25,7 @@ IFS=' ' read -r -a build_targets <<< "${TARGETS}"
 
 # If the targets includes Java targets, include Java build flag
 # and add Github Runner Java rule to WORKSPACE
-if [[ "${INCLUDES_JAVA}" ]]
+if [[ "${INCLUDES_JAVA}" == "true" ]]
 then
   build_flags+=("--java_runtime_version=myjdk")
 
@@ -134,7 +134,7 @@ for curr_target in "${!targets_set[@]}"; do
     #                                              #
     ################################################
 
-    if [[ "${NEEDS_RUNFILES}" ]]
+    if [[ "${NEEDS_RUNFILES}" == "true" ]]
     then
       # Get file(s) generated from build with respect to the target
       bazel_generated=$(bazel cquery --output=starlark --starlark:expr="'\n'.join([f.path for f in target.files.to_list()])" "$curr_target" 2>/dev/null)
