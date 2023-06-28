@@ -144,7 +144,7 @@ for curr_target in "${!targets_set[@]}"; do
       mkdir "./binaries/$binary_name"
 
       # Uses a Starlark expression to pass new line seperated list of file(s) into the set of files
-      while read -r path_to_artifact do
+      while read -r path_to_artifact; do
 
         # Copy generated artifact from absolute path from bazel cquery
         cp -L "$path_to_artifact" "./binaries/$binary_name"
