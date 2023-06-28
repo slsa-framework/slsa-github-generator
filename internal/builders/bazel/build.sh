@@ -78,7 +78,7 @@ then
         
         run_script_path=$(echo $file | awk -F'_deploy.jar' '{print $1}')
 
-        if [[ ! -z "$USER-LOCAL-JAVABIN" ]]
+        if [[ ! -z "${USER-LOCAL-JAVABIN}" ]]
         then
           # Configure runscript such that it will run on user's machine
           # TODO: maybe ask Bazel if they can input a flag for this
