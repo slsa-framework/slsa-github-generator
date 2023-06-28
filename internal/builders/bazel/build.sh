@@ -47,10 +47,13 @@ cat WORKSPACE
 # Build with respect to entire arrays of flags and targets
 #bazel build "${build_flags[@]}" "${build_targets[@]}"
 
+echo "start first loop"
+echo ""
+
 # Could this query be slow? Maybe add input-flag for generic glob patterns?
 for input in "${build_targets[@]}"; do
   echo "$input"
-  for target in $(bazel query "$target"); do
+  for target in $(bazel query "$input"); do
     echo "$target"
     output=$(bazel query "kind(java_binary, $target)" 2>/dev/null)
     if [[ -n "$output" ]]
