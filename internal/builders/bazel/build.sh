@@ -104,6 +104,14 @@ then
     fi
   done
 
+  # DEBUG
+  for target in "${!targets_set[@]}"; do
+    # echo out entire targets set
+    echo "$target"
+  done
+
+  echo ""
+  echo "targets above"
 else # Upload the artfiacts as standalone pieces, no folders
 
   # Using target string, copy artifact(s) to binaries dir
@@ -127,9 +135,9 @@ if [[ "${#targets_set[@]}" -ne 0  ]]
 then
   set -u # disable now
   for unique_target in "${!targets_set[@]}"; do
-    # Removes everything up to and including the first colon
-    # "//src/internal:fib" --> "fib"
-    binary_name=${unique_target#*:}
+    # Removes everything up to and including the last /
+    # "./binaries/bazel-out/k8-fastbuild/bin/src/fib --> "fib"
+    binary_name=$(basename unique_target)
 
     # Create dir for artifact and its runfiles
     mkdir "./binaries/$binary_name"
