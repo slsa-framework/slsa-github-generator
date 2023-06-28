@@ -41,6 +41,10 @@ on:
       provenance-download-sha256:
         description: "The sha256 of the provenance attestation uploaded to the workflow run."
         value: "${{ jobs.slsa-run.outputs.attestations-download-sha256 }}"
+
+      target-download-sha256:
+        description: "The sha256 of the target uploaded to the workflow run."
+        value: "${{ fromJSON(jobs.slsa-run.outputs.build-artifacts-outputs).target-download-sha256 }}"
 jobs:
   slsa-setup:
     permissions:
@@ -66,7 +70,7 @@ jobs:
       contents: read # For asset uploads.
       actions: read # For the entrypoint.
       packages: write # To publish to GitHub packages.
-    uses: AdamKorcz/slsa-github-generator/.github/workflows/delegator_lowperms-generic_slsa3.yml@maven2
+    uses: slsa-framework/slsa-github-generator/.github/workflows/delegator_lowperms-generic_slsa3.yml@main
     with:
       slsa-token: "${{ needs.slsa-setup.outputs.slsa-token }}"
 

@@ -23,6 +23,10 @@ on:
         description: "The sha256 of the package provenance artifact."
         required: false
         type: string
+      target-download-sha256:
+        description: "The sha256 of the target directory."
+        required: true
+        type: string
     secrets:
       maven-username:
         description: "Maven username"
@@ -66,10 +70,11 @@ jobs:
           sha256: "${{ inputs.provenance-download-sha256 }}"
 
       - name: Download the target dir
-        uses: actions/download-artifact@v3
+        uses: slsa-framework/slsa-github-generator/.github/actions/secure-download-folder@main
         with:
           name: target
           path: ./target
+          sha256: "${{ inputs.target-download-sha256 }}"
 
       - name: Publish to the Maven Central Repository
         shell: bash
@@ -80,11 +85,8 @@ jobs:
           SLSA_DIR: "${{ inputs.provenance-download-name }}"
           PROVENANCE_FILES: "${{ inputs.provenance-download-name }}"
         run: |
-          echo "ls 2"
-          ls
-          echo "ls slsa-attestations"
-          ls slsa-attestations
-          ls slsa-attestations/"${PROVENANCE_FILES}"
+          echo "ls target"
+          ls target
           # Build and run custom plugin
           cd plugin && mvn clean install && cd ..
           # Re-indexing the secondary jar files for deploy
