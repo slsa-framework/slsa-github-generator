@@ -150,9 +150,9 @@ then
     cp -L "$unique_target" "./binaries/$binary_name"
 
     # if runfiles dir exists
-    if [[ -d target_path+=".runfiles" ]]
+    if [[ -d "${unique_target}.runfiles" ]]
     then
-      target_runfiles=$target_path+=".runfiles"
+      target_runfiles="${unique_target}.runfiles"
       cp -Lr "$target_runfiles" "./binaries/$binary_name"
       cd "./binaries/$binary_name/$binary_name.runfiles/"
 
