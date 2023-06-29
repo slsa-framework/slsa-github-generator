@@ -120,13 +120,11 @@ for curr_target in "${!targets_set[@]}"; do
     # to the user input. This allows users that download the binaries from the Github workflow to be able
     # to run the run-script themselves, which would not be possible as it is either set to the Github Runner VM Java bin path
     # if no flag to USER_LOCAL_JAVABIN is passed in their workflow or to the path passed in their flag.
-    awk -v n=67 -v s='    --local_javabin=*) USER_JAVA_BIN="${1#--local_javabin}" ;;' 'NR == n {print s} {print}' $run_script_path > temp_file && mv -f temp_file $run_script_path
-    awk -v n=83 -v s='' 'NR == n {print s} {print}' $run_script_path > temp_file && mv -f temp_file $run_script_path
-    awk -v n=84 -v s='if [[ -n $USER_JAVA_BIN ]]; then JAVABIN=$USER_JAVA_BIN; fi' 'NR == n {print s} {print}' $run_script_path > temp_file && mv -f temp_file $run_script_path
-
+    awk -v n=67 -v s='    --local_javabin=*) USER_JAVA_BIN="${1#--local_javabin}" ;;' 'NR == n {print s} {print}' "$run_script_path" > temp_file && mv -f temp_file "$run_script_path"
+    awk -v n=83 -v s='' 'NR == n {print s} {print}' "$run_script_path" > temp_file && mv -f temp_file "$run_script_path"
+    awk -v n=84 -v s='if [[ -n $USER_JAVA_BIN ]]; then JAVABIN=$USER_JAVA_BIN; fi' 'NR == n {print s} {print}' "$run_script_path" > temp_file && mv -f temp_file "$run_script_path"
     
     cp -L "$run_script_path" "./binaries/$run_script_name"
-
 
   ################################################
   #                                              #
@@ -187,6 +185,5 @@ for curr_target in "${!targets_set[@]}"; do
           cp -L "$file" ./binaries
       done <<< "$bazel_generated"
     fi
-  
   fi
 done
