@@ -1,0 +1,127 @@
+# Copyright 2023 SLSA Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+on:
+  workflow_call:
+    inputs:
+      provenance-download-name:
+        description: "The artifact name for the package provenance."
+        required: true
+        type: string
+      provenance-download-sha256:
+        description: "The sha256 of the package provenance artifact."
+        required: false
+        type: string
+      target-download-sha256:
+        description: "The sha256 of the target directory."
+        required: true
+        type: string
+    secrets:
+      maven-username:
+        description: "Maven username"
+        required: false
+      maven-password:
+        description: "Maven password"
+        required: false
+      gpg-key-pass:
+        description: "gpg-key-pass"
+        required: false
+      gpg-private-key:
+        description: "gpg-key-pass"
+        required: false
+
+jobs:
+  setup-java:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the project repository
+        uses: slsa-framework/slsa-github-generator/.github/actions/secure-project-checkout@main
+      - name: Set up Java for publishing to Maven Central Repository
+        uses: actions/setup-java@v3
+        env:
+          MAVEN_USERNAME: ${{ secrets.maven-username }}
+          MAVEN_PASSWORD: ${{ secrets.maven-password }}
+          GPG_KEY_PASS: ${{ secrets.gpg-key-pass }}
+        with:
+          java-version: '11'
+          distribution: 'temurin'
+          server-id: ossrh
+          server-username: MAVEN_USERNAME
+          server-password: MAVEN_PASSWORD
+          gpg-private-key: ${{ secrets.gpg-private-key }}
+          gpg-passphrase: GPG_KEY_PASS
+
+      - name: Download the slsa attestation
+        uses: slsa-framework/slsa-github-generator/.github/actions/secure-download-folder@main
+        with:
+          name: "${{ inputs.provenance-download-name }}"
+          path: slsa-attestations
+          sha256: "${{ inputs.provenance-download-sha256 }}"
+
+      - name: Download the target dir
+        uses: slsa-framework/slsa-github-generator/.github/actions/secure-download-folder@main
+        with:
+          name: target
+          path: ./
+          sha256: "${{ inputs.target-download-sha256 }}"
+
+      - name: Publish to the Maven Central Repository
+        shell: bash
+        env:
+          MAVEN_USERNAME: "${{ secrets.maven-username }}"
+          MAVEN_PASSWORD: "${{ secrets.maven-password }}"
+          GPG_KEY_PASS: "${{ secrets.gpg-key-pass }}"
+          SLSA_DIR: "${{ inputs.provenance-download-name }}"
+          PROVENANCE_FILES: "${{ inputs.provenance-download-name }}"
+        run: |
+          # Build and run custom plugin
+          cd plugin && mvn clean install && cd ..
+          # Re-indexing the secondary jar files for deploy
+          mvn javadoc:jar source:jar
+          echo "find javadoc"
+          find . -name "*javadoc*"
+          echo "end find javadoc"
+          # Retrieve project version
+          VERSION=$(mvn org.apache.maven.plugins:maven-help-plugin:3.2.0:evaluate -Dexpression=project.version -q -DforceStdout)
+          ARTIFACTID=$(mvn org.apache.maven.plugins:maven-help-plugin:3.2.0:evaluate -Dexpression=project.artifactId -q -DforceStdout)
+          # Reset the environment variables add in the base provenance
+          FILES="slsa-attestations/${PROVENANCE_FILES}/${ARTIFACTID}-${VERSION}.jar.intoto.build.slsa"
+          TYPES=slsa
+          CLASSIFIERS=jar.intoto.build
+          # Find all necessary built jar files and attach them to the environment variable deploy
+          # shellcheck disable=SC2044 # We don't spawn a new sub shell since we are appending to global env vars
+          for name in $(find ./ -name "$ARTIFACTID-$VERSION-*.jar")
+          do
+            # shellcheck disable=SC1001 # shellcheck complains over \- but the line does what it should.
+            TARGET=$(echo "${name}" | rev | cut -d\- -f1 | rev)
+            FILES=$FILES,$name
+            TYPES=$TYPES,${TARGET##*.}
+            CLASSIFIERS=$CLASSIFIERS,${TARGET%.*}
+            echo "FILESSS: ${FILES}"
+          done
+          echo "find ./ -name {ARTIFACTID}-{VERSION}-*.jar"
+          find ./ -name "${ARTIFACTID}-${VERSION}-*.jar"
+
+          # Find all generated provenance files and attach them the the environment variable for deploy
+          # shellcheck disable=SC2044 # We don't spawn a new sub shell since we are appending to global env vars
+          for name in $(find ./ -name "$ARTIFACTID-$VERSION-*.jar.intoto.build.slsa")
+          do
+            # shellcheck disable=SC1001 # shellcheck complains over \- but the line does what it should.
+            TARGET=$(echo "${name}" | rev | cut -d\- -f1 | rev)
+            FILES=$FILES,$name
+            TYPES=$TYPES",slsa"
+            CLASSIFIERS=$CLASSIFIERS,${TARGET::-9}
+          done
+          # Sign and deploy the files to the ossrh remote repository
+          mvn validate jar:jar -Dfile=target/"${ARTIFACTID}"-"${VERSION}".jar -Durl=https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/ -DrepositoryId=ossrh -Dfiles="${FILES}" -Dtypes="${TYPES}" -Dclassifiers="${CLASSIFIERS}" -DpomFile=pom.xml gpg:sign-and-deploy-file
