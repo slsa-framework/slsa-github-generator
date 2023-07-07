@@ -126,7 +126,7 @@ With the `needs-runfiles` flag set to true, each target specified in the workflo
 ### Java Artifact Support (and Caveats)
 
 If the targets being built includes Java targets, then the flag `includes-java` must be set to true. Additionally, if a specific distribution and version of Java is needed,
-that can be designated through the `user-java-distribution` and 'user-java-version' flags. Note that the default Java distribution is Oracle and default Java version is 17. 
+that can be designated through the `user-java-distribution` and `user-java-version` flags. Note that the default Java distribution is Oracle and default Java version is 17. 
 For more info on configuring the Java distribution and version go [here](https://github.com/actions/setup-java). This flag usage can be seen in the following resuable workflow call:
 
 ```yaml
