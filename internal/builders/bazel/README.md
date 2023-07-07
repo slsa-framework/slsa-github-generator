@@ -18,6 +18,8 @@ workflow the "Bazel builder" from now on.
 - [Development status](#development-status)
 - [Generating Provenance](#generating-provenance)
   - [Getting Started](#getting-started)
+  - [Runfile Suuport](runfile-support)
+  - [Java Artifact Support (and Caveats)](java-artifact-support-(and-caveats))
   - [Referencing the Bazel builder](#referencing-the-bazel-builder)
   - [Private Repositories](#private-repositories)
   - [Supported Triggers](#supported-triggers)
@@ -155,8 +157,7 @@ the run-script the `--singlejar` flag must be specified to signal to the run-scr
 
 `./Main --singlejar --local_javabin="path/to/user/bin/java"`
 
-
-
+Note that Java targets do not need to have the `needs-runfiles` flag to be true in order to create the _deploy.jar and run-script for it.
 
 ### Referencing the Bazel builder
 
