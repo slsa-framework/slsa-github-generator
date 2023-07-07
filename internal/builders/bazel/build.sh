@@ -38,7 +38,6 @@ then
   echo "" >> ./WORKSPACE
   echo "load(\"@bazel_tools//tools/jdk:local_java_repository.bzl\", \"local_java_repository\")" >> ./WORKSPACE
   echo "$java_rule" >> ./WORKSPACE
-  cat ./WORKSPACE
 fi
 
 # Use associative array as a set to increase efficency in avoiding double copying the target.
