@@ -93,11 +93,70 @@ jobs:
 
 The `targets` are a set of space separated build targets to be built. Each target must include the `//` workspace root identifier and package target identifier (`:your_target`). Because of this each target should be of the form `//path/from/root/to/target:your_target`.
 
-Targets can also be referred to with general glob patterns such as `//src/...` or `//src/internal:all`. Note however, that support for artifacts that
-require runfiles is still currently in development and not available at this time. Progress for runfile support is currently being tracked [here](https://github.com/slsa-framework/slsa-github-generator/issues/2332).
+Targets can also be referred to with general glob patterns such as `//src/...` or `//src/internal:all`. Generic glob patterns that have an intersection are allowed as well.
 
 Once the targets are built, the Bazel builder creates a folder for the artifacts
 and another for the provenance attestations which are uploaded as artifacts to the workflow run.
+
+### Runfile Support
+If the artifact(s) built need the runfiles generated along with it to function properly, then they can be added with the artifact in the attestation. In the following resuable workflow call, the flag `needs-runfiles` will be set to `true`
+in order to package the artifacts with their runfiles.
+
+```yaml
+jobs:
+  build:
+    permissions:
+      id-token: write # For signing
+      contents: read # For repo checkout.
+      actions: read # For getting workflow run info.
+    if: startsWith(github.ref, 'refs/tags/')
+    uses: slsa-framework/slsa-github-generator/.github/workflows/builder_bazel_slsa3.yml@v1.7.0
+    with:
+      targets: "//src:fib //src:hello"
+      flags: "--strip=always"
+      needs-runfiles: true
+```
+
+In the artifact folder that gets uploaded to Github, with `needs-runfiles` set to true, there will be a folder for each artifact which contains the artifact and the folder of its runfiles.
+With the `needs-runfiles` flag set to true, each target specified in the workflow call will be packaged with their respective runfiles.
+
+### Java Artifact Support (and Caveats)
+If the targets being built includes Java targets, then the flag `includes-java` must be set to true. Additionally, if a specific distribution and version of Java is needed,
+that can be designated through the `user-java-distribution` and 'user-java-version' flags. Note that the default Java distribution is Oracle and default Java version is 17. 
+For more info on configuring the Java distribution and version go [here](https://github.com/actions/setup-java). This flag usage can be seen in the following resuable workflow call:
+
+```yaml
+jobs:
+  build:
+    permissions:
+      id-token: write # For signing
+      contents: read # For repo checkout.
+      actions: read # For getting workflow run info.
+    if: startsWith(github.ref, 'refs/tags/')
+    uses: slsa-framework/slsa-github-generator/.github/workflows/builder_bazel_slsa3.yml@v1.7.0
+    with:
+      targets: "//src:fib //src:hello"
+      flags: "--strip=always"
+      includes-java: true
+      user-java-distribution: "oracle"
+      user-java-version: "17"
+```
+
+Each Java target will be outputed in its own directory inside the artifact folder that gets uploaded. Inside each respective artifact directory will be a JAR that can be ran on its own using the run-script that is
+packaged with it. For instance if there is a Java target named Main it would be uploaded as its own directory with tree looking like the following:
+
+├── Main <br />
+│   ├── Main <br />
+│   └── Main_deploy.jar <br />
+
+Each Java target, whether specified as in the targets input as a _deploy.jar or not, will be built as a [_deploy.jar](https://bazel.build/reference/be/java) which contains all classes found by classloader and native libraries for dependencies.
+Since the artifact is built on a Github Runner, the run-script has the VM's Java bin path hardcoded in. However, the run-script has been modified to include an additional flag, `--local_javabin` to change the Java Bin path to the user's. To run the JAR using
+the run-script the `--singlejar` flag must be specified to signal to the run-script that the JAR is a _deploy.jar. Additionally, `--local_javabin` must be set to the path of the user's Java Bin to run it. Therefore running the JAR would look like the following:
+
+`./Main --singlejar --local_javabin="path/to/user/bin/java"`
+
+
+
 
 ### Referencing the Bazel builder
 
