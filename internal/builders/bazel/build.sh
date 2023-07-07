@@ -35,7 +35,6 @@ then
   )"
 
   # Echo the configuration for the local Github Runner java into the root WORKSPACE file.
-  echo "" >> ./WORKSPACE
   echo "load(\"@bazel_tools//tools/jdk:local_java_repository.bzl\", \"local_java_repository\")" >> ./WORKSPACE
   echo "$java_rule" >> ./WORKSPACE
 fi
