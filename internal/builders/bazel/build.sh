@@ -37,7 +37,7 @@ then
   # Echo the configuration for the local Github Runner java into the root WORKSPACE file.
   echo "load(\"@bazel_tools//tools/jdk:local_java_repository.bzl\", \"local_java_repository\")" >> ./WORKSPACE
   echo "$java_rule" >> ./WORKSPACE
-  cat workspace
+  cat ./WORKSPACE
 fi
 
 # Use associative array as a set to increase efficency in avoiding double copying the target.
