@@ -39,6 +39,13 @@ inputs:
   slsa-workflow-secret13: {}
   slsa-workflow-secret14: {}
   slsa-workflow-secret15: {}
+outputs:
+  target-download-sha256:
+    description: >
+      The sha256 digest of the "target" directory.
+
+      Users should verify the download against this digest to prevent tampering.
+    value: ${{ steps.upload-target.outputs.sha256 }}
 
 on:
   workflow_call:
@@ -47,26 +54,18 @@ runs:
   steps:
     - uses: actions/checkout@96f53100ba2a5449eb71d2e6604bbcd94b9449b5 # v 3.5.2
     - name: Set up JDK
-      uses: actions/setup-java@45058d7f99afcd22834b58fde7cbfb7075eb48a2 # v 3.11.0
+      uses: actions/setup-java@1f2faad7e0bc7efd1f6da4ca0a0f2b23b03a3a7d # v 3.11.0
       with:
         distribution: temurin
         java-version: ${{ fromJson(inputs.slsa-workflow-inputs).jdk-version }}
     - name: Run mvn package
       shell: bash
-      run: mvn package
-    - name: Put release artifacts in one directory
-      shell: bash
       env:
         SLSA_OUTPUTS_ARTIFACTS_FILE: ${{ inputs.slsa-layout-file }}
-        ARTIFACT_LIST: ${{ fromJson(inputs.slsa-workflow-inputs).artifact-list }}
-      run: ./../__TOOL_ACTION_DIR__/collect_release_artifacts.sh
-    - name: Upload built artifacts
-      uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
+      run: cd plugin && mvn clean install && cd .. && mvn package
+    - name: Upload target
+      id: upload-target
+      uses: slsa-framework/slsa-github-generator/.github/actions/secure-upload-folder@main
       with:
-        path: ./release-files-for-slsa/*
-    - name: Make outputs
-      id: make-outputs
-      shell: bash
-      env:
-        SLSA_OUTPUTS_ARTIFACTS_FILE: ${{ inputs.slsa-layout-file }}
-      run: ./../__TOOL_CHECKOUT_DIR__/internal/builders/gradle/create_attestation.sh
+        name: target
+        path: target
