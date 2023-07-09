@@ -35,9 +35,8 @@ on:
         type: string
       base64-subjects-as-file:
         description: >
-          The name of the file containing the artifacts for which to generate provenance, formatted the same as the output of sha256sum (SHA256 NAME\\n[...]) and base64 encoded.
-          The file must have been shared with Action 'actions/generator/generic/create-base64-subjects-filename'.
-          This is the 'name' output of 'actions/generator/generic/create-base64-subjects-filename'.
+          The file 'handle' representing the filename containing the artifacts for which to generate provenance, formatted the same as the output of sha256sum (SHA256 NAME\\n[...]) and base64 encoded. 'actions/generator/generic/create-base64-subjects-from-file'.
+          The handle must be created using Action 'slsa-framework/slsa-github-generator/actions/generator/generic/create-base64-subjects-from-file'.
         required: false
         type: string
       upload-assets:

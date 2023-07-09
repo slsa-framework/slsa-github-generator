@@ -52,6 +52,7 @@ runs:
 
     - name: Create object
       id: object
+      shell: bash
       env:
         UNTRUSTED_ARTIFACT_NAME: "${{ steps.name.outputs.artifact_name }}"
         SHA256: "${{ steps.upload.outputs.sha256 }}"
