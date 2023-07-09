@@ -33,6 +33,17 @@ on:
         description: "Artifacts for which to generate provenance, formatted the same as the output of sha256sum (SHA256 NAME\\n[...]) and base64 encoded."
         required: true
         type: string
+      base64-subjects-name:
+        description: >
+          The name of the file containing the artifacts for which to generate provenance, formatted the same as the output of sha256sum (SHA256 NAME\\n[...]) and base64 encoded.
+          The file must have been shared with Action 'actions/generator/generic/create-base64-subjects-filename'.
+          This is the 'name' output of 'actions/generator/generic/create-base64-subjects-filename'.
+      base64-subjects-sha256:
+        description: >
+          The sha256 of the filename shared using Action 'actions/generator/generic/create-base64-subjects-filename' and passed as argument 'base64-subjects-name' to this workflow.
+          This is the 'sha256' output of 'actions/generator/generic/create-base64-subjects-filename'.
+        required: true
+        type: string
       upload-assets:
         description: >
           If true, provenance is uploaded to a GitHub release for new tags.
@@ -107,9 +118,23 @@ on:
         value: ${{ jobs.final.outputs.outcome }}
 
 jobs:
+  # debug
+  debug:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Debug
+        env:
+          NAME: ${{ inputs.base64-subjects-name }}
+          SHA256: ${{ inputs.base64-subjects-sha256 }}
+        run: |
+          set -euo pipefail
+          echo "NAME: ${NAME}"
+          echo "SHA256: ${SHA256}"
+          exit 1
   # detect-env detects the reusable workflow's repository and ref for use later
   # in the workflow.
   detect-env:
+    needs: [debug]
     outputs:
       outcome: ${{ steps.final.outputs.outcome }}
       repository: ${{ steps.detect.outputs.repository }}
