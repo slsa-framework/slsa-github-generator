@@ -40,6 +40,10 @@ runs:
         set -euo pipefail
 
         name=$(basename "${UNTRUSTED_PATH}")
+        if [[ -z "${UNTRUSTED_PATH}" ]]; then
+          echo "error: empty path"
+          exit 1
+        fi
         echo "artifact_name=${name}-${RNG}" >> "$GITHUB_OUTPUT"
         echo "filename=${name}" >> "$GITHUB_OUTPUT"
 
