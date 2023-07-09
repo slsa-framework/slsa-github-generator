@@ -120,12 +120,11 @@ jobs:
     steps:
       - name: Debug
         env:
-          NAME: ${{ inputs.base64-subjects-name }}
-          SHA256: ${{ inputs.base64-subjects-sha256 }}
+          AS_FILE: ${{ inputs.base64-subjects-as-file }}
         run: |
           set -euo pipefail
-          echo "NAME: ${NAME}"
-          echo "SHA256: ${SHA256}"
+          obj=$(echo "${AS_FILE}" | base64 -d | jq)
+          echo "AS_FILE: ${obj}"
           exit 1
   # detect-env detects the reusable workflow's repository and ref for use later
   # in the workflow.
