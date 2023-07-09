@@ -117,13 +117,35 @@ jobs:
   debug:
     runs-on: ubuntu-latest
     steps:
+     - name: Extract subjects file metadata
+        id: metadata
+        continue-on-error: true
+        if: ${{ inputs.base64-subjects-as-file != '' }}
+        run: |
+           set -euo pipefail
+           obj=$(echo "${AS_FILE}" | base64 -d | jq)
+           echo "AS_FILE: ${obj}"
+           artifact_name=$(echo "${obj}" | jq -r '.artifact_name')
+           filename=$(echo "${obj}" | jq -r '.filename')
+           sha256=$(echo "${obj}" | jq -r '.sha256')
+
+          echo "artifact_name=${artifact_name}" >> "$GITHUB_OUTPUT"
+          echo "filename=${filename}" >> "$GITHUB_OUTPUT"
+          echo "sha256=${sha256}" >> "$GITHUB_OUTPUT"
+
+      - name: Download subjects file
+        continue-on-error: true
+        if: ${{ inputs.base64-subjects-as-file != '' }}
+        uses: slsa-framework/slsa-github-generator/.github/actions/secure-download-artifact@main
+        with:
+          name: "${{ steps.metadata.outputs.artifact_name }}"
+          path: "${{ steps.metadata.outputs.filename }}"
+          sha256: "${{ steps.metadata.outputs.sha256 }}"
+
       - name: Debug
-        env:
-          AS_FILE: ${{ inputs.base64-subjects-as-file }}
         run: |
           set -euo pipefail
-          obj=$(echo "${AS_FILE}" | base64 -d | jq)
-          echo "AS_FILE: ${obj}"
+          tree
           exit 1
   # detect-env detects the reusable workflow's repository and ref for use later
   # in the workflow.
@@ -183,6 +205,38 @@ jobs:
           compile-builder: "${{ inputs.compile-generator }}"
           directory: "${{ env.BUILDER_DIR }}"
           allow-private-repository: ${{ inputs.private-repository }}
+
+      - name: Extract subjects file metadata
+        id: metadata
+        continue-on-error: true
+        if: ${{ inputs.base64-subjects-as-file != '' }}
+        run: |
+           set -euo pipefail
+           obj=$(echo "${AS_FILE}" | base64 -d | jq)
+           echo "AS_FILE: ${obj}"
+           artifact_name=$(echo "${obj}" | jq -r '.artifact_name')
+           filename=$(echo "${obj}" | jq -r '.filename')
+           sha256=$(echo "${obj}" | jq -r '.sha256')
+
+          echo "artifact_name=${artifact_name}" >> "$GITHUB_OUTPUT"
+          echo "filename=${filename}" >> "$GITHUB_OUTPUT"
+          echo "sha256=${sha256}" >> "$GITHUB_OUTPUT"
+
+      - name: Download subjects file
+        continue-on-error: true
+        if: ${{ inputs.base64-subjects-as-file != '' }}
+        uses: slsa-framework/slsa-github-generator/.github/actions/secure-download-artifact@main
+        with:
+          name: "${{ steps.metadata.outputs.artifact_name }}"
+          path: "${{ steps.metadata.outputs.filename }}"
+          sha256: "${{ steps.metadata.outputs.sha256 }}"
+
+      - name: Debug
+        run: |
+          set -euo pipefail
+          obj=$(echo "${AS_FILE}" | base64 -d | jq)
+          echo "AS_FILE: ${obj}"
+          exit 1
 
       - name: Create and sign provenance
         id: sign-prov
