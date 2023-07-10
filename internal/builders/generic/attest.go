@@ -38,7 +38,7 @@ func attestCmd(provider slsa.ClientProvider, check func(error),
 	signer signing.Signer, tlog signing.TransparencyLog,
 ) *cobra.Command {
 	var attPath string
-	var subjects string
+	var subjects_filename string
 
 	c := &cobra.Command{
 		Use:   "attest",
@@ -51,7 +51,7 @@ run in the context of a Github Actions workflow.`,
 			ghContext, err := github.GetWorkflowContext()
 			check(err)
 
-			parsedSubjects, err := parseSubjects(subjects)
+			parsedSubjects, err := parseSubjects(subjects_filename)
 			check(err)
 
 			if len(parsedSubjects) == 0 {

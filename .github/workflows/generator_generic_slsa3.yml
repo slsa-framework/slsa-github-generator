@@ -21,7 +21,7 @@ env:
   # Generator
   BUILDER_BINARY: slsa-generator-generic-linux-amd64 # Name of the binary in the release assets.
   BUILDER_DIR: internal/builders/generic # Source directory if we compile the builder.
-  SUBJECTS_FILE: "subject.sha256sum.base64"
+  SUBJECTS_FILENAME: "subjects.sha256sum.base64"
 
 defaults:
   run:
@@ -152,11 +152,11 @@ jobs:
           UNTRUSTED_SUBJECTS_FILENAME: "${{ steps.metadata.outputs.filename }}"
         run: |
           set -euo pipefail
-          # NOTE: SUBJECTS_FILE is trusted and declared at the top of the file.
+          # NOTE: SUBJECTS_FILENAME is trusted and declared at the top of the file.
           if [[ -n "${UNTRUSTED_SUBJECTS_FILENAME}" ]]; then
-            mv "${UNTRUSTED_SUBJECTS_FILENAME}" "${SUBJECTS_FILE}"
+            mv "${UNTRUSTED_SUBJECTS_FILENAME}" "${SUBJECTS_FILENAME}"
           else
-            echo "${UNTRUSTED_SUBJECTS}" > "${SUBJECTS_FILE}"
+            echo "${UNTRUSTED_SUBJECTS}" > "${SUBJECTS_FILENAME}"
           fi
 
       - name: Debug
@@ -164,7 +164,7 @@ jobs:
           set -euo pipefail
           tree
           ls -l
-          exit 1
+          #exit 1
 
   # detect-env detects the reusable workflow's repository and ref for use later
   # in the workflow.
@@ -252,12 +252,25 @@ jobs:
           path: "${{ steps.metadata.outputs.filename }}"
           sha256: "${{ steps.metadata.outputs.sha256 }}"
 
+      - name: Create subject file
+        continue-on-error: true
+        env:
+          UNTRUSTED_SUBJECTS: "${{ inputs.base64-subjects }}"
+          UNTRUSTED_SUBJECTS_FILENAME: "${{ steps.metadata.outputs.filename }}"
+        run: |
+          set -euo pipefail
+          # NOTE: SUBJECTS_FILE is trusted and declared at the top of the file.
+          if [[ -n "${UNTRUSTED_SUBJECTS_FILENAME}" ]]; then
+            mv "${UNTRUSTED_SUBJECTS_FILENAME}" "${SUBJECTS_FILENAME}"
+          else
+            echo "${UNTRUSTED_SUBJECTS}" > "${SUBJECTS_FILENAME}"
+          fi
+
       - name: Debug
         run: |
           set -euo pipefail
-          obj=$(echo "${AS_FILE}" | base64 -d | jq)
-          echo "AS_FILE: ${obj}"
-          exit 1
+          tree
+          ls -l
 
       - name: Create and sign provenance
         id: sign-prov
@@ -267,7 +280,6 @@ jobs:
         # See: https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions#understanding-the-risk-of-script-injections
         env:
           GITHUB_CONTEXT: "${{ toJSON(github) }}"
-          UNTRUSTED_SUBJECTS: "${{ inputs.base64-subjects }}"
           UNTRUSTED_PROVENANCE_NAME: "${{ inputs.provenance-name }}"
           UNTRUSTED_DEPRECATED_ATTESTATION_NAME: "${{ inputs.attestation-name }}"
         run: |
@@ -289,7 +301,7 @@ jobs:
           # number of subjects based on in-toto attestation bundle file naming conventions.
           # See: https://github.com/in-toto/attestation/blob/main/spec/bundle.md#file-naming-convention
           # NOTE: The attest commmand outputs the provenance-name and provenance-sha256
-          "$GITHUB_WORKSPACE/$BUILDER_BINARY" attest --subjects "${UNTRUSTED_SUBJECTS}" -g "$untrusted_prov_name"
+          "$GITHUB_WORKSPACE/$BUILDER_BINARY" attest --subjects-path "${SUBJECTS_FILENAME}" -g "$untrusted_prov_name"
 
       - name: Upload the signed provenance
         id: upload-prov

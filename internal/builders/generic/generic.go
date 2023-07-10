@@ -27,6 +27,7 @@ import (
 
 	intoto "github.com/in-toto/in-toto-golang/in_toto"
 	slsacommon "github.com/in-toto/in-toto-golang/in_toto/slsa_provenance/common"
+	"github.com/slsa-framework/slsa-github-generator/internal/utils"
 )
 
 func checkExit(err error) {
@@ -74,10 +75,14 @@ var (
 )
 
 // parseSubjects parses the value given to the subjects option.
-func parseSubjects(b64str string) ([]intoto.Subject, error) {
+func parseSubjects(filename string) ([]intoto.Subject, error) {
 	var parsed []intoto.Subject
 
-	subjects, err := base64.StdEncoding.DecodeString(b64str)
+	subjects_bytes, err := utils.SafeReadFile(filename)
+	if err != nil {
+		return nil, fmt.Errorf("%w: error reading file", err)
+	}
+	subjects, err := base64.StdEncoding.DecodeString(string(subjects_bytes))
 	if err != nil {
 		return nil, fmt.Errorf("%w: error decoding subjects (is it base64 encoded?): %w", errBase64, err)
 	}
