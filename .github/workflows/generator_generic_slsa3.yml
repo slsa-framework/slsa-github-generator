@@ -21,6 +21,7 @@ env:
   # Generator
   BUILDER_BINARY: slsa-generator-generic-linux-amd64 # Name of the binary in the release assets.
   BUILDER_DIR: internal/builders/generic # Source directory if we compile the builder.
+  SUBJECTS_FILE: "subject.sha256sum.base64"
 
 defaults:
   run:
@@ -143,6 +144,20 @@ jobs:
           name: "${{ steps.metadata.outputs.artifact_name }}"
           path: "${{ steps.metadata.outputs.filename }}"
           sha256: "${{ steps.metadata.outputs.sha256 }}"
+
+      - name: Create subject file
+        continue-on-error: true
+        env:
+          UNTRUSTED_SUBJECTS: "${{ inputs.base64-subjects }}"
+          UNTRUSTED_SUBJECTS_FILENAME: "${{ steps.metadata.outputs.filename }}"
+        run: |
+          set -euo pipefail
+          # NOTE: SUBJECTS_FILE is trusted and declared at the top of the file.
+          if [[ -n "${UNTRUSTED_SUBJECTS_FILENAME}" ]]; then
+            mv "${UNTRUSTED_SUBJECTS_FILENAME}" "${SUBJECTS_FILE}"
+          else
+            echo "${UNTRUSTED_SUBJECTS}" > "${SUBJECTS_FILE}"
+          fi
 
       - name: Debug
         run: |
