@@ -121,10 +121,12 @@ jobs:
         id: metadata
         continue-on-error: true
         if: inputs.base64-subjects-as-file != ''
+        env:
+          UNTRUSTED_SUBJECTS_AS_FILE: "${{ inputs.base64-subjects-as-file }}"
         run: |
           set -euo pipefail
-          obj=$(echo "${AS_FILE}" | base64 -d | jq)
-          echo "AS_FILE: ${obj}"
+          obj=$(echo "${UNTRUSTED_SUBJECTS_AS_FILE}" | base64 -d | jq)
+          echo "UNTRUSTED_SUBJECTS_AS_FILE: ${obj}"
           artifact_name=$(echo "${obj}" | jq -r '.artifact_name')
           filename=$(echo "${obj}" | jq -r '.filename')
           sha256=$(echo "${obj}" | jq -r '.sha256')
@@ -211,10 +213,12 @@ jobs:
         id: metadata
         continue-on-error: true
         if: inputs.base64-subjects-as-file != ''
+        env:
+          UNTRUSTED_SUBJECTS_AS_FILE: "${{ inputs.base64-subjects-as-file }}"
         run: |
           set -euo pipefail
-          obj=$(echo "${AS_FILE}" | base64 -d | jq)
-          echo "AS_FILE: ${obj}"
+          obj=$(echo "${UNTRUSTED_SUBJECTS_AS_FILE}" | base64 -d | jq)
+          echo "UNTRUSTED_SUBJECTS_AS_FILE: ${obj}"
           artifact_name=$(echo "${obj}" | jq -r '.artifact_name')
           filename=$(echo "${obj}" | jq -r '.filename')
           sha256=$(echo "${obj}" | jq -r '.sha256')
