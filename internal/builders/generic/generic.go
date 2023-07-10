@@ -78,11 +78,11 @@ var (
 func parseSubjects(filename string) ([]intoto.Subject, error) {
 	var parsed []intoto.Subject
 
-	subjects_bytes, err := utils.SafeReadFile(filename)
+	subjectsBytes, err := utils.SafeReadFile(filename)
 	if err != nil {
 		return nil, fmt.Errorf("%w: error reading file", err)
 	}
-	subjects, err := base64.StdEncoding.DecodeString(string(subjects_bytes))
+	subjects, err := base64.StdEncoding.DecodeString(string(subjectsBytes))
 	if err != nil {
 		return nil, fmt.Errorf("%w: error decoding subjects (is it base64 encoded?): %w", errBase64, err)
 	}

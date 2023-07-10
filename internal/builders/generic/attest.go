@@ -133,8 +133,8 @@ run in the context of a Github Actions workflow.`,
 		"Path to write the signed provenance.",
 	)
 	c.Flags().StringVarP(
-		&subjects, "subjects", "s", "",
-		"Formatted list of subjects in the same format as sha256sum (base64 encoded).",
+		&subjects_filename, "subjects-filename", "s", "",
+		"Filename containing a formatted list of subjects in the same format as sha256sum (base64 encoded).",
 	)
 
 	return c
