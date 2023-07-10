@@ -32,10 +32,13 @@ set -euo pipefail
 
 # Get the raw package name and scope from the output of `npm pack --json`
 # This name is of the form '<scope>/<package name>'
-raw_package_scope=$(echo "${PACKAGE_NAME:-}" | cut -d'/' -f1)
-raw_package_name=$(echo "${PACKAGE_NAME:-}" | cut -d'/' -f2)
+# NOTE: `cut -s` will suppress output for all fields if the delimiter is
+# not present.
+raw_package_scope=$(echo "${PACKAGE_NAME:-}" | cut -s -d'/' -f1)
+raw_package_name=$(echo "${PACKAGE_NAME:-}" | cut -s -d'/' -f2)
 if [ "${raw_package_name}" == "" ]; then
-    raw_package_name="${raw_package_scope}"
+    # This is a non-scoped package.
+    raw_package_name="${PACKAGE_NAME:-}"
     raw_package_scope=""
 fi
 # package scope (namespace) is URL(percent) encoded.
