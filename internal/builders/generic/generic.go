@@ -74,7 +74,7 @@ var (
 	errScan = errors.New("subjects")
 )
 
-// readSubjectsFile reads and parses the subjects frmo a filename
+// readSubjectsFile reads and parses the subjects from a filename.
 func readSubjectsFile(filename string) ([]intoto.Subject, error) {
 	subjectsBytes, err := utils.SafeReadFile(filename)
 	if err != nil {
