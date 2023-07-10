@@ -152,6 +152,7 @@ jobs:
       outcome: ${{ steps.final.outputs.outcome }}
       provenance-sha256: ${{ steps.sign-prov.outputs.provenance-sha256 }}
       provenance-name: ${{ steps.sign-prov.outputs.provenance-name }}
+      subject-artifact-name: ${{ steps.metadata.outputs.artifact_name }}
     runs-on: ubuntu-latest
     needs: [detect-env]
     permissions:
@@ -329,3 +330,12 @@ jobs:
           set -euo pipefail
           echo "outcome=$([ "$SUCCESS" == "true" ] && echo "success" || echo "failure")" >> "$GITHUB_OUTPUT"
           [ "$CONTINUE" == "true" ] || [ "$SUCCESS" == "true" ] || exit 27
+
+  # cleanup deletes internal artifacts used by the generator workflow
+  cleanup:
+    runs-on: ubuntu-latest
+    needs: [detect-env, generator, upload-assets]
+    steps:
+      - uses: geekyeggo/delete-artifact@54ab544f12cdb7b71613a16a2b5a37a9ade990af # v2.0.0
+        with:
+          name: "${{ needs.generator.outputs.subject-artifact-name }}"
