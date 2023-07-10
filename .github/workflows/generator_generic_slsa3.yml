@@ -147,6 +147,7 @@ jobs:
           set -euo pipefail
           tree
           exit 1
+
   # detect-env detects the reusable workflow's repository and ref for use later
   # in the workflow.
   detect-env:
