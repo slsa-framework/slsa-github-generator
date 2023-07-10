@@ -52,7 +52,7 @@ run in the context of a Github Actions workflow.`,
 			ghContext, err := github.GetWorkflowContext()
 			check(err)
 
-			// If not sujects were provided, read from the file instead.
+			// If not sujects are provided, read from the file instead.
 			if subjects == "" {
 				subjectsBytes, err := utils.SafeReadFile(subjectsFilename)
 				check(err)
