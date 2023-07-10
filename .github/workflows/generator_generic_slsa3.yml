@@ -163,6 +163,7 @@ jobs:
         run: |
           set -euo pipefail
           tree
+          ls -l
           exit 1
 
   # detect-env detects the reusable workflow's repository and ref for use later
