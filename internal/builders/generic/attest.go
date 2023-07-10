@@ -38,7 +38,7 @@ func attestCmd(provider slsa.ClientProvider, check func(error),
 	signer signing.Signer, tlog signing.TransparencyLog,
 ) *cobra.Command {
 	var attPath string
-	var subjects_filename string
+	var subjectsFilename string
 
 	c := &cobra.Command{
 		Use:   "attest",
@@ -51,7 +51,7 @@ run in the context of a Github Actions workflow.`,
 			ghContext, err := github.GetWorkflowContext()
 			check(err)
 
-			parsedSubjects, err := parseSubjects(subjects_filename)
+			parsedSubjects, err := parseSubjects(subjectsFilename)
 			check(err)
 
 			if len(parsedSubjects) == 0 {
@@ -133,7 +133,7 @@ run in the context of a Github Actions workflow.`,
 		"Path to write the signed provenance.",
 	)
 	c.Flags().StringVarP(
-		&subjects_filename, "subjects-filename", "s", "",
+		&subjectsFilename, "subjects-filename", "s", "",
 		"Filename containing a formatted list of subjects in the same format as sha256sum (base64 encoded).",
 	)
 
