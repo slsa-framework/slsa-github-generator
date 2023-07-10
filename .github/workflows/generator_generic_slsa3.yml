@@ -21,7 +21,7 @@ env:
   # Generator
   BUILDER_BINARY: slsa-generator-generic-linux-amd64 # Name of the binary in the release assets.
   BUILDER_DIR: internal/builders/generic # Source directory if we compile the builder.
-  SUBJECTS_FILENAME: "subjects.sha256sum.base64"
+  SUBJECTS_FILENAME: "subjects.sha256sum.base64.231b023dad77ada71cb6fb328090d00a" # Filename containing the subjects. A random value is appended to avoid name collisions.
 
 defaults:
   run:
@@ -114,62 +114,9 @@ on:
         value: ${{ jobs.final.outputs.outcome }}
 
 jobs:
-  # debug
-  debug:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Extract subjects file metadata
-        id: metadata
-        continue-on-error: true
-        if: inputs.base64-subjects-as-file != ''
-        env:
-          UNTRUSTED_SUBJECTS_AS_FILE: "${{ inputs.base64-subjects-as-file }}"
-        run: |
-          set -euo pipefail
-          obj=$(echo "${UNTRUSTED_SUBJECTS_AS_FILE}" | base64 -d | jq)
-          echo "UNTRUSTED_SUBJECTS_AS_FILE: ${obj}"
-          artifact_name=$(echo "${obj}" | jq -r '.artifact_name')
-          filename=$(echo "${obj}" | jq -r '.filename')
-          sha256=$(echo "${obj}" | jq -r '.sha256')
-
-          echo "artifact_name=${artifact_name}" >> "$GITHUB_OUTPUT"
-          echo "filename=${filename}" >> "$GITHUB_OUTPUT"
-          echo "sha256=${sha256}" >> "$GITHUB_OUTPUT"
-
-      - name: Download subjects file
-        continue-on-error: true
-        if: inputs.base64-subjects-as-file != ''
-        uses: slsa-framework/slsa-github-generator/.github/actions/secure-download-artifact@main
-        with:
-          name: "${{ steps.metadata.outputs.artifact_name }}"
-          path: "${{ steps.metadata.outputs.filename }}"
-          sha256: "${{ steps.metadata.outputs.sha256 }}"
-
-      - name: Create subject file
-        continue-on-error: true
-        env:
-          UNTRUSTED_SUBJECTS: "${{ inputs.base64-subjects }}"
-          UNTRUSTED_SUBJECTS_FILENAME: "${{ steps.metadata.outputs.filename }}"
-        run: |
-          set -euo pipefail
-          # NOTE: SUBJECTS_FILENAME is trusted and declared at the top of the file.
-          if [[ -n "${UNTRUSTED_SUBJECTS_FILENAME}" ]]; then
-            mv "${UNTRUSTED_SUBJECTS_FILENAME}" "${SUBJECTS_FILENAME}"
-          else
-            echo "${UNTRUSTED_SUBJECTS}" > "${SUBJECTS_FILENAME}"
-          fi
-
-      - name: Debug
-        run: |
-          set -euo pipefail
-          tree
-          ls -l
-          #exit 1
-
   # detect-env detects the reusable workflow's repository and ref for use later
   # in the workflow.
   detect-env:
-    needs: [debug]
     outputs:
       outcome: ${{ steps.final.outputs.outcome }}
       repository: ${{ steps.detect.outputs.repository }}
@@ -265,12 +212,6 @@ jobs:
           else
             echo "${UNTRUSTED_SUBJECTS}" > "${SUBJECTS_FILENAME}"
           fi
-
-      - name: Debug
-        run: |
-          set -euo pipefail
-          tree
-          ls -l
 
       - name: Create and sign provenance
         id: sign-prov
