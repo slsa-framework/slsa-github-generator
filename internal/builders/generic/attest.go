@@ -52,13 +52,13 @@ run in the context of a Github Actions workflow.`,
 			ghContext, err := github.GetWorkflowContext()
 			check(err)
 
-			var parsedSubjects []intoto.Subject
-			if subjects != "" {
-				parsedSubjects, err = parseSubjects(subjects)
-			} else {
-				parsedSubjects, err = readSubjectsFile(subjectsFilename)
+			// If not sujects were provided, read from the file instead.
+			if subjects == "" {
+				subjectsBytes, err := utils.SafeReadFile(subjectsFilename)
+				check(err)
+				subjects = string(subjectsBytes)
 			}
-
+			parsedSubjects, err := parseSubjects(subjects)
 			check(err)
 			if len(parsedSubjects) == 0 {
 				check(errors.New("expected at least one subject"))

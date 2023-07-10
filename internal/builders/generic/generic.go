@@ -27,7 +27,6 @@ import (
 
 	intoto "github.com/in-toto/in-toto-golang/in_toto"
 	slsacommon "github.com/in-toto/in-toto-golang/in_toto/slsa_provenance/common"
-	"github.com/slsa-framework/slsa-github-generator/internal/utils"
 )
 
 func checkExit(err error) {
@@ -73,15 +72,6 @@ var (
 	// errScan is an error scanning the SHA digest data.
 	errScan = errors.New("subjects")
 )
-
-// readSubjectsFile reads and parses the subjects from a filename.
-func readSubjectsFile(filename string) ([]intoto.Subject, error) {
-	subjectsBytes, err := utils.SafeReadFile(filename)
-	if err != nil {
-		return nil, fmt.Errorf("%w: error reading file", err)
-	}
-	return parseSubjects(string(subjectsBytes))
-}
 
 // parseSubjects parses the value given to the subjects option.
 func parseSubjects(b64Str string) ([]intoto.Subject, error) {
