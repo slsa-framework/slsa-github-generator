@@ -74,15 +74,20 @@ var (
 	errScan = errors.New("subjects")
 )
 
-// parseSubjects parses the value given to the subjects option.
-func parseSubjects(filename string) ([]intoto.Subject, error) {
-	var parsed []intoto.Subject
-
+// readSubjectsFile reads and parses the subjects frmo a filename
+func readSubjectsFile(filename string) ([]intoto.Subject, error) {
 	subjectsBytes, err := utils.SafeReadFile(filename)
 	if err != nil {
 		return nil, fmt.Errorf("%w: error reading file", err)
 	}
-	subjects, err := base64.StdEncoding.DecodeString(string(subjectsBytes))
+	return parseSubjects(string(subjectsBytes))
+}
+
+// parseSubjects parses the value given to the subjects option.
+func parseSubjects(b64Str string) ([]intoto.Subject, error) {
+	var parsed []intoto.Subject
+
+	subjects, err := base64.StdEncoding.DecodeString(b64Str)
 	if err != nil {
 		return nil, fmt.Errorf("%w: error decoding subjects (is it base64 encoded?): %w", errBase64, err)
 	}

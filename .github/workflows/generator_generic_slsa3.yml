@@ -186,6 +186,7 @@ jobs:
           filename=$(echo "${obj}" | jq -r '.filename')
           sha256=$(echo "${obj}" | jq -r '.sha256')
 
+          # shellcheck disable=SC2129
           echo "artifact_name=${artifact_name}" >> "$GITHUB_OUTPUT"
           echo "filename=${filename}" >> "$GITHUB_OUTPUT"
           echo "sha256=${sha256}" >> "$GITHUB_OUTPUT"

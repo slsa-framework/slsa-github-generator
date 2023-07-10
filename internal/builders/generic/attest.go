@@ -51,7 +51,7 @@ run in the context of a Github Actions workflow.`,
 			ghContext, err := github.GetWorkflowContext()
 			check(err)
 
-			parsedSubjects, err := parseSubjects(subjectsFilename)
+			parsedSubjects, err := readSubjectsFile(subjectsFilename)
 			check(err)
 
 			if len(parsedSubjects) == 0 {
