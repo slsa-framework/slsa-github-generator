@@ -6685,6 +6685,338 @@ __exportStar(__nccwpck_require__(9980), exports);
 
 /***/ }),
 
+/***/ 8134:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.appDataPath = void 0;
+/*
+Copyright 2023 The Sigstore Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+const os_1 = __importDefault(__nccwpck_require__(2037));
+const path_1 = __importDefault(__nccwpck_require__(1017));
+function appDataPath(name) {
+    const homedir = os_1.default.homedir();
+    switch (process.platform) {
+        /* istanbul ignore next */
+        case 'darwin': {
+            const appSupport = path_1.default.join(homedir, 'Library', 'Application Support');
+            return path_1.default.join(appSupport, name);
+        }
+        /* istanbul ignore next */
+        case 'win32': {
+            const localAppData = process.env.LOCALAPPDATA || path_1.default.join(homedir, 'AppData', 'Local');
+            return path_1.default.join(localAppData, name, 'Data');
+        }
+        /* istanbul ignore next */
+        default: {
+            const localData = process.env.XDG_DATA_HOME || path_1.default.join(homedir, '.local', 'share');
+            return path_1.default.join(localData, name);
+        }
+    }
+}
+exports.appDataPath = appDataPath;
+
+
+/***/ }),
+
+/***/ 8447:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.TUFClient = void 0;
+/*
+Copyright 2023 The Sigstore Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+const fs_1 = __importDefault(__nccwpck_require__(7147));
+const path_1 = __importDefault(__nccwpck_require__(1017));
+const tuf_js_1 = __nccwpck_require__(9475);
+const target_1 = __nccwpck_require__(1412);
+class TUFClient {
+    constructor(options) {
+        initTufCache(options.cachePath, options.rootPath);
+        const remote = initRemoteConfig(options.cachePath, options.mirrorURL);
+        this.updater = initClient(options.cachePath, remote, options);
+    }
+    async refresh() {
+        return this.updater.refresh();
+    }
+    getTarget(targetName) {
+        return (0, target_1.readTarget)(this.updater, targetName);
+    }
+}
+exports.TUFClient = TUFClient;
+// Initializes the TUF cache directory structure including the initial
+// root.json file. If the cache directory does not exist, it will be
+// created. If the targets directory does not exist, it will be created.
+// If the root.json file does not exist, it will be copied from the
+// rootPath argument.
+function initTufCache(cachePath, tufRootPath) {
+    const targetsPath = path_1.default.join(cachePath, 'targets');
+    const cachedRootPath = path_1.default.join(cachePath, 'root.json');
+    if (!fs_1.default.existsSync(cachePath)) {
+        fs_1.default.mkdirSync(cachePath, { recursive: true });
+    }
+    if (!fs_1.default.existsSync(targetsPath)) {
+        fs_1.default.mkdirSync(targetsPath);
+    }
+    if (!fs_1.default.existsSync(cachedRootPath)) {
+        fs_1.default.copyFileSync(tufRootPath, cachedRootPath);
+    }
+    return cachePath;
+}
+// Initializes the remote.json file, which contains the URL of the TUF
+// repository. If the file does not exist, it will be created. If the file
+// exists, it will be parsed and returned.
+function initRemoteConfig(rootDir, mirrorURL) {
+    let remoteConfig;
+    const remoteConfigPath = path_1.default.join(rootDir, 'remote.json');
+    if (fs_1.default.existsSync(remoteConfigPath)) {
+        const data = fs_1.default.readFileSync(remoteConfigPath, 'utf-8');
+        remoteConfig = JSON.parse(data);
+    }
+    if (!remoteConfig) {
+        remoteConfig = { mirror: mirrorURL };
+        fs_1.default.writeFileSync(remoteConfigPath, JSON.stringify(remoteConfig));
+    }
+    return remoteConfig;
+}
+function initClient(cachePath, remote, options) {
+    const baseURL = remote.mirror;
+    const config = {
+        fetchTimeout: options.timeout,
+    };
+    // tuf-js only supports a number for fetchRetries so we have to
+    // convert the boolean and object options to a number.
+    /* istanbul ignore if */
+    if (typeof options.retry !== 'undefined') {
+        if (typeof options.retry === 'number') {
+            config.fetchRetries = options.retry;
+        }
+        else if (typeof options.retry === 'object') {
+            config.fetchRetries = options.retry.retries;
+        }
+        else if (options.retry === true) {
+            config.fetchRetries = 1;
+        }
+    }
+    return new tuf_js_1.Updater({
+        metadataBaseUrl: baseURL,
+        targetBaseUrl: `${baseURL}/targets`,
+        metadataDir: cachePath,
+        targetDir: path_1.default.join(cachePath, 'targets'),
+        config,
+    });
+}
+
+
+/***/ }),
+
+/***/ 8624:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.TUFError = void 0;
+class TUFError extends Error {
+    constructor({ code, message, cause, }) {
+        super(message);
+        this.code = code;
+        this.cause = cause;
+        this.name = this.constructor.name;
+    }
+}
+exports.TUFError = TUFError;
+
+
+/***/ }),
+
+/***/ 8567:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.TUFError = exports.initTUF = exports.getTrustedRoot = void 0;
+/*
+Copyright 2023 The Sigstore Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+const protobuf_specs_1 = __nccwpck_require__(530);
+const appdata_1 = __nccwpck_require__(8134);
+const client_1 = __nccwpck_require__(8447);
+const DEFAULT_CACHE_DIR = 'sigstore-js';
+const DEFAULT_MIRROR_URL = 'https://tuf-repo-cdn.sigstore.dev';
+const DEFAULT_TUF_ROOT_PATH = '../store/public-good-instance-root.json';
+const DEFAULT_RETRY = { retries: 2 };
+const DEFAULT_TIMEOUT = 5000;
+const TRUSTED_ROOT_TARGET = 'trusted_root.json';
+async function getTrustedRoot(
+/* istanbul ignore next */
+options = {}) {
+    const client = createClient(options);
+    const trustedRoot = await client.getTarget(TRUSTED_ROOT_TARGET);
+    return protobuf_specs_1.TrustedRoot.fromJSON(JSON.parse(trustedRoot));
+}
+exports.getTrustedRoot = getTrustedRoot;
+async function initTUF(
+/* istanbul ignore next */
+options = {}) {
+    const client = createClient(options);
+    return client.refresh().then(() => client);
+}
+exports.initTUF = initTUF;
+// Create a TUF client with default options
+function createClient(options) {
+    /* istanbul ignore next */
+    return new client_1.TUFClient({
+        cachePath: options.cachePath || (0, appdata_1.appDataPath)(DEFAULT_CACHE_DIR),
+        rootPath: options.rootPath || __nccwpck_require__.ab + "public-good-instance-root.json",
+        mirrorURL: options.mirrorURL || DEFAULT_MIRROR_URL,
+        retry: options.retry ?? DEFAULT_RETRY,
+        timeout: options.timeout ?? DEFAULT_TIMEOUT,
+    });
+}
+var error_1 = __nccwpck_require__(8624);
+Object.defineProperty(exports, "TUFError", ({ enumerable: true, get: function () { return error_1.TUFError; } }));
+
+
+/***/ }),
+
+/***/ 1412:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.readTarget = void 0;
+/*
+Copyright 2023 The Sigstore Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+const fs_1 = __importDefault(__nccwpck_require__(7147));
+const error_1 = __nccwpck_require__(8624);
+// Downloads and returns the specified target from the provided TUF Updater.
+async function readTarget(tuf, targetPath) {
+    const path = await getTargetPath(tuf, targetPath);
+    return new Promise((resolve, reject) => {
+        fs_1.default.readFile(path, 'utf-8', (err, data) => {
+            if (err) {
+                reject(new error_1.TUFError({
+                    code: 'TUF_READ_TARGET_ERROR',
+                    message: `error reading target ${path}`,
+                    cause: err,
+                }));
+            }
+            else {
+                resolve(data);
+            }
+        });
+    });
+}
+exports.readTarget = readTarget;
+// Returns the local path to the specified target. If the target is not yet
+// cached locally, the provided TUF Updater will be used to download and
+// cache the target.
+async function getTargetPath(tuf, target) {
+    let targetInfo;
+    try {
+        targetInfo = await tuf.getTargetInfo(target);
+    }
+    catch (err) {
+        throw new error_1.TUFError({
+            code: 'TUF_REFRESH_METADATA_ERROR',
+            message: 'error refreshing TUF metadata',
+            cause: err,
+        });
+    }
+    if (!targetInfo) {
+        throw new error_1.TUFError({
+            code: 'TUF_FIND_TARGET_ERROR',
+            message: `target ${target} not found`,
+        });
+    }
+    let path = await tuf.findCachedTarget(targetInfo);
+    // An empty path here means the target has not been cached locally, or is
+    // out of date. In either case, we need to download it.
+    if (!path) {
+        try {
+            path = await tuf.downloadTarget(targetInfo);
+        }
+        catch (err) {
+            throw new error_1.TUFError({
+                code: 'TUF_DOWNLOAD_TARGET_ERROR',
+                message: `error downloading target ${path}`,
+                cause: err,
+            });
+        }
+    }
+    return path;
+}
+
+
+/***/ }),
+
 /***/ 1040:
 /***/ ((__unused_webpack_module, exports) => {
 
@@ -7529,7 +7861,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.SuccinctRoles = exports.DelegatedRole = exports.Role = exports.TOP_LEVEL_ROLE_NAMES = void 0;
 const crypto_1 = __importDefault(__nccwpck_require__(6113));
-const minimatch_1 = __importDefault(__nccwpck_require__(153));
+const minimatch_1 = __nccwpck_require__(4878);
 const util_1 = __importDefault(__nccwpck_require__(3837));
 const error_1 = __nccwpck_require__(8448);
 const utils_1 = __nccwpck_require__(5688);
@@ -7691,7 +8023,7 @@ function isTargetInPathPattern(target, pattern) {
     if (patternParts.length != targetParts.length) {
         return false;
     }
-    return zip(targetParts, patternParts).every(([targetPart, patternPart]) => (0, minimatch_1.default)(targetPart, patternPart));
+    return zip(targetParts, patternParts).every(([targetPart, patternPart]) => (0, minimatch_1.minimatch)(targetPart, patternPart));
 }
 /**
  * Succinctly defines a hash bin delegation graph.
@@ -15403,7 +15735,7 @@ function setup(env) {
 	createDebug.disable = disable;
 	createDebug.enable = enable;
 	createDebug.enabled = enabled;
-	createDebug.humanize = __nccwpck_require__(9992);
+	createDebug.humanize = __nccwpck_require__(900);
 	createDebug.destroy = destroy;
 
 	Object.keys(env).forEach(key => {
@@ -18672,7 +19004,7 @@ exports["default"] = parseProxyResponse;
  */
 
 var util = __nccwpck_require__(3837);
-var ms = __nccwpck_require__(9992);
+var ms = __nccwpck_require__(900);
 
 module.exports = function (t) {
   if (typeof t === 'number') return t;
@@ -22997,7 +23329,7 @@ function getProxy (proxyUrl, opts, isHttps) {
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 const { Request, Response } = __nccwpck_require__(8998)
-const Minipass = __nccwpck_require__(1077)
+const { Minipass } = __nccwpck_require__(4643)
 const MinipassFlush = __nccwpck_require__(4181)
 const cacache = __nccwpck_require__(5490)
 const url = __nccwpck_require__(7310)
@@ -23092,6 +23424,12 @@ const getMetadata = (request, response, options) => {
   }
 
   for (const name of KEEP_RESPONSE_HEADERS) {
+    if (response.headers.has(name)) {
+      metadata.resHeaders[name] = response.headers.get(name)
+    }
+  }
+
+  for (const name of options.cacheAdditionalHeaders) {
     if (response.headers.has(name)) {
       metadata.resHeaders[name] = response.headers.get(name)
     }
@@ -23329,6 +23667,7 @@ class CacheEntry {
       // that reads from cacache and attach it to a new Response
       const body = new Minipass()
       const headers = { ...this.policy.responseHeaders() }
+
       const onResume = () => {
         const cacheStream = cacache.get.stream.byDigest(
           this.options.cachePath, this.entry.integrity, { memoize: this.options.memoize }
@@ -23412,6 +23751,24 @@ class CacheEntry {
           hasOwnProperty(this.entry.metadata.resHeaders, name)
         ) {
           metadata.resHeaders[name] = this.entry.metadata.resHeaders[name]
+        }
+      }
+
+      for (const name of options.cacheAdditionalHeaders) {
+        const inMeta = hasOwnProperty(metadata.resHeaders, name)
+        const inEntry = hasOwnProperty(this.entry.metadata.resHeaders, name)
+        const inPolicy = hasOwnProperty(this.policy.response.headers, name)
+
+        // if the header is in the existing entry, but it is not in the metadata
+        // then we need to write it to the metadata as this will refresh the on-disk cache
+        if (!inMeta && inEntry) {
+          metadata.resHeaders[name] = this.entry.metadata.resHeaders[name]
+        }
+        // if the header is in the metadata, but not in the policy, then we need to set
+        // it in the policy so that it's included in the immediate response. future
+        // responses will load a new cache entry, so we don't need to change that
+        if (!inPolicy && inMeta) {
+          this.policy.response.headers[name] = metadata.resHeaders[name]
         }
       }
 
@@ -23985,6 +24342,8 @@ const configureOptions = (opts) => {
     }
   }
 
+  options.cacheAdditionalHeaders = options.cacheAdditionalHeaders || []
+
   // cacheManager is deprecated, but if it's set and
   // cachePath is not we should copy it to the new field
   if (options.cacheManager && !options.cachePath) {
@@ -24051,7 +24410,7 @@ module.exports = CachingMinipassPipeline
 /***/ 2619:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
-const Minipass = __nccwpck_require__(1077)
+const { Minipass } = __nccwpck_require__(4643)
 const fetch = __nccwpck_require__(8998)
 const promiseRetry = __nccwpck_require__(4742)
 const ssri = __nccwpck_require__(4406)
@@ -25197,6 +25556,716 @@ class LRUCache {
 }
 
 module.exports = LRUCache
+
+
+/***/ }),
+
+/***/ 4643:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+const proc =
+  typeof process === 'object' && process
+    ? process
+    : {
+        stdout: null,
+        stderr: null,
+      }
+const EE = __nccwpck_require__(2361)
+const Stream = __nccwpck_require__(2781)
+const stringdecoder = __nccwpck_require__(1576)
+const SD = stringdecoder.StringDecoder
+
+const EOF = Symbol('EOF')
+const MAYBE_EMIT_END = Symbol('maybeEmitEnd')
+const EMITTED_END = Symbol('emittedEnd')
+const EMITTING_END = Symbol('emittingEnd')
+const EMITTED_ERROR = Symbol('emittedError')
+const CLOSED = Symbol('closed')
+const READ = Symbol('read')
+const FLUSH = Symbol('flush')
+const FLUSHCHUNK = Symbol('flushChunk')
+const ENCODING = Symbol('encoding')
+const DECODER = Symbol('decoder')
+const FLOWING = Symbol('flowing')
+const PAUSED = Symbol('paused')
+const RESUME = Symbol('resume')
+const BUFFER = Symbol('buffer')
+const PIPES = Symbol('pipes')
+const BUFFERLENGTH = Symbol('bufferLength')
+const BUFFERPUSH = Symbol('bufferPush')
+const BUFFERSHIFT = Symbol('bufferShift')
+const OBJECTMODE = Symbol('objectMode')
+// internal event when stream is destroyed
+const DESTROYED = Symbol('destroyed')
+// internal event when stream has an error
+const ERROR = Symbol('error')
+const EMITDATA = Symbol('emitData')
+const EMITEND = Symbol('emitEnd')
+const EMITEND2 = Symbol('emitEnd2')
+const ASYNC = Symbol('async')
+const ABORT = Symbol('abort')
+const ABORTED = Symbol('aborted')
+const SIGNAL = Symbol('signal')
+
+const defer = fn => Promise.resolve().then(fn)
+
+// TODO remove when Node v8 support drops
+const doIter = global._MP_NO_ITERATOR_SYMBOLS_ !== '1'
+const ASYNCITERATOR =
+  (doIter && Symbol.asyncIterator) || Symbol('asyncIterator not implemented')
+const ITERATOR =
+  (doIter && Symbol.iterator) || Symbol('iterator not implemented')
+
+// events that mean 'the stream is over'
+// these are treated specially, and re-emitted
+// if they are listened for after emitting.
+const isEndish = ev => ev === 'end' || ev === 'finish' || ev === 'prefinish'
+
+const isArrayBuffer = b =>
+  b instanceof ArrayBuffer ||
+  (typeof b === 'object' &&
+    b.constructor &&
+    b.constructor.name === 'ArrayBuffer' &&
+    b.byteLength >= 0)
+
+const isArrayBufferView = b => !Buffer.isBuffer(b) && ArrayBuffer.isView(b)
+
+class Pipe {
+  constructor(src, dest, opts) {
+    this.src = src
+    this.dest = dest
+    this.opts = opts
+    this.ondrain = () => src[RESUME]()
+    dest.on('drain', this.ondrain)
+  }
+  unpipe() {
+    this.dest.removeListener('drain', this.ondrain)
+  }
+  // istanbul ignore next - only here for the prototype
+  proxyErrors() {}
+  end() {
+    this.unpipe()
+    if (this.opts.end) this.dest.end()
+  }
+}
+
+class PipeProxyErrors extends Pipe {
+  unpipe() {
+    this.src.removeListener('error', this.proxyErrors)
+    super.unpipe()
+  }
+  constructor(src, dest, opts) {
+    super(src, dest, opts)
+    this.proxyErrors = er => dest.emit('error', er)
+    src.on('error', this.proxyErrors)
+  }
+}
+
+class Minipass extends Stream {
+  constructor(options) {
+    super()
+    this[FLOWING] = false
+    // whether we're explicitly paused
+    this[PAUSED] = false
+    this[PIPES] = []
+    this[BUFFER] = []
+    this[OBJECTMODE] = (options && options.objectMode) || false
+    if (this[OBJECTMODE]) this[ENCODING] = null
+    else this[ENCODING] = (options && options.encoding) || null
+    if (this[ENCODING] === 'buffer') this[ENCODING] = null
+    this[ASYNC] = (options && !!options.async) || false
+    this[DECODER] = this[ENCODING] ? new SD(this[ENCODING]) : null
+    this[EOF] = false
+    this[EMITTED_END] = false
+    this[EMITTING_END] = false
+    this[CLOSED] = false
+    this[EMITTED_ERROR] = null
+    this.writable = true
+    this.readable = true
+    this[BUFFERLENGTH] = 0
+    this[DESTROYED] = false
+    if (options && options.debugExposeBuffer === true) {
+      Object.defineProperty(this, 'buffer', { get: () => this[BUFFER] })
+    }
+    if (options && options.debugExposePipes === true) {
+      Object.defineProperty(this, 'pipes', { get: () => this[PIPES] })
+    }
+    this[SIGNAL] = options && options.signal
+    this[ABORTED] = false
+    if (this[SIGNAL]) {
+      this[SIGNAL].addEventListener('abort', () => this[ABORT]())
+      if (this[SIGNAL].aborted) {
+        this[ABORT]()
+      }
+    }
+  }
+
+  get bufferLength() {
+    return this[BUFFERLENGTH]
+  }
+
+  get encoding() {
+    return this[ENCODING]
+  }
+  set encoding(enc) {
+    if (this[OBJECTMODE]) throw new Error('cannot set encoding in objectMode')
+
+    if (
+      this[ENCODING] &&
+      enc !== this[ENCODING] &&
+      ((this[DECODER] && this[DECODER].lastNeed) || this[BUFFERLENGTH])
+    )
+      throw new Error('cannot change encoding')
+
+    if (this[ENCODING] !== enc) {
+      this[DECODER] = enc ? new SD(enc) : null
+      if (this[BUFFER].length)
+        this[BUFFER] = this[BUFFER].map(chunk => this[DECODER].write(chunk))
+    }
+
+    this[ENCODING] = enc
+  }
+
+  setEncoding(enc) {
+    this.encoding = enc
+  }
+
+  get objectMode() {
+    return this[OBJECTMODE]
+  }
+  set objectMode(om) {
+    this[OBJECTMODE] = this[OBJECTMODE] || !!om
+  }
+
+  get ['async']() {
+    return this[ASYNC]
+  }
+  set ['async'](a) {
+    this[ASYNC] = this[ASYNC] || !!a
+  }
+
+  // drop everything and get out of the flow completely
+  [ABORT]() {
+    this[ABORTED] = true
+    this.emit('abort', this[SIGNAL].reason)
+    this.destroy(this[SIGNAL].reason)
+  }
+
+  get aborted() {
+    return this[ABORTED]
+  }
+  set aborted(_) {}
+
+  write(chunk, encoding, cb) {
+    if (this[ABORTED]) return false
+    if (this[EOF]) throw new Error('write after end')
+
+    if (this[DESTROYED]) {
+      this.emit(
+        'error',
+        Object.assign(
+          new Error('Cannot call write after a stream was destroyed'),
+          { code: 'ERR_STREAM_DESTROYED' }
+        )
+      )
+      return true
+    }
+
+    if (typeof encoding === 'function') (cb = encoding), (encoding = 'utf8')
+
+    if (!encoding) encoding = 'utf8'
+
+    const fn = this[ASYNC] ? defer : f => f()
+
+    // convert array buffers and typed array views into buffers
+    // at some point in the future, we may want to do the opposite!
+    // leave strings and buffers as-is
+    // anything else switches us into object mode
+    if (!this[OBJECTMODE] && !Buffer.isBuffer(chunk)) {
+      if (isArrayBufferView(chunk))
+        chunk = Buffer.from(chunk.buffer, chunk.byteOffset, chunk.byteLength)
+      else if (isArrayBuffer(chunk)) chunk = Buffer.from(chunk)
+      else if (typeof chunk !== 'string')
+        // use the setter so we throw if we have encoding set
+        this.objectMode = true
+    }
+
+    // handle object mode up front, since it's simpler
+    // this yields better performance, fewer checks later.
+    if (this[OBJECTMODE]) {
+      /* istanbul ignore if - maybe impossible? */
+      if (this.flowing && this[BUFFERLENGTH] !== 0) this[FLUSH](true)
+
+      if (this.flowing) this.emit('data', chunk)
+      else this[BUFFERPUSH](chunk)
+
+      if (this[BUFFERLENGTH] !== 0) this.emit('readable')
+
+      if (cb) fn(cb)
+
+      return this.flowing
+    }
+
+    // at this point the chunk is a buffer or string
+    // don't buffer it up or send it to the decoder
+    if (!chunk.length) {
+      if (this[BUFFERLENGTH] !== 0) this.emit('readable')
+      if (cb) fn(cb)
+      return this.flowing
+    }
+
+    // fast-path writing strings of same encoding to a stream with
+    // an empty buffer, skipping the buffer/decoder dance
+    if (
+      typeof chunk === 'string' &&
+      // unless it is a string already ready for us to use
+      !(encoding === this[ENCODING] && !this[DECODER].lastNeed)
+    ) {
+      chunk = Buffer.from(chunk, encoding)
+    }
+
+    if (Buffer.isBuffer(chunk) && this[ENCODING])
+      chunk = this[DECODER].write(chunk)
+
+    // Note: flushing CAN potentially switch us into not-flowing mode
+    if (this.flowing && this[BUFFERLENGTH] !== 0) this[FLUSH](true)
+
+    if (this.flowing) this.emit('data', chunk)
+    else this[BUFFERPUSH](chunk)
+
+    if (this[BUFFERLENGTH] !== 0) this.emit('readable')
+
+    if (cb) fn(cb)
+
+    return this.flowing
+  }
+
+  read(n) {
+    if (this[DESTROYED]) return null
+
+    if (this[BUFFERLENGTH] === 0 || n === 0 || n > this[BUFFERLENGTH]) {
+      this[MAYBE_EMIT_END]()
+      return null
+    }
+
+    if (this[OBJECTMODE]) n = null
+
+    if (this[BUFFER].length > 1 && !this[OBJECTMODE]) {
+      if (this.encoding) this[BUFFER] = [this[BUFFER].join('')]
+      else this[BUFFER] = [Buffer.concat(this[BUFFER], this[BUFFERLENGTH])]
+    }
+
+    const ret = this[READ](n || null, this[BUFFER][0])
+    this[MAYBE_EMIT_END]()
+    return ret
+  }
+
+  [READ](n, chunk) {
+    if (n === chunk.length || n === null) this[BUFFERSHIFT]()
+    else {
+      this[BUFFER][0] = chunk.slice(n)
+      chunk = chunk.slice(0, n)
+      this[BUFFERLENGTH] -= n
+    }
+
+    this.emit('data', chunk)
+
+    if (!this[BUFFER].length && !this[EOF]) this.emit('drain')
+
+    return chunk
+  }
+
+  end(chunk, encoding, cb) {
+    if (typeof chunk === 'function') (cb = chunk), (chunk = null)
+    if (typeof encoding === 'function') (cb = encoding), (encoding = 'utf8')
+    if (chunk) this.write(chunk, encoding)
+    if (cb) this.once('end', cb)
+    this[EOF] = true
+    this.writable = false
+
+    // if we haven't written anything, then go ahead and emit,
+    // even if we're not reading.
+    // we'll re-emit if a new 'end' listener is added anyway.
+    // This makes MP more suitable to write-only use cases.
+    if (this.flowing || !this[PAUSED]) this[MAYBE_EMIT_END]()
+    return this
+  }
+
+  // don't let the internal resume be overwritten
+  [RESUME]() {
+    if (this[DESTROYED]) return
+
+    this[PAUSED] = false
+    this[FLOWING] = true
+    this.emit('resume')
+    if (this[BUFFER].length) this[FLUSH]()
+    else if (this[EOF]) this[MAYBE_EMIT_END]()
+    else this.emit('drain')
+  }
+
+  resume() {
+    return this[RESUME]()
+  }
+
+  pause() {
+    this[FLOWING] = false
+    this[PAUSED] = true
+  }
+
+  get destroyed() {
+    return this[DESTROYED]
+  }
+
+  get flowing() {
+    return this[FLOWING]
+  }
+
+  get paused() {
+    return this[PAUSED]
+  }
+
+  [BUFFERPUSH](chunk) {
+    if (this[OBJECTMODE]) this[BUFFERLENGTH] += 1
+    else this[BUFFERLENGTH] += chunk.length
+    this[BUFFER].push(chunk)
+  }
+
+  [BUFFERSHIFT]() {
+    if (this[OBJECTMODE]) this[BUFFERLENGTH] -= 1
+    else this[BUFFERLENGTH] -= this[BUFFER][0].length
+    return this[BUFFER].shift()
+  }
+
+  [FLUSH](noDrain) {
+    do {} while (this[FLUSHCHUNK](this[BUFFERSHIFT]()) && this[BUFFER].length)
+
+    if (!noDrain && !this[BUFFER].length && !this[EOF]) this.emit('drain')
+  }
+
+  [FLUSHCHUNK](chunk) {
+    this.emit('data', chunk)
+    return this.flowing
+  }
+
+  pipe(dest, opts) {
+    if (this[DESTROYED]) return
+
+    const ended = this[EMITTED_END]
+    opts = opts || {}
+    if (dest === proc.stdout || dest === proc.stderr) opts.end = false
+    else opts.end = opts.end !== false
+    opts.proxyErrors = !!opts.proxyErrors
+
+    // piping an ended stream ends immediately
+    if (ended) {
+      if (opts.end) dest.end()
+    } else {
+      this[PIPES].push(
+        !opts.proxyErrors
+          ? new Pipe(this, dest, opts)
+          : new PipeProxyErrors(this, dest, opts)
+      )
+      if (this[ASYNC]) defer(() => this[RESUME]())
+      else this[RESUME]()
+    }
+
+    return dest
+  }
+
+  unpipe(dest) {
+    const p = this[PIPES].find(p => p.dest === dest)
+    if (p) {
+      this[PIPES].splice(this[PIPES].indexOf(p), 1)
+      p.unpipe()
+    }
+  }
+
+  addListener(ev, fn) {
+    return this.on(ev, fn)
+  }
+
+  on(ev, fn) {
+    const ret = super.on(ev, fn)
+    if (ev === 'data' && !this[PIPES].length && !this.flowing) this[RESUME]()
+    else if (ev === 'readable' && this[BUFFERLENGTH] !== 0)
+      super.emit('readable')
+    else if (isEndish(ev) && this[EMITTED_END]) {
+      super.emit(ev)
+      this.removeAllListeners(ev)
+    } else if (ev === 'error' && this[EMITTED_ERROR]) {
+      if (this[ASYNC]) defer(() => fn.call(this, this[EMITTED_ERROR]))
+      else fn.call(this, this[EMITTED_ERROR])
+    }
+    return ret
+  }
+
+  get emittedEnd() {
+    return this[EMITTED_END]
+  }
+
+  [MAYBE_EMIT_END]() {
+    if (
+      !this[EMITTING_END] &&
+      !this[EMITTED_END] &&
+      !this[DESTROYED] &&
+      this[BUFFER].length === 0 &&
+      this[EOF]
+    ) {
+      this[EMITTING_END] = true
+      this.emit('end')
+      this.emit('prefinish')
+      this.emit('finish')
+      if (this[CLOSED]) this.emit('close')
+      this[EMITTING_END] = false
+    }
+  }
+
+  emit(ev, data, ...extra) {
+    // error and close are only events allowed after calling destroy()
+    if (ev !== 'error' && ev !== 'close' && ev !== DESTROYED && this[DESTROYED])
+      return
+    else if (ev === 'data') {
+      return !this[OBJECTMODE] && !data
+        ? false
+        : this[ASYNC]
+        ? defer(() => this[EMITDATA](data))
+        : this[EMITDATA](data)
+    } else if (ev === 'end') {
+      return this[EMITEND]()
+    } else if (ev === 'close') {
+      this[CLOSED] = true
+      // don't emit close before 'end' and 'finish'
+      if (!this[EMITTED_END] && !this[DESTROYED]) return
+      const ret = super.emit('close')
+      this.removeAllListeners('close')
+      return ret
+    } else if (ev === 'error') {
+      this[EMITTED_ERROR] = data
+      super.emit(ERROR, data)
+      const ret =
+        !this[SIGNAL] || this.listeners('error').length
+          ? super.emit('error', data)
+          : false
+      this[MAYBE_EMIT_END]()
+      return ret
+    } else if (ev === 'resume') {
+      const ret = super.emit('resume')
+      this[MAYBE_EMIT_END]()
+      return ret
+    } else if (ev === 'finish' || ev === 'prefinish') {
+      const ret = super.emit(ev)
+      this.removeAllListeners(ev)
+      return ret
+    }
+
+    // Some other unknown event
+    const ret = super.emit(ev, data, ...extra)
+    this[MAYBE_EMIT_END]()
+    return ret
+  }
+
+  [EMITDATA](data) {
+    for (const p of this[PIPES]) {
+      if (p.dest.write(data) === false) this.pause()
+    }
+    const ret = super.emit('data', data)
+    this[MAYBE_EMIT_END]()
+    return ret
+  }
+
+  [EMITEND]() {
+    if (this[EMITTED_END]) return
+
+    this[EMITTED_END] = true
+    this.readable = false
+    if (this[ASYNC]) defer(() => this[EMITEND2]())
+    else this[EMITEND2]()
+  }
+
+  [EMITEND2]() {
+    if (this[DECODER]) {
+      const data = this[DECODER].end()
+      if (data) {
+        for (const p of this[PIPES]) {
+          p.dest.write(data)
+        }
+        super.emit('data', data)
+      }
+    }
+
+    for (const p of this[PIPES]) {
+      p.end()
+    }
+    const ret = super.emit('end')
+    this.removeAllListeners('end')
+    return ret
+  }
+
+  // const all = await stream.collect()
+  collect() {
+    const buf = []
+    if (!this[OBJECTMODE]) buf.dataLength = 0
+    // set the promise first, in case an error is raised
+    // by triggering the flow here.
+    const p = this.promise()
+    this.on('data', c => {
+      buf.push(c)
+      if (!this[OBJECTMODE]) buf.dataLength += c.length
+    })
+    return p.then(() => buf)
+  }
+
+  // const data = await stream.concat()
+  concat() {
+    return this[OBJECTMODE]
+      ? Promise.reject(new Error('cannot concat in objectMode'))
+      : this.collect().then(buf =>
+          this[OBJECTMODE]
+            ? Promise.reject(new Error('cannot concat in objectMode'))
+            : this[ENCODING]
+            ? buf.join('')
+            : Buffer.concat(buf, buf.dataLength)
+        )
+  }
+
+  // stream.promise().then(() => done, er => emitted error)
+  promise() {
+    return new Promise((resolve, reject) => {
+      this.on(DESTROYED, () => reject(new Error('stream destroyed')))
+      this.on('error', er => reject(er))
+      this.on('end', () => resolve())
+    })
+  }
+
+  // for await (let chunk of stream)
+  [ASYNCITERATOR]() {
+    let stopped = false
+    const stop = () => {
+      this.pause()
+      stopped = true
+      return Promise.resolve({ done: true })
+    }
+    const next = () => {
+      if (stopped) return stop()
+      const res = this.read()
+      if (res !== null) return Promise.resolve({ done: false, value: res })
+
+      if (this[EOF]) return stop()
+
+      let resolve = null
+      let reject = null
+      const onerr = er => {
+        this.removeListener('data', ondata)
+        this.removeListener('end', onend)
+        this.removeListener(DESTROYED, ondestroy)
+        stop()
+        reject(er)
+      }
+      const ondata = value => {
+        this.removeListener('error', onerr)
+        this.removeListener('end', onend)
+        this.removeListener(DESTROYED, ondestroy)
+        this.pause()
+        resolve({ value: value, done: !!this[EOF] })
+      }
+      const onend = () => {
+        this.removeListener('error', onerr)
+        this.removeListener('data', ondata)
+        this.removeListener(DESTROYED, ondestroy)
+        stop()
+        resolve({ done: true })
+      }
+      const ondestroy = () => onerr(new Error('stream destroyed'))
+      return new Promise((res, rej) => {
+        reject = rej
+        resolve = res
+        this.once(DESTROYED, ondestroy)
+        this.once('error', onerr)
+        this.once('end', onend)
+        this.once('data', ondata)
+      })
+    }
+
+    return {
+      next,
+      throw: stop,
+      return: stop,
+      [ASYNCITERATOR]() {
+        return this
+      },
+    }
+  }
+
+  // for (let chunk of stream)
+  [ITERATOR]() {
+    let stopped = false
+    const stop = () => {
+      this.pause()
+      this.removeListener(ERROR, stop)
+      this.removeListener(DESTROYED, stop)
+      this.removeListener('end', stop)
+      stopped = true
+      return { done: true }
+    }
+
+    const next = () => {
+      if (stopped) return stop()
+      const value = this.read()
+      return value === null ? stop() : { value }
+    }
+    this.once('end', stop)
+    this.once(ERROR, stop)
+    this.once(DESTROYED, stop)
+
+    return {
+      next,
+      throw: stop,
+      return: stop,
+      [ITERATOR]() {
+        return this
+      },
+    }
+  }
+
+  destroy(er) {
+    if (this[DESTROYED]) {
+      if (er) this.emit('error', er)
+      else this.emit(DESTROYED)
+      return this
+    }
+
+    this[DESTROYED] = true
+
+    // throw away all buffered data, it's never coming out
+    this[BUFFER].length = 0
+    this[BUFFERLENGTH] = 0
+
+    if (typeof this.close === 'function' && !this[CLOSED]) this.close()
+
+    if (er) this.emit('error', er)
+    // if no error to emit, still reject pending promises
+    else this.emit(DESTROYED)
+
+    return this
+  }
+
+  static isStream(s) {
+    return (
+      !!s &&
+      (s instanceof Minipass ||
+        s instanceof Stream ||
+        (s instanceof EE &&
+          // readable
+          (typeof s.pipe === 'function' ||
+            // writable
+            (typeof s.write === 'function' && typeof s.end === 'function'))))
+    )
+  }
+}
+
+exports.Minipass = Minipass
 
 
 /***/ }),
@@ -31525,7 +32594,7 @@ module.exports = class Minipass extends Stream {
 
 /***/ }),
 
-/***/ 9992:
+/***/ 900:
 /***/ ((module) => {
 
 /**
@@ -36146,7 +37215,7 @@ module.exports = gte
 
 /***/ }),
 
-/***/ 900:
+/***/ 929:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 const SemVer = __nccwpck_require__(8088)
@@ -36201,7 +37270,7 @@ module.exports = major
 
 /***/ }),
 
-/***/ 8447:
+/***/ 7883:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 const SemVer = __nccwpck_require__(8088)
@@ -36355,10 +37424,10 @@ const identifiers = __nccwpck_require__(2463)
 const parse = __nccwpck_require__(5925)
 const valid = __nccwpck_require__(9601)
 const clean = __nccwpck_require__(8848)
-const inc = __nccwpck_require__(900)
+const inc = __nccwpck_require__(929)
 const diff = __nccwpck_require__(4297)
 const major = __nccwpck_require__(6688)
-const minor = __nccwpck_require__(8447)
+const minor = __nccwpck_require__(7883)
 const patch = __nccwpck_require__(2866)
 const prerelease = __nccwpck_require__(4016)
 const compare = __nccwpck_require__(4309)
@@ -38060,7 +39129,7 @@ class Rekor {
     }
     /**
      * Create a new entry in the Rekor log.
-     * @param propsedEntry {EntryKind} Data to create a new entry
+     * @param propsedEntry {ProposedEntry} Data to create a new entry
      * @returns {Promise<Entry>} The created entry
      */
     async createEntry(propsedEntry) {
@@ -38128,7 +39197,7 @@ function entryFromResponse(data) {
         throw new Error('Received multiple entries in Rekor response');
     }
     // Grab UUID and entry data from the response
-    const [uuid, entry] = Object.entries(data)[0];
+    const [uuid, entry] = entries[0];
     return {
         ...entry,
         uuid,
@@ -38631,21 +39700,6 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.sigstore = void 0;
-/*
-Copyright 2022 The Sigstore Authors.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
 exports.sigstore = __importStar(__nccwpck_require__(1111));
 
 
@@ -38860,7 +39914,7 @@ async function createRekorEntry(dsseEnvelope, publicKey, options = {}) {
         signature: sigMaterial,
         tlogEntry: entry,
     });
-    return sigstore.Bundle.toJSON(bundle);
+    return sigstore.bundleToJSON(bundle);
 }
 exports.createRekorEntry = createRekorEntry;
 
@@ -38896,7 +39950,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.DEFAULT_REKOR_URL = exports.DEFAULT_FULCIO_URL = exports.tuf = exports.utils = exports.VerificationError = exports.ValidationError = exports.PolicyError = exports.InternalError = exports.verify = exports.attest = exports.sign = void 0;
+exports.DEFAULT_REKOR_URL = exports.DEFAULT_FULCIO_URL = exports.tuf = exports.utils = exports.VerificationError = exports.ValidationError = exports.PolicyError = exports.InternalError = exports.createVerifier = exports.verify = exports.attest = exports.sign = void 0;
 /*
 Copyright 2023 The Sigstore Authors.
 
@@ -38912,9 +39966,9 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
+const tuf = __importStar(__nccwpck_require__(8567));
 const config = __importStar(__nccwpck_require__(3430));
 const sign_1 = __nccwpck_require__(9884);
-const tuf = __importStar(__nccwpck_require__(5143));
 const sigstore = __importStar(__nccwpck_require__(8598));
 const verify_1 = __nccwpck_require__(7995);
 async function sign(payload, options = {}) {
@@ -38924,11 +39978,13 @@ async function sign(payload, options = {}) {
     const signer = new sign_1.Signer({
         ca,
         tlog,
-        identityProviders: idps,
+        identityProviders: options.identityProvider
+            ? [options.identityProvider]
+            : idps,
         tlogUpload: options.tlogUpload,
     });
     const bundle = await signer.signBlob(payload);
-    return sigstore.Bundle.toJSON(bundle);
+    return sigstore.bundleToJSON(bundle);
 }
 exports.sign = sign;
 async function attest(payload, payloadType, options = {}) {
@@ -38940,11 +39996,13 @@ async function attest(payload, payloadType, options = {}) {
         ca,
         tlog,
         tsa,
-        identityProviders: idps,
+        identityProviders: options.identityProvider
+            ? [options.identityProvider]
+            : idps,
         tlogUpload: options.tlogUpload,
     });
     const bundle = await signer.signAttestation(payload, payloadType);
-    return sigstore.Bundle.toJSON(bundle);
+    return sigstore.bundleToJSON(bundle);
 }
 exports.attest = attest;
 async function verify(bundle, payload, options = {}) {
@@ -38961,22 +40019,47 @@ async function verify(bundle, payload, options = {}) {
     return verifier.verify(deserializedBundle, opts, payload);
 }
 exports.verify = verify;
+async function createVerifier(options) {
+    const trustedRoot = await tuf.getTrustedRoot({
+        mirrorURL: options.tufMirrorURL,
+        rootPath: options.tufRootPath,
+        cachePath: options.tufCachePath,
+        retry: options.retry ?? config.DEFAULT_RETRY,
+        timeout: options.timeout ?? config.DEFAULT_TIMEOUT,
+    });
+    const verifier = new verify_1.Verifier(trustedRoot, options.keySelector);
+    const verifyOpts = config.artifactVerificationOptions(options);
+    return {
+        verify: (bundle) => {
+            const deserializedBundle = sigstore.bundleFromJSON(bundle);
+            return verifier.verify(deserializedBundle, verifyOpts);
+        },
+    };
+}
+exports.createVerifier = createVerifier;
 const tufUtils = {
     client: (options = {}) => {
-        const t = new tuf.TUFClient({
+        return tuf.initTUF({
             mirrorURL: options.tufMirrorURL,
             rootPath: options.tufRootPath,
             cachePath: options.tufCachePath,
-            retry: options.retry ?? config.DEFAULT_RETRY,
-            timeout: options.timeout ?? config.DEFAULT_TIMEOUT,
+            retry: options.retry,
+            timeout: options.timeout,
         });
-        return t.refresh().then(() => t);
     },
     /*
      * @deprecated Use tufUtils.client instead.
      */
     getTarget: (path, options = {}) => {
-        return tufUtils.client(options).then((t) => t.getTarget(path));
+        return tuf
+            .initTUF({
+            mirrorURL: options.tufMirrorURL,
+            rootPath: options.tufRootPath,
+            cachePath: options.tufCachePath,
+            retry: options.retry,
+            timeout: options.timeout,
+        })
+            .then((t) => t.getTarget(path));
     },
 };
 exports.tuf = tufUtils;
@@ -38998,11 +40081,23 @@ exports.DEFAULT_REKOR_URL = config.DEFAULT_REKOR_URL;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.toProposedIntotoEntry = exports.toProposedHashedRekordEntry = void 0;
+exports.toProposedIntotoEntry = exports.toProposedHashedRekordEntry = exports.toProposedDSSEEntry = void 0;
+const sigstore_1 = __nccwpck_require__(8598);
 const util_1 = __nccwpck_require__(6901);
-const types_1 = __nccwpck_require__(9406);
+const DEFAULT_DSSE_API_VERSION = '0.0.1';
 const DEFAULT_HASHEDREKORD_API_VERSION = '0.0.1';
 const DEFAULT_INTOTO_API_VERSION = '0.0.2';
+// Returns a properly formatted Rekor "dsse" entry for the given DSSE
+// envelope and signature
+function toProposedDSSEEntry(envelope, signature, apiVersion = DEFAULT_DSSE_API_VERSION) {
+    switch (apiVersion) {
+        case '0.0.1':
+            return toProposedDSSEV001Entry(envelope, signature);
+        default:
+            throw new Error(`Unsupported dsse kind API version: ${apiVersion}`);
+    }
+}
+exports.toProposedDSSEEntry = toProposedDSSEEntry;
 // Returns a properly formatted Rekor "hashedrekord" entry for the given digest
 // and signature
 function toProposedHashedRekordEntry(digest, signature) {
@@ -39011,7 +40106,7 @@ function toProposedHashedRekordEntry(digest, signature) {
     const b64Key = util_1.encoding.base64Encode(toPublicKey(signature));
     return {
         apiVersion: DEFAULT_HASHEDREKORD_API_VERSION,
-        kind: types_1.HASHEDREKORD_KIND,
+        kind: 'hashedrekord',
         spec: {
             data: {
                 hash: {
@@ -39040,11 +40135,23 @@ function toProposedIntotoEntry(envelope, signature, apiVersion = DEFAULT_INTOTO_
     }
 }
 exports.toProposedIntotoEntry = toProposedIntotoEntry;
+function toProposedDSSEV001Entry(envelope, signature) {
+    return {
+        apiVersion: '0.0.1',
+        kind: 'dsse',
+        spec: {
+            proposedContent: {
+                envelope: JSON.stringify(sigstore_1.Envelope.toJSON(envelope)),
+                verifiers: [util_1.encoding.base64Encode(toPublicKey(signature))],
+            },
+        },
+    };
+}
 function toProposedIntotoV002Entry(envelope, signature) {
     // Calculate the value for the payloadHash field in the Rekor entry
     const payloadHash = util_1.crypto.hash(envelope.payload).toString('hex');
     // Calculate the value for the hash field in the Rekor entry
-    const envelopeHash = calculateDSSEHash(envelope);
+    const envelopeHash = calculateDSSEHash(envelope, signature);
     // Collect values for re-creating the DSSE envelope.
     // Double-encode payload and signature cause that's what Rekor expects
     const payload = util_1.encoding.base64Encode(envelope.payload.toString('base64'));
@@ -39054,7 +40161,7 @@ function toProposedIntotoV002Entry(envelope, signature) {
     // Create the envelope portion of the entry. Note the inclusion of the
     // publicKey in the signature struct is not a standard part of a DSSE
     // envelope, but is required by Rekor.
-    const dsse = {
+    const dsseEnv = {
         payloadType: envelope.payloadType,
         payload: payload,
         signatures: [{ sig, publicKey }],
@@ -39063,14 +40170,14 @@ function toProposedIntotoV002Entry(envelope, signature) {
     // need to do the same here so that we can properly recreate the entry for
     // verification.
     if (keyid.length > 0) {
-        dsse.signatures[0].keyid = keyid;
+        dsseEnv.signatures[0].keyid = keyid;
     }
     return {
         apiVersion: '0.0.2',
-        kind: types_1.INTOTO_KIND,
+        kind: 'intoto',
         spec: {
             content: {
-                envelope: dsse,
+                envelope: dsseEnv,
                 hash: { algorithm: 'sha256', value: envelopeHash },
                 payloadHash: { algorithm: 'sha256', value: payloadHash },
             },
@@ -39084,17 +40191,22 @@ function toProposedIntotoV002Entry(envelope, signature) {
 //  * signature is base64 encoded (only the first signature is used)
 //  * keyid is included ONLY if it is NOT an empty string
 //  * The resulting JSON is canonicalized and hashed to a hex string
-function calculateDSSEHash(envelope) {
-    const dsse = {
+function calculateDSSEHash(envelope, signature) {
+    const dsseEnv = {
         payloadType: envelope.payloadType,
         payload: envelope.payload.toString('base64'),
-        signatures: [{ sig: envelope.signatures[0].sig.toString('base64') }],
+        signatures: [
+            {
+                sig: envelope.signatures[0].sig.toString('base64'),
+                publicKey: toPublicKey(signature),
+            },
+        ],
     };
     // If the keyid is an empty string, Rekor seems to remove it altogether.
     if (envelope.signatures[0].keyid.length > 0) {
-        dsse.signatures[0].keyid = envelope.signatures[0].keyid;
+        dsseEnv.signatures[0].keyid = envelope.signatures[0].keyid;
     }
-    return util_1.crypto.hash(util_1.json.canonicalize(dsse)).toString('hex');
+    return util_1.crypto.hash(util_1.json.canonicalize(dsseEnv)).toString('hex');
 }
 function toPublicKey(signature) {
     return signature.certificates
@@ -39188,19 +40300,6 @@ function entryExistsError(value) {
 
 /***/ }),
 
-/***/ 9406:
-/***/ ((__unused_webpack_module, exports) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.HASHEDREKORD_KIND = exports.INTOTO_KIND = void 0;
-exports.INTOTO_KIND = 'intoto';
-exports.HASHEDREKORD_KIND = 'hashedrekord';
-
-
-/***/ }),
-
 /***/ 7878:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
@@ -39235,6 +40334,9 @@ function verifyTLogBody(entry, bundleContent) {
             throw new error_1.VerificationError(TLOG_MISMATCH_ERROR_MSG);
         }
         switch (body.kind) {
+            case 'dsse':
+                verifyDSSETLogBody(body, bundleContent);
+                break;
             case 'intoto':
                 verifyIntotoTLogBody(body, bundleContent);
                 break;
@@ -39251,6 +40353,20 @@ function verifyTLogBody(entry, bundleContent) {
     }
 }
 exports.verifyTLogBody = verifyTLogBody;
+// Compare the given intoto tlog entry to the given bundle
+function verifyDSSETLogBody(tlogEntry, content) {
+    if (content?.$case !== 'dsseEnvelope') {
+        throw new error_1.VerificationError(`unsupported bundle content: ${content?.$case || 'unknown'}`);
+    }
+    const dsse = content.dsseEnvelope;
+    switch (tlogEntry.apiVersion) {
+        case '0.0.1':
+            verifyDSSE001TLogBody(tlogEntry, dsse);
+            break;
+        default:
+            throw new error_1.VerificationError(`unsupported dsse version: ${tlogEntry.apiVersion}`);
+    }
+}
 // Compare the given intoto tlog entry to the given bundle
 function verifyIntotoTLogBody(tlogEntry, content) {
     if (content?.$case !== 'dsseEnvelope') {
@@ -39277,6 +40393,28 @@ function verifyHashedRekordTLogBody(tlogEntry, content) {
             break;
         default:
             throw new error_1.VerificationError(`unsupported hashedrekord version: ${tlogEntry.apiVersion}`);
+    }
+}
+// Compare the given dsse v0.0.1 tlog entry to the given DSSE envelope.
+function verifyDSSE001TLogBody(tlogEntry, dsse) {
+    // Collect all of the signatures from the DSSE envelope
+    // Turns them into base64-encoded strings for comparison
+    const dsseSigs = dsse.signatures.map((signature) => signature.sig.toString('base64'));
+    // Collect all of the signatures from the tlog entry
+    const tlogSigs = tlogEntry.spec.signatures?.map((signature) => signature.signature);
+    // Ensure the bundle's DSSE and the tlog entry contain the same number of signatures
+    if (dsseSigs.length !== tlogSigs?.length) {
+        throw new error_1.VerificationError(TLOG_MISMATCH_ERROR_MSG);
+    }
+    // Ensure that every signature in the bundle's DSSE is present in the tlog entry
+    if (!dsseSigs.every((dsseSig) => tlogSigs.includes(dsseSig))) {
+        throw new error_1.VerificationError(TLOG_MISMATCH_ERROR_MSG);
+    }
+    // Ensure the digest of the bundle's DSSE payload matches the digest in the
+    // tlog entry
+    const dssePayloadHash = util_1.crypto.hash(dsse.payload).toString('hex');
+    if (dssePayloadHash !== tlogEntry.spec.payloadHash?.value) {
+        throw new error_1.VerificationError(TLOG_MISMATCH_ERROR_MSG);
     }
 }
 // Compare the given intoto v0.0.2 tlog entry to the given DSSE envelope.
@@ -39369,6 +40507,7 @@ limitations under the License.
 */
 const error_1 = __nccwpck_require__(6274);
 const sigstore = __importStar(__nccwpck_require__(8598));
+const cert_1 = __nccwpck_require__(3669);
 const body_1 = __nccwpck_require__(7878);
 const set_1 = __nccwpck_require__(6801);
 // Verifies that the number of tlog entries that pass offline verification
@@ -39378,7 +40517,7 @@ function verifyTLogEntries(bundle, trustedRoot, options) {
         throw new error_1.VerificationError('Online verification not implemented');
     }
     // Extract the signing cert, if available
-    const signingCert = sigstore.signingCertificate(bundle);
+    const signingCert = signingCertificate(bundle);
     // Iterate over the tlog entries and verify each one
     const verifiedEntries = bundle.verificationMaterial.tlogEntries.filter((entry) => verifyTLogEntryOffline(entry, bundle.content, trustedRoot.tlogs, signingCert));
     if (verifiedEntries.length < options.threshold) {
@@ -39400,6 +40539,13 @@ function verifyTLogEntryOffline(entry, bundleContent, tlogs, signingCert) {
     return ((0, body_1.verifyTLogBody)(entry, bundleContent) &&
         (0, set_1.verifyTLogSET)(entry, tlogs) &&
         verifyTLogIntegrationTime());
+}
+function signingCertificate(bundle) {
+    if (!sigstore.isBundleWithCertificateChain(bundle)) {
+        return undefined;
+    }
+    const signingCert = bundle.verificationMaterial.content.x509CertificateChain.certificates[0];
+    return cert_1.x509Certificate.parse(signingCert.rawBytes);
 }
 
 
@@ -39535,240 +40681,6 @@ exports.TSAClient = TSAClient;
 
 /***/ }),
 
-/***/ 5143:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.TUFClient = exports.getTrustedRoot = void 0;
-/*
-Copyright 2023 The Sigstore Authors.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
-const fs_1 = __importDefault(__nccwpck_require__(7147));
-const path_1 = __importDefault(__nccwpck_require__(1017));
-const tuf_js_1 = __nccwpck_require__(9475);
-const sigstore = __importStar(__nccwpck_require__(8598));
-const util_1 = __nccwpck_require__(6901);
-const target_1 = __nccwpck_require__(9212);
-const TRUSTED_ROOT_TARGET = 'trusted_root.json';
-const DEFAULT_CACHE_DIR = util_1.appdata.appDataPath('sigstore-js');
-const DEFAULT_MIRROR_URL = 'https://tuf-repo-cdn.sigstore.dev';
-const DEFAULT_TUF_ROOT_PATH = '../../store/public-good-instance-root.json';
-async function getTrustedRoot(options = {}) {
-    const client = new TUFClient(options);
-    const trustedRoot = await client.getTarget(TRUSTED_ROOT_TARGET);
-    return sigstore.TrustedRoot.fromJSON(JSON.parse(trustedRoot));
-}
-exports.getTrustedRoot = getTrustedRoot;
-class TUFClient {
-    constructor(options) {
-        const cachePath = options.cachePath || DEFAULT_CACHE_DIR;
-        const tufRootPath = options.rootPath || __nccwpck_require__.ab + "public-good-instance-root.json";
-        const mirrorURL = options.mirrorURL || DEFAULT_MIRROR_URL;
-        initTufCache(cachePath, tufRootPath);
-        const remote = initRemoteConfig(cachePath, mirrorURL);
-        this.updater = initClient(cachePath, remote, options);
-    }
-    async refresh() {
-        return this.updater.refresh();
-    }
-    getTarget(targetName) {
-        return (0, target_1.readTarget)(this.updater, targetName);
-    }
-}
-exports.TUFClient = TUFClient;
-// Initializes the TUF cache directory structure including the initial
-// root.json file. If the cache directory does not exist, it will be
-// created. If the targets directory does not exist, it will be created.
-// If the root.json file does not exist, it will be copied from the
-// rootPath argument.
-function initTufCache(cachePath, tufRootPath) {
-    const targetsPath = path_1.default.join(cachePath, 'targets');
-    const cachedRootPath = path_1.default.join(cachePath, 'root.json');
-    if (!fs_1.default.existsSync(cachePath)) {
-        fs_1.default.mkdirSync(cachePath, { recursive: true });
-    }
-    if (!fs_1.default.existsSync(targetsPath)) {
-        fs_1.default.mkdirSync(targetsPath);
-    }
-    if (!fs_1.default.existsSync(cachedRootPath)) {
-        fs_1.default.copyFileSync(tufRootPath, cachedRootPath);
-    }
-    return cachePath;
-}
-// Initializes the remote.json file, which contains the URL of the TUF
-// repository. If the file does not exist, it will be created. If the file
-// exists, it will be parsed and returned.
-function initRemoteConfig(rootDir, mirrorURL) {
-    let remoteConfig;
-    const remoteConfigPath = path_1.default.join(rootDir, 'remote.json');
-    if (fs_1.default.existsSync(remoteConfigPath)) {
-        const data = fs_1.default.readFileSync(remoteConfigPath, 'utf-8');
-        remoteConfig = JSON.parse(data);
-    }
-    if (!remoteConfig) {
-        remoteConfig = { mirror: mirrorURL };
-        fs_1.default.writeFileSync(remoteConfigPath, JSON.stringify(remoteConfig));
-    }
-    return remoteConfig;
-}
-function initClient(cachePath, remote, options) {
-    const baseURL = remote.mirror;
-    const config = {
-        fetchTimeout: options.timeout,
-    };
-    // tuf-js only supports a number for fetchRetries so we have to
-    // convert the boolean and object options to a number.
-    if (typeof options.retry !== 'undefined') {
-        if (typeof options.retry === 'number') {
-            config.fetchRetries = options.retry;
-        }
-        else if (typeof options.retry === 'object') {
-            config.fetchRetries = options.retry.retries;
-        }
-        else if (options.retry === true) {
-            config.fetchRetries = 1;
-        }
-    }
-    return new tuf_js_1.Updater({
-        metadataBaseUrl: baseURL,
-        targetBaseUrl: `${baseURL}/targets`,
-        metadataDir: cachePath,
-        targetDir: path_1.default.join(cachePath, 'targets'),
-        config,
-    });
-}
-
-
-/***/ }),
-
-/***/ 9212:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.readTarget = void 0;
-/*
-Copyright 2023 The Sigstore Authors.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
-const fs_1 = __importDefault(__nccwpck_require__(7147));
-const error_1 = __nccwpck_require__(6274);
-// Downloads and returns the specified target from the provided TUF Updater.
-async function readTarget(tuf, targetPath) {
-    const path = await getTargetPath(tuf, targetPath);
-    return new Promise((resolve, reject) => {
-        fs_1.default.readFile(path, 'utf-8', (err, data) => {
-            if (err) {
-                reject(new error_1.InternalError({
-                    code: 'TUF_READ_TARGET_ERROR',
-                    message: `error reading target ${path}`,
-                    cause: err,
-                }));
-            }
-            else {
-                resolve(data);
-            }
-        });
-    });
-}
-exports.readTarget = readTarget;
-// Returns the local path to the specified target. If the target is not yet
-// cached locally, the provided TUF Updater will be used to download and
-// cache the target.
-async function getTargetPath(tuf, target) {
-    let targetInfo;
-    try {
-        targetInfo = await tuf.getTargetInfo(target);
-    }
-    catch (err) {
-        throw new error_1.InternalError({
-            code: 'TUF_REFRESH_METADATA_ERROR',
-            message: 'error refreshing TUF metadata',
-            cause: err,
-        });
-    }
-    if (!targetInfo) {
-        throw new error_1.InternalError({
-            code: 'TUF_FIND_TARGET_ERROR',
-            message: `target ${target} not found`,
-        });
-    }
-    let path = await tuf.findCachedTarget(targetInfo);
-    // An empty path here means the target has not been cached locally, or is
-    // out of date. In either case, we need to download it.
-    if (!path) {
-        try {
-            path = await tuf.downloadTarget(targetInfo);
-        }
-        catch (err) {
-            throw new error_1.InternalError({
-                code: 'TUF_DOWNLOAD_TARGET_ERROR',
-                message: `error downloading target ${path}`,
-                cause: err,
-            });
-        }
-    }
-    return path;
-}
-
-
-/***/ }),
-
 /***/ 2787:
 /***/ ((__unused_webpack_module, exports) => {
 
@@ -39793,26 +40705,12 @@ exports.extractSignatureMaterial = extractSignatureMaterial;
 /***/ }),
 
 /***/ 8598:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
 
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __exportStar = (this && this.__exportStar) || function(m, exports) {
-    for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
-};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.signingCertificate = exports.toMessageSignatureBundle = exports.toDSSEBundle = exports.isVerifiableTransparencyLogEntry = exports.isCAVerificationOptions = exports.isBundleWithCertificateChain = exports.isBundleWithVerificationMaterial = exports.bundleFromJSON = void 0;
+exports.toMessageSignatureBundle = exports.toDSSEBundle = exports.isVerifiableTransparencyLogEntry = exports.isCAVerificationOptions = exports.isBundleWithCertificateChain = exports.bundleToJSON = exports.bundleFromJSON = exports.SubjectAlternativeNameType = exports.PublicKeyDetails = exports.HashAlgorithm = exports.Envelope = void 0;
 /*
 Copyright 2023 The Sigstore Authors.
 
@@ -39830,11 +40728,14 @@ limitations under the License.
 */
 const protobuf_specs_1 = __nccwpck_require__(530);
 const util_1 = __nccwpck_require__(6901);
-const cert_1 = __nccwpck_require__(3669);
 const validate_1 = __nccwpck_require__(6857);
-__exportStar(__nccwpck_require__(530), exports);
-__exportStar(__nccwpck_require__(2163), exports);
-__exportStar(__nccwpck_require__(6857), exports);
+// Enums from protobuf-specs
+// TODO: Move Envelope to "type" export once @sigstore/sign is a thing
+var protobuf_specs_2 = __nccwpck_require__(530);
+Object.defineProperty(exports, "Envelope", ({ enumerable: true, get: function () { return protobuf_specs_2.Envelope; } }));
+Object.defineProperty(exports, "HashAlgorithm", ({ enumerable: true, get: function () { return protobuf_specs_2.HashAlgorithm; } }));
+Object.defineProperty(exports, "PublicKeyDetails", ({ enumerable: true, get: function () { return protobuf_specs_2.PublicKeyDetails; } }));
+Object.defineProperty(exports, "SubjectAlternativeNameType", ({ enumerable: true, get: function () { return protobuf_specs_2.SubjectAlternativeNameType; } }));
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const bundleFromJSON = (obj) => {
     const bundle = protobuf_specs_1.Bundle.fromJSON(obj);
@@ -39842,16 +40743,15 @@ const bundleFromJSON = (obj) => {
     return bundle;
 };
 exports.bundleFromJSON = bundleFromJSON;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const bundleToJSON = (bundle) => {
+    return protobuf_specs_1.Bundle.toJSON(bundle);
+};
+exports.bundleToJSON = bundleToJSON;
 const BUNDLE_MEDIA_TYPE = 'application/vnd.dev.sigstore.bundle+json;version=0.1';
-// Type guard for narrowing a Bundle to a BundleWithVerificationMaterial
-function isBundleWithVerificationMaterial(bundle) {
-    return bundle.verificationMaterial !== undefined;
-}
-exports.isBundleWithVerificationMaterial = isBundleWithVerificationMaterial;
 // Type guard for narrowing a Bundle to a BundleWithCertificateChain
 function isBundleWithCertificateChain(bundle) {
-    return (isBundleWithVerificationMaterial(bundle) &&
-        bundle.verificationMaterial.content !== undefined &&
+    return (bundle.verificationMaterial.content !== undefined &&
         bundle.verificationMaterial.content.$case === 'x509CertificateChain');
 }
 exports.isBundleWithCertificateChain = isBundleWithCertificateChain;
@@ -39867,6 +40767,9 @@ function isVerifiableTransparencyLogEntry(entry) {
         entry.kindVersion !== undefined);
 }
 exports.isVerifiableTransparencyLogEntry = isVerifiableTransparencyLogEntry;
+// All of the following functions are used to construct a ValidBundle
+// from various types of input. When this code moves into the
+// @sigstore/sign package, these functions will be exported from there.
 function toDSSEBundle({ envelope, signature, tlogEntry, timestamp, }) {
     return {
         mediaType: BUNDLE_MEDIA_TYPE,
@@ -39901,8 +40804,12 @@ function toMessageSignatureBundle({ digest, signature, tlogEntry, timestamp, }) 
 }
 exports.toMessageSignatureBundle = toMessageSignatureBundle;
 function toTransparencyLogEntry(entry) {
-    const set = Buffer.from(entry.verification.signedEntryTimestamp, 'base64');
+    const b64SET = entry.verification?.signedEntryTimestamp || '';
+    const set = Buffer.from(b64SET, 'base64');
     const logID = Buffer.from(entry.logID, 'hex');
+    const proof = entry.verification?.inclusionProof
+        ? toInclusionProof(entry.verification.inclusionProof)
+        : undefined;
     // Parse entry body so we can extract the kind and version.
     const bodyJSON = util_1.encoding.base64Decode(entry.body);
     const entryBody = JSON.parse(bodyJSON);
@@ -39919,8 +40826,19 @@ function toTransparencyLogEntry(entry) {
             kind: entryBody.kind,
             version: entryBody.apiVersion,
         },
-        inclusionProof: undefined,
+        inclusionProof: proof,
         canonicalizedBody: Buffer.from(entry.body, 'base64'),
+    };
+}
+function toInclusionProof(proof) {
+    return {
+        logIndex: proof.logIndex.toString(),
+        rootHash: Buffer.from(proof.rootHash, 'hex'),
+        treeSize: proof.treeSize.toString(),
+        checkpoint: {
+            envelope: proof.checkpoint,
+        },
+        hashes: proof.hashes.map((h) => Buffer.from(h, 'hex')),
     };
 }
 function toVerificationMaterial({ signature, tlogEntry, timestamp, }) {
@@ -39952,24 +40870,6 @@ function toTimestampVerificationData(timestamp) {
         rfc3161Timestamps: [{ signedTimestamp: timestamp }],
     };
 }
-function signingCertificate(bundle) {
-    if (!isBundleWithCertificateChain(bundle)) {
-        return undefined;
-    }
-    const signingCert = bundle.verificationMaterial.content.x509CertificateChain.certificates[0];
-    return cert_1.x509Certificate.parse(signingCert.rawBytes);
-}
-exports.signingCertificate = signingCertificate;
-
-
-/***/ }),
-
-/***/ 2163:
-/***/ ((__unused_webpack_module, exports) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
 
 
 /***/ }),
@@ -39981,6 +40881,21 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.assertValidBundle = void 0;
+/*
+Copyright 2023 The Sigstore Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
 const error_1 = __nccwpck_require__(6274);
 // Performs basic validation of a Sigstore bundle to ensure that all required
 // fields are populated. This is not a complete validation of the bundle, but
@@ -40055,36 +40970,520 @@ exports.assertValidBundle = assertValidBundle;
 
 /***/ }),
 
-/***/ 7899:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+/***/ 4726:
+/***/ ((__unused_webpack_module, exports) => {
 
 "use strict";
 
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.appDataPath = void 0;
-const os_1 = __importDefault(__nccwpck_require__(2037));
-const path_1 = __importDefault(__nccwpck_require__(1017));
-function appDataPath(name) {
-    const homedir = os_1.default.homedir();
-    switch (process.platform) {
-        case 'darwin': {
-            const appSupport = path_1.default.join(homedir, 'Library', 'Application Support');
-            return path_1.default.join(appSupport, name);
+exports.ASN1TypeError = exports.ASN1ParseError = void 0;
+/*
+Copyright 2023 The Sigstore Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+class ASN1ParseError extends Error {
+}
+exports.ASN1ParseError = ASN1ParseError;
+class ASN1TypeError extends Error {
+}
+exports.ASN1TypeError = ASN1TypeError;
+
+
+/***/ }),
+
+/***/ 2346:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.ASN1Obj = void 0;
+/*
+Copyright 2023 The Sigstore Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+var obj_1 = __nccwpck_require__(6014);
+Object.defineProperty(exports, "ASN1Obj", ({ enumerable: true, get: function () { return obj_1.ASN1Obj; } }));
+
+
+/***/ }),
+
+/***/ 2321:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+/*
+Copyright 2023 The Sigstore Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.encodeLength = exports.decodeLength = void 0;
+const error_1 = __nccwpck_require__(4726);
+// Decodes the length of a DER-encoded ANS.1 element from the supplied stream.
+// https://learn.microsoft.com/en-us/windows/win32/seccertenroll/about-encoded-length-and-value-bytes
+function decodeLength(stream) {
+    const buf = stream.getUint8();
+    // If the most significant bit is UNSET the length is just the value of the
+    // byte.
+    if ((buf & 0x80) === 0x00) {
+        return buf;
+    }
+    // Otherwise, the lower 7 bits of the first byte indicate the number of bytes
+    // that follow to encode the length.
+    const byteCount = buf & 0x7f;
+    // Ensure the encoded length can safely fit in a JS number.
+    if (byteCount > 6) {
+        throw new error_1.ASN1ParseError('length exceeds 6 byte limit');
+    }
+    // Iterate over the bytes that encode the length.
+    let len = 0;
+    for (let i = 0; i < byteCount; i++) {
+        len = len * 256 + stream.getUint8();
+    }
+    // This is a valid ASN.1 length encoding, but we don't support it.
+    if (len === 0) {
+        throw new error_1.ASN1ParseError('indefinite length encoding not supported');
+    }
+    return len;
+}
+exports.decodeLength = decodeLength;
+// Translates the supplied value to a DER-encoded length.
+function encodeLength(len) {
+    if (len < 128) {
+        return Buffer.from([len]);
+    }
+    // Bitwise operations on large numbers are not supported in JS, so we need to
+    // use BigInts.
+    let val = BigInt(len);
+    const bytes = [];
+    while (val > 0n) {
+        bytes.unshift(Number(val & 255n));
+        val = val >> 8n;
+    }
+    return Buffer.from([0x80 | bytes.length, ...bytes]);
+}
+exports.encodeLength = encodeLength;
+
+
+/***/ }),
+
+/***/ 6014:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.ASN1Obj = void 0;
+/*
+Copyright 2023 The Sigstore Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+const stream_1 = __nccwpck_require__(9080);
+const error_1 = __nccwpck_require__(4726);
+const length_1 = __nccwpck_require__(2321);
+const parse_1 = __nccwpck_require__(4721);
+const tag_1 = __nccwpck_require__(3968);
+class ASN1Obj {
+    constructor(tag, value, subs) {
+        this.tag = tag;
+        this.value = value;
+        this.subs = subs;
+    }
+    // Constructs an ASN.1 object from a Buffer of DER-encoded bytes.
+    static parseBuffer(buf) {
+        return parseStream(new stream_1.ByteStream(buf));
+    }
+    toDER() {
+        const valueStream = new stream_1.ByteStream();
+        if (this.subs.length > 0) {
+            for (const sub of this.subs) {
+                valueStream.appendView(sub.toDER());
+            }
         }
-        case 'win32': {
-            const localAppData = process.env.LOCALAPPDATA || path_1.default.join(homedir, 'AppData', 'Local');
-            return path_1.default.join(localAppData, name, 'Data');
+        else {
+            valueStream.appendView(this.value);
         }
-        default: {
-            const localData = process.env.XDG_DATA_HOME || path_1.default.join(homedir, '.local', 'share');
-            return path_1.default.join(localData, name);
+        const value = valueStream.buffer;
+        // Concat tag/length/value
+        const obj = new stream_1.ByteStream();
+        obj.appendChar(this.tag.toDER());
+        obj.appendView((0, length_1.encodeLength)(value.length));
+        obj.appendView(value);
+        return obj.buffer;
+    }
+    /////////////////////////////////////////////////////////////////////////////
+    // Convenience methods for parsing ASN.1 primitives into JS types
+    // Returns the ASN.1 object's value as a boolean. Throws an error if the
+    // object is not a boolean.
+    toBoolean() {
+        if (!this.tag.isBoolean()) {
+            throw new error_1.ASN1TypeError('not a boolean');
+        }
+        return (0, parse_1.parseBoolean)(this.value);
+    }
+    // Returns the ASN.1 object's value as a BigInt. Throws an error if the
+    // object is not an integer.
+    toInteger() {
+        if (!this.tag.isInteger()) {
+            throw new error_1.ASN1TypeError('not an integer');
+        }
+        return (0, parse_1.parseInteger)(this.value);
+    }
+    // Returns the ASN.1 object's value as an OID string. Throws an error if the
+    // object is not an OID.
+    toOID() {
+        if (!this.tag.isOID()) {
+            throw new error_1.ASN1TypeError('not an OID');
+        }
+        return (0, parse_1.parseOID)(this.value);
+    }
+    // Returns the ASN.1 object's value as a Date. Throws an error if the object
+    // is not either a UTCTime or a GeneralizedTime.
+    toDate() {
+        switch (true) {
+            case this.tag.isUTCTime():
+                return (0, parse_1.parseTime)(this.value, true);
+            case this.tag.isGeneralizedTime():
+                return (0, parse_1.parseTime)(this.value, false);
+            default:
+                throw new error_1.ASN1TypeError('not a date');
         }
     }
+    // Returns the ASN.1 object's value as a number[] where each number is the
+    // value of a bit in the bit string. Throws an error if the object is not a
+    // bit string.
+    toBitString() {
+        if (!this.tag.isBitString()) {
+            throw new error_1.ASN1TypeError('not a bit string');
+        }
+        return (0, parse_1.parseBitString)(this.value);
+    }
 }
-exports.appDataPath = appDataPath;
+exports.ASN1Obj = ASN1Obj;
+/////////////////////////////////////////////////////////////////////////////
+// Internal stream parsing functions
+function parseStream(stream) {
+    // Parse tag, length, and value from stream
+    const tag = new tag_1.ASN1Tag(stream.getUint8());
+    const len = (0, length_1.decodeLength)(stream);
+    const value = stream.slice(stream.position, len);
+    const start = stream.position;
+    let subs = [];
+    // If the object is constructed, parse its children. Sometimes, children
+    // are embedded in OCTESTRING objects, so we need to check those
+    // for children as well.
+    if (tag.constructed) {
+        subs = collectSubs(stream, len);
+    }
+    else if (tag.isOctetString()) {
+        // Attempt to parse children of OCTETSTRING objects. If anything fails,
+        // assume the object is not constructed and treat as primitive.
+        try {
+            subs = collectSubs(stream, len);
+        }
+        catch (e) {
+            // Fail silently and treat as primitive
+        }
+    }
+    // If there are no children, move stream cursor to the end of the object
+    if (subs.length === 0) {
+        stream.seek(start + len);
+    }
+    return new ASN1Obj(tag, value, subs);
+}
+function collectSubs(stream, len) {
+    // Calculate end of object content
+    const end = stream.position + len;
+    // Make sure there are enough bytes left in the stream. This should never
+    // happen, cause it'll get caught when the stream is sliced in parseStream.
+    // Leaving as an extra check just in case.
+    /* istanbul ignore if */
+    if (end > stream.length) {
+        throw new error_1.ASN1ParseError('invalid length');
+    }
+    // Parse all children
+    const subs = [];
+    while (stream.position < end) {
+        subs.push(parseStream(stream));
+    }
+    // When we're done parsing children, we should be at the end of the object
+    if (stream.position !== end) {
+        throw new error_1.ASN1ParseError('invalid length');
+    }
+    return subs;
+}
+
+
+/***/ }),
+
+/***/ 4721:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.parseBitString = exports.parseBoolean = exports.parseOID = exports.parseTime = exports.parseStringASCII = exports.parseInteger = void 0;
+/*
+Copyright 2023 The Sigstore Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+const RE_TIME_SHORT_YEAR = /^(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})Z$/;
+const RE_TIME_LONG_YEAR = /^(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})Z$/;
+// Parse a BigInt from the DER-encoded buffer
+// https://learn.microsoft.com/en-us/windows/win32/seccertenroll/about-integer
+function parseInteger(buf) {
+    let pos = 0;
+    const end = buf.length;
+    let val = buf[pos];
+    const neg = val > 0x7f;
+    // Consume any padding bytes
+    const pad = neg ? 0xff : 0x00;
+    while (val == pad && ++pos < end) {
+        val = buf[pos];
+    }
+    // Calculate remaining bytes to read
+    const len = end - pos;
+    if (len === 0)
+        return BigInt(neg ? -1 : 0);
+    // Handle two's complement for negative numbers
+    val = neg ? val - 256 : val;
+    // Parse remaining bytes
+    let n = BigInt(val);
+    for (let i = pos + 1; i < end; ++i) {
+        n = n * BigInt(256) + BigInt(buf[i]);
+    }
+    return n;
+}
+exports.parseInteger = parseInteger;
+// Parse an ASCII string from the DER-encoded buffer
+// https://learn.microsoft.com/en-us/windows/win32/seccertenroll/about-basic-types#boolean
+function parseStringASCII(buf) {
+    return buf.toString('ascii');
+}
+exports.parseStringASCII = parseStringASCII;
+// Parse a Date from the DER-encoded buffer
+// https://www.rfc-editor.org/rfc/rfc5280#section-4.1.2.5.1
+function parseTime(buf, shortYear) {
+    const timeStr = parseStringASCII(buf);
+    // Parse the time string into matches - captured groups start at index 1
+    const m = shortYear
+        ? RE_TIME_SHORT_YEAR.exec(timeStr)
+        : RE_TIME_LONG_YEAR.exec(timeStr);
+    if (!m) {
+        throw new Error('invalid time');
+    }
+    // Translate dates with a 2-digit year to 4 digits per the spec
+    if (shortYear) {
+        let year = Number(m[1]);
+        year += year >= 50 ? 1900 : 2000;
+        m[1] = year.toString();
+    }
+    // Translate to ISO8601 format and parse
+    return new Date(`${m[1]}-${m[2]}-${m[3]}T${m[4]}:${m[5]}:${m[6]}Z`);
+}
+exports.parseTime = parseTime;
+// Parse an OID from the DER-encoded buffer
+// https://learn.microsoft.com/en-us/windows/win32/seccertenroll/about-object-identifier
+function parseOID(buf) {
+    let pos = 0;
+    const end = buf.length;
+    // Consume first byte which encodes the first two OID components
+    let n = buf[pos++];
+    const first = Math.floor(n / 40);
+    const second = n % 40;
+    let oid = `${first}.${second}`;
+    // Consume remaining bytes
+    let val = 0;
+    for (; pos < end; ++pos) {
+        n = buf[pos];
+        val = (val << 7) + (n & 0x7f);
+        // If the left-most bit is NOT set, then this is the last byte in the
+        // sequence and we can add the value to the OID and reset the accumulator
+        if ((n & 0x80) === 0) {
+            oid += `.${val}`;
+            val = 0;
+        }
+    }
+    return oid;
+}
+exports.parseOID = parseOID;
+// Parse a boolean from the DER-encoded buffer
+// https://learn.microsoft.com/en-us/windows/win32/seccertenroll/about-basic-types#boolean
+function parseBoolean(buf) {
+    return buf[0] !== 0;
+}
+exports.parseBoolean = parseBoolean;
+// Parse a bit string from the DER-encoded buffer
+// https://learn.microsoft.com/en-us/windows/win32/seccertenroll/about-bit-string
+function parseBitString(buf) {
+    // First byte tell us how many unused bits are in the last byte
+    const unused = buf[0];
+    const start = 1;
+    const end = buf.length;
+    const bits = [];
+    for (let i = start; i < end; ++i) {
+        const byte = buf[i];
+        // The skip value is only used for the last byte
+        const skip = i === end - 1 ? unused : 0;
+        // Iterate over each bit in the byte (most significant first)
+        for (let j = 7; j >= skip; --j) {
+            // Read the bit and add it to the bit string
+            bits.push((byte >> j) & 0x01);
+        }
+    }
+    return bits;
+}
+exports.parseBitString = parseBitString;
+
+
+/***/ }),
+
+/***/ 3968:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.ASN1Tag = exports.UNIVERSAL_TAG = void 0;
+/*
+Copyright 2023 The Sigstore Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+const error_1 = __nccwpck_require__(4726);
+exports.UNIVERSAL_TAG = {
+    BOOLEAN: 0x01,
+    INTEGER: 0x02,
+    BIT_STRING: 0x03,
+    OCTET_STRING: 0x04,
+    OBJECT_IDENTIFIER: 0x06,
+    SEQUENCE: 0x10,
+    SET: 0x11,
+    PRINTABLE_STRING: 0x13,
+    UTC_TIME: 0x17,
+    GENERALIZED_TIME: 0x18,
+};
+const TAG_CLASS = {
+    UNIVERSAL: 0x00,
+    APPLICATION: 0x01,
+    CONTEXT_SPECIFIC: 0x02,
+    PRIVATE: 0x03,
+};
+// https://learn.microsoft.com/en-us/windows/win32/seccertenroll/about-encoded-tag-bytes
+class ASN1Tag {
+    constructor(enc) {
+        // Bits 0 through 4 are the tag number
+        this.number = enc & 0x1f;
+        // Bit 5 is the constructed bit
+        this.constructed = (enc & 0x20) === 0x20;
+        // Bit 6 & 7 are the class
+        this.class = enc >> 6;
+        if (this.number === 0x1f) {
+            throw new error_1.ASN1ParseError('long form tags not supported');
+        }
+        if (this.class === TAG_CLASS.UNIVERSAL && this.number === 0x00) {
+            throw new error_1.ASN1ParseError('unsupported tag 0x00');
+        }
+    }
+    isUniversal() {
+        return this.class === TAG_CLASS.UNIVERSAL;
+    }
+    isContextSpecific(num) {
+        const res = this.class === TAG_CLASS.CONTEXT_SPECIFIC;
+        return num !== undefined ? res && this.number === num : res;
+    }
+    isBoolean() {
+        return this.isUniversal() && this.number === exports.UNIVERSAL_TAG.BOOLEAN;
+    }
+    isInteger() {
+        return this.isUniversal() && this.number === exports.UNIVERSAL_TAG.INTEGER;
+    }
+    isBitString() {
+        return this.isUniversal() && this.number === exports.UNIVERSAL_TAG.BIT_STRING;
+    }
+    isOctetString() {
+        return this.isUniversal() && this.number === exports.UNIVERSAL_TAG.OCTET_STRING;
+    }
+    isOID() {
+        return (this.isUniversal() && this.number === exports.UNIVERSAL_TAG.OBJECT_IDENTIFIER);
+    }
+    isUTCTime() {
+        return this.isUniversal() && this.number === exports.UNIVERSAL_TAG.UTC_TIME;
+    }
+    isGeneralizedTime() {
+        return this.isUniversal() && this.number === exports.UNIVERSAL_TAG.GENERALIZED_TIME;
+    }
+    toDER() {
+        return this.number | (this.constructed ? 0x20 : 0x00) | (this.class << 6);
+    }
+}
+exports.ASN1Tag = ASN1Tag;
 
 
 /***/ }),
@@ -40277,7 +41676,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.ua = exports.promise = exports.pem = exports.oidc = exports.json = exports.encoding = exports.dsse = exports.crypto = exports.appdata = void 0;
+exports.ua = exports.promise = exports.pem = exports.oidc = exports.json = exports.encoding = exports.dsse = exports.crypto = exports.asn1 = void 0;
 /*
 Copyright 2022 The Sigstore Authors.
 
@@ -40293,7 +41692,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-exports.appdata = __importStar(__nccwpck_require__(7899));
+exports.asn1 = __importStar(__nccwpck_require__(2346));
 exports.crypto = __importStar(__nccwpck_require__(3684));
 exports.dsse = __importStar(__nccwpck_require__(5073));
 exports.encoding = __importStar(__nccwpck_require__(1378));
@@ -40642,8 +42041,8 @@ class ByteStream {
         this.view = newView;
     }
 }
-ByteStream.BLOCK_SIZE = 1024;
 exports.ByteStream = ByteStream;
+ByteStream.BLOCK_SIZE = 1024;
 
 
 /***/ }),
@@ -40841,493 +42240,6 @@ function verifyDSSESignature(envelope, publicKey) {
 
 /***/ }),
 
-/***/ 2346:
-/***/ ((__unused_webpack_module, exports) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.ASN1TypeError = exports.ASN1ParseError = void 0;
-/*
-Copyright 2023 The Sigstore Authors.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
-class ASN1ParseError extends Error {
-}
-exports.ASN1ParseError = ASN1ParseError;
-class ASN1TypeError extends Error {
-}
-exports.ASN1TypeError = ASN1TypeError;
-
-
-/***/ }),
-
-/***/ 8884:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-/*
-Copyright 2023 The Sigstore Authors.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.encodeLength = exports.decodeLength = void 0;
-const error_1 = __nccwpck_require__(2346);
-// Decodes the length of a DER-encoded ANS.1 element from the supplied stream.
-// https://learn.microsoft.com/en-us/windows/win32/seccertenroll/about-encoded-length-and-value-bytes
-function decodeLength(stream) {
-    const buf = stream.getUint8();
-    // If the most significant bit is UNSET the length is just the value of the
-    // byte.
-    if ((buf & 0x80) === 0x00) {
-        return buf;
-    }
-    // Otherwise, the lower 7 bits of the first byte indicate the number of bytes
-    // that follow to encode the length.
-    const byteCount = buf & 0x7f;
-    // Ensure the encoded length can safely fit in a JS number.
-    if (byteCount > 6) {
-        throw new error_1.ASN1ParseError('length exceeds 6 byte limit');
-    }
-    // Iterate over the bytes that encode the length.
-    let len = 0;
-    for (let i = 0; i < byteCount; i++) {
-        len = len * 256 + stream.getUint8();
-    }
-    // This is a valid ASN.1 length encoding, but we don't support it.
-    if (len === 0) {
-        throw new error_1.ASN1ParseError('indefinite length encoding not supported');
-    }
-    return len;
-}
-exports.decodeLength = decodeLength;
-// Translates the supplied value to a DER-encoded length.
-function encodeLength(len) {
-    if (len < 128) {
-        return Buffer.from([len]);
-    }
-    // Bitwise operations on large numbers are not supported in JS, so we need to
-    // use BigInts.
-    let val = BigInt(len);
-    const bytes = [];
-    while (val > 0n) {
-        bytes.unshift(Number(val & 255n));
-        val = val >> 8n;
-    }
-    return Buffer.from([0x80 | bytes.length, ...bytes]);
-}
-exports.encodeLength = encodeLength;
-
-
-/***/ }),
-
-/***/ 7744:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.ASN1Obj = void 0;
-/*
-Copyright 2023 The Sigstore Authors.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
-const stream_1 = __nccwpck_require__(9080);
-const error_1 = __nccwpck_require__(2346);
-const length_1 = __nccwpck_require__(8884);
-const parse_1 = __nccwpck_require__(1350);
-const tag_1 = __nccwpck_require__(1071);
-class ASN1Obj {
-    constructor(tag, value, subs) {
-        this.tag = tag;
-        this.value = value;
-        this.subs = subs;
-    }
-    // Constructs an ASN.1 object from a Buffer of DER-encoded bytes.
-    static parseBuffer(buf) {
-        return parseStream(new stream_1.ByteStream(buf));
-    }
-    toDER() {
-        const valueStream = new stream_1.ByteStream();
-        if (this.subs.length > 0) {
-            for (const sub of this.subs) {
-                valueStream.appendView(sub.toDER());
-            }
-        }
-        else {
-            valueStream.appendView(this.value);
-        }
-        const value = valueStream.buffer;
-        // Concat tag/length/value
-        const obj = new stream_1.ByteStream();
-        obj.appendChar(this.tag.toDER());
-        obj.appendView((0, length_1.encodeLength)(value.length));
-        obj.appendView(value);
-        return obj.buffer;
-    }
-    /////////////////////////////////////////////////////////////////////////////
-    // Convenience methods for parsing ASN.1 primitives into JS types
-    // Returns the ASN.1 object's value as a boolean. Throws an error if the
-    // object is not a boolean.
-    toBoolean() {
-        if (!this.tag.isBoolean()) {
-            throw new error_1.ASN1TypeError('not a boolean');
-        }
-        return (0, parse_1.parseBoolean)(this.value);
-    }
-    // Returns the ASN.1 object's value as a BigInt. Throws an error if the
-    // object is not an integer.
-    toInteger() {
-        if (!this.tag.isInteger()) {
-            throw new error_1.ASN1TypeError('not an integer');
-        }
-        return (0, parse_1.parseInteger)(this.value);
-    }
-    // Returns the ASN.1 object's value as an OID string. Throws an error if the
-    // object is not an OID.
-    toOID() {
-        if (!this.tag.isOID()) {
-            throw new error_1.ASN1TypeError('not an OID');
-        }
-        return (0, parse_1.parseOID)(this.value);
-    }
-    // Returns the ASN.1 object's value as a Date. Throws an error if the object
-    // is not either a UTCTime or a GeneralizedTime.
-    toDate() {
-        switch (true) {
-            case this.tag.isUTCTime():
-                return (0, parse_1.parseTime)(this.value, true);
-            case this.tag.isGeneralizedTime():
-                return (0, parse_1.parseTime)(this.value, false);
-            default:
-                throw new error_1.ASN1TypeError('not a date');
-        }
-    }
-    // Returns the ASN.1 object's value as a number[] where each number is the
-    // value of a bit in the bit string. Throws an error if the object is not a
-    // bit string.
-    toBitString() {
-        if (!this.tag.isBitString()) {
-            throw new error_1.ASN1TypeError('not a bit string');
-        }
-        return (0, parse_1.parseBitString)(this.value);
-    }
-}
-exports.ASN1Obj = ASN1Obj;
-/////////////////////////////////////////////////////////////////////////////
-// Internal stream parsing functions
-function parseStream(stream) {
-    // Parse tag, length, and value from stream
-    const tag = new tag_1.ASN1Tag(stream.getUint8());
-    const len = (0, length_1.decodeLength)(stream);
-    const value = stream.slice(stream.position, len);
-    const start = stream.position;
-    let subs = [];
-    // If the object is constructed, parse its children. Sometimes, children
-    // are embedded in OCTESTRING objects, so we need to check those
-    // for children as well.
-    if (tag.constructed) {
-        subs = collectSubs(stream, len);
-    }
-    else if (tag.isOctetString()) {
-        // Attempt to parse children of OCTETSTRING objects. If anything fails,
-        // assume the object is not constructed and treat as primitive.
-        try {
-            subs = collectSubs(stream, len);
-        }
-        catch (e) {
-            // Fail silently and treat as primitive
-        }
-    }
-    // If there are no children, move stream cursor to the end of the object
-    if (subs.length === 0) {
-        stream.seek(start + len);
-    }
-    return new ASN1Obj(tag, value, subs);
-}
-function collectSubs(stream, len) {
-    // Calculate end of object content
-    const end = stream.position + len;
-    // Make sure there are enough bytes left in the stream
-    if (end > stream.length) {
-        throw new error_1.ASN1ParseError('invalid length');
-    }
-    // Parse all children
-    const subs = [];
-    while (stream.position < end) {
-        subs.push(parseStream(stream));
-    }
-    // When we're done parsing children, we should be at the end of the object
-    if (stream.position !== end) {
-        throw new error_1.ASN1ParseError('invalid length');
-    }
-    return subs;
-}
-
-
-/***/ }),
-
-/***/ 1350:
-/***/ ((__unused_webpack_module, exports) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.parseBitString = exports.parseBoolean = exports.parseOID = exports.parseTime = exports.parseStringASCII = exports.parseInteger = void 0;
-/*
-Copyright 2023 The Sigstore Authors.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
-const RE_TIME_SHORT_YEAR = /^(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})Z$/;
-const RE_TIME_LONG_YEAR = /^(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})Z$/;
-// Parse a BigInt from the DER-encoded buffer
-// https://learn.microsoft.com/en-us/windows/win32/seccertenroll/about-integer
-function parseInteger(buf) {
-    let pos = 0;
-    const end = buf.length;
-    let val = buf[pos];
-    const neg = val > 0x7f;
-    // Consume any padding bytes
-    const pad = neg ? 0xff : 0x00;
-    while (val == pad && ++pos < end) {
-        val = buf[pos];
-    }
-    // Calculate remaining bytes to read
-    const len = end - pos;
-    if (len === 0)
-        return BigInt(neg ? -1 : 0);
-    // Handle two's complement for negative numbers
-    val = neg ? val - 256 : val;
-    // Parse remaining bytes
-    let n = BigInt(val);
-    for (let i = pos + 1; i < end; ++i) {
-        n = n * BigInt(256) + BigInt(buf[i]);
-    }
-    return n;
-}
-exports.parseInteger = parseInteger;
-// Parse an ASCII string from the DER-encoded buffer
-// https://learn.microsoft.com/en-us/windows/win32/seccertenroll/about-basic-types#boolean
-function parseStringASCII(buf) {
-    return buf.toString('ascii');
-}
-exports.parseStringASCII = parseStringASCII;
-// Parse a Date from the DER-encoded buffer
-// https://www.rfc-editor.org/rfc/rfc5280#section-4.1.2.5.1
-function parseTime(buf, shortYear) {
-    const timeStr = parseStringASCII(buf);
-    // Parse the time string into matches - captured groups start at index 1
-    const m = shortYear
-        ? RE_TIME_SHORT_YEAR.exec(timeStr)
-        : RE_TIME_LONG_YEAR.exec(timeStr);
-    if (!m) {
-        throw new Error('invalid time');
-    }
-    // Translate dates with a 2-digit year to 4 digits per the spec
-    if (shortYear) {
-        let year = Number(m[1]);
-        year += year >= 50 ? 1900 : 2000;
-        m[1] = year.toString();
-    }
-    // Translate to ISO8601 format and parse
-    return new Date(`${m[1]}-${m[2]}-${m[3]}T${m[4]}:${m[5]}:${m[6]}Z`);
-}
-exports.parseTime = parseTime;
-// Parse an OID from the DER-encoded buffer
-// https://learn.microsoft.com/en-us/windows/win32/seccertenroll/about-object-identifier
-function parseOID(buf) {
-    let pos = 0;
-    const end = buf.length;
-    // Consume first byte which encodes the first two OID components
-    let n = buf[pos++];
-    const first = Math.floor(n / 40);
-    const second = n % 40;
-    let oid = `${first}.${second}`;
-    // Consume remaining bytes
-    let val = 0;
-    for (; pos < end; ++pos) {
-        n = buf[pos];
-        val = (val << 7) + (n & 0x7f);
-        // If the left-most bit is NOT set, then this is the last byte in the
-        // sequence and we can add the value to the OID and reset the accumulator
-        if ((n & 0x80) === 0) {
-            oid += `.${val}`;
-            val = 0;
-        }
-    }
-    return oid;
-}
-exports.parseOID = parseOID;
-// Parse a boolean from the DER-encoded buffer
-// https://learn.microsoft.com/en-us/windows/win32/seccertenroll/about-basic-types#boolean
-function parseBoolean(buf) {
-    return buf[0] !== 0;
-}
-exports.parseBoolean = parseBoolean;
-// Parse a bit string from the DER-encoded buffer
-// https://learn.microsoft.com/en-us/windows/win32/seccertenroll/about-bit-string
-function parseBitString(buf) {
-    // First byte tell us how many unused bits are in the last byte
-    const unused = buf[0];
-    const start = 1;
-    const end = buf.length;
-    const bits = [];
-    for (let i = start; i < end; ++i) {
-        const byte = buf[i];
-        // The skip value is only used for the last byte
-        const skip = i === end - 1 ? unused : 0;
-        // Iterate over each bit in the byte (most significant first)
-        for (let j = 7; j >= skip; --j) {
-            // Read the bit and add it to the bit string
-            bits.push((byte >> j) & 0x01);
-        }
-    }
-    return bits;
-}
-exports.parseBitString = parseBitString;
-
-
-/***/ }),
-
-/***/ 1071:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.ASN1Tag = exports.UNIVERSAL_TAG = void 0;
-/*
-Copyright 2023 The Sigstore Authors.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
-const error_1 = __nccwpck_require__(2346);
-exports.UNIVERSAL_TAG = {
-    BOOLEAN: 0x01,
-    INTEGER: 0x02,
-    BIT_STRING: 0x03,
-    OCTET_STRING: 0x04,
-    OBJECT_IDENTIFIER: 0x06,
-    SEQUENCE: 0x10,
-    SET: 0x11,
-    PRINTABLE_STRING: 0x13,
-    UTC_TIME: 0x17,
-    GENERALIZED_TIME: 0x18,
-};
-const TAG_CLASS = {
-    UNIVERSAL: 0x00,
-    APPLICATION: 0x01,
-    CONTEXT_SPECIFIC: 0x02,
-    PRIVATE: 0x03,
-};
-// https://learn.microsoft.com/en-us/windows/win32/seccertenroll/about-encoded-tag-bytes
-class ASN1Tag {
-    constructor(enc) {
-        // Bits 0 through 4 are the tag number
-        this.number = enc & 0x1f;
-        // Bit 5 is the constructed bit
-        this.constructed = (enc & 0x20) === 0x20;
-        // Bit 6 & 7 are the class
-        this.class = enc >> 6;
-        if (this.number === 0x1f) {
-            throw new error_1.ASN1ParseError('long form tags not supported');
-        }
-        if (this.class === TAG_CLASS.UNIVERSAL && this.number === 0x00) {
-            throw new error_1.ASN1ParseError('unsupported tag 0x00');
-        }
-    }
-    isUniversal() {
-        return this.class === TAG_CLASS.UNIVERSAL;
-    }
-    isContextSpecific(num) {
-        const res = this.class === TAG_CLASS.CONTEXT_SPECIFIC;
-        return num !== undefined ? res && this.number === num : res;
-    }
-    isBoolean() {
-        return this.isUniversal() && this.number === exports.UNIVERSAL_TAG.BOOLEAN;
-    }
-    isInteger() {
-        return this.isUniversal() && this.number === exports.UNIVERSAL_TAG.INTEGER;
-    }
-    isBitString() {
-        return this.isUniversal() && this.number === exports.UNIVERSAL_TAG.BIT_STRING;
-    }
-    isOctetString() {
-        return this.isUniversal() && this.number === exports.UNIVERSAL_TAG.OCTET_STRING;
-    }
-    isOID() {
-        return (this.isUniversal() && this.number === exports.UNIVERSAL_TAG.OBJECT_IDENTIFIER);
-    }
-    isUTCTime() {
-        return this.isUniversal() && this.number === exports.UNIVERSAL_TAG.UTC_TIME;
-    }
-    isGeneralizedTime() {
-        return this.isUniversal() && this.number === exports.UNIVERSAL_TAG.GENERALIZED_TIME;
-    }
-    toDER() {
-        return this.number | (this.constructed ? 0x20 : 0x00) | (this.class << 6);
-    }
-}
-exports.ASN1Tag = ASN1Tag;
-
-
-/***/ }),
-
 /***/ 3669:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
@@ -41336,8 +42248,8 @@ exports.ASN1Tag = ASN1Tag;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.x509Certificate = void 0;
 const util_1 = __nccwpck_require__(6901);
+const asn1_1 = __nccwpck_require__(2346);
 const stream_1 = __nccwpck_require__(9080);
-const obj_1 = __nccwpck_require__(7744);
 const ext_1 = __nccwpck_require__(1643);
 const EXTENSION_OID_SUBJECT_KEY_ID = '2.5.29.14';
 const EXTENSION_OID_KEY_USAGE = '2.5.29.15';
@@ -41367,7 +42279,7 @@ class x509Certificate {
     }
     static parse(cert) {
         const der = typeof cert === 'string' ? util_1.pem.toDER(cert) : cert;
-        const asn1 = obj_1.ASN1Obj.parseBuffer(der);
+        const asn1 = asn1_1.ASN1Obj.parseBuffer(der);
         return new x509Certificate(asn1);
     }
     get tbsCertificate() {
@@ -41585,21 +42497,6 @@ exports.x509Certificate = x509Certificate;
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.x509SCTExtension = exports.x509SubjectKeyIDExtension = exports.x509AuthorityKeyIDExtension = exports.x509SubjectAlternativeNameExtension = exports.x509KeyUsageExtension = exports.x509BasicConstraintsExtension = exports.x509Extension = void 0;
-/*
-Copyright 2023 The Sigstore Authors.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
 const stream_1 = __nccwpck_require__(9080);
 const sct_1 = __nccwpck_require__(8284);
 // https://www.rfc-editor.org/rfc/rfc5280#section-4.1
@@ -45931,11 +46828,13 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.DefaultFetcher = exports.BaseFetcher = void 0;
+const debug_1 = __importDefault(__nccwpck_require__(8237));
 const fs_1 = __importDefault(__nccwpck_require__(7147));
 const make_fetch_happen_1 = __importDefault(__nccwpck_require__(9525));
 const util_1 = __importDefault(__nccwpck_require__(3837));
 const error_1 = __nccwpck_require__(7040);
 const tmpfile_1 = __nccwpck_require__(6400);
+const log = (0, debug_1.default)('tuf:fetch');
 class BaseFetcher {
     // Download file from given URL. The file is downloaded to a temporary
     // location and then passed to the given handler. The handler is responsible
@@ -45985,6 +46884,7 @@ class DefaultFetcher extends BaseFetcher {
         this.retries = options.retries;
     }
     async fetch(url) {
+        log('GET %s', url);
         const response = await (0, make_fetch_happen_1.default)(url, {
             timeout: this.timeout,
             retry: this.retries,
@@ -46271,9 +47171,13 @@ var __importStar = (this && this.__importStar) || function (mod) {
     __setModuleDefault(result, mod);
     return result;
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Updater = void 0;
 const models_1 = __nccwpck_require__(5833);
+const debug_1 = __importDefault(__nccwpck_require__(8237));
 const fs = __importStar(__nccwpck_require__(7147));
 const path = __importStar(__nccwpck_require__(1017));
 const config_1 = __nccwpck_require__(9530);
@@ -46281,6 +47185,7 @@ const error_1 = __nccwpck_require__(7040);
 const fetcher_1 = __nccwpck_require__(5991);
 const store_1 = __nccwpck_require__(7001);
 const url = __importStar(__nccwpck_require__(5961));
+const log = (0, debug_1.default)('tuf:cache');
 class Updater {
     constructor(options) {
         const { metadataDir, metadataBaseUrl, targetDir, targetBaseUrl, fetcher, config, } = options;
@@ -46298,6 +47203,8 @@ class Updater {
                     retries: this.config.fetchRetries,
                 });
     }
+    // refresh and load the metadata before downloading the target
+    // refresh should be called once after the client is initialized
     async refresh() {
         await this.loadRoot();
         await this.loadTimestamp();
@@ -46335,6 +47242,7 @@ class Updater {
             // Verify hashes and length of downloaded file
             await targetInfo.verify(fs.createReadStream(fileName));
             // Copy file to target path
+            log('WRITE %s', targetPath);
             fs.copyFileSync(fileName, targetPath);
         });
         return targetPath;
@@ -46345,7 +47253,7 @@ class Updater {
         }
         try {
             if (fs.existsSync(filePath)) {
-                targetInfo.verify(fs.createReadStream(filePath));
+                await targetInfo.verify(fs.createReadStream(filePath));
                 return filePath;
             }
         }
@@ -46356,6 +47264,7 @@ class Updater {
     }
     loadLocalMetadata(fileName) {
         const filePath = path.join(this.dir, `${fileName}.json`);
+        log('READ %s', filePath);
         return fs.readFileSync(filePath);
     }
     // Sequentially load and persist on local disk every newer root metadata
@@ -46549,6 +47458,7 @@ class Updater {
     async persistMetadata(metaDataName, bytesData) {
         try {
             const filePath = path.join(this.dir, `${metaDataName}.json`);
+            log('WRITE %s', filePath);
             fs.writeFileSync(filePath, bytesData.toString('utf8'));
         }
         catch (error) {
@@ -50236,6 +51146,623 @@ module.exports = require("zlib");
 
 /***/ }),
 
+/***/ 3033:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.assertValidPattern = void 0;
+const MAX_PATTERN_LENGTH = 1024 * 64;
+const assertValidPattern = (pattern) => {
+    if (typeof pattern !== 'string') {
+        throw new TypeError('invalid pattern');
+    }
+    if (pattern.length > MAX_PATTERN_LENGTH) {
+        throw new TypeError('pattern is too long');
+    }
+};
+exports.assertValidPattern = assertValidPattern;
+//# sourceMappingURL=assert-valid-pattern.js.map
+
+/***/ }),
+
+/***/ 596:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+// parse a single path portion
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.AST = void 0;
+const brace_expressions_js_1 = __nccwpck_require__(3857);
+const unescape_js_1 = __nccwpck_require__(6615);
+const types = new Set(['!', '?', '+', '*', '@']);
+const isExtglobType = (c) => types.has(c);
+// Patterns that get prepended to bind to the start of either the
+// entire string, or just a single path portion, to prevent dots
+// and/or traversal patterns, when needed.
+// Exts don't need the ^ or / bit, because the root binds that already.
+const startNoTraversal = '(?!(?:^|/)\\.\\.?(?:$|/))';
+const startNoDot = '(?!\\.)';
+// characters that indicate a start of pattern needs the "no dots" bit,
+// because a dot *might* be matched. ( is not in the list, because in
+// the case of a child extglob, it will handle the prevention itself.
+const addPatternStart = new Set(['[', '.']);
+// cases where traversal is A-OK, no dot prevention needed
+const justDots = new Set(['..', '.']);
+const reSpecials = new Set('().*{}+?[]^$\\!');
+const regExpEscape = (s) => s.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
+// any single thing other than /
+const qmark = '[^/]';
+// * => any number of characters
+const star = qmark + '*?';
+// use + when we need to ensure that *something* matches, because the * is
+// the only thing in the path portion.
+const starNoEmpty = qmark + '+?';
+// remove the \ chars that we added if we end up doing a nonmagic compare
+// const deslash = (s: string) => s.replace(/\\(.)/g, '$1')
+class AST {
+    type;
+    #root;
+    #hasMagic;
+    #uflag = false;
+    #parts = [];
+    #parent;
+    #parentIndex;
+    #negs;
+    #filledNegs = false;
+    #options;
+    #toString;
+    // set to true if it's an extglob with no children
+    // (which really means one child of '')
+    #emptyExt = false;
+    constructor(type, parent, options = {}) {
+        this.type = type;
+        // extglobs are inherently magical
+        if (type)
+            this.#hasMagic = true;
+        this.#parent = parent;
+        this.#root = this.#parent ? this.#parent.#root : this;
+        this.#options = this.#root === this ? options : this.#root.#options;
+        this.#negs = this.#root === this ? [] : this.#root.#negs;
+        if (type === '!' && !this.#root.#filledNegs)
+            this.#negs.push(this);
+        this.#parentIndex = this.#parent ? this.#parent.#parts.length : 0;
+    }
+    get hasMagic() {
+        /* c8 ignore start */
+        if (this.#hasMagic !== undefined)
+            return this.#hasMagic;
+        /* c8 ignore stop */
+        for (const p of this.#parts) {
+            if (typeof p === 'string')
+                continue;
+            if (p.type || p.hasMagic)
+                return (this.#hasMagic = true);
+        }
+        // note: will be undefined until we generate the regexp src and find out
+        return this.#hasMagic;
+    }
+    // reconstructs the pattern
+    toString() {
+        if (this.#toString !== undefined)
+            return this.#toString;
+        if (!this.type) {
+            return (this.#toString = this.#parts.map(p => String(p)).join(''));
+        }
+        else {
+            return (this.#toString =
+                this.type + '(' + this.#parts.map(p => String(p)).join('|') + ')');
+        }
+    }
+    #fillNegs() {
+        /* c8 ignore start */
+        if (this !== this.#root)
+            throw new Error('should only call on root');
+        if (this.#filledNegs)
+            return this;
+        /* c8 ignore stop */
+        // call toString() once to fill this out
+        this.toString();
+        this.#filledNegs = true;
+        let n;
+        while ((n = this.#negs.pop())) {
+            if (n.type !== '!')
+                continue;
+            // walk up the tree, appending everthing that comes AFTER parentIndex
+            let p = n;
+            let pp = p.#parent;
+            while (pp) {
+                for (let i = p.#parentIndex + 1; !pp.type && i < pp.#parts.length; i++) {
+                    for (const part of n.#parts) {
+                        /* c8 ignore start */
+                        if (typeof part === 'string') {
+                            throw new Error('string part in extglob AST??');
+                        }
+                        /* c8 ignore stop */
+                        part.copyIn(pp.#parts[i]);
+                    }
+                }
+                p = pp;
+                pp = p.#parent;
+            }
+        }
+        return this;
+    }
+    push(...parts) {
+        for (const p of parts) {
+            if (p === '')
+                continue;
+            /* c8 ignore start */
+            if (typeof p !== 'string' && !(p instanceof AST && p.#parent === this)) {
+                throw new Error('invalid part: ' + p);
+            }
+            /* c8 ignore stop */
+            this.#parts.push(p);
+        }
+    }
+    toJSON() {
+        const ret = this.type === null
+            ? this.#parts.slice().map(p => (typeof p === 'string' ? p : p.toJSON()))
+            : [this.type, ...this.#parts.map(p => p.toJSON())];
+        if (this.isStart() && !this.type)
+            ret.unshift([]);
+        if (this.isEnd() &&
+            (this === this.#root ||
+                (this.#root.#filledNegs && this.#parent?.type === '!'))) {
+            ret.push({});
+        }
+        return ret;
+    }
+    isStart() {
+        if (this.#root === this)
+            return true;
+        // if (this.type) return !!this.#parent?.isStart()
+        if (!this.#parent?.isStart())
+            return false;
+        if (this.#parentIndex === 0)
+            return true;
+        // if everything AHEAD of this is a negation, then it's still the "start"
+        const p = this.#parent;
+        for (let i = 0; i < this.#parentIndex; i++) {
+            const pp = p.#parts[i];
+            if (!(pp instanceof AST && pp.type === '!')) {
+                return false;
+            }
+        }
+        return true;
+    }
+    isEnd() {
+        if (this.#root === this)
+            return true;
+        if (this.#parent?.type === '!')
+            return true;
+        if (!this.#parent?.isEnd())
+            return false;
+        if (!this.type)
+            return this.#parent?.isEnd();
+        // if not root, it'll always have a parent
+        /* c8 ignore start */
+        const pl = this.#parent ? this.#parent.#parts.length : 0;
+        /* c8 ignore stop */
+        return this.#parentIndex === pl - 1;
+    }
+    copyIn(part) {
+        if (typeof part === 'string')
+            this.push(part);
+        else
+            this.push(part.clone(this));
+    }
+    clone(parent) {
+        const c = new AST(this.type, parent);
+        for (const p of this.#parts) {
+            c.copyIn(p);
+        }
+        return c;
+    }
+    static #parseAST(str, ast, pos, opt) {
+        let escaping = false;
+        let inBrace = false;
+        let braceStart = -1;
+        let braceNeg = false;
+        if (ast.type === null) {
+            // outside of a extglob, append until we find a start
+            let i = pos;
+            let acc = '';
+            while (i < str.length) {
+                const c = str.charAt(i++);
+                // still accumulate escapes at this point, but we do ignore
+                // starts that are escaped
+                if (escaping || c === '\\') {
+                    escaping = !escaping;
+                    acc += c;
+                    continue;
+                }
+                if (inBrace) {
+                    if (i === braceStart + 1) {
+                        if (c === '^' || c === '!') {
+                            braceNeg = true;
+                        }
+                    }
+                    else if (c === ']' && !(i === braceStart + 2 && braceNeg)) {
+                        inBrace = false;
+                    }
+                    acc += c;
+                    continue;
+                }
+                else if (c === '[') {
+                    inBrace = true;
+                    braceStart = i;
+                    braceNeg = false;
+                    acc += c;
+                    continue;
+                }
+                if (!opt.noext && isExtglobType(c) && str.charAt(i) === '(') {
+                    ast.push(acc);
+                    acc = '';
+                    const ext = new AST(c, ast);
+                    i = AST.#parseAST(str, ext, i, opt);
+                    ast.push(ext);
+                    continue;
+                }
+                acc += c;
+            }
+            ast.push(acc);
+            return i;
+        }
+        // some kind of extglob, pos is at the (
+        // find the next | or )
+        let i = pos + 1;
+        let part = new AST(null, ast);
+        const parts = [];
+        let acc = '';
+        while (i < str.length) {
+            const c = str.charAt(i++);
+            // still accumulate escapes at this point, but we do ignore
+            // starts that are escaped
+            if (escaping || c === '\\') {
+                escaping = !escaping;
+                acc += c;
+                continue;
+            }
+            if (inBrace) {
+                if (i === braceStart + 1) {
+                    if (c === '^' || c === '!') {
+                        braceNeg = true;
+                    }
+                }
+                else if (c === ']' && !(i === braceStart + 2 && braceNeg)) {
+                    inBrace = false;
+                }
+                acc += c;
+                continue;
+            }
+            else if (c === '[') {
+                inBrace = true;
+                braceStart = i;
+                braceNeg = false;
+                acc += c;
+                continue;
+            }
+            if (isExtglobType(c) && str.charAt(i) === '(') {
+                part.push(acc);
+                acc = '';
+                const ext = new AST(c, part);
+                part.push(ext);
+                i = AST.#parseAST(str, ext, i, opt);
+                continue;
+            }
+            if (c === '|') {
+                part.push(acc);
+                acc = '';
+                parts.push(part);
+                part = new AST(null, ast);
+                continue;
+            }
+            if (c === ')') {
+                if (acc === '' && ast.#parts.length === 0) {
+                    ast.#emptyExt = true;
+                }
+                part.push(acc);
+                acc = '';
+                ast.push(...parts, part);
+                return i;
+            }
+            acc += c;
+        }
+        // unfinished extglob
+        // if we got here, it was a malformed extglob! not an extglob, but
+        // maybe something else in there.
+        ast.type = null;
+        ast.#hasMagic = undefined;
+        ast.#parts = [str.substring(pos - 1)];
+        return i;
+    }
+    static fromGlob(pattern, options = {}) {
+        const ast = new AST(null, undefined, options);
+        AST.#parseAST(pattern, ast, 0, options);
+        return ast;
+    }
+    // returns the regular expression if there's magic, or the unescaped
+    // string if not.
+    toMMPattern() {
+        // should only be called on root
+        /* c8 ignore start */
+        if (this !== this.#root)
+            return this.#root.toMMPattern();
+        /* c8 ignore stop */
+        const glob = this.toString();
+        const [re, body, hasMagic, uflag] = this.toRegExpSource();
+        // if we're in nocase mode, and not nocaseMagicOnly, then we do
+        // still need a regular expression if we have to case-insensitively
+        // match capital/lowercase characters.
+        const anyMagic = hasMagic ||
+            this.#hasMagic ||
+            (this.#options.nocase &&
+                !this.#options.nocaseMagicOnly &&
+                glob.toUpperCase() !== glob.toLowerCase());
+        if (!anyMagic) {
+            return body;
+        }
+        const flags = (this.#options.nocase ? 'i' : '') + (uflag ? 'u' : '');
+        return Object.assign(new RegExp(`^${re}$`, flags), {
+            _src: re,
+            _glob: glob,
+        });
+    }
+    // returns the string match, the regexp source, whether there's magic
+    // in the regexp (so a regular expression is required) and whether or
+    // not the uflag is needed for the regular expression (for posix classes)
+    // TODO: instead of injecting the start/end at this point, just return
+    // the BODY of the regexp, along with the start/end portions suitable
+    // for binding the start/end in either a joined full-path makeRe context
+    // (where we bind to (^|/), or a standalone matchPart context (where
+    // we bind to ^, and not /).  Otherwise slashes get duped!
+    //
+    // In part-matching mode, the start is:
+    // - if not isStart: nothing
+    // - if traversal possible, but not allowed: ^(?!\.\.?$)
+    // - if dots allowed or not possible: ^
+    // - if dots possible and not allowed: ^(?!\.)
+    // end is:
+    // - if not isEnd(): nothing
+    // - else: $
+    //
+    // In full-path matching mode, we put the slash at the START of the
+    // pattern, so start is:
+    // - if first pattern: same as part-matching mode
+    // - if not isStart(): nothing
+    // - if traversal possible, but not allowed: /(?!\.\.?(?:$|/))
+    // - if dots allowed or not possible: /
+    // - if dots possible and not allowed: /(?!\.)
+    // end is:
+    // - if last pattern, same as part-matching mode
+    // - else nothing
+    //
+    // Always put the (?:$|/) on negated tails, though, because that has to be
+    // there to bind the end of the negated pattern portion, and it's easier to
+    // just stick it in now rather than try to inject it later in the middle of
+    // the pattern.
+    //
+    // We can just always return the same end, and leave it up to the caller
+    // to know whether it's going to be used joined or in parts.
+    // And, if the start is adjusted slightly, can do the same there:
+    // - if not isStart: nothing
+    // - if traversal possible, but not allowed: (?:/|^)(?!\.\.?$)
+    // - if dots allowed or not possible: (?:/|^)
+    // - if dots possible and not allowed: (?:/|^)(?!\.)
+    //
+    // But it's better to have a simpler binding without a conditional, for
+    // performance, so probably better to return both start options.
+    //
+    // Then the caller just ignores the end if it's not the first pattern,
+    // and the start always gets applied.
+    //
+    // But that's always going to be $ if it's the ending pattern, or nothing,
+    // so the caller can just attach $ at the end of the pattern when building.
+    //
+    // So the todo is:
+    // - better detect what kind of start is needed
+    // - return both flavors of starting pattern
+    // - attach $ at the end of the pattern when creating the actual RegExp
+    //
+    // Ah, but wait, no, that all only applies to the root when the first pattern
+    // is not an extglob. If the first pattern IS an extglob, then we need all
+    // that dot prevention biz to live in the extglob portions, because eg
+    // +(*|.x*) can match .xy but not .yx.
+    //
+    // So, return the two flavors if it's #root and the first child is not an
+    // AST, otherwise leave it to the child AST to handle it, and there,
+    // use the (?:^|/) style of start binding.
+    //
+    // Even simplified further:
+    // - Since the start for a join is eg /(?!\.) and the start for a part
+    // is ^(?!\.), we can just prepend (?!\.) to the pattern (either root
+    // or start or whatever) and prepend ^ or / at the Regexp construction.
+    toRegExpSource(allowDot) {
+        const dot = allowDot ?? !!this.#options.dot;
+        if (this.#root === this)
+            this.#fillNegs();
+        if (!this.type) {
+            const noEmpty = this.isStart() && this.isEnd();
+            const src = this.#parts
+                .map(p => {
+                const [re, _, hasMagic, uflag] = typeof p === 'string'
+                    ? AST.#parseGlob(p, this.#hasMagic, noEmpty)
+                    : p.toRegExpSource(allowDot);
+                this.#hasMagic = this.#hasMagic || hasMagic;
+                this.#uflag = this.#uflag || uflag;
+                return re;
+            })
+                .join('');
+            let start = '';
+            if (this.isStart()) {
+                if (typeof this.#parts[0] === 'string') {
+                    // this is the string that will match the start of the pattern,
+                    // so we need to protect against dots and such.
+                    // '.' and '..' cannot match unless the pattern is that exactly,
+                    // even if it starts with . or dot:true is set.
+                    const dotTravAllowed = this.#parts.length === 1 && justDots.has(this.#parts[0]);
+                    if (!dotTravAllowed) {
+                        const aps = addPatternStart;
+                        // check if we have a possibility of matching . or ..,
+                        // and prevent that.
+                        const needNoTrav = 
+                        // dots are allowed, and the pattern starts with [ or .
+                        (dot && aps.has(src.charAt(0))) ||
+                            // the pattern starts with \., and then [ or .
+                            (src.startsWith('\\.') && aps.has(src.charAt(2))) ||
+                            // the pattern starts with \.\., and then [ or .
+                            (src.startsWith('\\.\\.') && aps.has(src.charAt(4)));
+                        // no need to prevent dots if it can't match a dot, or if a
+                        // sub-pattern will be preventing it anyway.
+                        const needNoDot = !dot && !allowDot && aps.has(src.charAt(0));
+                        start = needNoTrav ? startNoTraversal : needNoDot ? startNoDot : '';
+                    }
+                }
+            }
+            // append the "end of path portion" pattern to negation tails
+            let end = '';
+            if (this.isEnd() &&
+                this.#root.#filledNegs &&
+                this.#parent?.type === '!') {
+                end = '(?:$|\\/)';
+            }
+            const final = start + src + end;
+            return [
+                final,
+                (0, unescape_js_1.unescape)(src),
+                (this.#hasMagic = !!this.#hasMagic),
+                this.#uflag,
+            ];
+        }
+        // We need to calculate the body *twice* if it's a repeat pattern
+        // at the start, once in nodot mode, then again in dot mode, so a
+        // pattern like *(?) can match 'x.y'
+        const repeated = this.type === '*' || this.type === '+';
+        // some kind of extglob
+        const start = this.type === '!' ? '(?:(?!(?:' : '(?:';
+        let body = this.#partsToRegExp(dot);
+        if (this.isStart() && this.isEnd() && !body && this.type !== '!') {
+            // invalid extglob, has to at least be *something* present, if it's
+            // the entire path portion.
+            const s = this.toString();
+            this.#parts = [s];
+            this.type = null;
+            this.#hasMagic = undefined;
+            return [s, (0, unescape_js_1.unescape)(this.toString()), false, false];
+        }
+        // XXX abstract out this map method
+        let bodyDotAllowed = !repeated || allowDot || dot || !startNoDot
+            ? ''
+            : this.#partsToRegExp(true);
+        if (bodyDotAllowed === body) {
+            bodyDotAllowed = '';
+        }
+        if (bodyDotAllowed) {
+            body = `(?:${body})(?:${bodyDotAllowed})*?`;
+        }
+        // an empty !() is exactly equivalent to a starNoEmpty
+        let final = '';
+        if (this.type === '!' && this.#emptyExt) {
+            final = (this.isStart() && !dot ? startNoDot : '') + starNoEmpty;
+        }
+        else {
+            const close = this.type === '!'
+                ? // !() must match something,but !(x) can match ''
+                    '))' +
+                        (this.isStart() && !dot && !allowDot ? startNoDot : '') +
+                        star +
+                        ')'
+                : this.type === '@'
+                    ? ')'
+                    : this.type === '?'
+                        ? ')?'
+                        : this.type === '+' && bodyDotAllowed
+                            ? ')'
+                            : this.type === '*' && bodyDotAllowed
+                                ? `)?`
+                                : `)${this.type}`;
+            final = start + body + close;
+        }
+        return [
+            final,
+            (0, unescape_js_1.unescape)(body),
+            (this.#hasMagic = !!this.#hasMagic),
+            this.#uflag,
+        ];
+    }
+    #partsToRegExp(dot) {
+        return this.#parts
+            .map(p => {
+            // extglob ASTs should only contain parent ASTs
+            /* c8 ignore start */
+            if (typeof p === 'string') {
+                throw new Error('string type in extglob ast??');
+            }
+            /* c8 ignore stop */
+            // can ignore hasMagic, because extglobs are already always magic
+            const [re, _, _hasMagic, uflag] = p.toRegExpSource(dot);
+            this.#uflag = this.#uflag || uflag;
+            return re;
+        })
+            .filter(p => !(this.isStart() && this.isEnd()) || !!p)
+            .join('|');
+    }
+    static #parseGlob(glob, hasMagic, noEmpty = false) {
+        let escaping = false;
+        let re = '';
+        let uflag = false;
+        for (let i = 0; i < glob.length; i++) {
+            const c = glob.charAt(i);
+            if (escaping) {
+                escaping = false;
+                re += (reSpecials.has(c) ? '\\' : '') + c;
+                continue;
+            }
+            if (c === '\\') {
+                if (i === glob.length - 1) {
+                    re += '\\\\';
+                }
+                else {
+                    escaping = true;
+                }
+                continue;
+            }
+            if (c === '[') {
+                const [src, needUflag, consumed, magic] = (0, brace_expressions_js_1.parseClass)(glob, i);
+                if (consumed) {
+                    re += src;
+                    uflag = uflag || needUflag;
+                    i += consumed - 1;
+                    hasMagic = hasMagic || magic;
+                    continue;
+                }
+            }
+            if (c === '*') {
+                if (noEmpty && glob === '*')
+                    re += starNoEmpty;
+                else
+                    re += star;
+                hasMagic = true;
+                continue;
+            }
+            if (c === '?') {
+                re += qmark;
+                hasMagic = true;
+                continue;
+            }
+            re += regExpEscape(c);
+        }
+        return [re, (0, unescape_js_1.unescape)(glob), !!hasMagic, uflag];
+    }
+}
+exports.AST = AST;
+//# sourceMappingURL=ast.js.map
+
+/***/ }),
+
 /***/ 3857:
 /***/ ((__unused_webpack_module, exports) => {
 
@@ -50424,20 +51951,6 @@ exports.escape = escape;
 
 /***/ }),
 
-/***/ 153:
-/***/ (function(module, __unused_webpack_exports, __nccwpck_require__) {
-
-"use strict";
-
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-const index_js_1 = __importDefault(__nccwpck_require__(4878));
-module.exports = Object.assign(index_js_1.default, { default: index_js_1.default, minimatch: index_js_1.default });
-//# sourceMappingURL=index-cjs.js.map
-
-/***/ }),
-
 /***/ 4878:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
@@ -50447,13 +51960,14 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.unescape = exports.escape = exports.Minimatch = exports.match = exports.makeRe = exports.braceExpand = exports.defaults = exports.filter = exports.GLOBSTAR = exports.sep = exports.minimatch = void 0;
+exports.unescape = exports.escape = exports.AST = exports.Minimatch = exports.match = exports.makeRe = exports.braceExpand = exports.defaults = exports.filter = exports.GLOBSTAR = exports.sep = exports.minimatch = void 0;
 const brace_expansion_1 = __importDefault(__nccwpck_require__(4515));
-const brace_expressions_js_1 = __nccwpck_require__(3857);
+const assert_valid_pattern_js_1 = __nccwpck_require__(3033);
+const ast_js_1 = __nccwpck_require__(596);
 const escape_js_1 = __nccwpck_require__(5615);
 const unescape_js_1 = __nccwpck_require__(6615);
 const minimatch = (p, pattern, options = {}) => {
-    assertValidPattern(pattern);
+    (0, assert_valid_pattern_js_1.assertValidPattern)(pattern);
     // shortcut: comments match nothing.
     if (!options.nocomment && pattern.charAt(0) === '#') {
         return false;
@@ -50461,7 +51975,6 @@ const minimatch = (p, pattern, options = {}) => {
     return new Minimatch(pattern, options).match(p);
 };
 exports.minimatch = minimatch;
-exports["default"] = exports.minimatch;
 // Optimized checking for the most common glob patterns.
 const starDotExtRE = /^\*+([^+@!?\*\[\(]*)$/;
 const starDotExtTest = (ext) => (f) => !f.startsWith('.') && f.endsWith(ext);
@@ -50529,13 +52042,6 @@ exports.sep = defaultPlatform === 'win32' ? path.win32.sep : path.posix.sep;
 exports.minimatch.sep = exports.sep;
 exports.GLOBSTAR = Symbol('globstar **');
 exports.minimatch.GLOBSTAR = exports.GLOBSTAR;
-const plTypes = {
-    '!': { open: '(?:(?!(?:', close: '))[^/]*?)' },
-    '?': { open: '(?:', close: ')?' },
-    '+': { open: '(?:', close: ')+' },
-    '*': { open: '(?:', close: ')*' },
-    '@': { open: '(?:', close: ')' },
-};
 // any single thing other than /
 // don't need to escape / when using new RegExp()
 const qmark = '[^/]';
@@ -50548,15 +52054,6 @@ const twoStarDot = '(?:(?!(?:\\/|^)(?:\\.{1,2})($|\\/)).)*?';
 // not a ^ or / followed by a dot,
 // followed by anything, any number of times.
 const twoStarNoDot = '(?:(?!(?:\\/|^)\\.).)*?';
-// "abc" -> { a:true, b:true, c:true }
-const charSet = (s) => s.split('').reduce((set, c) => {
-    set[c] = true;
-    return set;
-}, {});
-// characters that need to be escaped in RegExp.
-const reSpecials = charSet('().*{}+?[]^$\\!');
-// characters that indicate we have to add the pattern start
-const addPatternStartSet = charSet('[.(');
 const filter = (pattern, options = {}) => (p) => (0, exports.minimatch)(p, pattern, options);
 exports.filter = filter;
 exports.minimatch.filter = exports.filter;
@@ -50574,6 +52071,16 @@ const defaults = (def) => {
             }
             static defaults(options) {
                 return orig.defaults(ext(def, options)).Minimatch;
+            }
+        },
+        AST: class AST extends orig.AST {
+            /* c8 ignore start */
+            constructor(type, parent, options = {}) {
+                super(type, parent, ext(def, options));
+            }
+            /* c8 ignore stop */
+            static fromGlob(pattern, options = {}) {
+                return orig.AST.fromGlob(pattern, ext(def, options));
             }
         },
         unescape: (s, options = {}) => orig.unescape(s, ext(def, options)),
@@ -50600,7 +52107,7 @@ exports.minimatch.defaults = exports.defaults;
 // a{2..}b -> a{2..}b
 // a{b}c -> a{b}c
 const braceExpand = (pattern, options = {}) => {
-    assertValidPattern(pattern);
+    (0, assert_valid_pattern_js_1.assertValidPattern)(pattern);
     // Thanks to Yeting Li <https://github.com/yetingli> for
     // improving this regexp to avoid a ReDOS vulnerability.
     if (options.nobrace || !/\{(?:(?!\{).)*\}/.test(pattern)) {
@@ -50611,15 +52118,6 @@ const braceExpand = (pattern, options = {}) => {
 };
 exports.braceExpand = braceExpand;
 exports.minimatch.braceExpand = exports.braceExpand;
-const MAX_PATTERN_LENGTH = 1024 * 64;
-const assertValidPattern = (pattern) => {
-    if (typeof pattern !== 'string') {
-        throw new TypeError('invalid pattern');
-    }
-    if (pattern.length > MAX_PATTERN_LENGTH) {
-        throw new TypeError('pattern is too long');
-    }
-};
 // parse a component of the expanded set.
 // At this point, no pattern may contain "/" in it
 // so we're going to return a 2d array, where each entry is the full
@@ -50645,7 +52143,6 @@ const match = (list, pattern, options = {}) => {
 exports.match = match;
 exports.minimatch.match = exports.match;
 // replace stuff like \* with *
-const globUnescape = (s) => s.replace(/\\(.)/g, '$1');
 const globMagic = /[?*]|[+@!]\(.*?\)|\[|\]/;
 const regExpEscape = (s) => s.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
 class Minimatch {
@@ -50667,7 +52164,7 @@ class Minimatch {
     windowsNoMagicRoot;
     regexp;
     constructor(pattern, options = {}) {
-        assertValidPattern(pattern);
+        (0, assert_valid_pattern_js_1.assertValidPattern)(pattern);
         options = options || {};
         this.options = options;
         this.pattern = pattern;
@@ -51068,39 +52565,35 @@ class Minimatch {
     // the parts match.
     matchOne(file, pattern, partial = false) {
         const options = this.options;
-        // a UNC pattern like //?/c:/* can match a path like c:/x
-        // and vice versa
+        // UNC paths like //?/X:/... can match X:/... and vice versa
+        // Drive letters in absolute drive or unc paths are always compared
+        // case-insensitively.
         if (this.isWindows) {
-            const fileUNC = file[0] === '' &&
+            const fileDrive = typeof file[0] === 'string' && /^[a-z]:$/i.test(file[0]);
+            const fileUNC = !fileDrive &&
+                file[0] === '' &&
                 file[1] === '' &&
                 file[2] === '?' &&
-                typeof file[3] === 'string' &&
                 /^[a-z]:$/i.test(file[3]);
-            const patternUNC = pattern[0] === '' &&
+            const patternDrive = typeof pattern[0] === 'string' && /^[a-z]:$/i.test(pattern[0]);
+            const patternUNC = !patternDrive &&
+                pattern[0] === '' &&
                 pattern[1] === '' &&
                 pattern[2] === '?' &&
                 typeof pattern[3] === 'string' &&
                 /^[a-z]:$/i.test(pattern[3]);
-            if (fileUNC && patternUNC) {
-                const fd = file[3];
-                const pd = pattern[3];
+            const fdi = fileUNC ? 3 : fileDrive ? 0 : undefined;
+            const pdi = patternUNC ? 3 : patternDrive ? 0 : undefined;
+            if (typeof fdi === 'number' && typeof pdi === 'number') {
+                const [fd, pd] = [file[fdi], pattern[pdi]];
                 if (fd.toLowerCase() === pd.toLowerCase()) {
-                    file[3] = pd;
-                }
-            }
-            else if (patternUNC && typeof file[0] === 'string') {
-                const pd = pattern[3];
-                const fd = file[0];
-                if (pd.toLowerCase() === fd.toLowerCase()) {
-                    pattern[3] = fd;
-                    pattern = pattern.slice(3);
-                }
-            }
-            else if (fileUNC && typeof pattern[0] === 'string') {
-                const fd = file[3];
-                if (fd.toLowerCase() === pattern[0].toLowerCase()) {
-                    pattern[0] = fd;
-                    file = file.slice(3);
+                    pattern[pdi] = fd;
+                    if (pdi > fdi) {
+                        pattern = pattern.slice(pdi);
+                    }
+                    else if (fdi > pdi) {
+                        file = file.slice(fdi);
+                    }
                 }
             }
         }
@@ -51258,7 +52751,7 @@ class Minimatch {
         return (0, exports.braceExpand)(this.pattern, this.options);
     }
     parse(pattern) {
-        assertValidPattern(pattern);
+        (0, assert_valid_pattern_js_1.assertValidPattern)(pattern);
         const options = this.options;
         // shortcuts
         if (pattern === '**')
@@ -51296,293 +52789,8 @@ class Minimatch {
         else if ((m = pattern.match(dotStarRE))) {
             fastTest = dotStarTest;
         }
-        let re = '';
-        let hasMagic = false;
-        let escaping = false;
-        // ? => one single character
-        const patternListStack = [];
-        const negativeLists = [];
-        let stateChar = false;
-        let uflag = false;
-        let pl;
-        // . and .. never match anything that doesn't start with .,
-        // even when options.dot is set.  However, if the pattern
-        // starts with ., then traversal patterns can match.
-        let dotTravAllowed = pattern.charAt(0) === '.';
-        let dotFileAllowed = options.dot || dotTravAllowed;
-        const patternStart = () => dotTravAllowed
-            ? ''
-            : dotFileAllowed
-                ? '(?!(?:^|\\/)\\.{1,2}(?:$|\\/))'
-                : '(?!\\.)';
-        const subPatternStart = (p) => p.charAt(0) === '.'
-            ? ''
-            : options.dot
-                ? '(?!(?:^|\\/)\\.{1,2}(?:$|\\/))'
-                : '(?!\\.)';
-        const clearStateChar = () => {
-            if (stateChar) {
-                // we had some state-tracking character
-                // that wasn't consumed by this pass.
-                switch (stateChar) {
-                    case '*':
-                        re += star;
-                        hasMagic = true;
-                        break;
-                    case '?':
-                        re += qmark;
-                        hasMagic = true;
-                        break;
-                    default:
-                        re += '\\' + stateChar;
-                        break;
-                }
-                this.debug('clearStateChar %j %j', stateChar, re);
-                stateChar = false;
-            }
-        };
-        for (let i = 0, c; i < pattern.length && (c = pattern.charAt(i)); i++) {
-            this.debug('%s\t%s %s %j', pattern, i, re, c);
-            // skip over any that are escaped.
-            if (escaping) {
-                // completely not allowed, even escaped.
-                // should be impossible.
-                /* c8 ignore start */
-                if (c === '/') {
-                    return false;
-                }
-                /* c8 ignore stop */
-                if (reSpecials[c]) {
-                    re += '\\';
-                }
-                re += c;
-                escaping = false;
-                continue;
-            }
-            switch (c) {
-                // Should already be path-split by now.
-                /* c8 ignore start */
-                case '/': {
-                    return false;
-                }
-                /* c8 ignore stop */
-                case '\\':
-                    clearStateChar();
-                    escaping = true;
-                    continue;
-                // the various stateChar values
-                // for the "extglob" stuff.
-                case '?':
-                case '*':
-                case '+':
-                case '@':
-                case '!':
-                    this.debug('%s\t%s %s %j <-- stateChar', pattern, i, re, c);
-                    // if we already have a stateChar, then it means
-                    // that there was something like ** or +? in there.
-                    // Handle the stateChar, then proceed with this one.
-                    this.debug('call clearStateChar %j', stateChar);
-                    clearStateChar();
-                    stateChar = c;
-                    // if extglob is disabled, then +(asdf|foo) isn't a thing.
-                    // just clear the statechar *now*, rather than even diving into
-                    // the patternList stuff.
-                    if (options.noext)
-                        clearStateChar();
-                    continue;
-                case '(': {
-                    if (!stateChar) {
-                        re += '\\(';
-                        continue;
-                    }
-                    const plEntry = {
-                        type: stateChar,
-                        start: i - 1,
-                        reStart: re.length,
-                        open: plTypes[stateChar].open,
-                        close: plTypes[stateChar].close,
-                    };
-                    this.debug(this.pattern, '\t', plEntry);
-                    patternListStack.push(plEntry);
-                    // negation is (?:(?!(?:js)(?:<rest>))[^/]*)
-                    re += plEntry.open;
-                    // next entry starts with a dot maybe?
-                    if (plEntry.start === 0 && plEntry.type !== '!') {
-                        dotTravAllowed = true;
-                        re += subPatternStart(pattern.slice(i + 1));
-                    }
-                    this.debug('plType %j %j', stateChar, re);
-                    stateChar = false;
-                    continue;
-                }
-                case ')': {
-                    const plEntry = patternListStack[patternListStack.length - 1];
-                    if (!plEntry) {
-                        re += '\\)';
-                        continue;
-                    }
-                    patternListStack.pop();
-                    // closing an extglob
-                    clearStateChar();
-                    hasMagic = true;
-                    pl = plEntry;
-                    // negation is (?:(?!js)[^/]*)
-                    // The others are (?:<pattern>)<type>
-                    re += pl.close;
-                    if (pl.type === '!') {
-                        negativeLists.push(Object.assign(pl, { reEnd: re.length }));
-                    }
-                    continue;
-                }
-                case '|': {
-                    const plEntry = patternListStack[patternListStack.length - 1];
-                    if (!plEntry) {
-                        re += '\\|';
-                        continue;
-                    }
-                    clearStateChar();
-                    re += '|';
-                    // next subpattern can start with a dot?
-                    if (plEntry.start === 0 && plEntry.type !== '!') {
-                        dotTravAllowed = true;
-                        re += subPatternStart(pattern.slice(i + 1));
-                    }
-                    continue;
-                }
-                // these are mostly the same in regexp and glob
-                case '[':
-                    // swallow any state-tracking char before the [
-                    clearStateChar();
-                    const [src, needUflag, consumed, magic] = (0, brace_expressions_js_1.parseClass)(pattern, i);
-                    if (consumed) {
-                        re += src;
-                        uflag = uflag || needUflag;
-                        i += consumed - 1;
-                        hasMagic = hasMagic || magic;
-                    }
-                    else {
-                        re += '\\[';
-                    }
-                    continue;
-                case ']':
-                    re += '\\' + c;
-                    continue;
-                default:
-                    // swallow any state char that wasn't consumed
-                    clearStateChar();
-                    re += regExpEscape(c);
-                    break;
-            } // switch
-        } // for
-        // handle the case where we had a +( thing at the *end*
-        // of the pattern.
-        // each pattern list stack adds 3 chars, and we need to go through
-        // and escape any | chars that were passed through as-is for the regexp.
-        // Go through and escape them, taking care not to double-escape any
-        // | chars that were already escaped.
-        for (pl = patternListStack.pop(); pl; pl = patternListStack.pop()) {
-            let tail;
-            tail = re.slice(pl.reStart + pl.open.length);
-            this.debug(this.pattern, 'setting tail', re, pl);
-            // maybe some even number of \, then maybe 1 \, followed by a |
-            tail = tail.replace(/((?:\\{2}){0,64})(\\?)\|/g, (_, $1, $2) => {
-                if (!$2) {
-                    // the | isn't already escaped, so escape it.
-                    $2 = '\\';
-                    // should already be done
-                    /* c8 ignore start */
-                }
-                /* c8 ignore stop */
-                // need to escape all those slashes *again*, without escaping the
-                // one that we need for escaping the | character.  As it works out,
-                // escaping an even number of slashes can be done by simply repeating
-                // it exactly after itself.  That's why this trick works.
-                //
-                // I am sorry that you have to see this.
-                return $1 + $1 + $2 + '|';
-            });
-            this.debug('tail=%j\n   %s', tail, tail, pl, re);
-            const t = pl.type === '*' ? star : pl.type === '?' ? qmark : '\\' + pl.type;
-            hasMagic = true;
-            re = re.slice(0, pl.reStart) + t + '\\(' + tail;
-        }
-        // handle trailing things that only matter at the very end.
-        clearStateChar();
-        if (escaping) {
-            // trailing \\
-            re += '\\\\';
-        }
-        // only need to apply the nodot start if the re starts with
-        // something that could conceivably capture a dot
-        const addPatternStart = addPatternStartSet[re.charAt(0)];
-        // Hack to work around lack of negative lookbehind in JS
-        // A pattern like: *.!(x).!(y|z) needs to ensure that a name
-        // like 'a.xyz.yz' doesn't match.  So, the first negative
-        // lookahead, has to look ALL the way ahead, to the end of
-        // the pattern.
-        for (let n = negativeLists.length - 1; n > -1; n--) {
-            const nl = negativeLists[n];
-            const nlBefore = re.slice(0, nl.reStart);
-            const nlFirst = re.slice(nl.reStart, nl.reEnd - 8);
-            let nlAfter = re.slice(nl.reEnd);
-            const nlLast = re.slice(nl.reEnd - 8, nl.reEnd) + nlAfter;
-            // Handle nested stuff like *(*.js|!(*.json)), where open parens
-            // mean that we should *not* include the ) in the bit that is considered
-            // "after" the negated section.
-            const closeParensBefore = nlBefore.split(')').length;
-            const openParensBefore = nlBefore.split('(').length - closeParensBefore;
-            let cleanAfter = nlAfter;
-            for (let i = 0; i < openParensBefore; i++) {
-                cleanAfter = cleanAfter.replace(/\)[+*?]?/, '');
-            }
-            nlAfter = cleanAfter;
-            const dollar = nlAfter === '' ? '(?:$|\\/)' : '';
-            re = nlBefore + nlFirst + nlAfter + dollar + nlLast;
-        }
-        // if the re is not "" at this point, then we need to make sure
-        // it doesn't match against an empty path part.
-        // Otherwise a/* will match a/, which it should not.
-        if (re !== '' && hasMagic) {
-            re = '(?=.)' + re;
-        }
-        if (addPatternStart) {
-            re = patternStart() + re;
-        }
-        // if it's nocase, and the lcase/uppercase don't match, it's magic
-        if (options.nocase && !hasMagic && !options.nocaseMagicOnly) {
-            hasMagic = pattern.toUpperCase() !== pattern.toLowerCase();
-        }
-        // skip the regexp for non-magical patterns
-        // unescape anything in it, though, so that it'll be
-        // an exact match against a file etc.
-        if (!hasMagic) {
-            return globUnescape(re);
-        }
-        const flags = (options.nocase ? 'i' : '') + (uflag ? 'u' : '');
-        try {
-            const ext = fastTest
-                ? {
-                    _glob: pattern,
-                    _src: re,
-                    test: fastTest,
-                }
-                : {
-                    _glob: pattern,
-                    _src: re,
-                };
-            return Object.assign(new RegExp('^' + re + '$', flags), ext);
-            /* c8 ignore start */
-        }
-        catch (er) {
-            // should be impossible
-            // If it was an invalid regular expression, then it can't match
-            // anything.  This trick looks for a character after the end of
-            // the string, which is of course impossible, except in multi-line
-            // mode, but it's not a /m regex.
-            this.debug('invalid regexp', er);
-            return new RegExp('$.');
-        }
-        /* c8 ignore stop */
+        const re = ast_js_1.AST.fromGlob(pattern, this.options).toMMPattern();
+        return fastTest ? Object.assign(re, { test: fastTest }) : re;
     }
     makeRe() {
         if (this.regexp || this.regexp === false)
@@ -51604,7 +52812,7 @@ class Minimatch {
             : options.dot
                 ? twoStarDot
                 : twoStarNoDot;
-        const flags = options.nocase ? 'i' : '';
+        const flags = new Set(options.nocase ? ['i'] : []);
         // regexpify non-globstar patterns
         // if ** is only item, then we just do one twoStar
         // if ** is first, and there are more, prepend (\/|twoStar\/)? to next
@@ -51613,11 +52821,17 @@ class Minimatch {
         // then filter out GLOBSTAR symbols
         let re = set
             .map(pattern => {
-            const pp = pattern.map(p => typeof p === 'string'
-                ? regExpEscape(p)
-                : p === exports.GLOBSTAR
-                    ? exports.GLOBSTAR
-                    : p._src);
+            const pp = pattern.map(p => {
+                if (p instanceof RegExp) {
+                    for (const f of p.flags.split(''))
+                        flags.add(f);
+                }
+                return typeof p === 'string'
+                    ? regExpEscape(p)
+                    : p === exports.GLOBSTAR
+                        ? exports.GLOBSTAR
+                        : p._src;
+            });
             pp.forEach((p, i) => {
                 const next = pp[i + 1];
                 const prev = pp[i - 1];
@@ -51643,14 +52857,17 @@ class Minimatch {
             return pp.filter(p => p !== exports.GLOBSTAR).join('/');
         })
             .join('|');
+        // need to wrap in parens if we had more than one thing with |,
+        // otherwise only the first will be anchored to ^ and the last to $
+        const [open, close] = set.length > 1 ? ['(?:', ')'] : ['', ''];
         // must match entire pattern
         // ending in a * or ** will make it less strict.
-        re = '^(?:' + re + ')$';
+        re = '^' + open + re + close + '$';
         // can match anything, as long as it's not this.
         if (this.negate)
-            re = '^(?!' + re + ').*$';
+            re = '^(?!' + re + ').+$';
         try {
-            this.regexp = new RegExp(re, flags);
+            this.regexp = new RegExp(re, [...flags].join(''));
             /* c8 ignore start */
         }
         catch (ex) {
@@ -51737,11 +52954,14 @@ class Minimatch {
 }
 exports.Minimatch = Minimatch;
 /* c8 ignore start */
+var ast_js_2 = __nccwpck_require__(596);
+Object.defineProperty(exports, "AST", ({ enumerable: true, get: function () { return ast_js_2.AST; } }));
 var escape_js_2 = __nccwpck_require__(5615);
 Object.defineProperty(exports, "escape", ({ enumerable: true, get: function () { return escape_js_2.escape; } }));
 var unescape_js_2 = __nccwpck_require__(6615);
 Object.defineProperty(exports, "unescape", ({ enumerable: true, get: function () { return unescape_js_2.unescape; } }));
 /* c8 ignore stop */
+exports.minimatch.AST = ast_js_1.AST;
 exports.minimatch.Minimatch = Minimatch;
 exports.minimatch.escape = escape_js_1.escape;
 exports.minimatch.unescape = unescape_js_1.unescape;
@@ -51856,7 +53076,7 @@ module.exports = JSON.parse('[["0","\\u0000",128],["a1","｡",62],["8140","　�
 /***/ ((module) => {
 
 "use strict";
-module.exports = JSON.parse('{"name":"make-fetch-happen","version":"11.0.2","description":"Opinionated, caching, retrying fetch client","main":"lib/index.js","files":["bin/","lib/"],"scripts":{"test":"tap","posttest":"npm run lint","eslint":"eslint","lint":"eslint \\"**/*.js\\"","lintfix":"npm run lint -- --fix","postlint":"template-oss-check","snap":"tap","template-oss-apply":"template-oss-apply --force"},"repository":{"type":"git","url":"https://github.com/npm/make-fetch-happen.git"},"keywords":["http","request","fetch","mean girls","caching","cache","subresource integrity"],"author":"GitHub Inc.","license":"ISC","dependencies":{"agentkeepalive":"^4.2.1","cacache":"^17.0.0","http-cache-semantics":"^4.1.0","http-proxy-agent":"^5.0.0","https-proxy-agent":"^5.0.0","is-lambda":"^1.0.1","lru-cache":"^7.7.1","minipass":"^4.0.0","minipass-collect":"^1.0.2","minipass-fetch":"^3.0.0","minipass-flush":"^1.0.5","minipass-pipeline":"^1.2.4","negotiator":"^0.6.3","promise-retry":"^2.0.1","socks-proxy-agent":"^7.0.0","ssri":"^10.0.0"},"devDependencies":{"@npmcli/eslint-config":"^4.0.0","@npmcli/template-oss":"4.10.0","mkdirp":"^1.0.4","nock":"^13.2.4","rimraf":"^3.0.2","safe-buffer":"^5.2.1","standard-version":"^9.3.2","tap":"^16.0.0"},"engines":{"node":"^14.17.0 || ^16.13.0 || >=18.0.0"},"tap":{"color":1,"files":"test/*.js","check-coverage":true,"timeout":60,"nyc-arg":["--exclude","tap-snapshots/**"]},"templateOSS":{"//@npmcli/template-oss":"This file is partially managed by @npmcli/template-oss. Edits may be overwritten.","version":"4.10.0"}}');
+module.exports = JSON.parse('{"name":"make-fetch-happen","version":"11.1.1","description":"Opinionated, caching, retrying fetch client","main":"lib/index.js","files":["bin/","lib/"],"scripts":{"test":"tap","posttest":"npm run lint","eslint":"eslint","lint":"eslint \\"**/*.js\\"","lintfix":"npm run lint -- --fix","postlint":"template-oss-check","snap":"tap","template-oss-apply":"template-oss-apply --force"},"repository":{"type":"git","url":"https://github.com/npm/make-fetch-happen.git"},"keywords":["http","request","fetch","mean girls","caching","cache","subresource integrity"],"author":"GitHub Inc.","license":"ISC","dependencies":{"agentkeepalive":"^4.2.1","cacache":"^17.0.0","http-cache-semantics":"^4.1.1","http-proxy-agent":"^5.0.0","https-proxy-agent":"^5.0.0","is-lambda":"^1.0.1","lru-cache":"^7.7.1","minipass":"^5.0.0","minipass-fetch":"^3.0.0","minipass-flush":"^1.0.5","minipass-pipeline":"^1.2.4","negotiator":"^0.6.3","promise-retry":"^2.0.1","socks-proxy-agent":"^7.0.0","ssri":"^10.0.0"},"devDependencies":{"@npmcli/eslint-config":"^4.0.0","@npmcli/template-oss":"4.14.1","nock":"^13.2.4","safe-buffer":"^5.2.1","standard-version":"^9.3.2","tap":"^16.0.0"},"engines":{"node":"^14.17.0 || ^16.13.0 || >=18.0.0"},"tap":{"color":1,"files":"test/*.js","check-coverage":true,"timeout":60,"nyc-arg":["--exclude","tap-snapshots/**"]},"templateOSS":{"//@npmcli/template-oss":"This file is partially managed by @npmcli/template-oss. Edits may be overwritten.","version":"4.14.1","publish":"true"}}');
 
 /***/ }),
 
@@ -51872,7 +53092,7 @@ module.exports = {"i8":"3.0.1"};
 /***/ ((module) => {
 
 "use strict";
-module.exports = {"i8":"1.5.2"};
+module.exports = {"i8":"1.7.0"};
 
 /***/ }),
 
