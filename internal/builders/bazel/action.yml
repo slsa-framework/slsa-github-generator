@@ -58,11 +58,6 @@ runs:
         distribution: "${{ fromJson(inputs.slsa-workflow-inputs).user-java-distribution }}"
         java-version: "${{ fromJson(inputs.slsa-workflow-inputs).user-java-version }}"
 
-    - name: Set Env Var $JAVA_HOME
-      shell: bash
-      run: |
-        export JAVA_HOME="$JAVA_HOME"
-
     - id: build
       env:
         TARGETS: ${{ fromJson(inputs.slsa-workflow-inputs).targets }}
