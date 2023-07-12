@@ -49,6 +49,7 @@ jobs:
       - name: unit tests
         run: |
           set -euo pipefail
+          npm install -g npm@9.8.0
           make unit-test
 
   check-verifier:
