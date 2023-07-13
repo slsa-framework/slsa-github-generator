@@ -22,7 +22,7 @@ import (
 	"net/url"
 	"strings"
 
-	toml "github.com/pelletier/go-toml"
+	toml "github.com/pelletier/go-toml/v2"
 	"github.com/slsa-framework/slsa-github-generator/internal/utils"
 )
 
