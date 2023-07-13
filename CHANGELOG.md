@@ -9,7 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- toc -->
 
-- [Unreleased](#unreleased)
+- [[1.8.0]](#180)
+  - [1.8.0: Node.js Builder (beta)](#180-nodejs-builder-beta)
 - [1.7.0](#170)
   - [1.7.0: Go builder](#170-go-builder)
 - [v1.6.0](#v160)
@@ -79,14 +80,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- tocstop -->
 
-## Unreleased
-
 <!--
 Information on the next release will be added here.
 
 Use the format "X.Y.Z: Go builder" etc. for format headers to avoid header name
 duplication."
 -->
+
+## [1.8.0]
+
+### 1.8.0: Node.js Builder (beta)
+
+- **Fixed**: Node.js Builder now sets the subject properly for un-scoped
+  packages. See #2359.
+- **Changed**: The extension for provenance files was changed from
+  `.intoto.jsonl` to `.build.slsa`.
 
 ## 1.7.0
 
@@ -426,3 +434,5 @@ To learn how to use it, see [./README.md#golang-projects](https://github.com/sls
 ### Contributors
 
 @asraa @ianlewis @MarkLodato @joshuagl @laurentsimon
+
+[1.7.1]: https://github.com/slsa-framework/slsa-github-generator/releases/tag/v1.7.1
