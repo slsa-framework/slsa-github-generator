@@ -39,7 +39,6 @@ func attestCmd(provider slsa.ClientProvider, check func(error),
 ) *cobra.Command {
 	var attPath string
 	var subjectsFilename string
-	var subjects string
 
 	c := &cobra.Command{
 		Use:   "attest",
@@ -52,13 +51,9 @@ run in the context of a Github Actions workflow.`,
 			ghContext, err := github.GetWorkflowContext()
 			check(err)
 
-			// If not sujects are provided, read from the file instead.
-			if subjects == "" {
-				subjectsBytes, err := utils.SafeReadFile(subjectsFilename)
-				check(err)
-				subjects = string(subjectsBytes)
-			}
-			parsedSubjects, err := parseSubjects(subjects)
+			subjectsBytes, err := utils.SafeReadFile(subjectsFilename)
+			check(err)
+			parsedSubjects, err := parseSubjects(string(subjectsBytes))
 			check(err)
 			if len(parsedSubjects) == 0 {
 				check(errors.New("expected at least one subject"))
@@ -141,10 +136,6 @@ run in the context of a Github Actions workflow.`,
 	c.Flags().StringVarP(
 		&subjectsFilename, "subjects-filename", "f", "",
 		"Filename containing a formatted list of subjects in the same format as sha256sum (base64 encoded).",
-	)
-	c.Flags().StringVarP(
-		&subjects, "subjects", "s", "",
-		"A formatted list of subjects in the same format as sha256sum (base64 encoded).",
 	)
 	return c
 }
