@@ -11,6 +11,7 @@
     - [SLSA Setup Action (SSA)](#slsa-setup-action-ssa)
     - [SLSA Reusable Workflow (SRW)](#slsa-reusable-workflow-srw)
 - [Integration Steps](#integration-steps)
+  - [Supported Triggers](#supported-triggers)
   - [TRW inputs](#trw-inputs)
     - [Inputs](#inputs)
     - [Secrets](#secrets)
@@ -97,6 +98,10 @@ The SRW acts as the build's orchestrator. It calls the TCA, generates provenance
 ## Integration Steps
 
 In this example, we will assume there is an existing [GitHub Action](https://github.com/laurentsimon/byob-doc/tree/v0.0.1/action.yml) which builds an artifact. The Action is fairly simple: it just [echos the parameters into the artifact](https://github.com/laurentsimon/byob-doc/tree/v0.0.1/action.yml#L58). It also takes a [username, password and token](https://github.com/laurentsimon/byob-doc/tree/v0.0.1/action.yml#L31-L34) to retrieve / push information from a remote registry. Like popular release Actions, it [releases the built artifact to GitHub releases](https://github.com/laurentsimon/byob-doc/tree/v0.0.1/action.yml#L67-L78). It outputs the [name of the built artifact and the status of the build](https://github.com/laurentsimon/byob-doc/tree/v0.0.1/action.yml#L35-L41). See the full [action.yml](https://github.com/laurentsimon/byob-doc/tree/v0.0.1/action.yml).
+
+### Supported Triggers
+
+The following triggers are supported: `create`, `release`, `push` and `workflow_dispatch`, as recommended by the [SLSA specifications](https://github.com/slsa-framework/github-actions-buildtypes/tree/main/workflow/v1#description).
 
 ### TRW inputs
 
