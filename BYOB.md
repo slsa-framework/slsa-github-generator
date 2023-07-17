@@ -58,7 +58,7 @@ The example snippet shows the invocation of a builder with path `.github/workflo
 
 ### Tool Repository
 
-This is the tool repository hosting the builder invoked by PWs. The repository contains two components:
+This is the tool repository hosting the builder invoked by PWs. The tool repository MUST be public. The repository contains two components:
 
 #### Tool Reusable Workflow (TRW)
 
