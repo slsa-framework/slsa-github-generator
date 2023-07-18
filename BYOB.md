@@ -94,29 +94,38 @@ The SLSA Reuseable Workflow (SRW) acts as the build's orchestrator. It calls the
 
 ## Integration Steps
 
-In this example, we will assume there is an existing [GitHub Action](https://github.com/laurentsimon/byob-doc/tree/v0.0.1/action.yml) which builds an artifact. The Action is fairly simple: it just [echos the parameters into the artifact](https://github.com/laurentsimon/byob-doc/tree/v0.0.1/action.yml#L58). It also takes a [username, password and token](https://github.com/laurentsimon/byob-doc/tree/v0.0.1/action.yml#L31-L34) to retrieve / push information from a remote registry. Like popular release Actions, it [releases the built artifact to GitHub releases](https://github.com/laurentsimon/byob-doc/tree/v0.0.1/action.yml#L67-L78). It outputs the [name of the built artifact and the status of the build](https://github.com/laurentsimon/byob-doc/tree/v0.0.1/action.yml#L35-L41). See the full [action.yml](https://github.com/laurentsimon/byob-doc/tree/v0.0.1/action.yml).
+In this example, we will assume there is an existing [GitHub Action](https://github.com/laurentsimon/byob-doc/tree/v0.0.1/action.yml) which builds an artifact. 
+The Action does the following: 
+- [Echos the parameters into the artifact](https://github.com/laurentsimon/byob-doc/tree/v0.0.1/action.yml#L58). 
+- Takes a [username, password and token](https://github.com/laurentsimon/byob-doc/tree/v0.0.1/action.yml#L31-L34) to retrieve / push information from a remote registry. 
+- [Releases the built artifact to GitHub releases](https://github.com/laurentsimon/byob-doc/tree/v0.0.1/action.yml#L67-L78) (similarly to popular release Actions). 
+- Outputs the [name of the built artifact and the status of the build](https://github.com/laurentsimon/byob-doc/tree/v0.0.1/action.yml#L35-L41). 
 
-### TRW inputs
+See the full [action.yml](https://github.com/laurentsimon/byob-doc/tree/v0.0.1/action.yml).
+
+### Step 1: TRW inputs
 
 The first step for our integration is to create our TRW file and define its inputs. The inputs should mirror those of the existing Action above that we want to make SLSA compliant.
 
 #### Inputs
 
-Inputs that have low entropy are defined under the [inputs section](https://github.com/laurentsimon/byob-doc/tree/v0.0.1/.github/workflows/builder_example_slsa3.yml#L25-L39). Unlike Action inputs, you may define the type ([boolean, number, or string](https://docs.github.com/en/actions/using-workflows/reusing-workflows)) of each input. You may also provide a default value. The inputs will be attested to in the generated provenance. We will in [Section: SRW Setup](#srw-setup) how to redact certain inputs from the provenance, such as the username that may be considered sensitive.
+Inputs that have low entropy are defined under the [inputs section](https://github.com/laurentsimon/byob-doc/tree/v0.0.1/.github/workflows/builder_example_slsa3.yml#L25-L39). Unlike Action inputs, you may define the type ([boolean, number, or string](https://docs.github.com/en/actions/using-workflows/reusing-workflows)) of each input. You may also provide a default value. The inputs will be attested to in the generated provenance. We will discuss in [Section: SRW Setup](#srw-setup) how to redact certain inputs that might be sensitive, such as username, from the provenance. 
 
 We also declare an additional [rekor-log-public](https://github.com/laurentsimon/byob-doc/tree/v0.0.1/.github/workflows/builder_example_slsa3.yml#L43-L47) boolean input. Given that the name of the repository will be available in the provenance and will be uploaded to the public transparency log, we need users to acknowledge that they are aware that private repository names will be made public. We encourage all TRWs to define this option. For public repositories, the value of the input is set to true by default by the SRW. For private repositories, users should set if to true when calling the TRW.
 
 #### Secrets
 
-Unlike Actions, secrets are defined under a separate [secrets section](https://github.com/laurentsimon/byob-doc/tree/v0.0.1/.github/workflows/builder_example_slsa3.yml#L49-L57). Secrets should only be high-entropy values. Do not set username or other low-entropy PII as secrets, as it may intermittently fail due to this [unresolved GitHub issue](https://github.com/orgs/community/discussions/37942). Secrets may be marked as optional. Unlike for Actions, secrets cannot have default values: in our example, the [token](https://github.com/laurentsimon/byob-doc/tree/v0.0.1/.github/workflows/builder_example_slsa3.yml#L55-L57) secret has no default value, whereas the original Action [had one](https://github.com/laurentsimon/byob-doc/tree/v0.0.1/action.yml#L33). We will see in [Section: Invocation of Existing Action](#invocation-of-existing-action) how to set default values in the TCA.
+Unlike Actions, secrets are defined under a separate [secrets section](https://github.com/laurentsimon/byob-doc/tree/v0.0.1/.github/workflows/builder_example_slsa3.yml#L49-L57). 
+
+Secrets should only be high-entropy values. Do not set username or other low-entropy PII as secrets, as it may intermittently fail due to this [unresolved GitHub issue](https://github.com/orgs/community/discussions/37942). Secrets may be marked as optional. Unlike for Actions, secrets cannot have default values. In our example, the [token](https://github.com/laurentsimon/byob-doc/tree/v0.0.1/.github/workflows/builder_example_slsa3.yml#L55-L57) secret has no default value, whereas the original Action [had one](https://github.com/laurentsimon/byob-doc/tree/v0.0.1/action.yml#L33). We will see in [Section: Invocation of Existing Action](#invocation-of-existing-action) how to set default values in the TCA.
 
 #### Outputs
 
-The outputs from the TCA may be returned to the PW as well. To do this, use the [outputs section](https://github.com/laurentsimon/byob-doc/tree/v0.0.1/.github/workflows/builder_example_slsa3.yml#L61-L67). There are [other outputs set](https://github.com/laurentsimon/byob-doc/tree/v0.0.1/.github/workflows/builder_example_slsa3.yml#L69-L75) as well in our example: Those provide metadata about the built artifacts and their provenance, and we will discuss them in [Section: Upload Attestations](#upload-attestations).
+The outputs from the TCA may be returned to the PW as well. To do this, use the [outputs section](https://github.com/laurentsimon/byob-doc/tree/v0.0.1/.github/workflows/builder_example_slsa3.yml#L61-L67) to define the artifact and the status. Our example uses [additional outputs](https://github.com/laurentsimon/byob-doc/tree/v0.0.1/.github/workflows/builder_example_slsa3.yml#L69-L75) to  provide metadata about the built artifacts and their provenance. We will discuss them in [Section: Upload Attestations](#upload-attestations).
 
 #### Important Notes
 
-One key difference between the Action and reusable workflow is isolation. The SRW runs on a different VM than the TRW; and the TRW runs on a different VM from the PW. This means that the artifact built by the TCA (which is managed by the SRW) is not accessible directly by the TRW. The SRW needs to share these files with the TRW; which may also share them with the PW. We will see in the following sections how to do that. The [TRW outputs](https://github.com/laurentsimon/byob-doc/tree/v0.0.1/.github/workflows/builder_example_slsa3.yml#L69-L88) provides the metadata necessary to download these files, and we will discuss them in [Section: Upload Attestations](#upload-attestations).
+One key difference between the Action and reusable workflow is isolation. The SRW runs on a different VM than the TRW; and the TRW runs on a different VM from the PW. This means that the artifact built by the TCA (which is managed by the SRW) is not accessible directly by the TRW. The SRW needs to share these files with the TRW; which may also share them with the PW. How to handle this isolation is discussed in [Section: SRW Setup]. The [TRW outputs](https://github.com/laurentsimon/byob-doc/tree/v0.0.1/.github/workflows/builder_example_slsa3.yml#L69-L88) provides the metadata necessary to download these files, and we will discuss them in [Section: Upload Attestations](#upload-attestations).
 
 ### SRW Setup
 
