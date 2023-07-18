@@ -92,7 +92,7 @@ The SLSA Reuseable Workflow (SRW) acts as the build's orchestrator. It calls the
     slsa-token: ${{ needs.slsa-setup.outputs.slsa-token }}
 ```
 
-## Integration Steps
+## Example: Convert a GitHub Action to be SLSA3 Compliant
 
 In this example, we will assume there is an existing [GitHub Action](https://github.com/laurentsimon/byob-doc/tree/v0.0.1/action.yml) which builds an artifact. 
 The Action does the following: 
