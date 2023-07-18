@@ -35,6 +35,37 @@ on:
         required: false
         type: string
         default: ""
+      needs-runfiles:
+        description: >
+          A boolean input that if true will package the artifact's runfiles along with the artifact.
+
+          If this flag is not set, then the artifact itself will be uploaded without any corresponding runfiles
+          that Bazel generates for it during the build process.
+        required: false
+        type: boolean
+        default: false
+      includes-java:
+        description: >
+          A boolean input that if true will add the build flag "--java_runtime_version=myjdk".
+
+          If this flag is not set, then the build process will not be able to generate a JAR that can run
+          standalone through adding the flag --singlejar on the run script for the JAR that is also generated.
+        required: false
+        type: boolean
+        default: false
+      user-java-distribution:
+        description: The Java distribution to setup to build artifacts with.
+        default: "oracle"
+        type: string
+        required: false
+      user-java-version:
+        description: >
+          The Java version to setup to build artifacts with.
+
+          Supports major versions 8, 11, 16, 17, and other versions also.
+        default: "17"
+        type: string
+        required: false
 
     outputs:
       provenance-download-name:
