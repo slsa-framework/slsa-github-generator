@@ -16,7 +16,6 @@
 
 set -euo pipefail
 
-# TODO(Issue #2331): switch copy to binaries to a temp dir
 mkdir bazel_builder_binaries_to_upload_to_gh
 
 # Transfer flags and targets to their respective arrays
@@ -102,7 +101,7 @@ for curr_target in "${!targets_set[@]}"; do
     # Get the absolute path to output of Java JAR artifact.
     bazel_generated=$(bazel cquery --output=starlark --starlark:expr="'\n'.join([f.path for f in target.files.to_list()])" "$curr_target" 2>/dev/null)
 
-    # Copy JAR to artifact-specific dir in ./binaries and remove symbolic links.
+    # Copy JAR to artifact-specific dir in ./bazel_builder_binaries_to_upload_to_gh and remove symbolic links.
     file="$bazel_generated"
     cp -Lr "$file" "./bazel_builder_binaries_to_upload_to_gh/$run_script_name"
     
