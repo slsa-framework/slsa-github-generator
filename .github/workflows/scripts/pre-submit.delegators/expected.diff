@@ -6,13 +6,13 @@
 > # GITHUB_TOKEN permissions from end-users.
 > 
 > name: SLSA low-permission builder delegator
-77a82
+76a81
 > 
-106c111
+105c110
 <           slsa-workflow-recipient: "delegator_generic_slsa3.yml"
 ---
 >           slsa-workflow-recipient: "delegator_lowperms-generic_slsa3.yml"
-138,140c143
+137,139c142
 <       # TODO(#2076): Use dynamic GITHUB_TOKEN permissions.
 <       contents: write # To release assets.
 <       packages: write # To publish to GitHub packages.
