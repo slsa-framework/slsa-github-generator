@@ -208,6 +208,18 @@ func TestParseSubjects(t *testing.T) {
 	}
 }
 
+func createTmpFile(content string) (string, error) {
+	file, err := os.CreateTemp(".", "test-")
+	if err != nil {
+		return "", err
+	}
+	defer file.Close()
+	if _, err := file.Write([]byte(content)); err != nil {
+		return "", err
+	}
+	return file.Name(), nil
+}
+
 // Test_attestCmd tests the attest command.
 func Test_attestCmd_default_single_artifact(t *testing.T) {
 	t.Setenv("GITHUB_CONTEXT", "{}")
@@ -231,10 +243,15 @@ func Test_attestCmd_default_single_artifact(t *testing.T) {
 		}
 	}()
 
+	fn, err := createTmpFile(base64.StdEncoding.EncodeToString([]byte(testHash)))
+	if err != nil {
+		t.Errorf("unexpected failure: %v", err)
+	}
+	defer os.Remove(fn)
 	c := attestCmd(&slsa.NilClientProvider{}, checkTest(t), &testutil.TestSigner{}, &testutil.TestTransparencyLog{})
 	c.SetOut(new(bytes.Buffer))
 	c.SetArgs([]string{
-		"--subjects", base64.StdEncoding.EncodeToString([]byte(testHash)),
+		"--subjects-filename", fn,
 	})
 	if err := c.Execute(); err != nil {
 		t.Errorf("unexpected failure: %v", err)
@@ -268,12 +285,17 @@ func Test_attestCmd_default_multi_artifact(t *testing.T) {
 		}
 	}()
 
+	fn, err := createTmpFile(base64.StdEncoding.EncodeToString([]byte(
+		`b5bb9d8014a0f9b1d61e21e796d78dccdf1352f23cd32812f4850b878ae4944c  artifact1
+b5bb9d8014a0f9b1d61e21e796d78dccdf1352f23cd32812f4850b878ae4944c  artifact2`)))
+	if err != nil {
+		t.Errorf("unexpected failure: %v", err)
+	}
+	defer os.Remove(fn)
 	c := attestCmd(&slsa.NilClientProvider{}, checkTest(t), &testutil.TestSigner{}, &testutil.TestTransparencyLog{})
 	c.SetOut(new(bytes.Buffer))
 	c.SetArgs([]string{
-		"--subjects", base64.StdEncoding.EncodeToString([]byte(
-			`b5bb9d8014a0f9b1d61e21e796d78dccdf1352f23cd32812f4850b878ae4944c  artifact1
-b5bb9d8014a0f9b1d61e21e796d78dccdf1352f23cd32812f4850b878ae4944c  artifact2`)),
+		"--subjects-filename", fn,
 	})
 	if err := c.Execute(); err != nil {
 		t.Errorf("unexpected failure: %v", err)
@@ -307,10 +329,15 @@ func Test_attestCmd_custom_provenance_name(t *testing.T) {
 		}
 	}()
 
+	fn, err := createTmpFile(base64.StdEncoding.EncodeToString([]byte(testHash)))
+	if err != nil {
+		t.Errorf("unexpected failure: %v", err)
+	}
+	defer os.Remove(fn)
 	c := attestCmd(&slsa.NilClientProvider{}, checkTest(t), &testutil.TestSigner{}, &testutil.TestTransparencyLog{})
 	c.SetOut(new(bytes.Buffer))
 	c.SetArgs([]string{
-		"--subjects", base64.StdEncoding.EncodeToString([]byte(testHash)),
+		"--subjects-filename", fn,
 		"--signature", "custom.intoto.jsonl",
 	})
 	if err := c.Execute(); err != nil {
@@ -357,10 +384,15 @@ func Test_attestCmd_invalid_extension(t *testing.T) {
 		}
 	}
 
+	fn, err := createTmpFile(base64.StdEncoding.EncodeToString([]byte(testHash)))
+	if err != nil {
+		t.Errorf("unexpected failure: %v", err)
+	}
+	defer os.Remove(fn)
 	c := attestCmd(&slsa.NilClientProvider{}, check, &testutil.TestSigner{}, &testutil.TestTransparencyLog{})
 	c.SetOut(new(bytes.Buffer))
 	c.SetArgs([]string{
-		"--subjects", base64.StdEncoding.EncodeToString([]byte(testHash)),
+		"--subjects-filename", fn,
 		"--signature", "invalid_name",
 	})
 	if err := c.Execute(); err != nil {
@@ -405,10 +437,15 @@ func Test_attestCmd_invalid_path(t *testing.T) {
 		}
 	}
 
+	fn, err := createTmpFile(base64.StdEncoding.EncodeToString([]byte(testHash)))
+	if err != nil {
+		t.Errorf("unexpected failure: %v", err)
+	}
+	defer os.Remove(fn)
 	c := attestCmd(&slsa.NilClientProvider{}, check, &testutil.TestSigner{}, &testutil.TestTransparencyLog{})
 	c.SetOut(new(bytes.Buffer))
 	c.SetArgs([]string{
-		"--subjects", base64.StdEncoding.EncodeToString([]byte(testHash)),
+		"--subjects-filename", fn,
 		"--signature", "/provenance.intoto.jsonl",
 	})
 	if err := c.Execute(); err != nil {
@@ -443,10 +480,15 @@ func Test_attestCmd_subdirectory_artifact(t *testing.T) {
 		}
 	}()
 
+	fn, err := createTmpFile(base64.StdEncoding.EncodeToString([]byte(testHash)))
+	if err != nil {
+		t.Errorf("unexpected failure: %v", err)
+	}
+	defer os.Remove(fn)
 	c := attestCmd(&slsa.NilClientProvider{}, checkTest(t), &testutil.TestSigner{}, &testutil.TestTransparencyLog{})
 	c.SetOut(new(bytes.Buffer))
 	c.SetArgs([]string{
-		"--subjects", base64.StdEncoding.EncodeToString([]byte(testHash)),
+		"--subjects-filename", fn,
 	})
 	if err := c.Execute(); err != nil {
 		t.Errorf("unexpected failure: %v", err)

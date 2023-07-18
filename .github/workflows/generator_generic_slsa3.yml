@@ -21,6 +21,7 @@ env:
   # Generator
   BUILDER_BINARY: slsa-generator-generic-linux-amd64 # Name of the binary in the release assets.
   BUILDER_DIR: internal/builders/generic # Source directory if we compile the builder.
+  SUBJECTS_FILENAME: "subjects.sha256sum.base64.231b023dad77ada71cb6fb328090d00a" # Filename containing the subjects. A random value is appended to avoid name collisions.
 
 defaults:
   run:
@@ -31,7 +32,13 @@ on:
     inputs:
       base64-subjects:
         description: "Artifacts for which to generate provenance, formatted the same as the output of sha256sum (SHA256 NAME\\n[...]) and base64 encoded."
-        required: true
+        required: false
+        type: string
+      base64-subjects-as-file:
+        description: >
+          The file 'handle' representing the filename containing the artifacts for which to generate provenance, formatted the same as the output of sha256sum (SHA256 NAME\\n[...]) and base64 encoded. 'actions/generator/generic/create-base64-subjects-from-file'.
+          The handle must be created using Action 'slsa-framework/slsa-github-generator/actions/generator/generic/create-base64-subjects-from-file'.
+        required: false
         type: string
       upload-assets:
         description: >
@@ -145,6 +152,7 @@ jobs:
       outcome: ${{ steps.final.outputs.outcome }}
       provenance-sha256: ${{ steps.sign-prov.outputs.provenance-sha256 }}
       provenance-name: ${{ steps.sign-prov.outputs.provenance-name }}
+      subject-artifact-name: ${{ steps.metadata.outputs.artifact_name }}
     runs-on: ubuntu-latest
     needs: [detect-env]
     permissions:
@@ -165,6 +173,48 @@ jobs:
           directory: "${{ env.BUILDER_DIR }}"
           allow-private-repository: ${{ inputs.private-repository }}
 
+      - name: Extract subjects file metadata
+        id: metadata
+        continue-on-error: true
+        if: inputs.base64-subjects-as-file != ''
+        env:
+          UNTRUSTED_SUBJECTS_AS_FILE: "${{ inputs.base64-subjects-as-file }}"
+        run: |
+          set -euo pipefail
+          obj=$(echo "${UNTRUSTED_SUBJECTS_AS_FILE}" | base64 -d | jq)
+          echo "UNTRUSTED_SUBJECTS_AS_FILE: ${obj}"
+          artifact_name=$(echo "${obj}" | jq -r '.artifact_name')
+          filename=$(echo "${obj}" | jq -r '.filename')
+          sha256=$(echo "${obj}" | jq -r '.sha256')
+
+          # shellcheck disable=SC2129
+          echo "artifact_name=${artifact_name}" >> "$GITHUB_OUTPUT"
+          echo "filename=${filename}" >> "$GITHUB_OUTPUT"
+          echo "sha256=${sha256}" >> "$GITHUB_OUTPUT"
+
+      - name: Download subjects file
+        continue-on-error: true
+        if: inputs.base64-subjects-as-file != ''
+        uses: slsa-framework/slsa-github-generator/.github/actions/secure-download-artifact@main
+        with:
+          name: "${{ steps.metadata.outputs.artifact_name }}"
+          path: "${{ steps.metadata.outputs.filename }}"
+          sha256: "${{ steps.metadata.outputs.sha256 }}"
+
+      - name: Create subject file
+        continue-on-error: true
+        env:
+          UNTRUSTED_SUBJECTS: "${{ inputs.base64-subjects }}"
+          UNTRUSTED_SUBJECTS_FILENAME: "${{ steps.metadata.outputs.filename }}"
+        run: |
+          set -euo pipefail
+          # NOTE: SUBJECTS_FILE is trusted and declared at the top of the file.
+          if [[ -n "${UNTRUSTED_SUBJECTS_FILENAME}" ]]; then
+            mv "${UNTRUSTED_SUBJECTS_FILENAME}" "${SUBJECTS_FILENAME}"
+          else
+            echo "${UNTRUSTED_SUBJECTS}" > "${SUBJECTS_FILENAME}"
+          fi
+
       - name: Create and sign provenance
         id: sign-prov
         continue-on-error: true
@@ -173,7 +223,6 @@ jobs:
         # See: https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions#understanding-the-risk-of-script-injections
         env:
           GITHUB_CONTEXT: "${{ toJSON(github) }}"
-          UNTRUSTED_SUBJECTS: "${{ inputs.base64-subjects }}"
           UNTRUSTED_PROVENANCE_NAME: "${{ inputs.provenance-name }}"
           UNTRUSTED_DEPRECATED_ATTESTATION_NAME: "${{ inputs.attestation-name }}"
         run: |
@@ -195,7 +244,7 @@ jobs:
           # number of subjects based on in-toto attestation bundle file naming conventions.
           # See: https://github.com/in-toto/attestation/blob/main/spec/bundle.md#file-naming-convention
           # NOTE: The attest commmand outputs the provenance-name and provenance-sha256
-          "$GITHUB_WORKSPACE/$BUILDER_BINARY" attest --subjects "${UNTRUSTED_SUBJECTS}" -g "$untrusted_prov_name"
+          "$GITHUB_WORKSPACE/$BUILDER_BINARY" attest --subjects-filename "${SUBJECTS_FILENAME}" -g "$untrusted_prov_name"
 
       - name: Upload the signed provenance
         id: upload-prov
@@ -281,3 +330,6 @@ jobs:
           set -euo pipefail
           echo "outcome=$([ "$SUCCESS" == "true" ] && echo "success" || echo "failure")" >> "$GITHUB_OUTPUT"
           [ "$CONTINUE" == "true" ] || [ "$SUCCESS" == "true" ] || exit 27
+
+  # cleanup deletes internal artifacts used by the generator workflow
+  # TODO(#2382): Delete artifacts ${{ needs.generator.outputs.subject-artifact-name }}

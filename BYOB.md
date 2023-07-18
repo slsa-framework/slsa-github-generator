@@ -11,6 +11,7 @@
     - [SLSA Setup Action (SSA)](#slsa-setup-action-ssa)
     - [SLSA Reusable Workflow (SRW)](#slsa-reusable-workflow-srw)
 - [Integration Steps](#integration-steps)
+  - [Supported Triggers](#supported-triggers)
   - [TRW inputs](#trw-inputs)
     - [Inputs](#inputs)
     - [Secrets](#secrets)
@@ -56,7 +57,7 @@ The example snippet shows the invocation of a builder with path `.github/workflo
 
 ### Tool Repository
 
-The tool repository hosts the builder invoked by PWs. The repository contains two components, the Tool Reuseable Workflow and the Tool Callback Action. 
+The tool repository hosts the builder invoked by PWs. The tool repository MUST be public. The repository contains two components, the Tool Reuseable Workflow and the Tool Callback Action. 
 
 #### Tool Reusable Workflow (TRW)
 
@@ -102,6 +103,29 @@ The Action does the following:
 - Outputs the [name of the built artifact and the status of the build](https://github.com/laurentsimon/byob-doc/tree/v0.0.1/action.yml#L35-L41). 
 
 See the full [action.yml](https://github.com/laurentsimon/byob-doc/tree/v0.0.1/action.yml).
+
+### Before you begin: understand supported triggers
+
+Only the following [event types] are supported as recommended by the [SLSA specifications](https://github.com/slsa-framework/github-actions-buildtypes/tree/main/workflow/v1#description):
+
+| Supported event type  | Event description                          |
+| --------------------- | ------------------------------------------ |
+| [`create`]            | Creation of a git tag or branch.           |
+| [`release`]           | Creation or update of a GitHub release.    |
+| [`push`]              | Creation or update of a git tag or branch. |
+| [`workflow_dispatch`] | Manual trigger of a workflow.              |
+
+`pull_request` events are currently not supported. If you would like support for
+`pull_request`, please tell us about your use case on
+[issue #358](https://github.com/slsa-framework/slsa-github-generator/issues/358). If
+you have an issue related to any other triggers please submit a
+[new issue](https://github.com/slsa-framework/slsa-github-generator/issues/new/choose).
+
+[event types]: https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows
+[`create`]: https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#create
+[`release`]: https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#release
+[`push`]: https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#push
+[`workflow_dispatch`]: https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#workflow_dispatch
 
 ### Step 1: TRW inputs
 
