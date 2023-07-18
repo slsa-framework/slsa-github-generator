@@ -73,7 +73,6 @@ runs:
       id: rng
       uses: slsa-framework/slsa-github-generator/.github/actions/rng@main
 
-    # TODO(#2276): Use secure upload folder Action
     - name: Generate Artifacts
       id: generate-artifacts
       uses: slsa-framework/slsa-github-generator/.github/actions/secure-upload-folder@v1.7.0
