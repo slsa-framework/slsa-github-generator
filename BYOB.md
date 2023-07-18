@@ -121,6 +121,7 @@ you have an issue related to any other triggers please submit a
 [`release`]: https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#release
 [`push`]: https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#push
 [`workflow_dispatch`]: https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#workflow_dispatch
+
 ### TRW inputs
 
 The first step for our integration is to create our TRW file and define its inputs. The inputs should mirror those of the existing Action above that we want to make SLSA compliant.
