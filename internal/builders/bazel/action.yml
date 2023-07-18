@@ -76,7 +76,7 @@ runs:
     # TODO(#2276): Use secure upload folder Action
     - name: Generate Artifacts
       id: generate-artifacts
-      uses: slsa-framework/slsa-github-generator/.github/actions/secure-upload-folder@0e55b76ce421082dfa4b34a6ac3c5e59de0f3bb58 # v1.7.0
+      uses: slsa-framework/slsa-github-generator/.github/actions/secure-upload-folder@main
       with:
         name: "${{ steps.rng.outputs.random }}-binaries"
         path: "/tmp/bazel_builder_binaries_to_upload" # path-to-artifact(s)
