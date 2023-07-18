@@ -38,17 +38,15 @@
 
 ## Design Overview
 
-The Build Your Own Builder (BYOB) framework makes it simple to make an existing GitHub Acton SLSA3 compliant. You delegate orchestration and provenance generation to the BYOB framework. You don't need to be aware of all the complexity around reusable workflows, signing, intoto, Sigstore, or SLSA.
+The Build Your Own Builder (BYOB) framework makes it simple to make an existing GitHub Acton SLSA3 compliant. Instead of handling the complexity around reuseable workflows, signing, intoto, Sigstore, etc, you can simply delegate orchestration and provenance generation to the BYOB framework. 
 
-The diagram below depicts the different components of the BYOB framework.
+The diagram below depicts the different components of the BYOB framework. We'll cover the different portions in our overview. 
 
 ![Screenshot](images/byob-design.png)
 
-The Build Your Own Builder (BYOB) framework makes it simple to make an existing GitHub Acton SLSA3 compliant. By delegating orchestration and provenance generation to the BYOB framework., you need not be aware of reusable workflows, signing, intoto, Sigstore and other shenanigans.
-
 ### Project Workflow (PW)
 
-On the left, the end-user project workflow (PW) is depicted. The PW is hosted in the repository that wants to build an artifact. As part of a build, the PW invokes the SLSA compliant builder defined by the TRW:
+The Project Workflow (PW) is hosted in the repository that wants to build an artifact. As part of a build, the PW invokes the SLSA compliant builder defined by the Tool Reuseable Workflow (TRW):
 
 ```yaml
 - uses: npm/builder/.github/workflows/slsa.3.yml@vx.y.z
@@ -58,23 +56,23 @@ The example snippet shows the invocation of a builder with path `.github/workflo
 
 ### Tool Repository
 
-This is the tool repository hosting the builder invoked by PWs. The repository contains two components:
+The tool repository hosts the builder invoked by PWs. The repository contains two components, the Tool Reuseable Workflow and the Tool Callback Action. 
 
 #### Tool Reusable Workflow (TRW)
 
-The "Tool Reusable Workflow" (TRW) is the SLSA compliant builder that will "wrap" an existing Action. End users' PWs invoke the TRW to build their artifacts. The TRW workflow file must be created as part of the integration.
+The "Tool Reusable Workflow" (TRW) is the SLSA compliant builder that will "wrap" an existing GitHub Action. End users' PWs invoke the TRW to build their artifacts. The TRW workflow file must be created as part of the integration.
 
 #### Tool Callback Action (TCA)
 
-The "Tool Callback Action" (TCA) is the Action that is invoked by the BYOB framework in an isolated GitHub job. The TCA is also hosted in the tool repository. The TCA's role is threefold:
+The "Tool Callback Action" (TCA) is the GitHub Action that is invoked by the BYOB framework in an isolated GitHub job. The TCA does the following:
 
-- Set the environment. For example, if the builder wants to build Go projects, the TCA would install the Go compiler.
-- Call your existing Action. For example, if the builder wants to make the GoReleaser Action SLSA compliant, the TCA would call the existing `goreleaser/goreleaser-action` after it has set up the environment.
-- Output attestation metadata (name, binaries and hashes) that are used by the framework to generate SLSA provenance.
+- Sets the environment. For example, if the builder wants to build Go projects, the TCA would install the Go compiler.
+- Calls your existing GitHub Action. For example, if the builder wants to make the GoReleaser Action SLSA compliant, the TCA would call the existing `goreleaser/goreleaser-action` after it has set up the environment.
+- Outputs attestation metadata (name, binaries and hashes) that are used by the framework to generate SLSA provenance.
 
 ### SLSA GitHub Repository
 
-The [slsa-github-generator](https://github.com/slsa-framework/slsa-github-generator) repository hosts the code for the BYOB framework maintained by the OpenSSF SLSA tooling team. There are two main components you will use for your integration.
+The [slsa-github-generator](https://github.com/slsa-framework/slsa-github-generator) repository hosts the code for the BYOB framework maintained by the OpenSSF SLSA tooling team. There are two main components you will use for your integration, the SLSA Setup Action and the SLSA Reuseable Workflow. 
 
 #### SLSA Setup Action (SSA)
 
@@ -86,7 +84,7 @@ The [setup-generic](https://github.com/slsa-framework/slsa-github-generator/blob
 
 #### SLSA Reusable Workflow (SRW)
 
-The SRW acts as the build's orchestrator. It calls the TCA, generates provenance, and returns the provenance to its TRW caller. A TRW would typically call the SRW as follows:
+The SLSA Reuseable Workflow (SRW) acts as the build's orchestrator. It calls the TCA, generates provenance, and returns the provenance to its TRW caller. A TRW would typically call the SRW as follows:
 
 ```yaml
 - uses: slsa-framework/slsa-github-generator/.github/workflow/delegator_generic_slsa3.yml@v1.8.0
