@@ -11,6 +11,7 @@
     - [SLSA Setup Action (SSA)](#slsa-setup-action-ssa)
     - [SLSA Reusable Workflow (SRW)](#slsa-reusable-workflow-srw)
 - [Integration Steps](#integration-steps)
+  - [Supported Triggers](#supported-triggers)
   - [TRW inputs](#trw-inputs)
     - [Inputs](#inputs)
     - [Secrets](#secrets)
@@ -58,7 +59,7 @@ The example snippet shows the invocation of a builder with path `.github/workflo
 
 ### Tool Repository
 
-This is the tool repository hosting the builder invoked by PWs. The repository contains two components:
+This is the tool repository hosting the builder invoked by PWs. The tool repository MUST be public. The repository contains two components:
 
 #### Tool Reusable Workflow (TRW)
 
@@ -97,6 +98,29 @@ The SRW acts as the build's orchestrator. It calls the TCA, generates provenance
 ## Integration Steps
 
 In this example, we will assume there is an existing [GitHub Action](https://github.com/laurentsimon/byob-doc/tree/v0.0.1/action.yml) which builds an artifact. The Action is fairly simple: it just [echos the parameters into the artifact](https://github.com/laurentsimon/byob-doc/tree/v0.0.1/action.yml#L58). It also takes a [username, password and token](https://github.com/laurentsimon/byob-doc/tree/v0.0.1/action.yml#L31-L34) to retrieve / push information from a remote registry. Like popular release Actions, it [releases the built artifact to GitHub releases](https://github.com/laurentsimon/byob-doc/tree/v0.0.1/action.yml#L67-L78). It outputs the [name of the built artifact and the status of the build](https://github.com/laurentsimon/byob-doc/tree/v0.0.1/action.yml#L35-L41). See the full [action.yml](https://github.com/laurentsimon/byob-doc/tree/v0.0.1/action.yml).
+
+### Supported Triggers
+
+Only the following [event types] are supported as recommended by the [SLSA specifications](https://github.com/slsa-framework/github-actions-buildtypes/tree/main/workflow/v1#description):
+
+| Supported event type  | Event description                          |
+| --------------------- | ------------------------------------------ |
+| [`create`]            | Creation of a git tag or branch.           |
+| [`release`]           | Creation or update of a GitHub release.    |
+| [`push`]              | Creation or update of a git tag or branch. |
+| [`workflow_dispatch`] | Manual trigger of a workflow.              |
+
+`pull_request` events are currently not supported. If you would like support for
+`pull_request`, please tell us about your use case on
+[issue #358](https://github.com/slsa-framework/slsa-github-generator/issues/358). If
+you have an issue related to any other triggers please submit a
+[new issue](https://github.com/slsa-framework/slsa-github-generator/issues/new/choose).
+
+[event types]: https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows
+[`create`]: https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#create
+[`release`]: https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#release
+[`push`]: https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#push
+[`workflow_dispatch`]: https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#workflow_dispatch
 
 ### TRW inputs
 
