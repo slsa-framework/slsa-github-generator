@@ -98,6 +98,33 @@ provenance:
     base64-subjects: "${{ needs.build.outputs.hashes }}"
 ```
 
+The `base64-subjects` input has a maximum length as defined by [ARG_MAX](https://www.in-ulm.de/~mascheck/various/argmax/) on the runner. If you need to attest to a large number of files that exceeds the maximum length, use the `base64-subjects-as-file` input option instead. This option requires that you save the ouput of the sha256sum command into a file:
+
+```shell
+sha256sum artifact1 artifact2 ... | base64 -w0 > large_digests_file.text
+```
+
+The you must then share this file with the generator using the [actions/generator/generic/create-base64-subjects-from-file Action](https://github.com/slsa-framework/slsa-github-generator/tree/main/actions/generator/generic/create-base64-subjects-from-file):
+
+```yaml
+build:
+  outputs:
+    subjects-as-file: ${{ steps.hashes.outputs.handle }}
+  ...
+    uses: slsa-framework/slsa-github-generator/actions/generator/generic/create-base64-subjects-from-file@v1.7.0
+    id: hashes
+    with:
+      path: large_digests_file.text
+provenance:
+  permissions:
+    actions: read # Needed for detection of GitHub Actions environment.
+    id-token: write # Needed for provenance signing and ID
+    contents: write # Needed for release uploads
+  uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.7.0
+  with:
+    base64-subjects-as-file: "${{ needs.build.outputs.subjects-as-file }}"
+```
+
 **Note**: Make sure that you reference the generator with a semantic version of the form `@vX.Y.Z`.
 More information [here](/README.md#referencing-slsa-builders-and-generators).
 

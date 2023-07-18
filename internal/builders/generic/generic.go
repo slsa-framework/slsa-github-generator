@@ -74,10 +74,10 @@ var (
 )
 
 // parseSubjects parses the value given to the subjects option.
-func parseSubjects(b64str string) ([]intoto.Subject, error) {
+func parseSubjects(b64Str string) ([]intoto.Subject, error) {
 	var parsed []intoto.Subject
 
-	subjects, err := base64.StdEncoding.DecodeString(b64str)
+	subjects, err := base64.StdEncoding.DecodeString(b64Str)
 	if err != nil {
 		return nil, fmt.Errorf("%w: error decoding subjects (is it base64 encoded?): %w", errBase64, err)
 	}
