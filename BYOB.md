@@ -151,7 +151,7 @@ Let's go through the parameters:
 - `slsa-workflow-inputs` are the inputs to the TRW, which the provenance will attest to. These inputs are also provided to the TCA by the BYOB framework.
 - `slsa-workflow-masked-inputs` is a list of comma separated field names that are redacted from the generated SLSA provenance. In this example, we're telling the TRW that the username input should be redacted. Any TRW `secrets` are separate from `inputs` and thus are automatically excluded from the provenance.
 
-### SRW Invocation
+### Step 3: SRW Invocation
 
 Once we have initialized the SRW, we [call the SRW](https://github.com/laurentsimon/byob-doc/blob/v0.0.1/.github/workflows/builder_example_slsa3.yml#L96-L108):
 
@@ -173,16 +173,16 @@ slsa-run:
 
 In addition to the token, we also [provide the secrets](https://github.com/laurentsimon/byob-doc/blob/v0.0.1/.github/workflows/builder_example_slsa3.yml#L107-L108). Up to 15 secrets are supported. Secrets are simply passed to the TCA. They are not included in provenance.
 
-### Creating a TCA
+### Step 4: Creating a TCA
 
-The call above will run the SRW and invoke the callback Action, so let's see how to define it now. The Action code is available under [internal/callback_action](https://github.com/laurentsimon/byob-doc/tree/v0.0.1/internal/callback_action/).
+The call that we constructed in [Step 3](#step-3-srw-invocation) will run the SRW and invoke the callback Action, which we will define in this step. The Action code is available under [internal/callback_action](https://github.com/laurentsimon/byob-doc/tree/v0.0.1/internal/callback_action/).
 
 #### Inputs
 
 The inputs to the TCA are [pre-defined](https://github.com/laurentsimon/byob-doc/tree/v0.0.1/internal/callback_action/action.yml#L6-L14), so you just have to follow their definition:
 
-- `slsa-workflow-inputs` contains a JSON object with a list of key-value pairs for the inputs provided by the [TRW to the SSA during initialization](https://github.com/laurentsimon/byob-doc/blob/v0.0.1/.github/workflows/builder_example_slsa3.yml#L93). We will see shortly how to use these values.
-- `slsa-layout-file` is a path to a file where we will write a layout for generating the attestation. We will see shortly how the format for this file.
+- `slsa-workflow-inputs` contains a JSON object with a list of key-value pairs for the inputs provided by the [TRW to the SSA during initialization](https://github.com/laurentsimon/byob-doc/blob/v0.0.1/.github/workflows/builder_example_slsa3.yml#L93). 
+- `slsa-layout-file` is a path to a file where we will write a layout for generating the attestation. 
 - `slsa-workflow-secretX`, where X is the number '1' to '15'. These contain the secrets that the TRW [provides to the SRW during invocation](https://github.com/laurentsimon/byob-doc/blob/v0.0.1/.github/workflows/builder_example_slsa3.yml#L106-L108). Unused secrets [should be clearly marked as unused](https://github.com/laurentsimon/byob-doc/tree/v0.0.1/internal/callback_action/action.yml#L26-L39).
 
 #### Outputs
