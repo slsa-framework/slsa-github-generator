@@ -76,12 +76,10 @@ runs:
     # TODO(#2276): Use secure upload folder Action
     - name: Generate Artifacts
       id: generate-artifacts
-      uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
+      uses: slsa-framework/slsa-github-generator/.github/actions/secure-upload-folder@v1.7.0
       with:
         name: "${{ steps.rng.outputs.random }}-binaries"
-        path: "./binaries" # path-to-artifact(s)
-        if-no-files-found: error
-        retention-days: 5
+        path: "./bazel_builder_binaries_to_upload_to_gh" # path-to-artifact(s)
 
     - name: Echo statement
       id: confirm
