@@ -101,8 +101,26 @@ In this example, we will assume there is an existing [GitHub Action](https://git
 
 ### Supported Triggers
 
-The following triggers are supported: `create`, `release`, `push` and `workflow_dispatch`, as recommended by the [SLSA specifications](https://github.com/slsa-framework/github-actions-buildtypes/tree/main/workflow/v1#description).
+Only the following [event types] are supported as recommended by the [SLSA specifications](https://github.com/slsa-framework/github-actions-buildtypes/tree/main/workflow/v1#description):
 
+| Supported event type  | Event description                          |
+| --------------------- | ------------------------------------------ |
+| [`create`]            | Creation of a git tag or branch.           |
+| [`release`]           | Creation or update of a GitHub release.    |
+| [`push`]              | Creation or update of a git tag or branch. |
+| [`workflow_dispatch`] | Manual trigger of a workflow.              |
+
+`pull_request` events are currently not supported. If you would like support for
+`pull_request`, please tell us about your use case on
+[issue #358](https://github.com/slsa-framework/slsa-github-generator/issues/358). If
+you have an issue related to any other triggers please submit a
+[new issue](https://github.com/slsa-framework/slsa-github-generator/issues/new/choose).
+
+[event types]: https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows
+[`create`]: https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#create
+[`release`]: https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#release
+[`push`]: https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#push
+[`workflow_dispatch`]: https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#workflow_dispatch
 ### TRW inputs
 
 The first step for our integration is to create our TRW file and define its inputs. The inputs should mirror those of the existing Action above that we want to make SLSA compliant.
