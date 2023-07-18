@@ -121,7 +121,7 @@ for curr_target in "${!targets_set[@]}"; do
     awk -v n=127 -v s='' 'NR == n {print s} {print}' "$run_script_path" > temp_file && mv -f temp_file "$run_script_path"
     awk -v n=128 -v s='if [[ -n $USER_JAVA_BIN ]]; then JAVABIN=$USER_JAVA_BIN; fi' 'NR == n {print s} {print}' "$run_script_path" > temp_file && mv -f temp_file "$run_script_path"
 
-    cp -L "$run_script_path" "./binaries/$run_script_name"
+    cp -L "$run_script_path" "/tmp/bazel_builder_binaries_to_upload/$run_script_name"
 
   ################################################
   #                                              #
