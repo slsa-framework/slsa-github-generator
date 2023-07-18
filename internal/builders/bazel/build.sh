@@ -17,7 +17,7 @@
 set -euo pipefail
 
 # TODO(Issue #2331): switch copy to binaries to a temp dir
-mkdir binaries
+mkdir bazel_builder_binaries_to_upload_to_gh
 
 # Transfer flags and targets to their respective arrays
 IFS=' ' read -r -a build_flags <<< "${FLAGS}"
@@ -97,14 +97,14 @@ for curr_target in "${!targets_set[@]}"; do
     run_script_name=$(echo "$binary_name" | awk -F'_deploy.jar' '{print $1}')
 
     # Create dir for artifact and its runfiles
-    mkdir "./binaries/$run_script_name"
+    mkdir "./bazel_builder_binaries_to_upload_to_gh/$run_script_name"
 
     # Get the absolute path to output of Java JAR artifact.
     bazel_generated=$(bazel cquery --output=starlark --starlark:expr="'\n'.join([f.path for f in target.files.to_list()])" "$curr_target" 2>/dev/null)
 
     # Copy JAR to artifact-specific dir in ./binaries and remove symbolic links.
     file="$bazel_generated"
-    cp -Lr "$file" "./binaries/$run_script_name"
+    cp -Lr "$file" "./bazel_builder_binaries_to_upload_to_gh/$run_script_name"
     
     # Get the path the to run-script associated with the {$curr_target}_deploy.jar
     # If the user inputted the path to their local JAVABIN insert that into the run-script to define it.
@@ -121,7 +121,7 @@ for curr_target in "${!targets_set[@]}"; do
     awk -v n=127 -v s='' 'NR == n {print s} {print}' "$run_script_path" > temp_file && mv -f temp_file "$run_script_path"
     awk -v n=128 -v s='if [[ -n $USER_JAVA_BIN ]]; then JAVABIN=$USER_JAVA_BIN; fi' 'NR == n {print s} {print}' "$run_script_path" > temp_file && mv -f temp_file "$run_script_path"
     
-    cp -L "$run_script_path" "./binaries/$run_script_name"
+    cp -L "$run_script_path" "./bazel_builder_binaries_to_upload_to_gh/$run_script_name"
 
   ################################################
   #                                              #
@@ -143,20 +143,20 @@ for curr_target in "${!targets_set[@]}"; do
       bazel_generated=$(bazel cquery --output=starlark --starlark:expr="'\n'.join([f.path for f in target.files.to_list()])" "$curr_target" 2>/dev/null)
 
       # Create dir for artifact and its runfiles
-      mkdir "./binaries/$binary_name"
+      mkdir "./bazel_builder_binaries_to_upload_to_gh/$binary_name"
 
       # Uses a Starlark expression to pass new line seperated list of file(s) into the set of files
       while read -r path_to_artifact; do
 
         # Copy generated artifact from absolute path from bazel cquery
-        cp -L "$path_to_artifact" "./binaries/$binary_name"
+        cp -L "$path_to_artifact" "./bazel_builder_binaries_to_upload_to_gh/$binary_name"
 
         # if runfiles dir exists, copy runfiles into artifact's dir
         if [[ -d "${path_to_artifact}.runfiles" ]]
         then
           path_to_target_runfiles="${path_to_artifact}.runfiles"
-          cp -Lr "$path_to_target_runfiles" "./binaries/$binary_name"
-          cd "./binaries/$binary_name/$binary_name.runfiles/"
+          cp -Lr "$path_to_target_runfiles" "./bazel_builder_binaries_to_upload_to_gh/$binary_name"
+          cd "./bazel_builder_binaries_to_upload_to_gh/$binary_name/$binary_name.runfiles/"
 
           # Unneeded and can contain unwanted symbolic links
           rm -rf _main/external
@@ -179,7 +179,7 @@ for curr_target in "${!targets_set[@]}"; do
       
       # Uses a Starlark expression to pass new line seperated list of file(s) into the set of files
       while read -r file; do
-          cp -L "$file" ./binaries
+          cp -L "$file" ./bazel_builder_binaries_to_upload_to_gh
       done <<< "$bazel_generated"
     fi
   fi
