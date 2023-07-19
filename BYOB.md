@@ -265,7 +265,7 @@ You may want to [return the attestation to the PW](https://github.com/laurentsim
 
 ## PW Integration
 
-TODO: Provide a little context about what you mean by "PW integration"
+<!-- TODO(#2405): Provide a little context about what you mean by "PW integration" -->
 
 ### PW Call
 
