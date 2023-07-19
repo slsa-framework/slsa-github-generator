@@ -323,7 +323,7 @@ The next thing to do is to [_not_ upload the asset to the GitHub release](https:
 
 #### Update TRW
 
-Now we need to download the artifact and publish it from the TRW. To do that, follow the steps:
+Now we need to download the artifact and publish it from the TRW. To do that, follow these steps:
 
 - [Download the artifacts](https://github.com/laurentsimon/byob-doc/tree/v0.0.2/.github/workflows/builder_example_slsa3.yml#L142-L149) uploaded by the TCA.
 - [Publish the artifacts](https://github.com/laurentsimon/byob-doc/tree/v0.0.2/.github/workflows/builder_example_slsa3.yml#L151-L168).
