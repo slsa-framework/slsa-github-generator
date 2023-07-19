@@ -104,6 +104,8 @@ The Action does the following:
 
 See the full [action.yml](https://github.com/laurentsimon/byob-doc/tree/v0.0.1/action.yml).
 
+Some more advanced topics are ommitted for clarity, but can be found in the [Section: Hardening](#hardening). Once you have completed this example and the [provenance example](#provenance-example), we recommend following the steps in [Section: Hardening](#hardening), as it represents best security practice. 
+
 ### Before you begin: understand supported triggers
 
 Only the following [event types] are supported as recommended by the [SLSA specifications](https://github.com/slsa-framework/github-actions-buildtypes/tree/main/workflow/v1#description):
@@ -262,6 +264,8 @@ You may want to [return the attestation to the PW](https://github.com/laurentsim
 
 ## PW Integration
 
+TODO: Provide a little context about what you mean by "PW integration" 
+
 ### PW Call
 
 The PW workflow will call your builder as follows:
@@ -309,7 +313,7 @@ The first thing to do is to use a "low permission SRW". The SRW we used in our o
 
 #### Update TCA
 
-The next thing to do is to [_not_ uploads asset to the GitHub release](https://github.com/laurentsimon/byob-doc/blob/v0.0.1/action.yml#L67-L78) within the existing Action and update the TCA to securely share the built artifacts with the TRW. (The TRW will later be updated to publish the artifacts). To update the TCA:
+The next thing to do is to [_not_ upload the asset to the GitHub release](https://github.com/laurentsimon/byob-doc/blob/v0.0.1/action.yml#L67-L78) within the existing Action and update the TCA to securely share the built artifacts with the TRW. (The TRW will later be updated to publish the artifacts). To update the TCA:
 
 - [Generate a random value](https://github.com/laurentsimon/byob-doc/tree/v0.0.2/internal/callback_action/action.yml#L81-L86) to uniquely name your artifact. This is necessary to avoid name collisions if multiple builders run concurrently. This could be concurrent runs of your builder, or someone else's builder.
 - [Create a folder with all the generated artifacts](https://github.com/laurentsimon/byob-doc/tree/v0.0.2/internal/callback_action/action.yml#L88-L98). In our case, we build a single artifact.
@@ -318,7 +322,7 @@ The next thing to do is to [_not_ uploads asset to the GitHub release](https://g
 
 #### Update TRW
 
-Now we need to download the artifact and publish it from the TRW. Do do that, follow the steps:
+Now we need to download the artifact and publish it from the TRW. To do that, follow the steps:
 
 - [Download the artifacts](https://github.com/laurentsimon/byob-doc/tree/v0.0.2/.github/workflows/builder_example_slsa3.yml#L142-L149) uploaded by the TCA.
 - [Publish the artifacts](https://github.com/laurentsimon/byob-doc/tree/v0.0.2/.github/workflows/builder_example_slsa3.yml#L151-L168).
