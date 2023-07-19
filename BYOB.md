@@ -11,7 +11,7 @@
     - [SLSA Setup Action (SSA)](#slsa-setup-action-ssa)
     - [SLSA Reusable Workflow (SRW)](#slsa-reusable-workflow-srw)
 - [Example: Convert a GitHub Action to be SLSA3 Compliant](#example-convert-a-github-action-to-be-slsa3-compliant)
-  - [Before you begin: understand supported triggers](#supported-triggers)
+  - [Before you begin: understand supported triggers](#before-you-begin-understand-supported-triggers)
   - [Step 1: TRW inputs](#step-1-trw-inputs)
     - [Inputs](#inputs)
     - [Secrets](#secrets)
