@@ -16,6 +16,9 @@
   - [What is SLSA?](#what-is-slsa)
   - [What is provenance?](#what-is-provenance)
   - [What is slsa-github-generator?](#what-is-slsa-github-generator)
+  - [Hall of Fame](#hall-of-fame)
+   - [Generation of Provenance](#generation-of-provenance)
+   - [Builder Creation](#builder-creation)
 - [Roadmap](#roadmap)
 - [Generation of provenance](#generation-of-provenance)
   - [Referencing SLSA builders and generators](#referencing-slsa-builders-and-generators)
@@ -73,10 +76,12 @@ SLSA provenance on GitHub for your projects. The generated provenance meets the
 [provenance generation](https://slsa.dev/spec/v1.0/requirements#provenance-generation)
 and [isolation](https://slsa.dev/spec/v1.0/requirements#isolation-strength)
 requirements for [SLSA Build level 3 and above](https://slsa.dev/spec/v1.0/levels).
+See some [popular projects](#generation-of-provenance) generating provenance using this project.
 - tools for building a SLSA builder on GitHub using the [Build-Your-Own-Builder](#build-your-own-builder) framework. With this framework, you can "wrap" an existing GitHub Action into a SLSA builder. The SLSA builder will generate non-forgeable provenance meeting the
 [provenance generation](https://slsa.dev/spec/v1.0/requirements#provenance-generation)
 and [isolation](https://slsa.dev/spec/v1.0/requirements#isolation-strength)
 requirements for [SLSA Build level 3 and above](https://slsa.dev/spec/v1.0/levels).
+See some [builders](#builder-creation) created using the BYOB framework.
 
 While slsa-github-generator can help you achieve SLSA Build level 3, use of the provided
 [GitHub Actions reusable workflows](https://docs.github.com/en/actions/using-workflows/reusing-workflows)
@@ -85,6 +90,44 @@ Specifically, these workflows do not address provenance
 [distribution](https://slsa.dev/spec/v1.0/distributing-provenance) or
 [verification](https://slsa.dev/spec/v1.0/verifying-artifacts). Those requirements
 must be handled separately to meet SLSA Build level 3+.
+
+### Hall of Fame
+
+#### Generation of Provenance
+
+Below is a non exhaustive list of projects that use the builders in this repository to generate provenance:
+
+1. [flask](https://github.com/pallets/flask) ![flask stars](https://img.shields.io/github/stars/pallets/flask?style=social) 63
+1. [flatbuffers](https://github.com/google/flatbuffers) ![flatbuffers stars](https://img.shields.io/github/stars/google/flatbuffers?style=social) 20.8
+1. [grpc-gateway](https://github.com/grpc-ecosystem/grpc-gateway) ![grpc-gateway stars](https://img.shields.io/github/stars/grpc-ecosystem/grpc-gateway?style=social) 15.7
+1. [click](https://github.com/pallets/click) ![click stars](https://img.shields.io/github/stars/pallets/click?style=social) 14.1
+1. [argo-cd](https://github.com/argoproj/argo-cd) ![argo-cd stars](https://img.shields.io/github/stars/argoproj/argo-cd?style=social) 13.6
+1. [jib](https://github.com/GoogleContainerTools/jib) ![jib stars](https://img.shields.io/github/stars/GoogleContainerTools/jib?style=social) 12.9
+1. [jinja](https://github.com/pallets/jinja) ![jinja stars](https://img.shields.io/github/stars/pallets/jinja?style=social) 9.4
+1. [docker-bench-security](https://github.com/docker/docker-bench-security) ![docker-bench-security stars](https://img.shields.io/github/stars/docker/docker-bench-security?style=social) 8.4
+1. [sentencepiece](https://github.com/google/sentencepiece) ![sentencepiece stars](https://img.shields.io/github/stars/google/sentencepiece?style=social) 7.8
+1. [werkzeug](https://github.com/pallets/werkzeug) ![werkzeug stars](https://img.shields.io/github/stars/pallets/werkzeug?style=social) 6.4
+1. [ko](https://github.com/ko-build/ko) ![ko stars](https://img.shields.io/github/stars/ko-build/ko?style=social) 6.4
+1. [micronaut-core](https://github.com/micronaut-projects/micronaut-core) ![werkzeug stars](https://img.shields.io/github/stars/micronaut-projects/micronaut-core?style=social) 5.8
+1. [kubeedge](https://github.com/kubeedge/kubeedge) ![kubeedge stars](https://img.shields.io/github/stars/kubeedge/kubeedge?style=social) 5.9
+1. [osv-scanner](https://github.com/google/osv-scanner) ![kubeedge stars](https://img.shields.io/github/stars/google/osv-scanner?style=social) 5.2
+1. [flux2](https://github.com/fluxcd/flux2) ![flux2 stars](https://img.shields.io/github/stars/fluxcd/flux2?style=social) 5.1
+1. [kyverno](https://github.com/kyverno/kyverno) ![kyverno stars](https://img.shields.io/github/stars/kyverno/kyverno?style=social) 4.9
+1. [flask-sqlalchemy](https://github.com/pallets-eco/flask-sqlalchemy) ![flask-sqlalchemy stars](https://img.shields.io/github/stars/pallets-eco/flask-sqlalchemy?style=social) 4
+1. [scorecard](https://github.com/ossf/scorecard) ![scorecard stars](https://img.shields.io/github/stars/ossf/scorecard?style=social) 3.6
+1. [urllib3](https://github.com/urllib3/urllib3) ![urllib3 stars](https://img.shields.io/github/stars/urllib3/urllib3?style=social) 3.5
+1. [pdns](https://github.com/PowerDNS/pdns) ![pdns stars](https://img.shields.io/github/stars/PowerDNS/pdns?style=social) 3.1
+1. [powertools-lambda-python](https://github.com/aws-powertools/powertools-lambda-python) ![powertools-lambda-python stars](https://img.shields.io/github/stars/aws-powertools/powertools-lambda-python?style=social) 2.2
+
+
+#### Builder Creation
+
+Several builders have been built using the "Build Your Own Builder" (BYOB):
+
+1. [nodejs builder](https://github.com/slsa-framework/slsa-github-generator/tree/main/internal/builders/nodejs#readme), by @ianlewis
+1. Coming soon! [JReleaser builder](TODO), by @aalmiray
+1. Coming soon! [Maven builder](https://github.com/slsa-framework/slsa-github-generator/blob/main/internal/builders/maven/README.md), by @AdamKorcz
+1. Coming soon! [Gradle builder](https://github.com/slsa-framework/slsa-github-generator/tree/main/internal/builders/gradle/README.md), by @AdamKorcz
 
 ## Roadmap
 
