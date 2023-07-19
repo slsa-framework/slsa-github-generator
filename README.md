@@ -17,8 +17,8 @@
   - [What is provenance?](#what-is-provenance)
   - [What is slsa-github-generator?](#what-is-slsa-github-generator)
   - [Hall of Fame](#hall-of-fame)
-   - [Generation of Provenance](#generation-of-provenance)
-   - [Builder Creation](#builder-creation)
+      - [Generation of Provenance](#generation-of-provenance)
+      - [Builder Creation](#builder-creation)
 - [Roadmap](#roadmap)
 - [Generation of provenance](#generation-of-provenance)
   - [Referencing SLSA builders and generators](#referencing-slsa-builders-and-generators)
@@ -97,27 +97,27 @@ must be handled separately to meet SLSA Build level 3+.
 
 Below is a non exhaustive list of projects that use the builders in this repository to generate provenance:
 
-1. [flask](https://github.com/pallets/flask) ![flask stars](https://img.shields.io/github/stars/pallets/flask?style=social) 63
-1. [flatbuffers](https://github.com/google/flatbuffers) ![flatbuffers stars](https://img.shields.io/github/stars/google/flatbuffers?style=social) 20.8
-1. [grpc-gateway](https://github.com/grpc-ecosystem/grpc-gateway) ![grpc-gateway stars](https://img.shields.io/github/stars/grpc-ecosystem/grpc-gateway?style=social) 15.7
-1. [click](https://github.com/pallets/click) ![click stars](https://img.shields.io/github/stars/pallets/click?style=social) 14.1
-1. [argo-cd](https://github.com/argoproj/argo-cd) ![argo-cd stars](https://img.shields.io/github/stars/argoproj/argo-cd?style=social) 13.6
-1. [jib](https://github.com/GoogleContainerTools/jib) ![jib stars](https://img.shields.io/github/stars/GoogleContainerTools/jib?style=social) 12.9
-1. [jinja](https://github.com/pallets/jinja) ![jinja stars](https://img.shields.io/github/stars/pallets/jinja?style=social) 9.4
-1. [docker-bench-security](https://github.com/docker/docker-bench-security) ![docker-bench-security stars](https://img.shields.io/github/stars/docker/docker-bench-security?style=social) 8.4
-1. [sentencepiece](https://github.com/google/sentencepiece) ![sentencepiece stars](https://img.shields.io/github/stars/google/sentencepiece?style=social) 7.8
-1. [werkzeug](https://github.com/pallets/werkzeug) ![werkzeug stars](https://img.shields.io/github/stars/pallets/werkzeug?style=social) 6.4
-1. [ko](https://github.com/ko-build/ko) ![ko stars](https://img.shields.io/github/stars/ko-build/ko?style=social) 6.4
-1. [micronaut-core](https://github.com/micronaut-projects/micronaut-core) ![werkzeug stars](https://img.shields.io/github/stars/micronaut-projects/micronaut-core?style=social) 5.8
-1. [kubeedge](https://github.com/kubeedge/kubeedge) ![kubeedge stars](https://img.shields.io/github/stars/kubeedge/kubeedge?style=social) 5.9
-1. [osv-scanner](https://github.com/google/osv-scanner) ![kubeedge stars](https://img.shields.io/github/stars/google/osv-scanner?style=social) 5.2
-1. [flux2](https://github.com/fluxcd/flux2) ![flux2 stars](https://img.shields.io/github/stars/fluxcd/flux2?style=social) 5.1
-1. [kyverno](https://github.com/kyverno/kyverno) ![kyverno stars](https://img.shields.io/github/stars/kyverno/kyverno?style=social) 4.9
-1. [flask-sqlalchemy](https://github.com/pallets-eco/flask-sqlalchemy) ![flask-sqlalchemy stars](https://img.shields.io/github/stars/pallets-eco/flask-sqlalchemy?style=social) 4
-1. [scorecard](https://github.com/ossf/scorecard) ![scorecard stars](https://img.shields.io/github/stars/ossf/scorecard?style=social) 3.6
-1. [urllib3](https://github.com/urllib3/urllib3) ![urllib3 stars](https://img.shields.io/github/stars/urllib3/urllib3?style=social) 3.5
-1. [pdns](https://github.com/PowerDNS/pdns) ![pdns stars](https://img.shields.io/github/stars/PowerDNS/pdns?style=social) 3.1
-1. [powertools-lambda-python](https://github.com/aws-powertools/powertools-lambda-python) ![powertools-lambda-python stars](https://img.shields.io/github/stars/aws-powertools/powertools-lambda-python?style=social) 2.2
+1. [flask](https://github.com/pallets/flask) ![flask stars](https://img.shields.io/github/stars/pallets/flask)
+1. [flatbuffers](https://github.com/google/flatbuffers) ![flatbuffers stars](https://img.shields.io/github/stars/google/flatbuffers)
+1. [grpc-gateway](https://github.com/grpc-ecosystem/grpc-gateway) ![grpc-gateway stars](https://img.shields.io/github/stars/grpc-ecosystem/grpc-gateway)
+1. [click](https://github.com/pallets/click) ![click stars](https://img.shields.io/github/stars/pallets/click)
+1. [argo-cd](https://github.com/argoproj/argo-cd) ![argo-cd stars](https://img.shields.io/github/stars/argoproj/argo-cd)
+1. [jib](https://github.com/GoogleContainerTools/jib) ![jib stars](https://img.shields.io/github/stars/GoogleContainerTools/jib)
+1. [jinja](https://github.com/pallets/jinja) ![jinja stars](https://img.shields.io/github/stars/pallets/jinja)
+1. [docker-bench-security](https://github.com/docker/docker-bench-security) ![docker-bench-security stars](https://img.shields.io/github/stars/docker/docker-bench-security)
+1. [sentencepiece](https://github.com/google/sentencepiece) ![sentencepiece stars](https://img.shields.io/github/stars/google/sentencepiece)
+1. [werkzeug](https://github.com/pallets/werkzeug) ![werkzeug stars](https://img.shields.io/github/stars/pallets/werkzeug)
+1. [ko](https://github.com/ko-build/ko) ![ko stars](https://img.shields.io/github/stars/ko-build/ko)
+1. [micronaut-core](https://github.com/micronaut-projects/micronaut-core) ![werkzeug stars](https://img.shields.io/github/stars/micronaut-projects/micronaut-core)
+1. [kubeedge](https://github.com/kubeedge/kubeedge) ![kubeedge stars](https://img.shields.io/github/stars/kubeedge/kubeedge)
+1. [osv-scanner](https://github.com/google/osv-scanner) ![kubeedge stars](https://img.shields.io/github/stars/google/osv-scanner)
+1. [flux2](https://github.com/fluxcd/flux2) ![flux2 stars](https://img.shields.io/github/stars/fluxcd/flux2)
+1. [kyverno](https://github.com/kyverno/kyverno) ![kyverno stars](https://img.shields.io/github/stars/kyverno/kyverno)
+1. [flask-sqlalchemy](https://github.com/pallets-eco/flask-sqlalchemy) ![flask-sqlalchemy stars](https://img.shields.io/github/stars/pallets-eco/flask-sqlalchemy)
+1. [scorecard](https://github.com/ossf/scorecard) ![scorecard stars](https://img.shields.io/github/stars/ossf/scorecard)
+1. [urllib3](https://github.com/urllib3/urllib3) ![urllib3 stars](https://img.shields.io/github/stars/urllib3/urllib3)
+1. [pdns](https://github.com/PowerDNS/pdns) ![pdns stars](https://img.shields.io/github/stars/PowerDNS/pdns)
+1. [powertools-lambda-python](https://github.com/aws-powertools/powertools-lambda-python) ![powertools-lambda-python stars](https://img.shields.io/github/stars/aws-powertools/powertools-lambda-python)
 
 
 #### Builder Creation
