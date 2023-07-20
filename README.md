@@ -105,7 +105,7 @@ Below is a non-exhaustive list of projects that use the builders in this reposit
 Several builders have been built using the "Build Your Own Builder" (BYOB):
 
 1. [nodejs builder](https://github.com/slsa-framework/slsa-github-generator/tree/main/internal/builders/nodejs#readme), by @ianlewis
-1. Coming soon! [JReleaser builder](TODO), by @aalmiray
+1. Coming soon! [JReleaser builder](https://github.com/jreleaser/release-action/tree/java#slsa-builder), by @aalmiray
 1. Coming soon! [Maven builder](https://github.com/slsa-framework/slsa-github-generator/blob/main/internal/builders/maven/README.md), by @AdamKorcz
 1. Coming soon! [Gradle builder](https://github.com/slsa-framework/slsa-github-generator/tree/main/internal/builders/gradle/README.md), by @AdamKorcz
 
