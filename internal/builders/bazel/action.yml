@@ -52,6 +52,9 @@ runs:
       uses: bazelbuild/setup-bazelisk@95c9bf48d0c570bb3e28e57108f3450cd67c1a44 # v2.0.0
 
     - name: Setup Java
+      env:         
+        INCLUDES_JAVA: ${{ fromJson(inputs.slsa-workflow-inputs).includes-java }}
+      if: $INCLUDES_JAVA == true
       id: java
       uses: actions/setup-java@5ffc13f4174014e2d4d4572b3d74c3fa61aeb2c2 # v3.11.0
       with:
@@ -81,19 +84,23 @@ runs:
         DOCKER_IMAGE: ${{ fromJson(inputs.slsa-workflow-inputs).docker-image }}
       shell: bash
       run: |
+        echo "tree of repo"
         tree
         echo " "
         echo " "
         cd ..
-        
+
+        echo "tree of GH context"
         tree
         echo " "
         echo " "
         cd -
-        
+
+        echo "start docker"
         docker pull $DOCKER_IMAGE
         curr_dir=$(pwd)
-        docker run --rm -v $PWD/../:/src -w /src $DOCKER_IMAGE /bin/sh -c "cd $curr_dir && ./../__TOOL_ACTION_DIR__/build.sh"
+        echo $curr_dir
+        docker run --rm -v $PWD/../:/src -w /src $DOCKER_IMAGE /bin/sh -c "tree && ./../__TOOL_ACTION_DIR__/build.sh"
         # docker run --rm -v $PWD/../:/src -w /src $DOCKER_IMAGE ./../__TOOL_ACTION_DIR__/build.sh
       
     - id: build
