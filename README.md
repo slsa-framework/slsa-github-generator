@@ -97,7 +97,7 @@ must be handled separately to meet SLSA Build level 3+.
 
 Below is a non-exhaustive list of projects that use the builders in this repository to generate provenance:
 
-1. [flask](https://github.com/pallets/flask) ![flask stars](https://img.shields.io/github/stars/pallets/flask)
+1. [![flask stars](https://img.shields.io/github/stars/pallets/flask?logo=github&label=pallets/flask)](https://github.com/pallets/flask)
 1. [flatbuffers](https://github.com/google/flatbuffers) ![flatbuffers stars](https://img.shields.io/github/stars/google/flatbuffers)
 1. [grpc-gateway](https://github.com/grpc-ecosystem/grpc-gateway) ![grpc-gateway stars](https://img.shields.io/github/stars/grpc-ecosystem/grpc-gateway)
 1. [click](https://github.com/pallets/click) ![click stars](https://img.shields.io/github/stars/pallets/click)
