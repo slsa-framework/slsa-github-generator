@@ -35,6 +35,11 @@ on:
         required: false
         type: string
         default: ""
+      docker-image:
+        description: "Docker Image for build environment to run on"
+        required: false
+        type: string
+        default: ""
       needs-runfiles:
         description: >
           A boolean input that if true will package the artifact's runfiles along with the artifact.
