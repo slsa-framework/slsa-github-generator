@@ -92,7 +92,8 @@ runs:
         cd -
         
         docker pull $DOCKER_IMAGE
-        docker run --rm -v $PWD/../:/src -w /src $DOCKER_IMAGE /bin/sh -c "tree && echo ' ' && echo ' ' && cd .. && tree && echo ' ' && echo ' ' cd -"
+        curr_dir=$(pwd)
+        docker run --rm -v $PWD/../:/src -w /src $DOCKER_IMAGE /bin/sh -c "cd $curr_dir && ./../__TOOL_ACTION_DIR__/build.sh"
         # docker run --rm -v $PWD/../:/src -w /src $DOCKER_IMAGE ./../__TOOL_ACTION_DIR__/build.sh
       
     - id: build
