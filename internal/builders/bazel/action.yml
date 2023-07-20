@@ -93,7 +93,7 @@ runs:
         
         docker pull $DOCKER_IMAGE
         docker run --rm -v $PWD:/src -w /src $DOCKER_IMAGE /bin/sh -c "tree && echo ' ' && echo ' ' && cd .. && tree && echo ' ' && echo ' ' cd -"
-        # docker run --rm -v $PWD:/src -w /src $DOCKER_IMAGE ./../__TOOL_ACTION_DIR__/build.sh
+        # docker run --rm -v $PWD/../:/src -w /src $DOCKER_IMAGE ./../__TOOL_ACTION_DIR__/build.sh
       
     - id: build
       if: env.USE_DOCKER == 'false'
