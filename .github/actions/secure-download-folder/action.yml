@@ -63,6 +63,7 @@ runs:
         echo "computed hash is ${UNTRUSTED_COMPUTED_HASH}"
         if [[ "${UNTRUSTED_COMPUTED_HASH}" != "${UNTRUSTED_EXPECTED_HASH}" ]]; then
           echo "hashes do not match"
+          rm -rf "${TRUSTED_FOLDER}"
           exit -2
         fi
         echo "hashes match"
