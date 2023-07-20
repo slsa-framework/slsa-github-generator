@@ -19,11 +19,11 @@ set -euo pipefail
 # "version" and "attestations" fields:
 echo -e -n "{\n  \"version\": 1,\n  \"attestations\": [" >> "$SLSA_OUTPUTS_ARTIFACTS_FILE"
 
-num_binary_files=$(find ./bazel_builder_binaries_to_upload_to_gh -type f | wc -l)
+num_binary_files=$(find ./bazel_builder_binaries_to_upload_to_gh_7bc972367cb286b7f36ab4457f06e369 -type f | wc -l)
 counter=1
 
 # Add one attestation per binary:
-find ./bazel_builder_binaries_to_upload_to_gh -type f -print0 | while read -r -d $'\0' fname
+find ./bazel_builder_binaries_to_upload_to_gh_7bc972367cb286b7f36ab4457f06e369 -type f -print0 | while read -r -d $'\0' fname
 do
     bn=$(basename -- "$fname")
     hash=$(sha256sum "$fname" | awk '{print $1}')
