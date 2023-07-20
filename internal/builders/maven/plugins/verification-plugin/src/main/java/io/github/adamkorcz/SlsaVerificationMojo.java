@@ -58,8 +58,8 @@ public class SlsaVerificationMojo extends AbstractMojo {
     /**
       * Custom path of GOHOME, default value is $HOME/go
     **/
-    @Parameter(property = "slsa.gohome")
-    private String gohome;
+    @Parameter(property = "slsa.verifier.path", required = true)
+    private String verifierPath;
 
     @Component
     private MavenSession mavenSession;
@@ -69,39 +69,6 @@ public class SlsaVerificationMojo extends AbstractMojo {
 
 
     public void execute() throws MojoExecutionException, MojoFailureException {
-        // Check Go Home directory
-        if ((gohome == null) || gohome.equals("")) {
-          gohome = System.getProperty("user.home") + "/go";
-        }
-        if (!(new File(gohome + "/bin")).exists()) {
-            getLog().info("Skipping slsa verification: Golang not installed or GOHOME not set properly.");
-            return;
-        }
-
-        // Install slsa verifier with go
-        try {
-            executeMojo(
-                plugin(
-                    groupId("org.codehaus.mojo"),
-                    artifactId("exec-maven-plugin"),
-                    version("3.1.0")
-                ),
-                goal("exec"),
-                configuration(
-                    element(name("executable"), "go"),
-                    element(name("commandlineArgs"), "install github.com/slsa-framework/slsa-verifier/v2/cli/slsa-verifier@latest")
-                ),
-                executionEnvironment(
-                    project,
-                    mavenSession,
-                    pluginManager
-                )
-            );
-        } catch(MojoExecutionException e) {
-            getLog().info("Skipping slsa verification: Fail to retrieve slsa-verifier.");
-            return;
-        }
-
         // Verify the slsa of each dependency
         Set<Artifact> dependencyArtifacts = project.getDependencyArtifacts();
         for (Artifact artifact : dependencyArtifacts ) {
@@ -158,8 +125,9 @@ public class SlsaVerificationMojo extends AbstractMojo {
             try {
                 // Run slsa verification on the artifact and print the result
                 // It will never fail the build process
+                // This might be prone to command-injections. TODO: Secure against that. 
                 String arguments = "verify-artifact --provenance-path ";
-                arguments += "${project.build.directory}/slsa/" + artifact.getArtifactId() + "-" + artifact.getVersion() + "-jar.build.slsa ";
+                arguments += "${project.build.directory}/slsa/" + artifact.getArtifactId() + "-" + artifact.getVersion() + "-jar.intoto.build.slsa ";
                 arguments += " --source-uri ./ ${project.build.directory}/slsa/" + artifact.getArtifactId() + "-" + artifact.getVersion() + ".jar";
                 executeMojo(
                     plugin(
@@ -169,7 +137,7 @@ public class SlsaVerificationMojo extends AbstractMojo {
                     ),
                     goal("exec"),
                     configuration(
-                        element(name("executable"), gohome + "/bin/slsa-verifier"),
+                        element(name("executable"), verifierPath),
                         element(name("commandlineArgs"), arguments),
                         element(name("useMavenLogger"), "true")
                     ),
