@@ -100,7 +100,8 @@ This release includes bug fixes and new features.
 
 ### 1.8.0: Node.js Builder
 
-- **Fixed**: Publishing for non-scoped packages was fixed (See #2359)
+- **Fixed**: Publishing for non-scoped packages was fixed (See
+  [#2359](https://github.com/slsa-framework/slsa-github-generator/issues/2359))
 - **Fixed**: Documentation was updated to clarify that the GitHub Actions
   `deployment` event is not supported.
 - **Changed**: The file extension for the generated provenance file was changed
