@@ -90,10 +90,12 @@ duplication."
 
 ## 1.8.0
 
+This release includes bug fixes and new features.
+
 ### 1.8.0: Generic Generator
 
 - **Added**: A new
-  [`base64-subjects-as-file`](https://github.com/laurentsimon/slsa-github-generator/blob/v1.8.0/internal/builders/generic/README.md#workflow-inputs)
+  [`base64-subjects-as-file`](https://github.com/slsa-framework/slsa-github-generator/blob/v1.8.0/internal/builders/generic/README.md#workflow-inputs)
   was added to allow for specifying a large subject list.
 
 ### 1.8.0: Node.js Builder
