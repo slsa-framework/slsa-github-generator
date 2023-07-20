@@ -9,7 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- toc -->
 
-- [Unreleased](#unreleased)
+- [1.8.0](#180)
+  - [1.8.0: Generic Generator](#180-generic-generator)
+  - [1.8.0: Node.js Builder](#180-nodejs-builder)
 - [1.7.0](#170)
   - [1.7.0: Go builder](#170-go-builder)
 - [v1.6.0](#v160)
@@ -79,8 +81,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- tocstop -->
 
-## Unreleased
-
 <!--
 Information on the next release will be added here.
 
@@ -88,9 +88,35 @@ Use the format "X.Y.Z: Go builder" etc. for format headers to avoid header name
 duplication."
 -->
 
+## 1.8.0
+
+This release includes bug fixes and new features.
+
+### 1.8.0: Generic Generator
+
+- **Added**: A new
+  [`base64-subjects-as-file`](https://github.com/slsa-framework/slsa-github-generator/blob/v1.8.0/internal/builders/generic/README.md#workflow-inputs)
+  was added to allow for specifying a large subject list.
+
+### 1.8.0: Node.js Builder
+
+- **Fixed**: Publishing for non-scoped packages was fixed (See
+  [#2359](https://github.com/slsa-framework/slsa-github-generator/issues/2359))
+- **Fixed**: Documentation was updated to clarify that the GitHub Actions
+  `deployment` event is not supported.
+- **Changed**: The file extension for the generated provenance file was changed
+  from `.sigstore` to `.build.slsa` in order to make it easier to identify
+  provenance files regardless of file format.
+- **Fixed**: The publish action was fixed to address an issue with the package
+  name when using Node 16.
+
 ## 1.7.0
 
-This release includes the first beta release of the [Container-based builder](https://github.com/slsa-framework/slsa-github-generator/tree/v1.7.0/internal/builders/docker). The Container-based builder provides a GitHub Actions reusable workflow that can be used to invoke a container image with a user-specified command to generate an artifact and SLSA Build L3 compliant provenance.
+This release includes the first beta release of the
+[Container-based builder](https://github.com/slsa-framework/slsa-github-generator/tree/v1.7.0/internal/builders/docker).
+The Container-based builder provides a GitHub Actions reusable workflow that can
+be used to invoke a container image with a user-specified command to generate an
+artifact and SLSA Build L3 compliant provenance.
 
 ### 1.7.0: Go builder
 
