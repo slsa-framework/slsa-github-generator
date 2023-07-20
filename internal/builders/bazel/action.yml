@@ -81,8 +81,8 @@ runs:
         DOCKER_IMAGE: ${{ fromJson(inputs.slsa-workflow-inputs).docker-image }}
       shell: bash
       run: |
-        docker pull "{$DOCKER_IMAGE}"
-        docker run -rm -v $PWD:/src -w /src "{$DOCKER_IMAGE}" ./../__TOOL_ACTION_DIR__/build.sh
+        docker pull $DOCKER_IMAGE
+        docker run -rm -v $PWD:/src -w /src $DOCKER_IMAGE ./../__TOOL_ACTION_DIR__/build.sh
       
     - id: build
       if: env.USE_DOCKER == 'false'
