@@ -195,7 +195,7 @@ jobs:
       - name: Download subjects file
         continue-on-error: true
         if: inputs.base64-subjects-as-file != ''
-        uses: slsa-framework/slsa-github-generator/.github/actions/secure-download-artifact@main
+        uses: slsa-framework/slsa-github-generator/.github/actions/secure-download-artifact@v1.8.0-rc.0
         with:
           name: "${{ steps.metadata.outputs.artifact_name }}"
           path: "${{ steps.metadata.outputs.filename }}"
