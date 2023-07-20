@@ -88,9 +88,11 @@ Use the format "X.Y.Z: Go builder" etc. for format headers to avoid header name
 duplication."
 -->
 
-## [1.8.0]
+## 1.8.0
 
-This release includes bug fixes and new features.
+Release [1.8.0] includes bug fixes and new features.
+
+See the [full change list](https://github.com/slsa-framework/slsa-github-generator/compare/v1.7.0...v1.8.0).
 
 ### 1.8.0: Generic Generator
 
