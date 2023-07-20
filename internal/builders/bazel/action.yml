@@ -78,7 +78,7 @@ runs:
       uses: slsa-framework/slsa-github-generator/.github/actions/secure-upload-folder@v1.7.0
       with:
         name: "${{ steps.rng.outputs.random }}-binaries"
-        path: "./bazel_builder_binaries_to_upload_to_gh" # path-to-artifact(s)
+        path: "./bazel_builder_binaries_to_upload_to_gh_7bc972367cb286b7f36ab4457f06e369" # path-to-artifact(s)
 
     - name: Echo statement
       id: confirm
