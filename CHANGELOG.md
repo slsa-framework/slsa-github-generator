@@ -9,7 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- toc -->
 
-- [Unreleased](#unreleased)
+- [1.8.0](#180)
+  - [1.8.0: Generic Generator](#180-generic-generator)
+  - [1.8.0: Node.js Builder](#180-nodejs-builder)
 - [1.7.0](#170)
   - [1.7.0: Go builder](#170-go-builder)
 - [v1.6.0](#v160)
