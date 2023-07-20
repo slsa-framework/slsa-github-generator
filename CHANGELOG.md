@@ -88,19 +88,19 @@ Use the format "X.Y.Z: Go builder" etc. for format headers to avoid header name
 duplication."
 -->
 
-## 1.8.0
+## v1.8.0
 
-Release [1.8.0] includes bug fixes and new features.
+Release [v1.8.0] includes bug fixes and new features.
 
 See the [full change list](https://github.com/slsa-framework/slsa-github-generator/compare/v1.7.0...v1.8.0).
 
-### 1.8.0: Generic Generator
+### v1.8.0: Generic Generator
 
 - **Added**: A new
   [`base64-subjects-as-file`](https://github.com/slsa-framework/slsa-github-generator/blob/v1.8.0/internal/builders/generic/README.md#workflow-inputs)
   was added to allow for specifying a large subject list.
 
-### 1.8.0: Node.js Builder (beta)
+### v1.8.0: Node.js Builder (beta)
 
 - **Fixed**: Publishing for non-scoped packages was fixed (See
   [#2359](https://github.com/slsa-framework/slsa-github-generator/issues/2359))
@@ -112,7 +112,7 @@ See the [full change list](https://github.com/slsa-framework/slsa-github-generat
 - **Fixed**: The publish action was fixed to address an issue with the package
   name when using Node 16.
 
-## 1.7.0
+## v1.7.0
 
 This release includes the first beta release of the
 [Container-based builder](https://github.com/slsa-framework/slsa-github-generator/tree/v1.7.0/internal/builders/docker).
@@ -120,7 +120,7 @@ The Container-based builder provides a GitHub Actions reusable workflow that can
 be used to invoke a container image with a user-specified command to generate an
 artifact and SLSA Build L3 compliant provenance.
 
-### 1.7.0: Go builder
+### v1.7.0: Go builder
 
 - **Added**: A new
   [go-version-file](https://github.com/slsa-framework/slsa-github-generator/blob/main/internal/builders/go/README.md#workflow-inputs)
@@ -455,4 +455,4 @@ To learn how to use it, see [./README.md#golang-projects](https://github.com/sls
 
 @asraa @ianlewis @MarkLodato @joshuagl @laurentsimon
 
-[1.8.0]: https://github.com/slsa-framework/slsa-github-generator/releases/tag/v1.8.0
+[v1.8.0]: https://github.com/slsa-framework/slsa-github-generator/releases/tag/v1.8.0
