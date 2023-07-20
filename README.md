@@ -95,7 +95,7 @@ must be handled separately to meet SLSA Build level 3+.
 
 #### Generation of Provenance
 
-Below is a non exhaustive list of projects that use the builders in this repository to generate provenance:
+Below is a non-exhaustive list of projects that use the builders in this repository to generate provenance:
 
 1. [flask](https://github.com/pallets/flask) ![flask stars](https://img.shields.io/github/stars/pallets/flask)
 1. [flatbuffers](https://github.com/google/flatbuffers) ![flatbuffers stars](https://img.shields.io/github/stars/google/flatbuffers)
