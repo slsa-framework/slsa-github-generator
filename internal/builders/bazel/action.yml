@@ -58,7 +58,34 @@ runs:
         distribution: "${{ fromJson(inputs.slsa-workflow-inputs).user-java-distribution }}"
         java-version: "${{ fromJson(inputs.slsa-workflow-inputs).user-java-version }}"
 
+    - name: Check for Docker Image
+      id: docker
+      shell: bash
+      run: |
+        if [[ -z "${{ fromJson(inputs.slsa-workflow-inputs).docker-image }}" ]]
+        then
+          echo "No Docker Image provided. Will build without."
+          echo "USE_DOCKER=false" >> $GITHUB_ENV
+        else
+          echo "Docker image provided. Running build on Docker Image."
+          echo "USE_DOCKER=true" >> $GITHUB_ENV
+        fi
+        
+    - name: Build on Docker Image
+      if: env.USE_DOCKER == 'true'
+      env:
+        TARGETS: ${{ fromJson(inputs.slsa-workflow-inputs).targets }}
+        FLAGS: ${{ fromJson(inputs.slsa-workflow-inputs).flags }}
+        NEEDS_RUNFILES: ${{ fromJson(inputs.slsa-workflow-inputs).needs-runfiles }}
+        INCLUDES_JAVA: ${{ fromJson(inputs.slsa-workflow-inputs).includes-java }}
+        DOCKER_IMAGE: ${{ fromJson(inputs.slsa-workflow-inputs).docker-image }}
+      shell: bash
+      run: |
+        docker pull "{$DOCKER_IMAGE}"
+        docker run -rm -v $PWD:/src -w /src "{$DOCKER_IMAGE}" ./../__TOOL_ACTION_DIR__/build.sh
+      
     - id: build
+      if: env.USE_DOCKER == 'false'
       env:
         TARGETS: ${{ fromJson(inputs.slsa-workflow-inputs).targets }}
         FLAGS: ${{ fromJson(inputs.slsa-workflow-inputs).flags }}
