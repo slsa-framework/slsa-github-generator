@@ -12,6 +12,8 @@ The plugin wraps the [the slsa verifier](https://github.com/slsa-framework/slsa-
 
 To use the plugin you must have Go, Java and Maven installed. It has currently only been tested on Ubuntu.
 
+The plugin requires that the slsa-verifier is already installed on the machine.
+
 ## Development status
 
 The plugin is in its early stages and is not ready for production.
