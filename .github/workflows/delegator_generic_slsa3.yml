@@ -65,8 +65,7 @@ on:
         description: >
           Name of the artifact to download all the attestations.
 
-          When run on a `pull_request` trigger, attestations are not signed and have an ".intoto" extension.
-          When run on other triggers, attestations are signed and have an "intoto.sigstore" extension.
+          Attestations are signed and have an "build.slsa" extension.
         value: ${{ jobs.generate-provenance.outputs.attestations-download-name }}
 
       attestations-download-sha256:
