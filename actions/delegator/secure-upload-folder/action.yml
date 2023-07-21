@@ -34,7 +34,7 @@ runs:
   steps:
     - name: Upload the folder
       id: upload
-      uses: slsa-framework/slsa-github-generator/.github/actions/secure-upload-folder@v1.8.0-rc.0
+      uses: slsa-framework/slsa-github-generator/.github/actions/secure-upload-folder@main
       with:
         name: ${{ inputs.name }}
         path: ${{ inputs.path }}
