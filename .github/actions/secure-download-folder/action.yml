@@ -31,7 +31,7 @@ runs:
   steps:
     - name: Compute a random value
       id: rng
-      uses: slsa-framework/slsa-github-generator/.github/actions/rng@v1.8.0-rc.0
+      uses: slsa-framework/slsa-github-generator/.github/actions/rng@main
 
     - name: Download the artifact
       uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
@@ -41,7 +41,7 @@ runs:
 
     - name: Compute the hash
       id: compute
-      uses: slsa-framework/slsa-github-generator/.github/actions/compute-sha256@v1.8.0-rc.0
+      uses: slsa-framework/slsa-github-generator/.github/actions/compute-sha256@main
       with:
         path: "${{ steps.rng.outputs.random }}/folder.tgz"
 
@@ -63,6 +63,7 @@ runs:
         echo "computed hash is ${UNTRUSTED_COMPUTED_HASH}"
         if [[ "${UNTRUSTED_COMPUTED_HASH}" != "${UNTRUSTED_EXPECTED_HASH}" ]]; then
           echo "hashes do not match"
+          rm -rf "${TRUSTED_FOLDER}"
           exit -2
         fi
         echo "hashes match"

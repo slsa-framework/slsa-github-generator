@@ -46,7 +46,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout the project repository
-        uses: slsa-framework/slsa-github-generator/.github/actions/secure-project-checkout@v1.8.0-rc.0
+        uses: slsa-framework/slsa-github-generator/.github/actions/secure-project-checkout@main
       - name: Set up Java for publishing to Maven Central Repository
         uses: actions/setup-java@5ffc13f4174014e2d4d4572b3d74c3fa61aeb2c2 # v3
         env:
@@ -63,14 +63,14 @@ jobs:
           gpg-passphrase: GPG_KEY_PASS
 
       - name: Download the slsa attestation
-        uses: slsa-framework/slsa-github-generator/.github/actions/secure-download-folder@v1.8.0-rc.0
+        uses: slsa-framework/slsa-github-generator/.github/actions/secure-download-folder@main
         with:
           name: "${{ inputs.provenance-download-name }}"
           path: slsa-attestations
           sha256: "${{ inputs.provenance-download-sha256 }}"
 
       - name: Download the target dir
-        uses: slsa-framework/slsa-github-generator/.github/actions/secure-download-folder@v1.8.0-rc.0
+        uses: slsa-framework/slsa-github-generator/.github/actions/secure-download-folder@main
         with:
           name: target
           path: ./
