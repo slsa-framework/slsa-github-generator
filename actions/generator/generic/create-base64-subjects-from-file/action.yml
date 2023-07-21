@@ -1,0 +1,71 @@
+# Copyright 2023 SLSA Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+name: "Secure subjects file sharing generic generator"
+description: "Create a list of subjects from a file"
+inputs:
+  path:
+    description: 'A path to a file containing the base64-subjects.'
+    required: true
+outputs:
+  handle:
+    description: "Object handle representing the file."
+    value: "${{ steps.object.outputs.base64 }}"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Generate random value
+      id: rng
+      uses: slsa-framework/slsa-github-generator/.github/actions/rng@main
+
+    - name: Generate random name
+      id: name
+      shell: bash
+      env:
+        UNTRUSTED_PATH: "${{ inputs.path }}"
+        RNG: "${{ steps.rng.outputs.random }}"
+      run: |
+        set -euo pipefail
+
+        name=$(basename "${UNTRUSTED_PATH}")
+        if [[ -z "${UNTRUSTED_PATH}" ]]; then
+          echo "error: empty path"
+          exit 1
+        fi
+        echo "artifact_name=${name}-${RNG}" >> "$GITHUB_OUTPUT"
+        echo "filename=${name}" >> "$GITHUB_OUTPUT"
+
+    - name: Upload file
+      id: upload
+      uses: slsa-framework/slsa-github-generator/.github/actions/secure-upload-artifact@main
+      with:
+        name: "${{ steps.name.outputs.artifact_name }}"
+        path: "${{ inputs.path }}"
+
+    - name: Create object
+      id: object
+      shell: bash
+      env:
+        UNTRUSTED_ARTIFACT_NAME: "${{ steps.name.outputs.artifact_name }}"
+        SHA256: "${{ steps.upload.outputs.sha256 }}"
+        UNTRUSTED_FILENAME: "${{ steps.name.outputs.filename }}"
+      run: |
+        set -euo pipefail
+
+        object="{\"artifact_name\": \"${UNTRUSTED_ARTIFACT_NAME}\", \"sha256\": \"${SHA256}\", \"filename\": \"${UNTRUSTED_FILENAME}\"}"
+        echo "$object" | jq
+        base64_object=$(echo "$object" | base64 -w0)
+
+        echo "base64=${base64_object}" >> "$GITHUB_OUTPUT"

@@ -98,6 +98,33 @@ provenance:
     base64-subjects: "${{ needs.build.outputs.hashes }}"
 ```
 
+The `base64-subjects` input has a maximum length as defined by [ARG_MAX](https://www.in-ulm.de/~mascheck/various/argmax/) on the runner. If you need to attest to a large number of files that exceeds the maximum length, use the `base64-subjects-as-file` input option instead. This option requires that you save the ouput of the sha256sum command into a file:
+
+```shell
+sha256sum artifact1 artifact2 ... | base64 -w0 > large_digests_file.text
+```
+
+The you must then share this file with the generator using the [actions/generator/generic/create-base64-subjects-from-file Action](https://github.com/slsa-framework/slsa-github-generator/tree/main/actions/generator/generic/create-base64-subjects-from-file):
+
+```yaml
+build:
+  outputs:
+    subjects-as-file: ${{ steps.hashes.outputs.handle }}
+  ...
+    uses: slsa-framework/slsa-github-generator/actions/generator/generic/create-base64-subjects-from-file@v1.7.0
+    id: hashes
+    with:
+      path: large_digests_file.text
+provenance:
+  permissions:
+    actions: read # Needed for detection of GitHub Actions environment.
+    id-token: write # Needed for provenance signing and ID
+    contents: write # Needed for release uploads
+  uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.7.0
+  with:
+    base64-subjects-as-file: "${{ needs.build.outputs.subjects-as-file }}"
+```
+
 **Note**: Make sure that you reference the generator with a semantic version of the form `@vX.Y.Z`.
 More information [here](/README.md#referencing-slsa-builders-and-generators).
 
@@ -229,16 +256,17 @@ issue](https://github.com/slsa-framework/slsa-github-generator/issues/new/choose
 
 The [generic workflow](https://github.com/slsa-framework/slsa-github-generator/blob/main/.github/workflows/generator_generic_slsa3.yml) accepts the following inputs:
 
-| Name                 | Required | Default                                                                                         | Description                                                                                                                                                                                                                                                      |
-| -------------------- | -------- | ----------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `base64-subjects`    | yes      |                                                                                                 | Artifact(s) for which to generate provenance, formatted the same as the output of sha256sum (SHA256 NAME\n[...]) and base64 encoded. The encoded value should decode to, for example: `90f3f7d6c862883ab9d856563a81ea6466eb1123b55bff11198b4ed0030cac86 foo.zip` |
-| `upload-assets`      | no       | false                                                                                           | If true provenance is uploaded to a GitHub release for new tags.                                                                                                                                                                                                 |
-| `upload-tag-name`    | no       |                                                                                                 | If specified and `upload-assets` is set to true, the provenance will be uploaded to a Github release identified by the tag-name regardless of the triggering event.                                                                                              |
-| `provenance-name`    | no       | "(subject name).intoto.jsonl" if a single subject. "multiple.intoto.json" if multiple subjects. | The artifact name of the signed provenance. The file must have the `intoto.jsonl` extension.                                                                                                                                                                     |
-| `attestation-name`   | no       | "(subject name).intoto.jsonl" if a single subject. "multiple.intoto.json" if multiple subjects. | The artifact name of the signed provenance. The file must have the `intoto.jsonl` extension. DEPRECATED: use `provenance-name` instead.                                                                                                                          |
-| `private-repository` | no       | false                                                                                           | Set to true to opt-in to posting to the public transparency log. Will generate an error if false for private repositories. This input has no effect for public repositories. See [Private Repositories](#private-repositories).                                  |
-| `continue-on-error`  | no       | false                                                                                           | Set to true to ignore errors. This option is useful if you won't want a failure to fail your entire workflow.                                                                                                                                                    |
-| `draft-release`      | no       | false                                                                                           | If true, the release is created as a draft                                                                                                                                                                                                                       |
+| Name                      | Required                                                           | Default                                                                                         | Description                                                                                                                                                                                                                                                                        |
+| ------------------------- | ------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `base64-subjects`         | One of `base64-subjects` or `base64-subjects-as-file` is required. |                                                                                                 | Artifact(s) for which to generate provenance, formatted the same as the output of sha256sum (SHA256 NAME\n[...]) and base64 encoded. The encoded value should decode to, for example: `90f3f7d6c862883ab9d856563a81ea6466eb1123b55bff11198b4ed0030cac86 foo.zip`                   |
+| `base64-subjects-as-file` | One of `base64-subjects` or `base64-subjects-as-file` is required. |                                                                                                 | The name of a artifacts containing formatted subjects as uploaded by the [actions/generator/generic/create-base64-subjects-from-file Action](https://github.com/slsa-framework/slsa-github-generator/tree/main/actions/generator/generic/create-base64-subjects-from-file) action. |
+| `upload-assets`           | no                                                                 | false                                                                                           | If true provenance is uploaded to a GitHub release for new tags.                                                                                                                                                                                                                   |
+| `upload-tag-name`         | no                                                                 |                                                                                                 | If specified and `upload-assets` is set to true, the provenance will be uploaded to a Github release identified by the tag-name regardless of the triggering event.                                                                                                                |
+| `provenance-name`         | no                                                                 | "(subject name).intoto.jsonl" if a single subject. "multiple.intoto.json" if multiple subjects. | The artifact name of the signed provenance. The file must have the `intoto.jsonl` extension.                                                                                                                                                                                       |
+| `attestation-name`        | no                                                                 | "(subject name).intoto.jsonl" if a single subject. "multiple.intoto.json" if multiple subjects. | The artifact name of the signed provenance. The file must have the `intoto.jsonl` extension. DEPRECATED: use `provenance-name` instead.                                                                                                                                            |
+| `private-repository`      | no                                                                 | false                                                                                           | Set to true to opt-in to posting to the public transparency log. Will generate an error if false for private repositories. This input has no effect for public repositories. See [Private Repositories](#private-repositories).                                                    |
+| `continue-on-error`       | no                                                                 | false                                                                                           | Set to true to ignore errors. This option is useful if you won't want a failure to fail your entire workflow.                                                                                                                                                                      |
+| `draft-release`           | no                                                                 | false                                                                                           | If true, the release is created as a draft                                                                                                                                                                                                                                         |
 
 ### Workflow Outputs
 
@@ -459,7 +487,7 @@ generate SLSA3 provenance by updating your existing workflow with the steps indi
 2. Build your project and release it:
 
    ```yaml
-     # project specific build instructions
+   # project specific build instructions
    - name: Build
      run: |
        make build
@@ -467,10 +495,10 @@ generate SLSA3 provenance by updating your existing workflow with the steps indi
    - name: Run JReleaser
      uses: jreleaser/release-action@f2226e009ec9445383677f56482ca3181d649bcc # branch=v2
      with:
-         arguments: full-release
+       arguments: full-release
      env:
-         JRELEASER_PROJECT_VERSION: 1.2.3 # value supplied as input or read from sources
-         JRELEASER_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+       JRELEASER_PROJECT_VERSION: 1.2.3 # value supplied as input or read from sources
+       JRELEASER_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
    ```
 
 3. Add a step to generate the provenance subjects as shown below:
@@ -523,29 +551,29 @@ jobs:
       - name: Run JReleaser
         uses: jreleaser/release-action@f2226e009ec9445383677f56482ca3181d649bcc # branch=v2
         with:
-            arguments: full-release
+          arguments: full-release
         env:
-            JRELEASER_PROJECT_VERSION: 1.2.3 # value supplied as input or read from sources
-            JRELEASER_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          JRELEASER_PROJECT_VERSION: 1.2.3 # value supplied as input or read from sources
+          JRELEASER_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Generate subject
         shell: bash
         id: slsa
         run: |
-            echo "hashes=$(cat out/jreleaser/checksums/checksums_sha256.txt | base64 -w0)" >> "$GITHUB_OUTPUT"
-            echo "tagname=$(grep tagName out/jreleaser/output.properties | awk -F'=' '{print $2}')" >> "$GITHUB_OUTPUT"
+          echo "hashes=$(cat out/jreleaser/checksums/checksums_sha256.txt | base64 -w0)" >> "$GITHUB_OUTPUT"
+          echo "tagname=$(grep tagName out/jreleaser/output.properties | awk -F'=' '{print $2}')" >> "$GITHUB_OUTPUT"
 
   provenance:
-      needs: [release]
-      permissions:
-          actions: read # To read the workflow path.
-          id-token: write # To sign the provenance.
-          contents: write # To add assets to a release.
-      uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.7.0
-      with:
-          base64-subjects: ${{ needs.release.outputs.hashes }}
-          upload-assets: true # upload to a new release
-          upload-tag-name: ${{ needs.release.outputs.tagname }}
+    needs: [release]
+    permissions:
+      actions: read # To read the workflow path.
+      id-token: write # To sign the provenance.
+      contents: write # To add assets to a release.
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.7.0
+    with:
+      base64-subjects: ${{ needs.release.outputs.hashes }}
+      upload-assets: true # upload to a new release
+      upload-tag-name: ${{ needs.release.outputs.tagname }}
 ```
 
 ### Provenance for Bazel
