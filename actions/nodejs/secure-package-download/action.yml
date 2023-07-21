@@ -29,7 +29,7 @@ runs:
   using: "composite"
   steps:
     - name: Download the package
-      uses: slsa-framework/slsa-github-generator/.github/actions/secure-download-artifact@v1.8.0-rc.0
+      uses: slsa-framework/slsa-github-generator/.github/actions/secure-download-artifact@main
       with:
         name: ${{ inputs.name }}
         path: ${{ inputs.path }}
