@@ -103,7 +103,7 @@ runs:
         docker pull $DOCKER_IMAGE
         curr_dir=$(basename "$(pwd)")
         echo $curr_dir
-        docker run --rm --env TARGETS=${TARGETS} FLAGS=${FLAGS} NEEDS_RUNFILES=${NEEDS_RUNFILES} INCLUDES_JAVA=${INCLUDES_JAVA} -v $PWD/../:/src -w /src $DOCKER_IMAGE /bin/sh -c "ls && tree && cd $curr_dir && ls && tree && ./../__TOOL_ACTION_DIR__/build.sh"
+        docker run --rm --env TARGETS=${TARGETS} --env FLAGS=${FLAGS} --env NEEDS_RUNFILES=${NEEDS_RUNFILES} --env INCLUDES_JAVA=${INCLUDES_JAVA} -v $PWD/../:/src -w /src $DOCKER_IMAGE /bin/sh -c "ls && tree && cd $curr_dir && ls && tree && ./../__TOOL_ACTION_DIR__/build.sh"
         # docker run --rm -v $PWD/../:/src -w /src $DOCKER_IMAGE ./../__TOOL_ACTION_DIR__/build.sh
       
     - id: build
