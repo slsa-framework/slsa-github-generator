@@ -142,9 +142,7 @@ requirements for [SLSA Build level 3 and above](https://slsa.dev/spec/v1.0/level
 
 This repository hosts the following builders:
 
-1. [Go Builder SLSA Level 3](internal/builders/go/README.md). **Status**: [available since v1.0.0](https://github.com/slsa-framework/slsa-github-generator/milestone/1).
-   This builder builds and generates provenance for your [Go](https://go.dev/) projects. To use it,
-   follow the [Go builder's README.md](internal/builders/go/README.md).
+1. [Go Builder SLSA Level 3](internal/builders/go/README.md). **Status**: [available since v1.0.0](https://github.com/slsa-framework/slsa-github-generator/milestone/1). This builder builds and generates provenance for your [Go](https://go.dev/) projects. 
 2. [Node.js Builder SLSA Level 3](internal/builders/nodejs/README.md).
    **Status**: [Beta since v1.6.0](https://github.com/slsa-framework/slsa-github-generator/milestone/8).
    [Expected GA release Jun 2023](https://github.com/slsa-framework/slsa-github-generator/milestone/17).
