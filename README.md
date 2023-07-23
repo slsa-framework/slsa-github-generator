@@ -152,7 +152,7 @@ This repository hosts the following builders:
 4. [Maven builder](internal/builders/maven/README.md). **Status**: [Beta since v1.8.0](https://github.com/slsa-framework/slsa-github-generator/milestone/14). This builder builds [Maven](https://maven.apache.org/) packages. The package and its attestations can be uploaded to [Maven central](https://search.maven.org).
 5. [Gradle builder](internal/builders/gradle/README.md). **Status**: [Beta since v1.8.0](https://github.com/slsa-framework/slsa-github-generator/milestone/15). This builder builds [Gradle](https://gradle.org/) projects. The Maven package and its attestations can be uploaded to Maven central.
 5. [Bazel builder](internal/builders/bazel/README.md). **Status**: [WIP](https://github.com/slsa-framework/slsa-github-generator/milestone/16).
-   [Expected beta-release Sept 2023]This builder builds [Bazel](https://bazel.build/) projects.
+   [Expected beta-release Sept 2023](https://github.com/slsa-framework/slsa-github-generator/milestone/16). This builder builds [Bazel](https://bazel.build/) projects.
 7. _Container Builder SLSA Level 3_. **Status**: [WIP](https://github.com/slsa-framework/slsa-github-generator/milestone/5).
    This builder will build your container image and generate provenance. The generated provenance will be compatible with
    [cosign](https://github.com/sigstore/cosign)'s attestation format.
@@ -161,7 +161,7 @@ If you would rather build your project yourself, use the generators instead as e
 
 There are other builders built using this repository's [BYOB framework](#build-your-own-builderld Your Own Builder) and not hosted in this repository:
 
-1. [JReleaser builder](https://github.com/jreleaser/release-action/tree/java#slsa-builder).
+1. [JReleaser builder](https://github.com/jreleaser/release-action/tree/java#slsa-builder). Lets you build and generate provenance using [JReleaser](https://jreleaser.org/).
 
 
 ### Provenance-only generators
