@@ -155,12 +155,11 @@ This repository hosts the following builders:
    This builder builds your container image and generate provenance. The generated provenance is compatible with
    [cosign](https://github.com/sigstore/cosign)'s attestation format.
 
-If you would rather build your project yourself, use the generators instead as explained in the next section.
-
-There are other builders built using this repository's [BYOB framework](#build-your-own-builder) and not hosted in this repository:
+There are other available builders using this repository's [BYOB framework](#build-your-own-builder) and not hosted in this repository:
 
 1. [JReleaser builder](https://github.com/jreleaser/release-action/tree/java#slsa-builder). Lets you build and generate provenance using [JReleaser](https://jreleaser.org/).
 
+If you would rather build your project yourself, use the generators instead as explained in the next section.
 
 ### Provenance-only generators
 
