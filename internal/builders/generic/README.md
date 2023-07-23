@@ -43,7 +43,8 @@ project simply generates provenance as a separate step in an existing workflow.
   - [A single provenance attestation for all artifacts](#a-single-provenance-attestation-for-all-artifacts)
   - [A different attestation for each iteration](#a-different-attestation-for-each-iteration)
 - [Known Issues](#known-issues)
-  - ['internal error' when using using `upload-assets`](#internal-error-when-using-using-upload-assets)
+  - [Skip output 'hashes' since it may contain secret](#skip-output-hashes-since-it-may-contain-secret)
+  - ['internal error' when using `upload-assets`](#internal-error-when-using-upload-assets)
   - [error updating to TUF remote mirror: tuf: invalid key](#error-updating-to-tuf-remote-mirror-tuf-invalid-key)
 
 <!-- tocstop -->
@@ -98,7 +99,7 @@ provenance:
     base64-subjects: "${{ needs.build.outputs.hashes }}"
 ```
 
-The `base64-subjects` input has a maximum length as defined by [ARG_MAX](https://www.in-ulm.de/~mascheck/various/argmax/) on the runner. If you need to attest to a large number of files that exceeds the maximum length, use the `base64-subjects-as-file` input option instead. This option requires that you save the ouput of the sha256sum command into a file:
+The `base64-subjects` input has a maximum length as defined by [ARG_MAX](https://www.in-ulm.de/~mascheck/various/argmax/) on the runner. If you need to attest to a large number of files that exceeds the maximum length, use the `base64-subjects-as-file` input option instead. Another use case for this option is when GitHub Actions runner masks the job output because it detects a secret (see the discussion [here](https://github.com/orgs/community/discussions/37942)). This option requires that you save the output of the sha256sum command into a file:
 
 ```shell
 sha256sum artifact1 artifact2 ... | base64 -w0 > large_digests_file.text
@@ -1406,7 +1407,11 @@ jobs:
 
 ## Known Issues
 
-### 'internal error' when using using `upload-assets`
+### Skip output 'hashes' since it may contain secret
+
+The GitHub Actions runner sometimes masks the job output if it potentially contains a secret. One solution is to use the ``base64-subjects-as-file`` option to pass the artifact hashes using an existing file instead. See the instructions [here](#getting-started) to use the ``base64-subjects-as-file`` option.
+
+### 'internal error' when using `upload-assets`
 
 **Affected versions:** v1.5.0
 
