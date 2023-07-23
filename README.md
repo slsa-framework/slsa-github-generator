@@ -159,7 +159,7 @@ This repository hosts the following builders:
 
 If you would rather build your project yourself, use the generators instead as explained in the next section.
 
-There are other builders built using this repository's [BYOB framework](#build-your-own-builderld Your Own Builder) and not hosted in this repository:
+There are other builders built using this repository's [BYOB framework](#build-your-own-builder) and not hosted in this repository:
 
 1. [JReleaser builder](https://github.com/jreleaser/release-action/tree/java#slsa-builder). Lets you build and generate provenance using [JReleaser](https://jreleaser.org/).
 
