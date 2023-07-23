@@ -104,9 +104,11 @@ Below is a non-exhaustive list of projects that use the builders in this reposit
 Several builders have been built using the "Build Your Own Builder" (BYOB):
 
 1. [nodejs builder](https://github.com/slsa-framework/slsa-github-generator/tree/main/internal/builders/nodejs#readme), by @ianlewis
-2. Coming soon! [JReleaser builder](https://github.com/jreleaser/release-action/tree/java#slsa-builder), by @aalmiray
-3. Coming soon! [Maven builder](https://github.com/slsa-framework/slsa-github-generator/blob/main/internal/builders/maven/README.md), by @AdamKorcz
-4. Coming soon! [Gradle builder](https://github.com/slsa-framework/slsa-github-generator/tree/main/internal/builders/gradle/README.md), by @AdamKorcz
+2. [JReleaser builder](https://github.com/jreleaser/release-action/tree/java#slsa-builder), by @aalmiray
+3. [Maven builder](https://github.com/slsa-framework/slsa-github-generator/blob/main/internal/builders/maven/README.md), by @AdamKorcz
+4. [Gradle builder](https://github.com/slsa-framework/slsa-github-generator/tree/main/internal/builders/gradle/README.md), by @AdamKorcz
+4. Coming soon! [Bazel builder](https://github.com/slsa-framework/slsa-github-generator/tree/main/internal/builders/bazel/README.md), by @enteraga6
+
 
 ## Roadmap
 
@@ -148,12 +150,21 @@ This repository hosts the following builders:
 2. [Node.js Builder SLSA Level 3](internal/builders/nodejs/README.md).
    **Status**: [Beta since v1.6.0](https://github.com/slsa-framework/slsa-github-generator/milestone/8).
    [Expected GA release Jun 2023](https://github.com/slsa-framework/slsa-github-generator/milestone/17).
-3. _Container-based Builder SLSA Level 3_. **Status**: [Beta release since v1.7.0](https://github.com/slsa-framework/slsa-github-generator/milestone/4). This builder will build arbitrary artifacts by executing a user-supplied container image.
-4. _Container Builder SLSA Level 3_. **Status**: [WIP](https://github.com/slsa-framework/slsa-github-generator/milestone/5).
+3. _Container-based Builder SLSA Level 3_. **Status**: [Beta release since v1.7.0](https://github.com/slsa-framework/slsa-github-generator/milestone/4). This builder builds arbitrary artifacts by executing a user-supplied container image.
+4. [Maven](https://maven.apache.org/) builder. **Status**: [Beta since v1.8.0](https://github.com/slsa-framework/slsa-github-generator/milestone/14). This builder builds Maven packages. The package and its attestations can be uploaded to [Maven central](https://search.maven.org).
+5. [Gradle](https://gradle.org/) builder. **Status**: [Beta since v1.8.0](https://github.com/slsa-framework/slsa-github-generator/milestone/15). This builder builds Gradle projects. The Maven package and its attestations can be uploaded to Maven central.
+5. [Bazel](https://bazel.build/) builder. **Status**: [WIP](https://github.com/slsa-framework/slsa-github-generator/milestone/16).
+   [Expected beta-release Sept 2023]This builder builds Bazel projects.
+7. _Container Builder SLSA Level 3_. **Status**: [WIP](https://github.com/slsa-framework/slsa-github-generator/milestone/5).
    This builder will build your container image and generate provenance. The generated provenance will be compatible with
    [cosign](https://github.com/sigstore/cosign)'s attestation format.
 
 If you would rather build your project yourself, use the generators instead as explained in the next section.
+
+There are other builders built using this repository's [BYOB framework](#build-your-own-builderld Your Own Builder) and not hosted in this repository:
+
+1. [JReleaser builder](https://github.com/jreleaser/release-action/tree/java#slsa-builder).
+
 
 ### Provenance-only generators
 
