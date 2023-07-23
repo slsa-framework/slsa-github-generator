@@ -145,14 +145,14 @@ This repository hosts the following builders:
 1. [Go Builder](internal/builders/go/README.md). **Status**: [available since v1.0.0](https://github.com/slsa-framework/slsa-github-generator/milestone/1). This builder builds and generates provenance for your [Go](https://go.dev/) projects. 
 2. [Node.js Builder](internal/builders/nodejs/README.md).
    **Status**: [Beta since v1.6.0](https://github.com/slsa-framework/slsa-github-generator/milestone/8).
-   [Expected GA release Jun 2023](https://github.com/slsa-framework/slsa-github-generator/milestone/17).
+   [Expected GA release Sept 2023](https://github.com/slsa-framework/slsa-github-generator/milestone/17).
 3. [Container-based Builder](internal/builders/docker/README.md). **Status**: [Beta release since v1.7.0](https://github.com/slsa-framework/slsa-github-generator/milestone/4). This builder builds arbitrary artifacts by executing a user-supplied container image.
 4. [Maven builder](internal/builders/maven/README.md). **Status**: [Beta since v1.8.0](https://github.com/slsa-framework/slsa-github-generator/milestone/14). This builder builds [Maven](https://maven.apache.org/) packages. The package and its attestations can be uploaded to [Maven central](https://search.maven.org).
 5. [Gradle builder](internal/builders/gradle/README.md). **Status**: [Beta since v1.8.0](https://github.com/slsa-framework/slsa-github-generator/milestone/15). This builder builds [Gradle](https://gradle.org/) projects. The Maven package and its attestations can be uploaded to Maven central.
 5. [Bazel builder](internal/builders/bazel/README.md). **Status**: [WIP](https://github.com/slsa-framework/slsa-github-generator/milestone/16).
    [Expected beta-release Sept 2023](https://github.com/slsa-framework/slsa-github-generator/milestone/16). This builder builds [Bazel](https://bazel.build/) projects.
-7. _Container Builder SLSA Level 3_. **Status**: [WIP](https://github.com/slsa-framework/slsa-github-generator/milestone/5).
-   This builder will build your container image and generate provenance. The generated provenance will be compatible with
+7. Container Builder. **Status**: [WIP](https://github.com/slsa-framework/slsa-github-generator/milestone/5).
+   This builder builds your container image and generate provenance. The generated provenance is compatible with
    [cosign](https://github.com/sigstore/cosign)'s attestation format.
 
 If you would rather build your project yourself, use the generators instead as explained in the next section.
