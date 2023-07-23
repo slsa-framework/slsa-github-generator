@@ -142,11 +142,11 @@ requirements for [SLSA Build level 3 and above](https://slsa.dev/spec/v1.0/level
 
 This repository hosts the following builders:
 
-1. [Go Builder SLSA Level 3](internal/builders/go/README.md). **Status**: [available since v1.0.0](https://github.com/slsa-framework/slsa-github-generator/milestone/1). This builder builds and generates provenance for your [Go](https://go.dev/) projects. 
-2. [Node.js Builder SLSA Level 3](internal/builders/nodejs/README.md).
+1. [Go Builder](internal/builders/go/README.md). **Status**: [available since v1.0.0](https://github.com/slsa-framework/slsa-github-generator/milestone/1). This builder builds and generates provenance for your [Go](https://go.dev/) projects. 
+2. [Node.js Builder](internal/builders/nodejs/README.md).
    **Status**: [Beta since v1.6.0](https://github.com/slsa-framework/slsa-github-generator/milestone/8).
    [Expected GA release Jun 2023](https://github.com/slsa-framework/slsa-github-generator/milestone/17).
-3. _Container-based Builder SLSA Level 3_. **Status**: [Beta release since v1.7.0](https://github.com/slsa-framework/slsa-github-generator/milestone/4). This builder builds arbitrary artifacts by executing a user-supplied container image.
+3. [Container-based Builder](internal/builders/docker/README.md). **Status**: [Beta release since v1.7.0](https://github.com/slsa-framework/slsa-github-generator/milestone/4). This builder builds arbitrary artifacts by executing a user-supplied container image.
 4. [Maven builder](internal/builders/maven/README.md). **Status**: [Beta since v1.8.0](https://github.com/slsa-framework/slsa-github-generator/milestone/14). This builder builds [Maven](https://maven.apache.org/) packages. The package and its attestations can be uploaded to [Maven central](https://search.maven.org).
 5. [Gradle builder](internal/builders/gradle/README.md). **Status**: [Beta since v1.8.0](https://github.com/slsa-framework/slsa-github-generator/milestone/15). This builder builds [Gradle](https://gradle.org/) projects. The Maven package and its attestations can be uploaded to Maven central.
 5. [Bazel builder](internal/builders/bazel/README.md). **Status**: [WIP](https://github.com/slsa-framework/slsa-github-generator/milestone/16).
