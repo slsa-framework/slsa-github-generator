@@ -82,7 +82,6 @@ jobs:
       actions: read
     uses: slsa-framework/slsa-github-generator/.github/workflows/builder_gradle_slsa3.yml@v1.7.0
     with:
-      rekor-log-public: true
       artifact-list: ./artifact1.jar,./artifact2.jar
 ```
 
@@ -92,15 +91,10 @@ The Gradle builder requires you to specify the artifacts that you wish to attest
 
 ### Private Repositories
 
-Private repositories are supported with some caveats. Currently all builds
-generate and post a new entry in the public
-[Rekor](https://github.com/sigstore/rekor) API server instance at
-https://rekor.sigstore.dev/. This entry includes the repository name. This will cause the
-private repository name to leak and be discoverable via the public Rekor API
-server.
+The builder records all provenance signatures in the [Rekor](https://github.com/sigstore/rekor) public transparency log. 
+This record includes the repository name.
 
-If this is ok with you, you can set the `rekor-log-public` flag in order to
-opt in to publishing to the public Rekor instance from a private repository.
+To acknowledge you're aware that your repository name will be public, set the flag `rekor-log-public: true` when calling the builder:
 
 ```yaml
 with:
