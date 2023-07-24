@@ -75,7 +75,7 @@ on:
 permissions: read-all
 
 jobs:
-  usetrw:
+  build:
     permissions:
       id-token: write
       contents: read
