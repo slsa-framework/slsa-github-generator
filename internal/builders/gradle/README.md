@@ -77,10 +77,10 @@ permissions: read-all
 jobs:
   usetrw:
     permissions:
-      contents: read
       id-token: write
+      contents: read
       actions: read
-    uses: slsa-framework/slsa-github-generator/.github/workflows/builder_gradle_slsa3.yml@main
+    uses: slsa-framework/slsa-github-generator/.github/workflows/builder_gradle_slsa3.yml@v1.7.0
     with:
       rekor-log-public: true
       artifact-list: ./artifact1.jar,./artifact2.jar
