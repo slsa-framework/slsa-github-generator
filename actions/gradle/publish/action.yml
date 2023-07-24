@@ -18,7 +18,6 @@ inputs:
     description: "The JDK version for the action"
     required: true
     type: string
-secrets:
   maven-username:
     description: "Maven username"
     required: true
@@ -32,8 +31,6 @@ secrets:
     description: "gpg-key-pass"
     required: true
 
-on:
-  workflow_call:
 runs:
   using: "composite"
   steps:
