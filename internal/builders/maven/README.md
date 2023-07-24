@@ -81,10 +81,10 @@ env:
 jobs:
   build:
     permissions:
-      contents: write
       id-token: write
+      contents: read
       actions: read
-    uses: slsa-framework/slsa-github-generator/.github/workflows/builder_maven_slsa3.yml@main
+    uses: slsa-framework/slsa-github-generator/.github/workflows/builder_maven_slsa3.yml@v1.7.0
     with:
       rekor-log-public: true
 ```
