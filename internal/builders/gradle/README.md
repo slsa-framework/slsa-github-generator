@@ -92,9 +92,7 @@ The Gradle builder requires you to specify the artifacts that you wish to attest
 ### Private Repositories
 
 The builder records all provenance signatures in the [Rekor](https://github.com/sigstore/rekor) public transparency log. 
-This record includes the repository name.
-
-To acknowledge you're aware that your repository name will be public, set the flag `rekor-log-public: true` when calling the builder:
+This record includes the repository name. To acknowledge you're aware that your repository name will be public, set the flag `rekor-log-public: true` when calling the builder:
 
 ```yaml
 with:
