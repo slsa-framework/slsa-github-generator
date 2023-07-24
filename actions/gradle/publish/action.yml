@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-name: Gradle publisher for Maven Central
+name: Gradle publish Action for Maven Central
 inputs:
   jdk-version:
     description: "The JDK version for the action"
