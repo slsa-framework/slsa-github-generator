@@ -96,12 +96,7 @@ You can also release artifacts to Maven Central by adding the following step to 
 ```yaml
   publish:
     needs: build
-    permissions:
-      contents: write
-      id-token: write
-      actions: read
-      packages: write
-    uses: slsa-framework/slsa-github-generator/.github/workflows/publish_maven.yml@main
+    uses: slsa-framework/slsa-github-generator/.github/workflows/publish_maven.yml@v1.7.0
     with:
       provenance-download-name: "${{ needs.build.outputs.provenance-download-name }}"
       provenance-download-sha256: "${{ needs.build.outputs.provenance-download-sha256 }}"
