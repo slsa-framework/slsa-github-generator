@@ -1,0 +1,72 @@
+# Copyright 2023 SLSA Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+name: Gradle publisher for Maven Central
+inputs:
+  jdk-version:
+    description: "The JDK version for the action"
+    required: true
+    type: string
+secrets:
+  maven-username:
+    description: "Maven username"
+    required: true
+  maven-password:
+    description: "Maven password"
+    required: true
+  gpg-key-pass:
+    description: "gpg-key-pass. Also called 'gpg passphrase'"
+    required: true
+  gpg-private-key:
+    description: "gpg-key-pass"
+    required: true
+
+on:
+  workflow_call:
+runs:
+  using: "composite"
+  steps:
+    - uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
+    - name: Set up JDK
+      uses: actions/setup-java@5ffc13f4174014e2d4d4572b3d74c3fa61aeb2c2 # v3.11.0
+      env:
+        MAVEN_USERNAME: ${{ secrets.maven-username }}
+        MAVEN_PASSWORD: ${{ secrets.maven-password }}
+        GPG_KEY_PASS: ${{ secrets.gpg-key-pass }}
+      with:
+        distribution: temurin
+        java-version: ${{ inputs.jdk-version }}
+        server-id: ossrh
+        server-username: MAVEN_USERNAME
+        server-password: MAVEN_PASSWORD
+        gpg-private-key: ${{ secrets.gpg-private-key }}
+        gpg-passphrase: GPG_KEY_PASS
+    - name: Upload to Maven Central
+      shell: bash
+      env:
+        GPG_PRIVATE_KEY: ${{ secrets.gpg-private-key }}
+        GPG_PASSPHRASE: ${{ secrets.gpg-key-pass }}
+      run: |
+        # The Gradle publisher expect the provenance to exist in "./build/libs/slsa-attestations/"
+        if [ ! -d "./build/libs/slsa-attestations" ]
+        then
+            echo "Could not find ./build/libs/slsa-attestations"
+            echo "./build/libs/slsa-attestations should contain the provenance files"
+            exit 1
+        fi
+        # Import GPG signing key
+        echo "${GPG_PRIVATE_KEY}" | gpg --batch --import --import-options import-show
+        GPG_KEYNAME="$(echo "${GPG_PRIVATE_KEY}" | gpg --batch --show-keys --with-colons | awk -F: '$1 == "sec" { print $5 }')"
+        # Run the gradle publish plugin
+        ./gradlew "-Psigning.gnupg.keyName=${GPG_KEYNAME}" "-Psigning.gnupg.passphrase=${GPG_PASSPHRASE}" -Dorg.gradle.internal.publish.checksums.insecure=true publish --stacktrace
