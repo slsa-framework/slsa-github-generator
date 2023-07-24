@@ -16,14 +16,17 @@
 
 set -euo pipefail
 
+# Long directory name to avoid collisions with user's folder names
+binaries_dir="bazel_builder_binaries_to_upload_to_gh_7bc972367cb286b7f36ab4457f06e369"
+
 # "version" and "attestations" fields:
 echo -e -n "{\n  \"version\": 1,\n  \"attestations\": [" >> "$SLSA_OUTPUTS_ARTIFACTS_FILE"
 
-num_binary_files=$(find ./binaries -type f | wc -l)
+num_binary_files=$(find ./${binaries_dir} -type f | wc -l)
 counter=1
 
 # Add one attestation per binary:
-find ./binaries -type f -print0 | while read -r -d $'\0' fname
+find ./${binaries_dir} -type f -print0 | while read -r -d $'\0' fname
 do
     bn=$(basename -- "$fname")
     hash=$(sha256sum "$fname" | awk '{print $1}')

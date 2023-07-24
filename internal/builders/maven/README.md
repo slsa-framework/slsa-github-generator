@@ -75,9 +75,6 @@ on:
 
 permissions: read-all
 
-env:
-  GH_TOKEN: ${{ github.token }}
-  ISSUE_REPOSITORY: ${{ github.repository }}
 jobs:
   build:
     permissions:

@@ -89,9 +89,6 @@ jobs:
           cd plugin && mvn clean install && cd ..
           # Re-indexing the secondary jar files for deploy
           mvn javadoc:jar source:jar
-          echo "find javadoc"
-          find . -name "*javadoc*"
-          echo "end find javadoc"
           # Retrieve project version
           VERSION=$(mvn org.apache.maven.plugins:maven-help-plugin:3.2.0:evaluate -Dexpression=project.version -q -DforceStdout)
           ARTIFACTID=$(mvn org.apache.maven.plugins:maven-help-plugin:3.2.0:evaluate -Dexpression=project.artifactId -q -DforceStdout)
@@ -108,10 +105,7 @@ jobs:
             FILES=$FILES,$name
             TYPES=$TYPES,${TARGET##*.}
             CLASSIFIERS=$CLASSIFIERS,${TARGET%.*}
-            echo "FILESSS: ${FILES}"
           done
-          echo "find ./ -name {ARTIFACTID}-{VERSION}-*.jar"
-          find ./ -name "${ARTIFACTID}-${VERSION}-*.jar"
 
           # Find all generated provenance files and attach them the the environment variable for deploy
           # shellcheck disable=SC2044 # We don't spawn a new sub shell since we are appending to global env vars
