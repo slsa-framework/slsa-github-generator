@@ -281,6 +281,7 @@ function createToken(
     github: {
       actor_id: "123",
       event_name: "workflow_dispatch",
+      base_ref: "base-ref",
       ref: "refs/heads/mybranch",
       ref_type: "branch",
       repository: "ianlewis/byob-test",
