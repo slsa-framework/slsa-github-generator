@@ -1,12 +1,12 @@
-# Generation of SLSA3+ provenance for `.jar` artifacts built with Maven
+# Generation of SLSA3+ provenance for `.jar` artifacts built with Gradle
 
-This document explains how to generate SLSA provenance for `.jar` artifacts built with Maven.
+This document explains how to generate SLSA provenance for artifacts built with Gradle.
 
 This can be done by adding a step to your Github Actions workflow to call a
 [reusable
 workflow](https://docs.github.com/en/actions/using-workflows/reusing-workflows)
 to build the package and generate SLSA provenance. We'll call this
-workflow the "Maven builder" from now on.
+workflow the "Gradle builder" from now on.
 
 ---
 
@@ -28,8 +28,8 @@ workflow the "Maven builder" from now on.
 
 ## Benefits of Provenance
 
-Using the Maven builder will generate a non-forgeable attestation to the
-Maven package using the identity of the GitHub workflow. This can be used to
+Using the Gradle builder will generate a non-forgeable attestation to the
+Gradle package using the identity of the GitHub workflow. This can be used to
 create a positive attestation to a package coming from your repository.
 
 That means that once your users verify the package they have downloaded they can
@@ -38,7 +38,7 @@ tampered with.
 
 ## Development status
 
-The Maven builder is currently in alpha. The API could change while approaching
+The Gradle builder is currently in alpha. The API could change while approaching
 a Generally Available (GA) release. You can track progress towards General
 Availability via
 [this milestone](https://github.com/slsa-framework/slsa-github-generator/milestone/17).
@@ -49,27 +49,26 @@ to send us feedback!
 
 ## Limitations
 
-The Maven builder currently has the following limitations:
+The Gradle builder currently has the following limitations:
 
-1. The project must be build'able by way of `mvn package`. If you need the option for flags, profiles or something else to define more granular builds, please open an issue.
-2. The Maven publisher is limited to projects that output artifacts in a `target` directory - which is the default way used by the vast majority of projects.
+1. The project must be build'able by way of `gradle build`. If you need the option for flags, profiles or something else to define more granular builds, please open an issue.
 
 ## Generating Provenance
 
-The Maven builder uses a Github Actions reusable workflow to build your
+The Gradle builder uses a Github Actions reusable workflow to build your
 package and generate the provenance.
 
 ### Getting Started
 
 Let's say you have the following build set up:
 
-1. You can build your artifacts by way of `mvn package`.
+1. You can build your artifacts by way of `gradle build`.
 2. You release artifacts via Github Actions.
 
 To add provenance to releases is easy. Simply use the following workflow in `.github/workflows` in your repository:
 
 ```yaml
-name: Build with provenance
+name: SLSA Provenance with Gradle builder
 on:
   - workflow_dispatch
 
@@ -81,29 +80,14 @@ jobs:
       id-token: write
       contents: read
       actions: read
-    uses: slsa-framework/slsa-github-generator/.github/workflows/builder_maven_slsa3.yml@v1.7.0
-```
-
-Now, when you invoke this workflow, the Maven builder will build both your artifacts and the provenance files for them.
-
-You can also release artifacts to Maven Central by adding the following step to your workflow:
-
-```yaml
-  publish:
-    needs: build
-    uses: slsa-framework/slsa-github-generator/.github/workflows/publish_maven.yml@v1.7.0
+    uses: slsa-framework/slsa-github-generator/.github/workflows/builder_gradle_slsa3.yml@v1.7.0
     with:
-      provenance-download-name: "${{ needs.build.outputs.provenance-download-name }}"
-      provenance-download-sha256: "${{ needs.build.outputs.provenance-download-sha256 }}"
-      target-download-sha256: "${{ needs.build.outputs.target-download-sha256 }}"
-    secrets:
-      maven-username: ${{ secrets.OSSRH_USERNAME }}
-      maven-password: ${{ secrets.OSSRH_PASSWORD }}
-      gpg-key-pass: ${{ secrets.GPG_PASSPHRASE }}
-      gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
+      artifact-list: ./artifact1.jar,./artifact2.jar
 ```
 
-Now your workflow will build your artifacts and publish them to a staging repository in Maven Central.
+Now, when you invoke this workflow, the Gradle builder will build both your artifacts and the provenance files for them.
+
+The Gradle builder requires you to specify the artifacts that you wish to attest to. To do so, you add a comma-separated list of paths to the artifacts as shown in the example. The paths are relative from the root of your project directory.
 
 ### Private Repositories
 
