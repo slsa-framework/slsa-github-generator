@@ -93,6 +93,7 @@ async function run(): Promise<void> {
         event_payload_sha256: tscommon.safeFileSha256(
           process.env.GITHUB_EVENT_PATH || ""
         ),
+        base_ref: process.env.GITHUB_BASE_REF,
         ref: process.env.GITHUB_REF,
         ref_type: process.env.GITHUB_REF_TYPE,
         repository: process.env.GITHUB_REPOSITORY,
