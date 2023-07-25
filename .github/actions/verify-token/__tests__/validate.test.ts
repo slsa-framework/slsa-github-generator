@@ -161,6 +161,7 @@ function createToken(
       event_name: "workflow_dispatch",
       event_payload_sha256:
         "1307990e6ba5ca145eb35e99182a9bec46531bc54ddf656a602c780fa0240dee",
+      base_ref: "base-ref",
       ref: "refs/heads/mybranch",
       ref_type: "branch",
       repository: "ianlewis/byob-test",
@@ -273,6 +274,7 @@ describe("validateGitHubFields", () => {
     process.env.GITHUB_ACTOR_ID = "123";
     process.env.GITHUB_EVENT_NAME = "workflow_dispatch";
     process.env.GITHUB_EVENT_PATH = "/path/to/event.json";
+    process.env.GITHUB_BASE_REF = "base-ref";
     process.env.GITHUB_REF = "refs/heads/mybranch";
     process.env.GITHUB_REF_TYPE = "branch";
     process.env.GITHUB_REPOSITORY = "ianlewis/byob-test";
@@ -291,6 +293,7 @@ describe("validateGitHubFields", () => {
       event_name: "workflow_dispatch",
       event_payload_sha256:
         "1307990e6ba5ca145eb35e99182a9bec46531bc54ddf656a602c780fa0240dee",
+      base_ref: "base-ref",
       ref: "refs/heads/mybranch",
       ref_type: "branch",
       repository: "ianlewis/byob-test",
@@ -314,6 +317,7 @@ describe("validateGitHubFields", () => {
     process.env.GITHUB_ACTOR_ID = "123";
     process.env.GITHUB_EVENT_NAME = "workflow_dispatch";
     process.env.GITHUB_EVENT_PATH = "/path/to/event.json";
+    process.env.GITHUB_BASE_REF = "base-ref";
     process.env.GITHUB_REF = "refs/heads/mybranch";
     process.env.GITHUB_REF_TYPE = "branch";
     process.env.GITHUB_REPOSITORY = "ianlewis/byob-test";
@@ -332,6 +336,7 @@ describe("validateGitHubFields", () => {
       event_name: "workflow_dispatch",
       event_payload_sha256:
         "1307990e6ba5ca145eb35e99182a9bec46531bc54ddf656a602c780fa0240dee",
+      base_ref: "base-ref",
       ref: "refs/heads/mybranch",
       ref_type: "branch",
       repository: "ianlewis/byob-test",
@@ -358,6 +363,7 @@ describe("validateGitHubFields", () => {
     process.env.GITHUB_EVENT_NAME = "workflow_dispatch";
     process.env.GITHUB_EVENT_PATH = "/path/to/event.json";
     process.env.GITHUB_JOB = "234";
+    process.env.GITHUB_BASE_REF = "base-ref";
     process.env.GITHUB_REF = "refs/heads/mybranch";
     process.env.GITHUB_REF_TYPE = "branch";
     process.env.GITHUB_REPOSITORY = "ianlewis/byob-test";
@@ -377,6 +383,7 @@ describe("validateGitHubFields", () => {
       event_name: "workflow_dispatch",
       event_payload_sha256:
         "1307990e6ba5ca145eb35e99182a9bec46531bc54ddf656a602c780fa0240dee",
+      base_ref: "base-ref",
       ref: "refs/heads/mybranch",
       ref_type: "branch",
       repository: "asraa/byob-test", // NOTE: Not equal
@@ -403,6 +410,7 @@ describe("validateGitHubFields", () => {
     process.env.GITHUB_EVENT_NAME = "workflow_dispatch";
     process.env.GITHUB_EVENT_PATH = "/path/to/event.json";
     process.env.GITHUB_JOB = "234";
+    process.env.GITHUB_BASE_REF = "base-ref";
     process.env.GITHUB_REF = "refs/heads/mybranch";
     process.env.GITHUB_REF_TYPE = "branch";
     process.env.GITHUB_REPOSITORY = "ianlewis/byob-test";
@@ -422,6 +430,7 @@ describe("validateGitHubFields", () => {
       event_name: "workflow_dispatch",
       event_payload_sha256:
         "1307990e6ba5ca145eb35e99182a9bec46531bc54ddf656a602c780fa0240dee",
+      base_ref: "base-ref",
       ref: "refs/heads/mybranch",
       ref_type: "branch",
       repository: "ianlewis/byob-test",
@@ -437,6 +446,51 @@ describe("validateGitHubFields", () => {
     };
 
     tscommon.safeFileSha256.mockReturnValueOnce("incorrect-sha"); // NOTE: Not equal
+
+    expect(() => {
+      validateGitHubFields(obj);
+    }).toThrow();
+  });
+
+  it("does not validate githubObj with unequal base_ref", () => {
+    process.env.GITHUB_ACTOR_ID = "123";
+    process.env.GITHUB_EVENT_NAME = "workflow_dispatch";
+    process.env.GITHUB_EVENT_PATH = "/path/to/event.json";
+    process.env.GITHUB_BASE_REF = "not-base-ref";
+    process.env.GITHUB_REF = "refs/heads/mybranch";
+    process.env.GITHUB_REF_TYPE = "branch";
+    process.env.GITHUB_REPOSITORY = "ianlewis/byob-test";
+    process.env.GITHUB_REPOSITORY_ID = "456";
+    process.env.GITHUB_REPOSITORY_OWNER_ID = "789";
+    process.env.GITHUB_RUN_ATTEMPT = "1";
+    process.env.GITHUB_RUN_ID = "123456789";
+    process.env.GITHUB_RUN_NUMBER = "1";
+    process.env.GITHUB_SHA = "deadbeef";
+    process.env.GITHUB_WORKFLOW_REF =
+      "ianlewis/byob-test/.github/workflows/my-workflow.yml@refs/heads/my_branch";
+    process.env.GITHUB_WORKFLOW_SHA = "deadbeef";
+
+    const obj: githubObj = {
+      actor_id: "123",
+      event_name: "workflow_dispatch",
+      event_payload_sha256:
+        "1307990e6ba5ca145eb35e99182a9bec46531bc54ddf656a602c780fa0240dee",
+      base_ref: "base-ref",
+      ref: "refs/heads/mybranch",
+      ref_type: "branch",
+      repository: "ianlewis/byob-test",
+      repository_id: "456",
+      repository_owner_id: "789",
+      run_attempt: "1",
+      run_id: "123456789",
+      run_number: "1",
+      sha: "deadbeef",
+      workflow_ref:
+        "ianlewis/byob-test/.github/workflows/my-workflow.yml@refs/heads/my_branch",
+      workflow_sha: "deadbeef",
+    };
+
+    tscommon.safeFileSha256.mockReturnValueOnce(obj.event_payload_sha256);
 
     expect(() => {
       validateGitHubFields(obj);

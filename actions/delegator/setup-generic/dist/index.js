@@ -125,6 +125,7 @@ function run() {
                     actor_id: process.env.GITHUB_ACTOR_ID,
                     event_name: process.env.GITHUB_EVENT_NAME,
                     event_payload_sha256: tscommon.safeFileSha256(process.env.GITHUB_EVENT_PATH || ""),
+                    base_ref: process.env.GITHUB_BASE_REF,
                     ref: process.env.GITHUB_REF,
                     ref_type: process.env.GITHUB_REF_TYPE,
                     repository: process.env.GITHUB_REPOSITORY,
