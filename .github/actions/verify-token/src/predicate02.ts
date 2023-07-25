@@ -70,6 +70,7 @@ export async function createPredicate(
       environment: {
         GITHUB_ACTOR_ID: rawTokenObj.github.actor_id,
         GITHUB_EVENT_NAME: rawTokenObj.github.event_name,
+        GITHUB_BASE_REF: rawTokenObj.github.base_ref,
         GITHUB_REF: rawTokenObj.github.ref,
         GITHUB_REF_TYPE: rawTokenObj.github.ref_type,
         GITHUB_REPOSITORY: rawTokenObj.github.repository,
