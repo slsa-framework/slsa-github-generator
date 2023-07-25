@@ -12,7 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-permissions: read-all
+permissions:
+  contents: read
 
 on:
   workflow_call:
