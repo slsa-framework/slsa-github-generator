@@ -87,31 +87,31 @@ runs:
         mvn javadoc:jar source:jar
         # Retrieve project version
         version=$(mvn org.apache.maven.plugins:maven-help-plugin:3.2.0:evaluate -Dexpression=project.version -q -DforceStdout)
-        ARTIFACTID=$(mvn org.apache.maven.plugins:maven-help-plugin:3.2.0:evaluate -Dexpression=project.artifactId -q -DforceStdout)
+        artifactid=$(mvn org.apache.maven.plugins:maven-help-plugin:3.2.0:evaluate -Dexpression=project.artifactId -q -DforceStdout)
         # Reset the environment variables add in the base provenance
-        FILES="slsa-attestations/${PROVENANCE_FILES}/${ARTIFACTID}-${version}.jar.intoto.build.slsa"
-        TYPES=slsa
-        CLASSIFIERS=jar.intoto.build
+        files="slsa-attestations/${PROVENANCE_FILES}/${artifactid}-${version}.jar.intoto.build.slsa"
+        types=slsa
+        classifiers=jar.intoto.build
         # Find all necessary built jar files and attach them to the environment variable deploy
         # shellcheck disable=SC2044 # We don't spawn a new sub shell since we are appending to global env vars
-        for name in $(find ./ -name "$ARTIFACTID-$version-*.jar")
+        for name in $(find ./ -name "$artifactid-$version-*.jar")
         do
           # shellcheck disable=SC1001 # shellcheck complains over \- but the line does what it should.
-          TARGET=$(echo "${name}" | rev | cut -d\- -f1 | rev)
-          FILES=$FILES,$name
-          TYPES=$TYPES,${TARGET##*.}
-          CLASSIFIERS=$CLASSIFIERS,${TARGET%.*}
+          target=$(echo "${name}" | rev | cut -d\- -f1 | rev)
+          files=$files,$name
+          types=$types,${target##*.}
+          classifiers=$classifiers,${target%.*}
         done
 
         # Find all generated provenance files and attach them the the environment variable for deploy
         # shellcheck disable=SC2044 # We don't spawn a new sub shell since we are appending to global env vars
-        for name in $(find ./ -name "$ARTIFACTID-$version-*.jar.intoto.build.slsa")
+        for name in $(find ./ -name "$artifactid-$version-*.jar.intoto.build.slsa")
         do
           # shellcheck disable=SC1001 # shellcheck complains over \- but the line does what it should.
-          TARGET=$(echo "${name}" | rev | cut -d\- -f1 | rev)
-          FILES=$FILES,$name
-          TYPES=$TYPES",slsa"
-          CLASSIFIERS=$CLASSIFIERS,${TARGET::-9}
+          target=$(echo "${name}" | rev | cut -d\- -f1 | rev)
+          files=$files,$name
+          types=$types",slsa"
+          classifiers=$classifiers,${target::-9}
         done
         # Sign and deploy the files to the ossrh remote repository
-        mvn validate jar:jar -Dfile=target/"${ARTIFACTID}"-"${version}".jar -Durl=https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/ -DrepositoryId=ossrh -Dfiles="${FILES}" -Dtypes="${TYPES}" -Dclassifiers="${CLASSIFIERS}" -DpomFile=pom.xml gpg:sign-and-deploy-file
+        mvn validate jar:jar -Dfile=target/"${artifactid}"-"${version}".jar -Durl=https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/ -DrepositoryId=ossrh -Dfiles="${files}" -Dtypes="${types}" -Dclassifiers="${classifiers}" -DpomFile=pom.xml gpg:sign-and-deploy-file
