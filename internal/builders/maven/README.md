@@ -92,7 +92,7 @@ You can also release artifacts to Maven Central with [the slsa-github-generator 
   publish:
     - name: publish
       id: publish
-      uses: slsa-framework/slsa-github-generator/actions/maven/publish@@v1.7.0
+      uses: slsa-framework/slsa-github-generator/actions/maven/publish@v1.7.0
       with:
         provenance-download-name: "${{ needs.build.outputs.provenance-download-name }}"
         provenance-download-sha256: "${{ needs.build.outputs.provenance-download-sha256 }}"
