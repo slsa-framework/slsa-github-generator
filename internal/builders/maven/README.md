@@ -92,11 +92,11 @@ You can also release artifacts to Maven Central with [the slsa-github-generator 
   publish:
     - name: publish
       id: publish
-      uses: slsa-framework/slsa-github-generator/actions/maven/publish@main
+      uses: slsa-framework/slsa-github-generator/actions/maven/publish@@v1.7.0
       with:
-        provenance-download-name: "${{ needs.usetrw.outputs.provenance-download-name }}"
-        provenance-download-sha256: "${{ needs.usetrw.outputs.provenance-download-sha256 }}"
-        target-download-sha256: "${{ needs.usetrw.outputs.target-download-sha256 }}"
+        provenance-download-name: "${{ needs.build.outputs.provenance-download-name }}"
+        provenance-download-sha256: "${{ needs.build.outputs.provenance-download-sha256 }}"
+        target-download-sha256: "${{ needs.build.outputs.target-download-sha256 }}"
         maven-username: ${{ secrets.OSSRH_USERNAME }}
         maven-password: ${{ secrets.OSSRH_PASSWORD }}
         gpg-key-pass: ${{ secrets.GPG_PASSPHRASE }}
@@ -105,7 +105,7 @@ You can also release artifacts to Maven Central with [the slsa-github-generator 
 
 Now your workflow will build your artifacts and publish them to a staging repository in Maven Central.
 
-In the above example of the publisher, the job that invokes the Maven builder is called `usetrw`. The publisher uses output from that job.
+In the above example of the publish Action, the job that invokes the Maven builder is called `build`. The publish Action uses output from that job.
 
 ### Private Repositories
 
