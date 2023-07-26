@@ -27,7 +27,12 @@ export function validateGitHubFields(gho: githubObj): void {
   );
 
   // base_ref.
-  validateField("github.base_ref", gho.base_ref, process.env.GITHUB_BASE_REF);
+  validateField(
+    "github.base_ref",
+    gho.base_ref,
+    process.env.GITHUB_BASE_REF,
+    true
+  );
 
   // Validate the event. Only events in
   // https://github.com/slsa-framework/github-actions-buildtypes/tree/main/workflow/v1
@@ -175,15 +180,21 @@ export function validateFieldAnyOf<T>(
  * @param name - the name of the value
  * @param actual - the actual value of the field
  * @param expected - the expected value of the field
+ * @param allow_empty - whether the value may be empty
  * @throws Error - if actual and expected don't match or are empty.
  */
-export function validateField<T>(name: string, actual: T, expected: T): void {
+export function validateField<T>(
+  name: string,
+  actual: T,
+  expected: T,
+  allow_empty = false
+): void {
   if (actual !== expected) {
     throw new Error(
       `mismatch ${name}: got '${actual}', expected '${expected}'.`
     );
   }
-  if (!actual) {
+  if (!allow_empty && !actual) {
     throw new Error(`empty ${name}, expected non-empty value.`);
   }
 }
