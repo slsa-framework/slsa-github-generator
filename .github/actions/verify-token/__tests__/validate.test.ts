@@ -39,6 +39,14 @@ describe("validateField", () => {
     validateField("foo", "foo", "foo");
   });
 
+  it("validates equal empty values", () => {
+    validateField("foo", "", "", true);
+  });
+
+  expect(() => {
+    validateField("foo", "", "");
+  }).toThrow();
+
   it("does not validate unequal values", () => {
     expect(() => {
       validateField("foo", "foo", "bar");
