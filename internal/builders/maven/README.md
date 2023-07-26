@@ -86,24 +86,26 @@ jobs:
 
 Now, when you invoke this workflow, the Maven builder will build both your artifacts and the provenance files for them.
 
-You can also release artifacts to Maven Central by adding the following step to your workflow:
+You can also release artifacts to Maven Central with [the slsa-github-generator Maven publisher](https://github.com/slsa-framework/slsa-github-generator/blob/main/actions/maven/publish/action.yml) by adding the following step to your workflow:
 
 ```yaml
   publish:
-    needs: build
-    uses: slsa-framework/slsa-github-generator/.github/workflows/publish_maven.yml@v1.7.0
-    with:
-      provenance-download-name: "${{ needs.build.outputs.provenance-download-name }}"
-      provenance-download-sha256: "${{ needs.build.outputs.provenance-download-sha256 }}"
-      target-download-sha256: "${{ needs.build.outputs.target-download-sha256 }}"
-    secrets:
-      maven-username: ${{ secrets.OSSRH_USERNAME }}
-      maven-password: ${{ secrets.OSSRH_PASSWORD }}
-      gpg-key-pass: ${{ secrets.GPG_PASSPHRASE }}
-      gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
+    - name: publish
+      id: publish
+      uses: slsa-framework/slsa-github-generator/actions/maven/publish@main
+      with:
+        provenance-download-name: "${{ needs.usetrw.outputs.provenance-download-name }}"
+        provenance-download-sha256: "${{ needs.usetrw.outputs.provenance-download-sha256 }}"
+        target-download-sha256: "${{ needs.usetrw.outputs.target-download-sha256 }}"
+        maven-username: ${{ secrets.OSSRH_USERNAME }}
+        maven-password: ${{ secrets.OSSRH_PASSWORD }}
+        gpg-key-pass: ${{ secrets.GPG_PASSPHRASE }}
+        gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
 ```
 
 Now your workflow will build your artifacts and publish them to a staging repository in Maven Central.
+
+In the above example of the publisher, the job that invokes the Maven builder is called `usetrw`. The publisher uses output from that job.
 
 ### Private Repositories
 
