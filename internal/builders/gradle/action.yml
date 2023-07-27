@@ -39,6 +39,13 @@ inputs:
   slsa-workflow-secret13: {}
   slsa-workflow-secret14: {}
   slsa-workflow-secret15: {}
+outputs:
+  target-download-sha256:
+    description: >
+      The sha256 digest of the "build" directory.
+
+      Users should verify the download against this digest to prevent tampering.
+    value: ${{ steps.upload-build-dir.outputs.sha256 }}
 
 on:
   workflow_call:
@@ -51,10 +58,14 @@ runs:
       with:
         distribution: temurin
         java-version: ${{ fromJson(inputs.slsa-workflow-inputs).jdk-version }}
+    - name: Install plugin # TODO: Deploy this better!
+      id: install-plugin
+      shell: bash
+      run: cd plugin-gradle && ./gradlew clean publish && cd ..
     - name: Setup Gradle
       uses: gradle/gradle-build-action@915a66c096a03101667f9df2e56c9efef558b165 # v2.6.1
       with:
-        arguments: build -x test
+        arguments: build -x test -x javadoc
     - name: Put release artifacts in one directory
       shell: bash
       env:
