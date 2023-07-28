@@ -20,7 +20,7 @@ inputs:
     type: string
   provenance-download-sha256:
     description: "The sha256 of the package provenance artifact."
-    required: false
+    required: true
     type: string
   target-download-sha256:
     description: "The sha256 of the target directory."
@@ -28,21 +28,21 @@ inputs:
     type: string
   maven-username:
     description: "Maven username"
-    required: false
+    required: true
   maven-password:
     description: "Maven password"
-    required: false
+    required: true
   gpg-key-pass:
     description: "gpg-key-pass"
-    required: false
+    required: true
   gpg-private-key:
     description: "gpg-key-pass"
-    required: false
+    required: true
 runs:
   using: "composite"
   steps:
     - name: Checkout the project repository
-      uses: slsa-framework/slsa-github-generator/.github/actions/secure-project-checkout@main
+      uses: slsa-framework/slsa-github-generator/.github/actions/secure-project-checkout@main # needed because we run javadoc and sources.
     - name: Set up Java for publishing to Maven Central Repository
       uses: actions/setup-java@5ffc13f4174014e2d4d4572b3d74c3fa61aeb2c2 # v3
       env:
@@ -81,9 +81,6 @@ runs:
         SLSA_DIR: "${{ inputs.provenance-download-name }}"
         PROVENANCE_FILES: "${{ inputs.provenance-download-name }}"
       run: |
-        # Build and run custom plugin
-        cd plugin && mvn clean install && cd ..
-        # Re-indexing the secondary jar files for deploy
         mvn javadoc:jar source:jar
         # Retrieve project version
         version=$(mvn org.apache.maven.plugins:maven-help-plugin:3.2.0:evaluate -Dexpression=project.version -q -DforceStdout)
@@ -97,7 +94,7 @@ runs:
         for name in $(find ./ -name "$artifactid-$version-*.jar")
         do
           # shellcheck disable=SC1001 # shellcheck complains over \- but the line does what it should.
-          target=$(echo "${name}" | rev | cut -d\- -f1 | rev)
+          target=$(echo "${name}" | rev | cut -d- -f1 | rev)
           files=$files,$name
           types=$types,${target##*.}
           classifiers=$classifiers,${target%.*}
@@ -108,7 +105,7 @@ runs:
         for name in $(find ./ -name "$artifactid-$version-*.jar.intoto.build.slsa")
         do
           # shellcheck disable=SC1001 # shellcheck complains over \- but the line does what it should.
-          target=$(echo "${name}" | rev | cut -d\- -f1 | rev)
+          target=$(echo "${name}" | rev | cut -d- -f1 | rev)
           files=$files,$name
           types=$types",slsa"
           classifiers=$classifiers,${target::-9}

@@ -86,6 +86,8 @@ jobs:
 
 Now, when you invoke this workflow, the Maven builder will build both your artifacts and the provenance files for them.
 
+### Releasing directly to Maven Central
+
 You can also release artifacts to Maven Central with [the slsa-github-generator Maven publisher](https://github.com/slsa-framework/slsa-github-generator/blob/main/actions/maven/publish/action.yml) by adding the following step to your workflow:
 
 ```yaml
@@ -106,6 +108,28 @@ You can also release artifacts to Maven Central with [the slsa-github-generator 
 Now your workflow will build your artifacts and publish them to a staging repository in Maven Central.
 
 In the above example of the publish Action, the job that invokes the Maven builder is called `build`. The publish Action uses output from that job.
+
+#### Publisher requirements
+
+Besides adding the above workflow to your CI pipeline, you also need to add the following plugin to your `pom.xml`:
+
+```java
+<plugin>
+    <groupId>io.github.adamkorcz</groupId>
+    <artifactId>slsa-hashing-plugin</artifactId>
+    <version>0.0.1</version>
+    <executions>
+        <execution>
+            <goals>
+                <goal>hash-jarfile</goal>
+            </goals>
+        </execution>
+    </executions>
+    <configuration>
+        <outputJsonPath>${SLSA_OUTPUTS_ARTIFACTS_FILE}</outputJsonPath>
+    </configuration>
+</plugin>
+```
 
 ### Private Repositories
 
