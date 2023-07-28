@@ -19,6 +19,7 @@ workflow the "Maven builder" from now on.
 - [Limitations](#limitations)
 - [Generating Provenance](#generating-provenance)
   - [Getting Started](#getting-started)
+  - [Releasing directly to Maven Central](#releasing-directly-to-maven-central)
   - [Private Repositories](#private-repositories)
 - [Verification](#verification)
 
