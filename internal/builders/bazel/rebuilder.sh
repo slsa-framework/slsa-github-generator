@@ -35,15 +35,15 @@ verbose=false
 function usage() {
   if [[ $verify ]] 
   then
-    echo "Usage to verify AND rebuild artifact is the following:"
-    echo "Usage: $0 --artifact_path <path> --prov_path <path> --source_uri <uri> --builder_id <id> [--docker_image <image>] [--verify]"
-    echo "To ONLY rebuild use the following usage:"
-    echo "Usage: $0 --artifact_path <path> --prov_path <path> [--docker_image <image>]"
+    printf "\033[1;31m[ERROR] \033[0;31mWrong usage. Usage to verify AND rebuild artifact:\033[0m\n"
+    printf "\033[1;36mUsage: $0 \033[1;33m--artifact_path\033[0m <path> \033[1;33m--prov_path\033[0m <path> \033[1;33m--source_uri\033[0m <uri> \033[1;33m--builder_id\033[0m <id> \033[1;35m[--docker_image]\033[0m <image> \033[1;35m[--verify]\033[0m\n"
+    printf "\033[1;31m[ERROR] \033[0;31mWrong usage. Usage to ONLY rebuild the artifact:\033[0m\n"
+    printf "\033[1;36mUsage: $0 \033[1;33m--artifact_path\033[0m <path> \033[1;33m--prov_path\033[0m <path> \033[1;35m[--docker_image]\033[0m <image>\n"
   else
-    echo "Usage to ONLY rebuild artifact is the following:"
-    echo "Usage: $0 --artifact_path <path> --prov_path <path> [--docker_image <image>]"
-    echo "To verify AND rebuild artifact use the following usage:"
-    echo "Usage: $0 --artifact_path <path> --prov_path <path> --source_uri <uri> --builder_id <id> [--docker_image <image>] [--verify]"
+    printf "\033[1;31m[ERROR] \033[0;31mWrong usage. Usage to ONLY rebuild the artifact:\033[0m\n"
+    printf "\033[1;36mUsage: $0 \033[1;33m--artifact_path\033[0m <path> \033[1;33m--prov_path\033[0m <path> \033[1;35m[--docker_image]\033[0m <image>\n"
+    printf "\033[1;31m[ERROR] \033[0;31mWrong usage. Usage to verify AND rebuild artifact:\033[0m\n"
+    printf "\033[1;36mUsage: $0 \033[1;33m--artifact_path\033[0m <path> \033[1;33m--prov_path\033[0m <path> \033[1;33m--source_uri\033[0m <uri> \033[1;33m--builder_id\033[0m <id> \033[1;35m[--docker_image]\033[0m <image> \033[1;35m[--verify]\033[0m\n"
   fi
 }
 
@@ -67,8 +67,9 @@ function process_argument() {
 # Parse arguments sequentially to check for unrecognized arguments
 for ARG in "$@"; do
   if ! process_argument "$ARG"; then
-    echo "'$ARG' is unrecognized"
-    echo "Usage: $0 --artifact_path <path> --prov_path <path> --source_uri <uri> [--builder_id <id>] [--docker_image <image>] [--verify]"
+    my_arg="$ARG"
+    printf "\033[1;31m[ERROR] \033[0;31m$my_arg is unrecognized\033[0m\n"
+    usage
     exit 1
   fi
 done
@@ -81,14 +82,14 @@ done
 
 # Check if mandatory arguments for rebuild are not empty
 if [ -z "$artifact_path" ] || [ -z "$prov_path" ]; then
-  echo "Mandatory arguments missing or empty"
+  printf "\033[1;31m[ERROR] \033[0;31mMandatory arguments missing or empty\033[0m\n"
   usage
   exit 1
 fi
 
 # Check if mandatory arguments for verification are not empty
 if $verify && ([ -z "$source_uri" ] || [ -z "$builder_id" ]); then
-  echo "Mandatory arguments for verification are missing or empty"
+  printf "\033[1;31m[ERROR] \033[0;31mMandatory arguments for verification missing or empty\033[0m\n"
   usage
   exit 1
 fi
@@ -96,31 +97,40 @@ fi
 # Print received arguments (optional)
 if [[ $verbose ]]
 then
-  echo "Output Arguments:"
-  echo "artifact_path: $artifact_path"
-  echo "prov_path: $prov_path"
-  echo "source_uri: $source_uri"
+  printf "\033[1;34m✔ Output Arguments:\033[0m\n"
+  printf "\033[1;36martifact_path: \033[0m\033[1;32m$artifact_path\033[0m\n"
+  printf "\033[1;36mprov_path: \033[0m\033[1;32m$prov_path\033[0m\n"
+  printf "\033[1;36msource_uri: \033[0m\033[1;32m$source_uri\033[0m\n"
   
   if [ -n "$builder_id" ]; then
-    echo "builder_id: $builder_id"
+    printf "\033[1;36mbuilder_id: \033[0m\033[1;32m$builder_id\033[0m\n"
   fi
   
   if [ -n "$docker_image" ]; then
-    echo "docker_image: $docker_image"
+    printf "\033[1;36mdocker_image: \033[0m\033[1;32m$docker_image\033[0m\n"
   fi
-
+  
   if [ "$verify" = true ]; then
-    echo "verify: $verify"
-  fi
-
-  if [ -n "$builder_id" ]; then
-    echo "builder_id: $builder_id"
-  fi
-
-  if [ -n "$docker_image" ]; then
-    echo "docker_image: $docker_image"
+    printf "\033[1;36mverify: \033[0m\033[1;32m$verify\033[0m\n"
   fi
 fi
+
+################################################
+#                                              #
+#           To Output Styled Progress          #
+#                                              #
+################################################
+
+TYPE_SPEED=0.03
+function type_writer {
+  text="$1"
+
+  for (( i=0; i<${#text}; i++ )); do
+    echo -n "${text:$i:1}"
+    sleep $TYPE_SPEED
+  done
+  echo ""
+}
 
 ################################################
 #                                              #
@@ -128,15 +138,20 @@ fi
 #                                              #
 ################################################
 
+printf "\033[1;36m====================================================\033[0m\n"
+printf "\033[1;36m|\033[0m\033[1;33m\033[4m        🔨  Starting the Rebuild Process  🔨        \033[0m\033[1;36m|\033[0m\n"
+printf "\033[1;36m====================================================\033[0m\n"
+
 if [[ $verify ]]
 then
   # Clone the slsa-verifier repository
   if [ -d "slsa-verifier" ]; then
-    echo "The slsa-verifier repository is already cloned."
-    echo "To verify please remove the collision and try again"
+    type_writer "📁---> The slsa-verifier repository is already cloned."
+    type_writer "⚠️---> To verify please remove the collision and try again"
     exit 1
   else
-    echo "The slsa-verifier repository is not cloned. Cloning..."
+    printf "\033[1;36m====================================================\033[0m\n"
+    type_writer "📥---> The slsa-verifier repository is not cloned. Cloning..."
     git clone https://github.com/enteraga6/slsa-verifier
   fi
 
@@ -147,7 +162,8 @@ then
   go run ./cli/slsa-verifier/ verify-artifact ../$artifact_path --provenance-path ../$prov_path --source-uri $source_uri --builder-id $builder_id
   
   cd ..
-  echo "Cleaning up slsa-verifier..."
+  printf "\033[1;36m====================================================\033[0m\n"
+  type_writer "🧹---> Cleaning up slsa-verifier..."
   rm -rf ./slsa-verifier
   echo ""
 fi
@@ -199,14 +215,14 @@ done
 
 # Clone the source_uri repository to begin rebuild process
 if [ -d "$repo_name" ]; then
-  echo "Source repository appears already."
-  echo "to run rebuilder, fix collision by removing directory with name of $repo_name."
+  printf "\033[1;36m====================================================\033[0m\n"
+  type_writer "📁---> Source repository appears already."
+  type_writer "⚠️---> To run rebuilder, fix collision by removing directory with name of \$repo_name."
+
   exit 1
 else
-  echo "Cloning the source repository..."
+  type_writer "📥---> Cloning the source repository..."
   git clone https://$source_uri
-  echo "cloned."
-  echo ""
 fi
 
 ###################
@@ -242,18 +258,17 @@ fi
 if [[ -n "$DOCKER_IMAGE" ]]
 then
     docker pull $DOCKER_IMAGE
-
-    echo "Rebuilding with Docker Image Environment..."
-    # Mount docker image on this directory as workdir to gain access to script env
+    printf "\033[1;36m====================================================\033[0m\n"
+    type_writer "🔨---> Rebuilding with Docker Image Environment..."    # Mount docker image on this directory as workdir to gain access to script env
     # TODO: Check to see if env vars need to be passed in.
     docker run --rm -v $PWD:/workdir -w workdir $DOCKER_IMAGE /bin/sh -c "./build.sh"
-    echo "Artifacts rebuilt!"
+    printf "\033[1;42m✅ Artifacts rebuilt!\033[0m\n"
     echo ""
 else
     # Run the build script locally without a docker image
-    echo "Rebuilding with local environment..."
+    type_writer "💻---> Rebuilding with local environment..."
     source ../build.sh
-    echo "Artifacts rebuilt!"
+    printf "\033[1;42m✅ Artifacts rebuilt!\033[0m\n"
     echo ""
 fi
 
@@ -283,15 +298,17 @@ then
     cd $binaries_dir/$artifact_name
     rebuilt_checksum=$(sha256sum $artifact_name | awk '{ print $1 }')
     cp $artifact_name ./../../../rebuilt_artifacts_dir
-    echo "Cleaning up $repo_name..."
+    printf "\033[1;36m====================================================\033[0m\n"
+    type_writer "🧹---> Cleaning up $repo_name..."        
     cd ../../../ && rm -rf $repo_name
     echo ""
 else
     cd $binaries_dir
     rebuilt_checksum=$(sha256sum $artifact_name | awk '{ print $1 }')
     cp $artifact_name ./../../rebuilt_artifacts_dir
+    printf "\033[1;36m====================================================\033[0m\n"
+    type_writer "🧹---> Cleaning up $repo_name..."    
     cd ../../ && rm -rf $repo_name
-    echo "Cleaning up $repo_name..."
     echo ""
 fi
 
@@ -303,13 +320,13 @@ fi
 
 if [[ "$orig_checksum" == "$rebuilt_checksum" ]]
 then
-    echo "Checksum is the same for the original and rebuilt artifact!"
-    echo "This build is reproducible!"
+    printf "\033[1;42mChecksum is the \033[1m\033[4msame\033[0m\033[1;42m for the original and rebuilt artifact!\033[0m\n"
+    printf "\033[1;42m✅ This build is \033[1m\033[4mreproducible\033[0m!\033[0m\n"
     echo "$orig_checksum = Original Checksum"
     echo "$rebuilt_checksum = Rebuilt Checksum"
 else
-    echo "Checksum is NOT the same for the original and rebuilt artifact!"
-    echo "This build was NOT able to reproduced!"
+    printf "\033[1;41mChecksum is \033[1m\033[4mNOT\033[0m\033[1;41m the same for the original and rebuilt artifact!\033[0m\n"
+    printf "\033[1;41m⚠️ This build was \033[1m\033[4mNOT\033[0m\033[1;41m able to be reproduced!\033[0m\n"
     echo "$orig_checksum = Original Checksum"
     echo "$rebuilt_checksum = Rebuilt Checksum"
 fi
