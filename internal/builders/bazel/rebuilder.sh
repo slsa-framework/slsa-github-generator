@@ -133,6 +133,8 @@ then
   # Clone the slsa-verifier repository
   if [ -d "slsa-verifier" ]; then
     echo "The slsa-verifier repository is already cloned."
+    echo "To verify please remove the collision and try again"
+    exit 1
   else
     echo "The slsa-verifier repository is not cloned. Cloning..."
     git clone https://github.com/enteraga6/slsa-verifier
@@ -145,7 +147,9 @@ then
   go run ./cli/slsa-verifier/ verify-artifact ../$artifact_path --provenance-path ../$prov_path --source-uri $source_uri --builder-id $builder_id
   
   cd ..
+  echo "Cleaning up slsa-verifier..."
   rm -rf ./slsa-verifier
+  echo ""
 fi
 
 ################################################
@@ -195,10 +199,14 @@ done
 
 # Clone the source_uri repository to begin rebuild process
 if [ -d "$repo_name" ]; then
-  echo "The source repo is already cloned."
+  echo "Source repository appears already."
+  echo "to run rebuilder, fix collision by removing directory with name of $repo_name."
+  exit 1
 else
-  echo "The source repository is not cloned. Cloning..."
+  echo "Cloning the source repository..."
   git clone https://$source_uri
+  echo "cloned."
+  echo ""
 fi
 
 ###################
@@ -235,12 +243,18 @@ if [[ -n "$DOCKER_IMAGE" ]]
 then
     docker pull $DOCKER_IMAGE
 
+    echo "Rebuilding with Docker Image Environment..."
     # Mount docker image on this directory as workdir to gain access to script env
     # TODO: Check to see if env vars need to be passed in.
     docker run --rm -v $PWD:/workdir -w workdir $DOCKER_IMAGE /bin/sh -c "./build.sh"
+    echo "Artifacts rebuilt!"
+    echo ""
 else
     # Run the build script locally without a docker image
+    echo "Rebuilding with local environment..."
     source ../build.sh
+    echo "Artifacts rebuilt!"
+    echo ""
 fi
 
 # TODO: with java jars. Investigate current behavior and see if it is expected.
@@ -269,12 +283,16 @@ then
     cd $binaries_dir/$artifact_name
     rebuilt_checksum=$(sha256sum $artifact_name | awk '{ print $1 }')
     cp $artifact_name ./../../../rebuilt_artifacts_dir
+    echo "Cleaning up $repo_name..."
     cd ../../../ && rm -rf $repo_name
+    echo ""
 else
     cd $binaries_dir
     rebuilt_checksum=$(sha256sum $artifact_name | awk '{ print $1 }')
     cp $artifact_name ./../../rebuilt_artifacts_dir
     cd ../../ && rm -rf $repo_name
+    echo "Cleaning up $repo_name..."
+    echo ""
 fi
 
 ################################################
@@ -285,13 +303,13 @@ fi
 
 if [[ "$orig_checksum" == "$rebuilt_checksum" ]]
 then
-    echo "Checksum is the same for the original and rebuilt artifact"
-    echo "This build is reproducible."
+    echo "Checksum is the same for the original and rebuilt artifact!"
+    echo "This build is reproducible!"
     echo "$orig_checksum = Original Checksum"
     echo "$rebuilt_checksum = Rebuilt Checksum"
 else
-    echo "Checksum is NOT the same for the original and rebuilt artifact"
-    echo "This build is NOT reproducible"
+    echo "Checksum is NOT the same for the original and rebuilt artifact!"
+    echo "This build was NOT able to reproduced!"
     echo "$orig_checksum = Original Checksum"
     echo "$rebuilt_checksum = Rebuilt Checksum"
 fi
