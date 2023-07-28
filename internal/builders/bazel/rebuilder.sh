@@ -10,6 +10,7 @@ set -euo pipefail
 
 # This directory is where the rebuilt artifacts will be stored. It is made upon
 # running the rebuilder.
+# The long name is to avoid potential collisions.
 rebuilt_artifacts_dir="rebuilt_artifacts_0ffe97cd2693d6608f5a787151950ed8"
 mkdir $rebuilt_artifacts_dir
 ################################################
@@ -19,6 +20,7 @@ mkdir $rebuilt_artifacts_dir
 ################################################
 
 # For later - after rebuild - to cd into binaries folder to obtain artifacts.
+# The long name is to avoid potential collisions.
 binaries_dir="bazel_builder_binaries_to_upload_to_gh_7bc972367cb286b7f36ab4457f06e369"
 
 # Boolean that decides whether to use the slsa-verifier in addition to rebuild.
