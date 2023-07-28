@@ -20,6 +20,7 @@ workflow the "Maven builder" from now on.
 - [Generating Provenance](#generating-provenance)
   - [Getting Started](#getting-started)
   - [Releasing directly to Maven Central](#releasing-directly-to-maven-central)
+    - [Publisher requirements](#publisher-requirements)
   - [Private Repositories](#private-repositories)
 - [Verification](#verification)
 
