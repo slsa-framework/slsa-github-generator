@@ -234,7 +234,7 @@ jobs:
     permissions:
       contents: read
       id-token: write
-      actions: write
+      actions: read
       packages: read
     uses: AdamKorcz/slsa-github-generator/.github/workflows/builder_gradle_slsa3.yml@make-gradle-publisher-an-action
     with:
@@ -251,7 +251,7 @@ publish:
     permissions:
       contents: read
       id-token: write
-      actions: write
+      actions: read
   steps:
       - name: publish
         id: publish
