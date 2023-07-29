@@ -88,7 +88,7 @@ runs:
         # Reset the environment variables add in the base provenance
         files="slsa-attestations/${PROVENANCE_FILES}/${artifactid}-${version}.jar.build.slsa"
         types=slsa
-        classifiers=jar.intoto.build
+        classifiers=jar.build
         # Find all necessary built jar files and attach them to the environment variable deploy
         # shellcheck disable=SC2044 # We don't spawn a new sub shell since we are appending to global env vars
         for name in $(find ./ -name "$artifactid-$version-*.jar")
@@ -102,7 +102,7 @@ runs:
 
         # Find all generated provenance files and attach them the the environment variable for deploy
         # shellcheck disable=SC2044 # We don't spawn a new sub shell since we are appending to global env vars
-        for name in $(find ./ -name "$artifactid-$version-*.jar.intoto.build.slsa")
+        for name in $(find ./ -name "$artifactid-$version-*.jar.build.slsa")
         do
           # shellcheck disable=SC1001 # shellcheck complains over \- but the line does what it should.
           target=$(echo "${name}" | rev | cut -d- -f1 | rev)
