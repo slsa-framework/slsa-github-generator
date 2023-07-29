@@ -19,7 +19,7 @@ workflow the "Maven builder" from now on.
 - [Limitations](#limitations)
 - [Generating Provenance](#generating-provenance)
   - [Getting Started](#getting-started)
-  - [Releasing directly to Maven Central](#releasing-directly-to-maven-central)
+  - [Releasing to Maven Central](#releasing-directly-to-maven-central)
     - [Publisher requirements](#publisher-requirements)
   - [Private Repositories](#private-repositories)
 - [Verification](#verification)
@@ -88,9 +88,9 @@ jobs:
 
 Now, when you invoke this workflow, the Maven builder will build both your artifacts and the provenance files for them.
 
-### Releasing directly to Maven Central
+### Releasing to Maven Central
 
-You can also release artifacts to Maven Central with [the slsa-github-generator Maven publisher](https://github.com/slsa-framework/slsa-github-generator/blob/main/actions/maven/publish/action.yml) by adding the following step to your workflow:
+You can also release artifacts to Maven Central with [the slsa-github-generator Maven publish action](https://github.com/slsa-framework/slsa-github-generator/blob/main/actions/maven/publish/action.yml) by adding the following step to your workflow:
 
 ```yaml
   publish:
