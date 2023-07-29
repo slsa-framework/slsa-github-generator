@@ -111,7 +111,7 @@ Now your workflow will build your artifacts and publish them to a staging reposi
 
 In the above example of the publish Action, the job that invokes the Maven builder is called `build`. The publish Action uses output from that job.
 
-#### Publisher requirements
+#### Action requirements
 
 Besides adding the above workflow to your CI pipeline, you also need to add the following plugin to your `pom.xml`:
 
