@@ -86,10 +86,8 @@ runs:
       run: |
         # Collect the provenance files into a subdirectory of "./build"
         mv "${SLSA_DIR}" ./build/libs/slsa-attestations
-        
         # Import GPG signing key
         echo "${GPG_PRIVATE_KEY}" | gpg --batch --import --import-options import-show
         GPG_KEYNAME="$(echo "${GPG_PRIVATE_KEY}" | gpg --batch --show-keys --with-colons | awk -F: '$1 == "sec" { print $5 }')"
-        
         # Run the gradle publish plugin
         ./gradlew "-Psigning.gnupg.keyName=${GPG_KEYNAME}" "-Psigning.gnupg.passphrase=${GPG_PASSPHRASE}" -Dorg.gradle.internal.publish.checksums.insecure=true publish --stacktrace
