@@ -78,7 +78,6 @@ runs:
       env:
         SLSA_OUTPUTS_ARTIFACTS_FILE: ${{ inputs.slsa-layout-file }}
       run: ./../__TOOL_ACTION_DIR__/create_attestation.sh
-      
     - name: Upload build dir
       id: upload-build-dir
       uses: slsa-framework/slsa-github-generator/.github/actions/secure-upload-folder@main
