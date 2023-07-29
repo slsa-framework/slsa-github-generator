@@ -252,18 +252,19 @@ publish:
       contents: read
       id-token: write
       actions: write
-    steps:
+  steps:
       - name: publish
         id: publish
-        uses: slsa-framework/slsa-github-generator/actions/maven/publish@main
+        uses: AdamKorcz/slsa-github-generator/actions/gradle/publish@make-gradle-publisher-an-action
         with:
-          provenance-download-name: "${{ needs.build.outputs.provenance-download-name }}"
-          provenance-download-sha256: "${{ needs.build.outputs.provenance-download-sha256 }}"
-          target-download-sha256: "${{ needs.build.outputs.target-download-sha256 }}"
+          provenance-download-name: "${{ needs.usetrw.outputs.provenance-download-name }}"
+          provenance-download-sha256: "${{ needs.usetrw.outputs.provenance-download-sha256 }}"
+          target-download-sha256: "${{ needs.usetrw.outputs.target-download-sha256 }}"
           maven-username: ${{ secrets.OSSRH_USERNAME }}
           maven-password: ${{ secrets.OSSRH_PASSWORD }}
           gpg-key-pass: ${{ secrets.GPG_PASSPHRASE }}
           gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
+          jdk-version: "17"
 ```
 
 The variable names of the secrets may be different than how you named the required secrets for publishing to Maven Central. The parameters to `provenance-download-name`, `provenance-download-sha256` and `target-download-sha256` should not be changed.
