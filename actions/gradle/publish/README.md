@@ -15,6 +15,7 @@ The Action expects you to have built the artifacts using the SLSA Gradle builder
 ## Using the Gradle Publish action
 
 To use the Gradle action you need to:
+
 1. Modify your `build.gradle.kts` file.
 2. Add the step in your release workflow that invokes it.
 
