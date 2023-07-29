@@ -223,7 +223,7 @@ You don't need to configure anything inside that code snippet; Adding them to yo
 Before using the Gradle publish action, you should have a workflow that invokes the Gradle builder. It will look something like this:
 
 ```yaml
-name: Publish maven with action
+name: Publish Gradle with action
 on:
   - workflow_dispatch
 
@@ -236,9 +236,10 @@ jobs:
       id-token: write
       actions: write
       packages: read
-    uses: slsa-framework/slsa-github-generator/.github/workflows/builder_maven_slsa3.yml@main
+    uses: AdamKorcz/slsa-github-generator/.github/workflows/builder_gradle_slsa3.yml@make-gradle-publisher-an-action
     with:
       rekor-log-public: true
+      artifact-list: build/libs/artifact1-0.1.18.jar,build/libs/artifact-0.1.18-javadoc.jar,build/libs/artifact-0.1.18-sources.jar
 ```
 
 To use the Publish action, you need to add another job:
