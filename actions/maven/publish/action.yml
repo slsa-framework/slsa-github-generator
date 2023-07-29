@@ -86,7 +86,7 @@ runs:
         version=$(mvn org.apache.maven.plugins:maven-help-plugin:3.2.0:evaluate -Dexpression=project.version -q -DforceStdout)
         artifactid=$(mvn org.apache.maven.plugins:maven-help-plugin:3.2.0:evaluate -Dexpression=project.artifactId -q -DforceStdout)
         # Reset the environment variables add in the base provenance
-        files="slsa-attestations/${PROVENANCE_FILES}/${artifactid}-${version}.jar.intoto.build.slsa"
+        files="slsa-attestations/${PROVENANCE_FILES}/${artifactid}-${version}.jar.build.slsa"
         types=slsa
         classifiers=jar.intoto.build
         # Find all necessary built jar files and attach them to the environment variable deploy
