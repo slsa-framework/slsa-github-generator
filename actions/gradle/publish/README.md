@@ -237,7 +237,7 @@ jobs:
       id-token: write
       actions: read
       packages: read
-    uses: AdamKorcz/slsa-github-generator/.github/workflows/builder_gradle_slsa3.yml@make-gradle-publisher-an-action
+    uses: slsa-framework/slsa-github-generator/.github/workflows/builder_gradle_slsa3.yml@v1.7.0
     with:
       rekor-log-public: true
       artifact-list: build/libs/artifact1-0.1.18.jar,build/libs/artifact-0.1.18-javadoc.jar,build/libs/artifact-0.1.18-sources.jar
