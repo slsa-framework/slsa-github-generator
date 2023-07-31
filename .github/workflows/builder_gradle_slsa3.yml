@@ -47,6 +47,7 @@ on:
 
       target-download-sha256:
         description: "The sha256 of the target uploaded to the workflow run."
+        # NOTE: This is an "untrusted" value returned from the build.
         value: "${{ fromJSON(jobs.slsa-run.outputs.build-artifacts-outputs).target-download-sha256 }}"
 jobs:
   slsa-setup:
