@@ -256,7 +256,7 @@ publish:
   steps:
       - name: publish
         id: publish
-        uses: AdamKorcz/slsa-github-generator/actions/gradle/publish@make-gradle-publisher-an-action
+        uses: slsa-framework/slsa-github-generator/actions/gradle/publish@v1.7.0
         with:
           provenance-download-name: "${{ needs.usetrw.outputs.provenance-download-name }}"
           provenance-download-sha256: "${{ needs.usetrw.outputs.provenance-download-sha256 }}"
