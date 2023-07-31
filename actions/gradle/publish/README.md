@@ -41,7 +41,7 @@ repositories {
 
 group = "io.github.adamkorcz"
 version = "0.1.18"
-description = "Adams test java project"
+description = "Adam's test java project"
 java.sourceCompatibility = JavaVersion.VERSION_1_8
 
 java {
@@ -57,7 +57,7 @@ publishing {
             
             pom {
                 name.set("test-java-project")
-                description.set("Adams test java project")
+                description.set("Adam's test java project")
                 url.set("https://github.com/AdamKorcz/test-java-project")
                 licenses {
                     license {
@@ -233,8 +233,8 @@ permissions: read-all
 jobs:
   build:
     permissions:
-      contents: read
       id-token: write
+      contents: read
       actions: read
       packages: read
     uses: slsa-framework/slsa-github-generator/.github/workflows/builder_gradle_slsa3.yml@v1.7.0
@@ -250,17 +250,17 @@ publish:
   runs-on: ubuntu-latest
   needs: build
   permissions:
-    contents: read
     id-token: write
+    contents: read
     actions: read
   steps:
     - name: publish
       id: publish
       uses: slsa-framework/slsa-github-generator/actions/gradle/publish@v1.7.0
       with:
-        provenance-download-name: "${{ needs.usetrw.outputs.provenance-download-name }}"
-        provenance-download-sha256: "${{ needs.usetrw.outputs.provenance-download-sha256 }}"
-        target-download-sha256: "${{ needs.usetrw.outputs.target-download-sha256 }}"
+        provenance-download-name: "${{ needs.build.outputs.provenance-download-name }}"
+        provenance-download-sha256: "${{ needs.build.outputs.provenance-download-sha256 }}"
+        target-download-sha256: "${{ needs.build.outputs.target-download-sha256 }}"
         maven-username: ${{ secrets.OSSRH_USERNAME }}
         maven-password: ${{ secrets.OSSRH_PASSWORD }}
         gpg-key-pass: ${{ secrets.GPG_PASSPHRASE }}
@@ -268,7 +268,7 @@ publish:
         jdk-version: "17"
 ```
 
-The variable names of the secrets may be different than how you named the required secrets for publishing to Maven Central. The parameters to `provenance-download-name`, `provenance-download-sha256` and `target-download-sha256` should not be changed.
+Set the values of "maven-username", "maven-password", "gpg-key-pass" and " gpg-private-key" for your account. The parameters to `provenance-download-name`, `provenance-download-sha256` and `target-download-sha256` should not be changed.
 
 Once you trigger this workflow, your artifacts and provenance files will be added to a staging repository in Maven Central. You need to close the staging repository and then release:
 
