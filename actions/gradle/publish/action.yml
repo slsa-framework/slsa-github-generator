@@ -69,7 +69,7 @@ runs:
         sha256: "${{ inputs.provenance-download-sha256 }}"
 
     - name: Download the target dir
-      uses: slsa-framework/slsa-github-generator/.github/actions/secure-download-folder@v1.8.0-rc.1
+      uses: slsa-framework/slsa-github-generator/.github/actions/secure-download-folder@main
       with:
         name: build
         path: ./
