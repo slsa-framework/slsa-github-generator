@@ -247,25 +247,25 @@ To use the Publish action, you need to add another job:
 
 ```yaml
 publish:
-    runs-on: ubuntu-latest
-    needs: build
-    permissions:
-      contents: read
-      id-token: write
-      actions: read
+  runs-on: ubuntu-latest
+  needs: build
+  permissions:
+    contents: read
+    id-token: write
+    actions: read
   steps:
-      - name: publish
-        id: publish
-        uses: slsa-framework/slsa-github-generator/actions/gradle/publish@v1.7.0
-        with:
-          provenance-download-name: "${{ needs.usetrw.outputs.provenance-download-name }}"
-          provenance-download-sha256: "${{ needs.usetrw.outputs.provenance-download-sha256 }}"
-          target-download-sha256: "${{ needs.usetrw.outputs.target-download-sha256 }}"
-          maven-username: ${{ secrets.OSSRH_USERNAME }}
-          maven-password: ${{ secrets.OSSRH_PASSWORD }}
-          gpg-key-pass: ${{ secrets.GPG_PASSPHRASE }}
-          gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
-          jdk-version: "17"
+    - name: publish
+      id: publish
+      uses: slsa-framework/slsa-github-generator/actions/gradle/publish@v1.7.0
+      with:
+        provenance-download-name: "${{ needs.usetrw.outputs.provenance-download-name }}"
+        provenance-download-sha256: "${{ needs.usetrw.outputs.provenance-download-sha256 }}"
+        target-download-sha256: "${{ needs.usetrw.outputs.target-download-sha256 }}"
+        maven-username: ${{ secrets.OSSRH_USERNAME }}
+        maven-password: ${{ secrets.OSSRH_PASSWORD }}
+        gpg-key-pass: ${{ secrets.GPG_PASSPHRASE }}
+        gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
+        jdk-version: "17"
 ```
 
 The variable names of the secrets may be different than how you named the required secrets for publishing to Maven Central. The parameters to `provenance-download-name`, `provenance-download-sha256` and `target-download-sha256` should not be changed.
