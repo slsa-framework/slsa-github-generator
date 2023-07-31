@@ -72,6 +72,13 @@ runs:
         path: ./
         sha256: "${{ inputs.target-download-sha256 }}"
 
+    - name: Checkout the tool repository
+      uses: slsa-framework/slsa-github-generator/.github/actions/secure-builder-checkout@main
+      with:
+        repository: slsa-framework/slsa-github-generator
+        ref: main
+        path: __TOOL_CHECKOUT_DIR__
+
     - name: Publish to the Maven Central Repository
       shell: bash
       env:
@@ -81,6 +88,8 @@ runs:
         SLSA_DIR: "${{ inputs.provenance-download-name }}"
         PROVENANCE_FILES: "${{ inputs.provenance-download-name }}"
       run: |
+        mv ./__TOOL_CHECKOUT_DIR__ ../__TOOL_CHECKOUT_DIR__
+        cd ../__TOOL_CHECKOUT_DIR__/actions/maven/publish/slsa-hashing-plugin && mvn clean install && cd -
         mvn javadoc:jar source:jar
         # Retrieve project version
         version=$(mvn org.apache.maven.plugins:maven-help-plugin:3.2.0:evaluate -Dexpression=project.version -q -DforceStdout)

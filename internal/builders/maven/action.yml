@@ -58,11 +58,21 @@ runs:
       with:
         distribution: temurin
         java-version: ${{ fromJson(inputs.slsa-workflow-inputs).jdk-version }}
+    - name: Checkout the tool repository
+      uses: slsa-framework/slsa-github-generator/.github/actions/secure-builder-checkout@main
+      with:
+        repository: slsa-framework/slsa-github-generator
+        ref: main
+        path: __TOOL_CHECKOUT_DIR__
     - name: Run mvn package
       shell: bash
       env:
         SLSA_OUTPUTS_ARTIFACTS_FILE: ${{ inputs.slsa-layout-file }}
-      run: cd plugin && mvn clean install && cd .. && mvn package
+      run: |
+        mv ./__TOOL_CHECKOUT_DIR__ ../__TOOL_CHECKOUT_DIR__
+        cd ../__TOOL_CHECKOUT_DIR__/actions/maven/publish/slsa-hashing-plugin && mvn clean install && cd - && mvn package
+        ls
+        pwd
     - name: Upload target
       id: upload-target
       uses: slsa-framework/slsa-github-generator/.github/actions/secure-upload-folder@main
