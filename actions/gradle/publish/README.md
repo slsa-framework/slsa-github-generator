@@ -274,8 +274,8 @@ Once you trigger this workflow, your artifacts and provenance files will be adde
 
 Closing the staging repository:
 
-![closing the staging repository](/images/gradle-publisher-staging-repository.png)
+![closing the staging repository](/actions/gradle/publish/images/gradle-publisher-staging-repository.png)
 
 Releasing:
 
-![releasing the Gradle artefacts](/images/gradle-publisher-release-closed-repository.png)
+![releasing the Gradle artefacts](/actions/gradle/publish/images/gradle-publisher-release-closed-repository.png)
