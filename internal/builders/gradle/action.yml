@@ -39,6 +39,13 @@ inputs:
   slsa-workflow-secret13: {}
   slsa-workflow-secret14: {}
   slsa-workflow-secret15: {}
+outputs:
+  target-download-sha256:
+    description: >
+      The sha256 digest of the "build" directory.
+
+      Users should verify the download against this digest to prevent tampering.
+    value: ${{ steps.upload-build-dir.outputs.sha256 }}
 
 on:
   workflow_call:
@@ -71,3 +78,9 @@ runs:
       env:
         SLSA_OUTPUTS_ARTIFACTS_FILE: ${{ inputs.slsa-layout-file }}
       run: ./../__TOOL_ACTION_DIR__/create_attestation.sh
+    - name: Upload build dir
+      id: upload-build-dir
+      uses: slsa-framework/slsa-github-generator/.github/actions/secure-upload-folder@main
+      with:
+        name: build
+        path: build
