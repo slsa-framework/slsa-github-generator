@@ -104,7 +104,6 @@ runs:
         # shellcheck disable=SC2044 # We don't spawn a new sub shell since we are appending to global env vars
         for name in $(find ./ -name "$artifactid-$version-*.jar.build.slsa")
         do
-          # shellcheck disable=SC1001 # shellcheck complains over \- but the line does what it should.
           target=$(echo "${name}" | rev | cut -d- -f1 | rev)
           files=$files,$name
           types=$types",slsa"
