@@ -27,7 +27,6 @@ jobs:
       id-token: write
       contents: read
       actions: read
-      packages: read
     uses: slsa-framework/slsa-github-generator/.github/workflows/builder_maven_slsa3.yml@v1.7.0
     with:
       rekor-log-public: true
