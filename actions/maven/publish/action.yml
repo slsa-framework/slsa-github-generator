@@ -95,7 +95,7 @@ runs:
         echo "ls .."
         ls ..
         echo "ls ../__BUILDER_CHECKOUT_DIR__"
-        ls ../__BUILDER_CHECKOUT_DIR__"
+        ls ../__BUILDER_CHECKOUT_DIR__
         
         cd ../__BUILDER_CHECKOUT_DIR__/actions/maven/publish/slsa-hashing-plugin && mvn clean install && cd -
         mvn javadoc:jar source:jar
