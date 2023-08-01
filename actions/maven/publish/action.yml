@@ -90,10 +90,6 @@ runs:
       run: |
         mv ./__TOOL_CHECKOUT_DIR__ ../__TOOL_CHECKOUT_DIR__
         cd ../__TOOL_CHECKOUT_DIR__/actions/maven/publish/slsa-hashing-plugin && mvn clean install && cd -
-        echo "ls"
-        ls
-        echo "find.........."
-        find . -name *.build.slsa
         mvn javadoc:jar source:jar
         # Retrieve project version
         version=$(mvn org.apache.maven.plugins:maven-help-plugin:3.2.0:evaluate -Dexpression=project.version -q -DforceStdout)
@@ -111,10 +107,6 @@ runs:
           types=$types,${target##*.}
           classifiers=$classifiers,${target%.*}
         done
-
-        echo "files now: "
-        echo "${files}"
-
         # Find all generated provenance files and attach them the the environment variable for deploy
         # shellcheck disable=SC2044 # We don't spawn a new sub shell since we are appending to global env vars
         for name in $(find ./ -name "$artifactid-$version-*.jar.build.slsa")
@@ -124,8 +116,5 @@ runs:
           types=$types",slsa"
           classifiers=$classifiers,${target::-9}
         done
-
-        echo "files now: "
-        echo "${files}"
         # Sign and deploy the files to the ossrh remote repository
         mvn validate jar:jar -Dfile=target/"${artifactid}"-"${version}".jar -Durl=https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/ -DrepositoryId=ossrh -Dfiles="${files}" -Dtypes="${types}" -Dclassifiers="${classifiers}" -DpomFile=pom.xml gpg:sign-and-deploy-file
