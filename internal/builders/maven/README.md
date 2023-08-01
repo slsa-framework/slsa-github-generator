@@ -19,6 +19,8 @@ workflow the "Maven builder" from now on.
 - [Limitations](#limitations)
 - [Generating Provenance](#generating-provenance)
   - [Getting Started](#getting-started)
+  - [Releasing to Maven Central](#releasing-to-maven-central)
+    - [Action requirements](#action-requirements)
   - [Private Repositories](#private-repositories)
 - [Verification](#verification)
 
@@ -86,24 +88,31 @@ jobs:
 
 Now, when you invoke this workflow, the Maven builder will build both your artifacts and the provenance files for them.
 
-You can also release artifacts to Maven Central by adding the following step to your workflow:
+### Releasing to Maven Central
 
-```yaml
-  publish:
-    needs: build
-    uses: slsa-framework/slsa-github-generator/.github/workflows/publish_maven.yml@v1.7.0
-    with:
-      provenance-download-name: "${{ needs.build.outputs.provenance-download-name }}"
-      provenance-download-sha256: "${{ needs.build.outputs.provenance-download-sha256 }}"
-      target-download-sha256: "${{ needs.build.outputs.target-download-sha256 }}"
-    secrets:
-      maven-username: ${{ secrets.OSSRH_USERNAME }}
-      maven-password: ${{ secrets.OSSRH_PASSWORD }}
-      gpg-key-pass: ${{ secrets.GPG_PASSPHRASE }}
-      gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
+You can also release artifacts to Maven Central with [the slsa-github-generator Maven publish action](https://github.com/slsa-framework/slsa-github-generator/blob/main/actions/maven/publish/README.md).
+
+#### Action requirements
+
+Besides adding the above workflow to your CI pipeline, you also need to add the following plugin to your `pom.xml`:
+
+```xml
+<plugin>
+    <groupId>io.github.slsa-framework.slsa-github-generator</groupId>
+    <artifactId>hash-maven-plugin</artifactId>
+    <version>0.0.1</version>
+    <executions>
+        <execution>
+            <goals>
+                <goal>hash-jarfile</goal>
+            </goals>
+        </execution>
+    </executions>
+    <configuration>
+        <outputJsonPath>${SLSA_OUTPUTS_ARTIFACTS_FILE}</outputJsonPath>
+    </configuration>
+</plugin>
 ```
-
-Now your workflow will build your artifacts and publish them to a staging repository in Maven Central.
 
 ### Private Repositories
 
