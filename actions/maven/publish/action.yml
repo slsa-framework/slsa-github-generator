@@ -88,6 +88,13 @@ runs:
         SLSA_DIR: "${{ inputs.provenance-download-name }}"
         PROVENANCE_FILES: "${{ inputs.provenance-download-name }}"
       run: |
+        echo "ls"
+        ls
+        echo "ls .."
+        ls ..
+        echo "ls ../__BUILDER_CHECKOUT_DIR__"
+        ls ../__BUILDER_CHECKOUT_DIR__"
+        
         cd ../__BUILDER_CHECKOUT_DIR__/actions/maven/publish/slsa-hashing-plugin && mvn clean install && cd -
         mvn javadoc:jar source:jar
         # Retrieve project version
