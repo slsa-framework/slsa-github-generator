@@ -30,7 +30,18 @@ public class JarfileHashMojo extends AbstractMojo {
     @Parameter(property = "hash-jarfile.outputJsonPath", defaultValue = "")
     private String outputJsonPath;
 
+    @Parameter(property = "run.hash.jarfile", defaultValue = "false")
+    private Boolean runHashJarfile;
+
+
     public void execute() throws MojoExecutionException, MojoFailureException {
+        if (!runHashJarfile) {
+            getLog().info("SLSA Hash Jarfile plugin is skipped.");
+            return;
+        }
+
+        getLog().info("Start running SLSA Hash Jarfile plugin.");
+
         try {
             StringBuilder attestations = new StringBuilder();
 

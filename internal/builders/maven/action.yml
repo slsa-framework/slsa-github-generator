@@ -73,9 +73,7 @@ runs:
           && cd ../__TOOL_CHECKOUT_DIR__/actions/maven/publish/slsa-hashing-plugin \
           && mvn clean install \
           && cd - \
-          && mvn package
-        ls
-        pwd
+          && mvn package  -Drun.hash.jarfile=true
     - name: Upload target
       id: upload-target
       uses: slsa-framework/slsa-github-generator/.github/actions/secure-upload-folder@main
