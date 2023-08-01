@@ -92,8 +92,8 @@ runs:
         cd ../__TOOL_CHECKOUT_DIR__/actions/maven/publish/slsa-hashing-plugin && mvn clean install && cd -
         echo "ls"
         ls
+        echo "find.........."
         find . -name *.build.slsa
-        .build.slsa
         mvn javadoc:jar source:jar
         # Retrieve project version
         version=$(mvn org.apache.maven.plugins:maven-help-plugin:3.2.0:evaluate -Dexpression=project.version -q -DforceStdout)
