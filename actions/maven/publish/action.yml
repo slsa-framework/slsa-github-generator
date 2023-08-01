@@ -88,16 +88,16 @@ runs:
         SLSA_DIR: "${{ inputs.provenance-download-name }}"
         PROVENANCE_FILES: "${{ inputs.provenance-download-name }}"
       run: |
-        mv __BUILDER_CHECKOUT_DIR__ ../
+        #mv __BUILDER_CHECKOUT_DIR__ ../
         find ../.. -name "*.java"
         echo "ls"
         ls
         echo "ls .."
         ls ..
-        echo "ls ../__BUILDER_CHECKOUT_DIR__"
-        ls ../__BUILDER_CHECKOUT_DIR__
+        echo "ls __BUILDER_CHECKOUT_DIR__"
+        ls __BUILDER_CHECKOUT_DIR__
         
-        cd ../__BUILDER_CHECKOUT_DIR__/actions/maven/publish/slsa-hashing-plugin && mvn clean install && cd -
+        cd __BUILDER_CHECKOUT_DIR__/actions/maven/publish/slsa-hashing-plugin && mvn clean install && cd -
         mvn javadoc:jar source:jar
         # Retrieve project version
         export version=$(mvn org.apache.maven.plugins:maven-help-plugin:3.2.0:evaluate -Dexpression=project.version -q -DforceStdout)
