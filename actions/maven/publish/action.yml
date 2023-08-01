@@ -99,14 +99,12 @@ runs:
         types=slsa
         classifiers=jar.build
         # Find all necessary built jar files and attach them to the environment variable deploy
-        # shellcheck disable=SC2044 # We don't spawn a new sub shell since we are appending to global env vars
-        for name in $(find ./ -name "$artifactid-$version-*.jar")
-        do
+        while read -r name; do
           target=$(echo "${name}" | rev | cut -d- -f1 | rev)
           files=$files,$name
           types=$types,${target##*.}
           classifiers=$classifiers,${target%.*}
-        done
+        done <<<"$(find ./ -name "$artifactid-$version-*.jar")"
         # Find all generated provenance files and attach them the the environment variable for deploy
         # shellcheck disable=SC2044 # We don't spawn a new sub shell since we are appending to global env vars
         for name in $(find ./ -name "$artifactid-$version-*.jar.build.slsa")
