@@ -81,6 +81,19 @@ if [[ "$results" != "" ]]; then
     exit 1
 fi
 
+# Verify the Maven Actions use the correct builder ref.
+results=$(
+    find actions/maven/ internal/builders/maven/ -name '*.yaml' -o -name '*.yml' -type f -print0 |
+        xargs -0 grep -Pn "ref:[ ]*(?!$RELEASE_TAG)" ||
+        true
+)
+if [[ "$results" != "" ]]; then
+    echo "Some Maven Actions are referencing the builder at the incorrect tag \"$RELEASE_TAG\""
+    echo "$results"
+    exit 1
+fi
+
+
 if [[ "$RELEASE_TAG" =~ .*-rc\.[0-9]*$ ]]; then
     # don't check documentation for release candidates
     exit 0

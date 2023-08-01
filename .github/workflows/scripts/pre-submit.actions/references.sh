@@ -57,3 +57,17 @@ if [[ "$results" != "" ]]; then
     echo "$results"
     exit 1
 fi
+
+# Verify the Maven Actions use the correct builder ref.
+results=$(
+    find actions/maven/ internal/builders/maven/ -name '*.yaml' -o -name '*.yml' -type f -print0 |
+        xargs -0 grep -Pn "ref:[ ]*(?!main)" ||
+        true
+)
+if [[ "$results" != "" ]]; then
+    echo "Some Maven Actions are referencing the builder at main"
+    echo "$results"
+    exit 1
+fi
+
+
