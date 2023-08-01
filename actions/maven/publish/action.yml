@@ -106,13 +106,11 @@ runs:
           classifiers=$classifiers,${target%.*}
         done <<<"$(find ./ -name "$artifactid-$version-*.jar")"
         # Find all generated provenance files and attach them the the environment variable for deploy
-        # shellcheck disable=SC2044 # We don't spawn a new sub shell since we are appending to global env vars
-        for name in $(find ./ -name "$artifactid-$version-*.jar.build.slsa")
-        do
+        while read -r name; do
           target=$(echo "${name}" | rev | cut -d- -f1 | rev)
           files=$files,$name
           types=$types",slsa"
           classifiers=$classifiers,${target::-9}
-        done
+        done <<<"$(find ./ -name "$artifactid-$version-*.jar.build.slsa")"
         # Sign and deploy the files to the ossrh remote repository
         mvn validate jar:jar -Dfile=target/"${artifactid}"-"${version}".jar -Durl=https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/ -DrepositoryId=ossrh -Dfiles="${files}" -Dtypes="${types}" -Dclassifiers="${classifiers}" -DpomFile=pom.xml gpg:sign-and-deploy-file
