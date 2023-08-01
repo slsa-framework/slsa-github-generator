@@ -72,7 +72,7 @@ runs:
         path: ./
         sha256: "${{ inputs.target-download-sha256 }}"
 
-    - name: Checkout the tool repository
+    - name: Checkout the framework repository
       uses: slsa-framework/slsa-github-generator/.github/actions/secure-builder-checkout@main
       with:
         repository: slsa-framework/slsa-github-generator
