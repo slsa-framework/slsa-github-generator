@@ -69,8 +69,11 @@ runs:
       env:
         SLSA_OUTPUTS_ARTIFACTS_FILE: ${{ inputs.slsa-layout-file }}
       run: |
-        mv ./__TOOL_CHECKOUT_DIR__ ../__TOOL_CHECKOUT_DIR__
-        cd ../__TOOL_CHECKOUT_DIR__/actions/maven/publish/slsa-hashing-plugin && mvn clean install && cd - && mvn package
+        mv ./__TOOL_CHECKOUT_DIR__ ../__TOOL_CHECKOUT_DIR__ \
+          && cd ../__TOOL_CHECKOUT_DIR__/actions/maven/publish/slsa-hashing-plugin \
+          && mvn clean install \
+          && cd - \
+          && mvn package
         ls
         pwd
     - name: Upload target
