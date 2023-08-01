@@ -75,8 +75,8 @@ runs:
     - name: Checkout the tool repository
       uses: slsa-framework/slsa-github-generator/.github/actions/secure-builder-checkout@main
       with:
-        repository: slsa-framework/slsa-github-generator
-        ref: main
+        repository: AdamKorcz/slsa-github-generator
+        ref: maven-publisher-to-action #main
         path: __TOOL_CHECKOUT_DIR__
 
     - name: Publish to the Maven Central Repository
