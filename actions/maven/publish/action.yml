@@ -88,6 +88,7 @@ runs:
         SLSA_DIR: "${{ inputs.provenance-download-name }}"
         PROVENANCE_FILES: "${{ inputs.provenance-download-name }}"
       run: |
+        mv __BUILDER_CHECKOUT_DIR__ ../
         echo "ls"
         ls
         echo "ls .."
