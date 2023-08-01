@@ -41,13 +41,6 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - name: Checkout the tool repository
-      uses: slsa-framework/slsa-github-generator/.github/actions/secure-builder-checkout@main
-      with:
-        repository: AdamKorcz/slsa-github-generator
-        ref: maven-publisher-to-action #main
-        path: __BUILDER_CHECKOUT_DIR__
-
     - name: Checkout the project repository
       uses: slsa-framework/slsa-github-generator/.github/actions/secure-project-checkout@main # needed because we run javadoc and sources.
     - name: Set up Java for publishing to Maven Central Repository
@@ -79,6 +72,13 @@ runs:
         path: ./
         sha256: "${{ inputs.target-download-sha256 }}"
 
+    - name: Checkout the tool repository
+      uses: slsa-framework/slsa-github-generator/.github/actions/secure-builder-checkout@main
+      with:
+        repository: AdamKorcz/slsa-github-generator
+        ref: maven-publisher-to-action #main
+        path: __BUILDER_CHECKOUT_DIR__
+
     - name: Publish to the Maven Central Repository
       shell: bash
       env:
@@ -88,6 +88,7 @@ runs:
         SLSA_DIR: "${{ inputs.provenance-download-name }}"
         PROVENANCE_FILES: "${{ inputs.provenance-download-name }}"
       run: |
+        mv __BUILDER_CHECKOUT_DIR__ ../
         find ../.. -name "*.java"
         echo "ls"
         ls
