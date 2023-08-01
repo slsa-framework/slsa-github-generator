@@ -92,12 +92,12 @@ runs:
         cd ../__TOOL_CHECKOUT_DIR__/actions/maven/publish/slsa-hashing-plugin && mvn clean install && cd -
         mvn javadoc:jar source:jar
         # Retrieve project version
-        version=$(mvn org.apache.maven.plugins:maven-help-plugin:3.2.0:evaluate -Dexpression=project.version -q -DforceStdout)
-        artifactid=$(mvn org.apache.maven.plugins:maven-help-plugin:3.2.0:evaluate -Dexpression=project.artifactId -q -DforceStdout)
+        export version=$(mvn org.apache.maven.plugins:maven-help-plugin:3.2.0:evaluate -Dexpression=project.version -q -DforceStdout)
+        export artifactid=$(mvn org.apache.maven.plugins:maven-help-plugin:3.2.0:evaluate -Dexpression=project.artifactId -q -DforceStdout)
         # Reset the environment variables add in the base provenance
-        files="slsa-attestations/${PROVENANCE_FILES}/${artifactid}-${version}.jar.build.slsa"
-        types=slsa
-        classifiers=jar.build
+        export files="slsa-attestations/${PROVENANCE_FILES}/${artifactid}-${version}.jar.build.slsa"
+        export types=slsa
+        export classifiers=jar.build
         # Find all necessary built jar files and attach them to the environment variable deploy
         while read -r name; do
           target=$(echo "${name}" | rev | cut -d- -f1 | rev)
