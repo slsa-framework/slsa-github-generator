@@ -98,7 +98,7 @@ Besides adding the above workflow to your CI pipeline, you also need to add the 
 
 ```xml
 <plugin>
-    <groupId>dev.slsa.slsaframework</groupId>
+    <groupId>io.github.slsa-framework.slsa-github-generator</groupId>
     <artifactId>hash-maven-plugin</artifactId>
     <version>0.0.1</version>
     <executions>
