@@ -98,8 +98,10 @@ public class JarfileHashMojo extends AbstractMojo {
                     return outputJson;
                 }
             }
+            getLog().error("Could not generate the output json file.");
             return new File(targetDir, "hash.json");
         } catch (IOException e) {
+            getLog().error("Could not generate the output json file.");
             return new File(targetDir, "hash.json");
         }
     }
