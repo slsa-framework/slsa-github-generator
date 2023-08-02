@@ -38,7 +38,7 @@
 
 ## Overview
 
-This repository contains free tools to generate and verify SLSA3+ provenance for native GitHub projects using GitHub Actions.
+This repository contains free tools to generate and verify SLSA Build Level 3 provenance for native GitHub projects using GitHub Actions.
 Developers can build their software using a secure process that protects against many supply chain attacks and tampering.
 Users of their software can verify a tamper-proof statement of the process to know how the software was created.
 
