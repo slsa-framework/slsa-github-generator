@@ -196,7 +196,7 @@ A command line example is provided in [slsa-framework/slsa-verifier#example](htt
 
 If you want to build your own builder, use the [BYOB framework](BYOB.md). The framework lets you create your own SLSA3 builder on GitHub. For example, you can wrap an existing GitHub Action into a SLSA3 builder. For verification, your users can use the [slsa-verifier](#verification-of-provenance).
 
-## Roadmap
+## Project Roadmap
 
 The project roadmap is tracked via milestones. You can track progress and open
 issues via the [milestones page](https://github.com/slsa-framework/slsa-github-generator/milestones?direction=asc&sort=due_date&state=open).
