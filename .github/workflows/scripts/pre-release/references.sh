@@ -22,6 +22,7 @@ set -euo pipefail
 
 # Verify the tag has semver format.
 cd __EXAMPLE_PACKAGE__
+
 # shellcheck source=/dev/null
 source "./.github/workflows/scripts/e2e-utils.sh"
 major=$(version_major "$RELEASE_TAG")
@@ -80,6 +81,19 @@ if [[ "$results" != "" ]]; then
     echo "$results"
     exit 1
 fi
+
+# Verify the Maven Actions use the correct builder ref.
+results=$(
+    find actions/maven/ internal/builders/maven/ -name '*.yaml' -o -name '*.yml' -type f -print0 |
+        xargs -0 grep -Pn "ref:(\s*(?!$RELEASE_TAG)[^\s]+)" ||
+        true
+)
+if [[ "$results" != "" ]]; then
+    echo "Some Maven Actions are referencing the builder at the incorrect tag \"$RELEASE_TAG\""
+    echo "$results"
+    exit 1
+fi
+
 
 if [[ "$RELEASE_TAG" =~ .*-rc\.[0-9]*$ ]]; then
     # don't check documentation for release candidates

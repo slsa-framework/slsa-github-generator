@@ -36,7 +36,7 @@ fi
 
 # Verify our Actions are referenced at main in internal actions.
 results=$(
-    find .github/actions/ -maxdepth 2 -name '*.yaml' -o -name '*.yml' -type f -print0 \
+    find .github/actions/ -maxdepth 2 -name '*.yaml' -o -name '*.yml' -type f -print0 |
         xargs -0 grep -P "slsa-framework/slsa-github-generator/.*@(?!main)" ||
         true
 )
@@ -57,3 +57,17 @@ if [[ "$results" != "" ]]; then
     echo "$results"
     exit 1
 fi
+
+# Verify the Maven Actions use the correct builder ref.
+results=$(
+    find actions/maven/ internal/builders/maven/ -name '*.yaml' -o -name '*.yml' -type f -print0 |
+        xargs -0 grep -Pn "ref:(\s*(?!main)[^\s]+)" ||
+        true
+)
+if [[ "$results" != "" ]]; then
+    echo "Some Maven Actions are not referencing the builder at main"
+    echo "$results"
+    exit 1
+fi
+
+
