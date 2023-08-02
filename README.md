@@ -158,12 +158,11 @@ There are other available builders using this repository's [BYOB framework](#bui
 |:-----------|:-----------------|:------------|:--------|
 | [JReleaser](https://jreleaser.org/) projects | [JReleaser builder](https://github.com/jreleaser/release-action/tree/java#slsa-builder) | Builds and generates provenance using [JReleaser](https://jreleaser.org/) | [Beta since v1.8.0](https://github.com/slsa-framework/slsa-github-generator/milestone/16) |
 
-
 If none of these options fit your needs, use a [generator](#generators) as described below:
 
 ### Generators
 
-Generators only generate provenance for you. They let you meet the [provenance generation](https://slsa.dev/spec/v1.0/requirements#provenance-generation) requirements
+Generators only generate provenance for you.
 for [SLSA Build level 3](https://slsa.dev/spec/v1.0/levels).
 
 Generators create an attestation to a software artifact coming from your repository.
