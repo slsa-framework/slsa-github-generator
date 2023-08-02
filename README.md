@@ -120,7 +120,7 @@ using a trusted / isolated re-usable workflow. You can read up on the design in 
 
 To select the right option to geneate provenance for your use case, take into account the programming language and build toolchain you already use, e.g. `go`, `mvn`, `bazel`, etc. Select a [builder](#builders) for your ecosystem.
 For example, if you use `Go`, use the [Go builder](internal/builders/go/README.md). If you use Java and build Maven packages, use the [Maven builder](internal/builders/maven/README.md), and so on.
-If your release scripts are more complex than what the builder supports; or if there is no builder for your ecosystem, use a [generator](#generators) instead.
+If your release scripts are more complex than what the builder supports; or if there is no builder for your ecosystem, use a provenance [generator](#generators) instead.
 
 ### Referencing SLSA builders and generators
 
