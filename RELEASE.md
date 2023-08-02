@@ -103,6 +103,7 @@ Update version references with the following command:
 
 ```shell
 find .github/workflows/ .github/actions/ actions/ -name '*.yaml' -o -name '*.yml' | xargs sed -i "s/uses: slsa-framework\/slsa-github-generator\/\(.*\)@\(main\|v[0-9]\+\.[0-9]\+\.[0-9]\+\(-rc\.[0-9]\+\)\?\)/uses: slsa-framework\/slsa-github-generator\/\1@$BUILDER_TAG/"
+find actions/maven/ internal/builders/maven/ -name '*.yaml' -o -name '*.yml' -type f | xargs sed -i "s/\(ref:[ ]*\)main/\1$BUILDER_TAG/"
 ```
 
 Send a PR with this update and add `#label:release ${BUILDER_TAG}` in the PR description.
