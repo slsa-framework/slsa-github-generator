@@ -172,7 +172,7 @@ This repository hosts the following generators:
 
 | Artifact type |      Generator    |  Description | Status |
 |:--------------|:------------------|:-------------|:-------|
-| file | [Generic generator](internal/builders/generic/README.md) | Generates provenance for arbitrary file-based artifacts, for any ecosystem and programming language | [available since v1.2.0](https://github.com/slsa-framework/slsa-github-generator/milestone/2) |
+| file (binary, package tarball etc.) | [Generic generator](internal/builders/generic/README.md) | Generates provenance for arbitrary file-based artifacts, for any ecosystem and programming language | [available since v1.2.0](https://github.com/slsa-framework/slsa-github-generator/milestone/2) |
 | container | [Container generator](internal/builders/container/README.md)   |  Generate provenance for container images. The generated provenance is compatible with    [cosign](https://github.com/sigstore/cosign)'s attestation format. | [available since v1.4.0](https://github.com/slsa-framework/slsa-github-generator/milestone/3)
 
 ## Verify provenance
