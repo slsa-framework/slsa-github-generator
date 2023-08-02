@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
 inputs:
   provenance-download-name:
     description: "The artifact name for the package provenance."
@@ -50,8 +49,8 @@ runs:
         MAVEN_PASSWORD: ${{ inputs.maven-password }}
         GPG_KEY_PASS: ${{ inputs.gpg-key-pass }}
       with:
-        java-version: '11'
-        distribution: 'temurin'
+        java-version: "11"
+        distribution: "temurin"
         server-id: ossrh
         server-username: MAVEN_USERNAME
         server-password: MAVEN_PASSWORD
@@ -76,7 +75,7 @@ runs:
       uses: slsa-framework/slsa-github-generator/.github/actions/secure-builder-checkout@v1.8.0-rc.2
       with:
         repository: slsa-framework/slsa-github-generator
-        ref: main
+        ref: v1.8.0-rc.2
         path: __BUILDER_CHECKOUT_DIR__
 
     - name: Publish to the Maven Central Repository

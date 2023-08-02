@@ -17,11 +17,11 @@ inputs:
   # BYOB-provided inputs
   slsa-workflow-inputs:
     # Inputs in JSON format.
-    description: 'All the onputs'
+    description: "All the onputs"
     type: string
     required: true
   slsa-layout-file:
-    description: 'Location to store the layout content'
+    description: "Location to store the layout content"
     type: string
     required: true
   slsa-workflow-secret1: {}
@@ -50,7 +50,7 @@ outputs:
 on:
   workflow_call:
 runs:
-  using: 'composite'
+  using: "composite"
   steps:
     - uses: actions/checkout@96f53100ba2a5449eb71d2e6604bbcd94b9449b5 # v 3.5.2
     - name: Set up JDK
@@ -62,7 +62,7 @@ runs:
       uses: slsa-framework/slsa-github-generator/.github/actions/secure-builder-checkout@main
       with:
         repository: slsa-framework/slsa-github-generator
-        ref: main
+        ref: v1.8.0-rc.2
         path: __BUILDER_CHECKOUT_DIR__
     - name: Run mvn package
       shell: bash
