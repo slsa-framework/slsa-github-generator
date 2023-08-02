@@ -36,7 +36,7 @@ fi
 
 # Verify our Actions are referenced at main in internal actions.
 results=$(
-    find .github/actions/ -maxdepth 2 -name '*.yaml' -o -name '*.yml' -type f -print0 \
+    find .github/actions/ -maxdepth 2 -name '*.yaml' -o -name '*.yml' -type f -print0 |
         xargs -0 grep -P "slsa-framework/slsa-github-generator/.*@(?!main)" ||
         true
 )
