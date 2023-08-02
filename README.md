@@ -19,16 +19,16 @@
   - [Hall of Fame](#hall-of-fame)
     - [Generation of Provenance](#generation-of-provenance)
     - [Builder Creation](#builder-creation)
-- [Roadmap](#roadmap)
-- [Generation of provenance](#generation-of-provenance)
+- [Generate provenance](#generate-provenance)
   - [Referencing SLSA builders and generators](#referencing-slsa-builders-and-generators)
   - [Builders](#builders)
-  - [Provenance-only generators](#provenance-only-generators)
-- [Verification of provenance](#verification-of-provenance)
+  - [Generators](#generators)
+- [Verify provenance](#verify-provenance)
   - [Installation](#installation)
   - [Inputs](#inputs)
   - [Command line examples](#command-line-examples)
 - [Build Your Own Builder](#build-your-own-builder)
+- [Project Roadmap](#project-roadmap)
 - [Technical design](#technical-design)
   - [Specifications](#specifications)
   - [Provenance format](#provenance-format)
@@ -38,9 +38,13 @@
 
 ## Overview
 
+This repository contains free tools to generate and verify SLSA Build Level 3 provenance for native GitHub projects using GitHub Actions.
+Developers can build their software using a secure process that protects against many supply chain attacks and tampering.
+Users of their software can verify a tamper-proof statement of the process to know how the software was created.
+
 ### What is SLSA?
 
-[Supply chain Levels for Software Artifacts](https://slsa.dev), or SLSA (salsa),
+[Supply-chain Levels for Software Artifacts](https://slsa.dev), or SLSA (salsa),
 is a security framework, a check-list of standards and controls to prevent
 tampering, improve integrity, and secure packages and infrastructure in your
 projects, businesses or enterprises.
@@ -88,8 +92,8 @@ While slsa-github-generator can help you achieve SLSA Build level 3, use of the 
 only is not sufficient to meet all of the requirements at SLSA Build level 3.
 Specifically, these workflows do not address provenance
 [distribution](https://slsa.dev/spec/v1.0/distributing-provenance) or
-[verification](https://slsa.dev/spec/v1.0/verifying-artifacts). Those requirements
-must be handled separately to meet SLSA Build level 3+.
+[verification](https://slsa.dev/spec/v1.0/verifying-artifacts).
+You can use the [slsa-verifier](#verify-provenance) to verify the provenance.
 
 ### Hall of Fame
 
@@ -101,7 +105,7 @@ Below is a non-exhaustive list of projects that use the builders in this reposit
 
 #### Builder Creation
 
-Several builders have been built using the "Build Your Own Builder" (BYOB):
+Several builders have been built using the ["Build Your Own Builder" (BYOB) framework](#build-your-own-builder):
 
 1. [nodejs builder](https://github.com/slsa-framework/slsa-github-generator/tree/main/internal/builders/nodejs#readme), by @ianlewis
 2. [JReleaser builder](https://github.com/jreleaser/release-action/tree/java#slsa-builder), by @aalmiray
@@ -109,17 +113,14 @@ Several builders have been built using the "Build Your Own Builder" (BYOB):
 4. [Gradle builder](https://github.com/slsa-framework/slsa-github-generator/tree/main/internal/builders/gradle/README.md), by @AdamKorcz
 5. Coming soon! [Bazel builder](https://github.com/slsa-framework/slsa-github-generator/tree/main/internal/builders/bazel/README.md), by @enteraga6
 
-## Roadmap
+## Generate provenance
 
-The project roadmap is tracked via milestones. You can track progress and open
-issues via the [milestones page](https://github.com/slsa-framework/slsa-github-generator/milestones?direction=asc&sort=due_date&state=open).
-Each milestone includes a description of what is being worked on and a rough
-timeline for completion.
-
-## Generation of provenance
-
-Below we describe the various builders and generators in this repository. They let you build and / or generate non-forgeable provenance
+Below we describe the various [builders](#builders) and [generators](#generators) in this repository. They build and / or generate non-forgeable provenance
 using a trusted / isolated re-usable workflow. You can read up on the design in our [technical design document](#technical-design).
+
+To select the right option to geneate provenance for your use case, take into account the programming language and build toolchain you already use, e.g. `go`, `mvn`, `bazel`, etc. Select a [builder](#builders) for your ecosystem.
+For example, if you use Go, use the [Go builder](internal/builders/go/README.md). If you use Java and build Maven packages, use the [Maven builder](internal/builders/maven/README.md), and so on.
+If your release scripts are more complex than what the builder supports; or if there is no builder for your ecosystem, use a provenance [generator](#generators) instead.
 
 ### Referencing SLSA builders and generators
 
@@ -134,54 +135,50 @@ For guidance on how to configure renovate see [RENOVATE.md](RENOVATE.md).
 
 ### Builders
 
-Build platforms build and generate provenance. They let you meet the
+Builders build and generate provenance. They let you meet the
 [provenance generation](https://slsa.dev/spec/v1.0/requirements#provenance-generation) and
 [isolation strength](https://slsa.dev/spec/v1.0/requirements#isolation-strength)
 requirements for [SLSA Build level 3 and above](https://slsa.dev/spec/v1.0/levels).
 
 This repository hosts the following builders:
 
-1. [Go Builder](internal/builders/go/README.md). **Status**: [available since v1.0.0](https://github.com/slsa-framework/slsa-github-generator/milestone/1). This builder builds and generates provenance for your [Go](https://go.dev/) projects.
-2. [Node.js Builder](internal/builders/nodejs/README.md).
-   **Status**: [Beta since v1.6.0](https://github.com/slsa-framework/slsa-github-generator/milestone/8).
-   [Expected GA release Sept 2023](https://github.com/slsa-framework/slsa-github-generator/milestone/17).
-3. [Container-based Builder](internal/builders/docker/README.md). **Status**: [Beta release since v1.7.0](https://github.com/slsa-framework/slsa-github-generator/milestone/4). This builder builds arbitrary artifacts by executing a user-supplied container image.
-4. [Maven builder](internal/builders/maven/README.md). **Status**: [Beta since v1.8.0](https://github.com/slsa-framework/slsa-github-generator/milestone/14). This builder builds [Maven](https://maven.apache.org/) packages. The package and its attestations can be uploaded to [Maven central](https://search.maven.org).
-5. [Gradle builder](internal/builders/gradle/README.md). **Status**: [Beta since v1.8.0](https://github.com/slsa-framework/slsa-github-generator/milestone/15). This builder builds [Gradle](https://gradle.org/) projects. The Maven package and its attestations can be uploaded to Maven central.
-6. [Bazel builder](internal/builders/bazel/README.md). **Status**: [WIP](https://github.com/slsa-framework/slsa-github-generator/milestone/16).
-   [Expected beta-release Sept 2023](https://github.com/slsa-framework/slsa-github-generator/milestone/16). This builder builds [Bazel](https://bazel.build/) projects.
-7. Container Builder. **Status**: [WIP](https://github.com/slsa-framework/slsa-github-generator/milestone/5).
-   This builder builds your container image and generate provenance. The generated provenance is compatible with
-   [cosign](https://github.com/sigstore/cosign)'s attestation format.
+| Ecosystem |      Builder      |  Description | Status |
+|:-----------|:-----------------|:------------|:--------|
+| [Go](https://go.dev/) projects | [Go Builder](internal/builders/go/README.md) | Builds and generates provenance for Go projects | [available since v1.0.0](https://github.com/slsa-framework/slsa-github-generator/milestone/1) |
+| [Node.js](https://nodejs.org) projects | [Node.js Builder](internal/builders/nodejs/README.md)   |  Builds and generates provenance for npm packages | [Beta since v1.6.0](https://github.com/slsa-framework/slsa-github-generator/milestone/8). [Expected GA release Sept 2023](https://github.com/slsa-framework/slsa-github-generator/milestone/17)
+| [Maven](https://maven.apache.org/) projects | [Maven builder](internal/builders/maven/README.md) | Build Maven packages and generates provenance. Can be uploaded to [Maven central](https://search.maven.org) | [Beta since v1.8.0](https://github.com/slsa-framework/slsa-github-generator/milestone/14) |
+| [Gradle](https://gradle.org/) projects | [Gradle builder](internal/builders/gradle/README.md) | Build Gradle projects and generates provenance. Can be uploaded to [Maven central](https://search.maven.org) | [Beta since v1.8.0](https://github.com/slsa-framework/slsa-github-generator/milestone/15) |
+| [Bazel](https://bazel.build/) projects | [Bazel builder](internal/builders/bazel/README.md) | Builds [Bazel](https://bazel.build/) projects and generates provenance | [Beta release August 2023](https://github.com/slsa-framework/slsa-github-generator/milestone/16) |
+| [docker](https://www.docker.com/) images | Container Builder | Builds docker containers and generates provenance. The generated provenance is compatible with [cosign](https://github.com/sigstore/cosign)'s attestation format | [WIP](https://github.com/slsa-framework/slsa-github-generator/milestone/5)  |
+| Any | [Container-based Builder](internal/builders/docker/README.md) | Builds projects whose build pipeline is defined with a Dockerfile | [Beta since v1.7.0](https://github.com/slsa-framework/slsa-github-generator/milestone/16) |
 
 There are other available builders using this repository's [BYOB framework](#build-your-own-builder) and not hosted in this repository:
 
-1. [JReleaser builder](https://github.com/jreleaser/release-action/tree/java#slsa-builder). Lets you build and generate provenance using [JReleaser](https://jreleaser.org/).
+| Ecosystem |      Builder      |  Description | Status |
+|:-----------|:-----------------|:------------|:--------|
+| [JReleaser](https://jreleaser.org/) projects | [JReleaser builder](https://github.com/jreleaser/release-action/tree/java#slsa-builder) | Builds and generates provenance using [JReleaser](https://jreleaser.org/) | [Beta since v1.8.0](https://github.com/slsa-framework/slsa-github-generator/milestone/16) |
 
-If you would rather build your project yourself, use the generators instead as explained in the next section.
+If none of these options fit your needs, use a [generator](#generators) as described below:
 
-### Provenance-only generators
+### Generators
 
-Provenance-only generators let you build your artifact, and only generate provenance for you.
-They let you meet the [provenance generation](https://slsa.dev/spec/v1.0/requirements#provenance-generation) requirements
-for [SLSA Build level 3](https://slsa.dev/spec/v1.0/levels).
+Generators only generate provenance for you. They let you meet the
+[provenance generation](https://slsa.dev/spec/v1.0/requirements#provenance-generation) and
+[isolation strength](https://slsa.dev/spec/v1.0/requirements#isolation-strength)
+requirements for [SLSA Build level 3 and above](https://slsa.dev/spec/v1.0/levels).
 
 Generators create an attestation to a software artifact coming from your repository.
 
-Generators are _not_ able to report the commands used to generate your artifact in the provenance.
-
 This repository hosts the following generators:
 
-1. [Generic generator SLSA Level 3](internal/builders/generic/README.md). **Status**: [available since v1.2.0](https://github.com/slsa-framework/slsa-github-generator/milestone/2).
-   This generator generates provenance for arbitrary artifacts of your choice. To use it,
-   follow the [Generic generator's README.md](internal/builders/generic/README.md).
-2. [Container generator SLSA Level 3](internal/builders/container/README.md). **Status**: [available since v1.4.0](https://github.com/slsa-framework/slsa-github-generator/milestone/3).
-   This generator will generate provenance for container images. The generated provenance will be compatible with
-   [cosign](https://github.com/sigstore/cosign)'s attestation format.
+| Artifact type |      Generator    |  Description | Status |
+|:--------------|:------------------|:-------------|:-------|
+| file (binary, package tarball etc.) | [Generic generator](internal/builders/generic/README.md) | Generates provenance for arbitrary file-based artifacts, for any ecosystem and programming language | [available since v1.2.0](https://github.com/slsa-framework/slsa-github-generator/milestone/2) |
+| container | [Container generator](internal/builders/container/README.md)   |  Generate provenance for container images. The generated provenance is compatible with    [cosign](https://github.com/sigstore/cosign)'s attestation format. | [available since v1.4.0](https://github.com/slsa-framework/slsa-github-generator/milestone/3)
 
-## Verification of provenance
+## Verify provenance
 
-To verify the provenance, use the [github.com/slsa-framework/slsa-verifier](https://github.com/slsa-framework/slsa-verifier) project.
+To verify provenance created by any of the builders in this repository, use the [github.com/slsa-framework/slsa-verifier](https://github.com/slsa-framework/slsa-verifier) project.
 
 ### Installation
 
@@ -197,7 +194,16 @@ A command line example is provided in [slsa-framework/slsa-verifier#example](htt
 
 ## Build Your Own Builder
 
-If you want to build your own builder, use the [BYOB framework](BYOB.md). The framework lets you create your own SLSA3 builder on GitHub. For example, you can wrap an existing GitHub Action into a SLSA3 builder. For verification, your users can use the [slsa-verifier](#verification-of-provenance).
+Use the [BYOB framework](BYOB.md) to create your own SLSA builder on GitHub. If you have an existing GitHub Action, you can use the BYOB framework to wrap it into a SLSA builder.
+This will harden the build process by runing the Action in an isolated environment. Generated artifacts will meet Build Level 3 expectations and produce Build Level 3 provenance.
+To verify the provenance, your users can use the [slsa-verifier](#verification-of-provenance).
+
+## Project Roadmap
+
+The project roadmap is tracked via milestones. You can track progress and open
+issues via the [milestones page](https://github.com/slsa-framework/slsa-github-generator/milestones?direction=asc&sort=due_date&state=open).
+Each milestone includes a description of what is being worked on and a rough
+timeline for completion.
 
 ## Technical design
 
