@@ -177,7 +177,7 @@ This repository hosts the following generators:
 
 ## Verify provenance
 
-To verify the provenance, use the [github.com/slsa-framework/slsa-verifier](https://github.com/slsa-framework/slsa-verifier) project.
+To verify provenance created by any of the builders in this repository, use the [github.com/slsa-framework/slsa-verifier](https://github.com/slsa-framework/slsa-verifier) project.
 
 ### Installation
 
