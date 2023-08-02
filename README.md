@@ -44,7 +44,7 @@ Users of their software can verify a tamper-proof statement of the process to kn
 
 ### What is SLSA?
 
-[Supply chain Levels for Software Artifacts](https://slsa.dev), or SLSA (salsa),
+[Supply-chain Levels for Software Artifacts](https://slsa.dev), or SLSA (salsa),
 is a security framework, a check-list of standards and controls to prevent
 tampering, improve integrity, and secure packages and infrastructure in your
 projects, businesses or enterprises.
