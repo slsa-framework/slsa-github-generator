@@ -22,6 +22,7 @@ set -euo pipefail
 
 # Verify the tag has semver format.
 cd __EXAMPLE_PACKAGE__
+
 # shellcheck source=/dev/null
 source "./.github/workflows/scripts/e2e-utils.sh"
 major=$(version_major "$RELEASE_TAG")
@@ -84,7 +85,7 @@ fi
 # Verify the Maven Actions use the correct builder ref.
 results=$(
     find actions/maven/ internal/builders/maven/ -name '*.yaml' -o -name '*.yml' -type f -print0 |
-        xargs -0 grep -Pn "ref:[ ]*(?!$RELEASE_TAG)" ||
+        xargs -0 grep -Pn "ref:(\s*(?!$RELEASE_TAG)[^\s]+)" ||
         true
 )
 if [[ "$results" != "" ]]; then
