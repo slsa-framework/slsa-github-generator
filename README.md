@@ -119,7 +119,7 @@ Below we describe the various [builders](#builders) and [generators](#generators
 using a trusted / isolated re-usable workflow. You can read up on the design in our [technical design document](#technical-design).
 
 To select the right option to geneate provenance for your use case, take into account the programming language and build toolchain you already use, e.g. `go`, `mvn`, `bazel`, etc. Select a [builder](#builders) for your ecosystem.
-For example, if you use `Go`, use the [Go builder](internal/builders/go/README.md). If you use Java and build Maven packages, use the [Maven builder](internal/builders/maven/README.md), and so on.
+For example, if you use Go, use the [Go builder](internal/builders/go/README.md). If you use Java and build Maven packages, use the [Maven builder](internal/builders/maven/README.md), and so on.
 If your release scripts are more complex than what the builder supports; or if there is no builder for your ecosystem, use a provenance [generator](#generators) instead.
 
 ### Referencing SLSA builders and generators
@@ -135,7 +135,7 @@ For guidance on how to configure renovate see [RENOVATE.md](RENOVATE.md).
 
 ### Builders
 
-Build platforms build and generate provenance. They let you meet the
+Builders build and generate provenance. They let you meet the
 [provenance generation](https://slsa.dev/spec/v1.0/requirements#provenance-generation) and
 [isolation strength](https://slsa.dev/spec/v1.0/requirements#isolation-strength)
 requirements for [SLSA Build level 3 and above](https://slsa.dev/spec/v1.0/levels).
@@ -162,8 +162,10 @@ If none of these options fit your needs, use a [generator](#generators) as descr
 
 ### Generators
 
-Generators only generate provenance for you.
-for [SLSA Build level 3](https://slsa.dev/spec/v1.0/levels).
+Generators only generate provenance for you. They let you meet the
+[provenance generation](https://slsa.dev/spec/v1.0/requirements#provenance-generation) and
+[isolation strength](https://slsa.dev/spec/v1.0/requirements#isolation-strength)
+requirements for [SLSA Build level 3 and above](https://slsa.dev/spec/v1.0/levels).
 
 Generators create an attestation to a software artifact coming from your repository.
 
