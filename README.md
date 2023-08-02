@@ -92,8 +92,8 @@ While slsa-github-generator can help you achieve SLSA Build level 3, use of the 
 only is not sufficient to meet all of the requirements at SLSA Build level 3.
 Specifically, these workflows do not address provenance
 [distribution](https://slsa.dev/spec/v1.0/distributing-provenance) or
-[verification](https://slsa.dev/spec/v1.0/verifying-artifacts). Those requirements
-must be handled separately to meet SLSA Build level 3+.
+[verification](https://slsa.dev/spec/v1.0/verifying-artifacts).
+You can use the [slsa-verifier](#verify-provenance) to verify the provenance.
 
 ### Hall of Fame
 
@@ -105,7 +105,7 @@ Below is a non-exhaustive list of projects that use the builders in this reposit
 
 #### Builder Creation
 
-Several builders have been built using the "Build Your Own Builder" (BYOB):
+Several builders have been built using the ["Build Your Own Builder" (BYOB) framework](#build-your-own-builder):
 
 1. [nodejs builder](https://github.com/slsa-framework/slsa-github-generator/tree/main/internal/builders/nodejs#readme), by @ianlewis
 2. [JReleaser builder](https://github.com/jreleaser/release-action/tree/java#slsa-builder), by @aalmiray
@@ -120,7 +120,7 @@ using a trusted / isolated re-usable workflow. You can read up on the design in 
 
 To select the right option to geneate provenance for your use case, take into account the programming language and build toolchain you already use, e.g. `go`, `mvn`, `bazel`, etc. Select a [builder](#builders) for your ecosystem.
 For example, if you use `Go`, use the [Go builder](internal/builders/go/README.md). If you use Java and build Maven packages, use the [Maven builder](internal/builders/maven/README.md), and so on.
-If your release scripts are more complex than what the builder supports; or if you do not wish to change your build pipeline, use a [generator](#generators) instead.
+If your release scripts are more complex than what the builder supports; or if there is no builder for your ecosystem, use a [generator](#generators) instead.
 
 ### Referencing SLSA builders and generators
 
@@ -169,13 +169,11 @@ for [SLSA Build level 3](https://slsa.dev/spec/v1.0/levels).
 
 Generators create an attestation to a software artifact coming from your repository.
 
-Generators are _not_ able to report the commands used to generate your artifact in the provenance.
-
 This repository hosts the following generators:
 
-1Artifact type |      Builder      |  Description | Status |
-|:-----------|:-----------------|:------------|:--------|
-| file | [Generic generator](internal/builders/generic/README.md) | Generates provenance for arbitrary file-based artifacts | [available since v1.2.0](https://github.com/slsa-framework/slsa-github-generator/milestone/2) |
+| Artifact type |      Generator    |  Description | Status |
+|:--------------|:------------------|:-------------|:-------|
+| file | [Generic generator](internal/builders/generic/README.md) | Generates provenance for arbitrary file-based artifacts, for any ecosystem and programming language | [available since v1.2.0](https://github.com/slsa-framework/slsa-github-generator/milestone/2) |
 | container | [Container generator](internal/builders/container/README.md)   |  Generate provenance for container images. The generated provenance is compatible with    [cosign](https://github.com/sigstore/cosign)'s attestation format. | [available since v1.4.0](https://github.com/slsa-framework/slsa-github-generator/milestone/3)
 
 ## Verify provenance
