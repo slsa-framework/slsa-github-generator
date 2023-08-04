@@ -68,12 +68,17 @@ runs:
       shell: bash
       env:
         SLSA_OUTPUTS_ARTIFACTS_FILE: ${{ inputs.slsa-layout-file }}
+        PROJECT_ROOT: ${{ fromJson(inputs.slsa-workflow-inputs).directory }}
       run: |
+        gh_root_dir=$(pwd)
         mv ./__BUILDER_CHECKOUT_DIR__ ../__BUILDER_CHECKOUT_DIR__ \
           && cd ../__BUILDER_CHECKOUT_DIR__/actions/maven/publish/slsa-hashing-plugin \
           && mvn clean install \
           && cd - \
+          && cd "${PROJECT_ROOT}" \
           && mvn package  -Drun.hash.jarfile=true
+        mv $(dirname ${SLSA_OUTPUTS_ARTIFACTS_FILE}) "${gh_root_dir}/../"
+        mv target "${gh_root_dir}/"
     - name: Upload target
       id: upload-target
       uses: slsa-framework/slsa-github-generator/.github/actions/secure-upload-folder@main
