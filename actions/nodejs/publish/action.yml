@@ -26,14 +26,6 @@ inputs:
   node-auth-token:
     description: "The npm registry auth token used to publish the package."
     required: true
-  node-version:
-    description: "Version Spec of the version to use. Examples: 12.x, 10.15.1, >=10.15.0."
-    required: false
-    type: string
-  node-version-file:
-    description: "File containing the version Spec of the version to use.  Examples: .nvmrc, .node-version, .tool-versions."
-    required: false
-    type: string
   package-name:
     description: "The file name for the package tarball in the artifact."
     required: true
