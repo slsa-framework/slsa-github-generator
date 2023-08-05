@@ -7,11 +7,31 @@ set -eo pipefail
 #                     (if one is needed).
 #
 #                     Update: I think this can be solved with new docker image input ^
+#
+#   Need to check logic on builder-id: can be empty and use slsa-verifier if trusted builder after
+#   new feature merges. should write cases for both. should route slsa-verifier err if one out to console
 
 # This directory is where the rebuilt artifacts will be stored. It is made upon
 # running the rebuilder. The long name is to avoid potential collisions.
 rebuilt_artifacts_dir="rebuilt_artifacts_0ffe97cd2693d6608f5a787151950ed8"
 mkdir $rebuilt_artifacts_dir
+
+################################################
+#                                              #
+#            Color Code Env Vars               #
+#                                              #
+################################################
+
+RESET="\033[0m"
+BOLD="\033[1m"
+RED="\033[1;31m"
+LIGHT_RED="\033[0;31m"
+GREEN="\033[1;32m"
+YELLOW="\033[1;33m"
+BLUE="\033[1;34m"
+CYAN="\033[1;36m"
+MAGENTA="\033[1;35m"
+
 
 ################################################
 #                                              #
@@ -55,15 +75,15 @@ cleanup=0
 function usage() {
   if [[ $verify ]]
   then
-    printf "\033[1;31m[ERROR] \033[0;31mWrong usage. Usage to verify AND rebuild artifact:\033[0m\n"
-    printf "\033[1;36mUsage: $0 \033[1;33m--artifact_path\033[0m <path> \033[1;33m--prov_path\033[0m <path> \033[1;33m--source_uri\033[0m <uri> \033[1;33m--builder_id\033[0m <id> \033[1;35m[--docker_image]\033[0m <image> \033[1;35m[--verify]\033[0m\n"
-    printf "\033[1;31m[ERROR] \033[0;31mWrong usage. Usage to ONLY rebuild the artifact:\033[0m\n"
-    printf "\033[1;36mUsage: $0 \033[1;33m--artifact_path\033[0m <path> \033[1;33m--prov_path\033[0m <path> \033[1;35m[--docker_image]\033[0m <image>\n"
+    printf "${RED}[ERROR] ${LIGHT_RED}Wrong usage. Usage to verify AND rebuild artifact:${RESET}\n"
+    printf "${CYAN}Usage: $0 ${YELLOW}--artifact_path${RESET} <path> ${YELLOW}--prov_path${RESET} <path> ${YELLOW}--source_uri${RESET} <uri> ${YELLOW}--builder_id${RESET} <id> ${MAGENTA}[--docker_image]${RESET} <image> ${MAGENTA}[--verify]${RESET}\n"
+    printf "${RED}[ERROR] ${LIGHT_RED}Wrong usage. Usage to ONLY rebuild the artifact:${RESET}\n"
+    printf "${CYAN}Usage: $0 ${YELLOW}--artifact_path${RESET} <path> ${YELLOW}--prov_path${RESET} <path> ${MAGENTA}[--docker_image]${RESET} <image>\n"
   else
-    printf "\033[1;31m[ERROR] \033[0;31mWrong usage. Usage to ONLY rebuild the artifact:\033[0m\n"
-    printf "\033[1;36mUsage: $0 \033[1;33m--artifact_path\033[0m <path> \033[1;33m--prov_path\033[0m <path> \033[1;35m[--docker_image]\033[0m <image>\n"
-    printf "\033[1;31m[ERROR] \033[0;31mWrong usage. Usage to verify AND rebuild artifact:\033[0m\n"
-    printf "\033[1;36mUsage: $0 \033[1;33m--artifact_path\033[0m <path> \033[1;33m--prov_path\033[0m <path> \033[1;33m--source_uri\033[0m <uri> \033[1;33m--builder_id\033[0m <id> \033[1;35m[--docker_image]\033[0m <image> \033[1;35m[--verify]\033[0m\n"
+    printf "${RED}[ERROR] ${LIGHT_RED}Wrong usage. Usage to ONLY rebuild the artifact:${RESET}\n"
+    printf "${CYAN}Usage: $0 ${YELLOW}--artifact_path${RESET} <path> ${YELLOW}--prov_path${RESET} <path> ${MAGENTA}[--docker_image]${RESET} <image>\n"
+    printf "${RED}[ERROR] ${LIGHT_RED}Wrong usage. Usage to verify AND rebuild artifact:${RESET}\n"
+    printf "${CYAN}Usage: $0 ${YELLOW}--artifact_path${RESET} <path> ${YELLOW}--prov_path${RESET} <path> ${YELLOW}--source_uri${RESET} <uri> ${YELLOW}--builder_id${RESET} <id> ${MAGENTA}[--docker_image]${RESET} <image> ${MAGENTA}[--verify]${RESET}\n"
   fi
 
   cleanup
@@ -83,10 +103,8 @@ function process_argument() {
     --cleanup) cleanup=1 ;;
 
     *)
-      # echo "in"
       return 1 ;;
   esac
-  # echo "not in"
   return 0
 }
 
@@ -108,13 +126,12 @@ function cleanup() {
 
 # Parse arguments sequentially to check for unrecognized arguments
 for ARG in "$@"; do
-  # echo $@
   returnValue=$?
   process_argument $ARG
   if [[ !($returnValue) ]]
   then
     my_arg="$ARG"
-    printf "\033[1;31m[ERROR] \033[0;31m$my_arg is unrecognized\033[0m\n"
+    printf "${RED}[ERROR] ${LIGHT_RED}$my_arg is unrecognized${RESET}\n"
     usage
     cleanup
     exit 1
@@ -129,21 +146,21 @@ done
 
 # Check if mandatory arguments for rebuild are not empty
 if [ -z "$artifact_path" ]; then
-  printf "\033[1;31m[ERROR] \033[0;31mMandatory argument for rebuild, --artifact_path, is missing or empty\033[0m\n"
+  printf "${RED}[ERROR] ${LIGHT_RED}Mandatory argument for rebuild, --artifact_path, is missing or empty${RESET}\n"
   usage
   cleanup
   exit 1
 fi
 
 if [ -z "$prov_path" ]; then
-  printf "\033[1;31m[ERROR] \033[0;31mMandatory argument for rebuild, --prov_path, is missing or empty\033[0m\n"
+  printf "${RED}[ERROR] ${LIGHT_RED}Mandatory argument for rebuild, --prov_path, is missing or empty${RESET}\n"
   usage
   cleanup
   exit 1
 fi
 
 if [ -z "$source_uri" ]; then
-  printf "\033[1;31m[ERROR] \033[0;31mMandatory argument for rebuild, --source_uri, is missing or empty\033[0m\n"
+  printf "${RED}[ERROR] ${LIGHT_RED}Mandatory argument for rebuild, --source_uri, is missing or empty${RESET}\n"
   usage
   cleanup
   exit 1
@@ -153,7 +170,7 @@ fi
 echo $verify
 if [[ $verify -eq 1 && ( -z "$source_uri" || -z "$builder_id" ) ]]
 then
-  printf "\033[1;31m[ERROR] \033[0;31mMandatory arguments for verification missing or empty\033[0m\n"
+  printf "${RED}[ERROR] ${LIGHT_RED}Mandatory arguments for verification missing or empty${RESET}\n"
   usage
   cleanup
   exit 1
@@ -165,21 +182,21 @@ fi
 # Print received arguments (optional)
 if [[ $verbose ]]
 then
-  printf "\033[1;34m✔ Output Arguments:\033[0m\n"
-  printf "\033[1;36martifact_path: \033[0m\033[1;32m$artifact_path\033[0m\n"
-  printf "\033[1;36mprov_path: \033[0m\033[1;32m$prov_path\033[0m\n"
-  printf "\033[1;36msource_uri: \033[0m\033[1;32m$source_uri\033[0m\n"
+  printf "${BLUE}✔ Output Arguments:${RESET}\n"
+  printf "${CYAN}artifact_path: ${GREEN}$artifact_path${RESET}\n"
+  printf "${CYAN}prov_path: ${GREEN}$prov_path${RESET}\n"
+  printf "${CYAN}source_uri: ${GREEN}$source_uri${RESET}\n"
 
   if [ -n "$builder_id" ]; then
-    printf "\033[1;36mbuilder_id: \033[0m\033[1;32m$builder_id\033[0m\n"
+    printf "${CYAN}builder_id: ${GREEN}$builder_id${RESET}\n"
   fi
 
   if [ -n "$docker_image" ]; then
-    printf "\033[1;36mdocker_image: \033[0m\033[1;32m$docker_image\033[0m\n"
+    printf "${CYAN}docker_image: ${GREEN}$docker_image${RESET}\n"
   fi
 
   if [ $verify -eq 1 ]; then
-    printf "\033[1;36mverify: \033[0m\033[1;32m$verify\033[0m\n"
+    printf "${CYAN}verify: ${GREEN}$verify${RESET}\n"
   fi
 fi
 
@@ -189,9 +206,9 @@ fi
 #                                              #
 ################################################
 
-printf "\033[1;36m======================================================\033[0m\n"
-printf "\033[1;36m|\033[0m\033[1;33m\033[4m        🔨  Starting the Rebuild Process  🔨        \033[0m\033[1;36m|\033[0m\n"
-printf "\033[1;36m======================================================\033[0m\n"
+printf "${CYAN}======================================================${RESET}\n"
+printf "${CYAN}|\033[0m${YELLOW}\033[4m        🔨  Starting the Rebuild Process  🔨        ${RESET}${CYAN}|\033[0m\n"
+printf "${CYAN}======================================================${RESET}\n"
 
 if [[ $verify -eq 1 ]]
 then
@@ -202,7 +219,7 @@ then
     cleanup
     exit 1
   else
-    printf "\033[1;36m====================================================\033[0m\n"
+    printf "${CYAN}====================================================${RESET}\n"
     type_writer "📥---> The slsa-verifier repository is not cloned. Cloning..."
     git clone https://github.com/enteraga6/slsa-verifier
   fi
@@ -215,7 +232,7 @@ then
   go run ./cli/slsa-verifier/ verify-artifact ../$artifact_path --provenance-path ../$prov_path --source-uri $source_uri --builder-id $builder_id
 
   cd ..
-  printf "\033[1;36m====================================================\033[0m\n"
+  printf "${CYAN}====================================================${RESET}\n"
   type_writer "🧹---> Cleaning up slsa-verifier..."
   rm -rf ./slsa-verifier
   echo ""
@@ -280,7 +297,7 @@ repo_name=$(basename "$source_uri")
 echo $repo_name
 # Clone the source_uri repository to begin rebuild process
 if [ -d "$repo_name" ]; then
-  printf "\033[1;36m====================================================\033[0m\n"
+  printf "${CYAN}====================================================${RESET}\n"
   type_writer "📁---> Source repository appears already."
   type_writer "⚠️---> To run rebuilder, fix collision by removing directory with name of \$repo_name."
   cleanup
@@ -320,26 +337,33 @@ fi
 #                                              #
 ################################################
 
+#
+# I  DONT KNOW IF I LIKE HOW THIS LOOKS
+#
+BOLD_GREEN_BG="\033[1;42m"
+BOLD_RED_BG="\033[1;41m"
+UNDERLINE="\033[4m"
+
 if [[ -n "$DOCKER_IMAGE" ]]
 then
     cd -
     sudo docker pull $DOCKER_IMAGE
-    printf "\033[1;36m======================================================\033[0m\n"
+    printf "${CYAN}====================================================${RESET}\n"
     type_writer "🔨---> Rebuilding with Docker Image Environment..."    # Mount docker image on this directory as workdir to gain access to script env
-    printf "\033[1;36m======================================================\033[0m\n"
+    printf "${CYAN}====================================================${RESET}\n"
 
     sudo docker run --env repo_name=$repo_name --env TARGETS=${TARGETS} --env FLAGS=${FLAGS} --env NEEDS_RUNFILES=${NEEDS_RUNFILES} --env INCLUDES_JAVA=${INCLUDES_JAVA} --rm -v $PWD:/workdir -w /workdir $DOCKER_IMAGE /bin/sh -c "cd $repo_name && ./../build.sh"
-    printf "\033[1;36m======================================================\033[0m\n"
-    printf "\033[1;42m✅ Artifacts rebuilt!\033[0m\n"
-    printf "\033[1;36m======================================================\033[0m\n"
+    printf "${CYAN}====================================================${RESET}\n"
+    printf "${BOLD_GREEN_BG}✅ Artifacts rebuilt!${RESET}\n"
+    printf "${CYAN}====================================================${RESET}\n"
     echo ""
 else
     # Run the build script locally without a docker image
     type_writer "💻---> Rebuilding with local environment..."
     source ../build.sh
-    printf "\033[1;36m======================================================\033[0m\n"
-    printf "\033[1;42m✅ Artifacts rebuilt!\033[0m\n"
-    printf "\033[1;36m======================================================\033[0m\n"
+    printf "${CYAN}====================================================${RESET}\n"
+    printf "${BOLD_GREEN_BG}✅ Artifacts rebuilt!${RESET}\n"
+    printf "${CYAN}====================================================${RESET}\n"
     echo ""
 fi
 
@@ -381,6 +405,7 @@ else
     echo ""
 fi
 
+# TO REMOVE LATER
 ls
 
 ################################################
@@ -391,13 +416,13 @@ ls
 
 if [[ "$orig_checksum" == "$rebuilt_checksum" ]]
 then
-    printf "\033[1;42mChecksum is the \033[1m\033[4msame\033[0m\033[1;42m for the original and rebuilt artifact!\033[0m\n"
-    printf "\033[1;42m✅ This build is \033[1m\033[4mreproducible!\033[0m\033[0m\n"
+    printf "${BOLD_GREEN_BG}Checksum is the ${BOLD}${UNDERLINE}same${RESET}${BOLD_GREEN_BG} for the original and rebuilt artifact!${RESET}\n"
+    printf "${BOLD_GREEN_BG}✅ This build is ${BOLD}${UNDERLINE}reproducible!${RESET}\n"
     echo "$orig_checksum = Original Checksum"
     echo "$rebuilt_checksum = Rebuilt Checksum"
 else
-    printf "\033[1;41mChecksum is \033[1m\033[4mNOT\033[0m\033[1;41m the same for the original and rebuilt artifact!\033[0m\n"
-    printf "\033[1;41m⚠️ This build was \033[1m\033[4mNOT\033[0m\033[1;41m able to be reproduced!\033[0m\n"
+    printf "${BOLD_RED_BG}Checksum is ${BOLD}${UNDERLINE}NOT${RESET}${BOLD_RED_BG} the same for the original and rebuilt artifact!${RESET}\n"
+    printf "${BOLD_RED_BG}⚠️ This build was ${BOLD}${UNDERLINE}NOT${RESET}${BOLD_RED_BG} able to be reproduced!${RESET}\n"
     echo "$orig_checksum = Original Checksum"
     echo "$rebuilt_checksum = Rebuilt Checksum"
 fi
