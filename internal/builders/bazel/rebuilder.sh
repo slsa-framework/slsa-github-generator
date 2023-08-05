@@ -15,6 +15,23 @@ mkdir $rebuilt_artifacts_dir
 
 ################################################
 #                                              #
+#           To Output Styled Progress          #
+#                                              #
+################################################
+
+TYPE_SPEED=0.02
+function type_writer {
+  text="$1"
+
+  for (( i=0; i<${#text}; i++ )); do
+    echo -n "${text:$i:1}"
+    sleep $TYPE_SPEED
+  done
+  echo ""
+}
+
+################################################
+#                                              #
 #             Process Arguments                #
 #                                              #
 ################################################
@@ -28,6 +45,9 @@ verify=0
 
 # Boolean to trigger verbose version of Rebuilder.
 verbose=0
+
+# Boolean to trigger cleanup upon completion or failure.
+cleanup=0
 
 # Outputs the usage of the Rebuilder script for the two modes:
 # 1) Verify and Rebuild
@@ -45,6 +65,8 @@ function usage() {
     printf "\033[1;31m[ERROR] \033[0;31mWrong usage. Usage to verify AND rebuild artifact:\033[0m\n"
     printf "\033[1;36mUsage: $0 \033[1;33m--artifact_path\033[0m <path> \033[1;33m--prov_path\033[0m <path> \033[1;33m--source_uri\033[0m <uri> \033[1;33m--builder_id\033[0m <id> \033[1;35m[--docker_image]\033[0m <image> \033[1;35m[--verify]\033[0m\n"
   fi
+
+  cleanup
 }
 
 # Processes an argument for the script. Returns 0 if the given argument
@@ -58,6 +80,8 @@ function process_argument() {
     --docker_image=*) docker_image="${1#--docker_image=}" ;;
     --verify) verify=1 ;;
     --verbose) verbose=1 ;;
+    --cleanup) cleanup=1 ;;
+
     *)
       # echo "in"
       return 1 ;;
@@ -66,25 +90,27 @@ function process_argument() {
   return 0
 }
 
-# This function is will clean up built directories off after error
+# This function is will clean up built directories off after error.
 function cleanup() {
-  type_writer "🧹---> Cleaning up $rebuilt_artifacts_dir..."
-  rm -rf $rebuilt_artifacts_dir
-  
-  if [[ -n $repo_name ]]
-  then 
-    type_writer "🧹---> Cleaning up $repo_name..."
-    sudo rm -rf $repo_name
+  # If the cleanup flag is specified, remove created directories.
+  if [[ $cleanup -eq 1 ]]
+  then
+    type_writer "🧹---> Cleaning up $rebuilt_artifacts_dir..."
+    rm -rf $rebuilt_artifacts_dir
+
+    if [[ -n $repo_name ]]
+    then
+      type_writer "🧹---> Cleaning up $repo_name..."
+      sudo rm -rf $repo_name
+    fi
   fi
 }
 
 # Parse arguments sequentially to check for unrecognized arguments
 for ARG in "$@"; do
   # echo $@
-  # echo $ARG
   returnValue=$?
   process_argument $ARG
-  # echo $returnValue
   if [[ !($returnValue) ]]
   then
     my_arg="$ARG"
@@ -159,30 +185,13 @@ fi
 
 ################################################
 #                                              #
-#           To Output Styled Progress          #
-#                                              #
-################################################
-
-TYPE_SPEED=0.03
-function type_writer {
-  text="$1"
-
-  for (( i=0; i<${#text}; i++ )); do
-    echo -n "${text:$i:1}"
-    sleep $TYPE_SPEED
-  done
-  echo ""
-}
-
-################################################
-#                                              #
 #           Use Verifier (if --verify)         #
 #                                              #
 ################################################
 
-printf "\033[1;36m====================================================\033[0m\n"
+printf "\033[1;36m======================================================\033[0m\n"
 printf "\033[1;36m|\033[0m\033[1;33m\033[4m        🔨  Starting the Rebuild Process  🔨        \033[0m\033[1;36m|\033[0m\n"
-printf "\033[1;36m====================================================\033[0m\n"
+printf "\033[1;36m======================================================\033[0m\n"
 
 if [[ $verify -eq 1 ]]
 then
@@ -255,7 +264,7 @@ name_mapping["flags"]="FLAGS"
 name_mapping["docker-image"]="DOCKER_IMAGE"
 
 # Note: These boolean inputs are now dealed with as strings
-name_mapping["includes-java"]="INCLUDES_JAVA" 
+name_mapping["includes-java"]="INCLUDES_JAVA"
 name_mapping["needs-runfiles"]="NEEDS_RUNFILES"
 
 # Export the inputs for later use
@@ -277,7 +286,7 @@ if [ -d "$repo_name" ]; then
   cleanup
   exit 1
 else
-  type_writer "📥---> Cloning the source repository..."
+  type_writer "🐑---> Cloning the source repository..."
   git clone https://$source_uri
 fi
 
@@ -315,17 +324,22 @@ if [[ -n "$DOCKER_IMAGE" ]]
 then
     cd -
     sudo docker pull $DOCKER_IMAGE
-    printf "\033[1;36m====================================================\033[0m\n"
+    printf "\033[1;36m======================================================\033[0m\n"
     type_writer "🔨---> Rebuilding with Docker Image Environment..."    # Mount docker image on this directory as workdir to gain access to script env
-    # TODO: Check to see if env vars need to be passed in.
+    printf "\033[1;36m======================================================\033[0m\n"
+
     sudo docker run --env repo_name=$repo_name --env TARGETS=${TARGETS} --env FLAGS=${FLAGS} --env NEEDS_RUNFILES=${NEEDS_RUNFILES} --env INCLUDES_JAVA=${INCLUDES_JAVA} --rm -v $PWD:/workdir -w /workdir $DOCKER_IMAGE /bin/sh -c "cd $repo_name && ./../build.sh"
+    printf "\033[1;36m======================================================\033[0m\n"
     printf "\033[1;42m✅ Artifacts rebuilt!\033[0m\n"
+    printf "\033[1;36m======================================================\033[0m\n"
     echo ""
 else
     # Run the build script locally without a docker image
     type_writer "💻---> Rebuilding with local environment..."
     source ../build.sh
+    printf "\033[1;36m======================================================\033[0m\n"
     printf "\033[1;42m✅ Artifacts rebuilt!\033[0m\n"
+    printf "\033[1;36m======================================================\033[0m\n"
     echo ""
 fi
 
@@ -334,7 +348,7 @@ cd $repo_name
 
 # TODO: with java jars. Investigate current behavior and see if it is expected.
 #       There might need to be a special edge to handle _deploy.jar targets
-#       or java targets in general since they get transformed to java jars.  
+#       or java targets in general since they get transformed to java jars.
 
 # Obtain the name of the artifact
 if [[ $artifact_path == */* ]]
@@ -357,21 +371,13 @@ then
     ## some logic that takes x out and cds to it if deploy.jar
     cd $binaries_dir/$artifact_name
     rebuilt_checksum=$(sha256sum $artifact_name | awk '{ print $1 }')
-    cp $artifact_name ./../../../rebuilt_artifacts_dir
-    printf "\033[1;36m====================================================\033[0m\n"
-    type_writer "🧹---> Cleaning up $repo_name..."        
-    cd ../../../ && rm -rf $repo_name
+    cp $artifact_name ./../../../$rebuilt_artifacts_dir/
     echo ""
 else
-    ls
     cd $binaries_dir
     rebuilt_checksum=$(sha256sum $artifact_name | awk '{ print $1 }')
     ## WHY SUDO
-    sudo cp $artifact_name ./../../rebuilt_artifacts_dir
-    printf "\033[1;36m====================================================\033[0m\n"
-    type_writer "🧹---> Cleaning up $repo_name..."    
-    ## WHY DO I have to sudo
-    cd ../../ && sudo rm -rf $repo_name
+    sudo cp $artifact_name ./../../$rebuilt_artifacts_dir/
     echo ""
 fi
 
@@ -386,7 +392,7 @@ ls
 if [[ "$orig_checksum" == "$rebuilt_checksum" ]]
 then
     printf "\033[1;42mChecksum is the \033[1m\033[4msame\033[0m\033[1;42m for the original and rebuilt artifact!\033[0m\n"
-    printf "\033[1;42m✅ This build is \033[1m\033[4mreproducible\033[0m!\033[0m\n"
+    printf "\033[1;42m✅ This build is \033[1m\033[4mreproducible!\033[0m\033[0m\n"
     echo "$orig_checksum = Original Checksum"
     echo "$rebuilt_checksum = Rebuilt Checksum"
 else
