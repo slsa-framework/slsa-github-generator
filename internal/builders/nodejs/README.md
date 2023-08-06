@@ -18,6 +18,9 @@ workflow the "Node.js builder" from now on.
 - [Development status](#development-status)
 - [Generating Provenance](#generating-provenance)
   - [Getting Started](#getting-started)
+  - [Publishing packages](#publishing-packages)
+    - [Using the `nodejs/publish` action](#using-the-nodejspublish-action)
+    - [Custom publishing](#custom-publishing)
   - [Referencing the Node.js builder](#referencing-the-nodejs-builder)
   - [Private Repositories](#private-repositories)
   - [Supported Triggers](#supported-triggers)
@@ -28,6 +31,9 @@ workflow the "Node.js builder" from now on.
 - [Verification](#verification)
   - [npm audit signatures](#npm-audit-signatures)
   - [slsa-verifier](#slsa-verifier)
+  - [Known issues](#known-issues)
+    - [Workspaces are not supported](#workspaces-are-not-supported)
+    - [Other package managers not supported](#other-package-managers-not-supported)
 
 <!-- tocstop -->
 
@@ -47,8 +53,8 @@ tampered with.
 
 The Node.js builder is currently in beta. The API could change while approaching
 a Generally Available (GA) release. You can track progress towards General
-Availability via
-[this milestone](https://github.com/slsa-framework/slsa-github-generator/milestone/17).
+Availability via the
+[Node.js Builder GA milestone](https://github.com/slsa-framework/slsa-github-generator/milestone/17).
 
 Please try it out and
 [create an issue](https://github.com/slsa-framework/slsa-github-generator/issues/new)
@@ -128,6 +134,10 @@ they are listed.
 Once the build scripts are run, the Node.js builder creates a package tarball
 and provenance attestation which are uploaded as artifacts to the workflow run.
 
+### Publishing packages
+
+#### Using the `nodejs/publish` action
+
 After creating the package you can publish the package using the provided
 `nodejs/publish` action.
 
@@ -144,7 +154,7 @@ publish:
 
     - name: publish
       id: publish
-      uses: slsa-framework/slsa-github-generator/actions/nodejs/publish@<git sha> # v1.6.0
+      uses: slsa-framework/slsa-github-generator/actions/nodejs/publish@e55b76ce421082dfa4b34a6ac3c5e59de0f3bb58 # v1.7.0
       with:
         access: public
         node-auth-token: ${{ secrets.NPM_TOKEN }}
@@ -160,6 +170,54 @@ This action downloads the package tarball and provenance before running `npm
 publish` to publish your package to the npm registry. We provide a
 `node-auth-token` so that we can authenticate with `npmjs.com`.
 
+#### Custom publishing
+
+After the package has been built you can publish on your own by downloading the
+package archive and provenance attestations and running your own custom
+publishing command.
+
+Here is an example:
+
+```yaml
+jobs:
+  # build job etc. ...
+
+  publish:
+    needs: [build]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup Node
+        uses: actions/setup-node@e33196f7422957bea03ed53f6fbb155025ffc7b8 # v3.7.0
+        with:
+          node-version: 18
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Download tarball
+        uses: slsa-framework/slsa-github-generator/actions/nodejs/secure-package-download@v1.8.0
+        with:
+          name: ${{ needs.build.outputs.package-download-name }}
+          path: ${{ needs.build.outputs.package-name }}
+          sha256: ${{ needs.build.outputs.package-download-sha256 }}
+
+      - name: Download provenance
+        uses: slsa-framework/slsa-github-generator/actions/nodejs/secure-attestations-download@v1.8.0
+        with:
+          name: ${{ needs.build.outputs.provenance-download-name }}
+          path: "attestations"
+          sha256: ${{ needs.build.outputs.provenance-download-sha256 }}
+
+      - name: Publish the package
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          TARBALL_PATH: "${{ needs.build.outputs.package-name }}"
+          PROVENANCE_PATH: "./attestations/${{ needs.build.outputs.provenance-name }}"
+        run: |
+          npm publish "${TARBALL_PATH}" --access=public --provenance-file="${PROVENANCE_PATH}"
+```
+
+You will need a package management tool that supports providing the provenance
+file. Currently [npm], [lerna] or [pnpm] can support this.
+
 ### Referencing the Node.js builder
 
 At present, the builder **MUST** be referenced by a tag of the form `@vX.Y.Z`,
@@ -173,7 +231,7 @@ renovatebot, see the main repository [README.md](../../../README.md).
 
 Private repositories are supported with some caveats. Currently all builds
 generate and post a new entry in the public
-[Rekor](https://github.com/sigstore/rekor) API server instance at
+[Rekor] API server instance at
 https://rekor.sigstore.dev/. This entry includes the repository name. This will cause the
 private repository name to leak and be discoverable via the public Rekor API
 server.
@@ -227,7 +285,7 @@ Inputs:
 | node-version      | No       |                    | The version of Node.js to use. If no value is supplied, the `node` version from `$PATH` is used.                                                                                                                                                    |
 | node-version-file | No       |                    | File containing the version Spec of the version to use. Examples: .nvmrc, .node-version, .tool-versions.                                                                                                                                            |
 | rekor-log-public  | No       | false              | Set to true to opt-in to posting to the public transparency log. Will generate an error if false for private repositories. This input has no effect for public repositories. See [Private Repositories](#private-repositories).<br>Default: `false` |
-| run-scripts       | No       |                    | A comma separated ordered list of npm scripts to run before running `npm publish`. See [scripts](https://docs.npmjs.com/cli/v9/using-npm/scripts) for more information. \                                                                           |
+| run-scripts       | No       |                    | A comma separated ordered list of npm scripts to run before running `npm publish`. See [scripts] for more information. \                                                                                                                            |
 
 ### Workflow Outputs
 
@@ -244,12 +302,12 @@ The Node.js builder produces the following outputs:
 
 ### Provenance Format
 
-Provenance is generated as an [in-toto](https://in-toto.io/) statement with a
+Provenance is generated as an [in-toto] statement with a
 SLSA v0.2 predicate.
 
-| Name           | Value                                                          | Description                                                                                    |
-| -------------- | -------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
-| `subject.name` | Package url ([purl](https://github.com/package-url/purl-spec)) | The subject identifies the package in [purl](https://github.com/package-url/purl-spec) format. |
+| Name           | Value                | Description                                          |
+| -------------- | -------------------- | ---------------------------------------------------- |
+| `subject.name` | Package url ([purl]) | The subject identifies the package in [purl] format. |
 
 The project generates SLSA v0.2 provenance predicate with the following values.
 
@@ -374,3 +432,34 @@ package name, and package version.
 
 Please see the [documentation](https://github.com/slsa-framework/slsa-verifier)
 for more information.
+
+### Known issues
+
+#### Workspaces are not supported
+
+[Workspaces] are currently not supported but will be supported in a future
+release. See
+[#1789](https://github.com/slsa-framework/slsa-github-generator/issues/1789) for
+more details.
+
+#### Other package managers not supported
+
+Currently the Node.js builder does not support using other package managers like
+[yarn], [pnpm], or [lerna] for building.
+
+Currently [lerna] and [pnpm] can support publishing. See
+[Custom publishing](#custom-publishing) for more details.
+
+[Yarn] implements publishing on it's own and requires support for the
+`provenance` and `provenaceFile` config options. See
+[yarnpkg/berry#5430](https://github.com/yarnpkg/berry/issues/5430).
+
+[in-toto]: https://in-toto.io/
+[rekor]: https://github.com/sigstore/rekor
+[purl]: https://github.com/package-url/purl-spec
+[scripts]: https://docs.npmjs.com/cli/v9/using-npm/scripts
+[workspaces]: https://docs.npmjs.com/cli/v9/using-npm/workspaces
+[npm]: https://www.npmjs.com/package/npm
+[yarn]: https://yarnpkg.com/
+[pnpm]: https://pnpm.io/
+[lerna]: https://lerna.js.org/
