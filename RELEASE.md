@@ -558,7 +558,23 @@ The next step is to update the verifier's GitHub Actions e2e tests. There are Gi
 
 <!-- TODO(github.com/slsa-framework/slsa-github-generator/issues/1110): Describe GHA generic container e2e tests. -->
 
-For each of the GHA builders, you will need to:
+For the BYOB (a.k.a delegator) workflows, you will need to update the tag of the [slsa-framework/example-trw](https://github.com/slsa-framework/example-trw/) repository:
+
+1. Clone the repo, update the references to the tag and push the changes to the main branch:
+
+   ```bash
+   bash update-main-to-tag.sh "${BUILDER_TAG}"
+   ```
+
+2. Cut a release with tag `${BUILDER_TAG}`.
+
+3. Update the references back to main and push the changes to the main branch:
+
+   ```bash
+   bash update-tag-to-main.sh "${BUILDER_TAG}"
+   ```
+
+Then, for each of the GHA builders, you will need to:
 
 1. Generate binaries and provenance in
    [example-package](https://github.com/slsa-framework/example-package) using
