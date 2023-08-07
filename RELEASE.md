@@ -560,7 +560,7 @@ The next step is to update the verifier's GitHub Actions e2e tests. There are Gi
 
 For the BYOB (a.k.a delegator) workflows, you will need to update the tag of the [slsa-framework/example-trw](https://github.com/slsa-framework/example-trw/) repository:
 
-1. Update the references to the tag and push the changes to the main branch:
+1. Update the references to the tag and send a PR:
 
    ```bash
    bash update-main-to-tag.sh "${BUILDER_TAG}"
@@ -568,7 +568,7 @@ For the BYOB (a.k.a delegator) workflows, you will need to update the tag of the
 
 2. Cut a release with tag `${BUILDER_TAG}`.
 
-3. Update the references back to main and push the changes to the main branch:
+3. Update the references back to main and send a PR:
 
    ```bash
    bash update-tag-to-main.sh "${BUILDER_TAG}"
