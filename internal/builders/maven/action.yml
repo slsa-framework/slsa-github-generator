@@ -92,7 +92,7 @@ runs:
         gh_root_dir=$(pwd)
         validate_path "${gh_root_dir}"
         validate_path "${project_root}"
-        
+
         mv ./__BUILDER_CHECKOUT_DIR__ ../__BUILDER_CHECKOUT_DIR__ \
           && cd ../__BUILDER_CHECKOUT_DIR__/actions/maven/publish/slsa-hashing-plugin \
           && mvn clean install \
