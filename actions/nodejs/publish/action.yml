@@ -26,14 +26,6 @@ inputs:
   node-auth-token:
     description: "The npm registry auth token used to publish the package."
     required: true
-  node-version:
-    description: "Version Spec of the version to use. Examples: 12.x, 10.15.1, >=10.15.0."
-    required: false
-    type: string
-  node-version-file:
-    description: "File containing the version Spec of the version to use.  Examples: .nvmrc, .node-version, .tool-versions."
-    required: false
-    type: string
   package-name:
     description: "The file name for the package tarball in the artifact."
     required: true
@@ -55,12 +47,6 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - name: Setup Node
-      uses: actions/setup-node@e33196f7422957bea03ed53f6fbb155025ffc7b8 # v3.7.0
-      with:
-        node-version: ${{ inputs.node-version }}
-        node-version-file: ${{ inputs.node-version-file }}
-
     - name: Create temp dir
       id: temp-dir
       shell: bash
@@ -98,9 +84,9 @@ runs:
         temp_dir=$(mktemp -d)
         cd "${temp_dir}"
 
-        # Install npm >9.7.0 which includes support for --provenance-file.
+        # Install npm 9.8.1 which includes support for --provenance-file (added in 9.7.0).
         # This installs locally in the temp directory.
-        npm install npm@^9.7.0
+        npm install npm@9.8.1
 
         # Print the npm version.
         echo "** Installed local version of npm**"
