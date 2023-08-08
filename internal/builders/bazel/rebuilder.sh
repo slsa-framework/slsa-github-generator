@@ -70,14 +70,14 @@ function usage() {
   if [[ $verify ]]
   then
     printf "${RED}[ERROR] ${LIGHT_RED}Wrong usage. Usage to verify AND rebuild artifact:${RESET}\n"
-    printf "${CYAN}Usage: $0 ${YELLOW}--artifact_path${RESET} <path> ${YELLOW}--prov_path${RESET} <path> ${YELLOW}--source_uri${RESET} <uri> ${YELLOW}--builder_id${RESET} <id> ${MAGENTA}[--docker_image]${RESET} <image> ${MAGENTA}[--verify]${RESET}\n"
+    printf "${CYAN}Usage: %s ${YELLOW}--artifact_path${RESET} <path> ${YELLOW}--prov_path${RESET} <path> ${YELLOW}--source_uri${RESET} <uri> ${YELLOW}--builder_id${RESET} <id> ${MAGENTA}[--docker_image]${RESET} <image> ${MAGENTA}[--verify]${RESET}\n" "$0"
     printf "${RED}[ERROR] ${LIGHT_RED}Wrong usage. Usage to ONLY rebuild the artifact:${RESET}\n"
-    printf "${CYAN}Usage: $0 ${YELLOW}--artifact_path${RESET} <path> ${YELLOW}--prov_path${RESET} <path> ${MAGENTA}[--docker_image]${RESET} <image>\n"
+    printf "${CYAN}Usage: %s ${YELLOW}--artifact_path${RESET} <path> ${YELLOW}--prov_path${RESET} <path> ${MAGENTA}[--docker_image]${RESET} <image>\n" "$0"
   else
     printf "${RED}[ERROR] ${LIGHT_RED}Wrong usage. Usage to ONLY rebuild the artifact:${RESET}\n"
-    printf "${CYAN}Usage: $0 ${YELLOW}--artifact_path${RESET} <path> ${YELLOW}--prov_path${RESET} <path> ${MAGENTA}[--docker_image]${RESET} <image>\n"
+    printf "${CYAN}Usage: %s ${YELLOW}--artifact_path${RESET} <path> ${YELLOW}--prov_path${RESET} <path> ${MAGENTA}[--docker_image]${RESET} <image>\n" "$0"
     printf "${RED}[ERROR] ${LIGHT_RED}Wrong usage. Usage to verify AND rebuild artifact:${RESET}\n"
-    printf "${CYAN}Usage: $0 ${YELLOW}--artifact_path${RESET} <path> ${YELLOW}--prov_path${RESET} <path> ${YELLOW}--source_uri${RESET} <uri> ${YELLOW}--builder_id${RESET} <id> ${MAGENTA}[--docker_image]${RESET} <image> ${MAGENTA}[--verify]${RESET}\n"
+    printf "${CYAN}Usage: %s ${YELLOW}--artifact_path${RESET} <path> ${YELLOW}--prov_path${RESET} <path> ${YELLOW}--source_uri${RESET} <uri> ${YELLOW}--builder_id${RESET} <id> ${MAGENTA}[--docker_image]${RESET} <image> ${MAGENTA}[--verify]${RESET}\n" "$0"
   fi
 }
 
@@ -129,7 +129,7 @@ for ARG in "$@"; do
   if [[ !($returnValue) ]]
   then
     my_arg="$ARG"
-    printf "${RED}[ERROR] ${LIGHT_RED}$my_arg is unrecognized${RESET}\n"
+    printf "${RED}[ERROR] ${LIGHT_RED}%s is unrecognized${RESET}\n" "$my_arg"
     usage
     exit 1
   fi
@@ -172,21 +172,21 @@ fi
 if [[ $verbose -eq 1 ]]
 then
   printf "${BLUE}✔ Input Arguments Received:${RESET}\n"
-  printf "${CYAN}artifact_path: ${GREEN}$artifact_path${RESET}\n"
-  printf "${CYAN}prov_path: ${GREEN}$prov_path${RESET}\n"
-  printf "${CYAN}source_uri: ${GREEN}$source_uri${RESET}\n"
+  printf "${CYAN}artifact_path: ${GREEN}%s${RESET}\n" "$artifact_path"
+  printf "${CYAN}prov_path: ${GREEN}%s${RESET}\n" "$prov_path"
+  printf "${CYAN}source_uri: ${GREEN}%s${RESET}\n" "$source_uri"
 
   if [ -n "$builder_id" ]; then
-    printf "${CYAN}builder_id: ${GREEN}$builder_id${RESET}\n"
+    printf "${CYAN}builder_id: ${GREEN}%s${RESET}\n" "$builder_id"
   fi
 
   if [ -n "$docker_image" ]; then
-    printf "${CYAN}docker_image: ${GREEN}$docker_image${RESET}\n"
+    printf "${CYAN}docker_image: ${GREEN}%s${RESET}\n" "$docker_image"
   fi
 
-  printf "${CYAN}verify: ${GREEN}$verify${RESET}\n"
-  printf "${CYAN}verbose: ${GREEN}$verify${RESET}\n"
-  printf "${CYAN}cleanup: ${GREEN}$cleanup${RESET}\n"
+  printf "${CYAN}verify: ${GREEN}%s${RESET}\n" "$verify"
+  printf "${CYAN}verbose: ${GREEN}%s${RESET}\n" "$verbose"
+  printf "${CYAN}cleanup: ${GREEN}%s${RESET}\n" "$cleanup"
   echo ""
 fi
 
