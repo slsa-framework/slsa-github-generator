@@ -28,7 +28,7 @@ on:
         default: 17
         type: number
       directory:
-        description: "Sub-directory to launch the build from. Must be under the workspace. Relative from the root of the file directory when invoking the builder. Should not include a '/' at the end."
+        description: "Sub-directory to launch the build from. Must be under the workspace. Relative from the root of the file directory when invoking the builder."
         required: false
         type: string
         default: "."
