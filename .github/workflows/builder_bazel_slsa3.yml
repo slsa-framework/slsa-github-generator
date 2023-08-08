@@ -81,6 +81,19 @@ on:
           When run on other triggers, attestations are signed and have an "intoto.sigstore" extension.
         value: ${{ jobs.slsa-run.outputs.attestations-download-name }}
 
+      provenance-download-sha256:
+        description: >
+          The sha256 digest of the attestations.
+
+          Users should verify the download against this digest to prevent tampering.
+        value: "${{ jobs.slsa-run.outputs.attestations-download-sha256 }}"
+
+      binaries-download-name:
+        description: >
+          The name of the folder containing the built artifacts. There is a random hash at the
+          beginning of it in form <hash>-binaries to avoid collisions.
+        value: "${{ fromJSON(jobs.slsa-run.outputs.build-artifacts-outputs).binaries-download-name }}"
+
 jobs:
   slsa-setup:
     permissions:
