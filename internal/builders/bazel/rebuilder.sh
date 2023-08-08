@@ -31,6 +31,9 @@ YELLOW="\033[1;33m"
 BLUE="\033[1;34m"
 CYAN="\033[1;36m"
 MAGENTA="\033[1;35m"
+PURPLE="\033[1;35m"
+BOLD_RED_BG="\033[1;41m"
+UNDERLINE="\033[4m"
 
 
 ################################################
@@ -85,8 +88,6 @@ function usage() {
     printf "${RED}[ERROR] ${LIGHT_RED}Wrong usage. Usage to verify AND rebuild artifact:${RESET}\n"
     printf "${CYAN}Usage: $0 ${YELLOW}--artifact_path${RESET} <path> ${YELLOW}--prov_path${RESET} <path> ${YELLOW}--source_uri${RESET} <uri> ${YELLOW}--builder_id${RESET} <id> ${MAGENTA}[--docker_image]${RESET} <image> ${MAGENTA}[--verify]${RESET}\n"
   fi
-
-  cleanup
 }
 
 # Processes an argument for the script. Returns 0 if the given argument
@@ -133,7 +134,6 @@ for ARG in "$@"; do
     my_arg="$ARG"
     printf "${RED}[ERROR] ${LIGHT_RED}$my_arg is unrecognized${RESET}\n"
     usage
-    cleanup
     exit 1
   fi
 done
@@ -148,41 +148,33 @@ done
 if [ -z "$artifact_path" ]; then
   printf "${RED}[ERROR] ${LIGHT_RED}Mandatory argument for rebuild, --artifact_path, is missing or empty${RESET}\n"
   usage
-  cleanup
   exit 1
 fi
 
 if [ -z "$prov_path" ]; then
   printf "${RED}[ERROR] ${LIGHT_RED}Mandatory argument for rebuild, --prov_path, is missing or empty${RESET}\n"
   usage
-  cleanup
   exit 1
 fi
 
 if [ -z "$source_uri" ]; then
   printf "${RED}[ERROR] ${LIGHT_RED}Mandatory argument for rebuild, --source_uri, is missing or empty${RESET}\n"
   usage
-  cleanup
   exit 1
 fi
 
 # Check if mandatory arguments for verification are not empty
-echo $verify
 if [[ $verify -eq 1 && ( -z "$source_uri" || -z "$builder_id" ) ]]
 then
   printf "${RED}[ERROR] ${LIGHT_RED}Mandatory arguments for verification missing or empty${RESET}\n"
   usage
-  cleanup
   exit 1
 fi
 
-# artifact_path="./fib"
-# prov_path="./fib.build.slsa"
-# source_uri="github.com/enteraga6/slsa-lvl3-provenance"
 # Print received arguments (optional)
-if [[ $verbose ]]
+if [[ $verbose -eq 1 ]]
 then
-  printf "${BLUE}✔ Output Arguments:${RESET}\n"
+  printf "${BLUE}✔ Input Arguments Received:${RESET}\n"
   printf "${CYAN}artifact_path: ${GREEN}$artifact_path${RESET}\n"
   printf "${CYAN}prov_path: ${GREEN}$prov_path${RESET}\n"
   printf "${CYAN}source_uri: ${GREEN}$source_uri${RESET}\n"
@@ -198,6 +190,8 @@ then
   if [ $verify -eq 1 ]; then
     printf "${CYAN}verify: ${GREEN}$verify${RESET}\n"
   fi
+
+  echo ""
 fi
 
 ################################################
@@ -206,17 +200,12 @@ fi
 #                                              #
 ################################################
 
-printf "${CYAN}======================================================${RESET}\n"
-printf "${CYAN}|\033[0m${YELLOW}\033[4m        🔨  Starting the Rebuild Process  🔨        ${RESET}${CYAN}|\033[0m\n"
-printf "${CYAN}======================================================${RESET}\n"
-
 if [[ $verify -eq 1 ]]
 then
   # Clone the slsa-verifier repository
   if [ -d "slsa-verifier" ]; then
     type_writer "📁---> The slsa-verifier repository is already cloned."
     type_writer "⚠️---> To verify please remove the collision and try again"
-    cleanup
     exit 1
   else
     printf "${CYAN}====================================================${RESET}\n"
@@ -262,11 +251,15 @@ done < <(cat $prov_path | jq -r '.dsseEnvelope.payload' | base64 -d | jq -r '.pr
 
 # Todo: Style Env Vars Later
 
-for key in "${!data[@]}"
-do
-    echo "$key = ${data[$key]}"
-done
-
+if [[ $verbose -eq 1 ]]
+then
+  printf "${PURPLE}✔ Arguments Parsed from Provenance:${RESET}\n"
+  for key in "${!data[@]}"
+  do
+      printf "${MAGENTA}$key: ${GREEN}${data[$key]}${RESET}\n"
+  done
+  echo ""
+fi
 ################################################
 #                                              #
 #                 Setup ENV Vars               #
@@ -287,26 +280,17 @@ name_mapping["needs-runfiles"]="NEEDS_RUNFILES"
 # Export the inputs for later use
 for key in "${!data[@]}"; do
     # Check to see if the key is in name map before export as env var.
-    echo $key
-    echo ${name_mapping[$key]}
-    echo ${data[$key]}
     if [[ ${name_mapping[$key]+_} ]]; then
         export "${name_mapping[$key]}"="${data[$key]}"
-        echo "export"
     fi
-    echo ""
-
 done
 
-echo $source_uri
 repo_name=$(basename "$source_uri")
-echo $repo_name
 # Clone the source_uri repository to begin rebuild process
 if [ -d "$repo_name" ]; then
   printf "${CYAN}====================================================${RESET}\n"
   type_writer "📁---> Source repository appears already."
   type_writer "⚠️---> To run rebuilder, fix collision by removing directory with name of $repo_name."
-  cleanup
   exit 1
 else
   type_writer "🐑---> Cloning the source repository..."
@@ -343,15 +327,11 @@ fi
 #                                              #
 ################################################
 
-#
-# I  DONT KNOW IF I LIKE HOW THIS LOOKS
-#
-BOLD_GREEN_BG="\033[1;42m"
-BOLD_RED_BG="\033[1;41m"
-UNDERLINE="\033[4m"
+echo ""
+printf "${CYAN}======================================================${RESET}\n"
+printf "${CYAN}|\033[0m${YELLOW}\033[4m        🔨  Starting the Rebuild Process  🔨        ${RESET}${CYAN}|\033[0m\n"
+printf "${CYAN}======================================================${RESET}\n"
 
-echo $DOCKER_IMAGE
-echo $docker_image
 # Conditionals for docker images depend on if a Docker Image was use to build on Github.
 # If a Docker Image was not used to build on Github, then build locally. This is done to
 # ensure consistent build environment between both platforms.
@@ -359,42 +339,51 @@ if [[ -n $DOCKER_IMAGE ]]
 then
     cd -
     sudo docker pull $DOCKER_IMAGE
+    echo ""
     printf "${CYAN}====================================================${RESET}\n"
     type_writer "🔨---> Rebuilding with Docker Image Environment..."    # Mount docker image on this directory as workdir to gain access to script env
     printf "${CYAN}====================================================${RESET}\n"
+    echo ""
 
     sudo docker run --env repo_name=$repo_name --env TARGETS=${TARGETS} --env FLAGS=${FLAGS} --env NEEDS_RUNFILES=${NEEDS_RUNFILES} --env INCLUDES_JAVA=${INCLUDES_JAVA} --rm -v $PWD:/workdir -w /workdir $DOCKER_IMAGE /bin/sh -c "cd $repo_name && ./../build.sh"
-    printf "${CYAN}====================================================${RESET}\n"
-    printf "${BOLD_GREEN_BG}✅ Artifacts rebuilt!${RESET}\n"
-    printf "${CYAN}====================================================${RESET}\n"
+    echo ""
+    printf "${CYAN}=============================================${RESET}\n"
+    printf "${CYAN}|\033[0m${YELLOW}\033[4m        ✅  Artifacts Rebuilt! ✅          ${RESET}${CYAN}|\033[0m\n"
+    printf "${CYAN}=============================================${RESET}\n"
     echo ""
 else
+    if [[ -n "$docker_image" ]]
+    then
+      # Warning message for the users if their artifact was not built with a Docker Image, but a Docker Image was provided at command.
+      printf "${RED}[Warning] ${LIGHT_RED}Docker Image, $docker_image, provided, but artifact was not originally built on Docker Image${RESET}\n"
+    fi
     # Run the build script locally without a docker image
+    printf "${CYAN}=============================================${RESET}\n"
     type_writer "💻---> Rebuilding with local environment..."
+    printf "${CYAN}=============================================${RESET}\n"
+    echo ""
+
     source ../build.sh
-    printf "${CYAN}====================================================${RESET}\n"
-    printf "${BOLD_GREEN_BG}✅ Artifacts rebuilt!${RESET}\n"
-    printf "${CYAN}====================================================${RESET}\n"
+    echo ""
+    printf "${CYAN}=============================================${RESET}\n"
+    printf "${CYAN}|\033[0m${YELLOW}\033[4m        ✅  Artifacts Rebuilt! ✅          ${RESET}${CYAN}|\033[0m\n"
+    printf "${CYAN}=============================================${RESET}\n"
     echo ""
 fi
 
-echo $(pwd)
-#
-#
-# I think there is different logic for this when
-# docker image vs lcocal rebuild test 2 check
+# echo $(pwd)
+
+# To avoid unbound variable after build script which sets -euo
+set +u
 
 # If Docker Image was used to build on Github, we need to cd into repo
 # to access the binaries directory.
-# unbound error
-echo $DOCKER_IMAGE
 if [[ -n $DOCKER_IMAGE ]]
 then
   cd $repo_name
 else
   echo ""
 fi
-# cd $repo_name
 
 # TODO: with java jars. Investigate current behavior and see if it is expected.
 #       There might need to be a special edge to handle _deploy.jar targets
@@ -433,7 +422,8 @@ else
 fi
 
 # TO REMOVE LATER
-ls
+# ls
+echo ""
 
 ################################################
 #                                              #
@@ -443,15 +433,36 @@ ls
 
 if [[ "$orig_checksum" == "$rebuilt_checksum" ]]
 then
-    printf "${BOLD_GREEN_BG}Checksum is the ${BOLD}${UNDERLINE}same${RESET}${BOLD_GREEN_BG} for the original and rebuilt artifact!${RESET}\n"
-    printf "${BOLD_GREEN_BG}✅ This build is ${BOLD}${UNDERLINE}reproducible!${RESET}\n"
-    echo "$orig_checksum = Original Checksum"
-    echo "$rebuilt_checksum = Rebuilt Checksum"
+    printf "${GREEN}Checksum is the ${BOLD}${UNDERLINE}same${RESET}${GREEN} for the original and rebuilt artifact!${RESET}\n"
+    printf "${GREEN}✅ This build is ${BOLD}${UNDERLINE}reproducible! ✅ ${RESET}\n"
+    echo ""
+    echo "${GREEN}$orig_checksum = Original Checksum${RESET}"
+    echo "${GREEN}$rebuilt_checksum = Rebuilt Checksum${RESET}"
+    echo ""
 else
     printf "${BOLD_RED_BG}Checksum is ${BOLD}${UNDERLINE}NOT${RESET}${BOLD_RED_BG} the same for the original and rebuilt artifact!${RESET}\n"
-    printf "${BOLD_RED_BG}⚠️ This build was ${BOLD}${UNDERLINE}NOT${RESET}${BOLD_RED_BG} able to be reproduced!${RESET}\n"
+    printf "${BOLD_RED_BG}⚠️ This build was ${BOLD}${UNDERLINE}NOT${RESET}${BOLD_RED_BG} able to be reproduced! ⚠️ ${RESET}\n"
+    echo ""
     echo "$orig_checksum = Original Checksum"
     echo "$rebuilt_checksum = Rebuilt Checksum"
+    echo ""
 fi
 
-cleanup
+
+if [[ cleanup -eq 1 ]]
+then
+
+  # If there are runfiles or if the artifacts are Java, then each artifact
+  # has its own directory, so you need to exit out of it first.
+  if [[ "${NEEDS_RUNFILES}" == "true" || "${INCLUDES_JAVA}" == "true" ]]
+  then
+    cd ..
+  fi
+
+  # Current position is bazel_builder_dir/$repo_name/$binaries_dir,
+  # and to clean up need to be in /bazel.
+  cd ../..
+
+  # Now cleanup of verifier and cloned $repo_name.
+  cleanup
+fi
