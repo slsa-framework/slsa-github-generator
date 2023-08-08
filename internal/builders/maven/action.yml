@@ -68,7 +68,7 @@ runs:
       shell: bash
       env:
         SLSA_OUTPUTS_ARTIFACTS_FILE: ${{ inputs.slsa-layout-file }}
-        PROJECT_ROOT: ${{ fromJson(inputs.slsa-workflow-inputs).directory }}
+        UNTRUSTED_PROJECT_ROOT: ${{ fromJson(inputs.slsa-workflow-inputs).directory }}
       run: |
         # Ensure no directory traversal.
         # NOTE: the actions/download-artifact Action only creates files
@@ -88,10 +88,10 @@ runs:
           fi
         }
 
-        project_root=$(realpath "${PROJECT_ROOT}")
+        validate_path "${UNTRUSTED_PROJECT_ROOT}"
+        project_root=$(realpath "${UNTRUSTED_PROJECT_ROOT}")
         gh_root_dir=$(pwd)
         validate_path "${gh_root_dir}"
-        validate_path "${project_root}"
 
         mv ./__BUILDER_CHECKOUT_DIR__ ../__BUILDER_CHECKOUT_DIR__ \
           && cd ../__BUILDER_CHECKOUT_DIR__/actions/maven/publish/slsa-hashing-plugin \
