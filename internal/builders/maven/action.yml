@@ -78,7 +78,7 @@ runs:
           untrusted_path=$1
           resolved_dir=$(readlink -m "$untrusted_path")
           wd=$(readlink -m "${GITHUB_WORKSPACE}")
-          if [[ "${wd}" != "" ]] && [[ "${resolved_dir}" != "${wd}"/* ]] && [[ "${resolved_dir}" != "${wd}" ]]; then
+          if [[ "${resolved_dir}" != "${wd}"/* ]] && [[ "${resolved_dir}" != "${wd}" ]]; then
             if [[ "${RUNNER_TEMP}" != "" ]] && [[ "${resolved_dir}" != "${RUNNER_TEMP}"/* ]] && [[ "${resolved_dir}" != "${RUNNER_TEMP}" ]]; then
               if [[ "${resolved_dir}" != /tmp/* ]] && [[ "${resolved_dir}" != "/tmp" ]]; then
                 echo "Path is not in the workspace or temp directory: $untrusted_path"
