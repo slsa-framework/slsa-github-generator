@@ -456,7 +456,7 @@ fi
 if [[ "$orig_checksum" == "$rebuilt_checksum" ]]
 then
     printf "${GREEN}Checksum is the ${BOLD}${UNDERLINE}same${RESET}${GREEN} for the original and rebuilt artifact!${RESET}\n"
-    printf "${GREEN}✅ This build is ${BOLD}${UNDERLINE}reproducible! ✅ ${RESET}\n"
+    printf "${GREEN}✅ This build is ${BOLD}${UNDERLINE}reproducible!${RESET} ✅ \n"
     echo ""
     printf "${GREEN}%s${RESET} = Original Checksum${RESET}\n" "$orig_checksum"
     printf "${GREEN}%s${RESET} = Rebuilt Checksum${RESET}\n" "$rebuilt_checksum"
