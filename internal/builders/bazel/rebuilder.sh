@@ -108,13 +108,13 @@ function cleanup() {
     type_writer "🧹---> Cleaning up $rebuilt_artifacts_dir..."
     rm -rf $rebuilt_artifacts_dir
 
-    if [[ -n $repo_name ]]
+    if [[ -d "./$repo_name" ]]
     then
       type_writer "🧹---> Cleaning up $repo_name..."
-      sudo rm -rf $repo_name
+      sudo rm -rf "$repo_name"
     fi
 
-    if [[ -n "slsa-verifier" ]]
+    if [[ -d "./slsa-verifier" ]]
     then
       type_writer "🧹---> Cleaning up slsa-verifier..."
       sudo rm -rf slsa-verifier
@@ -310,7 +310,7 @@ then
     then
         # if JAVA_HOME is empty, set to jdk bin path from $(which java)
         if java_path=$(which java); then
-            JAVA_HOME="$(dirname $(dirname "${java_path}"))"
+            JAVA_HOME="$(dirname $(dirname ${java_path}))"
             export JAVA_HOME
         # JAVA_HOME cannot be set automatically
         else
