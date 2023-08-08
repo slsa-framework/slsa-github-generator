@@ -91,7 +91,7 @@ runs:
         validate_path "${UNTRUSTED_PROJECT_ROOT}"
         project_root=$(realpath "${UNTRUSTED_PROJECT_ROOT}")
 
-        # gh_root_dir is GITHUB_WORKSPACE and is trusted. 
+        # gh_root_dir is GITHUB_WORKSPACE and is trusted.
         # It does not require validation.
         gh_root_dir=$(pwd)
 
