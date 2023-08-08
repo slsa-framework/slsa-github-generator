@@ -1,4 +1,18 @@
 #!/bin/bash
+#
+# Copyright 2023 SLSA Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 # NOTE: -u not set to check for empty variables from parse arguments function.
 set -eo pipefail
@@ -70,14 +84,14 @@ function usage() {
   if [[ $verify ]]
   then
     printf "${RED}[ERROR] ${LIGHT_RED}Wrong usage. Usage to verify AND rebuild artifact:${RESET}\n"
-    printf "${CYAN}Usage: %s ${YELLOW}--artifact_path${RESET} <path> ${YELLOW}--prov_path${RESET} <path> ${YELLOW}--source_uri${RESET} <uri> ${YELLOW}--builder_id${RESET} <id> ${MAGENTA}[--docker_image]${RESET} <image> ${MAGENTA}[--verify]${RESET}\n" "$0"
+    printf "${CYAN}Usage: %s ${YELLOW}--artifact_path${RESET} <path> ${YELLOW}--prov_path${RESET} <path> ${YELLOW}--source_uri${RESET} <uri> ${YELLOW}--builder_id${RESET} <id> ${MAGENTA}[--docker_image]${RESET} <image> ${MAGENTA}[--verify]${RESET}\n" \$0\.
     printf "${RED}[ERROR] ${LIGHT_RED}Wrong usage. Usage to ONLY rebuild the artifact:${RESET}\n"
-    printf "${CYAN}Usage: %s ${YELLOW}--artifact_path${RESET} <path> ${YELLOW}--prov_path${RESET} <path> ${MAGENTA}[--docker_image]${RESET} <image>\n" "$0"
+    printf "${CYAN}Usage: %s ${YELLOW}--artifact_path${RESET} <path> ${YELLOW}--prov_path${RESET} <path> ${MAGENTA}[--docker_image]${RESET} <image>\n" \$0\.
   else
     printf "${RED}[ERROR] ${LIGHT_RED}Wrong usage. Usage to ONLY rebuild the artifact:${RESET}\n"
-    printf "${CYAN}Usage: %s ${YELLOW}--artifact_path${RESET} <path> ${YELLOW}--prov_path${RESET} <path> ${MAGENTA}[--docker_image]${RESET} <image>\n" "$0"
+    printf "${CYAN}Usage: %s ${YELLOW}--artifact_path${RESET} <path> ${YELLOW}--prov_path${RESET} <path> ${MAGENTA}[--docker_image]${RESET} <image>\n" \$0\.
     printf "${RED}[ERROR] ${LIGHT_RED}Wrong usage. Usage to verify AND rebuild artifact:${RESET}\n"
-    printf "${CYAN}Usage: %s ${YELLOW}--artifact_path${RESET} <path> ${YELLOW}--prov_path${RESET} <path> ${YELLOW}--source_uri${RESET} <uri> ${YELLOW}--builder_id${RESET} <id> ${MAGENTA}[--docker_image]${RESET} <image> ${MAGENTA}[--verify]${RESET}\n" "$0"
+    printf "${CYAN}Usage: %s ${YELLOW}--artifact_path${RESET} <path> ${YELLOW}--prov_path${RESET} <path> ${YELLOW}--source_uri${RESET} <uri> ${YELLOW}--builder_id${RESET} <id> ${MAGENTA}[--docker_image]${RESET} <image> ${MAGENTA}[--verify]${RESET}\n" \$0\.
   fi
 }
 
@@ -126,10 +140,10 @@ function cleanup() {
 for ARG in "$@"; do
   returnValue=$?
   process_argument $ARG
-  if [[ !($returnValue) ]]
+  if [[ ! ($returnValue) ]]
   then
     my_arg="$ARG"
-    printf "${RED}[ERROR] ${LIGHT_RED}%s is unrecognized${RESET}\n" "$my_arg"
+    printf "${RED}[ERROR] ${LIGHT_RED}%s is unrecognized${RESET}\n" \$my_arg\.
     usage
     exit 1
   fi
@@ -172,21 +186,21 @@ fi
 if [[ $verbose -eq 1 ]]
 then
   printf "${BLUE}✔ Input Arguments Received:${RESET}\n"
-  printf "${CYAN}artifact_path: ${GREEN}%s${RESET}\n" "$artifact_path"
-  printf "${CYAN}prov_path: ${GREEN}%s${RESET}\n" "$prov_path"
-  printf "${CYAN}source_uri: ${GREEN}%s${RESET}\n" "$source_uri"
+  printf "${CYAN}artifact_path: ${GREEN}%s${RESET}\n" \$artifact_path\.
+  printf "${CYAN}prov_path: ${GREEN}%s${RESET}\n" \$prov_path\.
+  printf "${CYAN}source_uri: ${GREEN}%s${RESET}\n" \$source_uri\.
 
   if [ -n "$builder_id" ]; then
-    printf "${CYAN}builder_id: ${GREEN}%s${RESET}\n" "$builder_id"
+    printf "${CYAN}builder_id: ${GREEN}%s${RESET}\n" \$builder_id\.
   fi
 
   if [ -n "$docker_image" ]; then
-    printf "${CYAN}docker_image: ${GREEN}%s${RESET}\n" "$docker_image"
+    printf "${CYAN}docker_image: ${GREEN}%s${RESET}\n" \$docker_image\.
   fi
 
-  printf "${CYAN}verify: ${GREEN}%s${RESET}\n" "$verify"
-  printf "${CYAN}verbose: ${GREEN}%s${RESET}\n" "$verbose"
-  printf "${CYAN}cleanup: ${GREEN}%s${RESET}\n" "$cleanup"
+  printf "${CYAN}verify: ${GREEN}%s${RESET}\n" \$verify\.
+  printf "${CYAN}verbose: ${GREEN}%s${RESET}\n" \$verbose\.
+  printf "${CYAN}cleanup: ${GREEN}%s${RESET}\n" \$cleanup\.
   echo ""
 fi
 
@@ -247,7 +261,7 @@ then
   printf "${PURPLE}✔ Arguments Parsed from Provenance:${RESET}\n"
   for key in "${!data[@]}"
   do
-      printf "${MAGENTA}$key: ${GREEN}${data[$key]}${RESET}\n"
+      printf "${MAGENTA}$key: ${GREEN}%s${RESET}\n" \${data[$key]}\.
   done
   echo ""
 fi
