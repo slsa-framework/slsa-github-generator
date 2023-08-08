@@ -41,6 +41,12 @@ inputs:
   slsa-workflow-secret14: {}
   slsa-workflow-secret15: {}
 
+outputs:
+  binaries-download-name:
+    description: "The name of binaries folder to download"
+    # NOTE: This is an "untrusted" value returned from the build.
+    value: "${{ steps.rng.outputs.random }}-binaries"
+    
 runs:
   using: "composite"
   steps:
