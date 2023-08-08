@@ -226,7 +226,7 @@ then
 
   # Change directory to the slsa-verifier directory
   cd slsa-verifier
-  
+
   # Run SLSA Verifier on user inputs
   # write if builder id then this if not include builder id then other command
   go run ./cli/slsa-verifier/ verify-artifact ../$artifact_path --provenance-path ../$prov_path --source-uri $source_uri --builder-id $builder_id
@@ -287,9 +287,15 @@ name_mapping["needs-runfiles"]="NEEDS_RUNFILES"
 # Export the inputs for later use
 for key in "${!data[@]}"; do
     # Check to see if the key is in name map before export as env var.
+    echo $key
+    echo ${name_mapping[$key]}
+    echo ${data[$key]}
     if [[ ${name_mapping[$key]+_} ]]; then
         export "${name_mapping[$key]}"="${data[$key]}"
+        echo "export"
     fi
+    echo ""
+
 done
 
 echo $source_uri
@@ -299,7 +305,7 @@ echo $repo_name
 if [ -d "$repo_name" ]; then
   printf "${CYAN}====================================================${RESET}\n"
   type_writer "📁---> Source repository appears already."
-  type_writer "⚠️---> To run rebuilder, fix collision by removing directory with name of \$repo_name."
+  type_writer "⚠️---> To run rebuilder, fix collision by removing directory with name of $repo_name."
   cleanup
   exit 1
 else
@@ -344,7 +350,12 @@ BOLD_GREEN_BG="\033[1;42m"
 BOLD_RED_BG="\033[1;41m"
 UNDERLINE="\033[4m"
 
-if [[ -n "$DOCKER_IMAGE" ]]
+echo $DOCKER_IMAGE
+echo $docker_image
+# Conditionals for docker images depend on if a Docker Image was use to build on Github.
+# If a Docker Image was not used to build on Github, then build locally. This is done to
+# ensure consistent build environment between both platforms.
+if [[ -n $DOCKER_IMAGE ]]
 then
     cd -
     sudo docker pull $DOCKER_IMAGE
@@ -368,7 +379,22 @@ else
 fi
 
 echo $(pwd)
-cd $repo_name
+#
+#
+# I think there is different logic for this when
+# docker image vs lcocal rebuild test 2 check
+
+# If Docker Image was used to build on Github, we need to cd into repo
+# to access the binaries directory.
+# unbound error
+echo $DOCKER_IMAGE
+if [[ -n $DOCKER_IMAGE ]]
+then
+  cd $repo_name
+else
+  echo ""
+fi
+# cd $repo_name
 
 # TODO: with java jars. Investigate current behavior and see if it is expected.
 #       There might need to be a special edge to handle _deploy.jar targets
@@ -393,6 +419,7 @@ if [[ "${NEEDS_RUNFILES}" == "true" || "${INCLUDES_JAVA}" == "true" ]]
 then
     ### WRITE CONDITINOAL WHERE if includes _deploy.jar go to x_deploy go to x before it
     ## some logic that takes x out and cds to it if deploy.jar
+    ls
     cd $binaries_dir/$artifact_name
     rebuilt_checksum=$(sha256sum $artifact_name | awk '{ print $1 }')
     cp $artifact_name ./../../../$rebuilt_artifacts_dir/
