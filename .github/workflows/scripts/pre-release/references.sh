@@ -82,6 +82,19 @@ if [[ "$results" != "" ]]; then
     exit 1
 fi
 
+# Verify our Actions are referenced by the release tag in BYOB actions.
+results=$(
+    find internal/builders/ -maxdepth 2 -name '*.yaml' -o -name '*.yml' -type f -print0 |
+        xargs -0 grep -Pn "slsa-framework/slsa-github-generator/.*@(?!$RELEASE_TAG)" |
+        sed 's/\(.*:\) *uses:.*\(\/.*\)/\1 [...]\2/' ||
+        true
+)
+if [[ "$results" != "" ]]; then
+    echo "Some Actions are not referenced via the correct release tag \"$RELEASE_TAG\" in BYOB actions"
+    echo "$results"
+    exit 1
+fi
+
 # Verify the Maven Actions use the correct builder ref.
 results=$(
     find actions/maven/ internal/builders/maven/ -name '*.yaml' -o -name '*.yml' -type f -print0 |

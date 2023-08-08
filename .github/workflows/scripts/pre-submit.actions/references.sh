@@ -58,6 +58,18 @@ if [[ "$results" != "" ]]; then
     exit 1
 fi
 
+# Verify our Actions are referenced at main in BYOB actions.
+results=$(
+    find internal/builders/ -maxdepth 2 -name '*.yaml' -o -name '*.yml' -type f -print0 |
+        xargs -0 grep -P "slsa-framework/slsa-github-generator/.*@(?!main)" ||
+        true
+)
+if [[ "$results" != "" ]]; then
+    echo "Some Actions are not referenced at main in BYOB Actions"
+    echo "$results"
+    exit 1
+fi
+
 # Verify the Maven Actions use the correct builder ref.
 results=$(
     find actions/maven/ internal/builders/maven/ -name '*.yaml' -o -name '*.yml' -type f -print0 |
@@ -69,5 +81,3 @@ if [[ "$results" != "" ]]; then
     echo "$results"
     exit 1
 fi
-
-
