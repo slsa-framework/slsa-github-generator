@@ -1,15 +1,7 @@
 #!/bin/bash
-set -eo pipefail
 
-# Notes:
-#    Current constraint: make the users download and setup the specific version of Java
-#                     that the workflow uses in the meantime of coming up with automation solution
-#                     (if one is needed).
-#
-#                     Update: I think this can be solved with new docker image input ^
-#
-#   Need to check logic on builder-id: can be empty and use slsa-verifier if trusted builder after
-#   new feature merges. should write cases for both. should route slsa-verifier err if one out to console
+# NOTE: -u not set to check for empty variables from parse arguments function.
+set -eo pipefail
 
 # This directory is where the rebuilt artifacts will be stored. It is made upon
 # running the rebuilder. The long name is to avoid potential collisions.
@@ -34,7 +26,6 @@ MAGENTA="\033[1;35m"
 PURPLE="\033[1;35m"
 BOLD_RED_BG="\033[1;41m"
 UNDERLINE="\033[4m"
-
 
 ################################################
 #                                              #
@@ -122,6 +113,12 @@ function cleanup() {
       type_writer "🧹---> Cleaning up $repo_name..."
       sudo rm -rf $repo_name
     fi
+
+    if [[ -n "slsa-verifier" ]]
+    then
+      type_writer "🧹---> Cleaning up slsa-verifier..."
+      sudo rm -rf slsa-verifier
+    fi
   fi
 }
 
@@ -187,10 +184,9 @@ then
     printf "${CYAN}docker_image: ${GREEN}$docker_image${RESET}\n"
   fi
 
-  if [ $verify -eq 1 ]; then
-    printf "${CYAN}verify: ${GREEN}$verify${RESET}\n"
-  fi
-
+  printf "${CYAN}verify: ${GREEN}$verify${RESET}\n"
+  printf "${CYAN}verbose: ${GREEN}$verify${RESET}\n"
+  printf "${CYAN}cleanup: ${GREEN}$cleanup${RESET}\n"
   echo ""
 fi
 
@@ -218,21 +214,16 @@ then
 
   # Run SLSA Verifier on user inputs
   # write if builder id then this if not include builder id then other command
+  # this is for once the non-compulsory feature gets merged.
   go run ./cli/slsa-verifier/ verify-artifact ../$artifact_path --provenance-path ../$prov_path --source-uri $source_uri --builder-id $builder_id
 
   cd ..
   printf "${CYAN}====================================================${RESET}\n"
-  type_writer "🧹---> Cleaning up slsa-verifier..."
-  rm -rf ./slsa-verifier
   echo ""
 fi
 
-#################################################
-# compute og sum
-
 # Compute the original checksum of the artifact to compare with Rebuilt.
 orig_checksum=$(sha256sum $artifact_path | awk '{ print $1 }')
-
 
 ################################################
 #                                              #
@@ -260,6 +251,7 @@ then
   done
   echo ""
 fi
+
 ################################################
 #                                              #
 #                 Setup ENV Vars               #
@@ -285,6 +277,12 @@ for key in "${!data[@]}"; do
     fi
 done
 
+################################################
+#                                              #
+#            Clone Repo to Rebuild             #
+#                                              #
+################################################
+
 repo_name=$(basename "$source_uri")
 # Clone the source_uri repository to begin rebuild process
 if [ -d "$repo_name" ]; then
@@ -293,32 +291,34 @@ if [ -d "$repo_name" ]; then
   type_writer "⚠️---> To run rebuilder, fix collision by removing directory with name of $repo_name."
   exit 1
 else
+  printf "${CYAN}====================================================${RESET}\n"
   type_writer "🐑---> Cloning the source repository..."
+  echo ""
   git clone https://$source_uri
+  printf "${CYAN}====================================================${RESET}\n"
+  echo ""
 fi
 
-###################
-#
 # Enter the Repo
 cd $repo_name
 
 # Check to see if JAVA_HOME is set then empty to
 # avoid triggering unbound variable error.
-# TODO: Only care for java_home if INCLUDES_JAVA is set
-# Check to see if JAVA_HOME is set then empty to
-# avoid triggering unbound variable error.
-if [[ ! -v JAVA_HOME || -z "${JAVA_HOME}" ]]
+if [[ "${INCLUDES_JAVA}" == "true" ]]
 then
-    # if JAVA_HOME is empty, set to jdk bin path from $(which java)
-    if java_path=$(which java); then
-        JAVA_HOME="$(dirname $(dirname "${java_path}"))"
-        export JAVA_HOME
-    # JAVA_HOME cannot be set automatically
+    if [[ ! -v JAVA_HOME || -z "${JAVA_HOME}" ]]
+    then
+        # if JAVA_HOME is empty, set to jdk bin path from $(which java)
+        if java_path=$(which java); then
+            JAVA_HOME="$(dirname $(dirname "${java_path}"))"
+            export JAVA_HOME
+        # JAVA_HOME cannot be set automatically
+        else
+            echo "JAVA_HOME cannot be set automatically. Check PATH."
+        fi
     else
-        echo "Java is not installed or it is not in system PATH"
+        echo "JAVA_HOME already set to ${JAVA_HOME}"
     fi
-else
-    echo "JAVA_HOME already set to ${JAVA_HOME}"
 fi
 
 ################################################
@@ -356,8 +356,11 @@ else
     then
       # Warning message for the users if their artifact was not built with a Docker Image, but a Docker Image was provided at command.
       printf "${RED}[Warning] ${LIGHT_RED}Docker Image, $docker_image, provided, but artifact was not originally built on Docker Image${RESET}\n"
+    else
+      echo "" # This is just for style.
     fi
-    # Run the build script locally without a docker image
+
+    # Run the build script locally without a docker image.
     printf "${CYAN}=============================================${RESET}\n"
     type_writer "💻---> Rebuilding with local environment..."
     printf "${CYAN}=============================================${RESET}\n"
@@ -371,9 +374,7 @@ else
     echo ""
 fi
 
-# echo $(pwd)
-
-# To avoid unbound variable after build script which sets -euo
+# To avoid unbound variable after build script which sets -euo.
 set +u
 
 # If Docker Image was used to build on Github, we need to cd into repo
@@ -381,13 +382,13 @@ set +u
 if [[ -n $DOCKER_IMAGE ]]
 then
   cd $repo_name
-else
-  echo ""
 fi
 
-# TODO: with java jars. Investigate current behavior and see if it is expected.
-#       There might need to be a special edge to handle _deploy.jar targets
-#       or java targets in general since they get transformed to java jars.
+################################################
+#                                              #
+#               Copy the Artifact              #
+#                                              #
+################################################
 
 # Obtain the name of the artifact
 if [[ $artifact_path == */* ]]
@@ -404,26 +405,33 @@ unset rebuilt_checksum # Makes sure it is empty before assigning.
 # The binaries folder contains different directories for the its artifacts and
 # the artifacts runfiles. Obtain the rebuilt binaries and copy them to the
 # path at root before cleaning up and deleting the repo.
-if [[ "${NEEDS_RUNFILES}" == "true" || "${INCLUDES_JAVA}" == "true" ]]
+if [[ "$artifact_name" == *"_deploy.jar"* ]]
 then
-    ### WRITE CONDITINOAL WHERE if includes _deploy.jar go to x_deploy go to x before it
-    ## some logic that takes x out and cds to it if deploy.jar
-    ls
-    cd $binaries_dir/$artifact_name
-    rebuilt_checksum=$(sha256sum $artifact_name | awk '{ print $1 }')
-    cp $artifact_name ./../../../$rebuilt_artifacts_dir/
-    echo ""
+      # Uses _deploy.jar as a field seperator and grabs the field before it.
+      # Directory of Java artifacts is same as run script name.
+      run_script_name=$(echo "$artifact_name" | awk -F'_deploy.jar' '{print $1}')
+      cd $binaries_dir/
+      rebuilt_checksum=$(sha256sum ./$run_script_name/$artifact_name | awk '{ print $1 }')
+
+      # Copy the entire directory, including the run script.
+      cp -R ./$run_script_name ./../../$rebuilt_artifacts_dir/
 else
+    if [[ "${NEEDS_RUNFILES}" == "true" ]]
+    then
+        # For non-java targets with runfiles.
+      cd $binaries_dir/
+      rebuilt_checksum=$(sha256sum ./$artifact_name/$artifact_name | awk '{ print $1 }')
+
+      # Copy entire directory, including the runfiles.
+      cp -R ./$artifact_name ./../../$rebuilt_artifacts_dir/
+    else
+    # For files withouts runfiles.
     cd $binaries_dir
     rebuilt_checksum=$(sha256sum $artifact_name | awk '{ print $1 }')
-    ## WHY SUDO
-    sudo cp $artifact_name ./../../$rebuilt_artifacts_dir/
-    echo ""
-fi
 
-# TO REMOVE LATER
-# ls
-echo ""
+    cp $artifact_name ./../../$rebuilt_artifacts_dir/
+    fi
+fi
 
 ################################################
 #                                              #
@@ -436,15 +444,15 @@ then
     printf "${GREEN}Checksum is the ${BOLD}${UNDERLINE}same${RESET}${GREEN} for the original and rebuilt artifact!${RESET}\n"
     printf "${GREEN}✅ This build is ${BOLD}${UNDERLINE}reproducible! ✅ ${RESET}\n"
     echo ""
-    echo "${GREEN}$orig_checksum = Original Checksum${RESET}"
-    echo "${GREEN}$rebuilt_checksum = Rebuilt Checksum${RESET}"
+    printf "${GREEN}$orig_checksum${RESET} = Original Checksum${RESET}\n"
+    printf "${GREEN}$rebuilt_checksum${RESET} = Rebuilt Checksum${RESET}\n"
     echo ""
 else
     printf "${BOLD_RED_BG}Checksum is ${BOLD}${UNDERLINE}NOT${RESET}${BOLD_RED_BG} the same for the original and rebuilt artifact!${RESET}\n"
-    printf "${BOLD_RED_BG}⚠️ This build was ${BOLD}${UNDERLINE}NOT${RESET}${BOLD_RED_BG} able to be reproduced! ⚠️ ${RESET}\n"
+    printf "${BOLD_RED_BG}        ⚠️  This build was ${BOLD}${UNDERLINE}NOT${RESET}${BOLD_RED_BG} able to be reproduced! ⚠️         ${RESET}\n"
     echo ""
-    echo "$orig_checksum = Original Checksum"
-    echo "$rebuilt_checksum = Rebuilt Checksum"
+    printf "${RED}$orig_checksum${RESET} = Original Checksum\n"
+    printf "${RED}$rebuilt_checksum${RESET} = Rebuilt Checksum\n"
     echo ""
 fi
 
