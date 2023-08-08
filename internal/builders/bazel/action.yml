@@ -41,6 +41,12 @@ inputs:
   slsa-workflow-secret14: {}
   slsa-workflow-secret15: {}
 
+outputs:
+  binaries-download-name:
+    description: "The name of binaries folder to download"
+    # NOTE: This is an "untrusted" value returned from the build.
+    value: "${{ steps.rng.outputs.random }}-binaries"
+
 runs:
   using: "composite"
   steps:
@@ -52,13 +58,47 @@ runs:
       uses: bazelbuild/setup-bazelisk@95c9bf48d0c570bb3e28e57108f3450cd67c1a44 # v2.0.0
 
     - name: Setup Java
+      if: ${{ fromJson(inputs.slsa-workflow-inputs).includes-java }} == 'true'
       id: java
       uses: actions/setup-java@cd89f46ac9d01407894225f350157564c9c7cee2 # v3.12.0
       with:
         distribution: "${{ fromJson(inputs.slsa-workflow-inputs).user-java-distribution }}"
         java-version: "${{ fromJson(inputs.slsa-workflow-inputs).user-java-version }}"
 
+    - name: Check for Docker Image
+      id: docker
+      shell: bash
+      run: |
+        if [[ -z "${{ fromJson(inputs.slsa-workflow-inputs).docker-image }}" ]]
+        then
+          echo "No Docker Image provided. Will build without."
+          echo "USE_DOCKER=false" >> $GITHUB_ENV
+        else
+          echo "Docker image provided. Running build on Docker Image."
+          echo "USE_DOCKER=true" >> $GITHUB_ENV
+        fi
+
+    - name: Build on Docker Image
+      if: env.USE_DOCKER == 'true'
+      env:
+        TARGETS: ${{ fromJson(inputs.slsa-workflow-inputs).targets }}
+        FLAGS: ${{ fromJson(inputs.slsa-workflow-inputs).flags }}
+        NEEDS_RUNFILES: ${{ fromJson(inputs.slsa-workflow-inputs).needs-runfiles }}
+        INCLUDES_JAVA: ${{ fromJson(inputs.slsa-workflow-inputs).includes-java }}
+        DOCKER_IMAGE: ${{ fromJson(inputs.slsa-workflow-inputs).docker-image }}
+      shell: bash
+      run: |
+        export TARGETS
+        export FLAGS
+        export NEEDS_RUNFILES
+        export INCLUDES_JAVA
+
+        docker pull $DOCKER_IMAGE
+        curr_dir=$(basename "$(pwd)")
+        docker run --rm --env TARGETS=${TARGETS} --env FLAGS=${FLAGS} --env NEEDS_RUNFILES=${NEEDS_RUNFILES} --env INCLUDES_JAVA=${INCLUDES_JAVA} -v $PWD/../:/src -w /src $DOCKER_IMAGE /bin/sh -c "ls && tree && cd $curr_dir && ls && tree && ./../__TOOL_ACTION_DIR__/build.sh"
+
     - id: build
+      if: env.USE_DOCKER == 'false'
       env:
         TARGETS: ${{ fromJson(inputs.slsa-workflow-inputs).targets }}
         FLAGS: ${{ fromJson(inputs.slsa-workflow-inputs).flags }}
