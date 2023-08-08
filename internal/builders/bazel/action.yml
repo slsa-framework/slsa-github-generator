@@ -71,7 +71,7 @@ runs:
           echo "Docker image provided. Running build on Docker Image."
           echo "USE_DOCKER=true" >> $GITHUB_ENV
         fi
-        
+
     - name: Build on Docker Image
       if: env.USE_DOCKER == 'true'
       env:
@@ -82,30 +82,15 @@ runs:
         DOCKER_IMAGE: ${{ fromJson(inputs.slsa-workflow-inputs).docker-image }}
       shell: bash
       run: |
-        echo "tree of repo"
-        tree
-        echo " "
-        echo " "
-        cd ..
-
-        echo "tree of GH context"
-        tree
-        echo " "
-        echo " "
-        cd -
-
         export TARGETS
         export FLAGS
         export NEEDS_RUNFILES
         export INCLUDES_JAVA
-        
-        echo "start docker"
+
         docker pull $DOCKER_IMAGE
         curr_dir=$(basename "$(pwd)")
-        echo $curr_dir
         docker run --rm --env TARGETS=${TARGETS} --env FLAGS=${FLAGS} --env NEEDS_RUNFILES=${NEEDS_RUNFILES} --env INCLUDES_JAVA=${INCLUDES_JAVA} -v $PWD/../:/src -w /src $DOCKER_IMAGE /bin/sh -c "ls && tree && cd $curr_dir && ls && tree && ./../__TOOL_ACTION_DIR__/build.sh"
-        # docker run --rm -v $PWD/../:/src -w /src $DOCKER_IMAGE ./../__TOOL_ACTION_DIR__/build.sh
-      
+
     - id: build
       if: env.USE_DOCKER == 'false'
       env:
