@@ -101,7 +101,7 @@ runs:
           && cd - \
           && cd "${project_root}" \
           && mvn package  -Drun.hash.jarfile=true
-        mv $(dirname ${SLSA_OUTPUTS_ARTIFACTS_FILE}) "${GITHUB_WORKSPACE}/../"
+        mv $(dirname "${SLSA_OUTPUTS_ARTIFACTS_FILE}") "${GITHUB_WORKSPACE}/../"
         mv target "${gh_root_dir}/"
     - name: Upload target
       id: upload-target
