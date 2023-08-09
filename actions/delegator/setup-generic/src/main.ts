@@ -91,7 +91,7 @@ async function run(): Promise<void> {
         actor_id: process.env.GITHUB_ACTOR_ID,
         event_name: process.env.GITHUB_EVENT_NAME,
         event_payload_sha256: tscommon.safeFileSha256(
-          process.env.GITHUB_EVENT_PATH || ""
+          process.env.GITHUB_EVENT_PATH || "",
         ),
         base_ref: process.env.GITHUB_BASE_REF,
         ref: process.env.GITHUB_REF,
@@ -135,7 +135,7 @@ async function run(): Promise<void> {
     // Sign and prepare the base64 bundle.
     const bundle = await sigstore.sign(
       Buffer.from(unsignedB64Token),
-      signOptions
+      signOptions,
     );
 
     // Verify just to double check.

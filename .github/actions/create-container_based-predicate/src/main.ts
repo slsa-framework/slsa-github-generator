@@ -78,13 +78,13 @@ async function run(): Promise<void> {
     const currentWorkflowRun = await gh.getWorkflowRun(
       ownerRepo,
       Number(process.env.GITHUB_RUN_ID),
-      token
+      token,
     );
     const predicate = generatePredicate(
       bd,
       builderBinaryRef,
       jobWorkflowRef,
-      currentWorkflowRun
+      currentWorkflowRun,
     );
 
     // Write output predicate

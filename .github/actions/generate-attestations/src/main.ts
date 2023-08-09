@@ -46,7 +46,7 @@ export function run(): void {
     const attestations = writeAttestations(
       slsaOutputs,
       predicateType,
-      predicateFile
+      predicateFile,
     );
 
     // Write attestations

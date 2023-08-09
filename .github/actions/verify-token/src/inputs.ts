@@ -26,25 +26,25 @@ export async function filterWorkflowInputs(
   ghToken: string,
   repoName: string,
   hash: string,
-  workflowPath: string
+  workflowPath: string,
 ): Promise<rawTokenInterface> {
   const content = await fetchToolWorkflow(
     ghToken,
     repoName,
     hash,
-    workflowPath
+    workflowPath,
   );
   return updateSLSAToken(content, slsaToken);
 }
 
 export function updateSLSAToken(
   content: string,
-  slsaToken: rawTokenInterface
+  slsaToken: rawTokenInterface,
 ): rawTokenInterface {
   const ret = Object.create(slsaToken);
   const workflow: gitHubWorkflowInterface = YAML.parse(content);
   slsaToken.tool.inputs = asMap<string | number | boolean>(
-    slsaToken.tool.inputs
+    slsaToken.tool.inputs,
   );
 
   // NOTE: We need to check the presence of workflow_call but it could be empty

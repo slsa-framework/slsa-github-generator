@@ -23,7 +23,7 @@ export function validateGitHubFields(gho: githubObj): void {
   validateField(
     "github.event_name",
     gho.event_name,
-    process.env.GITHUB_EVENT_NAME
+    process.env.GITHUB_EVENT_NAME,
   );
 
   // base_ref.
@@ -31,7 +31,7 @@ export function validateGitHubFields(gho: githubObj): void {
     "github.base_ref",
     gho.base_ref,
     process.env.GITHUB_BASE_REF,
-    true
+    true,
   );
 
   // Validate the event. Only events in
@@ -54,7 +54,7 @@ export function validateGitHubFields(gho: githubObj): void {
   validateField(
     "github.event_payload_sha256",
     gho.event_payload_sha256,
-    tscommon.safeFileSha256(eventPath)
+    tscommon.safeFileSha256(eventPath),
   );
 
   // ref.
@@ -67,28 +67,28 @@ export function validateGitHubFields(gho: githubObj): void {
   validateField(
     "github.repository",
     gho.repository,
-    process.env.GITHUB_REPOSITORY
+    process.env.GITHUB_REPOSITORY,
   );
 
   // repository_id.
   validateField(
     "github.repository_id",
     gho.repository_id,
-    process.env.GITHUB_REPOSITORY_ID
+    process.env.GITHUB_REPOSITORY_ID,
   );
 
   // repository_owner_id.
   validateField(
     "github.repository_owner_id",
     gho.repository_owner_id,
-    process.env.GITHUB_REPOSITORY_OWNER_ID
+    process.env.GITHUB_REPOSITORY_OWNER_ID,
   );
 
   // run_attempt.
   validateField(
     "github.run_attempt",
     gho.run_attempt,
-    process.env.GITHUB_RUN_ATTEMPT
+    process.env.GITHUB_RUN_ATTEMPT,
   );
 
   // run_id.
@@ -98,7 +98,7 @@ export function validateGitHubFields(gho: githubObj): void {
   validateField(
     "github.run_number",
     gho.run_number,
-    process.env.GITHUB_RUN_NUMBER
+    process.env.GITHUB_RUN_NUMBER,
   );
 
   // sha.
@@ -108,28 +108,28 @@ export function validateGitHubFields(gho: githubObj): void {
   validateField(
     "github.workflow_ref",
     gho.workflow_ref,
-    process.env.GITHUB_WORKFLOW_REF
+    process.env.GITHUB_WORKFLOW_REF,
   );
   validateFieldStartsWith(
     "github.workflow_ref",
     gho.workflow_ref,
-    `${process.env.GITHUB_REPOSITORY}/`
+    `${process.env.GITHUB_REPOSITORY}/`,
   );
 
   // workflow_sha.
   validateField(
     "github.workflow_sha",
     gho.workflow_sha,
-    process.env.GITHUB_WORKFLOW_SHA
+    process.env.GITHUB_WORKFLOW_SHA,
   );
 }
 
 export function validateAndMaskInputs(
-  slsaToken: rawTokenInterface
+  slsaToken: rawTokenInterface,
 ): rawTokenInterface {
   const toolInputs = slsaToken.tool.masked_inputs;
   slsaToken.tool.inputs = asMap<string | number | boolean>(
-    slsaToken.tool.inputs
+    slsaToken.tool.inputs,
   );
   if (
     toolInputs === undefined ||
@@ -159,7 +159,7 @@ export function validateAndMaskInputs(
 export function validateFieldAnyOf<T>(
   name: string,
   actual: T,
-  expected: T[]
+  expected: T[],
 ): void {
   for (const value of expected) {
     if (actual === value) {
@@ -169,8 +169,8 @@ export function validateFieldAnyOf<T>(
   }
   throw new Error(
     `mismatch ${name}: got '${actual}', expected one of '${expected.join(
-      ","
-    )}'.`
+      ",",
+    )}'.`,
   );
 }
 
@@ -187,11 +187,11 @@ export function validateField<T>(
   name: string,
   actual: T,
   expected: T,
-  allow_empty = false
+  allow_empty = false,
 ): void {
   if (actual !== expected) {
     throw new Error(
-      `mismatch ${name}: got '${actual}', expected '${expected}'.`
+      `mismatch ${name}: got '${actual}', expected '${expected}'.`,
     );
   }
   if (!allow_empty && !actual) {
@@ -202,11 +202,11 @@ export function validateField<T>(
 export function validateFieldStartsWith(
   name: string,
   actual: string,
-  prefix: string
+  prefix: string,
 ): void {
   if (!actual.startsWith(prefix)) {
     throw new Error(
-      `invalid ${name}: expected '${actual}' to start with '${prefix}'.`
+      `invalid ${name}: expected '${actual}' to start with '${prefix}'.`,
     );
   }
 }
