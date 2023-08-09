@@ -218,6 +218,9 @@ jobs:
 You will need a package management tool that supports providing the provenance
 file. Currently [npm], [lerna] or [pnpm] can support this.
 
+See the [full documentation for the `secure-attestations-download`
+action](../../../actions/nodejs/secure-attestations-download/README.md) for more information.
+
 ### Referencing the Node.js builder
 
 At present, the builder **MUST** be referenced by a tag of the form `@vX.Y.Z`,
