@@ -6227,6 +6227,328 @@ exports.request = request;
 
 /***/ }),
 
+/***/ 2712:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.isBundleWithDsseEnvelope = exports.isBundleWithMessageSignature = exports.isBundleWithPublicKey = exports.isBundleWithCertificateChain = exports.BUNDLE_V02_MEDIA_TYPE = exports.BUNDLE_V01_MEDIA_TYPE = void 0;
+exports.BUNDLE_V01_MEDIA_TYPE = 'application/vnd.dev.sigstore.bundle+json;version=0.1';
+exports.BUNDLE_V02_MEDIA_TYPE = 'application/vnd.dev.sigstore.bundle+json;version=0.2';
+// Type guards for bundle variants.
+function isBundleWithCertificateChain(b) {
+    return b.verificationMaterial.content.$case === 'x509CertificateChain';
+}
+exports.isBundleWithCertificateChain = isBundleWithCertificateChain;
+function isBundleWithPublicKey(b) {
+    return b.verificationMaterial.content.$case === 'publicKey';
+}
+exports.isBundleWithPublicKey = isBundleWithPublicKey;
+function isBundleWithMessageSignature(b) {
+    return b.content.$case === 'messageSignature';
+}
+exports.isBundleWithMessageSignature = isBundleWithMessageSignature;
+function isBundleWithDsseEnvelope(b) {
+    return b.content.$case === 'dsseEnvelope';
+}
+exports.isBundleWithDsseEnvelope = isBundleWithDsseEnvelope;
+
+
+/***/ }),
+
+/***/ 3802:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.ValidationError = void 0;
+/*
+Copyright 2023 The Sigstore Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+class ValidationError extends Error {
+    constructor(message, fields) {
+        super(message);
+        this.fields = fields;
+    }
+}
+exports.ValidationError = ValidationError;
+
+
+/***/ }),
+
+/***/ 9715:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.isBundleV01 = exports.assertBundleV01 = exports.assertBundleLatest = exports.assertBundle = exports.envelopeToJSON = exports.envelopeFromJSON = exports.bundleToJSON = exports.bundleFromJSON = exports.ValidationError = exports.isBundleWithPublicKey = exports.isBundleWithMessageSignature = exports.isBundleWithDsseEnvelope = exports.isBundleWithCertificateChain = exports.BUNDLE_V02_MEDIA_TYPE = exports.BUNDLE_V01_MEDIA_TYPE = void 0;
+/*
+Copyright 2023 The Sigstore Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+var bundle_1 = __nccwpck_require__(2712);
+Object.defineProperty(exports, "BUNDLE_V01_MEDIA_TYPE", ({ enumerable: true, get: function () { return bundle_1.BUNDLE_V01_MEDIA_TYPE; } }));
+Object.defineProperty(exports, "BUNDLE_V02_MEDIA_TYPE", ({ enumerable: true, get: function () { return bundle_1.BUNDLE_V02_MEDIA_TYPE; } }));
+Object.defineProperty(exports, "isBundleWithCertificateChain", ({ enumerable: true, get: function () { return bundle_1.isBundleWithCertificateChain; } }));
+Object.defineProperty(exports, "isBundleWithDsseEnvelope", ({ enumerable: true, get: function () { return bundle_1.isBundleWithDsseEnvelope; } }));
+Object.defineProperty(exports, "isBundleWithMessageSignature", ({ enumerable: true, get: function () { return bundle_1.isBundleWithMessageSignature; } }));
+Object.defineProperty(exports, "isBundleWithPublicKey", ({ enumerable: true, get: function () { return bundle_1.isBundleWithPublicKey; } }));
+var error_1 = __nccwpck_require__(3802);
+Object.defineProperty(exports, "ValidationError", ({ enumerable: true, get: function () { return error_1.ValidationError; } }));
+var serialized_1 = __nccwpck_require__(9875);
+Object.defineProperty(exports, "bundleFromJSON", ({ enumerable: true, get: function () { return serialized_1.bundleFromJSON; } }));
+Object.defineProperty(exports, "bundleToJSON", ({ enumerable: true, get: function () { return serialized_1.bundleToJSON; } }));
+Object.defineProperty(exports, "envelopeFromJSON", ({ enumerable: true, get: function () { return serialized_1.envelopeFromJSON; } }));
+Object.defineProperty(exports, "envelopeToJSON", ({ enumerable: true, get: function () { return serialized_1.envelopeToJSON; } }));
+var validate_1 = __nccwpck_require__(9599);
+Object.defineProperty(exports, "assertBundle", ({ enumerable: true, get: function () { return validate_1.assertBundle; } }));
+Object.defineProperty(exports, "assertBundleLatest", ({ enumerable: true, get: function () { return validate_1.assertBundleLatest; } }));
+Object.defineProperty(exports, "assertBundleV01", ({ enumerable: true, get: function () { return validate_1.assertBundleV01; } }));
+Object.defineProperty(exports, "isBundleV01", ({ enumerable: true, get: function () { return validate_1.isBundleV01; } }));
+
+
+/***/ }),
+
+/***/ 9875:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.envelopeToJSON = exports.envelopeFromJSON = exports.bundleToJSON = exports.bundleFromJSON = void 0;
+/*
+Copyright 2023 The Sigstore Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+const protobuf_specs_1 = __nccwpck_require__(530);
+const validate_1 = __nccwpck_require__(9599);
+const bundleFromJSON = (obj) => {
+    const bundle = protobuf_specs_1.Bundle.fromJSON(obj);
+    (0, validate_1.assertBundle)(bundle);
+    return bundle;
+};
+exports.bundleFromJSON = bundleFromJSON;
+const bundleToJSON = (bundle) => {
+    return protobuf_specs_1.Bundle.toJSON(bundle);
+};
+exports.bundleToJSON = bundleToJSON;
+const envelopeFromJSON = (obj) => {
+    return protobuf_specs_1.Envelope.fromJSON(obj);
+};
+exports.envelopeFromJSON = envelopeFromJSON;
+const envelopeToJSON = (envelope) => {
+    return protobuf_specs_1.Envelope.toJSON(envelope);
+};
+exports.envelopeToJSON = envelopeToJSON;
+
+
+/***/ }),
+
+/***/ 9599:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.assertBundleLatest = exports.isBundleV01 = exports.assertBundleV01 = exports.assertBundle = void 0;
+/*
+Copyright 2023 The Sigstore Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+const bundle_1 = __nccwpck_require__(2712);
+const error_1 = __nccwpck_require__(3802);
+// Performs basic validation of a Sigstore bundle to ensure that all required
+// fields are populated. This is not a complete validation of the bundle, but
+// rather a check that the bundle is in a valid state to be processed by the
+// rest of the code.
+function assertBundle(b) {
+    const invalidValues = [];
+    // Media type validation
+    if (b.mediaType === undefined ||
+        !b.mediaType.startsWith('application/vnd.dev.sigstore.bundle+json;version=')) {
+        invalidValues.push('mediaType');
+    }
+    // Content-related validation
+    if (b.content === undefined) {
+        invalidValues.push('content');
+    }
+    else {
+        switch (b.content.$case) {
+            case 'messageSignature':
+                if (b.content.messageSignature.messageDigest === undefined) {
+                    invalidValues.push('content.messageSignature.messageDigest');
+                }
+                else {
+                    if (b.content.messageSignature.messageDigest.digest.length === 0) {
+                        invalidValues.push('content.messageSignature.messageDigest.digest');
+                    }
+                }
+                if (b.content.messageSignature.signature.length === 0) {
+                    invalidValues.push('content.messageSignature.signature');
+                }
+                break;
+            case 'dsseEnvelope':
+                if (b.content.dsseEnvelope.payload.length === 0) {
+                    invalidValues.push('content.dsseEnvelope.payload');
+                }
+                if (b.content.dsseEnvelope.signatures.length !== 1) {
+                    invalidValues.push('content.dsseEnvelope.signatures');
+                }
+                else {
+                    if (b.content.dsseEnvelope.signatures[0].sig.length === 0) {
+                        invalidValues.push('content.dsseEnvelope.signatures[0].sig');
+                    }
+                }
+                break;
+        }
+    }
+    // Verification material-related validation
+    if (b.verificationMaterial === undefined) {
+        invalidValues.push('verificationMaterial');
+    }
+    else {
+        if (b.verificationMaterial.content === undefined) {
+            invalidValues.push('verificationMaterial.content');
+        }
+        else {
+            switch (b.verificationMaterial.content.$case) {
+                case 'x509CertificateChain':
+                    if (b.verificationMaterial.content.x509CertificateChain.certificates
+                        .length === 0) {
+                        invalidValues.push('verificationMaterial.content.x509CertificateChain.certificates');
+                    }
+                    b.verificationMaterial.content.x509CertificateChain.certificates.forEach((cert, i) => {
+                        if (cert.rawBytes.length === 0) {
+                            invalidValues.push(`verificationMaterial.content.x509CertificateChain.certificates[${i}].rawBytes`);
+                        }
+                    });
+                    break;
+            }
+        }
+        if (b.verificationMaterial.tlogEntries === undefined) {
+            invalidValues.push('verificationMaterial.tlogEntries');
+        }
+        else {
+            if (b.verificationMaterial.tlogEntries.length > 0) {
+                b.verificationMaterial.tlogEntries.forEach((entry, i) => {
+                    if (entry.logId === undefined) {
+                        invalidValues.push(`verificationMaterial.tlogEntries[${i}].logId`);
+                    }
+                    if (entry.kindVersion === undefined) {
+                        invalidValues.push(`verificationMaterial.tlogEntries[${i}].kindVersion`);
+                    }
+                });
+            }
+        }
+    }
+    if (invalidValues.length > 0) {
+        throw new error_1.ValidationError('invalid bundle', invalidValues);
+    }
+}
+exports.assertBundle = assertBundle;
+// Asserts that the given bundle conforms to the v0.1 bundle format.
+function assertBundleV01(b) {
+    const invalidValues = [];
+    if (b.mediaType && b.mediaType !== bundle_1.BUNDLE_V01_MEDIA_TYPE) {
+        invalidValues.push('mediaType');
+    }
+    if (b.verificationMaterial &&
+        b.verificationMaterial.tlogEntries?.length > 0) {
+        b.verificationMaterial.tlogEntries.forEach((entry, i) => {
+            if (entry.inclusionPromise === undefined) {
+                invalidValues.push(`verificationMaterial.tlogEntries[${i}].inclusionPromise`);
+            }
+        });
+    }
+    if (invalidValues.length > 0) {
+        throw new error_1.ValidationError('invalid v0.1 bundle', invalidValues);
+    }
+}
+exports.assertBundleV01 = assertBundleV01;
+// Type guard to determine if Bundle is a v0.1 bundle.
+function isBundleV01(b) {
+    try {
+        assertBundleV01(b);
+        return true;
+    }
+    catch (e) {
+        return false;
+    }
+}
+exports.isBundleV01 = isBundleV01;
+// Asserts that the given bundle conforms to the newest (0.2) bundle format.
+function assertBundleLatest(b) {
+    const invalidValues = [];
+    if (b.verificationMaterial &&
+        b.verificationMaterial.tlogEntries?.length > 0) {
+        b.verificationMaterial.tlogEntries.forEach((entry, i) => {
+            if (entry.inclusionProof === undefined) {
+                invalidValues.push(`verificationMaterial.tlogEntries[${i}].inclusionProof`);
+            }
+            else {
+                if (entry.inclusionProof.checkpoint === undefined) {
+                    invalidValues.push(`verificationMaterial.tlogEntries[${i}].inclusionProof.checkpoint`);
+                }
+            }
+        });
+    }
+    if (invalidValues.length > 0) {
+        throw new error_1.ValidationError('invalid v0.2 bundle', invalidValues);
+    }
+}
+exports.assertBundleLatest = assertBundleLatest;
+
+
+/***/ }),
+
 /***/ 714:
 /***/ ((__unused_webpack_module, exports) => {
 
@@ -7543,6 +7865,338 @@ __exportStar(__nccwpck_require__(2193), exports);
 __exportStar(__nccwpck_require__(4951), exports);
 __exportStar(__nccwpck_require__(4012), exports);
 __exportStar(__nccwpck_require__(9980), exports);
+
+
+/***/ }),
+
+/***/ 8134:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.appDataPath = void 0;
+/*
+Copyright 2023 The Sigstore Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+const os_1 = __importDefault(__nccwpck_require__(2037));
+const path_1 = __importDefault(__nccwpck_require__(1017));
+function appDataPath(name) {
+    const homedir = os_1.default.homedir();
+    switch (process.platform) {
+        /* istanbul ignore next */
+        case 'darwin': {
+            const appSupport = path_1.default.join(homedir, 'Library', 'Application Support');
+            return path_1.default.join(appSupport, name);
+        }
+        /* istanbul ignore next */
+        case 'win32': {
+            const localAppData = process.env.LOCALAPPDATA || path_1.default.join(homedir, 'AppData', 'Local');
+            return path_1.default.join(localAppData, name, 'Data');
+        }
+        /* istanbul ignore next */
+        default: {
+            const localData = process.env.XDG_DATA_HOME || path_1.default.join(homedir, '.local', 'share');
+            return path_1.default.join(localData, name);
+        }
+    }
+}
+exports.appDataPath = appDataPath;
+
+
+/***/ }),
+
+/***/ 8447:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.TUFClient = void 0;
+/*
+Copyright 2023 The Sigstore Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+const fs_1 = __importDefault(__nccwpck_require__(7147));
+const path_1 = __importDefault(__nccwpck_require__(1017));
+const tuf_js_1 = __nccwpck_require__(9475);
+const target_1 = __nccwpck_require__(1412);
+class TUFClient {
+    constructor(options) {
+        initTufCache(options.cachePath, options.rootPath);
+        const remote = initRemoteConfig(options.cachePath, options.mirrorURL);
+        this.updater = initClient(options.cachePath, remote, options);
+    }
+    async refresh() {
+        return this.updater.refresh();
+    }
+    getTarget(targetName) {
+        return (0, target_1.readTarget)(this.updater, targetName);
+    }
+}
+exports.TUFClient = TUFClient;
+// Initializes the TUF cache directory structure including the initial
+// root.json file. If the cache directory does not exist, it will be
+// created. If the targets directory does not exist, it will be created.
+// If the root.json file does not exist, it will be copied from the
+// rootPath argument.
+function initTufCache(cachePath, tufRootPath) {
+    const targetsPath = path_1.default.join(cachePath, 'targets');
+    const cachedRootPath = path_1.default.join(cachePath, 'root.json');
+    if (!fs_1.default.existsSync(cachePath)) {
+        fs_1.default.mkdirSync(cachePath, { recursive: true });
+    }
+    if (!fs_1.default.existsSync(targetsPath)) {
+        fs_1.default.mkdirSync(targetsPath);
+    }
+    if (!fs_1.default.existsSync(cachedRootPath)) {
+        fs_1.default.copyFileSync(tufRootPath, cachedRootPath);
+    }
+    return cachePath;
+}
+// Initializes the remote.json file, which contains the URL of the TUF
+// repository. If the file does not exist, it will be created. If the file
+// exists, it will be parsed and returned.
+function initRemoteConfig(rootDir, mirrorURL) {
+    let remoteConfig;
+    const remoteConfigPath = path_1.default.join(rootDir, 'remote.json');
+    if (fs_1.default.existsSync(remoteConfigPath)) {
+        const data = fs_1.default.readFileSync(remoteConfigPath, 'utf-8');
+        remoteConfig = JSON.parse(data);
+    }
+    if (!remoteConfig) {
+        remoteConfig = { mirror: mirrorURL };
+        fs_1.default.writeFileSync(remoteConfigPath, JSON.stringify(remoteConfig));
+    }
+    return remoteConfig;
+}
+function initClient(cachePath, remote, options) {
+    const baseURL = remote.mirror;
+    const config = {
+        fetchTimeout: options.timeout,
+    };
+    // tuf-js only supports a number for fetchRetries so we have to
+    // convert the boolean and object options to a number.
+    /* istanbul ignore if */
+    if (typeof options.retry !== 'undefined') {
+        if (typeof options.retry === 'number') {
+            config.fetchRetries = options.retry;
+        }
+        else if (typeof options.retry === 'object') {
+            config.fetchRetries = options.retry.retries;
+        }
+        else if (options.retry === true) {
+            config.fetchRetries = 1;
+        }
+    }
+    return new tuf_js_1.Updater({
+        metadataBaseUrl: baseURL,
+        targetBaseUrl: `${baseURL}/targets`,
+        metadataDir: cachePath,
+        targetDir: path_1.default.join(cachePath, 'targets'),
+        config,
+    });
+}
+
+
+/***/ }),
+
+/***/ 8624:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.TUFError = void 0;
+class TUFError extends Error {
+    constructor({ code, message, cause, }) {
+        super(message);
+        this.code = code;
+        this.cause = cause;
+        this.name = this.constructor.name;
+    }
+}
+exports.TUFError = TUFError;
+
+
+/***/ }),
+
+/***/ 8567:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.TUFError = exports.initTUF = exports.getTrustedRoot = void 0;
+/*
+Copyright 2023 The Sigstore Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+const protobuf_specs_1 = __nccwpck_require__(530);
+const appdata_1 = __nccwpck_require__(8134);
+const client_1 = __nccwpck_require__(8447);
+const DEFAULT_CACHE_DIR = 'sigstore-js';
+const DEFAULT_MIRROR_URL = 'https://tuf-repo-cdn.sigstore.dev';
+const DEFAULT_TUF_ROOT_PATH = '../store/public-good-instance-root.json';
+const DEFAULT_RETRY = { retries: 2 };
+const DEFAULT_TIMEOUT = 5000;
+const TRUSTED_ROOT_TARGET = 'trusted_root.json';
+async function getTrustedRoot(
+/* istanbul ignore next */
+options = {}) {
+    const client = createClient(options);
+    const trustedRoot = await client.getTarget(TRUSTED_ROOT_TARGET);
+    return protobuf_specs_1.TrustedRoot.fromJSON(JSON.parse(trustedRoot));
+}
+exports.getTrustedRoot = getTrustedRoot;
+async function initTUF(
+/* istanbul ignore next */
+options = {}) {
+    const client = createClient(options);
+    return client.refresh().then(() => client);
+}
+exports.initTUF = initTUF;
+// Create a TUF client with default options
+function createClient(options) {
+    /* istanbul ignore next */
+    return new client_1.TUFClient({
+        cachePath: options.cachePath || (0, appdata_1.appDataPath)(DEFAULT_CACHE_DIR),
+        rootPath: options.rootPath || __nccwpck_require__.ab + "public-good-instance-root.json",
+        mirrorURL: options.mirrorURL || DEFAULT_MIRROR_URL,
+        retry: options.retry ?? DEFAULT_RETRY,
+        timeout: options.timeout ?? DEFAULT_TIMEOUT,
+    });
+}
+var error_1 = __nccwpck_require__(8624);
+Object.defineProperty(exports, "TUFError", ({ enumerable: true, get: function () { return error_1.TUFError; } }));
+
+
+/***/ }),
+
+/***/ 1412:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.readTarget = void 0;
+/*
+Copyright 2023 The Sigstore Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+const fs_1 = __importDefault(__nccwpck_require__(7147));
+const error_1 = __nccwpck_require__(8624);
+// Downloads and returns the specified target from the provided TUF Updater.
+async function readTarget(tuf, targetPath) {
+    const path = await getTargetPath(tuf, targetPath);
+    return new Promise((resolve, reject) => {
+        fs_1.default.readFile(path, 'utf-8', (err, data) => {
+            if (err) {
+                reject(new error_1.TUFError({
+                    code: 'TUF_READ_TARGET_ERROR',
+                    message: `error reading target ${path}`,
+                    cause: err,
+                }));
+            }
+            else {
+                resolve(data);
+            }
+        });
+    });
+}
+exports.readTarget = readTarget;
+// Returns the local path to the specified target. If the target is not yet
+// cached locally, the provided TUF Updater will be used to download and
+// cache the target.
+async function getTargetPath(tuf, target) {
+    let targetInfo;
+    try {
+        targetInfo = await tuf.getTargetInfo(target);
+    }
+    catch (err) {
+        throw new error_1.TUFError({
+            code: 'TUF_REFRESH_METADATA_ERROR',
+            message: 'error refreshing TUF metadata',
+            cause: err,
+        });
+    }
+    if (!targetInfo) {
+        throw new error_1.TUFError({
+            code: 'TUF_FIND_TARGET_ERROR',
+            message: `target ${target} not found`,
+        });
+    }
+    let path = await tuf.findCachedTarget(targetInfo);
+    // An empty path here means the target has not been cached locally, or is
+    // out of date. In either case, we need to download it.
+    if (!path) {
+        try {
+            path = await tuf.downloadTarget(targetInfo);
+        }
+        catch (err) {
+            throw new error_1.TUFError({
+                code: 'TUF_DOWNLOAD_TARGET_ERROR',
+                message: `error downloading target ${path}`,
+                cause: err,
+            });
+        }
+    }
+    return path;
+}
 
 
 /***/ }),
@@ -12743,7 +13397,7 @@ function setup(env) {
 	createDebug.disable = disable;
 	createDebug.enable = enable;
 	createDebug.enabled = enabled;
-	createDebug.humanize = __nccwpck_require__(9992);
+	createDebug.humanize = __nccwpck_require__(900);
 	createDebug.destroy = destroy;
 
 	Object.keys(env).forEach(key => {
@@ -14995,7 +15649,7 @@ exports["default"] = parseProxyResponse;
  */
 
 var util = __nccwpck_require__(3837);
-var ms = __nccwpck_require__(9992);
+var ms = __nccwpck_require__(900);
 
 module.exports = function (t) {
   if (typeof t === 'number') return t;
@@ -23841,7 +24495,7 @@ module.exports = class Minipass extends Stream {
 
 /***/ }),
 
-/***/ 9992:
+/***/ 900:
 /***/ ((module) => {
 
 /**
@@ -28502,7 +29156,7 @@ module.exports = gte
 
 /***/ }),
 
-/***/ 900:
+/***/ 929:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 const SemVer = __nccwpck_require__(8088)
@@ -28558,7 +29212,7 @@ module.exports = major
 
 /***/ }),
 
-/***/ 8447:
+/***/ 7883:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 const SemVer = __nccwpck_require__(8088)
@@ -28695,10 +29349,10 @@ const identifiers = __nccwpck_require__(2463)
 const parse = __nccwpck_require__(5925)
 const valid = __nccwpck_require__(9601)
 const clean = __nccwpck_require__(8848)
-const inc = __nccwpck_require__(900)
+const inc = __nccwpck_require__(929)
 const diff = __nccwpck_require__(4297)
 const major = __nccwpck_require__(6688)
-const minor = __nccwpck_require__(8447)
+const minor = __nccwpck_require__(7883)
 const patch = __nccwpck_require__(2866)
 const prerelease = __nccwpck_require__(4016)
 const compare = __nccwpck_require__(4309)
@@ -29711,14 +30365,20 @@ module.exports = validRange
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.toCertificateRequest = void 0;
-function toCertificateRequest(publicKey, challenge) {
+function toCertificateRequest(identityToken, publicKey, challenge) {
     return {
-        publicKey: {
-            content: publicKey
-                .export({ type: 'spki', format: 'der' })
-                .toString('base64'),
+        credentials: {
+            oidcIdentityToken: identityToken,
         },
-        signedEmailAddress: challenge.toString('base64'),
+        publicKeyRequest: {
+            publicKey: {
+                algorithm: 'ECDSA',
+                content: publicKey
+                    .export({ format: 'pem', type: 'spki' })
+                    .toString('ascii'),
+            },
+            proofOfPossession: challenge.toString('base64'),
+        },
     };
 }
 exports.toCertificateRequest = toCertificateRequest;
@@ -29733,22 +30393,38 @@ exports.toCertificateRequest = toCertificateRequest;
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.CAClient = void 0;
-const client_1 = __nccwpck_require__(3969);
 const error_1 = __nccwpck_require__(6274);
-const util_1 = __nccwpck_require__(6901);
+const external_1 = __nccwpck_require__(9069);
 const format_1 = __nccwpck_require__(609);
 class CAClient {
     constructor(options) {
-        this.fulcio = new client_1.Fulcio({ baseURL: options.fulcioBaseURL });
+        this.fulcio = new external_1.Fulcio({
+            baseURL: options.fulcioBaseURL,
+            retry: options.retry,
+            timeout: options.timeout,
+        });
     }
     async createSigningCertificate(identityToken, publicKey, challenge) {
-        const request = (0, format_1.toCertificateRequest)(publicKey, challenge);
+        const request = (0, format_1.toCertificateRequest)(identityToken, publicKey, challenge);
         try {
-            const certificate = await this.fulcio.createSigningCertificate(identityToken, request);
-            return util_1.pem.split(certificate);
+            const resp = await this.fulcio.createSigningCertificate(request);
+            // Account for the fact that the response may contain either a
+            // signedCertificateEmbeddedSct or a signedCertificateDetachedSct.
+            const cert = resp.signedCertificateEmbeddedSct
+                ? resp.signedCertificateEmbeddedSct
+                : resp.signedCertificateDetachedSct;
+            // Return the first certificate in the chain, which is the signing
+            // certificate. Specifically not returning the rest of the chain to
+            // mitigate the risk of errors when verifying the certificate chain.
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+            return cert.chain.certificates.slice(0, 1);
         }
         catch (err) {
-            throw new error_1.InternalError('error creating signing certificate', err);
+            throw new error_1.InternalError({
+                code: 'CA_CREATE_SIGNING_CERTIFICATE_ERROR',
+                message: 'error creating signing certificate',
+                cause: err,
+            });
         }
     }
 }
@@ -29782,12 +30458,11 @@ limitations under the License.
 const error_1 = __nccwpck_require__(6274);
 const cert_1 = __nccwpck_require__(3669);
 const verify_1 = __nccwpck_require__(3812);
-function verifyChain(bundleCerts, certificateAuthorities) {
-    const certs = parseCerts(bundleCerts);
-    const signingCert = certs[0];
+function verifyChain(certificate, certificateAuthorities) {
+    const untrustedCert = cert_1.x509Certificate.parse(certificate.rawBytes);
     // Filter the list of certificate authorities to those which are valid for the
     // signing certificate's notBefore date.
-    const validCAs = filterCertificateAuthorities(certificateAuthorities, signingCert.notBefore);
+    const validCAs = filterCertificateAuthorities(certificateAuthorities, untrustedCert.notBefore);
     if (validCAs.length === 0) {
         throw new error_1.VerificationError('No valid certificate authorities');
     }
@@ -29797,9 +30472,9 @@ function verifyChain(bundleCerts, certificateAuthorities) {
         const trustedCerts = parseCerts(ca.certChain?.certificates || []);
         try {
             trustedChain = (0, verify_1.verifyCertificateChain)({
+                untrustedCert,
                 trustedCerts,
-                certs,
-                validAt: signingCert.notBefore,
+                validAt: untrustedCert.notBefore,
             });
             return true;
         }
@@ -29841,8 +30516,9 @@ const sct_1 = __nccwpck_require__(3456);
 const signer_1 = __nccwpck_require__(2244);
 function verifySigningCertificate(bundle, trustedRoot, options) {
     // Check that a trusted certificate chain can be found for the signing
-    // certificate in the bundle
-    const trustedChain = (0, chain_1.verifyChain)(bundle.verificationMaterial.content.x509CertificateChain.certificates, trustedRoot.certificateAuthorities);
+    // certificate in the bundle. Only the first certificate in the bundle's
+    // chain is used -- everything else must come from the trusted root.
+    const trustedChain = (0, chain_1.verifyChain)(bundle.verificationMaterial.content.x509CertificateChain.certificates[0], trustedRoot.certificateAuthorities);
     // Unless disabled, verify the SCTs in the signing certificate
     if (options.ctlogOptions.disable === false) {
         (0, sct_1.verifySCTs)(trustedChain, trustedRoot.ctlogs, options.ctlogOptions);
@@ -29942,7 +30618,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 const error_1 = __nccwpck_require__(6274);
-const sigstore = __importStar(__nccwpck_require__(8598));
+const sigstore = __importStar(__nccwpck_require__(266));
 // https://github.com/sigstore/fulcio/blob/main/docs/oid-info.md#1361415726411--issuer
 const OID_FULCIO_ISSUER = '1.3.6.1.4.1.57264.1.1';
 // https://github.com/sigstore/fulcio/blob/main/docs/oid-info.md#1361415726417--othername-san
@@ -30028,14 +30704,243 @@ function verifyOIDs(cert, oids) {
         }
         const oid = expectedExtension.oid.id.join('.');
         const extension = cert.extension(oid);
-        return extension?.value.equals(expectedExtension.value);
+        // If the extension is not present, or there is no value, return false
+        const valueObj = extension?.valueObj;
+        if (!valueObj) {
+            return false;
+        }
+        // Check to see if this is a newer style extension with an embedded
+        // UTF8String, or an older style extension with a raw string
+        if (valueObj.subs.length > 0) {
+            return valueObj.subs[0].value.equals(expectedExtension.value);
+        }
+        else {
+            return valueObj.value.equals(expectedExtension.value);
+        }
     });
 }
 
 
 /***/ }),
 
-/***/ 7045:
+/***/ 3430:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.identityProviders = exports.artifactVerificationOptions = exports.createTSAClient = exports.createTLogClient = exports.createCAClient = exports.DEFAULT_TIMEOUT = exports.DEFAULT_RETRY = exports.DEFAULT_REKOR_URL = exports.DEFAULT_FULCIO_URL = void 0;
+/*
+Copyright 2023 The Sigstore Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+const ca_1 = __nccwpck_require__(7021);
+const identity_1 = __importDefault(__nccwpck_require__(8761));
+const tlog_1 = __nccwpck_require__(2030);
+const tsa_1 = __nccwpck_require__(8880);
+const sigstore = __importStar(__nccwpck_require__(266));
+exports.DEFAULT_FULCIO_URL = 'https://fulcio.sigstore.dev';
+exports.DEFAULT_REKOR_URL = 'https://rekor.sigstore.dev';
+exports.DEFAULT_RETRY = { retries: 2 };
+exports.DEFAULT_TIMEOUT = 5000;
+function createCAClient(options) {
+    return new ca_1.CAClient({
+        fulcioBaseURL: options.fulcioURL || exports.DEFAULT_FULCIO_URL,
+        retry: options.retry ?? exports.DEFAULT_RETRY,
+        timeout: options.timeout ?? exports.DEFAULT_TIMEOUT,
+    });
+}
+exports.createCAClient = createCAClient;
+function createTLogClient(options) {
+    return new tlog_1.TLogClient({
+        rekorBaseURL: options.rekorURL || exports.DEFAULT_REKOR_URL,
+        retry: options.retry ?? exports.DEFAULT_RETRY,
+        timeout: options.timeout ?? exports.DEFAULT_TIMEOUT,
+    });
+}
+exports.createTLogClient = createTLogClient;
+function createTSAClient(options) {
+    return options.tsaServerURL
+        ? new tsa_1.TSAClient({
+            tsaBaseURL: options.tsaServerURL,
+            retry: options.retry ?? exports.DEFAULT_RETRY,
+            timeout: options.timeout ?? exports.DEFAULT_TIMEOUT,
+        })
+        : undefined;
+}
+exports.createTSAClient = createTSAClient;
+// Assembles the AtifactVerificationOptions from the supplied VerifyOptions.
+function artifactVerificationOptions(options) {
+    // The trusted signers are only used if the options contain a certificate
+    // issuer
+    let signers;
+    if (options.certificateIssuer) {
+        let san = undefined;
+        if (options.certificateIdentityEmail) {
+            san = {
+                type: sigstore.SubjectAlternativeNameType.EMAIL,
+                identity: {
+                    $case: 'value',
+                    value: options.certificateIdentityEmail,
+                },
+            };
+        }
+        else if (options.certificateIdentityURI) {
+            san = {
+                type: sigstore.SubjectAlternativeNameType.URI,
+                identity: {
+                    $case: 'value',
+                    value: options.certificateIdentityURI,
+                },
+            };
+        }
+        const oids = Object.entries(options.certificateOIDs || {}).map(([oid, value]) => ({
+            oid: { id: oid.split('.').map((s) => parseInt(s, 10)) },
+            value: Buffer.from(value),
+        }));
+        signers = {
+            $case: 'certificateIdentities',
+            certificateIdentities: {
+                identities: [
+                    {
+                        issuer: options.certificateIssuer,
+                        san: san,
+                        oids: oids,
+                    },
+                ],
+            },
+        };
+    }
+    // Construct the artifact verification options w/ defaults
+    return {
+        ctlogOptions: {
+            disable: options.ctLogThreshold === 0,
+            threshold: options.ctLogThreshold ?? 1,
+            detachedSct: false,
+        },
+        tlogOptions: {
+            disable: options.tlogThreshold === 0,
+            threshold: options.tlogThreshold ?? 1,
+            performOnlineVerification: false,
+        },
+        signers,
+    };
+}
+exports.artifactVerificationOptions = artifactVerificationOptions;
+// Translates the IdenityProviderOptions into a list of Providers which
+// should be queried to retrieve an identity token.
+function identityProviders(options) {
+    const idps = [];
+    const token = options.identityToken;
+    // If an explicit identity token is provided, use that. Setup a dummy
+    // provider that just returns the token. Otherwise, setup the CI context
+    // provider and (optionally) the OAuth provider.
+    if (token) {
+        idps.push({ getToken: () => Promise.resolve(token) });
+    }
+    else {
+        idps.push(identity_1.default.ciContextProvider());
+        if (options.oidcIssuer && options.oidcClientID) {
+            idps.push(identity_1.default.oauthProvider({
+                issuer: options.oidcIssuer,
+                clientID: options.oidcClientID,
+                clientSecret: options.oidcClientSecret,
+                redirectURL: options.oidcRedirectURL,
+            }));
+        }
+    }
+    return idps;
+}
+exports.identityProviders = identityProviders;
+
+
+/***/ }),
+
+/***/ 6274:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.InternalError = exports.PolicyError = exports.VerificationError = void 0;
+/*
+Copyright 2023 The Sigstore Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+/* eslint-disable @typescript-eslint/no-explicit-any */
+class BaseError extends Error {
+    constructor(message, cause) {
+        super(message);
+        this.name = this.constructor.name;
+        this.cause = cause;
+    }
+}
+class VerificationError extends BaseError {
+}
+exports.VerificationError = VerificationError;
+class PolicyError extends BaseError {
+}
+exports.PolicyError = PolicyError;
+class InternalError extends BaseError {
+    constructor({ code, message, cause, }) {
+        super(message, cause);
+        this.code = code;
+    }
+}
+exports.InternalError = InternalError;
+
+
+/***/ }),
+
+/***/ 5005:
 /***/ ((__unused_webpack_module, exports) => {
 
 "use strict";
@@ -30064,7 +30969,7 @@ exports.checkStatus = checkStatus;
 
 /***/ }),
 
-/***/ 7807:
+/***/ 8387:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
@@ -30091,32 +30996,30 @@ limitations under the License.
 */
 const make_fetch_happen_1 = __importDefault(__nccwpck_require__(9525));
 const util_1 = __nccwpck_require__(6901);
-const error_1 = __nccwpck_require__(7045);
+const error_1 = __nccwpck_require__(5005);
 /**
  * Fulcio API client.
  */
 class Fulcio {
     constructor(options) {
         this.fetch = make_fetch_happen_1.default.defaults({
-            retry: { retries: 2 },
-            timeout: 5000,
+            retry: options.retry,
+            timeout: options.timeout,
             headers: {
-                Accept: 'application/pem-certificate-chain',
                 'Content-Type': 'application/json',
                 'User-Agent': util_1.ua.getUserAgent(),
             },
         });
         this.baseUrl = options.baseURL;
     }
-    async createSigningCertificate(idToken, request) {
-        const url = `${this.baseUrl}/api/v1/signingCert`;
+    async createSigningCertificate(request) {
+        const url = `${this.baseUrl}/api/v2/signingCert`;
         const response = await this.fetch(url, {
             method: 'POST',
-            headers: { Authorization: `Bearer ${idToken}` },
             body: JSON.stringify(request),
         });
         (0, error_1.checkStatus)(response);
-        const data = await response.text();
+        const data = await response.json();
         return data;
     }
 }
@@ -30125,13 +31028,13 @@ exports.Fulcio = Fulcio;
 
 /***/ }),
 
-/***/ 3969:
+/***/ 9069:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.Rekor = exports.Fulcio = void 0;
+exports.TimestampAuthority = exports.Rekor = exports.Fulcio = exports.HTTPError = void 0;
 /*
 Copyright 2022 The Sigstore Authors.
 
@@ -30147,15 +31050,19 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-var fulcio_1 = __nccwpck_require__(7807);
+var error_1 = __nccwpck_require__(5005);
+Object.defineProperty(exports, "HTTPError", ({ enumerable: true, get: function () { return error_1.HTTPError; } }));
+var fulcio_1 = __nccwpck_require__(8387);
 Object.defineProperty(exports, "Fulcio", ({ enumerable: true, get: function () { return fulcio_1.Fulcio; } }));
-var rekor_1 = __nccwpck_require__(8732);
+var rekor_1 = __nccwpck_require__(9047);
 Object.defineProperty(exports, "Rekor", ({ enumerable: true, get: function () { return rekor_1.Rekor; } }));
+var tsa_1 = __nccwpck_require__(1679);
+Object.defineProperty(exports, "TimestampAuthority", ({ enumerable: true, get: function () { return tsa_1.TimestampAuthority; } }));
 
 
 /***/ }),
 
-/***/ 8732:
+/***/ 9047:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
@@ -30182,15 +31089,15 @@ limitations under the License.
 */
 const make_fetch_happen_1 = __importDefault(__nccwpck_require__(9525));
 const util_1 = __nccwpck_require__(6901);
-const error_1 = __nccwpck_require__(7045);
+const error_1 = __nccwpck_require__(5005);
 /**
  * Rekor API client.
  */
 class Rekor {
     constructor(options) {
         this.fetch = make_fetch_happen_1.default.defaults({
-            retry: { retries: 2 },
-            timeout: 5000,
+            retry: options.retry,
+            timeout: options.timeout,
             headers: {
                 Accept: 'application/json',
                 'User-Agent': util_1.ua.getUserAgent(),
@@ -30200,7 +31107,7 @@ class Rekor {
     }
     /**
      * Create a new entry in the Rekor log.
-     * @param propsedEntry {EntryKind} Data to create a new entry
+     * @param propsedEntry {ProposedEntry} Data to create a new entry
      * @returns {Promise<Entry>} The created entry
      */
     async createEntry(propsedEntry) {
@@ -30268,7 +31175,7 @@ function entryFromResponse(data) {
         throw new Error('Received multiple entries in Rekor response');
     }
     // Grab UUID and entry data from the response
-    const [uuid, entry] = Object.entries(data)[0];
+    const [uuid, entry] = entries[0];
     return {
         ...entry,
         uuid,
@@ -30278,13 +31185,16 @@ function entryFromResponse(data) {
 
 /***/ }),
 
-/***/ 6274:
-/***/ ((__unused_webpack_module, exports) => {
+/***/ 1679:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
 
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.PolicyError = exports.InternalError = exports.ValidationError = exports.VerificationError = void 0;
+exports.TimestampAuthority = void 0;
 /*
 Copyright 2023 The Sigstore Authors.
 
@@ -30300,26 +31210,32 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-/* eslint-disable @typescript-eslint/no-explicit-any */
-class BaseError extends Error {
-    constructor(message, cause) {
-        super(message);
-        this.name = this.constructor.name;
-        this.cause = cause;
+const make_fetch_happen_1 = __importDefault(__nccwpck_require__(9525));
+const util_1 = __nccwpck_require__(6901);
+const error_1 = __nccwpck_require__(5005);
+class TimestampAuthority {
+    constructor(options) {
+        this.fetch = make_fetch_happen_1.default.defaults({
+            retry: options.retry,
+            timeout: options.timeout,
+            headers: {
+                'Content-Type': 'application/json',
+                'User-Agent': util_1.ua.getUserAgent(),
+            },
+        });
+        this.baseUrl = options.baseURL;
+    }
+    async createTimestamp(request) {
+        const url = `${this.baseUrl}/api/v1/timestamp`;
+        const response = await this.fetch(url, {
+            method: 'POST',
+            body: JSON.stringify(request),
+        });
+        (0, error_1.checkStatus)(response);
+        return response.buffer();
     }
 }
-class VerificationError extends BaseError {
-}
-exports.VerificationError = VerificationError;
-class ValidationError extends BaseError {
-}
-exports.ValidationError = ValidationError;
-class InternalError extends BaseError {
-}
-exports.InternalError = InternalError;
-class PolicyError extends BaseError {
-}
-exports.PolicyError = PolicyError;
+exports.TimestampAuthority = TimestampAuthority;
 
 
 /***/ }),
@@ -30352,7 +31268,7 @@ limitations under the License.
 const make_fetch_happen_1 = __importDefault(__nccwpck_require__(9525));
 const util_1 = __nccwpck_require__(6901);
 // Collection of all the CI-specific providers we have implemented
-const providers = [getGHAToken];
+const providers = [getGHAToken, getEnv];
 /**
  * CIContextProvider is a composite identity provider which will iterate
  * over all of the CI-specific providers and return the token from the first
@@ -30393,6 +31309,16 @@ async function getGHAToken(audience) {
     });
     return response.json().then((data) => data.value);
 }
+/**
+ * getEnv can retrieve an OIDC token from an environment variable.
+ * This matches the behavior of https://github.com/sigstore/cosign/tree/main/pkg/providers/envvar
+ */
+async function getEnv() {
+    if (!process.env.SIGSTORE_ID_TOKEN) {
+        return Promise.reject('no token available');
+    }
+    return process.env.SIGSTORE_ID_TOKEN;
+}
 
 
 /***/ }),
@@ -30430,8 +31356,13 @@ const oauth_1 = __nccwpck_require__(7141);
  * @param clientSecret Client secret for the issuer (optional)
  * @returns {Provider}
  */
-function oauthProvider(issuer, clientID, clientSecret) {
-    return new oauth_1.OAuthProvider(new issuer_1.Issuer(issuer), clientID, clientSecret);
+function oauthProvider(options) {
+    return new oauth_1.OAuthProvider({
+        issuer: new issuer_1.Issuer(options.issuer),
+        clientID: options.clientID,
+        clientSecret: options.clientSecret,
+        redirectURL: options.redirectURL,
+    });
 }
 /**
  * ciContextProvider returns a new Provider instance which attempts to retrieve
@@ -30544,10 +31475,11 @@ const make_fetch_happen_1 = __importDefault(__nccwpck_require__(9525));
 const url_1 = __nccwpck_require__(7310);
 const util_1 = __nccwpck_require__(6901);
 class OAuthProvider {
-    constructor(issuer, clientID, clientSecret) {
-        this.clientID = clientID;
-        this.clientSecret = clientSecret || '';
-        this.issuer = issuer;
+    constructor(options) {
+        this.clientID = options.clientID;
+        this.clientSecret = options.clientSecret || '';
+        this.issuer = options.issuer;
+        this.redirectURI = options.redirectURL;
         this.codeVerifier = generateRandomString(32);
         this.state = generateRandomString(16);
     }
@@ -30561,9 +31493,20 @@ class OAuthProvider {
     async initiateAuthRequest() {
         const server = http_1.default.createServer();
         const sockets = new Set();
-        // Start server and wait till it is listening
+        // Start server and wait till it is listening. If a redirect URL was
+        // provided, use that. Otherwise, use a random port and construct the
+        // redirect URL.
         await new Promise((resolve) => {
-            server.listen(0, resolve);
+            if (this.redirectURI) {
+                const url = new url_1.URL(this.redirectURI);
+                server.listen(Number(url.port), url.hostname, resolve);
+            }
+            else {
+                server.listen(0, resolve);
+                // Get port the server is listening on and construct the server URL
+                const port = server.address().port;
+                this.redirectURI = `http://localhost:${port}`;
+            }
         });
         // Keep track of connections to the server so we can force a shutdown
         server.on('connection', (socket) => {
@@ -30572,9 +31515,6 @@ class OAuthProvider {
                 sockets.delete(socket);
             });
         });
-        // Get port the server is listening on and construct the server URL
-        const port = server.address().port;
-        this.redirectURI = `http://localhost:${port}`;
         const result = new Promise((resolve, reject) => {
             // Set-up handler for post-auth redirect
             server.on('request', (req, res) => {
@@ -30738,40 +31678,51 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.sigstore = void 0;
-/*
-Copyright 2022 The Sigstore Authors.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
 exports.sigstore = __importStar(__nccwpck_require__(1111));
 
 
 /***/ }),
 
 /***/ 9884:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
 
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Signer = void 0;
+const sigstore = __importStar(__nccwpck_require__(266));
 const util_1 = __nccwpck_require__(6901);
 class Signer {
     constructor(options) {
         this.identityProviders = [];
         this.ca = options.ca;
         this.tlog = options.tlog;
+        this.tsa = options.tsa;
         this.identityProviders = options.identityProviders;
+        this.tlogUpload = options.tlogUpload ?? true;
         this.signer = options.signer || this.signWithEphemeralKey.bind(this);
     }
     async signBlob(payload) {
@@ -30779,8 +31730,18 @@ class Signer {
         const sigMaterial = await this.signer(payload);
         // Calculate artifact digest
         const digest = util_1.crypto.hash(payload);
-        // Create Rekor entry
-        return this.tlog.createMessageSignatureEntry(digest, sigMaterial);
+        // Create a Rekor entry (if tlogUpload is enabled)
+        const entry = this.tlogUpload
+            ? await this.tlog.createMessageSignatureEntry(digest, sigMaterial)
+            : undefined;
+        return sigstore.toMessageSignatureBundle({
+            digest,
+            signature: sigMaterial,
+            tlogEntry: entry,
+            timestamp: this.tsa
+                ? await this.tsa.createTimestamp(sigMaterial.signature)
+                : undefined,
+        });
     }
     async signAttestation(payload, payloadType) {
         // Pre-authentication encoding to be signed
@@ -30797,7 +31758,18 @@ class Signer {
                 },
             ],
         };
-        return this.tlog.createDSSEEntry(envelope, sigMaterial);
+        // Create a Rekor entry (if tlogUpload is enabled)
+        const entry = this.tlogUpload
+            ? await this.tlog.createDSSEEntry(envelope, sigMaterial)
+            : undefined;
+        return sigstore.toDSSEBundle({
+            envelope,
+            signature: sigMaterial,
+            tlogEntry: entry,
+            timestamp: this.tsa
+                ? await this.tsa.createTimestamp(sigMaterial.signature)
+                : undefined,
+        });
     }
     async signWithEphemeralKey(payload) {
         // Create emphemeral key pair
@@ -30840,10 +31812,33 @@ exports.Signer = Signer;
 /***/ }),
 
 /***/ 2021:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
 
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.createRekorEntry = exports.createDSSEEnvelope = void 0;
 /*
@@ -30861,16 +31856,11 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-const sigstore_1 = __nccwpck_require__(1111);
-const tlog_1 = __nccwpck_require__(2030);
+const bundle_1 = __nccwpck_require__(9715);
+const config_1 = __nccwpck_require__(3430);
 const signature_1 = __nccwpck_require__(2787);
-const sigstore_2 = __nccwpck_require__(8598);
+const sigstore = __importStar(__nccwpck_require__(266));
 const util_1 = __nccwpck_require__(6901);
-function createTLogClient(options) {
-    return new tlog_1.TLogClient({
-        rekorBaseURL: options.rekorURL || sigstore_1.DEFAULT_REKOR_URL,
-    });
-}
 async function createDSSEEnvelope(payload, payloadType, options) {
     // Pre-authentication encoding to be signed
     const paeBuffer = util_1.dsse.preAuthEncoding(payloadType, payload);
@@ -30886,19 +31876,24 @@ async function createDSSEEnvelope(payload, payloadType, options) {
             },
         ],
     };
-    return (0, sigstore_2.envelopeToJSON)(envelope);
+    return sigstore.Envelope.toJSON(envelope);
 }
 exports.createDSSEEnvelope = createDSSEEnvelope;
 // Accepts a signed DSSE envelope and a PEM-encoded public key to be added to the
 // transparency log. Returns a Sigstore bundle suitable for offline verification.
 async function createRekorEntry(dsseEnvelope, publicKey, options = {}) {
-    const envelope = (0, sigstore_2.envelopeFromJSON)(dsseEnvelope);
-    const tlog = createTLogClient(options);
+    const envelope = sigstore.Envelope.fromJSON(dsseEnvelope);
+    const tlog = (0, config_1.createTLogClient)(options);
     const sigMaterial = (0, signature_1.extractSignatureMaterial)(envelope, publicKey);
-    const bundle = await tlog.createDSSEEntry(envelope, sigMaterial, {
+    const entry = await tlog.createDSSEEntry(envelope, sigMaterial, {
         fetchOnConflict: true,
     });
-    return (0, sigstore_2.bundleToJSON)(bundle);
+    const bundle = sigstore.toDSSEBundle({
+        envelope,
+        signature: sigMaterial,
+        tlogEntry: entry,
+    });
+    return (0, bundle_1.bundleToJSON)(bundle);
 }
 exports.createRekorEntry = createRekorEntry;
 
@@ -30933,11 +31928,8 @@ var __importStar = (this && this.__importStar) || function (mod) {
     __setModuleDefault(result, mod);
     return result;
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.verify = exports.attest = exports.sign = exports.DEFAULT_REKOR_URL = exports.DEFAULT_FULCIO_URL = exports.utils = void 0;
+exports.DEFAULT_REKOR_URL = exports.DEFAULT_FULCIO_URL = exports.tuf = exports.utils = exports.VerificationError = exports.PolicyError = exports.InternalError = exports.ValidationError = exports.createVerifier = exports.verify = exports.attest = exports.sign = void 0;
 /*
 Copyright 2023 The Sigstore Authors.
 
@@ -30953,141 +31945,112 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-const ca_1 = __nccwpck_require__(7021);
-const identity_1 = __importDefault(__nccwpck_require__(8761));
+const bundle_1 = __nccwpck_require__(9715);
+const tuf = __importStar(__nccwpck_require__(8567));
+const config = __importStar(__nccwpck_require__(3430));
 const sign_1 = __nccwpck_require__(9884);
-const tlog_1 = __nccwpck_require__(2030);
-const tuf = __importStar(__nccwpck_require__(5143));
-const sigstore = __importStar(__nccwpck_require__(8598));
-const util_1 = __nccwpck_require__(6901);
 const verify_1 = __nccwpck_require__(7995);
-exports.utils = __importStar(__nccwpck_require__(2021));
-exports.DEFAULT_FULCIO_URL = 'https://fulcio.sigstore.dev';
-exports.DEFAULT_REKOR_URL = 'https://rekor.sigstore.dev';
-function createCAClient(options) {
-    return new ca_1.CAClient({
-        fulcioBaseURL: options.fulcioURL || exports.DEFAULT_FULCIO_URL,
-    });
-}
-function createTLogClient(options) {
-    return new tlog_1.TLogClient({
-        rekorBaseURL: options.rekorURL || exports.DEFAULT_REKOR_URL,
-    });
-}
-const tufCacheDir = util_1.appdata.appDataPath('sigstore-js');
 async function sign(payload, options = {}) {
-    const ca = createCAClient(options);
-    const tlog = createTLogClient(options);
-    const idps = configureIdentityProviders(options);
+    const ca = config.createCAClient(options);
+    const tlog = config.createTLogClient(options);
+    const idps = config.identityProviders(options);
     const signer = new sign_1.Signer({
         ca,
         tlog,
-        identityProviders: idps,
+        identityProviders: options.identityProvider
+            ? [options.identityProvider]
+            : idps,
+        tlogUpload: options.tlogUpload,
     });
     const bundle = await signer.signBlob(payload);
-    return sigstore.Bundle.toJSON(bundle);
+    return (0, bundle_1.bundleToJSON)(bundle);
 }
 exports.sign = sign;
 async function attest(payload, payloadType, options = {}) {
-    const ca = createCAClient(options);
-    const tlog = createTLogClient(options);
-    const idps = configureIdentityProviders(options);
+    const ca = config.createCAClient(options);
+    const tlog = config.createTLogClient(options);
+    const tsa = config.createTSAClient(options);
+    const idps = config.identityProviders(options);
     const signer = new sign_1.Signer({
         ca,
         tlog,
-        identityProviders: idps,
+        tsa,
+        identityProviders: options.identityProvider
+            ? [options.identityProvider]
+            : idps,
+        tlogUpload: options.tlogUpload,
     });
     const bundle = await signer.signAttestation(payload, payloadType);
-    return sigstore.Bundle.toJSON(bundle);
+    return (0, bundle_1.bundleToJSON)(bundle);
 }
 exports.attest = attest;
 async function verify(bundle, payload, options = {}) {
-    const trustedRoot = await tuf.getTrustedRoot(tufCacheDir, {
+    const trustedRoot = await tuf.getTrustedRoot({
         mirrorURL: options.tufMirrorURL,
         rootPath: options.tufRootPath,
+        cachePath: options.tufCachePath,
+        retry: options.retry ?? config.DEFAULT_RETRY,
+        timeout: options.timeout ?? config.DEFAULT_TIMEOUT,
     });
     const verifier = new verify_1.Verifier(trustedRoot, options.keySelector);
-    const deserializedBundle = sigstore.bundleFromJSON(bundle);
-    const opts = collectArtifactVerificationOptions(options);
+    const deserializedBundle = (0, bundle_1.bundleFromJSON)(bundle);
+    const opts = config.artifactVerificationOptions(options);
     return verifier.verify(deserializedBundle, opts, payload);
 }
 exports.verify = verify;
-// Translates the IdenityProviderOptions into a list of Providers which
-// should be queried to retrieve an identity token.
-function configureIdentityProviders(options) {
-    const idps = [];
-    const token = options.identityToken;
-    // If an explicit identity token is provided, use that. Setup a dummy
-    // provider that just returns the token. Otherwise, setup the CI context
-    // provider and (optionally) the OAuth provider.
-    if (token) {
-        idps.push({ getToken: () => Promise.resolve(token) });
-    }
-    else {
-        idps.push(identity_1.default.ciContextProvider());
-        if (options.oidcIssuer && options.oidcClientID) {
-            idps.push(identity_1.default.oauthProvider(options.oidcIssuer, options.oidcClientID, options.oidcClientSecret));
-        }
-    }
-    return idps;
-}
-// Assembles the AtifactVerificationOptions from the supplied VerifyOptions.
-function collectArtifactVerificationOptions(options) {
-    // The trusted signers are only used if the options contain a certificate
-    // issuer
-    let signers;
-    if (options.certificateIssuer) {
-        let san = undefined;
-        if (options.certificateIdentityEmail) {
-            san = {
-                type: sigstore.SubjectAlternativeNameType.EMAIL,
-                identity: {
-                    $case: 'value',
-                    value: options.certificateIdentityEmail,
-                },
-            };
-        }
-        else if (options.certificateIdentityURI) {
-            san = {
-                type: sigstore.SubjectAlternativeNameType.URI,
-                identity: {
-                    $case: 'value',
-                    value: options.certificateIdentityURI,
-                },
-            };
-        }
-        const oids = Object.entries(options.certificateOIDs || {}).map(([oid, value]) => ({
-            oid: { id: oid.split('.').map((s) => parseInt(s, 10)) },
-            value: Buffer.from(value),
-        }));
-        signers = {
-            $case: 'certificateIdentities',
-            certificateIdentities: {
-                identities: [
-                    {
-                        issuer: options.certificateIssuer,
-                        san: san,
-                        oids: oids,
-                    },
-                ],
-            },
-        };
-    }
-    // Construct the artifact verification options w/ defaults
+async function createVerifier(options) {
+    const trustedRoot = await tuf.getTrustedRoot({
+        mirrorURL: options.tufMirrorURL,
+        rootPath: options.tufRootPath,
+        cachePath: options.tufCachePath,
+        retry: options.retry ?? config.DEFAULT_RETRY,
+        timeout: options.timeout ?? config.DEFAULT_TIMEOUT,
+    });
+    const verifier = new verify_1.Verifier(trustedRoot, options.keySelector);
+    const verifyOpts = config.artifactVerificationOptions(options);
     return {
-        ctlogOptions: {
-            disable: false,
-            threshold: options.ctLogThreshold || 1,
-            detachedSct: false,
+        verify: (bundle) => {
+            const deserializedBundle = (0, bundle_1.bundleFromJSON)(bundle);
+            return verifier.verify(deserializedBundle, verifyOpts);
         },
-        tlogOptions: {
-            disable: false,
-            threshold: options.tlogThreshold || 1,
-            performOnlineVerification: false,
-        },
-        signers,
     };
 }
+exports.createVerifier = createVerifier;
+const tufUtils = {
+    client: (options = {}) => {
+        return tuf.initTUF({
+            mirrorURL: options.tufMirrorURL,
+            rootPath: options.tufRootPath,
+            cachePath: options.tufCachePath,
+            retry: options.retry,
+            timeout: options.timeout,
+        });
+    },
+    /*
+     * @deprecated Use tufUtils.client instead.
+     */
+    getTarget: (path, options = {}) => {
+        return tuf
+            .initTUF({
+            mirrorURL: options.tufMirrorURL,
+            rootPath: options.tufRootPath,
+            cachePath: options.tufCachePath,
+            retry: options.retry,
+            timeout: options.timeout,
+        })
+            .then((t) => t.getTarget(path));
+    },
+};
+exports.tuf = tufUtils;
+var bundle_2 = __nccwpck_require__(9715);
+Object.defineProperty(exports, "ValidationError", ({ enumerable: true, get: function () { return bundle_2.ValidationError; } }));
+var error_1 = __nccwpck_require__(6274);
+Object.defineProperty(exports, "InternalError", ({ enumerable: true, get: function () { return error_1.InternalError; } }));
+Object.defineProperty(exports, "PolicyError", ({ enumerable: true, get: function () { return error_1.PolicyError; } }));
+Object.defineProperty(exports, "VerificationError", ({ enumerable: true, get: function () { return error_1.VerificationError; } }));
+exports.utils = __importStar(__nccwpck_require__(2021));
+exports.DEFAULT_FULCIO_URL = config.DEFAULT_FULCIO_URL;
+exports.DEFAULT_REKOR_URL = config.DEFAULT_REKOR_URL;
 
 
 /***/ }),
@@ -31098,11 +32061,23 @@ function collectArtifactVerificationOptions(options) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.toProposedIntotoEntry = exports.toProposedHashedRekordEntry = void 0;
+exports.toProposedIntotoEntry = exports.toProposedHashedRekordEntry = exports.toProposedDSSEEntry = void 0;
+const sigstore_1 = __nccwpck_require__(266);
 const util_1 = __nccwpck_require__(6901);
-const types_1 = __nccwpck_require__(9406);
+const DEFAULT_DSSE_API_VERSION = '0.0.1';
 const DEFAULT_HASHEDREKORD_API_VERSION = '0.0.1';
 const DEFAULT_INTOTO_API_VERSION = '0.0.2';
+// Returns a properly formatted Rekor "dsse" entry for the given DSSE
+// envelope and signature
+function toProposedDSSEEntry(envelope, signature, apiVersion = DEFAULT_DSSE_API_VERSION) {
+    switch (apiVersion) {
+        case '0.0.1':
+            return toProposedDSSEV001Entry(envelope, signature);
+        default:
+            throw new Error(`Unsupported dsse kind API version: ${apiVersion}`);
+    }
+}
+exports.toProposedDSSEEntry = toProposedDSSEEntry;
 // Returns a properly formatted Rekor "hashedrekord" entry for the given digest
 // and signature
 function toProposedHashedRekordEntry(digest, signature) {
@@ -31111,7 +32086,7 @@ function toProposedHashedRekordEntry(digest, signature) {
     const b64Key = util_1.encoding.base64Encode(toPublicKey(signature));
     return {
         apiVersion: DEFAULT_HASHEDREKORD_API_VERSION,
-        kind: types_1.HASHEDREKORD_KIND,
+        kind: 'hashedrekord',
         spec: {
             data: {
                 hash: {
@@ -31140,11 +32115,23 @@ function toProposedIntotoEntry(envelope, signature, apiVersion = DEFAULT_INTOTO_
     }
 }
 exports.toProposedIntotoEntry = toProposedIntotoEntry;
+function toProposedDSSEV001Entry(envelope, signature) {
+    return {
+        apiVersion: '0.0.1',
+        kind: 'dsse',
+        spec: {
+            proposedContent: {
+                envelope: JSON.stringify(sigstore_1.Envelope.toJSON(envelope)),
+                verifiers: [util_1.encoding.base64Encode(toPublicKey(signature))],
+            },
+        },
+    };
+}
 function toProposedIntotoV002Entry(envelope, signature) {
     // Calculate the value for the payloadHash field in the Rekor entry
     const payloadHash = util_1.crypto.hash(envelope.payload).toString('hex');
     // Calculate the value for the hash field in the Rekor entry
-    const envelopeHash = calculateDSSEHash(envelope);
+    const envelopeHash = calculateDSSEHash(envelope, signature);
     // Collect values for re-creating the DSSE envelope.
     // Double-encode payload and signature cause that's what Rekor expects
     const payload = util_1.encoding.base64Encode(envelope.payload.toString('base64'));
@@ -31154,7 +32141,7 @@ function toProposedIntotoV002Entry(envelope, signature) {
     // Create the envelope portion of the entry. Note the inclusion of the
     // publicKey in the signature struct is not a standard part of a DSSE
     // envelope, but is required by Rekor.
-    const dsse = {
+    const dsseEnv = {
         payloadType: envelope.payloadType,
         payload: payload,
         signatures: [{ sig, publicKey }],
@@ -31163,14 +32150,14 @@ function toProposedIntotoV002Entry(envelope, signature) {
     // need to do the same here so that we can properly recreate the entry for
     // verification.
     if (keyid.length > 0) {
-        dsse.signatures[0].keyid = keyid;
+        dsseEnv.signatures[0].keyid = keyid;
     }
     return {
         apiVersion: '0.0.2',
-        kind: types_1.INTOTO_KIND,
+        kind: 'intoto',
         spec: {
             content: {
-                envelope: dsse,
+                envelope: dsseEnv,
                 hash: { algorithm: 'sha256', value: envelopeHash },
                 payloadHash: { algorithm: 'sha256', value: payloadHash },
             },
@@ -31184,17 +32171,22 @@ function toProposedIntotoV002Entry(envelope, signature) {
 //  * signature is base64 encoded (only the first signature is used)
 //  * keyid is included ONLY if it is NOT an empty string
 //  * The resulting JSON is canonicalized and hashed to a hex string
-function calculateDSSEHash(envelope) {
-    const dsse = {
+function calculateDSSEHash(envelope, signature) {
+    const dsseEnv = {
         payloadType: envelope.payloadType,
         payload: envelope.payload.toString('base64'),
-        signatures: [{ sig: envelope.signatures[0].sig.toString('base64') }],
+        signatures: [
+            {
+                sig: envelope.signatures[0].sig.toString('base64'),
+                publicKey: toPublicKey(signature),
+            },
+        ],
     };
     // If the keyid is an empty string, Rekor seems to remove it altogether.
     if (envelope.signatures[0].keyid.length > 0) {
-        dsse.signatures[0].keyid = envelope.signatures[0].keyid;
+        dsseEnv.signatures[0].keyid = envelope.signatures[0].keyid;
     }
-    return util_1.crypto.hash(util_1.json.canonicalize(dsse)).toString('hex');
+    return util_1.crypto.hash(util_1.json.canonicalize(dsseEnv)).toString('hex');
 }
 function toPublicKey(signature) {
     return signature.certificates
@@ -31227,24 +32219,24 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-const client_1 = __nccwpck_require__(3969);
-const error_1 = __nccwpck_require__(7045);
-const error_2 = __nccwpck_require__(6274);
-const sigstore_1 = __nccwpck_require__(8598);
+const error_1 = __nccwpck_require__(6274);
+const external_1 = __nccwpck_require__(9069);
 const format_1 = __nccwpck_require__(8810);
 class TLogClient {
     constructor(options) {
-        this.rekor = new client_1.Rekor({ baseURL: options.rekorBaseURL });
+        this.rekor = new external_1.Rekor({
+            baseURL: options.rekorBaseURL,
+            retry: options.retry,
+            timeout: options.timeout,
+        });
     }
     async createMessageSignatureEntry(digest, sigMaterial, options = {}) {
         const proposedEntry = (0, format_1.toProposedHashedRekordEntry)(digest, sigMaterial);
-        const entry = await this.createEntry(proposedEntry, options.fetchOnConflict);
-        return sigstore_1.bundle.toMessageSignatureBundle(digest, sigMaterial, entry);
+        return this.createEntry(proposedEntry, options.fetchOnConflict);
     }
     async createDSSEEntry(envelope, sigMaterial, options = {}) {
         const proposedEntry = (0, format_1.toProposedIntotoEntry)(envelope, sigMaterial);
-        const entry = await this.createEntry(proposedEntry, options.fetchOnConflict);
-        return sigstore_1.bundle.toDSSEBundle(envelope, sigMaterial, entry);
+        return this.createEntry(proposedEntry, options.fetchOnConflict);
     }
     async createEntry(proposedEntry, fetchOnConflict = false) {
         let entry;
@@ -31260,11 +32252,19 @@ class TLogClient {
                     entry = await this.rekor.getEntry(uuid);
                 }
                 catch (err) {
-                    throw new error_2.InternalError('error fetching tlog entry', err);
+                    throw new error_1.InternalError({
+                        code: 'TLOG_FETCH_ENTRY_ERROR',
+                        message: 'error fetching tlog entry',
+                        cause: err,
+                    });
                 }
             }
             else {
-                throw new error_2.InternalError('error creating tlog entry', err);
+                throw new error_1.InternalError({
+                    code: 'TLOG_CREATE_ENTRY_ERROR',
+                    message: 'error creating tlog entry',
+                    cause: err,
+                });
             }
         }
         return entry;
@@ -31272,23 +32272,10 @@ class TLogClient {
 }
 exports.TLogClient = TLogClient;
 function entryExistsError(value) {
-    return (value instanceof error_1.HTTPError &&
+    return (value instanceof external_1.HTTPError &&
         value.statusCode === 409 &&
         value.location !== undefined);
 }
-
-
-/***/ }),
-
-/***/ 9406:
-/***/ ((__unused_webpack_module, exports) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.HASHEDREKORD_KIND = exports.INTOTO_KIND = void 0;
-exports.INTOTO_KIND = 'intoto';
-exports.HASHEDREKORD_KIND = 'hashedrekord';
 
 
 /***/ }),
@@ -31327,6 +32314,9 @@ function verifyTLogBody(entry, bundleContent) {
             throw new error_1.VerificationError(TLOG_MISMATCH_ERROR_MSG);
         }
         switch (body.kind) {
+            case 'dsse':
+                verifyDSSETLogBody(body, bundleContent);
+                break;
             case 'intoto':
                 verifyIntotoTLogBody(body, bundleContent);
                 break;
@@ -31343,6 +32333,20 @@ function verifyTLogBody(entry, bundleContent) {
     }
 }
 exports.verifyTLogBody = verifyTLogBody;
+// Compare the given intoto tlog entry to the given bundle
+function verifyDSSETLogBody(tlogEntry, content) {
+    if (content?.$case !== 'dsseEnvelope') {
+        throw new error_1.VerificationError(`unsupported bundle content: ${content?.$case || 'unknown'}`);
+    }
+    const dsse = content.dsseEnvelope;
+    switch (tlogEntry.apiVersion) {
+        case '0.0.1':
+            verifyDSSE001TLogBody(tlogEntry, dsse);
+            break;
+        default:
+            throw new error_1.VerificationError(`unsupported dsse version: ${tlogEntry.apiVersion}`);
+    }
+}
 // Compare the given intoto tlog entry to the given bundle
 function verifyIntotoTLogBody(tlogEntry, content) {
     if (content?.$case !== 'dsseEnvelope') {
@@ -31369,6 +32373,28 @@ function verifyHashedRekordTLogBody(tlogEntry, content) {
             break;
         default:
             throw new error_1.VerificationError(`unsupported hashedrekord version: ${tlogEntry.apiVersion}`);
+    }
+}
+// Compare the given dsse v0.0.1 tlog entry to the given DSSE envelope.
+function verifyDSSE001TLogBody(tlogEntry, dsse) {
+    // Collect all of the signatures from the DSSE envelope
+    // Turns them into base64-encoded strings for comparison
+    const dsseSigs = dsse.signatures.map((signature) => signature.sig.toString('base64'));
+    // Collect all of the signatures from the tlog entry
+    const tlogSigs = tlogEntry.spec.signatures?.map((signature) => signature.signature);
+    // Ensure the bundle's DSSE and the tlog entry contain the same number of signatures
+    if (dsseSigs.length !== tlogSigs?.length) {
+        throw new error_1.VerificationError(TLOG_MISMATCH_ERROR_MSG);
+    }
+    // Ensure that every signature in the bundle's DSSE is present in the tlog entry
+    if (!dsseSigs.every((dsseSig) => tlogSigs.includes(dsseSig))) {
+        throw new error_1.VerificationError(TLOG_MISMATCH_ERROR_MSG);
+    }
+    // Ensure the digest of the bundle's DSSE payload matches the digest in the
+    // tlog entry
+    const dssePayloadHash = util_1.crypto.hash(dsse.payload).toString('hex');
+    if (dssePayloadHash !== tlogEntry.spec.payloadHash?.value) {
+        throw new error_1.VerificationError(TLOG_MISMATCH_ERROR_MSG);
     }
 }
 // Compare the given intoto v0.0.2 tlog entry to the given DSSE envelope.
@@ -31414,34 +32440,167 @@ function verifyHashedrekor001TLogBody(tlogEntry, messageSignature) {
 
 /***/ }),
 
-/***/ 1108:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+/***/ 5940:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
 
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.verifyCheckpoint = void 0;
+const error_1 = __nccwpck_require__(6274);
+const util_1 = __nccwpck_require__(6901);
+// Separator between the note and the signatures in a checkpoint
+const CHECKPOINT_SEPARATOR = '\n\n';
+// Checkpoint signatures are of the following form:
+// "– <identity> <key_hint+signature_bytes>\n"
+// where:
+// - the prefix is an emdash (U+2014).
+// - <identity> gives a human-readable representation of the signing ID.
+// - <key_hint+signature_bytes> is the first 4 bytes of the SHA256 hash of the
+//   associated public key followed by the signature bytes.
+const SIGNATURE_REGEX = /\u2014 (\S+) (\S+)\n/g;
+// Verifies the checkpoint value in the given tlog entry. There are two steps
+// to the verification:
+// 1. Verify that all signatures in the checkpoint can be verified against a
+//    trusted public key
+// 2. Verify that the root hash in the checkpoint matches the root hash in the
+//    inclusion proof
+// See: https://github.com/transparency-dev/formats/blob/main/log/README.md
+function verifyCheckpoint(entry, tlogs) {
+    // Filter tlog instances to just those which were valid at the time of the
+    // entry
+    const validTLogs = filterTLogInstances(tlogs, entry.integratedTime);
+    const inclusionProof = entry.inclusionProof;
+    const signedNote = SignedNote.fromString(inclusionProof.checkpoint.envelope);
+    const checkpoint = LogCheckpoint.fromString(signedNote.note);
+    // Verify that the signatures in the checkpoint are all valid, also check
+    // that the root hash from the checkpoint matches the root hash in the
+    // inclusion proof
+    return (signedNote.verify(validTLogs) &&
+        util_1.crypto.bufferEqual(checkpoint.logHash, inclusionProof.rootHash));
+}
+exports.verifyCheckpoint = verifyCheckpoint;
+// SignedNote represents a signed note from a transparency log checkpoint. Consists
+// of a body (or note) and one more signatures calculated over the body. See
+// https://github.com/transparency-dev/formats/blob/main/log/README.md#signed-envelope
+class SignedNote {
+    constructor(note, signatures) {
+        this.note = note;
+        this.signatures = signatures;
     }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
+    // Deserialize a SignedNote from a string
+    static fromString(envelope) {
+        if (!envelope.includes(CHECKPOINT_SEPARATOR)) {
+            throw new error_1.VerificationError('malformed checkpoint: no separator');
+        }
+        // Split the note into the header and the data portions at the separator
+        const split = envelope.indexOf(CHECKPOINT_SEPARATOR);
+        const header = envelope.slice(0, split + 1);
+        const data = envelope.slice(split + CHECKPOINT_SEPARATOR.length);
+        // Find all the signature lines in the data portion
+        const matches = data.matchAll(SIGNATURE_REGEX);
+        // Parse each of the matched signature lines into the name and signature.
+        // The first four bytes of the signature are the key hint (should match the
+        // first four bytes of the log ID), and the rest is the signature itself.
+        const signatures = Array.from(matches, (match) => {
+            const [, name, signature] = match;
+            const sigBytes = Buffer.from(signature, 'base64');
+            if (sigBytes.length < 5) {
+                throw new error_1.VerificationError('malformed checkpoint: invalid signature');
+            }
+            return {
+                name,
+                keyHint: sigBytes.subarray(0, 4),
+                signature: sigBytes.subarray(4),
+            };
+        });
+        if (signatures.length === 0) {
+            throw new error_1.VerificationError('malformed checkpoint: no signatures');
+        }
+        return new SignedNote(header, signatures);
+    }
+    // Verifies the signatures in the SignedNote. For each signature, the
+    // corresponding transparency log is looked up by the key hint and the
+    // signature is verified against the public key in the transparency log.
+    // Throws an error if any of the signatures are invalid.
+    verify(tlogs) {
+        const data = Buffer.from(this.note, 'utf-8');
+        return this.signatures.every((signature) => {
+            // Find the transparency log instance with the matching key hint
+            const tlog = tlogs.find((tlog) => util_1.crypto.bufferEqual(tlog.logId.keyId.subarray(0, 4), signature.keyHint));
+            if (!tlog) {
+                return false;
+            }
+            const publicKey = util_1.crypto.createPublicKey(tlog.publicKey.rawBytes);
+            return util_1.crypto.verifyBlob(data, publicKey, signature.signature);
+        });
+    }
+}
+// LogCheckpoint represents a transparency log checkpoint. Consists of the
+// following:
+//  - origin: the name of the transparency log
+//  - logSize: the size of the log at the time of the checkpoint
+//  - logHash: the root hash of the log at the time of the checkpoint
+//  - rest: the rest of the checkpoint body, which is a list of log entries
+// See:
+// https://github.com/transparency-dev/formats/blob/main/log/README.md#checkpoint-body
+class LogCheckpoint {
+    constructor(origin, logSize, logHash, rest) {
+        this.origin = origin;
+        this.logSize = logSize;
+        this.logHash = logHash;
+        this.rest = rest;
+    }
+    static fromString(note) {
+        const lines = note.trim().split('\n');
+        if (lines.length < 4) {
+            throw new error_1.VerificationError('malformed checkpoint: too few lines in header');
+        }
+        const origin = lines[0];
+        const logSize = BigInt(lines[1]);
+        const rootHash = Buffer.from(lines[2], 'base64');
+        const rest = lines.slice(3);
+        return new LogCheckpoint(origin, logSize, rootHash, rest);
+    }
+}
+// Filter the list of tlog instances to only those which have usable public
+// keys and were valid at the given time.
+function filterTLogInstances(tlogInstances, integratedTime) {
+    const targetDate = new Date(Number(integratedTime) * 1000);
+    return tlogInstances.filter((tlog) => {
+        // Must have a log ID
+        if (!tlog.logId) {
+            return false;
+        }
+        // If the tlog doesn't have a public key, we can't use it
+        const publicKey = tlog.publicKey;
+        if (publicKey === undefined) {
+            return false;
+        }
+        // If the tlog doesn't have a rawBytes field, we can't use it
+        if (publicKey.rawBytes === undefined) {
+            return false;
+        }
+        // If the tlog doesn't have a validFor field, we don't need to check it
+        const validFor = publicKey.validFor;
+        if (validFor === undefined) {
+            return true;
+        }
+        // Check that the integrated time is within the validFor range
+        return (validFor.start !== undefined &&
+            validFor.start <= targetDate &&
+            (validFor.end === undefined || targetDate <= validFor.end));
+    });
+}
+
+
+/***/ }),
+
+/***/ 1108:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.verifyTLogEntries = void 0;
 /*
@@ -31459,30 +32618,51 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
+const bundle_1 = __nccwpck_require__(9715);
 const error_1 = __nccwpck_require__(6274);
-const sigstore = __importStar(__nccwpck_require__(8598));
+const cert_1 = __nccwpck_require__(3669);
 const body_1 = __nccwpck_require__(7878);
+const checkpoint_1 = __nccwpck_require__(5940);
+const merkle_1 = __nccwpck_require__(6673);
 const set_1 = __nccwpck_require__(6801);
 // Verifies that the number of tlog entries that pass offline verification
 // is greater than or equal to the threshold specified in the options.
 function verifyTLogEntries(bundle, trustedRoot, options) {
+    if (bundle.mediaType === bundle_1.BUNDLE_V01_MEDIA_TYPE) {
+        (0, bundle_1.assertBundleV01)(bundle);
+        verifyTLogEntriesForBundleV01(bundle, trustedRoot, options);
+    }
+    else {
+        (0, bundle_1.assertBundleLatest)(bundle);
+        verifyTLogEntriesForBundleLatest(bundle, trustedRoot, options);
+    }
+}
+exports.verifyTLogEntries = verifyTLogEntries;
+function verifyTLogEntriesForBundleV01(bundle, trustedRoot, options) {
     if (options.performOnlineVerification) {
         throw new error_1.VerificationError('Online verification not implemented');
     }
     // Extract the signing cert, if available
-    const signingCert = sigstore.signingCertificate(bundle);
+    const signingCert = signingCertificate(bundle);
     // Iterate over the tlog entries and verify each one
-    const verifiedEntries = bundle.verificationMaterial.tlogEntries.filter((entry) => verifyTLogEntryOffline(entry, bundle.content, trustedRoot.tlogs, signingCert));
+    const verifiedEntries = bundle.verificationMaterial.tlogEntries.filter((entry) => verifyTLogEntryWithInclusionPromise(entry, bundle.content, trustedRoot.tlogs, signingCert));
     if (verifiedEntries.length < options.threshold) {
         throw new error_1.VerificationError('tlog verification failed');
     }
 }
-exports.verifyTLogEntries = verifyTLogEntries;
-function verifyTLogEntryOffline(entry, bundleContent, tlogs, signingCert) {
-    // Check that the TLog entry has the fields necessary for verification
-    if (!sigstore.isVerifiableTransparencyLogEntry(entry)) {
-        return false;
+function verifyTLogEntriesForBundleLatest(bundle, trustedRoot, options) {
+    if (options.performOnlineVerification) {
+        throw new error_1.VerificationError('Online verification not implemented');
     }
+    // Extract the signing cert, if available
+    const signingCert = signingCertificate(bundle);
+    // Iterate over the tlog entries and verify each one
+    const verifiedEntries = bundle.verificationMaterial.tlogEntries.filter((entry) => verifyTLogEntryWithInclusionProof(entry, bundle.content, trustedRoot.tlogs, signingCert));
+    if (verifiedEntries.length < options.threshold) {
+        throw new error_1.VerificationError('tlog verification failed');
+    }
+}
+function verifyTLogEntryWithInclusionPromise(entry, bundleContent, tlogs, signingCert) {
     // If there is a signing certificate availble, check that the tlog integrated
     // time is within the certificate's validity period; otherwise, skip this
     // check.
@@ -31492,6 +32672,139 @@ function verifyTLogEntryOffline(entry, bundleContent, tlogs, signingCert) {
     return ((0, body_1.verifyTLogBody)(entry, bundleContent) &&
         (0, set_1.verifyTLogSET)(entry, tlogs) &&
         verifyTLogIntegrationTime());
+}
+function verifyTLogEntryWithInclusionProof(entry, bundleContent, tlogs, signingCert) {
+    // If there is a signing certificate availble, check that the tlog integrated
+    // time is within the certificate's validity period; otherwise, skip this
+    // check.
+    const verifyTLogIntegrationTime = signingCert
+        ? () => signingCert.validForDate(new Date(Number(entry.integratedTime) * 1000))
+        : () => true;
+    return ((0, body_1.verifyTLogBody)(entry, bundleContent) &&
+        (0, merkle_1.verifyMerkleInclusion)(entry) &&
+        (0, checkpoint_1.verifyCheckpoint)(entry, tlogs) &&
+        verifyTLogIntegrationTime());
+}
+function signingCertificate(bundle) {
+    if (!(0, bundle_1.isBundleWithCertificateChain)(bundle)) {
+        return undefined;
+    }
+    const signingCert = bundle.verificationMaterial.content.x509CertificateChain.certificates[0];
+    return cert_1.x509Certificate.parse(signingCert.rawBytes);
+}
+
+
+/***/ }),
+
+/***/ 6673:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.verifyMerkleInclusion = void 0;
+/*
+Copyright 2023 The Sigstore Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+const crypto_1 = __importDefault(__nccwpck_require__(6113));
+const error_1 = __nccwpck_require__(6274);
+const RFC6962_LEAF_HASH_PREFIX = Buffer.from([0x00]);
+const RFC6962_NODE_HASH_PREFIX = Buffer.from([0x01]);
+function verifyMerkleInclusion(entry) {
+    const inclusionProof = entry.inclusionProof;
+    const logIndex = BigInt(inclusionProof.logIndex);
+    const treeSize = BigInt(inclusionProof.treeSize);
+    if (logIndex < 0n || logIndex >= treeSize) {
+        throw new error_1.VerificationError('invalid inclusion proof index');
+    }
+    // Figure out which subset of hashes corresponds to the inner and border
+    // nodes
+    const { inner, border } = decompInclProof(logIndex, treeSize);
+    if (inclusionProof.hashes.length !== inner + border) {
+        throw new error_1.VerificationError('invalid inclusion proof length');
+    }
+    const innerHashes = inclusionProof.hashes.slice(0, inner);
+    const borderHashes = inclusionProof.hashes.slice(inner);
+    // The entry's hash is the leaf hash
+    const leafHash = hashLeaf(entry.canonicalizedBody);
+    // Chain the hashes belonging to the inner and border portions
+    const calculatedHash = chainBorderRight(chainInner(leafHash, innerHashes, logIndex), borderHashes);
+    // Calculated hash should match the root hash in the inclusion proof
+    return bufferEqual(calculatedHash, inclusionProof.rootHash);
+}
+exports.verifyMerkleInclusion = verifyMerkleInclusion;
+// Breaks down inclusion proof for a leaf at the specified index in a tree of
+// the specified size. The split point is where paths to the index leaf and
+// the (size - 1) leaf diverge. Returns lengths of the bottom and upper proof
+// parts.
+function decompInclProof(index, size) {
+    const inner = innerProofSize(index, size);
+    const border = onesCount(index >> BigInt(inner));
+    return { inner, border };
+}
+// Computes a subtree hash for a node on or below the tree's right border.
+// Assumes the provided proof hashes are ordered from lower to higher levels
+// and seed is the initial hash of the node specified by the index.
+function chainInner(seed, hashes, index) {
+    return hashes.reduce((acc, h, i) => {
+        if ((index >> BigInt(i)) & BigInt(1)) {
+            return hashChildren(h, acc);
+        }
+        else {
+            return hashChildren(acc, h);
+        }
+    }, seed);
+}
+// Computes a subtree hash for nodes along the tree's right border.
+function chainBorderRight(seed, hashes) {
+    return hashes.reduce((acc, h) => hashChildren(h, acc), seed);
+}
+function innerProofSize(index, size) {
+    return (index ^ (size - BigInt(1))).toString(2).length;
+}
+// Counts the number of ones in the binary representation of the given number.
+// https://en.wikipedia.org/wiki/Hamming_weight
+function onesCount(x) {
+    return x.toString(2).split('1').length - 1;
+}
+// Hashing logic according to RFC6962.
+// https://datatracker.ietf.org/doc/html/rfc6962#section-2
+function hashChildren(left, right) {
+    const hasher = crypto_1.default.createHash('sha256');
+    hasher.update(RFC6962_NODE_HASH_PREFIX);
+    hasher.update(left);
+    hasher.update(right);
+    return hasher.digest();
+}
+function hashLeaf(leaf) {
+    const hasher = crypto_1.default.createHash('sha256');
+    hasher.update(RFC6962_LEAF_HASH_PREFIX);
+    hasher.update(leaf);
+    return hasher.digest();
+}
+function bufferEqual(a, b) {
+    try {
+        return crypto_1.default.timingSafeEqual(a, b);
+    }
+    catch {
+        /* istanbul ignore next */
+        return false;
+    }
 }
 
 
@@ -31514,9 +32827,6 @@ function verifyTLogSET(entry, tlogs) {
     const validTLogs = filterTLogInstances(tlogs, entry.logId.keyId, entry.integratedTime);
     // Check to see if we can verify the SET against any of the valid tlogs
     return validTLogs.some((tlog) => {
-        if (!tlog.publicKey?.rawBytes) {
-            return false;
-        }
         const publicKey = util_1.crypto.createPublicKey(tlog.publicKey.rawBytes);
         // Re-create the original Rekor verification payload
         const payload = toVerificationPayload(entry);
@@ -31563,7 +32873,7 @@ function filterTLogInstances(tlogInstances, logID, integratedTime) {
             return true;
         }
         // Check that the integrated time is within the validFor range
-        return (publicKey.validFor.start &&
+        return (publicKey.validFor.start !== undefined &&
             publicKey.validFor.start <= targetDate &&
             (!publicKey.validFor.end || targetDate <= publicKey.validFor.end));
     });
@@ -31572,41 +32882,15 @@ function filterTLogInstances(tlogInstances, logID, integratedTime) {
 
 /***/ }),
 
-/***/ 5143:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+/***/ 8880:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
 
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.getTrustedRoot = void 0;
+exports.TSAClient = void 0;
 /*
-Copyright 2023 The Sigstore Authors.
+Copyright 2022 The Sigstore Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -31620,136 +32904,35 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-const fs_1 = __importDefault(__nccwpck_require__(7147));
-const path_1 = __importDefault(__nccwpck_require__(1017));
-const tuf_js_1 = __nccwpck_require__(9475);
-const sigstore = __importStar(__nccwpck_require__(8598));
-const target_1 = __nccwpck_require__(9212);
-const TRUSTED_ROOT_TARGET = 'trusted_root.json';
-const DEFAULT_MIRROR_URL = 'https://sigstore-tuf-root.storage.googleapis.com';
-const DEFAULT_TUF_ROOT_PATH = '../../store/public-good-instance-root.json';
-async function getTrustedRoot(cachePath, options = {}) {
-    const tufRootPath = options.rootPath || __nccwpck_require__.ab + "public-good-instance-root.json";
-    const mirrorURL = options.mirrorURL || DEFAULT_MIRROR_URL;
-    initTufCache(cachePath, tufRootPath);
-    const remote = initRemoteConfig(cachePath, mirrorURL);
-    const repoClient = initClient(cachePath, remote);
-    const trustedRoot = await (0, target_1.getTarget)(repoClient, TRUSTED_ROOT_TARGET);
-    return sigstore.TrustedRoot.fromJSON(JSON.parse(trustedRoot));
-}
-exports.getTrustedRoot = getTrustedRoot;
-// Initializes the TUF cache directory structure including the initial
-// root.json file. If the cache directory does not exist, it will be
-// created. If the targets directory does not exist, it will be created.
-// If the root.json file does not exist, it will be copied from the
-// rootPath argument.
-function initTufCache(cachePath, tufRootPath) {
-    const targetsPath = path_1.default.join(cachePath, 'targets');
-    const cachedRootPath = path_1.default.join(cachePath, 'root.json');
-    if (!fs_1.default.existsSync(cachePath)) {
-        fs_1.default.mkdirSync(cachePath, { recursive: true });
-    }
-    if (!fs_1.default.existsSync(targetsPath)) {
-        fs_1.default.mkdirSync(targetsPath);
-    }
-    if (!fs_1.default.existsSync(cachedRootPath)) {
-        fs_1.default.copyFileSync(tufRootPath, cachedRootPath);
-    }
-    return cachePath;
-}
-// Initializes the remote.json file, which contains the URL of the TUF
-// repository. If the file does not exist, it will be created. If the file
-// exists, it will be parsed and returned.
-function initRemoteConfig(rootDir, mirrorURL) {
-    let remoteConfig;
-    const remoteConfigPath = path_1.default.join(rootDir, 'remote.json');
-    if (fs_1.default.existsSync(remoteConfigPath)) {
-        const data = fs_1.default.readFileSync(remoteConfigPath, 'utf-8');
-        remoteConfig = JSON.parse(data);
-    }
-    if (!remoteConfig) {
-        remoteConfig = { mirror: mirrorURL };
-        fs_1.default.writeFileSync(remoteConfigPath, JSON.stringify(remoteConfig));
-    }
-    return remoteConfig;
-}
-function initClient(cachePath, remote) {
-    const baseURL = remote.mirror;
-    return new tuf_js_1.Updater({
-        metadataBaseUrl: baseURL,
-        targetBaseUrl: `${baseURL}/targets`,
-        metadataDir: cachePath,
-        targetDir: path_1.default.join(cachePath, 'targets'),
-    });
-}
-
-
-/***/ }),
-
-/***/ 9212:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.getTarget = void 0;
-/*
-Copyright 2023 The Sigstore Authors.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
-const fs_1 = __importDefault(__nccwpck_require__(7147));
 const error_1 = __nccwpck_require__(6274);
-// Returns the local path to the specified target. If the target is not yet
-// cached locally, the provided TUF Updater will be used to download and
-// cache the target.
-async function getTarget(tuf, targetPath) {
-    const path = await getTargetPath(tuf, targetPath);
-    try {
-        return fs_1.default.readFileSync(path, 'utf-8');
+const external_1 = __nccwpck_require__(9069);
+const util_1 = __nccwpck_require__(6901);
+class TSAClient {
+    constructor(options) {
+        this.tsa = new external_1.TimestampAuthority({
+            baseURL: options.tsaBaseURL,
+            retry: options.retry,
+            timeout: options.timeout,
+        });
     }
-    catch (err) {
-        throw new error_1.InternalError(`error reading trusted root: ${err}`);
-    }
-}
-exports.getTarget = getTarget;
-async function getTargetPath(tuf, target) {
-    let targetInfo;
-    try {
-        targetInfo = await tuf.refresh().then(() => tuf.getTargetInfo(target));
-    }
-    catch (err) {
-        throw new error_1.InternalError(`error refreshing TUF metadata: ${err}`);
-    }
-    if (!targetInfo) {
-        throw new error_1.InternalError(`target ${target} not found`);
-    }
-    let path = await tuf.findCachedTarget(targetInfo);
-    // An empty path here means the target has not been cached locally, or is
-    // out of date. In either case, we need to download it.
-    if (!path) {
+    async createTimestamp(signature) {
+        const request = {
+            artifactHash: util_1.crypto.hash(signature).toString('base64'),
+            hashAlgorithm: 'sha256',
+        };
         try {
-            path = await tuf.downloadTarget(targetInfo);
+            return await this.tsa.createTimestamp(request);
         }
         catch (err) {
-            throw new error_1.InternalError(`error downloading target: ${err}`);
+            throw new error_1.InternalError({
+                code: 'TSA_CREATE_TIMESTAMP_ERROR',
+                message: 'error creating timestamp',
+                cause: err,
+            });
         }
     }
-    return path;
 }
+exports.TSAClient = TSAClient;
 
 
 /***/ }),
@@ -31777,27 +32960,13 @@ exports.extractSignatureMaterial = extractSignatureMaterial;
 
 /***/ }),
 
-/***/ 8598:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+/***/ 266:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
 
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __exportStar = (this && this.__exportStar) || function(m, exports) {
-    for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
-};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.signingCertificate = exports.bundle = exports.isVerifiableTransparencyLogEntry = exports.isCAVerificationOptions = exports.isBundleWithCertificateChain = exports.isBundleWithVerificationMaterial = exports.envelopeFromJSON = exports.envelopeToJSON = exports.bundleFromJSON = exports.bundleToJSON = void 0;
+exports.toMessageSignatureBundle = exports.toDSSEBundle = exports.isCAVerificationOptions = exports.SubjectAlternativeNameType = exports.PublicKeyDetails = exports.HashAlgorithm = exports.Envelope = void 0;
 /*
 Copyright 2023 The Sigstore Authors.
 
@@ -31813,59 +32982,40 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
+const bundle_1 = __nccwpck_require__(9715);
 const protobuf_specs_1 = __nccwpck_require__(530);
 const util_1 = __nccwpck_require__(6901);
-const cert_1 = __nccwpck_require__(3669);
-const validate_1 = __nccwpck_require__(6857);
-__exportStar(__nccwpck_require__(530), exports);
-__exportStar(__nccwpck_require__(2163), exports);
-__exportStar(__nccwpck_require__(6857), exports);
-exports.bundleToJSON = protobuf_specs_1.Bundle.toJSON;
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const bundleFromJSON = (obj) => {
-    const bundle = protobuf_specs_1.Bundle.fromJSON(obj);
-    (0, validate_1.assertValidBundle)(bundle);
-    return bundle;
-};
-exports.bundleFromJSON = bundleFromJSON;
-exports.envelopeToJSON = protobuf_specs_1.Envelope.toJSON;
-exports.envelopeFromJSON = protobuf_specs_1.Envelope.fromJSON;
-const BUNDLE_MEDIA_TYPE = 'application/vnd.dev.sigstore.bundle+json;version=0.1';
-// Type guard for narrowing a Bundle to a BundleWithVerificationMaterial
-function isBundleWithVerificationMaterial(bundle) {
-    return bundle.verificationMaterial !== undefined;
-}
-exports.isBundleWithVerificationMaterial = isBundleWithVerificationMaterial;
-// Type guard for narrowing a Bundle to a BundleWithCertificateChain
-function isBundleWithCertificateChain(bundle) {
-    return (isBundleWithVerificationMaterial(bundle) &&
-        bundle.verificationMaterial.content !== undefined &&
-        bundle.verificationMaterial.content.$case === 'x509CertificateChain');
-}
-exports.isBundleWithCertificateChain = isBundleWithCertificateChain;
+// Enums from protobuf-specs
+// TODO: Move Envelope to "type" export once @sigstore/sign is a thing
+var protobuf_specs_2 = __nccwpck_require__(530);
+Object.defineProperty(exports, "Envelope", ({ enumerable: true, get: function () { return protobuf_specs_2.Envelope; } }));
+Object.defineProperty(exports, "HashAlgorithm", ({ enumerable: true, get: function () { return protobuf_specs_2.HashAlgorithm; } }));
+Object.defineProperty(exports, "PublicKeyDetails", ({ enumerable: true, get: function () { return protobuf_specs_2.PublicKeyDetails; } }));
+Object.defineProperty(exports, "SubjectAlternativeNameType", ({ enumerable: true, get: function () { return protobuf_specs_2.SubjectAlternativeNameType; } }));
 function isCAVerificationOptions(options) {
     return (options.ctlogOptions !== undefined &&
         (options.signers === undefined ||
             options.signers.$case === 'certificateIdentities'));
 }
 exports.isCAVerificationOptions = isCAVerificationOptions;
-function isVerifiableTransparencyLogEntry(entry) {
-    return (entry.logId !== undefined &&
-        entry.inclusionPromise !== undefined &&
-        entry.kindVersion !== undefined);
+// All of the following functions are used to construct a ValidBundle
+// from various types of input. When this code moves into the
+// @sigstore/sign package, these functions will be exported from there.
+function toDSSEBundle({ envelope, signature, tlogEntry, timestamp, }) {
+    return {
+        mediaType: bundle_1.BUNDLE_V01_MEDIA_TYPE,
+        content: { $case: 'dsseEnvelope', dsseEnvelope: envelope },
+        verificationMaterial: toVerificationMaterial({
+            signature,
+            tlogEntry,
+            timestamp,
+        }),
+    };
 }
-exports.isVerifiableTransparencyLogEntry = isVerifiableTransparencyLogEntry;
-exports.bundle = {
-    toDSSEBundle: (envelope, signature, rekorEntry) => ({
-        mediaType: BUNDLE_MEDIA_TYPE,
-        content: {
-            $case: 'dsseEnvelope',
-            dsseEnvelope: envelope,
-        },
-        verificationMaterial: toVerificationMaterial(signature, rekorEntry),
-    }),
-    toMessageSignatureBundle: (digest, signature, rekorEntry) => ({
-        mediaType: BUNDLE_MEDIA_TYPE,
+exports.toDSSEBundle = toDSSEBundle;
+function toMessageSignatureBundle({ digest, signature, tlogEntry, timestamp, }) {
+    return {
+        mediaType: bundle_1.BUNDLE_V01_MEDIA_TYPE,
         content: {
             $case: 'messageSignature',
             messageSignature: {
@@ -31876,12 +33026,22 @@ exports.bundle = {
                 signature: signature.signature,
             },
         },
-        verificationMaterial: toVerificationMaterial(signature, rekorEntry),
-    }),
-};
+        verificationMaterial: toVerificationMaterial({
+            signature,
+            tlogEntry,
+            timestamp,
+        }),
+    };
+}
+exports.toMessageSignatureBundle = toMessageSignatureBundle;
 function toTransparencyLogEntry(entry) {
-    const set = Buffer.from(entry.verification.signedEntryTimestamp, 'base64');
+    /* istanbul ignore next */
+    const b64SET = entry.verification?.signedEntryTimestamp || '';
+    const set = Buffer.from(b64SET, 'base64');
     const logID = Buffer.from(entry.logID, 'hex');
+    const proof = entry.verification?.inclusionProof
+        ? toInclusionProof(entry.verification.inclusionProof)
+        : undefined;
     // Parse entry body so we can extract the kind and version.
     const bodyJSON = util_1.encoding.base64Decode(entry.body);
     const entryBody = JSON.parse(bodyJSON);
@@ -31898,17 +33058,30 @@ function toTransparencyLogEntry(entry) {
             kind: entryBody.kind,
             version: entryBody.apiVersion,
         },
-        inclusionProof: undefined,
+        inclusionProof: proof,
         canonicalizedBody: Buffer.from(entry.body, 'base64'),
     };
 }
-function toVerificationMaterial(signature, entry) {
+function toInclusionProof(proof) {
+    return {
+        logIndex: proof.logIndex.toString(),
+        rootHash: Buffer.from(proof.rootHash, 'hex'),
+        treeSize: proof.treeSize.toString(),
+        checkpoint: {
+            envelope: proof.checkpoint,
+        },
+        hashes: proof.hashes.map((h) => Buffer.from(h, 'hex')),
+    };
+}
+function toVerificationMaterial({ signature, tlogEntry, timestamp, }) {
     return {
         content: signature.certificates
             ? toVerificationMaterialx509CertificateChain(signature.certificates)
             : toVerificationMaterialPublicKey(signature.key.id || ''),
-        tlogEntries: [toTransparencyLogEntry(entry)],
-        timestampVerificationData: undefined,
+        tlogEntries: tlogEntry ? [toTransparencyLogEntry(tlogEntry)] : [],
+        timestampVerificationData: timestamp
+            ? toTimestampVerificationData(timestamp)
+            : undefined,
     };
 }
 function toVerificationMaterialx509CertificateChain(certificates) {
@@ -31924,139 +33097,529 @@ function toVerificationMaterialx509CertificateChain(certificates) {
 function toVerificationMaterialPublicKey(hint) {
     return { $case: 'publicKey', publicKey: { hint } };
 }
-function signingCertificate(bundle) {
-    if (!isBundleWithCertificateChain(bundle)) {
-        return undefined;
-    }
-    const signingCert = bundle.verificationMaterial.content.x509CertificateChain.certificates[0];
-    return cert_1.x509Certificate.parse(signingCert.rawBytes);
+function toTimestampVerificationData(timestamp) {
+    return {
+        rfc3161Timestamps: [{ signedTimestamp: timestamp }],
+    };
 }
-exports.signingCertificate = signingCertificate;
 
 
 /***/ }),
 
-/***/ 2163:
+/***/ 4726:
 /***/ ((__unused_webpack_module, exports) => {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.ASN1TypeError = exports.ASN1ParseError = void 0;
+/*
+Copyright 2023 The Sigstore Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+class ASN1ParseError extends Error {
+}
+exports.ASN1ParseError = ASN1ParseError;
+class ASN1TypeError extends Error {
+}
+exports.ASN1TypeError = ASN1TypeError;
 
 
 /***/ }),
 
-/***/ 6857:
+/***/ 2346:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.assertValidBundle = void 0;
-const error_1 = __nccwpck_require__(6274);
-// Performs basic validation of a Sigstore bundle to ensure that all required
-// fields are populated. This is not a complete validation of the bundle, but
-// rather a check that the bundle is in a valid state to be processed by the
-// rest of the code.
-function assertValidBundle(b) {
-    const invalidValues = [];
-    // Content-related validation
-    if (b.content === undefined) {
-        invalidValues.push('content');
-    }
-    else {
-        switch (b.content.$case) {
-            case 'messageSignature':
-                if (b.content.messageSignature.messageDigest === undefined) {
-                    invalidValues.push('content.messageSignature.messageDigest');
-                }
-                else {
-                    if (b.content.messageSignature.messageDigest.digest.length === 0) {
-                        invalidValues.push('content.messageSignature.messageDigest.digest');
-                    }
-                }
-                if (b.content.messageSignature.signature.length === 0) {
-                    invalidValues.push('content.messageSignature.signature');
-                }
-                break;
-            case 'dsseEnvelope':
-                if (b.content.dsseEnvelope.payload.length === 0) {
-                    invalidValues.push('content.dsseEnvelope.payload');
-                }
-                if (b.content.dsseEnvelope.signatures.length !== 1) {
-                    invalidValues.push('content.dsseEnvelope.signatures');
-                }
-                else {
-                    if (b.content.dsseEnvelope.signatures[0].sig.length === 0) {
-                        invalidValues.push('content.dsseEnvelope.signatures[0].sig');
-                    }
-                }
-                break;
-        }
-    }
-    // Verification material-related validation
-    if (b.verificationMaterial === undefined) {
-        invalidValues.push('verificationMaterial');
-    }
-    else {
-        if (b.verificationMaterial.content === undefined) {
-            invalidValues.push('verificationMaterial.content');
-        }
-        else {
-            switch (b.verificationMaterial.content.$case) {
-                case 'x509CertificateChain':
-                    if (b.verificationMaterial.content.x509CertificateChain.certificates
-                        .length === 0) {
-                        invalidValues.push('verificationMaterial.content.x509CertificateChain.certificates');
-                    }
-                    b.verificationMaterial.content.x509CertificateChain.certificates.forEach((cert, i) => {
-                        if (cert.rawBytes.length === 0) {
-                            invalidValues.push(`verificationMaterial.content.x509CertificateChain.certificates[${i}].rawBytes`);
-                        }
-                    });
-                    break;
-            }
-        }
-    }
-    if (invalidValues.length > 0) {
-        throw new error_1.ValidationError(`invalid/missing bundle values: ${invalidValues.join(', ')}`);
-    }
-}
-exports.assertValidBundle = assertValidBundle;
+exports.ASN1Obj = void 0;
+/*
+Copyright 2023 The Sigstore Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+var obj_1 = __nccwpck_require__(6014);
+Object.defineProperty(exports, "ASN1Obj", ({ enumerable: true, get: function () { return obj_1.ASN1Obj; } }));
 
 
 /***/ }),
 
-/***/ 7899:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+/***/ 2321:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
 
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
+/*
+Copyright 2023 The Sigstore Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.appDataPath = void 0;
-const os_1 = __importDefault(__nccwpck_require__(2037));
-const path_1 = __importDefault(__nccwpck_require__(1017));
-function appDataPath(name) {
-    const homedir = os_1.default.homedir();
-    switch (process.platform) {
-        case 'darwin': {
-            const appSupport = path_1.default.join(homedir, 'Library', 'Application Support');
-            return path_1.default.join(appSupport, name);
+exports.encodeLength = exports.decodeLength = void 0;
+const error_1 = __nccwpck_require__(4726);
+// Decodes the length of a DER-encoded ANS.1 element from the supplied stream.
+// https://learn.microsoft.com/en-us/windows/win32/seccertenroll/about-encoded-length-and-value-bytes
+function decodeLength(stream) {
+    const buf = stream.getUint8();
+    // If the most significant bit is UNSET the length is just the value of the
+    // byte.
+    if ((buf & 0x80) === 0x00) {
+        return buf;
+    }
+    // Otherwise, the lower 7 bits of the first byte indicate the number of bytes
+    // that follow to encode the length.
+    const byteCount = buf & 0x7f;
+    // Ensure the encoded length can safely fit in a JS number.
+    if (byteCount > 6) {
+        throw new error_1.ASN1ParseError('length exceeds 6 byte limit');
+    }
+    // Iterate over the bytes that encode the length.
+    let len = 0;
+    for (let i = 0; i < byteCount; i++) {
+        len = len * 256 + stream.getUint8();
+    }
+    // This is a valid ASN.1 length encoding, but we don't support it.
+    if (len === 0) {
+        throw new error_1.ASN1ParseError('indefinite length encoding not supported');
+    }
+    return len;
+}
+exports.decodeLength = decodeLength;
+// Translates the supplied value to a DER-encoded length.
+function encodeLength(len) {
+    if (len < 128) {
+        return Buffer.from([len]);
+    }
+    // Bitwise operations on large numbers are not supported in JS, so we need to
+    // use BigInts.
+    let val = BigInt(len);
+    const bytes = [];
+    while (val > 0n) {
+        bytes.unshift(Number(val & 255n));
+        val = val >> 8n;
+    }
+    return Buffer.from([0x80 | bytes.length, ...bytes]);
+}
+exports.encodeLength = encodeLength;
+
+
+/***/ }),
+
+/***/ 6014:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.ASN1Obj = void 0;
+/*
+Copyright 2023 The Sigstore Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+const stream_1 = __nccwpck_require__(9080);
+const error_1 = __nccwpck_require__(4726);
+const length_1 = __nccwpck_require__(2321);
+const parse_1 = __nccwpck_require__(4721);
+const tag_1 = __nccwpck_require__(3968);
+class ASN1Obj {
+    constructor(tag, value, subs) {
+        this.tag = tag;
+        this.value = value;
+        this.subs = subs;
+    }
+    // Constructs an ASN.1 object from a Buffer of DER-encoded bytes.
+    static parseBuffer(buf) {
+        return parseStream(new stream_1.ByteStream(buf));
+    }
+    toDER() {
+        const valueStream = new stream_1.ByteStream();
+        if (this.subs.length > 0) {
+            for (const sub of this.subs) {
+                valueStream.appendView(sub.toDER());
+            }
         }
-        case 'win32': {
-            const localAppData = process.env.LOCALAPPDATA || path_1.default.join(homedir, 'AppData', 'Local');
-            return path_1.default.join(localAppData, name, 'Data');
+        else {
+            valueStream.appendView(this.value);
         }
-        default: {
-            const localData = process.env.XDG_DATA_HOME || path_1.default.join(homedir, '.local', 'share');
-            return path_1.default.join(localData, name);
+        const value = valueStream.buffer;
+        // Concat tag/length/value
+        const obj = new stream_1.ByteStream();
+        obj.appendChar(this.tag.toDER());
+        obj.appendView((0, length_1.encodeLength)(value.length));
+        obj.appendView(value);
+        return obj.buffer;
+    }
+    /////////////////////////////////////////////////////////////////////////////
+    // Convenience methods for parsing ASN.1 primitives into JS types
+    // Returns the ASN.1 object's value as a boolean. Throws an error if the
+    // object is not a boolean.
+    toBoolean() {
+        if (!this.tag.isBoolean()) {
+            throw new error_1.ASN1TypeError('not a boolean');
+        }
+        return (0, parse_1.parseBoolean)(this.value);
+    }
+    // Returns the ASN.1 object's value as a BigInt. Throws an error if the
+    // object is not an integer.
+    toInteger() {
+        if (!this.tag.isInteger()) {
+            throw new error_1.ASN1TypeError('not an integer');
+        }
+        return (0, parse_1.parseInteger)(this.value);
+    }
+    // Returns the ASN.1 object's value as an OID string. Throws an error if the
+    // object is not an OID.
+    toOID() {
+        if (!this.tag.isOID()) {
+            throw new error_1.ASN1TypeError('not an OID');
+        }
+        return (0, parse_1.parseOID)(this.value);
+    }
+    // Returns the ASN.1 object's value as a Date. Throws an error if the object
+    // is not either a UTCTime or a GeneralizedTime.
+    toDate() {
+        switch (true) {
+            case this.tag.isUTCTime():
+                return (0, parse_1.parseTime)(this.value, true);
+            case this.tag.isGeneralizedTime():
+                return (0, parse_1.parseTime)(this.value, false);
+            default:
+                throw new error_1.ASN1TypeError('not a date');
         }
     }
+    // Returns the ASN.1 object's value as a number[] where each number is the
+    // value of a bit in the bit string. Throws an error if the object is not a
+    // bit string.
+    toBitString() {
+        if (!this.tag.isBitString()) {
+            throw new error_1.ASN1TypeError('not a bit string');
+        }
+        return (0, parse_1.parseBitString)(this.value);
+    }
 }
-exports.appDataPath = appDataPath;
+exports.ASN1Obj = ASN1Obj;
+/////////////////////////////////////////////////////////////////////////////
+// Internal stream parsing functions
+function parseStream(stream) {
+    // Parse tag, length, and value from stream
+    const tag = new tag_1.ASN1Tag(stream.getUint8());
+    const len = (0, length_1.decodeLength)(stream);
+    const value = stream.slice(stream.position, len);
+    const start = stream.position;
+    let subs = [];
+    // If the object is constructed, parse its children. Sometimes, children
+    // are embedded in OCTESTRING objects, so we need to check those
+    // for children as well.
+    if (tag.constructed) {
+        subs = collectSubs(stream, len);
+    }
+    else if (tag.isOctetString()) {
+        // Attempt to parse children of OCTETSTRING objects. If anything fails,
+        // assume the object is not constructed and treat as primitive.
+        try {
+            subs = collectSubs(stream, len);
+        }
+        catch (e) {
+            // Fail silently and treat as primitive
+        }
+    }
+    // If there are no children, move stream cursor to the end of the object
+    if (subs.length === 0) {
+        stream.seek(start + len);
+    }
+    return new ASN1Obj(tag, value, subs);
+}
+function collectSubs(stream, len) {
+    // Calculate end of object content
+    const end = stream.position + len;
+    // Make sure there are enough bytes left in the stream. This should never
+    // happen, cause it'll get caught when the stream is sliced in parseStream.
+    // Leaving as an extra check just in case.
+    /* istanbul ignore if */
+    if (end > stream.length) {
+        throw new error_1.ASN1ParseError('invalid length');
+    }
+    // Parse all children
+    const subs = [];
+    while (stream.position < end) {
+        subs.push(parseStream(stream));
+    }
+    // When we're done parsing children, we should be at the end of the object
+    if (stream.position !== end) {
+        throw new error_1.ASN1ParseError('invalid length');
+    }
+    return subs;
+}
+
+
+/***/ }),
+
+/***/ 4721:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.parseBitString = exports.parseBoolean = exports.parseOID = exports.parseTime = exports.parseStringASCII = exports.parseInteger = void 0;
+/*
+Copyright 2023 The Sigstore Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+const RE_TIME_SHORT_YEAR = /^(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})Z$/;
+const RE_TIME_LONG_YEAR = /^(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})Z$/;
+// Parse a BigInt from the DER-encoded buffer
+// https://learn.microsoft.com/en-us/windows/win32/seccertenroll/about-integer
+function parseInteger(buf) {
+    let pos = 0;
+    const end = buf.length;
+    let val = buf[pos];
+    const neg = val > 0x7f;
+    // Consume any padding bytes
+    const pad = neg ? 0xff : 0x00;
+    while (val == pad && ++pos < end) {
+        val = buf[pos];
+    }
+    // Calculate remaining bytes to read
+    const len = end - pos;
+    if (len === 0)
+        return BigInt(neg ? -1 : 0);
+    // Handle two's complement for negative numbers
+    val = neg ? val - 256 : val;
+    // Parse remaining bytes
+    let n = BigInt(val);
+    for (let i = pos + 1; i < end; ++i) {
+        n = n * BigInt(256) + BigInt(buf[i]);
+    }
+    return n;
+}
+exports.parseInteger = parseInteger;
+// Parse an ASCII string from the DER-encoded buffer
+// https://learn.microsoft.com/en-us/windows/win32/seccertenroll/about-basic-types#boolean
+function parseStringASCII(buf) {
+    return buf.toString('ascii');
+}
+exports.parseStringASCII = parseStringASCII;
+// Parse a Date from the DER-encoded buffer
+// https://www.rfc-editor.org/rfc/rfc5280#section-4.1.2.5.1
+function parseTime(buf, shortYear) {
+    const timeStr = parseStringASCII(buf);
+    // Parse the time string into matches - captured groups start at index 1
+    const m = shortYear
+        ? RE_TIME_SHORT_YEAR.exec(timeStr)
+        : RE_TIME_LONG_YEAR.exec(timeStr);
+    if (!m) {
+        throw new Error('invalid time');
+    }
+    // Translate dates with a 2-digit year to 4 digits per the spec
+    if (shortYear) {
+        let year = Number(m[1]);
+        year += year >= 50 ? 1900 : 2000;
+        m[1] = year.toString();
+    }
+    // Translate to ISO8601 format and parse
+    return new Date(`${m[1]}-${m[2]}-${m[3]}T${m[4]}:${m[5]}:${m[6]}Z`);
+}
+exports.parseTime = parseTime;
+// Parse an OID from the DER-encoded buffer
+// https://learn.microsoft.com/en-us/windows/win32/seccertenroll/about-object-identifier
+function parseOID(buf) {
+    let pos = 0;
+    const end = buf.length;
+    // Consume first byte which encodes the first two OID components
+    let n = buf[pos++];
+    const first = Math.floor(n / 40);
+    const second = n % 40;
+    let oid = `${first}.${second}`;
+    // Consume remaining bytes
+    let val = 0;
+    for (; pos < end; ++pos) {
+        n = buf[pos];
+        val = (val << 7) + (n & 0x7f);
+        // If the left-most bit is NOT set, then this is the last byte in the
+        // sequence and we can add the value to the OID and reset the accumulator
+        if ((n & 0x80) === 0) {
+            oid += `.${val}`;
+            val = 0;
+        }
+    }
+    return oid;
+}
+exports.parseOID = parseOID;
+// Parse a boolean from the DER-encoded buffer
+// https://learn.microsoft.com/en-us/windows/win32/seccertenroll/about-basic-types#boolean
+function parseBoolean(buf) {
+    return buf[0] !== 0;
+}
+exports.parseBoolean = parseBoolean;
+// Parse a bit string from the DER-encoded buffer
+// https://learn.microsoft.com/en-us/windows/win32/seccertenroll/about-bit-string
+function parseBitString(buf) {
+    // First byte tell us how many unused bits are in the last byte
+    const unused = buf[0];
+    const start = 1;
+    const end = buf.length;
+    const bits = [];
+    for (let i = start; i < end; ++i) {
+        const byte = buf[i];
+        // The skip value is only used for the last byte
+        const skip = i === end - 1 ? unused : 0;
+        // Iterate over each bit in the byte (most significant first)
+        for (let j = 7; j >= skip; --j) {
+            // Read the bit and add it to the bit string
+            bits.push((byte >> j) & 0x01);
+        }
+    }
+    return bits;
+}
+exports.parseBitString = parseBitString;
+
+
+/***/ }),
+
+/***/ 3968:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.ASN1Tag = exports.UNIVERSAL_TAG = void 0;
+/*
+Copyright 2023 The Sigstore Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+const error_1 = __nccwpck_require__(4726);
+exports.UNIVERSAL_TAG = {
+    BOOLEAN: 0x01,
+    INTEGER: 0x02,
+    BIT_STRING: 0x03,
+    OCTET_STRING: 0x04,
+    OBJECT_IDENTIFIER: 0x06,
+    SEQUENCE: 0x10,
+    SET: 0x11,
+    PRINTABLE_STRING: 0x13,
+    UTC_TIME: 0x17,
+    GENERALIZED_TIME: 0x18,
+};
+const TAG_CLASS = {
+    UNIVERSAL: 0x00,
+    APPLICATION: 0x01,
+    CONTEXT_SPECIFIC: 0x02,
+    PRIVATE: 0x03,
+};
+// https://learn.microsoft.com/en-us/windows/win32/seccertenroll/about-encoded-tag-bytes
+class ASN1Tag {
+    constructor(enc) {
+        // Bits 0 through 4 are the tag number
+        this.number = enc & 0x1f;
+        // Bit 5 is the constructed bit
+        this.constructed = (enc & 0x20) === 0x20;
+        // Bit 6 & 7 are the class
+        this.class = enc >> 6;
+        if (this.number === 0x1f) {
+            throw new error_1.ASN1ParseError('long form tags not supported');
+        }
+        if (this.class === TAG_CLASS.UNIVERSAL && this.number === 0x00) {
+            throw new error_1.ASN1ParseError('unsupported tag 0x00');
+        }
+    }
+    isUniversal() {
+        return this.class === TAG_CLASS.UNIVERSAL;
+    }
+    isContextSpecific(num) {
+        const res = this.class === TAG_CLASS.CONTEXT_SPECIFIC;
+        return num !== undefined ? res && this.number === num : res;
+    }
+    isBoolean() {
+        return this.isUniversal() && this.number === exports.UNIVERSAL_TAG.BOOLEAN;
+    }
+    isInteger() {
+        return this.isUniversal() && this.number === exports.UNIVERSAL_TAG.INTEGER;
+    }
+    isBitString() {
+        return this.isUniversal() && this.number === exports.UNIVERSAL_TAG.BIT_STRING;
+    }
+    isOctetString() {
+        return this.isUniversal() && this.number === exports.UNIVERSAL_TAG.OCTET_STRING;
+    }
+    isOID() {
+        return (this.isUniversal() && this.number === exports.UNIVERSAL_TAG.OBJECT_IDENTIFIER);
+    }
+    isUTCTime() {
+        return this.isUniversal() && this.number === exports.UNIVERSAL_TAG.UTC_TIME;
+    }
+    isGeneralizedTime() {
+        return this.isUniversal() && this.number === exports.UNIVERSAL_TAG.GENERALIZED_TIME;
+    }
+    toDER() {
+        return this.number | (this.constructed ? 0x20 : 0x00) | (this.class << 6);
+    }
+}
+exports.ASN1Tag = ASN1Tag;
 
 
 /***/ }),
@@ -32070,7 +33633,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.randomBytes = exports.hash = exports.verifyBlob = exports.signBlob = exports.createPublicKey = exports.generateKeyPair = void 0;
+exports.bufferEqual = exports.randomBytes = exports.hash = exports.verifyBlob = exports.signBlob = exports.createPublicKey = exports.generateKeyPair = void 0;
 /*
 Copyright 2022 The Sigstore Authors.
 
@@ -32129,6 +33692,16 @@ function randomBytes(count) {
     return crypto_1.default.randomBytes(count);
 }
 exports.randomBytes = randomBytes;
+function bufferEqual(a, b) {
+    try {
+        return crypto_1.default.timingSafeEqual(a, b);
+    }
+    catch {
+        /* istanbul ignore next */
+        return false;
+    }
+}
+exports.bufferEqual = bufferEqual;
 
 
 /***/ }),
@@ -32249,7 +33822,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.ua = exports.promise = exports.pem = exports.oidc = exports.json = exports.encoding = exports.dsse = exports.crypto = exports.appdata = void 0;
+exports.ua = exports.promise = exports.pem = exports.oidc = exports.json = exports.encoding = exports.dsse = exports.crypto = exports.asn1 = void 0;
 /*
 Copyright 2022 The Sigstore Authors.
 
@@ -32265,7 +33838,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-exports.appdata = __importStar(__nccwpck_require__(7899));
+exports.asn1 = __importStar(__nccwpck_require__(2346));
 exports.crypto = __importStar(__nccwpck_require__(3684));
 exports.dsse = __importStar(__nccwpck_require__(5073));
 exports.encoding = __importStar(__nccwpck_require__(1378));
@@ -32415,7 +33988,7 @@ exports.extractJWTSubject = extractJWTSubject;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.fromDER = exports.toDER = exports.split = void 0;
+exports.fromDER = exports.toDER = void 0;
 /*
 Copyright 2022 The Sigstore Authors.
 
@@ -32433,27 +34006,6 @@ limitations under the License.
 */
 const PEM_HEADER = /-----BEGIN (.*)-----/;
 const PEM_FOOTER = /-----END (.*)-----/;
-// Given a set of PEM-encoded certificates bundled in a single string, returns
-// an array of certificates. Standard PEM encoding dictates that each certificate
-// should have a trailing newline after the footer.
-function split(certificate) {
-    const certs = [];
-    let cert = [];
-    certificate.split('\n').forEach((line) => {
-        line.includes;
-        if (line.match(PEM_HEADER)) {
-            cert = [];
-        }
-        if (line.length > 0) {
-            cert.push(line);
-        }
-        if (line.match(PEM_FOOTER)) {
-            certs.push(cert.join('\n').concat('\n'));
-        }
-    });
-    return certs;
-}
-exports.split = split;
 function toDER(certificate) {
     let der = '';
     certificate.split('\n').forEach((line) => {
@@ -32712,10 +34264,26 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Verifier = void 0;
+/*
+Copyright 2023 The Sigstore Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+const bundle_1 = __nccwpck_require__(9715);
 const ca = __importStar(__nccwpck_require__(7395));
 const error_1 = __nccwpck_require__(6274);
 const tlog = __importStar(__nccwpck_require__(1108));
-const sigstore = __importStar(__nccwpck_require__(8598));
+const sigstore = __importStar(__nccwpck_require__(266));
 const util_1 = __nccwpck_require__(6901);
 class Verifier {
     constructor(trustedRoot, keySelector) {
@@ -32726,10 +34294,12 @@ class Verifier {
     // and the bundle's transparency log entries.
     verify(bundle, options, data) {
         this.verifyArtifactSignature(bundle, data);
-        if (sigstore.isBundleWithCertificateChain(bundle)) {
+        if ((0, bundle_1.isBundleWithCertificateChain)(bundle)) {
             this.verifySigningCertificate(bundle, options);
         }
-        this.verifyTLogEntries(bundle, options);
+        if (options.tlogOptions.disable === false) {
+            this.verifyTLogEntries(bundle, options);
+        }
     }
     // Performs bundle signature verification. Determines the type of the bundle
     // content and delegates to the appropriate signature verification function.
@@ -32832,510 +34402,6 @@ function verifyDSSESignature(envelope, publicKey) {
 
 /***/ }),
 
-/***/ 2346:
-/***/ ((__unused_webpack_module, exports) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.ASN1TypeError = exports.ASN1ParseError = void 0;
-/*
-Copyright 2023 The Sigstore Authors.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
-class ASN1ParseError extends Error {
-}
-exports.ASN1ParseError = ASN1ParseError;
-class ASN1TypeError extends Error {
-}
-exports.ASN1TypeError = ASN1TypeError;
-
-
-/***/ }),
-
-/***/ 8884:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-/*
-Copyright 2023 The Sigstore Authors.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.encodeLength = exports.decodeLength = void 0;
-const error_1 = __nccwpck_require__(2346);
-// Decodes the length of a DER-encoded ANS.1 element from the supplied stream.
-// https://learn.microsoft.com/en-us/windows/win32/seccertenroll/about-encoded-length-and-value-bytes
-function decodeLength(stream) {
-    const buf = stream.getUint8();
-    // If the most significant bit is UNSET the length is just the value of the
-    // byte.
-    if ((buf & 0x80) === 0x00) {
-        return buf;
-    }
-    // Otherwise, the lower 7 bits of the first byte indicate the number of bytes
-    // that follow to encode the length.
-    const byteCount = buf & 0x7f;
-    // Ensure the encoded length can safely fit in a JS number.
-    if (byteCount > 6) {
-        throw new error_1.ASN1ParseError('length exceeds 6 byte limit');
-    }
-    // Iterate over the bytes that encode the length.
-    let len = 0;
-    for (let i = 0; i < byteCount; i++) {
-        len = len * 256 + stream.getUint8();
-    }
-    // This is a valid ASN.1 length encoding, but we don't support it.
-    if (len === 0) {
-        throw new error_1.ASN1ParseError('indefinite length encoding not supported');
-    }
-    return len;
-}
-exports.decodeLength = decodeLength;
-// Translates the supplied value to a DER-encoded length.
-function encodeLength(len) {
-    if (len < 128) {
-        return Buffer.from([len]);
-    }
-    // Bitwise operations on large numbers are not supported in JS, so we need to
-    // use BigInts.
-    let val = BigInt(len);
-    const bytes = [];
-    while (val > 0n) {
-        bytes.unshift(Number(val & 255n));
-        val = val >> 8n;
-    }
-    return Buffer.from([0x80 | bytes.length, ...bytes]);
-}
-exports.encodeLength = encodeLength;
-
-
-/***/ }),
-
-/***/ 7744:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.ASN1Obj = void 0;
-/*
-Copyright 2023 The Sigstore Authors.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
-const stream_1 = __nccwpck_require__(9080);
-const error_1 = __nccwpck_require__(2346);
-const length_1 = __nccwpck_require__(8884);
-const parse_1 = __nccwpck_require__(1350);
-const tag_1 = __nccwpck_require__(1071);
-class ASN1Obj {
-    constructor(tag, headerLength, buf, subs) {
-        this.tag = tag;
-        this.headerLength = headerLength;
-        this.buf = buf;
-        this.subs = subs;
-    }
-    // Constructs an ASN.1 object from a Buffer of DER-encoded bytes.
-    static parseBuffer(buf) {
-        return parseStream(new stream_1.ByteStream(buf));
-    }
-    // Returns the raw bytes of the ASN.1 object's value. For constructed objects,
-    // this is the concatenation of the raw bytes of the values of its children.
-    // For primitive objects, this is the raw bytes of the object's value.
-    // Use the various to* methods to parse the value into a specific type.
-    get value() {
-        return this.buf.subarray(this.headerLength);
-    }
-    // Returns the raw bytes of the entire ASN.1 object (including tag, length,
-    // and value)
-    get raw() {
-        return this.buf;
-    }
-    toDER() {
-        const valueStream = new stream_1.ByteStream();
-        if (this.subs.length > 0) {
-            for (const sub of this.subs) {
-                valueStream.appendView(sub.toDER());
-            }
-        }
-        else {
-            valueStream.appendView(this.value);
-        }
-        const value = valueStream.buffer;
-        // Concat tag/length/value
-        const obj = new stream_1.ByteStream();
-        obj.appendChar(this.tag.toDER());
-        obj.appendView((0, length_1.encodeLength)(value.length));
-        obj.appendView(value);
-        return obj.buffer;
-    }
-    /////////////////////////////////////////////////////////////////////////////
-    // Convenience methods for parsing ASN.1 primitives into JS types
-    // Returns the ASN.1 object's value as a boolean. Throws an error if the
-    // object is not a boolean.
-    toBoolean() {
-        if (!this.tag.isBoolean()) {
-            throw new error_1.ASN1TypeError('not a boolean');
-        }
-        return (0, parse_1.parseBoolean)(this.value);
-    }
-    // Returns the ASN.1 object's value as a BigInt. Throws an error if the
-    // object is not an integer.
-    toInteger() {
-        if (!this.tag.isInteger()) {
-            throw new error_1.ASN1TypeError('not an integer');
-        }
-        return (0, parse_1.parseInteger)(this.value);
-    }
-    // Returns the ASN.1 object's value as an OID string. Throws an error if the
-    // object is not an OID.
-    toOID() {
-        if (!this.tag.isOID()) {
-            throw new error_1.ASN1TypeError('not an OID');
-        }
-        return (0, parse_1.parseOID)(this.value);
-    }
-    // Returns the ASN.1 object's value as a Date. Throws an error if the object
-    // is not either a UTCTime or a GeneralizedTime.
-    toDate() {
-        switch (true) {
-            case this.tag.isUTCTime():
-                return (0, parse_1.parseTime)(this.value, true);
-            case this.tag.isGeneralizedTime():
-                return (0, parse_1.parseTime)(this.value, false);
-            default:
-                throw new error_1.ASN1TypeError('not a date');
-        }
-    }
-    // Returns the ASN.1 object's value as a number[] where each number is the
-    // value of a bit in the bit string. Throws an error if the object is not a
-    // bit string.
-    toBitString() {
-        if (!this.tag.isBitString()) {
-            throw new error_1.ASN1TypeError('not a bit string');
-        }
-        return (0, parse_1.parseBitString)(this.value);
-    }
-}
-exports.ASN1Obj = ASN1Obj;
-/////////////////////////////////////////////////////////////////////////////
-// Internal stream parsing functions
-function parseStream(stream) {
-    // Capture current stream position so we know where this object starts
-    const startPos = stream.position;
-    // Parse tag and length from stream
-    const tag = new tag_1.ASN1Tag(stream.getUint8());
-    const len = (0, length_1.decodeLength)(stream);
-    // Calculate length of header (tag + length)
-    const header = stream.position - startPos;
-    let subs = [];
-    // If the object is constructed, parse its children. Sometimes, children
-    // are embedded in OCTESTRING objects, so we need to check those
-    // for children as well.
-    if (tag.constructed) {
-        subs = collectSubs(stream, len);
-    }
-    else if (tag.isOctetString()) {
-        // Attempt to parse children of OCTETSTRING objects. If anything fails,
-        // assume the object is not constructed and treat as primitive.
-        try {
-            subs = collectSubs(stream, len);
-        }
-        catch (e) {
-            // Fail silently and treat as primitive
-        }
-    }
-    // If there are no children, move stream cursor to the end of the object
-    if (subs.length === 0) {
-        stream.seek(startPos + header + len);
-    }
-    // Capture the raw bytes of the object (including tag, length, and value)
-    const buf = stream.slice(startPos, header + len);
-    return new ASN1Obj(tag, header, buf, subs);
-}
-function collectSubs(stream, len) {
-    // Calculate end of object content
-    const end = stream.position + len;
-    // Make sure there are enough bytes left in the stream
-    if (end > stream.length) {
-        throw new error_1.ASN1ParseError('invalid length');
-    }
-    // Parse all children
-    const subs = [];
-    while (stream.position < end) {
-        subs.push(parseStream(stream));
-    }
-    // When we're done parsing children, we should be at the end of the object
-    if (stream.position !== end) {
-        throw new error_1.ASN1ParseError('invalid length');
-    }
-    return subs;
-}
-
-
-/***/ }),
-
-/***/ 1350:
-/***/ ((__unused_webpack_module, exports) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.parseBitString = exports.parseBoolean = exports.parseOID = exports.parseTime = exports.parseStringASCII = exports.parseInteger = void 0;
-/*
-Copyright 2023 The Sigstore Authors.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
-const RE_TIME_SHORT_YEAR = /^(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})Z$/;
-const RE_TIME_LONG_YEAR = /^(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})Z$/;
-// Parse a BigInt from the DER-encoded buffer
-// https://learn.microsoft.com/en-us/windows/win32/seccertenroll/about-integer
-function parseInteger(buf) {
-    let pos = 0;
-    const end = buf.length;
-    let val = buf[pos];
-    const neg = val > 0x7f;
-    // Consume any padding bytes
-    const pad = neg ? 0xff : 0x00;
-    while (val == pad && ++pos < end) {
-        val = buf[pos];
-    }
-    // Calculate remaining bytes to read
-    const len = end - pos;
-    if (len === 0)
-        return BigInt(neg ? -1 : 0);
-    // Handle two's complement for negative numbers
-    val = neg ? val - 256 : val;
-    // Parse remaining bytes
-    let n = BigInt(val);
-    for (let i = pos + 1; i < end; ++i) {
-        n = n * BigInt(256) + BigInt(buf[i]);
-    }
-    return n;
-}
-exports.parseInteger = parseInteger;
-// Parse an ASCII string from the DER-encoded buffer
-// https://learn.microsoft.com/en-us/windows/win32/seccertenroll/about-basic-types#boolean
-function parseStringASCII(buf) {
-    return buf.toString('ascii');
-}
-exports.parseStringASCII = parseStringASCII;
-// Parse a Date from the DER-encoded buffer
-// https://www.rfc-editor.org/rfc/rfc5280#section-4.1.2.5.1
-function parseTime(buf, shortYear) {
-    const timeStr = parseStringASCII(buf);
-    // Parse the time string into matches - captured groups start at index 1
-    const m = shortYear
-        ? RE_TIME_SHORT_YEAR.exec(timeStr)
-        : RE_TIME_LONG_YEAR.exec(timeStr);
-    if (!m) {
-        throw new Error('invalid time');
-    }
-    // Translate dates with a 2-digit year to 4 digits per the spec
-    if (shortYear) {
-        let year = Number(m[1]);
-        year += year >= 50 ? 1900 : 2000;
-        m[1] = year.toString();
-    }
-    // Translate to ISO8601 format and parse
-    return new Date(`${m[1]}-${m[2]}-${m[3]}T${m[4]}:${m[5]}:${m[6]}Z`);
-}
-exports.parseTime = parseTime;
-// Parse an OID from the DER-encoded buffer
-// https://learn.microsoft.com/en-us/windows/win32/seccertenroll/about-object-identifier
-function parseOID(buf) {
-    let pos = 0;
-    const end = buf.length;
-    // Consume first byte which encodes the first two OID components
-    let n = buf[pos++];
-    const first = Math.floor(n / 40);
-    const second = n % 40;
-    let oid = `${first}.${second}`;
-    // Consume remaining bytes
-    let val = 0;
-    for (; pos < end; ++pos) {
-        n = buf[pos];
-        val = (val << 7) + (n & 0x7f);
-        // If the left-most bit is NOT set, then this is the last byte in the
-        // sequence and we can add the value to the OID and reset the accumulator
-        if ((n & 0x80) === 0) {
-            oid += `.${val}`;
-            val = 0;
-        }
-    }
-    return oid;
-}
-exports.parseOID = parseOID;
-// Parse a boolean from the DER-encoded buffer
-// https://learn.microsoft.com/en-us/windows/win32/seccertenroll/about-basic-types#boolean
-function parseBoolean(buf) {
-    return buf[0] !== 0;
-}
-exports.parseBoolean = parseBoolean;
-// Parse a bit string from the DER-encoded buffer
-// https://learn.microsoft.com/en-us/windows/win32/seccertenroll/about-bit-string
-function parseBitString(buf) {
-    // First byte tell us how many unused bits are in the last byte
-    const unused = buf[0];
-    const start = 1;
-    const end = buf.length;
-    const bits = [];
-    for (let i = start; i < end; ++i) {
-        const byte = buf[i];
-        // The skip value is only used for the last byte
-        const skip = i === end - 1 ? unused : 0;
-        // Iterate over each bit in the byte (most significant first)
-        for (let j = 7; j >= skip; --j) {
-            // Read the bit and add it to the bit string
-            bits.push((byte >> j) & 0x01);
-        }
-    }
-    return bits;
-}
-exports.parseBitString = parseBitString;
-
-
-/***/ }),
-
-/***/ 1071:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.ASN1Tag = exports.UNIVERSAL_TAG = void 0;
-/*
-Copyright 2023 The Sigstore Authors.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
-const error_1 = __nccwpck_require__(2346);
-exports.UNIVERSAL_TAG = {
-    BOOLEAN: 0x01,
-    INTEGER: 0x02,
-    BIT_STRING: 0x03,
-    OCTET_STRING: 0x04,
-    OBJECT_IDENTIFIER: 0x06,
-    SEQUENCE: 0x10,
-    SET: 0x11,
-    PRINTABLE_STRING: 0x13,
-    UTC_TIME: 0x17,
-    GENERALIZED_TIME: 0x18,
-};
-const TAG_CLASS = {
-    UNIVERSAL: 0x00,
-    APPLICATION: 0x01,
-    CONTEXT_SPECIFIC: 0x02,
-    PRIVATE: 0x03,
-};
-// https://learn.microsoft.com/en-us/windows/win32/seccertenroll/about-encoded-tag-bytes
-class ASN1Tag {
-    constructor(enc) {
-        // Bits 0 through 4 are the tag number
-        this.number = enc & 0x1f;
-        // Bit 5 is the constructed bit
-        this.constructed = (enc & 0x20) === 0x20;
-        // Bit 6 & 7 are the class
-        this.class = enc >> 6;
-        if (this.number === 0x1f) {
-            throw new error_1.ASN1ParseError('long form tags not supported');
-        }
-        if (this.class === TAG_CLASS.UNIVERSAL && this.number === 0x00) {
-            throw new error_1.ASN1ParseError('unsupported tag 0x00');
-        }
-    }
-    isUniversal() {
-        return this.class === TAG_CLASS.UNIVERSAL;
-    }
-    isContextSpecific(num) {
-        const res = this.class === TAG_CLASS.CONTEXT_SPECIFIC;
-        return num !== undefined ? res && this.number === num : res;
-    }
-    isBoolean() {
-        return this.isUniversal() && this.number === exports.UNIVERSAL_TAG.BOOLEAN;
-    }
-    isInteger() {
-        return this.isUniversal() && this.number === exports.UNIVERSAL_TAG.INTEGER;
-    }
-    isBitString() {
-        return this.isUniversal() && this.number === exports.UNIVERSAL_TAG.BIT_STRING;
-    }
-    isOctetString() {
-        return this.isUniversal() && this.number === exports.UNIVERSAL_TAG.OCTET_STRING;
-    }
-    isOID() {
-        return (this.isUniversal() && this.number === exports.UNIVERSAL_TAG.OBJECT_IDENTIFIER);
-    }
-    isUTCTime() {
-        return this.isUniversal() && this.number === exports.UNIVERSAL_TAG.UTC_TIME;
-    }
-    isGeneralizedTime() {
-        return this.isUniversal() && this.number === exports.UNIVERSAL_TAG.GENERALIZED_TIME;
-    }
-    toDER() {
-        return this.number | (this.constructed ? 0x20 : 0x00) | (this.class << 6);
-    }
-}
-exports.ASN1Tag = ASN1Tag;
-
-
-/***/ }),
-
 /***/ 3669:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
@@ -33344,8 +34410,8 @@ exports.ASN1Tag = ASN1Tag;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.x509Certificate = void 0;
 const util_1 = __nccwpck_require__(6901);
+const asn1_1 = __nccwpck_require__(2346);
 const stream_1 = __nccwpck_require__(9080);
-const obj_1 = __nccwpck_require__(7744);
 const ext_1 = __nccwpck_require__(1643);
 const EXTENSION_OID_SUBJECT_KEY_ID = '2.5.29.14';
 const EXTENSION_OID_KEY_USAGE = '2.5.29.15';
@@ -33375,7 +34441,7 @@ class x509Certificate {
     }
     static parse(cert) {
         const der = typeof cert === 'string' ? util_1.pem.toDER(cert) : cert;
-        const asn1 = obj_1.ASN1Obj.parseBuffer(der);
+        const asn1 = asn1_1.ASN1Obj.parseBuffer(der);
         return new x509Certificate(asn1);
     }
     get tbsCertificate() {
@@ -33401,7 +34467,7 @@ class x509Certificate {
         return this.subjectObj.value;
     }
     get publicKey() {
-        return this.subjectPublicKeyInfoObj.raw;
+        return this.subjectPublicKeyInfoObj.toDER();
     }
     get signatureAlgorithm() {
         const oid = this.signatureAlgorithmObj.subs[0].toOID();
@@ -33457,13 +34523,13 @@ class x509Certificate {
         // Use the issuer's public key if provided, otherwise use the subject's
         const publicKey = issuerCertificate?.publicKey || this.publicKey;
         const key = util_1.crypto.createPublicKey(publicKey);
-        return util_1.crypto.verifyBlob(this.tbsCertificate.raw, key, this.signatureValue, this.signatureAlgorithm);
+        return util_1.crypto.verifyBlob(this.tbsCertificate.toDER(), key, this.signatureValue, this.signatureAlgorithm);
     }
     validForDate(date) {
         return this.notBefore <= date && date <= this.notAfter;
     }
     equals(other) {
-        return this.root.raw.equals(other.root.raw);
+        return this.root.toDER().equals(other.root.toDER());
     }
     verifySCTs(issuer, logs) {
         let extSCT;
@@ -33509,8 +34575,9 @@ class x509Certificate {
     }
     // Creates a copy of the certificate with a new buffer
     clone() {
-        const clone = Buffer.alloc(this.root.raw.length);
-        this.root.raw.copy(clone);
+        const der = this.root.toDER();
+        const clone = Buffer.alloc(der.length);
+        der.copy(clone);
         return x509Certificate.parse(clone);
     }
     findExtension(oid) {
@@ -33592,21 +34659,6 @@ exports.x509Certificate = x509Certificate;
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.x509SCTExtension = exports.x509SubjectKeyIDExtension = exports.x509AuthorityKeyIDExtension = exports.x509SubjectAlternativeNameExtension = exports.x509KeyUsageExtension = exports.x509BasicConstraintsExtension = exports.x509Extension = void 0;
-/*
-Copyright 2023 The Sigstore Authors.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
 const stream_1 = __nccwpck_require__(9080);
 const sct_1 = __nccwpck_require__(8284);
 // https://www.rfc-editor.org/rfc/rfc5280#section-4.1
@@ -33624,6 +34676,9 @@ class x509Extension {
     }
     get value() {
         return this.extnValueObj.value;
+    }
+    get valueObj() {
+        return this.extnValueObj;
     }
     get extnValueObj() {
         // The extnValue field will be the last element of the extension sequence
@@ -33889,15 +34944,15 @@ function verifyCertificateChain(opts) {
 exports.verifyCertificateChain = verifyCertificateChain;
 class CertificateChainVerifier {
     constructor(opts) {
-        this.certs = opts.certs;
+        this.untrustedCert = opts.untrustedCert;
         this.trustedCerts = opts.trustedCerts;
-        this.localCerts = dedupeCertificates([...opts.trustedCerts, ...opts.certs]);
+        this.localCerts = dedupeCertificates([
+            ...opts.trustedCerts,
+            opts.untrustedCert,
+        ]);
         this.validAt = opts.validAt || new Date();
     }
     verify() {
-        if (this.certs.length === 0) {
-            throw new error_1.VerificationError('No certificates provided');
-        }
         // Construct certificate path from leaf to root
         const certificatePath = this.sort();
         // Perform validation checks on each certificate in the path
@@ -33906,7 +34961,7 @@ class CertificateChainVerifier {
         return certificatePath;
     }
     sort() {
-        const leafCert = this.localCerts[this.localCerts.length - 1];
+        const leafCert = this.untrustedCert;
         // Construct all possible paths from the leaf
         let paths = this.buildPaths(leafCert);
         // Filter for paths which contain a trusted certificate
@@ -33917,7 +34972,9 @@ class CertificateChainVerifier {
         // Find the shortest of possible paths
         const path = paths.reduce((prev, curr) => prev.length < curr.length ? prev : curr);
         // Construct chain from shortest path
-        return [leafCert, ...path];
+        // Removes the last certificate in the path, which will be a second copy
+        // of the root certificate given that the root is self-signed.
+        return [leafCert, ...path].slice(0, -1);
     }
     // Recursively build all possible paths from the leaf to the root
     buildPaths(certificate) {
@@ -33988,8 +35045,8 @@ class CertificateChainVerifier {
         return issuers;
     }
     checkPath(path) {
-        if (path.length < 2) {
-            throw new error_1.VerificationError('Certificate chain must contain at least two certificates');
+        if (path.length < 1) {
+            throw new error_1.VerificationError('Certificate chain must contain at least one certificate');
         }
         // Check that all certificates are valid at the check date
         const validForDate = path.every((cert) => cert.validForDate(this.validAt));
@@ -34006,6 +35063,22 @@ class CertificateChainVerifier {
         for (let i = path.length - 2; i >= 0; i--) {
             if (!path[i].issuer.equals(path[i + 1].subject)) {
                 throw new error_1.VerificationError('Incorrect certificate name chaining');
+            }
+        }
+        // Check pathlength constraints
+        for (let i = 0; i < path.length; i++) {
+            const cert = path[i];
+            // If the certificate is a CA, check the path length
+            if (cert.extBasicConstraints?.isCA) {
+                const pathLength = cert.extBasicConstraints.pathLenConstraint;
+                // The path length, if set, indicates how many intermediate
+                // certificates (NOT including the leaf) are allowed to follow. The
+                // pathLength constraint of any intermediate CA certificate MUST be
+                // greater than or equal to it's own depth in the chain (with an
+                // adjustment for the leaf certificate)
+                if (pathLength !== undefined && pathLength < i - 1) {
+                    throw new error_1.VerificationError('Path length constraint exceeded');
+                }
             }
         }
     }
@@ -61987,7 +63060,7 @@ module.exports = {"i8":"3.0.3"};
 /***/ ((module) => {
 
 "use strict";
-module.exports = {"i8":"1.1.1"};
+module.exports = {"i8":"1.8.0"};
 
 /***/ }),
 
