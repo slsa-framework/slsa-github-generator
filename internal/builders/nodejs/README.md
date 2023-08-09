@@ -170,6 +170,10 @@ This action downloads the package tarball and provenance before running `npm
 publish` to publish your package to the npm registry. We provide a
 `node-auth-token` so that we can authenticate with `npmjs.com`.
 
+See the full documentation for the
+[`publish` action](../../../actions/nodejs/publish/README.md) for more
+information.
+
 #### Custom publishing
 
 After the package has been built you can publish on your own by downloading the
