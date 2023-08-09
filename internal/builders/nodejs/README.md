@@ -220,6 +220,8 @@ file. Currently [npm], [lerna] or [pnpm] can support this.
 
 See the full documentation for the
 [`secure-attestations-download` action](../../../actions/nodejs/secure-attestations-download/README.md)
+and
+[`secure-package-download` action](../../../actions/nodejs/secure-package-download/README.md)
 for more information.
 
 ### Referencing the Node.js builder
