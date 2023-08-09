@@ -51,11 +51,11 @@ async function run(): Promise<void> {
     } else {
       // Otherwise, try to use the referenced workflows from the current workflow run.
       core.info(
-        "Failed to retrieve OIDC token. This may be due to missing id-token: write permissions."
+        "Failed to retrieve OIDC token. This may be due to missing id-token: write permissions.",
       );
       [repository, ref, workflow] = await detectWorkflowFromContext(
         repoName,
-        token
+        token,
       );
     }
   } catch (error) {

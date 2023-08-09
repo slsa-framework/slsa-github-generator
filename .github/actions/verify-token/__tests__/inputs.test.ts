@@ -29,13 +29,13 @@ on:
 `;
     const ret = updateSLSAToken(content, token);
     expect(ret.tool.inputs).toEqual(
-      new Map<string, string | number | boolean>()
+      new Map<string, string | number | boolean>(),
     );
   });
 
   it("remove bool", async () => {
     const inputs = JSON.parse(
-      '{"name1": "value1", "name2": 2, "name3": "", "name4": true}'
+      '{"name1": "value1", "name2": 2, "name3": "", "name4": true}',
     );
     const token = createToken(inputs);
     const content = `
@@ -57,13 +57,13 @@ on:
         ["name1", "value1"],
         ["name2", 2],
         ["name3", ""],
-      ])
+      ]),
     );
   });
 
   it("remove empty string", async () => {
     const inputs = JSON.parse(
-      '{"name1": "value1", "name2": 2, "name3": "", "name4": true}'
+      '{"name1": "value1", "name2": 2, "name3": "", "name4": true}',
     );
     const token = createToken(inputs);
     const content = `
@@ -85,13 +85,13 @@ on:
         ["name1", "value1"],
         ["name2", 2],
         ["name4", true],
-      ])
+      ]),
     );
   });
 
   it("remove integer", async () => {
     const inputs = JSON.parse(
-      '{"name1": "value1", "name2": 2, "name3": "", "name4": true}'
+      '{"name1": "value1", "name2": 2, "name3": "", "name4": true}',
     );
     const token = createToken(inputs);
     const content = `
@@ -113,13 +113,13 @@ on:
         ["name1", "value1"],
         ["name3", ""],
         ["name4", true],
-      ])
+      ]),
     );
   });
 
   it("remove string", async () => {
     const inputs = JSON.parse(
-      '{"name1": "value1", "name2": 2, "name3": "", "name4": true}'
+      '{"name1": "value1", "name2": 2, "name3": "", "name4": true}',
     );
     const token = createToken(inputs);
     const content = `
@@ -141,13 +141,13 @@ on:
         ["name2", 2],
         ["name3", ""],
         ["name4", true],
-      ])
+      ]),
     );
   });
 
   it("no 'on' field", async () => {
     const inputs = JSON.parse(
-      '{"name1": "value1", "name2": 2, "name3": "", "name4": true}'
+      '{"name1": "value1", "name2": 2, "name3": "", "name4": true}',
     );
     const token = createToken(inputs);
     const content = `
@@ -171,7 +171,7 @@ ona:
 
   it("no 'workflow_call' field", async () => {
     const inputs = JSON.parse(
-      '{"name1": "value1", "name2": 2, "name3": "", "name4": true}'
+      '{"name1": "value1", "name2": 2, "name3": "", "name4": true}',
     );
     const token = createToken(inputs);
     const content = `
@@ -195,7 +195,7 @@ on:
 
   it("no 'inputs' field", async () => {
     const inputs = JSON.parse(
-      '{"name1": "value1", "name2": 2, "name3": "", "name4": true}'
+      '{"name1": "value1", "name2": 2, "name3": "", "name4": true}',
     );
     const token = createToken(inputs);
     const content = `
@@ -206,13 +206,13 @@ on:
 `;
     const ret = updateSLSAToken(content, token);
     expect(ret.tool.inputs).toEqual(
-      new Map<string, string | number | boolean>()
+      new Map<string, string | number | boolean>(),
     );
   });
 
   it("no fields under 'inputs'", async () => {
     const inputs = JSON.parse(
-      '{"name1": "value1", "name2": 2, "name3": "", "name4": true}'
+      '{"name1": "value1", "name2": 2, "name3": "", "name4": true}',
     );
     const token = createToken(inputs);
     const content = `
@@ -224,7 +224,7 @@ on:
 `;
     const ret = updateSLSAToken(content, token);
     expect(ret.tool.inputs).toEqual(
-      new Map<string, string | number | boolean>()
+      new Map<string, string | number | boolean>(),
     );
   });
 
@@ -239,7 +239,7 @@ on:
 `;
     const ret = updateSLSAToken(content, token);
     expect(ret.tool.inputs).toEqual(
-      new Map<string, string | number | boolean>()
+      new Map<string, string | number | boolean>(),
     );
   });
 
@@ -255,13 +255,13 @@ on:
 `;
     const ret = updateSLSAToken(content, token);
     expect(ret.tool.inputs).toEqual(
-      new Map<string, string | number | boolean>()
+      new Map<string, string | number | boolean>(),
     );
   });
 });
 
 function createToken(
-  inputs: Map<string, string | number | boolean>
+  inputs: Map<string, string | number | boolean>,
 ): rawTokenInterface {
   const token: rawTokenInterface = {
     version: 1,

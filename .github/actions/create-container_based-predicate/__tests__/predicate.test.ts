@@ -82,7 +82,7 @@ describe("generatePredicate", () => {
       bd,
       builderBinaryRef,
       jobWorkflowRef,
-      currentRun
+      currentRun,
     ) as types.SLSAv1Predicate;
 
     expect(pred.runDetails.builder.id).toBe(jobWorkflowRef);

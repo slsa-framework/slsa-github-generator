@@ -93,7 +93,7 @@ export function generatePredicate(
   bd: BuildDefinition,
   binaryRef: ResourceDescriptor,
   jobWorkflowRef: string,
-  currentRun: ApiWorkflowRun
+  currentRun: ApiWorkflowRun,
 ): SLSAv1Predicate {
   // Add the builder binary to the resolved dependencies.
   if (!bd.resolvedDependencies) {

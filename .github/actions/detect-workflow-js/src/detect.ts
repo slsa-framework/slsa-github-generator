@@ -32,7 +32,7 @@ export function decodeToken(federatedToken: string): githubClaimsType {
 }
 
 export async function detectWorkflowFromOIDC(
-  aud: string
+  aud: string,
 ): Promise<[string, string, string]> {
   const id_token = await core.getIDToken(aud);
   const decoded = decodeToken(id_token);
@@ -56,7 +56,7 @@ export async function detectWorkflowFromOIDC(
 
 export async function detectWorkflowFromContext(
   repoName: string,
-  token: string
+  token: string,
 ): Promise<[string, string, string]> {
   const [owner, repo] = repoName.split("/");
   const octokit = github.getOctokit(token);
@@ -70,7 +70,7 @@ export async function detectWorkflowFromContext(
 
   if (!workflowData.referenced_workflows) {
     return Promise.reject(
-      Error(`No reusable workflows detected ${JSON.stringify(workflowData)}.`)
+      Error(`No reusable workflows detected ${JSON.stringify(workflowData)}.`),
     );
   }
 
@@ -104,8 +104,8 @@ export async function detectWorkflowFromContext(
         if (!reusableWorkflow.ref) {
           return Promise.reject(
             Error(
-              "Referenced slsa-github-generator workflow missing ref: was the workflow invoked by digest?"
-            )
+              "Referenced slsa-github-generator workflow missing ref: was the workflow invoked by digest?",
+            ),
           );
         }
         const tmpRepository = [workflowOwner, workflowRepo].join("/");

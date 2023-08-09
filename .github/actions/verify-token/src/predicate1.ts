@@ -31,7 +31,7 @@ export async function createPredicate(
   rawTokenObj: rawTokenInterface,
   toolURI: string,
   token: string,
-  isGenerator: boolean
+  isGenerator: boolean,
 ): Promise<SLSAPredicate> {
   // Trigger information.
   const triggerPath: string = getTriggerPath(rawTokenObj);
@@ -134,7 +134,7 @@ export async function createPredicate(
   // NOTE: Contents of event_path have been pre-validated.
   predicate.buildDefinition.internalParameters.GITHUB_EVENT_PAYLOAD =
     JSON.parse(
-      tscommon.safeReadFileSync(process.env.GITHUB_EVENT_PATH || "").toString()
+      tscommon.safeReadFileSync(process.env.GITHUB_EVENT_PATH || "").toString(),
     );
 
   return predicate;

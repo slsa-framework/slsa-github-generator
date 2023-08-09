@@ -147,7 +147,7 @@ describe("validateFieldNonEmpty", () => {
 
 function createToken(
   inputs: Map<string, string | number | boolean>,
-  masked: string[]
+  masked: string[],
 ): rawTokenInterface {
   const token: rawTokenInterface = {
     version: 1,
@@ -208,7 +208,7 @@ function createToken(
 describe("validateAndMaskInputs", () => {
   it("valid masked inputs", () => {
     const inputs = JSON.parse(
-      '{"name1": "value1", "name2": 2, "name3": "", "name4": true}'
+      '{"name1": "value1", "name2": 2, "name3": "", "name4": true}',
     );
     const masked = ["name2", "name3", "name4"];
     const token = createToken(inputs, masked);
@@ -218,13 +218,13 @@ describe("validateAndMaskInputs", () => {
         ["name2", "***"],
         ["name3", "***"],
         ["name4", "***"],
-      ])
+      ]),
     );
   });
 
   it("single masked inputs", () => {
     const inputs = JSON.parse(
-      '{"name1": "value1", "name2": 2, "name3": "", "name4": true}'
+      '{"name1": "value1", "name2": 2, "name3": "", "name4": true}',
     );
     const masked = ["name2"];
     const token = createToken(inputs, masked);
@@ -234,13 +234,13 @@ describe("validateAndMaskInputs", () => {
         ["name2", "***"],
         ["name3", ""],
         ["name4", true],
-      ])
+      ]),
     );
   });
 
   it("empty masked inputs", () => {
     const inputs = JSON.parse(
-      '{"name1": "value1", "name2": 2, "name3": "", "name4": true}'
+      '{"name1": "value1", "name2": 2, "name3": "", "name4": true}',
     );
     const masked = [""];
     const token = createToken(inputs, masked);
@@ -250,13 +250,13 @@ describe("validateAndMaskInputs", () => {
         ["name2", 2],
         ["name3", ""],
         ["name4", true],
-      ])
+      ]),
     );
   });
 
   it("invalid masked input name", () => {
     const inputs = JSON.parse(
-      '{"name1": "value1", "name2": 2, "name3": "", "name4": true}'
+      '{"name1": "value1", "name2": 2, "name3": "", "name4": true}',
     );
     const masked = ["does-not-exist"];
     const token = createToken(inputs, masked);
