@@ -51,17 +51,17 @@ builder to the official registry.
 
 ## Inputs
 
-| Name                         | Required | Default                                                          | Description                                                                                                                          |
-| ---------------------------- | -------- | ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
-| `access`                     | no       | 'restricted' for scoped packages, 'public' for unscoped packages | The package access level. See [`npm help access`](https://docs.npmjs.com/cli/v9/commands/npm-access) for more information.           |
-| `dist-tag`                   | no       | "latest"                                                         | The package dist-tag to attach. See [`npm help dist-tag`](https://docs.npmjs.com/cli/v9/commands/npm-dist-tag) for more information. |
-| `node-auth-token`            | yes      |                                                                  | The npm registry auth token used to publish the package.                                                                             |
-| `package-name`               | yes      |                                                                  | The file name for the package tarball in the artifact.                                                                               |
-| `package-download-name`      | yes      |                                                                  | The GitHub Actions artifact name for the package tarball.                                                                            |
-| `package-download-sha256`    | yes      |                                                                  | The sha256 of the package tarball artifact.                                                                                          |
-| `provenance-name`            | yes      |                                                                  | The file name for the package provenance in the artifact.                                                                            |
-| `provenance-download-name`   | yes      |                                                                  | The GitHub Actions artifact name for the package provenance.                                                                         |
-| `provenance-download-sha256` | yes      |                                                                  | The sha256 of the package provenance artifact.                                                                                       |
+| Name                         | Required | Default                                                          | Description                                                                                                                                          |
+| ---------------------------- | -------- | ---------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `access`                     | no       | 'restricted' for scoped packages, 'public' for unscoped packages | The package access level. See [`npm help access`](https://docs.npmjs.com/cli/v9/commands/npm-access) for more information.                           |
+| `dist-tag`                   | no       | "latest"                                                         | The package dist-tag to attach. See [`npm help dist-tag`](https://docs.npmjs.com/cli/v9/commands/npm-dist-tag) for more information.                 |
+| `node-auth-token`            | yes      |                                                                  | The npm registry auth token used to publish the package. See [About access tokens](https://docs.npmjs.com/about-access-tokens) for more information. |
+| `package-name`               | yes      |                                                                  | The file name for the package tarball in the artifact.                                                                                               |
+| `package-download-name`      | yes      |                                                                  | The GitHub Actions artifact name for the package tarball.                                                                                            |
+| `package-download-sha256`    | yes      |                                                                  | The sha256 of the package tarball artifact.                                                                                                          |
+| `provenance-name`            | yes      |                                                                  | The file name for the package provenance in the artifact.                                                                                            |
+| `provenance-download-name`   | yes      |                                                                  | The GitHub Actions artifact name for the package provenance.                                                                                         |
+| `provenance-download-sha256` | yes      |                                                                  | The sha256 of the package provenance artifact.                                                                                                       |
 
 ## Outputs
 
