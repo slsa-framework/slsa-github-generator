@@ -114,11 +114,11 @@ Below is a non-exhaustive list of projects that use the builders in this reposit
 
 Several builders have been built using the ["Build Your Own Builder" (BYOB) framework](#build-your-own-builder):
 
-1. [nodejs builder](https://github.com/slsa-framework/slsa-github-generator/tree/main/internal/builders/nodejs#readme), by @ianlewis
-2. [JReleaser builder](https://github.com/jreleaser/release-action/tree/java#slsa-builder), by @aalmiray
-3. [Maven builder](https://github.com/slsa-framework/slsa-github-generator/blob/main/internal/builders/maven/README.md), by @AdamKorcz
-4. [Gradle builder](https://github.com/slsa-framework/slsa-github-generator/tree/main/internal/builders/gradle/README.md), by @AdamKorcz
-5. Coming soon! [Bazel builder](https://github.com/slsa-framework/slsa-github-generator/tree/main/internal/builders/bazel/README.md), by @enteraga6
+1. [nodejs builder](https://github.com/slsa-framework/slsa-github-generator/tree/main/internal/builders/nodejs#readme), by [@ianlewis](https://github.com/ianlewis)
+2. [JReleaser builder](https://github.com/jreleaser/release-action/tree/java#slsa-builder), by [@aalmiray](https://github.com/aalmiray)
+3. [Maven builder](https://github.com/slsa-framework/slsa-github-generator/blob/main/internal/builders/maven/README.md), by [@AdamKorcz](https:/github.com/AdamKorcz)
+4. [Gradle builder](https://github.com/slsa-framework/slsa-github-generator/tree/main/internal/builders/gradle/README.md), by [@AdamKorcz](https:/github.com/AdamKorcz)
+5. **Coming soon!** [Bazel builder](https://github.com/slsa-framework/slsa-github-generator/tree/main/internal/builders/bazel/README.md), by [@enteraga6](https://github.com/enteraga6)
 
 ## Generate provenance
 
