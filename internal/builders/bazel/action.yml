@@ -68,40 +68,40 @@ runs:
         distribution: "${{ fromJson(inputs.slsa-workflow-inputs).user-java-distribution }}"
         java-version: "${{ fromJson(inputs.slsa-workflow-inputs).user-java-version }}"
 
-    - name: Check for Docker Image
-      id: docker
+    - name: Check for Environment Image
+      id: env-image
       shell: bash
       run: |
-        if [[ -z "${{ fromJson(inputs.slsa-workflow-inputs).docker-image }}" ]]
+        if [[ -z "${{ fromJson(inputs.slsa-workflow-inputs).env-image }}" ]]
         then
-          echo "No Docker Image provided. Will build without."
-          echo "USE_DOCKER=false" >> $GITHUB_ENV
+          echo "No Environment Image provided. Will build without."
+          echo "use_image=false" >> "$GITHUB_OUTPUT"
         else
-          echo "Docker image provided. Running build on Docker Image."
-          echo "USE_DOCKER=true" >> $GITHUB_ENV
+          echo "Environment image provided. Running build on Environment Image."
+          echo "use_image=true" >> "$GITHUB_OUTPUT"
         fi
 
-    - name: Build on Docker Image
-      if: env.USE_DOCKER == 'true'
+    - name: Build on Environment Image
+      if: ${{ steps.env-image.outputs.use_image }} == 'true'
       env:
-        TARGETS: ${{ fromJson(inputs.slsa-workflow-inputs).targets }}
-        FLAGS: ${{ fromJson(inputs.slsa-workflow-inputs).flags }}
-        NEEDS_RUNFILES: ${{ fromJson(inputs.slsa-workflow-inputs).needs-runfiles }}
-        INCLUDES_JAVA: ${{ fromJson(inputs.slsa-workflow-inputs).includes-java }}
-        DOCKER_IMAGE: ${{ fromJson(inputs.slsa-workflow-inputs).docker-image }}
+        UNTRUSTED_TARGETS: ${{ fromJson(inputs.slsa-workflow-inputs).targets }}
+        UNTRUSTED_FLAGS: ${{ fromJson(inputs.slsa-workflow-inputs).flags }}
+        UNTRUSTED_NEEDS_RUNFILES: ${{ fromJson(inputs.slsa-workflow-inputs).needs-runfiles }}
+        UNTRUSTED_INCLUDES_JAVA: ${{ fromJson(inputs.slsa-workflow-inputs).includes-java }}
+        UNTRUSTED_ENV_IMAGE: ${{ fromJson(inputs.slsa-workflow-inputs).env-image }}
       shell: bash
       run: |
-        docker pull $DOCKER_IMAGE
+        docker pull $UNTRUSTED_ENV_IMAGE
         curr_dir=$(basename "$(pwd)")
-        docker run --rm --env TARGETS=${TARGETS} --env FLAGS=${FLAGS} --env NEEDS_RUNFILES=${NEEDS_RUNFILES} --env INCLUDES_JAVA=${INCLUDES_JAVA} -v $PWD/../:/src -w /src $DOCKER_IMAGE /bin/sh -c "ls && tree && cd $curr_dir && ls && tree && ./../__TOOL_ACTION_DIR__/build.sh"
+        docker run --rm --env TARGETS=${UNTRUSTED_TARGETS} --env FLAGS=${UNTRUSTED_FLAGS} --env NEEDS_RUNFILES=${UNTRUSTED_NEEDS_RUNFILES} --env INCLUDES_JAVA=${UNTRUSTED_INCLUDES_JAVA} -v $PWD/../:/src -w /src $UNTRUSTED_ENV_IMAGE /bin/sh -c "ls && tree && cd $curr_dir && ls && tree && ./../__TOOL_ACTION_DIR__/build.sh"
 
     - id: build
-      if: env.USE_DOCKER == 'false'
+      if: ${{ steps.env-image.outputs.use_image }} == 'false'
       env:
-        TARGETS: ${{ fromJson(inputs.slsa-workflow-inputs).targets }}
-        FLAGS: ${{ fromJson(inputs.slsa-workflow-inputs).flags }}
-        NEEDS_RUNFILES: ${{ fromJson(inputs.slsa-workflow-inputs).needs-runfiles }}
-        INCLUDES_JAVA: ${{ fromJson(inputs.slsa-workflow-inputs).includes-java }}
+        UNTRUSTED_TARGETS: ${{ fromJson(inputs.slsa-workflow-inputs).targets }}
+        UNTRUSTED_FLAGS: ${{ fromJson(inputs.slsa-workflow-inputs).flags }}
+        UNTRUSTED_NEEDS_RUNFILES: ${{ fromJson(inputs.slsa-workflow-inputs).needs-runfiles }}
+        UNTRUSTED_INCLUDES_JAVA: ${{ fromJson(inputs.slsa-workflow-inputs).includes-java }}
       shell: bash
       run: ./../__TOOL_ACTION_DIR__/build.sh
 

@@ -35,8 +35,8 @@ on:
         required: false
         type: string
         default: ""
-      docker-image:
-        description: "Docker Image for build environment to run on"
+      env-image:
+        description: "Image for build environment to run on"
         required: false
         type: string
         default: ""
