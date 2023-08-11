@@ -304,7 +304,7 @@ cd "$repo_name"
 
 # Check to see if JAVA_HOME is set then empty to
 # avoid triggering unbound variable error.
-if [[ "${INCLUDES_JAVA}" == "true" ]]
+if [[ "${UNTRUSTED_INCLUDES_JAVA}" == "true" ]]
 then
     if [[ ! -v JAVA_HOME || -z "${JAVA_HOME}" ]]; then
         # if JAVA_HOME is empty, set to jdk bin path from $(which java)
