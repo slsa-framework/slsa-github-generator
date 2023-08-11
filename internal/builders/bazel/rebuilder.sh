@@ -377,7 +377,7 @@ else
     echo -e "${CYAN}======================================================${RESET}"
     echo ""
 
-    # shellcheck source=./../build.sh
+    # shellcheck source=./build.sh
     source ../build.sh
     echo ""
     echo -e "${CYAN}======================================================${RESET}"
