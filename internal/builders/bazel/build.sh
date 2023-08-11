@@ -74,6 +74,10 @@ for input in "${build_targets[@]}"; do
   done
 done
 
+ls
+tree
+echo $(pwd)
+
 ################################################
 #                                              #
 #    Copy Needed Artifacts To Binaries Dir     #
