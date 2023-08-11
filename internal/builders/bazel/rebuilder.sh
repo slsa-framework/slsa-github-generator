@@ -159,14 +159,14 @@ if [ -z ${prov_path:-} ]; then
   exit 1
 fi
 
-if [ -z {$source_uri:-} ]; then
+if [ -z ${source_uri:-} ]; then
   echo -e "${RED}[ERROR] ${LIGHT_RED}Mandatory argument for rebuild, --source_uri, is missing or empty${RESET}"
   usage
   exit 1
 fi
 
 # Check if mandatory arguments for verification are not empty
-if [[ $verify -eq 1 && ( -z ${source_uri:-} || -z {$builder_id:-} ) ]]; then
+if [[ $verify -eq 1 && ( -z ${source_uri:-} || -z ${builder_id:-} ) ]]; then
   echo -e "${RED}[ERROR] ${LIGHT_RED}Mandatory arguments for verification missing or empty${RESET}"
   usage
   exit 1
@@ -179,11 +179,11 @@ if [[ $verbose -eq 1 ]]; then
     echo -e "${CYAN}prov_path: ${GREEN}$prov_path${RESET}"
     echo -e "${CYAN}source_uri: ${GREEN}$source_uri${RESET}"
 
-  if [ -n ${builder_id:-} ]; then
+  if [[ -n ${builder_id:-} ]]; then
       echo -e "${CYAN}builder_id: ${GREEN}$builder_id${RESET}"
   fi
 
-  if [ -n ${docker_image:-} ]; then
+  if [[ -n ${docker_image:-} ]]; then
       echo -e "${CYAN}docker_image: ${GREEN}$docker_image${RESET}"
   fi
 
