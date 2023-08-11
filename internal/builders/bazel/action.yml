@@ -45,7 +45,7 @@ outputs:
   artifacts-download-name:
     description: "The name of binaries folder to download"
     # NOTE: This is an "untrusted" value returned from the build.
-    value: "${{ steps.rng.outputs.random }}-binaries"
+    value: "${{ steps.rng.outputs.random }}-artifacts"
   artifacts-download-sha256:
     description: "SHA256 of the uploaded tarball of artifacts."
     value: ${{ steps.generate-artifacts.outputs.sha256 }}
@@ -91,11 +91,6 @@ runs:
         DOCKER_IMAGE: ${{ fromJson(inputs.slsa-workflow-inputs).docker-image }}
       shell: bash
       run: |
-        export TARGETS
-        export FLAGS
-        export NEEDS_RUNFILES
-        export INCLUDES_JAVA
-
         docker pull $DOCKER_IMAGE
         curr_dir=$(basename "$(pwd)")
         docker run --rm --env TARGETS=${TARGETS} --env FLAGS=${FLAGS} --env NEEDS_RUNFILES=${NEEDS_RUNFILES} --env INCLUDES_JAVA=${INCLUDES_JAVA} -v $PWD/../:/src -w /src $DOCKER_IMAGE /bin/sh -c "ls && tree && cd $curr_dir && ls && tree && ./../__TOOL_ACTION_DIR__/build.sh"
@@ -120,7 +115,7 @@ runs:
       id: generate-artifacts
       uses: slsa-framework/slsa-github-generator/.github/actions/secure-upload-folder@v1.8.0
       with:
-        name: "${{ steps.rng.outputs.random }}-binaries"
+        name: "${{ steps.rng.outputs.random }}-artifacts"
         path: "./bazel_builder_binaries_to_upload_to_gh_7bc972367cb286b7f36ab4457f06e369" # path-to-artifact(s)
 
     - name: Echo statement
