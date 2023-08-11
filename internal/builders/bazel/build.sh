@@ -103,8 +103,13 @@ for curr_target in "${!targets_set[@]}"; do
     run_script_name=$(echo "$binary_name" | awk -F'_deploy.jar' '{print $1}')
     echo $run_script_name
     tree
+
+    # debug fix attempt
+    cd $binaries_dir
+    mkdir "$run_script_name"
+    cd -
     # Create dir for artifact and its runfiles
-    mkdir -p "./${binaries_dir}/${run_script_name}"
+    #mkdir -p "./${binaries_dir}/${run_script_name}"
 
     # Get the absolute path to output of Java JAR artifact.
     bazel_generated=$(bazel cquery --output=starlark --starlark:expr="'\n'.join([f.path for f in target.files.to_list()])" "$curr_target" 2>/dev/null)
