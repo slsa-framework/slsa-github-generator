@@ -199,8 +199,7 @@ fi
 #                                              #
 ################################################
 
-if [[ $verify -eq 1 ]]
-then
+if [[ $verify -eq 1 ]]; then
   # Clone the slsa-verifier repository
   if [ -d "slsa-verifier" ]; then
     type_writer "📁---> The slsa-verifier repository is already cloned."
