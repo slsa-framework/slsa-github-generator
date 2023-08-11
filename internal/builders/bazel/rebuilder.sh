@@ -249,7 +249,7 @@ declare -A data
 # and the value is the value that the user inputted. Pipe value to @text, to deal with booleans.
 while IFS='=' read -r key value; do
     data["$key"]="$value"
-done < <(cat "$prov_path" | jq -r '.dsseEnvelope.payload' | base64 -d | jq -r '.predicate.buildDefinition.externalParameters.inputs | to_entries | .[] | .key + "=" + (.value | @text)')
+done < <(<"$prov_path" jq -r '.dsseEnvelope.payload' | base64 -d | jq -r '.predicate.buildDefinition.externalParameters.inputs | to_entries | .[] | .key + "=" + (.value | @text)')
 
 # Todo: Style Env Vars Later
 
