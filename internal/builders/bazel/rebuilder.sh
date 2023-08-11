@@ -147,19 +147,19 @@ done
 ################################################
 
 # Check if mandatory arguments for rebuild are not empty
-if [ -z ${artifact_path:-} ]; then
+if [ -z "${artifact_path:-}" ]; then
   echo -e "${RED}[ERROR] ${LIGHT_RED}Mandatory argument for rebuild, --artifact_path, is missing or empty${RESET}"
   usage
   exit 1
 fi
 
-if [ -z ${prov_path:-} ]; then
+if [ -z "${prov_path:-}" ]; then
   echo -e "${RED}[ERROR] ${LIGHT_RED}Mandatory argument for rebuild, --prov_path, is missing or empty${RESET}"
   usage
   exit 1
 fi
 
-if [ -z ${source_uri:-} ]; then
+if [ -z "${source_uri:-}" ]; then
   echo -e "${RED}[ERROR] ${LIGHT_RED}Mandatory argument for rebuild, --source_uri, is missing or empty${RESET}"
   usage
   exit 1
