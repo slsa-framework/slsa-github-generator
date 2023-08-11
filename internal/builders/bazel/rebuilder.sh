@@ -422,20 +422,19 @@ then
       # Copy the entire directory, including the run script.
       cp -R ./"$run_script_name" ./../../"$rebuilt_artifacts_dir"/
 else
-    if [[ "${NEEDS_RUNFILES}" == "true" ]]
-    then
+    if [[ "${NEEDS_RUNFILES}" == "true" ]]; then
         # For non-java targets with runfiles.
-      cd $binaries_dir/
-      rebuilt_checksum=$(sha256sum ./"$artifact_name"/"$artifact_name" | awk '{ print $1 }')
+        cd $binaries_dir/
+        rebuilt_checksum=$(sha256sum ./"$artifact_name"/"$artifact_name" | awk '{ print $1 }')
 
-      # Copy entire directory, including the runfiles.
-      cp -R ./"$artifact_name" ./../../"$rebuilt_artifacts_dir"/
+        # Copy entire directory, including the runfiles.
+        cp -R ./"$artifact_name" ./../../"$rebuilt_artifacts_dir"/
     else
-    # For files withouts runfiles.
-    cd $binaries_dir
-    rebuilt_checksum=$(sha256sum "$artifact_name" | awk '{ print $1 }')
+        # For files withouts runfiles.
+        cd $binaries_dir
+        rebuilt_checksum=$(sha256sum "$artifact_name" | awk '{ print $1 }')
 
-    cp "$artifact_name" ./../../$rebuilt_artifacts_dir/
+        cp "$artifact_name" ./../../$rebuilt_artifacts_dir/
     fi
 fi
 
@@ -445,8 +444,7 @@ fi
 #                                              #
 ################################################
 
-if [[ "$orig_checksum" == "$rebuilt_checksum" ]]
-  then
+if [[ "$orig_checksum" == "$rebuilt_checksum" ]]; then
     echo -e "${GREEN}Checksum is the ${BOLD}${UNDERLINE}same${RESET}${GREEN} for the original and rebuilt artifact!${RESET}"
     echo -e "${GREEN}✅ This build is ${BOLD}${UNDERLINE}reproducible!${RESET} ✅"
     echo ""
@@ -466,20 +464,19 @@ if [[ "$orig_checksum" == "$rebuilt_checksum" ]]
 if [[ cleanup -eq 1 ]]
 then
 
-  # If there are runfiles or if the artifacts are Java, then each artifact
-  # has its own directory, so you need to exit out of it first.
+    # If there are runfiles or if the artifacts are Java, then each artifact
+    # has its own directory, so you need to exit out of it first.
 
-  # TODO TEST FUNCTIONALITY OF CLEANUP
+    # TODO TEST FUNCTIONALITY OF CLEANUP
 
-  # if [[ "${NEEDS_RUNFILES}" == "true" || "${INCLUDES_JAVA}" == "true" ]]
-  # then
-  #   cd ..
-  # fi
+    # if [[ "${NEEDS_RUNFILES}" == "true" || "${INCLUDES_JAVA}" == "true" ]]; then
+    #   cd ..
+    # fi
 
-  # Current position is bazel_builder_dir/$repo_name/$binaries_dir,
-  # and to clean up need to be in /bazel.
-  cd ../..
+    # Current position is bazel_builder_dir/$repo_name/$binaries_dir,
+    # and to clean up need to be in /bazel.
+    cd ../..
 
-  # Now cleanup of verifier and cloned $repo_name.
-  cleanup
+    # Now cleanup of verifier and cloned $repo_name.
+    cleanup
 fi
