@@ -132,8 +132,7 @@ function cleanup() {
 for ARG in "$@"; do
   returnValue=$?
   process_argument "$ARG"
-  if [[ ! ($returnValue) ]]
-  then
+  if [[ ! ($returnValue) ]]; then
     my_arg="$ARG"
     echo -e "${RED}[ERROR] ${LIGHT_RED}$my_arg is unrecognized${RESET}"
     usage
@@ -167,16 +166,14 @@ if [ -z {$source_uri:-} ]; then
 fi
 
 # Check if mandatory arguments for verification are not empty
-if [[ $verify -eq 1 && ( -z ${source_uri:-} || -z {$builder_id:-} ) ]]
-then
+if [[ $verify -eq 1 && ( -z ${source_uri:-} || -z {$builder_id:-} ) ]]; then
   echo -e "${RED}[ERROR] ${LIGHT_RED}Mandatory arguments for verification missing or empty${RESET}"
   usage
   exit 1
 fi
 
 # Print received arguments (optional)
-if [[ $verbose -eq 1 ]]
-then
+if [[ $verbose -eq 1 ]]; then
     echo -e "${BLUE}✔ Input Arguments Received:${RESET}"
     echo -e "${CYAN}artifact_path: ${GREEN}$artifact_path${RESET}"
     echo -e "${CYAN}prov_path: ${GREEN}$prov_path${RESET}"
@@ -248,11 +245,9 @@ done < <(<"$prov_path" jq -r '.dsseEnvelope.payload' | base64 -d | jq -r '.predi
 
 # Todo: Style Env Vars Later
 
-if [[ $verbose -eq 1 ]]
-then
+if [[ $verbose -eq 1 ]]; then
   echo -e "${PURPLE}✔ Arguments Parsed from Provenance:${RESET}"
-  for key in "${!data[@]}"
-  do
+  for key in "${!data[@]}"; do
       echo -e "${MAGENTA}$key: ${GREEN}${data[$key]}${RESET}"
   done
   echo ""
@@ -312,8 +307,7 @@ cd "$repo_name"
 # avoid triggering unbound variable error.
 if [[ "${INCLUDES_JAVA}" == "true" ]]
 then
-    if [[ ! -v JAVA_HOME || -z "${JAVA_HOME}" ]]
-    then
+    if [[ ! -v JAVA_HOME || -z "${JAVA_HOME}" ]]; then
         # if JAVA_HOME is empty, set to jdk bin path from $(which java)
         if java_path=$(which java); then
             JAVA_HOME="$(dirname "$(dirname "${java_path}")")"
@@ -341,8 +335,7 @@ echo -e "${CYAN}======================================================${RESET}"
 # Conditionals for docker images depend on if a Docker Image was use to build on Github.
 # If a Docker Image was not used to build on Github, then build locally. This is done to
 # ensure consistent build environment between both platforms.
-if [[ -n ${DOCKER_IMAGE:-} ]]
-then
+if [[ -n ${DOCKER_IMAGE:-} ]]; then
     cd -
     sudo docker pull "$DOCKER_IMAGE"
     echo ""
@@ -358,8 +351,7 @@ then
     echo -e "${CYAN}======================================================${RESET}"
     echo ""
 else
-    if [[ -n ${docker_image:-} ]]
-    then
+    if [[ -n ${docker_image:-} ]]; then
       # Warning message for the users if their artifact was not built with a Docker Image, but a Docker Image was provided at command.
       echo -e "${RED}[Warning] ${LIGHT_RED}Docker Image, $docker_image, provided, but artifact was not originally built on Docker Image${RESET}"
     else
@@ -384,8 +376,7 @@ fi
 
 # If Docker Image was used to build on Github, we need to cd into repo
 # to access the binaries directory.
-if [[ -n ${DOCKER_IMAGE:-} ]]
-then
+if [[ -n ${DOCKER_IMAGE:-} ]]; then
   cd "$repo_name"
 fi
 
@@ -396,8 +387,7 @@ fi
 ################################################
 
 # Obtain the name of the artifact
-if [[ $artifact_path == */* ]]
-then
+if [[ $artifact_path == */* ]]; then
     artifact_name=$(basename "$artifact_path")
 else
     artifact_name=$artifact_path
@@ -410,8 +400,7 @@ unset rebuilt_checksum # Makes sure it is empty before assigning.
 # The binaries folder contains different directories for the its artifacts and
 # the artifacts runfiles. Obtain the rebuilt binaries and copy them to the
 # path at root before cleaning up and deleting the repo.
-if [[ "$artifact_name" == *"_deploy.jar"* ]]
-then
+if [[ "$artifact_name" == *"_deploy.jar"* ]]; then
       # Uses _deploy.jar as a field seperator and grabs the field before it.
       # Directory of Java artifacts is same as run script name.
       run_script_name=$(echo "$artifact_name" | awk -F'_deploy.jar' '{print $1}')
