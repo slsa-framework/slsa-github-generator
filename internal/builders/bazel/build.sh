@@ -74,10 +74,6 @@ for input in "${build_targets[@]}"; do
   done
 done
 
-ls
-tree
-echo $(pwd)
-
 ################################################
 #                                              #
 #    Copy Needed Artifacts To Binaries Dir     #
@@ -101,17 +97,9 @@ for curr_target in "${!targets_set[@]}"; do
   then
     # Uses _deploy.jar as a field seperator and grabs the field before it.
     run_script_name=$(echo "$binary_name" | awk -F'_deploy.jar' '{print $1}')
-    echo $run_script_name
-    tree
-    ls
-    # debug fix attempt
-    cd $binaries_dir
-    ls
-    mkdir "$run_script_name"
-    ls
-    cd -
+
     # Create dir for artifact and its runfiles
-    #mkdir -p "./${binaries_dir}/${run_script_name}"
+    mkdir "./${binaries_dir}/$run_script_name"
 
     # Get the absolute path to output of Java JAR artifact.
     bazel_generated=$(bazel cquery --output=starlark --starlark:expr="'\n'.join([f.path for f in target.files.to_list()])" "$curr_target" 2>/dev/null)
