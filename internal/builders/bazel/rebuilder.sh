@@ -462,8 +462,7 @@ if [[ "$orig_checksum" == "$rebuilt_checksum" ]]
   fi
 
 
-if [[ cleanup -eq 1 ]]
-then
+if [[ cleanup -eq 1 ]]; then
 
   # If there are runfiles or if the artifacts are Java, then each artifact
   # has its own directory, so you need to exit out of it first.
