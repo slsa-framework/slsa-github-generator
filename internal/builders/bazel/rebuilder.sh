@@ -80,8 +80,7 @@ cleanup=0
 # 1) Verify and Rebuild
 # 2) Rebuild only
 function usage() {
-  if [[ $verify ]]
-  then
+  if [[ $verify ]]; then
     echo -e "${RED}[ERROR] ${LIGHT_RED}Wrong usage. Usage to verify AND rebuild artifact:${RESET}"
     echo -e "${CYAN}Usage: $0 ${YELLOW}--artifact_path${RESET} <path> ${YELLOW}--prov_path${RESET} <path> ${YELLOW}--source_uri${RESET} <uri> ${YELLOW}--builder_id${RESET} <id> ${MAGENTA}[--docker_image]${RESET} <image> ${MAGENTA}[--verify]${RESET}"
     echo -e "${RED}[ERROR] ${LIGHT_RED}Wrong usage. Usage to ONLY rebuild the artifact:${RESET}"
