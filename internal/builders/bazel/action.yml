@@ -49,6 +49,14 @@ outputs:
   artifacts-download-sha256:
     description: "SHA256 of the uploaded tarball of artifacts."
     value: ${{ steps.generate-artifacts.outputs.sha256 }}
+  artifacts-actual-name:
+    description: >
+      The name of the folder which contains the artifacts.
+
+      After downloading artifacts-download-name and extracting
+      the folder.tgz from inside. A folder with artifacts with
+      this name will be extracted.
+    value: "bazel_builder_binaries_to_upload_to_gh_7bc972367cb286b7f36ab4457f06e369"
 
 runs:
   using: "composite"

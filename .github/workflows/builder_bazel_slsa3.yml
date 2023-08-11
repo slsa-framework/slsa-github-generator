@@ -105,6 +105,15 @@ on:
         description: "SHA256 of the uploaded tarball of built artifacts."
         value: ${{ fromJSON(jobs.slsa-run.outputs.build-artifacts-outputs).artifacts-download-sha256 }}
 
+      artifacts-actual-name:
+        description: >
+          The name of the folder which contains the artifacts.
+
+          After downloading artifacts-download-name and extracting
+          the folder.tgz from inside. A folder with artifacts with
+          this name will be extracted.
+        value: ${{ fromJSON(jobs.slsa-run.outputs.build-artifacts-outputs).artifacts-actual-name }}
+
 jobs:
   slsa-setup:
     permissions:
