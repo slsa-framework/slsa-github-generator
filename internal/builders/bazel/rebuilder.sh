@@ -82,14 +82,14 @@ cleanup=0
 function usage() {
   if [[ $verify ]]; then
     echo -e "${RED}[ERROR] ${LIGHT_RED}Wrong usage. Usage to verify AND rebuild artifact:${RESET}"
-    echo -e "${CYAN}Usage: $0 ${YELLOW}--artifact_path${RESET} <path> ${YELLOW}--prov_path${RESET} <path> ${YELLOW}--source_uri${RESET} <uri> ${YELLOW}--builder_id${RESET} <id> ${MAGENTA}[--docker_image]${RESET} <image> ${MAGENTA}[--verify]${RESET}"
+    echo -e "${CYAN}Usage: $0 ${YELLOW}--artifact_path${RESET}=<path> ${YELLOW}--prov_path${RESET}=<path> ${YELLOW}--source_uri${RESET}=<uri> ${YELLOW}--builder_id${RESET}=<id> ${MAGENTA}[--env_image]${RESET}=<image> ${MAGENTA}[--verify]${RESET}"
     echo -e "${RED}[ERROR] ${LIGHT_RED}Wrong usage. Usage to ONLY rebuild the artifact:${RESET}"
-    echo -e "${CYAN}Usage: $0 ${YELLOW}--artifact_path${RESET} <path> ${YELLOW}--prov_path${RESET} <path> ${MAGENTA}[--docker_image]${RESET} <image>"
+    echo -e "${CYAN}Usage: $0 ${YELLOW}--artifact_path${RESET}=<path> ${YELLOW}--prov_path${RESET}=<path> ${MAGENTA}[--env_image]${RESET}=<image>"
   else
     echo -e "${RED}[ERROR] ${LIGHT_RED}Wrong usage. Usage to ONLY rebuild the artifact:${RESET}"
-    echo -e "${CYAN}Usage: $0 ${YELLOW}--artifact_path${RESET} <path> ${YELLOW}--prov_path${RESET} <path> ${MAGENTA}[--docker_image]${RESET} <image>"
+    echo -e "${CYAN}Usage: $0 ${YELLOW}--artifact_path${RESET}=<path> ${YELLOW}--prov_path${RESET}=<path> ${MAGENTA}[--env_image]${RESET}=<image>"
     echo -e "${RED}[ERROR] ${LIGHT_RED}Wrong usage. Usage to verify AND rebuild artifact:${RESET}"
-    echo -e "${CYAN}Usage: $0 ${YELLOW}--artifact_path${RESET} <path> ${YELLOW}--prov_path${RESET} <path> ${YELLOW}--source_uri${RESET} <uri> ${YELLOW}--builder_id${RESET} <id> ${MAGENTA}[--docker_image]${RESET} <image> ${MAGENTA}[--verify]${RESET}"
+    echo -e "${CYAN}Usage: $0 ${YELLOW}--artifact_path${RESET}=<path> ${YELLOW}--prov_path${RESET}=<path> ${YELLOW}--source_uri${RESET}=<uri> ${YELLOW}--builder_id${RESET}=<id> ${MAGENTA}[--env_image]${RESET}=<image> ${MAGENTA}[--verify]${RESET}"
   fi
 }
 
@@ -101,7 +101,7 @@ function process_argument() {
     --prov_path=*) prov_path="${1#--prov_path=}" ;;
     --source_uri=*) source_uri="${1#--source_uri=}" ;;
     --builder_id=*) builder_id="${1#--builder_id=}" ;;
-    --docker_image=*) docker_image="${1#--docker_image=}" ;;
+    --env_image=*) env_image="${1#--env_image=}" ;;
     --verify) verify=1 ;;
     --verbose) verbose=1 ;;
     --cleanup) cleanup=1 ;;
@@ -183,8 +183,8 @@ if [[ $verbose -eq 1 ]]; then
       echo -e "${CYAN}builder_id: ${GREEN}$builder_id${RESET}"
   fi
 
-  if [[ -n ${docker_image:-} ]]; then
-      echo -e "${CYAN}docker_image: ${GREEN}$docker_image${RESET}"
+  if [[ -n ${env_image:-} ]]; then
+      echo -e "${CYAN}env_image: ${GREEN}$env_image${RESET}"
   fi
 
   echo -e "${CYAN}verify: ${GREEN}$verify${RESET}"
@@ -263,7 +263,7 @@ fi
 declare -A name_mapping
 name_mapping["targets"]="UNTRUSTED_TARGETS"
 name_mapping["flags"]="UNTRUSTED_FLAGS"
-name_mapping["docker-image"]="UNTRUSTED_DOCKER_IMAGE"
+name_mapping["env-image"]="UNTRUSTED_DOCKER_IMAGE"
 
 # Note: These boolean inputs are now dealed with as strings
 name_mapping["includes-java"]="UNTRUSTED_INCLUDES_JAVA"
@@ -331,7 +331,7 @@ echo -e "${CYAN}======================================================${RESET}"
 echo -e "${CYAN}|${RESET}${YELLOW}${UNDERLINE}        🔨  Starting the Rebuild Process  🔨        ${RESET}${CYAN}|${RESET}"
 echo -e "${CYAN}======================================================${RESET}"
 
-# Conditionals for docker images depend on if a Docker Image was use to build on Github.
+# Conditionals for environment images depend on if a Docker Image was use to build on Github.
 # If a Docker Image was not used to build on Github, then build locally. This is done to
 # ensure consistent build environment between both platforms.
 if [[ -n ${UNTRUSTED_DOCKER_IMAGE:-} ]]; then
@@ -339,7 +339,7 @@ if [[ -n ${UNTRUSTED_DOCKER_IMAGE:-} ]]; then
     sudo docker pull "$UNTRUSTED_DOCKER_IMAGE"
     echo ""
     echo -e "${CYAN}======================================================${RESET}"
-    type_writer "🔨---> Rebuilding with Docker Image Environment..."    # Mount docker image on this directory as workdir to gain access to script env
+    type_writer "🔨---> Rebuilding with Docker Image Environment..."    # Mount environment image on this directory as workdir to gain access to script env
     echo -e "${CYAN}======================================================${RESET}"
     echo ""
 
@@ -350,14 +350,14 @@ if [[ -n ${UNTRUSTED_DOCKER_IMAGE:-} ]]; then
     echo -e "${CYAN}======================================================${RESET}"
     echo ""
 else
-    if [[ -n ${docker_image:-} ]]; then
+    if [[ -n ${env_image:-} ]]; then
       # Warning message for the users if their artifact was not built with a Docker Image, but a Docker Image was provided at command.
-      echo -e "${RED}[Warning] ${LIGHT_RED}Docker Image, $docker_image, provided, but artifact was not originally built on Docker Image${RESET}"
+      echo -e "${RED}[Warning] ${LIGHT_RED}Docker Image, $env_image, provided, but artifact was not originally built on Docker Image${RESET}"
     else
       echo "" # This is just for style.
     fi
 
-    # Run the build script locally without a docker image.
+    # Run the build script locally without an environment image.
     echo -e "${CYAN}======================================================${RESET}"
     type_writer "💻---> Rebuilding with local environment..."
     echo -e "${CYAN}======================================================${RESET}"
