@@ -75,14 +75,15 @@ runs:
         if [[ -z "${{ fromJson(inputs.slsa-workflow-inputs).env-image }}" ]]
         then
           echo "No Environment Image provided. Will build without."
-          echo "USE_DOCKER=false" >> $GITHUB_ENV
+          echo "::set-output name=boolean_output::${{ toJSON($i) }}"
+
         else
           echo "Docker image provided. Running build on Docker Image."
-          echo "USE_DOCKER=true" >> $GITHUB_ENV
+          # echo "USE_DOCKER=true" >> $GITHUB_ENV
         fi
 
     - name: Build on Environment Image
-      if: env.USE_DOCKER == 'true'
+      if: fromJSON(steps.output_producer.outputs.boolean_output)
       env:
         UNTRUSTED_TARGETS: ${{ fromJson(inputs.slsa-workflow-inputs).targets }}
         UNTRUSTED_FLAGS: ${{ fromJson(inputs.slsa-workflow-inputs).flags }}
