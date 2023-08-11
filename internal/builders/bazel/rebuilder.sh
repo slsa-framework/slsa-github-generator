@@ -14,10 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# NOTE: -u not set to check for empty variables from parse arguments function.
-set -eo pipefail
-
-# Disabled to stop triggering warnings about color env vars.
+set -euo pipefail
 
 # This directory is where the rebuilt artifacts will be stored. It is made upon
 # running the rebuilder. The long name is to avoid potential collisions.
@@ -78,8 +75,7 @@ verbose=0
 
 # Boolean to trigger cleanup upon completion or failure.
 cleanup=0
-# Disabled to stop triggering warnings about color env vars.
-    # shellcheck disable=SC2059
+
 # Outputs the usage of the Rebuilder script for the two modes:
 # 1) Verify and Rebuild
 # 2) Rebuild only
@@ -153,26 +149,26 @@ done
 ################################################
 
 # Check if mandatory arguments for rebuild are not empty
-if [ -z "$artifact_path" ]; then
+if [ -z ${artifact_path:-} ]; then
   echo -e "${RED}[ERROR] ${LIGHT_RED}Mandatory argument for rebuild, --artifact_path, is missing or empty${RESET}"
   usage
   exit 1
 fi
 
-if [ -z "$prov_path" ]; then
+if [ -z ${prov_path:-} ]; then
   echo -e "${RED}[ERROR] ${LIGHT_RED}Mandatory argument for rebuild, --prov_path, is missing or empty${RESET}"
   usage
   exit 1
 fi
 
-if [ -z "$source_uri" ]; then
+if [ -z {$source_uri:-} ]; then
   echo -e "${RED}[ERROR] ${LIGHT_RED}Mandatory argument for rebuild, --source_uri, is missing or empty${RESET}"
   usage
   exit 1
 fi
 
 # Check if mandatory arguments for verification are not empty
-if [[ $verify -eq 1 && ( -z "$source_uri" || -z "$builder_id" ) ]]
+if [[ $verify -eq 1 && ( -z ${source_uri:-} || -z {$builder_id:-} ) ]]
 then
   echo -e "${RED}[ERROR] ${LIGHT_RED}Mandatory arguments for verification missing or empty${RESET}"
   usage
@@ -187,11 +183,11 @@ then
     echo -e "${CYAN}prov_path: ${GREEN}$prov_path${RESET}"
     echo -e "${CYAN}source_uri: ${GREEN}$source_uri${RESET}"
 
-  if [ -n "$builder_id" ]; then
+  if [ -n ${builder_id:-} ]; then
       echo -e "${CYAN}builder_id: ${GREEN}$builder_id${RESET}"
   fi
 
-  if [ -n "$docker_image" ]; then
+  if [ -n ${docker_image:-} ]; then
       echo -e "${CYAN}docker_image: ${GREEN}$docker_image${RESET}"
   fi
 
@@ -346,7 +342,7 @@ echo -e "${CYAN}======================================================${RESET}"
 # Conditionals for docker images depend on if a Docker Image was use to build on Github.
 # If a Docker Image was not used to build on Github, then build locally. This is done to
 # ensure consistent build environment between both platforms.
-if [[ -n $DOCKER_IMAGE ]]
+if [[ -n ${DOCKER_IMAGE:-} ]]
 then
     cd -
     sudo docker pull "$DOCKER_IMAGE"
@@ -363,7 +359,7 @@ then
     echo -e "${CYAN}======================================================${RESET}"
     echo ""
 else
-    if [[ -n "$docker_image" ]]
+    if [[ -n ${docker_image:-} ]]
     then
       # Warning message for the users if their artifact was not built with a Docker Image, but a Docker Image was provided at command.
       echo -e "${RED}[Warning] ${LIGHT_RED}Docker Image, $docker_image, provided, but artifact was not originally built on Docker Image${RESET}"
@@ -387,12 +383,9 @@ else
     echo ""
 fi
 
-# To avoid unbound variable after build script which sets -euo.
-set +u
-
 # If Docker Image was used to build on Github, we need to cd into repo
 # to access the binaries directory.
-if [[ -n $DOCKER_IMAGE ]]
+if [[ -n ${DOCKER_IMAGE:-} ]]
 then
   cd "$repo_name"
 fi
