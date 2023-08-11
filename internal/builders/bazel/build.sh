@@ -101,7 +101,7 @@ for curr_target in "${!targets_set[@]}"; do
   then
     # Uses _deploy.jar as a field seperator and grabs the field before it.
     run_script_name=$(echo "$binary_name" | awk -F'_deploy.jar' '{print $1}')
-
+    echo $run_script_name
     # Create dir for artifact and its runfiles
     mkdir "./${binaries_dir}/$run_script_name"
 
