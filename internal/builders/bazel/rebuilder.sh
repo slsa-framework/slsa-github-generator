@@ -46,13 +46,13 @@ UNDERLINE="\033[4m"
 #                                              #
 ################################################
 
-TYPE_SPEED=0.02
+type_speed=0.02
 function type_writer {
   text="$1"
 
   for (( i=0; i<${#text}; i++ )); do
     echo -n "${text:$i:1}"
-    sleep $TYPE_SPEED
+    sleep $type_speed
   done
   echo ""
 }
