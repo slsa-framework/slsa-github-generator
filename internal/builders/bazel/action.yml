@@ -75,10 +75,10 @@ runs:
         if [[ -z "${{ fromJson(inputs.slsa-workflow-inputs).env-image }}" ]]
         then
           echo "No Environment Image provided. Will build without."
-          echo "use_env_image=false >> $GITHUB_OUTPUT"
+          echo "use_env_image=false" >> $GITHUB_OUTPUT
         else
           echo "Docker image provided. Running build on Docker Image."
-          echo "use_env_image=true  >> $GITHUB_OUTPUT"
+          echo "use_env_image=true"  >> $GITHUB_OUTPUT
         fi
 
     - name: Build on Environment Image
