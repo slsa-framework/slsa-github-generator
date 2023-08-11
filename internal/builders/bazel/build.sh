@@ -103,10 +103,12 @@ for curr_target in "${!targets_set[@]}"; do
     run_script_name=$(echo "$binary_name" | awk -F'_deploy.jar' '{print $1}')
     echo $run_script_name
     tree
-
+    ls
     # debug fix attempt
     cd $binaries_dir
+    ls
     mkdir "$run_script_name"
+    ls
     cd -
     # Create dir for artifact and its runfiles
     #mkdir -p "./${binaries_dir}/${run_script_name}"
