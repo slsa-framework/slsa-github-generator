@@ -89,11 +89,9 @@ runs:
         UNTRUSTED_NEEDS_RUNFILES: ${{ fromJson(inputs.slsa-workflow-inputs).needs-runfiles }}
         UNTRUSTED_INCLUDES_JAVA: ${{ fromJson(inputs.slsa-workflow-inputs).includes-java }}
         UNTRUSTED_ENV_IMAGE: ${{ fromJson(inputs.slsa-workflow-inputs).env-image }}
-        test: ${{ steps.env-image.outputs.use_env_image }}
       shell: bash
       run: |
-        echo "docker block:"
-        echo $test
+        set -euo pipefail
         docker pull $UNTRUSTED_ENV_IMAGE
         curr_dir=$(basename "$(pwd)")
         docker run --rm --env UNTRUSTED_TARGETS=${UNTRUSTED_TARGETS} --env UNTRUSTED_FLAGS=${UNTRUSTED_FLAGS} --env UNTRUSTED_NEEDS_RUNFILES=${UNTRUSTED_NEEDS_RUNFILES} --env UNTRUSTED_INCLUDES_JAVA=${UNTRUSTED_INCLUDES_JAVA} -v $PWD/../:/src -w /src $UNTRUSTED_ENV_IMAGE /bin/sh -c "ls && tree && cd $curr_dir && ls && tree && ./../__TOOL_ACTION_DIR__/build.sh"
@@ -105,11 +103,8 @@ runs:
         UNTRUSTED_FLAGS: ${{ fromJson(inputs.slsa-workflow-inputs).flags }}
         UNTRUSTED_NEEDS_RUNFILES: ${{ fromJson(inputs.slsa-workflow-inputs).needs-runfiles }}
         UNTRUSTED_INCLUDES_JAVA: ${{ fromJson(inputs.slsa-workflow-inputs).includes-java }}
-        test: ${{ steps.env-image.outputs.use_env_image }}
       shell: bash
       run: |
-        echo "running"
-        echo $test
         ./../__TOOL_ACTION_DIR__/build.sh
 
     # rng generates a random number to avoid name collision in artifacts
