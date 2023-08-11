@@ -352,13 +352,11 @@ Arguments:
 
 The rebuilder does the following:
 
-```
 1. Verifies the provenance for the artifact to rebuild,
 2. Parses out the attested build process from the provenance,
 3. Clones the repo that produced it,
 4. Rebuilds the inputted artifact with the attest build process,
 5. Compares checksums for reproducibility
-```
 
 An example usage of the rebuilder is the following command:
 `./rebuilder.sh --artifact_path==<path> --prov_path=<path> --source_uri=<uri> --builder_id=<id> --env_image=<image> --verify --verbose`
