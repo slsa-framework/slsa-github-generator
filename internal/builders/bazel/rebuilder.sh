@@ -213,7 +213,7 @@ then
   else
     echo -e "${CYAN}====================================================${RESET}"
     type_writer "📥---> The slsa-verifier repository is not cloned. Cloning..."
-    git clone https://github.com/enteraga6/slsa-verifier
+    git clone https://github.com/slsa-framework/slsa-verifier
   fi
 
   # Change directory to the slsa-verifier directory
