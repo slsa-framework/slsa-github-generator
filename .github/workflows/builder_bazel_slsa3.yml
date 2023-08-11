@@ -40,6 +40,13 @@ on:
         required: false
         type: string
         default: ""
+      env-image-digest:
+        description: >
+          TODO(#2630): Add verification method for digest.
+          The image digest of the environment image.
+          This must be specified in order to verify the image.
+        required: false
+        type: string
       needs-runfiles:
         description: >
           A boolean input that if true will package the artifact's runfiles along with the artifact.
