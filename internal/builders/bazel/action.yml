@@ -46,6 +46,9 @@ outputs:
     description: "The name of binaries folder to download"
     # NOTE: This is an "untrusted" value returned from the build.
     value: "${{ steps.rng.outputs.random }}-binaries"
+  artifacts-download-sha256:
+    description: "SHA256 of the uploaded tarball of artifacts."
+    value: ${{ steps.generate-artifacts.outputs.sha256 }}
 
 runs:
   using: "composite"
