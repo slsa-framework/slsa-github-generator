@@ -377,11 +377,11 @@ else
     echo -e "${CYAN}======================================================${RESET}"
     echo ""
 
-    # shellcheck source=../build.sh
+    # shellcheck source=./../build.sh
     source ../build.sh
     echo ""
     echo -e "${CYAN}======================================================${RESET}"
-    printf "${CYAN}|${RESET}${YELLOW}${UNDERLINE}        ✅  Artifacts Rebuilt! ✅          ${RESET}${CYAN}|${RESET}\n"
+    echo -e "${CYAN}|${RESET}${YELLOW}${UNDERLINE}        ✅  Artifacts Rebuilt! ✅          ${RESET}${CYAN}|${RESET}"
     echo -e "${CYAN}======================================================${RESET}"
     echo ""
 fi
