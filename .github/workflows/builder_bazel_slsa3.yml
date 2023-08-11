@@ -93,7 +93,7 @@ on:
           The name of the folder containing the built artifacts. There is a random hash at the
           beginning of it in form <hash>-binaries to avoid collisions.
         value: ${{ fromJSON(jobs.slsa-run.outputs.build-artifacts-outputs).artifacts-download-name }}
-        
+
       artifacts-download-sha256:
         description: "SHA256 of the uploaded tarball of built artifacts."
         value: ${{ fromJSON(jobs.slsa-run.outputs.build-artifacts-outputs).artifacts-download-sha256 }}
