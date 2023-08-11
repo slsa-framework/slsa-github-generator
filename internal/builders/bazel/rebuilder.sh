@@ -261,13 +261,13 @@ fi
 # The name map will convert and export the key strings of inputs to
 # match with the environment variables of the Bazel Builder build.sh
 declare -A name_mapping
-name_mapping["targets"]="TARGETS"
-name_mapping["flags"]="FLAGS"
-name_mapping["docker-image"]="DOCKER_IMAGE"
+name_mapping["targets"]="UNTRUSTED_TARGETS"
+name_mapping["flags"]="UNTRUSTED_FLAGS"
+name_mapping["docker-image"]="UNTRUSTED_DOCKER_IMAGE"
 
 # Note: These boolean inputs are now dealed with as strings
-name_mapping["includes-java"]="INCLUDES_JAVA"
-name_mapping["needs-runfiles"]="NEEDS_RUNFILES"
+name_mapping["includes-java"]="UNTRUSTED_INCLUDES_JAVA"
+name_mapping["needs-runfiles"]="UNTRUSTED_NEEDS_RUNFILES"
 
 # Export the inputs for later use
 for key in "${!data[@]}"; do
@@ -334,16 +334,16 @@ echo -e "${CYAN}======================================================${RESET}"
 # Conditionals for docker images depend on if a Docker Image was use to build on Github.
 # If a Docker Image was not used to build on Github, then build locally. This is done to
 # ensure consistent build environment between both platforms.
-if [[ -n ${DOCKER_IMAGE:-} ]]; then
+if [[ -n ${UNTRUSTED_DOCKER_IMAGE:-} ]]; then
     cd -
-    sudo docker pull "$DOCKER_IMAGE"
+    sudo docker pull "$UNTRUSTED_DOCKER_IMAGE"
     echo ""
     echo -e "${CYAN}======================================================${RESET}"
     type_writer "🔨---> Rebuilding with Docker Image Environment..."    # Mount docker image on this directory as workdir to gain access to script env
     echo -e "${CYAN}======================================================${RESET}"
     echo ""
 
-    sudo docker run --env repo_name="$repo_name" --env TARGETS="${TARGETS}" --env FLAGS="${FLAGS}" --env NEEDS_RUNFILES="${NEEDS_RUNFILES}" --env INCLUDES_JAVA="${INCLUDES_JAVA}" --rm -v "$PWD":/workdir -w /workdir "$DOCKER_IMAGE" /bin/sh -c "cd $repo_name && ./../build.sh"
+    sudo docker run --env repo_name="$repo_name" --env UNTRUSTED_TARGETS="${UNTRUSTED_TARGETS}" --env UNTRUSTED_FLAGS="${UNTRUSTED_FLAGS}" --env UNTRUSTED_NEEDS_RUNFILES="${UNTRUSTED_NEEDS_RUNFILES}" --env UNTRUSTED_INCLUDES_JAVA="${UNTRUSTED_INCLUDES_JAVA}" --rm -v "$PWD":/workdir -w /workdir "$UNTRUSTED_DOCKER_IMAGE" /bin/sh -c "cd $repo_name && ./../build.sh"
     echo ""
     echo -e "${CYAN}======================================================${RESET}"
     echo -e "${CYAN}|${RESET}${YELLOW}${UNDERLINE}        ✅  Artifacts Rebuilt! ✅          ${RESET}${CYAN}|${RESET}"
@@ -375,7 +375,7 @@ fi
 
 # If Docker Image was used to build on Github, we need to cd into repo
 # to access the binaries directory.
-if [[ -n ${DOCKER_IMAGE:-} ]]; then
+if [[ -n ${UNTRUSTED_DOCKER_IMAGE:-} ]]; then
   cd "$repo_name"
 fi
 

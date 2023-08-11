@@ -93,7 +93,7 @@ runs:
       run: |
         docker pull $UNTRUSTED_ENV_IMAGE
         curr_dir=$(basename "$(pwd)")
-        docker run --rm --env TARGETS=${UNTRUSTED_TARGETS} --env FLAGS=${UNTRUSTED_FLAGS} --env NEEDS_RUNFILES=${UNTRUSTED_NEEDS_RUNFILES} --env INCLUDES_JAVA=${UNTRUSTED_INCLUDES_JAVA} -v $PWD/../:/src -w /src $UNTRUSTED_ENV_IMAGE /bin/sh -c "ls && tree && cd $curr_dir && ls && tree && ./../__TOOL_ACTION_DIR__/build.sh"
+        docker run --rm --env UNTRUSTED_TARGETS=${UNTRUSTED_TARGETS} --env UNTRUSTED_FLAGS=${UNTRUSTED_FLAGS} --env UNTRUSTED_NEEDS_RUNFILES=${UNTRUSTED_NEEDS_RUNFILES} --env UNTRUSTED_INCLUDES_JAVA=${UNTRUSTED_INCLUDES_JAVA} -v $PWD/../:/src -w /src $UNTRUSTED_ENV_IMAGE /bin/sh -c "ls && tree && cd $curr_dir && ls && tree && ./../__TOOL_ACTION_DIR__/build.sh"
 
     - id: build
       if: ${{ steps.env-image.outputs.use_image }} == 'false'
