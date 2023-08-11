@@ -86,15 +86,15 @@ cleanup=0
 function usage() {
   if [[ $verify ]]
   then
-    echo "${RED}[ERROR] ${LIGHT_RED}Wrong usage. Usage to verify AND rebuild artifact:${RESET}"
-    echo "${CYAN}Usage: $0 ${YELLOW}--artifact_path${RESET} <path> ${YELLOW}--prov_path${RESET} <path> ${YELLOW}--source_uri${RESET} <uri> ${YELLOW}--builder_id${RESET} <id> ${MAGENTA}[--docker_image]${RESET} <image> ${MAGENTA}[--verify]${RESET}"
-    echo "${RED}[ERROR] ${LIGHT_RED}Wrong usage. Usage to ONLY rebuild the artifact:${RESET}"
-    echo "${CYAN}Usage: $0 ${YELLOW}--artifact_path${RESET} <path> ${YELLOW}--prov_path${RESET} <path> ${MAGENTA}[--docker_image]${RESET} <image>"
+    echo -e "${RED}[ERROR] ${LIGHT_RED}Wrong usage. Usage to verify AND rebuild artifact:${RESET}"
+    echo -e "${CYAN}Usage: $0 ${YELLOW}--artifact_path${RESET} <path> ${YELLOW}--prov_path${RESET} <path> ${YELLOW}--source_uri${RESET} <uri> ${YELLOW}--builder_id${RESET} <id> ${MAGENTA}[--docker_image]${RESET} <image> ${MAGENTA}[--verify]${RESET}"
+    echo -e "${RED}[ERROR] ${LIGHT_RED}Wrong usage. Usage to ONLY rebuild the artifact:${RESET}"
+    echo -e "${CYAN}Usage: $0 ${YELLOW}--artifact_path${RESET} <path> ${YELLOW}--prov_path${RESET} <path> ${MAGENTA}[--docker_image]${RESET} <image>"
   else
-    echo "${RED}[ERROR] ${LIGHT_RED}Wrong usage. Usage to ONLY rebuild the artifact:${RESET}"
-    echo "${CYAN}Usage: $0 ${YELLOW}--artifact_path${RESET} <path> ${YELLOW}--prov_path${RESET} <path> ${MAGENTA}[--docker_image]${RESET} <image>"
-    echo "${RED}[ERROR] ${LIGHT_RED}Wrong usage. Usage to verify AND rebuild artifact:${RESET}"
-    echo "${CYAN}Usage: $0 ${YELLOW}--artifact_path${RESET} <path> ${YELLOW}--prov_path${RESET} <path> ${YELLOW}--source_uri${RESET} <uri> ${YELLOW}--builder_id${RESET} <id> ${MAGENTA}[--docker_image]${RESET} <image> ${MAGENTA}[--verify]${RESET}"
+    echo -e "${RED}[ERROR] ${LIGHT_RED}Wrong usage. Usage to ONLY rebuild the artifact:${RESET}"
+    echo -e "${CYAN}Usage: $0 ${YELLOW}--artifact_path${RESET} <path> ${YELLOW}--prov_path${RESET} <path> ${MAGENTA}[--docker_image]${RESET} <image>"
+    echo -e "${RED}[ERROR] ${LIGHT_RED}Wrong usage. Usage to verify AND rebuild artifact:${RESET}"
+    echo -e "${CYAN}Usage: $0 ${YELLOW}--artifact_path${RESET} <path> ${YELLOW}--prov_path${RESET} <path> ${YELLOW}--source_uri${RESET} <uri> ${YELLOW}--builder_id${RESET} <id> ${MAGENTA}[--docker_image]${RESET} <image> ${MAGENTA}[--verify]${RESET}"
   fi
 }
 
@@ -140,7 +140,7 @@ for ARG in "$@"; do
   if [[ ! ($returnValue) ]]
   then
     my_arg="$ARG"
-    echo "${RED}[ERROR] ${LIGHT_RED}$my_arg is unrecognized${RESET}"
+    echo -e "${RED}[ERROR] ${LIGHT_RED}$my_arg is unrecognized${RESET}"
     usage
     exit 1
   fi
@@ -154,19 +154,19 @@ done
 
 # Check if mandatory arguments for rebuild are not empty
 if [ -z "$artifact_path" ]; then
-  echo "${RED}[ERROR] ${LIGHT_RED}Mandatory argument for rebuild, --artifact_path, is missing or empty${RESET}"
+  echo -e "${RED}[ERROR] ${LIGHT_RED}Mandatory argument for rebuild, --artifact_path, is missing or empty${RESET}"
   usage
   exit 1
 fi
 
 if [ -z "$prov_path" ]; then
-  echo "${RED}[ERROR] ${LIGHT_RED}Mandatory argument for rebuild, --prov_path, is missing or empty${RESET}"
+  echo -e "${RED}[ERROR] ${LIGHT_RED}Mandatory argument for rebuild, --prov_path, is missing or empty${RESET}"
   usage
   exit 1
 fi
 
 if [ -z "$source_uri" ]; then
-  echo "${RED}[ERROR] ${LIGHT_RED}Mandatory argument for rebuild, --source_uri, is missing or empty${RESET}"
+  echo -e "${RED}[ERROR] ${LIGHT_RED}Mandatory argument for rebuild, --source_uri, is missing or empty${RESET}"
   usage
   exit 1
 fi
@@ -174,7 +174,7 @@ fi
 # Check if mandatory arguments for verification are not empty
 if [[ $verify -eq 1 && ( -z "$source_uri" || -z "$builder_id" ) ]]
 then
-  echo "${RED}[ERROR] ${LIGHT_RED}Mandatory arguments for verification missing or empty${RESET}"
+  echo -e "${RED}[ERROR] ${LIGHT_RED}Mandatory arguments for verification missing or empty${RESET}"
   usage
   exit 1
 fi
@@ -182,22 +182,22 @@ fi
 # Print received arguments (optional)
 if [[ $verbose -eq 1 ]]
 then
-    echo "${BLUE}✔ Input Arguments Received:${RESET}"
-    echo "${CYAN}artifact_path: ${GREEN}$artifact_path${RESET}"
-    echo "${CYAN}prov_path: ${GREEN}$prov_path${RESET}"
-    echo "${CYAN}source_uri: ${GREEN}$source_uri${RESET}"
+    echo -e "${BLUE}✔ Input Arguments Received:${RESET}"
+    echo -e "${CYAN}artifact_path: ${GREEN}$artifact_path${RESET}"
+    echo -e "${CYAN}prov_path: ${GREEN}$prov_path${RESET}"
+    echo -e "${CYAN}source_uri: ${GREEN}$source_uri${RESET}"
 
   if [ -n "$builder_id" ]; then
-      echo "${CYAN}builder_id: ${GREEN}$builder_id${RESET}"
+      echo -e "${CYAN}builder_id: ${GREEN}$builder_id${RESET}"
   fi
 
   if [ -n "$docker_image" ]; then
-      echo "${CYAN}docker_image: ${GREEN}$docker_image${RESET}"
+      echo -e "${CYAN}docker_image: ${GREEN}$docker_image${RESET}"
   fi
 
-  echo "${CYAN}verify: ${GREEN}$verify${RESET}"
-  echo "${CYAN}verbose: ${GREEN}$verbose${RESET}"
-  echo "${CYAN}cleanup: ${GREEN}$cleanup${RESET}"
+  echo -e "${CYAN}verify: ${GREEN}$verify${RESET}"
+  echo -e "${CYAN}verbose: ${GREEN}$verbose${RESET}"
+  echo -e "${CYAN}cleanup: ${GREEN}$cleanup${RESET}"
   echo ""
 fi
 
@@ -215,7 +215,7 @@ then
     type_writer "⚠️---> To verify please remove the collision and try again"
     exit 1
   else
-    echo "${CYAN}====================================================${RESET}"
+    echo -e "${CYAN}====================================================${RESET}"
     type_writer "📥---> The slsa-verifier repository is not cloned. Cloning..."
     git clone https://github.com/enteraga6/slsa-verifier
   fi
@@ -229,7 +229,7 @@ then
   go run ./cli/slsa-verifier/ verify-artifact ../"$artifact_path" --provenance-path ../"$prov_path" --source-uri "$source_uri" --builder-id "$builder_id"
 
   cd ..
-  echo "${CYAN}====================================================${RESET}"
+  echo -e "${CYAN}====================================================${RESET}"
   echo ""
 fi
 
@@ -255,10 +255,10 @@ done < <(cat "$prov_path" | jq -r '.dsseEnvelope.payload' | base64 -d | jq -r '.
 
 if [[ $verbose -eq 1 ]]
 then
-  echo "${PURPLE}✔ Arguments Parsed from Provenance:${RESET}"
+  echo -e "${PURPLE}✔ Arguments Parsed from Provenance:${RESET}"
   for key in "${!data[@]}"
   do
-      echo "${MAGENTA}$key: ${GREEN}${data[$key]}${RESET}\"
+      echo -e "${MAGENTA}$key: ${GREEN}${data[$key]}${RESET}"
   done
   echo ""
 fi
@@ -297,16 +297,16 @@ done
 repo_name=$(basename "$source_uri")
 # Clone the source_uri repository to begin rebuild process
 if [ -d "$repo_name" ]; then
-  echo "${CYAN}====================================================${RESET}"
+  echo -e "${CYAN}====================================================${RESET}"
   type_writer "📁---> Source repository appears already."
   type_writer "⚠️---> To run rebuilder, fix collision by removing directory with name of $repo_name."
   exit 1
 else
-  echo "${CYAN}====================================================${RESET}"
+  echo -e "${CYAN}====================================================${RESET}"
   type_writer "🐑---> Cloning the source repository..."
   echo ""
   git clone https://"$source_uri"
-  echo "${CYAN}====================================================${RESET}"
+  echo -e "${CYAN}====================================================${RESET}"
   echo ""
 fi
 
@@ -339,9 +339,9 @@ fi
 ################################################
 
 echo ""
-echo "${CYAN}======================================================${RESET}"
-echo "${CYAN}|${RESET}${YELLOW}${UNDERLINE}        🔨  Starting the Rebuild Process  🔨        ${RESET}${CYAN}|${RESET}"
-echo "${CYAN}======================================================${RESET}"
+echo -e "${CYAN}======================================================${RESET}"
+echo -e "${CYAN}|${RESET}${YELLOW}${UNDERLINE}        🔨  Starting the Rebuild Process  🔨        ${RESET}${CYAN}|${RESET}"
+echo -e "${CYAN}======================================================${RESET}"
 
 # Conditionals for docker images depend on if a Docker Image was use to build on Github.
 # If a Docker Image was not used to build on Github, then build locally. This is done to
@@ -351,38 +351,38 @@ then
     cd -
     sudo docker pull "$DOCKER_IMAGE"
     echo ""
-    echo "${CYAN}======================================================${RESET}"
+    echo -e "${CYAN}======================================================${RESET}"
     type_writer "🔨---> Rebuilding with Docker Image Environment..."    # Mount docker image on this directory as workdir to gain access to script env
-    echo "${CYAN}======================================================${RESET}"
+    echo -e "${CYAN}======================================================${RESET}"
     echo ""
 
     sudo docker run --env repo_name="$repo_name" --env TARGETS="${TARGETS}" --env FLAGS="${FLAGS}" --env NEEDS_RUNFILES="${NEEDS_RUNFILES}" --env INCLUDES_JAVA="${INCLUDES_JAVA}" --rm -v "$PWD":/workdir -w /workdir "$DOCKER_IMAGE" /bin/sh -c "cd $repo_name && ./../build.sh"
     echo ""
-    echo "${CYAN}======================================================${RESET}"
-    echo "${CYAN}|${RESET}${YELLOW}${UNDERLINE}        ✅  Artifacts Rebuilt! ✅          ${RESET}${CYAN}|${RESET}"
-    echo "${CYAN}======================================================${RESET}"
+    echo -e "${CYAN}======================================================${RESET}"
+    echo -e "${CYAN}|${RESET}${YELLOW}${UNDERLINE}        ✅  Artifacts Rebuilt! ✅          ${RESET}${CYAN}|${RESET}"
+    echo -e "${CYAN}======================================================${RESET}"
     echo ""
 else
     if [[ -n "$docker_image" ]]
     then
       # Warning message for the users if their artifact was not built with a Docker Image, but a Docker Image was provided at command.
-      echo "${RED}[Warning] ${LIGHT_RED}Docker Image, $docker_image, provided, but artifact was not originally built on Docker Image${RESET}"
+      echo -e "${RED}[Warning] ${LIGHT_RED}Docker Image, $docker_image, provided, but artifact was not originally built on Docker Image${RESET}"
     else
       echo "" # This is just for style.
     fi
 
     # Run the build script locally without a docker image.
-    echo "${CYAN}======================================================${RESET}"
+    echo -e "${CYAN}======================================================${RESET}"
     type_writer "💻---> Rebuilding with local environment..."
-    echo "${CYAN}======================================================${RESET}"
+    echo -e "${CYAN}======================================================${RESET}"
     echo ""
 
     # shellcheck source=../build.sh
     source ../build.sh
     echo ""
-    echo "${CYAN}======================================================${RESET}"
+    echo -e "${CYAN}======================================================${RESET}"
     printf "${CYAN}|${RESET}${YELLOW}${UNDERLINE}        ✅  Artifacts Rebuilt! ✅          ${RESET}${CYAN}|${RESET}\n"
-    echo "${CYAN}======================================================${RESET}"
+    echo -e "${CYAN}======================================================${RESET}"
     echo ""
 fi
 
@@ -453,18 +453,18 @@ fi
 
 if [[ "$orig_checksum" == "$rebuilt_checksum" ]]
   then
-    echo "${GREEN}Checksum is the ${BOLD}${UNDERLINE}same${RESET}${GREEN} for the original and rebuilt artifact!${RESET}"
-    echo "${GREEN}✅ This build is ${BOLD}${UNDERLINE}reproducible!${RESET} ✅"
+    echo -e "${GREEN}Checksum is the ${BOLD}${UNDERLINE}same${RESET}${GREEN} for the original and rebuilt artifact!${RESET}"
+    echo -e "${GREEN}✅ This build is ${BOLD}${UNDERLINE}reproducible!${RESET} ✅"
     echo ""
-    echo "${GREEN}$orig_checksum${RESET} = Original Checksum"
-    echo "${GREEN}$rebuilt_checksum${RESET} = Rebuilt Checksum"
+    echo -e "${GREEN}$orig_checksum${RESET} = Original Checksum"
+    echo -e "${GREEN}$rebuilt_checksum${RESET} = Rebuilt Checksum"
     echo ""
   else
-    echo "${BOLD_RED_BG}Checksum is ${BOLD}${UNDERLINE}NOT${RESET}${BOLD_RED_BG} the same for the original and rebuilt artifact!${RESET}"
-    echo "${BOLD_RED_BG}        ⚠️  This build was ${BOLD}${UNDERLINE}NOT${RESET}${BOLD_RED_BG} able to be reproduced! ⚠️         ${RESET}"
+    echo -e "${BOLD_RED_BG}Checksum is ${BOLD}${UNDERLINE}NOT${RESET}${BOLD_RED_BG} the same for the original and rebuilt artifact!${RESET}"
+    echo -e "${BOLD_RED_BG}        ⚠️  This build was ${BOLD}${UNDERLINE}NOT${RESET}${BOLD_RED_BG} able to be reproduced! ⚠️         ${RESET}"
     echo ""
-    echo "${RED}$orig_checksum${RESET} = Original Checksum"
-    echo "${RED}$rebuilt_checksum${RESET} = Rebuilt Checksum"
+    echo -e "${RED}$orig_checksum${RESET} = Original Checksum"
+    echo -e "${RED}$rebuilt_checksum${RESET} = Rebuilt Checksum"
     echo ""
   fi
 
@@ -474,10 +474,13 @@ then
 
   # If there are runfiles or if the artifacts are Java, then each artifact
   # has its own directory, so you need to exit out of it first.
-  if [[ "${NEEDS_RUNFILES}" == "true" || "${INCLUDES_JAVA}" == "true" ]]
-  then
-    cd ..
-  fi
+
+  # TODO TEST FUNCTIONALITY OF CLEANUP
+
+  # if [[ "${NEEDS_RUNFILES}" == "true" || "${INCLUDES_JAVA}" == "true" ]]
+  # then
+  #   cd ..
+  # fi
 
   # Current position is bazel_builder_dir/$repo_name/$binaries_dir,
   # and to clean up need to be in /bazel.
