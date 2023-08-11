@@ -75,14 +75,14 @@ runs:
         if [[ -z "${{ fromJson(inputs.slsa-workflow-inputs).env-image }}" ]]
         then
           echo "No Environment Image provided. Will build without."
-          echo "use_image=false" >> "$GITHUB_OUTPUT"
+          echo "USE_DOCKER=false" >> $GITHUB_ENV
         else
-          echo "Environment image provided. Running build on Environment Image."
-          echo "use_image=true" >> "$GITHUB_OUTPUT"
+          echo "Docker image provided. Running build on Docker Image."
+          echo "USE_DOCKER=true" >> $GITHUB_ENV
         fi
 
     - name: Build on Environment Image
-      if: ${{ steps.env-image.outputs.use_image }} == 'true'
+      if: env.USE_DOCKER == 'true'
       env:
         UNTRUSTED_TARGETS: ${{ fromJson(inputs.slsa-workflow-inputs).targets }}
         UNTRUSTED_FLAGS: ${{ fromJson(inputs.slsa-workflow-inputs).flags }}
@@ -96,7 +96,7 @@ runs:
         docker run --rm --env UNTRUSTED_TARGETS=${UNTRUSTED_TARGETS} --env UNTRUSTED_FLAGS=${UNTRUSTED_FLAGS} --env UNTRUSTED_NEEDS_RUNFILES=${UNTRUSTED_NEEDS_RUNFILES} --env UNTRUSTED_INCLUDES_JAVA=${UNTRUSTED_INCLUDES_JAVA} -v $PWD/../:/src -w /src $UNTRUSTED_ENV_IMAGE /bin/sh -c "ls && tree && cd $curr_dir && ls && tree && ./../__TOOL_ACTION_DIR__/build.sh"
 
     - id: build
-      if: ${{ steps.env-image.outputs.use_image }} == 'false'
+      if: env.USE_DOCKER == 'false'
       env:
         UNTRUSTED_TARGETS: ${{ fromJson(inputs.slsa-workflow-inputs).targets }}
         UNTRUSTED_FLAGS: ${{ fromJson(inputs.slsa-workflow-inputs).flags }}
