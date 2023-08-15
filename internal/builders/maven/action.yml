@@ -99,6 +99,8 @@ runs:
           && cd - \
           && cd "${project_root}" \
           && mvn package  -Drun.hash.jarfile=true
+        # NOTE: SLSA_OUTPUTS_ARTIFACTS_FILE is a relative path and the project_root may
+        # not be in GITHUB_WORKSPACE, so we need to move the file.
         mv $(dirname "${SLSA_OUTPUTS_ARTIFACTS_FILE}") "${GITHUB_WORKSPACE}/../"
         mv target "${GITHUB_WORKSPACE}/"
     - name: Upload target
