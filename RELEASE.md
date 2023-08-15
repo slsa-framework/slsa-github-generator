@@ -102,10 +102,15 @@ This will trigger the [release workflow](https://github.com/slsa-framework/slsa-
 Update version references with the following command:
 
 ```shell
-find .github/workflows/ .github/actions/ actions/ -name '*.yaml' -o -name '*.yml' | xargs sed -i "s/uses: slsa-framework\/slsa-github-generator\/\(.*\)@\(main\|v[0-9]\+\.[0-9]\+\.[0-9]\+\(-rc\.[0-9]\+\)\?\)/uses: slsa-framework\/slsa-github-generator\/\1@$BUILDER_TAG/"
+find .github/workflows/ .github/actions/ actions/ -name '*.yaml' -o -name '*.yml' -type f | xargs sed -i "s/uses: slsa-framework\/slsa-github-generator\/\(.*\)@\(main\|v[0-9]\+\.[0-9]\+\.[0-9]\+\(-rc\.[0-9]\+\)\?\)/uses: slsa-framework\/slsa-github-generator\/\1@$BUILDER_TAG/"
+find actions/maven/ internal/builders/maven/ -name '*.yaml' -o -name '*.yml' -type f | xargs sed -i "s/\(ref:[ ]*\)\(main\|v[0-9]\+\.[0-9]\+\.[0-9]\+\(-rc\.[0-9]\+\)\?\)/\1$BUILDER_TAG/"
 ```
 
-Send a PR with this update and add `#label:release ${BUILDER_TAG}` in the PR description.
+Send a PR with this update and add the following to the PR description.
+
+```text
+#label:release ${BUILDER_TAG}
+```
 
 Once the PR is merged, immediately update the tag to point to HEAD.
 
@@ -136,36 +141,71 @@ There is one integration test we cannot easily test "live", so we need to simula
    ```
 
 2. Ensure your fork of the builder is at the same commit hash as the official builder's `$BUILDER_TAG` release.
-3. Create a new branch `git checkout -b "$BUILDER_REF"`
-4. Update the file `$BUILDER_REPOSITORY/main/.github/actions/generate-builder/action.yml` by replacing the strings `BUILDER_REPOSITORY` and `VERIFIER_REPOSITORY` with your own username (value of `$GITHUB_USERNAME`). Then push the changes.
-5. For the Go builder, update the file `$BUILDER_REPOSITORY/main/.github/workflows/builder_go_slsa3.yml` to:
+3. Create a new branch
+
+   ```shell
+   git checkout -b "$BUILDER_REF"
+   ```
+
+4. Update the file `.github/actions/generate-builder/action.yml` by replacing the strings `BUILDER_REPOSITORY` and `VERIFIER_REPOSITORY` with your own username (value of `$GITHUB_USERNAME`). Then push the changes.
+
+   ```shell
+   sed -i "s/BUILDER_REPOSITORY: slsa-framework\/slsa-github-generator/BUILDER_REPOSITORY: ${GITHUB_USERNAME}\/slsa-github-generator/" .github/actions/generate-builder/action.yml
+   sed -i "s/VERIFIER_REPOSITORY: slsa-framework\/slsa-verifier/VERIFIER_REPOSITORY: ${GITHUB_USERNAME}\/slsa-verifier/" .github/actions/generate-builder/action.yml
+   ```
+
+5. For the Go builder, update the file `.github/workflows/builder_go_slsa3.yml` to:
 
    ```yaml
    uses: $BUILDER_REPOSITORY/.github/actions/generate-builder@$BUILDER_TAG
    ```
 
+   using this command:
+
+   ```shell
+   sed -i "s/uses: slsa-framework\/slsa-github-generator\/\.github\/actions\/generate-builder@\(main\|v[0-9]\+\.[0-9]\+\.[0-9]\+\(-rc\.[0-9]\+\)\?\)/uses: ${BUILDER_REPOSITORY/\//\\\/}\/.github\/actions\/generate-builder@${BUILDER_TAG}/" .github/workflows/builder_go_slsa3.yml
+   ```
+
    Add `testing: true` as an input.
 
-6. For the Generic generator, update the file `$BUILDER_REPOSITORY/main/.github/workflows/generator_generic_slsa3.yml`to:
+6. For the Generic generator, update the file `.github/workflows/generator_generic_slsa3.yml` to:
 
    ```yaml
    uses: $BUILDER_REPOSITORY/.github/actions/generate-builder@$BUILDER_TAG
    ```
 
+   using this command:
+
+   ```shell
+   sed -i "s/uses: slsa-framework\/slsa-github-generator\/\.github\/actions\/generate-builder@\(main\|v[0-9]\+\.[0-9]\+\.[0-9]\+\(-rc\.[0-9]\+\)\?\)/uses: ${BUILDER_REPOSITORY/\//\\\/}\/.github\/actions\/generate-builder@${BUILDER_TAG}/" .github/workflows/generator_generic_slsa3.yml
+   ```
+
    Add `testing: true` as an input.
 
-7. For the Container generator, update the file `$BUILDER_REPOSITORY/main/.github/workflows/generator_container_slsa3.yml`to:
+7. For the Container generator, update the file `.github/workflows/generator_container_slsa3.yml` to:
 
    ```yaml
    uses: $BUILDER_REPOSITORY/.github/actions/generate-builder@$BUILDER_TAG
    ```
 
+   using this command:
+
+   ```shell
+   sed -i "s/uses: slsa-framework\/slsa-github-generator\/\.github\/actions\/generate-builder@\(main\|v[0-9]\+\.[0-9]\+\.[0-9]\+\(-rc\.[0-9]\+\)\?\)/uses: ${BUILDER_REPOSITORY/\//\\\/}\/.github\/actions\/generate-builder@${BUILDER_TAG}/" .github/workflows/generator_container_slsa3.yml
+   ```
+
    Add `testing: true` as an input.
 
-8. For the Container-based generator, update the file `$BUILDER_REPOSITORY/main/.github/workflows/builder_container-based_slsa3.yml`to:
+8. For the Container-based generator, update the file `.github/workflows/builder_container-based_slsa3.yml` to:
 
    ```yaml
    uses: $BUILDER_REPOSITORY/.github/actions/generate-builder@$BUILDER_TAG
+   ```
+
+   using this command:
+
+   ```shell
+   sed -i "s/uses: slsa-framework\/slsa-github-generator\/\.github\/actions\/generate-builder@\(main\|v[0-9]\+\.[0-9]\+\.[0-9]\+\(-rc\.[0-9]\+\)\?\)/uses: ${BUILDER_REPOSITORY/\//\\\/}\/.github\/actions\/generate-builder@${BUILDER_TAG}/" .github/workflows/builder_container-based_slsa3.yml
    ```
 
    Add `testing: true` as an input.
@@ -174,11 +214,11 @@ There is one integration test we cannot easily test "live", so we need to simula
 
 10. Create a release for the builders for this branch:
 
-   ```shell
-   "$GH" release -R "$BUILDER_REPOSITORY" create "$BUILDER_TAG" --title "$BUILDER_TAG" --notes "pre-release tests for $BUILDER_TAG $(date)" --target "$BUILDER_REF"
-   ```
+    ```shell
+    "$GH" release -R "$BUILDER_REPOSITORY" create "$BUILDER_TAG" --title "$BUILDER_TAG" --notes "pre-release tests for $BUILDER_TAG $(date)" --target "$BUILDER_REF"
+    ```
 
-   This will trigger a workflow release, let it complete and generate the release assets.
+    This will trigger a workflow release, let it complete and generate the release assets.
 
 #### Go builder verifier test
 
@@ -474,17 +514,21 @@ This will trigger the [release workflow](https://github.com/slsa-framework/slsa-
 Update version references with the following command:
 
 ```shell
-find .github/workflows/ .github/actions/ actions/ -name '*.yaml' -o -name '*.yml' | xargs sed -i "s/uses: slsa-framework\/slsa-github-generator\/\(.*\)@\(main\|v[0-9]\+\.[0-9]\+\.[0-9]\+\(-rc\.[0-9]\+\)\?\)/uses: slsa-framework\/slsa-github-generator\/\1@$BUILDER_TAG/"
-find actions/maven/ internal/builders/maven/ -name '*.yaml' -o -name '*.yml' -type f | xargs sed -i "s/\(ref:[ ]*\)main/\1$BUILDER_TAG/"
+find .github/workflows/ .github/actions/ actions/ -name '*.yaml' -o -name '*.yml' -type f | xargs sed -i "s/uses: slsa-framework\/slsa-github-generator\/\(.*\)@\(main\|v[0-9]\+\.[0-9]\+\.[0-9]\+\(-rc\.[0-9]\+\)\?\)/uses: slsa-framework\/slsa-github-generator\/\1@$BUILDER_TAG/"
+find actions/maven/ internal/builders/maven/ -name '*.yaml' -o -name '*.yml' -type f | xargs sed -i "s/\(ref:[ ]*\)\(main\|v[0-9]\+\.[0-9]\+\.[0-9]\+\(-rc\.[0-9]\+\)\?\)/\1$BUILDER_TAG/"
 ```
 
 Likewise, update documentation with the following command:
 
 ```shell
-find . -name "*.md" -exec sed -i "s~\(uses: .*/slsa-github-generator/.*@\)v[0-9]\+\.[0-9]\+\.[0-9]\+\(-rc\.[0-9]\+\)\?~\1$BUILDER_TAG~g" {} +
+find . -name "*.md" -type f -exec sed -i "s~\(uses: .*/slsa-github-generator/.*@\)v[0-9]\+\.[0-9]\+\.[0-9]\+\(-rc\.[0-9]\+\)\?~\1$BUILDER_TAG~g" {} +
 ```
 
-Send a PR with this update and add `#label:release ${BUILDER_TAG}` in the PR description.
+Send a PR with this update and add the following to the PR description.
+
+```text
+#label:release ${BUILDER_TAG}
+```
 
 Once the PR is merged, immediately update the tag to point to HEAD.
 
@@ -504,9 +548,8 @@ Re-run the [adversarial builder tests](#adversarial-builder-tests) using the fin
 Send a PR to reference the Actions at `@main`. You can use:
 
 ```shell
-find .github/workflows/ .github/actions/ actions/ -name '*.yaml' -o -name '*.yml' | xargs sed -i "s/uses: slsa-framework\/slsa-github-generator\/\(.*\)@${BUILDER_TAG}/uses: slsa-framework\/slsa-github-generator\/\1@main/"
+find .github/workflows/ .github/actions/ actions/ -name '*.yaml' -o -name '*.yml' -type f | xargs sed -i "s/uses: slsa-framework\/slsa-github-generator\/\(.*\)@${BUILDER_TAG}/uses: slsa-framework\/slsa-github-generator\/\1@main/"
 find actions/maven/ internal/builders/maven/ -name '*.yaml' -o -name '*.yml' -type f | xargs sed -i "s/\(ref:[ ]*\)$BUILDER_TAG/\1main/"
-
 ```
 
 ### Update verifier
@@ -515,7 +558,23 @@ The next step is to update the verifier's GitHub Actions e2e tests. There are Gi
 
 <!-- TODO(github.com/slsa-framework/slsa-github-generator/issues/1110): Describe GHA generic container e2e tests. -->
 
-For each of the GHA builders, you will need to:
+For the BYOB (a.k.a delegator) workflows, you will need to update the tag of the [slsa-framework/example-trw](https://github.com/slsa-framework/example-trw/) repository:
+
+1. Update the references to the tag and send a PR:
+
+   ```bash
+   bash update-main-to-tag.sh "${BUILDER_TAG}"
+   ```
+
+2. Cut a release with tag `${BUILDER_TAG}`.
+
+3. Update the references back to main and send a PR:
+
+   ```bash
+   bash update-tag-to-main.sh "${BUILDER_TAG}"
+   ```
+
+Then, for each of the GHA builders, you will need to:
 
 1. Generate binaries and provenance in
    [example-package](https://github.com/slsa-framework/example-package) using

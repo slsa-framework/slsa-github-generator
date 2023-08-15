@@ -122,14 +122,14 @@ async function run(): Promise<void> {
     validateField(
       "builder.audience",
       rawTokenObj.builder.audience,
-      workflowRecipient
+      workflowRecipient,
     );
 
     // Verify the runner label.
     validateFieldAnyOf(
       "builder.runner_label",
       rawTokenObj.builder.runner_label,
-      ["ubuntu-latest"]
+      ["ubuntu-latest"],
     );
 
     // Verify the GitHub event information.
@@ -138,7 +138,7 @@ async function run(): Promise<void> {
     // Validate the build Action is not empty.
     validateFieldNonEmpty(
       "tool.actions.build_artifacts.path",
-      rawTokenObj.tool.actions.build_artifacts.path
+      rawTokenObj.tool.actions.build_artifacts.path,
     );
 
     // No validation needed for the builder inputs,
@@ -156,20 +156,20 @@ async function run(): Promise<void> {
       ghToken,
       toolRepository,
       toolSha,
-      toolPath
+      toolPath,
     );
     core.debug(
       `workflow inputs: ${JSON.stringify(
-        Object.fromEntries(rawFilteredTokenObj.tool.inputs)
-      )}`
+        Object.fromEntries(rawFilteredTokenObj.tool.inputs),
+      )}`,
     );
 
     // Validate the masked inputs and update the token.
     const rawMaskedTokenObj = validateAndMaskInputs(rawFilteredTokenObj);
     core.debug(
       `masked inputs: ${JSON.stringify(
-        Object.fromEntries(rawMaskedTokenObj.tool.inputs)
-      )}`
+        Object.fromEntries(rawMaskedTokenObj.tool.inputs),
+      )}`,
     );
 
     core.debug(`slsa-verified-token: ${rawTokenStr}`);
@@ -183,7 +183,7 @@ async function run(): Promise<void> {
           rawMaskedTokenObj,
           toolURI,
           ghToken,
-          isGenerator
+          isGenerator,
         );
         predicateStr = JSON.stringify(predicate_v1);
         break;
@@ -192,7 +192,7 @@ async function run(): Promise<void> {
         const predicate_v02 = await createPredicate_v02(
           rawMaskedTokenObj,
           toolURI,
-          ghToken
+          ghToken,
           // NOTE: no differences between generator and builder.
         );
         predicateStr = JSON.stringify(predicate_v02);
@@ -200,7 +200,7 @@ async function run(): Promise<void> {
       }
       default: {
         throw new Error(
-          `Unsupported slsa-version: ${rawMaskedTokenObj.slsaVersion}`
+          `Unsupported slsa-version: ${rawMaskedTokenObj.slsaVersion}`,
         );
       }
     }

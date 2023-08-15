@@ -36,7 +36,7 @@ describe("createStatement", () => {
     const attestation = statement.createStatement(
       subjects,
       predicateType,
-      predicate
+      predicate,
     );
     expect(attestation.subject).toEqual(subjects);
     expect(attestation.predicateType).toEqual(predicateType);
@@ -89,10 +89,10 @@ describe("writeAttestation", () => {
     const attestations: Record<string, string> = statement.writeAttestations(
       "layoutMock",
       predicateType,
-      "predicateMock"
+      "predicateMock",
     );
     expect(Object.keys(attestations)).toEqual(
-      expect.arrayContaining(["attestation1.intoto", "attestation2.intoto"])
+      expect.arrayContaining(["attestation1.intoto", "attestation2.intoto"]),
     );
   });
 
@@ -127,7 +127,7 @@ describe("writeAttestation", () => {
     fs.readFileSync.mockReturnValueOnce(JSON.stringify(predicate));
 
     expect(() =>
-      statement.writeAttestations("layoutMock", predicateType, "predicateMock")
+      statement.writeAttestations("layoutMock", predicateType, "predicateMock"),
     ).toThrow(Error);
   });
 
@@ -143,7 +143,7 @@ describe("writeAttestation", () => {
     fs.readFileSync.mockReturnValueOnce(JSON.stringify(predicate));
 
     expect(() =>
-      statement.writeAttestations("layoutMock", predicateType, "predicateMock")
+      statement.writeAttestations("layoutMock", predicateType, "predicateMock"),
     ).toThrow(Error);
   });
 });

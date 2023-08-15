@@ -23,7 +23,7 @@ import * as tscommon from "tscommon";
 export async function getWorkflowRun(
   repository: string,
   run_id: number,
-  token: string
+  token: string,
 ): Promise<ApiWorkflowRun> {
   const octokit = github.getOctokit(token);
   const [owner, repo] = repository.split("/");
@@ -39,7 +39,7 @@ export async function getWorkflowRun(
 // and external parameters.
 export function addGitHubParameters(
   predicate: types.SLSAv1Predicate,
-  currentRun: ApiWorkflowRun
+  currentRun: ApiWorkflowRun,
 ): types.SLSAv1Predicate {
   const { env } = process;
   const ctx = github.context;
@@ -57,7 +57,7 @@ export function addGitHubParameters(
   internalParams.GITHUB_REPOSITORY = env.GITHUB_REPOSITORY || "";
   internalParams.GITHUB_REPOSITORY_ID = String(currentRun.repository.id || "");
   internalParams.GITHUB_REPOSITORY_OWNER_ID = String(
-    currentRun.repository.owner.id || ""
+    currentRun.repository.owner.id || "",
   );
   internalParams.GITHUB_RUN_ATTEMPT = env.GITHUB_RUN_ATTEMPT || "";
   internalParams.GITHUB_RUN_ID = ctx.runId;
@@ -74,7 +74,7 @@ export function addGitHubParameters(
   // TODO(github.com/slsa-framework/slsa-github-generator/issues/1575): Redact sensitive information.
   if (env.GITHUB_EVENT_PATH) {
     const ghEvent = JSON.parse(
-      tscommon.safeReadFileSync(env.GITHUB_EVENT_PATH || "").toString()
+      tscommon.safeReadFileSync(env.GITHUB_EVENT_PATH || "").toString(),
     );
     internalParams.GITHUB_EVENT_PAYLOAD = ghEvent;
   }

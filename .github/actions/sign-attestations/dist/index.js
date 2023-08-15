@@ -2706,6 +2706,328 @@ module.exports = withTempDir
 
 /***/ }),
 
+/***/ 2712:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.isBundleWithDsseEnvelope = exports.isBundleWithMessageSignature = exports.isBundleWithPublicKey = exports.isBundleWithCertificateChain = exports.BUNDLE_V02_MEDIA_TYPE = exports.BUNDLE_V01_MEDIA_TYPE = void 0;
+exports.BUNDLE_V01_MEDIA_TYPE = 'application/vnd.dev.sigstore.bundle+json;version=0.1';
+exports.BUNDLE_V02_MEDIA_TYPE = 'application/vnd.dev.sigstore.bundle+json;version=0.2';
+// Type guards for bundle variants.
+function isBundleWithCertificateChain(b) {
+    return b.verificationMaterial.content.$case === 'x509CertificateChain';
+}
+exports.isBundleWithCertificateChain = isBundleWithCertificateChain;
+function isBundleWithPublicKey(b) {
+    return b.verificationMaterial.content.$case === 'publicKey';
+}
+exports.isBundleWithPublicKey = isBundleWithPublicKey;
+function isBundleWithMessageSignature(b) {
+    return b.content.$case === 'messageSignature';
+}
+exports.isBundleWithMessageSignature = isBundleWithMessageSignature;
+function isBundleWithDsseEnvelope(b) {
+    return b.content.$case === 'dsseEnvelope';
+}
+exports.isBundleWithDsseEnvelope = isBundleWithDsseEnvelope;
+
+
+/***/ }),
+
+/***/ 3802:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.ValidationError = void 0;
+/*
+Copyright 2023 The Sigstore Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+class ValidationError extends Error {
+    constructor(message, fields) {
+        super(message);
+        this.fields = fields;
+    }
+}
+exports.ValidationError = ValidationError;
+
+
+/***/ }),
+
+/***/ 9715:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.isBundleV01 = exports.assertBundleV01 = exports.assertBundleLatest = exports.assertBundle = exports.envelopeToJSON = exports.envelopeFromJSON = exports.bundleToJSON = exports.bundleFromJSON = exports.ValidationError = exports.isBundleWithPublicKey = exports.isBundleWithMessageSignature = exports.isBundleWithDsseEnvelope = exports.isBundleWithCertificateChain = exports.BUNDLE_V02_MEDIA_TYPE = exports.BUNDLE_V01_MEDIA_TYPE = void 0;
+/*
+Copyright 2023 The Sigstore Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+var bundle_1 = __nccwpck_require__(2712);
+Object.defineProperty(exports, "BUNDLE_V01_MEDIA_TYPE", ({ enumerable: true, get: function () { return bundle_1.BUNDLE_V01_MEDIA_TYPE; } }));
+Object.defineProperty(exports, "BUNDLE_V02_MEDIA_TYPE", ({ enumerable: true, get: function () { return bundle_1.BUNDLE_V02_MEDIA_TYPE; } }));
+Object.defineProperty(exports, "isBundleWithCertificateChain", ({ enumerable: true, get: function () { return bundle_1.isBundleWithCertificateChain; } }));
+Object.defineProperty(exports, "isBundleWithDsseEnvelope", ({ enumerable: true, get: function () { return bundle_1.isBundleWithDsseEnvelope; } }));
+Object.defineProperty(exports, "isBundleWithMessageSignature", ({ enumerable: true, get: function () { return bundle_1.isBundleWithMessageSignature; } }));
+Object.defineProperty(exports, "isBundleWithPublicKey", ({ enumerable: true, get: function () { return bundle_1.isBundleWithPublicKey; } }));
+var error_1 = __nccwpck_require__(3802);
+Object.defineProperty(exports, "ValidationError", ({ enumerable: true, get: function () { return error_1.ValidationError; } }));
+var serialized_1 = __nccwpck_require__(9875);
+Object.defineProperty(exports, "bundleFromJSON", ({ enumerable: true, get: function () { return serialized_1.bundleFromJSON; } }));
+Object.defineProperty(exports, "bundleToJSON", ({ enumerable: true, get: function () { return serialized_1.bundleToJSON; } }));
+Object.defineProperty(exports, "envelopeFromJSON", ({ enumerable: true, get: function () { return serialized_1.envelopeFromJSON; } }));
+Object.defineProperty(exports, "envelopeToJSON", ({ enumerable: true, get: function () { return serialized_1.envelopeToJSON; } }));
+var validate_1 = __nccwpck_require__(9599);
+Object.defineProperty(exports, "assertBundle", ({ enumerable: true, get: function () { return validate_1.assertBundle; } }));
+Object.defineProperty(exports, "assertBundleLatest", ({ enumerable: true, get: function () { return validate_1.assertBundleLatest; } }));
+Object.defineProperty(exports, "assertBundleV01", ({ enumerable: true, get: function () { return validate_1.assertBundleV01; } }));
+Object.defineProperty(exports, "isBundleV01", ({ enumerable: true, get: function () { return validate_1.isBundleV01; } }));
+
+
+/***/ }),
+
+/***/ 9875:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.envelopeToJSON = exports.envelopeFromJSON = exports.bundleToJSON = exports.bundleFromJSON = void 0;
+/*
+Copyright 2023 The Sigstore Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+const protobuf_specs_1 = __nccwpck_require__(530);
+const validate_1 = __nccwpck_require__(9599);
+const bundleFromJSON = (obj) => {
+    const bundle = protobuf_specs_1.Bundle.fromJSON(obj);
+    (0, validate_1.assertBundle)(bundle);
+    return bundle;
+};
+exports.bundleFromJSON = bundleFromJSON;
+const bundleToJSON = (bundle) => {
+    return protobuf_specs_1.Bundle.toJSON(bundle);
+};
+exports.bundleToJSON = bundleToJSON;
+const envelopeFromJSON = (obj) => {
+    return protobuf_specs_1.Envelope.fromJSON(obj);
+};
+exports.envelopeFromJSON = envelopeFromJSON;
+const envelopeToJSON = (envelope) => {
+    return protobuf_specs_1.Envelope.toJSON(envelope);
+};
+exports.envelopeToJSON = envelopeToJSON;
+
+
+/***/ }),
+
+/***/ 9599:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.assertBundleLatest = exports.isBundleV01 = exports.assertBundleV01 = exports.assertBundle = void 0;
+/*
+Copyright 2023 The Sigstore Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+const bundle_1 = __nccwpck_require__(2712);
+const error_1 = __nccwpck_require__(3802);
+// Performs basic validation of a Sigstore bundle to ensure that all required
+// fields are populated. This is not a complete validation of the bundle, but
+// rather a check that the bundle is in a valid state to be processed by the
+// rest of the code.
+function assertBundle(b) {
+    const invalidValues = [];
+    // Media type validation
+    if (b.mediaType === undefined ||
+        !b.mediaType.startsWith('application/vnd.dev.sigstore.bundle+json;version=')) {
+        invalidValues.push('mediaType');
+    }
+    // Content-related validation
+    if (b.content === undefined) {
+        invalidValues.push('content');
+    }
+    else {
+        switch (b.content.$case) {
+            case 'messageSignature':
+                if (b.content.messageSignature.messageDigest === undefined) {
+                    invalidValues.push('content.messageSignature.messageDigest');
+                }
+                else {
+                    if (b.content.messageSignature.messageDigest.digest.length === 0) {
+                        invalidValues.push('content.messageSignature.messageDigest.digest');
+                    }
+                }
+                if (b.content.messageSignature.signature.length === 0) {
+                    invalidValues.push('content.messageSignature.signature');
+                }
+                break;
+            case 'dsseEnvelope':
+                if (b.content.dsseEnvelope.payload.length === 0) {
+                    invalidValues.push('content.dsseEnvelope.payload');
+                }
+                if (b.content.dsseEnvelope.signatures.length !== 1) {
+                    invalidValues.push('content.dsseEnvelope.signatures');
+                }
+                else {
+                    if (b.content.dsseEnvelope.signatures[0].sig.length === 0) {
+                        invalidValues.push('content.dsseEnvelope.signatures[0].sig');
+                    }
+                }
+                break;
+        }
+    }
+    // Verification material-related validation
+    if (b.verificationMaterial === undefined) {
+        invalidValues.push('verificationMaterial');
+    }
+    else {
+        if (b.verificationMaterial.content === undefined) {
+            invalidValues.push('verificationMaterial.content');
+        }
+        else {
+            switch (b.verificationMaterial.content.$case) {
+                case 'x509CertificateChain':
+                    if (b.verificationMaterial.content.x509CertificateChain.certificates
+                        .length === 0) {
+                        invalidValues.push('verificationMaterial.content.x509CertificateChain.certificates');
+                    }
+                    b.verificationMaterial.content.x509CertificateChain.certificates.forEach((cert, i) => {
+                        if (cert.rawBytes.length === 0) {
+                            invalidValues.push(`verificationMaterial.content.x509CertificateChain.certificates[${i}].rawBytes`);
+                        }
+                    });
+                    break;
+            }
+        }
+        if (b.verificationMaterial.tlogEntries === undefined) {
+            invalidValues.push('verificationMaterial.tlogEntries');
+        }
+        else {
+            if (b.verificationMaterial.tlogEntries.length > 0) {
+                b.verificationMaterial.tlogEntries.forEach((entry, i) => {
+                    if (entry.logId === undefined) {
+                        invalidValues.push(`verificationMaterial.tlogEntries[${i}].logId`);
+                    }
+                    if (entry.kindVersion === undefined) {
+                        invalidValues.push(`verificationMaterial.tlogEntries[${i}].kindVersion`);
+                    }
+                });
+            }
+        }
+    }
+    if (invalidValues.length > 0) {
+        throw new error_1.ValidationError('invalid bundle', invalidValues);
+    }
+}
+exports.assertBundle = assertBundle;
+// Asserts that the given bundle conforms to the v0.1 bundle format.
+function assertBundleV01(b) {
+    const invalidValues = [];
+    if (b.mediaType && b.mediaType !== bundle_1.BUNDLE_V01_MEDIA_TYPE) {
+        invalidValues.push('mediaType');
+    }
+    if (b.verificationMaterial &&
+        b.verificationMaterial.tlogEntries?.length > 0) {
+        b.verificationMaterial.tlogEntries.forEach((entry, i) => {
+            if (entry.inclusionPromise === undefined) {
+                invalidValues.push(`verificationMaterial.tlogEntries[${i}].inclusionPromise`);
+            }
+        });
+    }
+    if (invalidValues.length > 0) {
+        throw new error_1.ValidationError('invalid v0.1 bundle', invalidValues);
+    }
+}
+exports.assertBundleV01 = assertBundleV01;
+// Type guard to determine if Bundle is a v0.1 bundle.
+function isBundleV01(b) {
+    try {
+        assertBundleV01(b);
+        return true;
+    }
+    catch (e) {
+        return false;
+    }
+}
+exports.isBundleV01 = isBundleV01;
+// Asserts that the given bundle conforms to the newest (0.2) bundle format.
+function assertBundleLatest(b) {
+    const invalidValues = [];
+    if (b.verificationMaterial &&
+        b.verificationMaterial.tlogEntries?.length > 0) {
+        b.verificationMaterial.tlogEntries.forEach((entry, i) => {
+            if (entry.inclusionProof === undefined) {
+                invalidValues.push(`verificationMaterial.tlogEntries[${i}].inclusionProof`);
+            }
+            else {
+                if (entry.inclusionProof.checkpoint === undefined) {
+                    invalidValues.push(`verificationMaterial.tlogEntries[${i}].inclusionProof.checkpoint`);
+                }
+            }
+        });
+    }
+    if (invalidValues.length > 0) {
+        throw new error_1.ValidationError('invalid v0.2 bundle', invalidValues);
+    }
+}
+exports.assertBundleLatest = assertBundleLatest;
+
+
+/***/ }),
+
 /***/ 714:
 /***/ ((__unused_webpack_module, exports) => {
 
@@ -6663,8 +6985,7 @@ module.exports.constants = __nccwpck_require__(7757);
 
 const OriginalAgent = (__nccwpck_require__(3685).Agent);
 const ms = __nccwpck_require__(845);
-const debug = __nccwpck_require__(8237)('agentkeepalive');
-const deprecate = __nccwpck_require__(8883)('agentkeepalive');
+const debug = (__nccwpck_require__(3837).debuglog)('agentkeepalive');
 const {
   INIT_SOCKET,
   CURRENT_ID,
@@ -6686,6 +7007,10 @@ if (majorVersion >= 11 && majorVersion <= 12) {
   defaultTimeoutListenerCount = 2;
 } else if (majorVersion >= 13) {
   defaultTimeoutListenerCount = 3;
+}
+
+function deprecate(message) {
+  console.log('[agentkeepalive:deprecated] %s', message);
 }
 
 class Agent extends OriginalAgent {
@@ -6891,6 +7216,7 @@ class Agent extends OriginalAgent {
 
     const newSocket = super.createConnection(options, onNewCreate);
     if (newSocket) onNewCreate(null, newSocket);
+    return newSocket;
   }
 
   get statusChanged() {
@@ -7114,8 +7440,8 @@ class HttpsAgent extends HttpAgent {
     };
   }
 
-  createConnection(options) {
-    const socket = this[CREATE_HTTPS_CONNECTION](options);
+  createConnection(options, oncreate) {
+    const socket = this[CREATE_HTTPS_CONNECTION](options, oncreate);
     this[INIT_SOCKET](socket, options);
     return socket;
   }
@@ -9917,551 +10243,6 @@ formatters.O = function (v) {
 	this.inspectOpts.colors = this.useColors;
 	return util.inspect(v, this.inspectOpts);
 };
-
-
-/***/ }),
-
-/***/ 8883:
-/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
-
-/*!
- * depd
- * Copyright(c) 2014-2018 Douglas Christopher Wilson
- * MIT Licensed
- */
-
-/**
- * Module dependencies.
- */
-
-var relative = (__nccwpck_require__(1017).relative)
-
-/**
- * Module exports.
- */
-
-module.exports = depd
-
-/**
- * Get the path to base files on.
- */
-
-var basePath = process.cwd()
-
-/**
- * Determine if namespace is contained in the string.
- */
-
-function containsNamespace (str, namespace) {
-  var vals = str.split(/[ ,]+/)
-  var ns = String(namespace).toLowerCase()
-
-  for (var i = 0; i < vals.length; i++) {
-    var val = vals[i]
-
-    // namespace contained
-    if (val && (val === '*' || val.toLowerCase() === ns)) {
-      return true
-    }
-  }
-
-  return false
-}
-
-/**
- * Convert a data descriptor to accessor descriptor.
- */
-
-function convertDataDescriptorToAccessor (obj, prop, message) {
-  var descriptor = Object.getOwnPropertyDescriptor(obj, prop)
-  var value = descriptor.value
-
-  descriptor.get = function getter () { return value }
-
-  if (descriptor.writable) {
-    descriptor.set = function setter (val) { return (value = val) }
-  }
-
-  delete descriptor.value
-  delete descriptor.writable
-
-  Object.defineProperty(obj, prop, descriptor)
-
-  return descriptor
-}
-
-/**
- * Create arguments string to keep arity.
- */
-
-function createArgumentsString (arity) {
-  var str = ''
-
-  for (var i = 0; i < arity; i++) {
-    str += ', arg' + i
-  }
-
-  return str.substr(2)
-}
-
-/**
- * Create stack string from stack.
- */
-
-function createStackString (stack) {
-  var str = this.name + ': ' + this.namespace
-
-  if (this.message) {
-    str += ' deprecated ' + this.message
-  }
-
-  for (var i = 0; i < stack.length; i++) {
-    str += '\n    at ' + stack[i].toString()
-  }
-
-  return str
-}
-
-/**
- * Create deprecate for namespace in caller.
- */
-
-function depd (namespace) {
-  if (!namespace) {
-    throw new TypeError('argument namespace is required')
-  }
-
-  var stack = getStack()
-  var site = callSiteLocation(stack[1])
-  var file = site[0]
-
-  function deprecate (message) {
-    // call to self as log
-    log.call(deprecate, message)
-  }
-
-  deprecate._file = file
-  deprecate._ignored = isignored(namespace)
-  deprecate._namespace = namespace
-  deprecate._traced = istraced(namespace)
-  deprecate._warned = Object.create(null)
-
-  deprecate.function = wrapfunction
-  deprecate.property = wrapproperty
-
-  return deprecate
-}
-
-/**
- * Determine if event emitter has listeners of a given type.
- *
- * The way to do this check is done three different ways in Node.js >= 0.8
- * so this consolidates them into a minimal set using instance methods.
- *
- * @param {EventEmitter} emitter
- * @param {string} type
- * @returns {boolean}
- * @private
- */
-
-function eehaslisteners (emitter, type) {
-  var count = typeof emitter.listenerCount !== 'function'
-    ? emitter.listeners(type).length
-    : emitter.listenerCount(type)
-
-  return count > 0
-}
-
-/**
- * Determine if namespace is ignored.
- */
-
-function isignored (namespace) {
-  if (process.noDeprecation) {
-    // --no-deprecation support
-    return true
-  }
-
-  var str = process.env.NO_DEPRECATION || ''
-
-  // namespace ignored
-  return containsNamespace(str, namespace)
-}
-
-/**
- * Determine if namespace is traced.
- */
-
-function istraced (namespace) {
-  if (process.traceDeprecation) {
-    // --trace-deprecation support
-    return true
-  }
-
-  var str = process.env.TRACE_DEPRECATION || ''
-
-  // namespace traced
-  return containsNamespace(str, namespace)
-}
-
-/**
- * Display deprecation message.
- */
-
-function log (message, site) {
-  var haslisteners = eehaslisteners(process, 'deprecation')
-
-  // abort early if no destination
-  if (!haslisteners && this._ignored) {
-    return
-  }
-
-  var caller
-  var callFile
-  var callSite
-  var depSite
-  var i = 0
-  var seen = false
-  var stack = getStack()
-  var file = this._file
-
-  if (site) {
-    // provided site
-    depSite = site
-    callSite = callSiteLocation(stack[1])
-    callSite.name = depSite.name
-    file = callSite[0]
-  } else {
-    // get call site
-    i = 2
-    depSite = callSiteLocation(stack[i])
-    callSite = depSite
-  }
-
-  // get caller of deprecated thing in relation to file
-  for (; i < stack.length; i++) {
-    caller = callSiteLocation(stack[i])
-    callFile = caller[0]
-
-    if (callFile === file) {
-      seen = true
-    } else if (callFile === this._file) {
-      file = this._file
-    } else if (seen) {
-      break
-    }
-  }
-
-  var key = caller
-    ? depSite.join(':') + '__' + caller.join(':')
-    : undefined
-
-  if (key !== undefined && key in this._warned) {
-    // already warned
-    return
-  }
-
-  this._warned[key] = true
-
-  // generate automatic message from call site
-  var msg = message
-  if (!msg) {
-    msg = callSite === depSite || !callSite.name
-      ? defaultMessage(depSite)
-      : defaultMessage(callSite)
-  }
-
-  // emit deprecation if listeners exist
-  if (haslisteners) {
-    var err = DeprecationError(this._namespace, msg, stack.slice(i))
-    process.emit('deprecation', err)
-    return
-  }
-
-  // format and write message
-  var format = process.stderr.isTTY
-    ? formatColor
-    : formatPlain
-  var output = format.call(this, msg, caller, stack.slice(i))
-  process.stderr.write(output + '\n', 'utf8')
-}
-
-/**
- * Get call site location as array.
- */
-
-function callSiteLocation (callSite) {
-  var file = callSite.getFileName() || '<anonymous>'
-  var line = callSite.getLineNumber()
-  var colm = callSite.getColumnNumber()
-
-  if (callSite.isEval()) {
-    file = callSite.getEvalOrigin() + ', ' + file
-  }
-
-  var site = [file, line, colm]
-
-  site.callSite = callSite
-  site.name = callSite.getFunctionName()
-
-  return site
-}
-
-/**
- * Generate a default message from the site.
- */
-
-function defaultMessage (site) {
-  var callSite = site.callSite
-  var funcName = site.name
-
-  // make useful anonymous name
-  if (!funcName) {
-    funcName = '<anonymous@' + formatLocation(site) + '>'
-  }
-
-  var context = callSite.getThis()
-  var typeName = context && callSite.getTypeName()
-
-  // ignore useless type name
-  if (typeName === 'Object') {
-    typeName = undefined
-  }
-
-  // make useful type name
-  if (typeName === 'Function') {
-    typeName = context.name || typeName
-  }
-
-  return typeName && callSite.getMethodName()
-    ? typeName + '.' + funcName
-    : funcName
-}
-
-/**
- * Format deprecation message without color.
- */
-
-function formatPlain (msg, caller, stack) {
-  var timestamp = new Date().toUTCString()
-
-  var formatted = timestamp +
-    ' ' + this._namespace +
-    ' deprecated ' + msg
-
-  // add stack trace
-  if (this._traced) {
-    for (var i = 0; i < stack.length; i++) {
-      formatted += '\n    at ' + stack[i].toString()
-    }
-
-    return formatted
-  }
-
-  if (caller) {
-    formatted += ' at ' + formatLocation(caller)
-  }
-
-  return formatted
-}
-
-/**
- * Format deprecation message with color.
- */
-
-function formatColor (msg, caller, stack) {
-  var formatted = '\x1b[36;1m' + this._namespace + '\x1b[22;39m' + // bold cyan
-    ' \x1b[33;1mdeprecated\x1b[22;39m' + // bold yellow
-    ' \x1b[0m' + msg + '\x1b[39m' // reset
-
-  // add stack trace
-  if (this._traced) {
-    for (var i = 0; i < stack.length; i++) {
-      formatted += '\n    \x1b[36mat ' + stack[i].toString() + '\x1b[39m' // cyan
-    }
-
-    return formatted
-  }
-
-  if (caller) {
-    formatted += ' \x1b[36m' + formatLocation(caller) + '\x1b[39m' // cyan
-  }
-
-  return formatted
-}
-
-/**
- * Format call site location.
- */
-
-function formatLocation (callSite) {
-  return relative(basePath, callSite[0]) +
-    ':' + callSite[1] +
-    ':' + callSite[2]
-}
-
-/**
- * Get the stack as array of call sites.
- */
-
-function getStack () {
-  var limit = Error.stackTraceLimit
-  var obj = {}
-  var prep = Error.prepareStackTrace
-
-  Error.prepareStackTrace = prepareObjectStackTrace
-  Error.stackTraceLimit = Math.max(10, limit)
-
-  // capture the stack
-  Error.captureStackTrace(obj)
-
-  // slice this function off the top
-  var stack = obj.stack.slice(1)
-
-  Error.prepareStackTrace = prep
-  Error.stackTraceLimit = limit
-
-  return stack
-}
-
-/**
- * Capture call site stack from v8.
- */
-
-function prepareObjectStackTrace (obj, stack) {
-  return stack
-}
-
-/**
- * Return a wrapped function in a deprecation message.
- */
-
-function wrapfunction (fn, message) {
-  if (typeof fn !== 'function') {
-    throw new TypeError('argument fn must be a function')
-  }
-
-  var args = createArgumentsString(fn.length)
-  var stack = getStack()
-  var site = callSiteLocation(stack[1])
-
-  site.name = fn.name
-
-  // eslint-disable-next-line no-new-func
-  var deprecatedfn = new Function('fn', 'log', 'deprecate', 'message', 'site',
-    '"use strict"\n' +
-    'return function (' + args + ') {' +
-    'log.call(deprecate, message, site)\n' +
-    'return fn.apply(this, arguments)\n' +
-    '}')(fn, log, this, message, site)
-
-  return deprecatedfn
-}
-
-/**
- * Wrap property in a deprecation message.
- */
-
-function wrapproperty (obj, prop, message) {
-  if (!obj || (typeof obj !== 'object' && typeof obj !== 'function')) {
-    throw new TypeError('argument obj must be object')
-  }
-
-  var descriptor = Object.getOwnPropertyDescriptor(obj, prop)
-
-  if (!descriptor) {
-    throw new TypeError('must call property on owner object')
-  }
-
-  if (!descriptor.configurable) {
-    throw new TypeError('property must be configurable')
-  }
-
-  var deprecate = this
-  var stack = getStack()
-  var site = callSiteLocation(stack[1])
-
-  // set site name
-  site.name = prop
-
-  // convert data descriptor
-  if ('value' in descriptor) {
-    descriptor = convertDataDescriptorToAccessor(obj, prop, message)
-  }
-
-  var get = descriptor.get
-  var set = descriptor.set
-
-  // wrap getter
-  if (typeof get === 'function') {
-    descriptor.get = function getter () {
-      log.call(deprecate, message, site)
-      return get.apply(this, arguments)
-    }
-  }
-
-  // wrap setter
-  if (typeof set === 'function') {
-    descriptor.set = function setter () {
-      log.call(deprecate, message, site)
-      return set.apply(this, arguments)
-    }
-  }
-
-  Object.defineProperty(obj, prop, descriptor)
-}
-
-/**
- * Create DeprecationError for deprecation
- */
-
-function DeprecationError (namespace, message, stack) {
-  var error = new Error()
-  var stackString
-
-  Object.defineProperty(error, 'constructor', {
-    value: DeprecationError
-  })
-
-  Object.defineProperty(error, 'message', {
-    configurable: true,
-    enumerable: false,
-    value: message,
-    writable: true
-  })
-
-  Object.defineProperty(error, 'name', {
-    enumerable: false,
-    configurable: true,
-    value: 'DeprecationError',
-    writable: true
-  })
-
-  Object.defineProperty(error, 'namespace', {
-    configurable: true,
-    enumerable: false,
-    value: namespace,
-    writable: true
-  })
-
-  Object.defineProperty(error, 'stack', {
-    configurable: true,
-    enumerable: false,
-    get: function () {
-      if (stackString !== undefined) {
-        return stackString
-      }
-
-      // prepare stack trace
-      return (stackString = createStackString.call(this, stack))
-    },
-    set: function setter (val) {
-      stackString = val
-    }
-  })
-
-  return error
-}
 
 
 /***/ }),
@@ -25217,7 +24998,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 const error_1 = __nccwpck_require__(6274);
-const sigstore = __importStar(__nccwpck_require__(8598));
+const sigstore = __importStar(__nccwpck_require__(266));
 // https://github.com/sigstore/fulcio/blob/main/docs/oid-info.md#1361415726411--issuer
 const OID_FULCIO_ISSUER = '1.3.6.1.4.1.57264.1.1';
 // https://github.com/sigstore/fulcio/blob/main/docs/oid-info.md#1361415726417--othername-san
@@ -25374,7 +25155,7 @@ const ca_1 = __nccwpck_require__(7021);
 const identity_1 = __importDefault(__nccwpck_require__(8761));
 const tlog_1 = __nccwpck_require__(2030);
 const tsa_1 = __nccwpck_require__(8880);
-const sigstore = __importStar(__nccwpck_require__(8598));
+const sigstore = __importStar(__nccwpck_require__(266));
 exports.DEFAULT_FULCIO_URL = 'https://fulcio.sigstore.dev';
 exports.DEFAULT_REKOR_URL = 'https://rekor.sigstore.dev';
 exports.DEFAULT_RETRY = { retries: 2 };
@@ -25450,13 +25231,13 @@ function artifactVerificationOptions(options) {
     // Construct the artifact verification options w/ defaults
     return {
         ctlogOptions: {
-            disable: false,
-            threshold: options.ctLogThreshold || 1,
+            disable: options.ctLogThreshold === 0,
+            threshold: options.ctLogThreshold ?? 1,
             detachedSct: false,
         },
         tlogOptions: {
-            disable: false,
-            threshold: options.tlogThreshold || 1,
+            disable: options.tlogThreshold === 0,
+            threshold: options.tlogThreshold ?? 1,
             performOnlineVerification: false,
         },
         signers,
@@ -25498,7 +25279,7 @@ exports.identityProviders = identityProviders;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.InternalError = exports.PolicyError = exports.ValidationError = exports.VerificationError = void 0;
+exports.InternalError = exports.PolicyError = exports.VerificationError = void 0;
 /*
 Copyright 2023 The Sigstore Authors.
 
@@ -25525,9 +25306,6 @@ class BaseError extends Error {
 class VerificationError extends BaseError {
 }
 exports.VerificationError = VerificationError;
-class ValidationError extends BaseError {
-}
-exports.ValidationError = ValidationError;
 class PolicyError extends BaseError {
 }
 exports.PolicyError = PolicyError;
@@ -26315,7 +26093,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Signer = void 0;
-const sigstore = __importStar(__nccwpck_require__(8598));
+const sigstore = __importStar(__nccwpck_require__(266));
 const util_1 = __nccwpck_require__(6901);
 class Signer {
     constructor(options) {
@@ -26458,9 +26236,10 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
+const bundle_1 = __nccwpck_require__(9715);
 const config_1 = __nccwpck_require__(3430);
 const signature_1 = __nccwpck_require__(2787);
-const sigstore = __importStar(__nccwpck_require__(8598));
+const sigstore = __importStar(__nccwpck_require__(266));
 const util_1 = __nccwpck_require__(6901);
 async function createDSSEEnvelope(payload, payloadType, options) {
     // Pre-authentication encoding to be signed
@@ -26494,7 +26273,7 @@ async function createRekorEntry(dsseEnvelope, publicKey, options = {}) {
         signature: sigMaterial,
         tlogEntry: entry,
     });
-    return sigstore.bundleToJSON(bundle);
+    return (0, bundle_1.bundleToJSON)(bundle);
 }
 exports.createRekorEntry = createRekorEntry;
 
@@ -26530,7 +26309,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.DEFAULT_REKOR_URL = exports.DEFAULT_FULCIO_URL = exports.tuf = exports.utils = exports.VerificationError = exports.ValidationError = exports.PolicyError = exports.InternalError = exports.createVerifier = exports.verify = exports.attest = exports.sign = void 0;
+exports.DEFAULT_REKOR_URL = exports.DEFAULT_FULCIO_URL = exports.tuf = exports.utils = exports.VerificationError = exports.PolicyError = exports.InternalError = exports.ValidationError = exports.createVerifier = exports.verify = exports.attest = exports.sign = void 0;
 /*
 Copyright 2023 The Sigstore Authors.
 
@@ -26546,10 +26325,10 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
+const bundle_1 = __nccwpck_require__(9715);
 const tuf = __importStar(__nccwpck_require__(8567));
 const config = __importStar(__nccwpck_require__(3430));
 const sign_1 = __nccwpck_require__(9884);
-const sigstore = __importStar(__nccwpck_require__(8598));
 const verify_1 = __nccwpck_require__(7995);
 async function sign(payload, options = {}) {
     const ca = config.createCAClient(options);
@@ -26564,7 +26343,7 @@ async function sign(payload, options = {}) {
         tlogUpload: options.tlogUpload,
     });
     const bundle = await signer.signBlob(payload);
-    return sigstore.bundleToJSON(bundle);
+    return (0, bundle_1.bundleToJSON)(bundle);
 }
 exports.sign = sign;
 async function attest(payload, payloadType, options = {}) {
@@ -26582,7 +26361,7 @@ async function attest(payload, payloadType, options = {}) {
         tlogUpload: options.tlogUpload,
     });
     const bundle = await signer.signAttestation(payload, payloadType);
-    return sigstore.bundleToJSON(bundle);
+    return (0, bundle_1.bundleToJSON)(bundle);
 }
 exports.attest = attest;
 async function verify(bundle, payload, options = {}) {
@@ -26594,7 +26373,7 @@ async function verify(bundle, payload, options = {}) {
         timeout: options.timeout ?? config.DEFAULT_TIMEOUT,
     });
     const verifier = new verify_1.Verifier(trustedRoot, options.keySelector);
-    const deserializedBundle = sigstore.bundleFromJSON(bundle);
+    const deserializedBundle = (0, bundle_1.bundleFromJSON)(bundle);
     const opts = config.artifactVerificationOptions(options);
     return verifier.verify(deserializedBundle, opts, payload);
 }
@@ -26611,7 +26390,7 @@ async function createVerifier(options) {
     const verifyOpts = config.artifactVerificationOptions(options);
     return {
         verify: (bundle) => {
-            const deserializedBundle = sigstore.bundleFromJSON(bundle);
+            const deserializedBundle = (0, bundle_1.bundleFromJSON)(bundle);
             return verifier.verify(deserializedBundle, verifyOpts);
         },
     };
@@ -26643,10 +26422,11 @@ const tufUtils = {
     },
 };
 exports.tuf = tufUtils;
+var bundle_2 = __nccwpck_require__(9715);
+Object.defineProperty(exports, "ValidationError", ({ enumerable: true, get: function () { return bundle_2.ValidationError; } }));
 var error_1 = __nccwpck_require__(6274);
 Object.defineProperty(exports, "InternalError", ({ enumerable: true, get: function () { return error_1.InternalError; } }));
 Object.defineProperty(exports, "PolicyError", ({ enumerable: true, get: function () { return error_1.PolicyError; } }));
-Object.defineProperty(exports, "ValidationError", ({ enumerable: true, get: function () { return error_1.ValidationError; } }));
 Object.defineProperty(exports, "VerificationError", ({ enumerable: true, get: function () { return error_1.VerificationError; } }));
 exports.utils = __importStar(__nccwpck_require__(2021));
 exports.DEFAULT_FULCIO_URL = config.DEFAULT_FULCIO_URL;
@@ -26662,7 +26442,7 @@ exports.DEFAULT_REKOR_URL = config.DEFAULT_REKOR_URL;
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.toProposedIntotoEntry = exports.toProposedHashedRekordEntry = exports.toProposedDSSEEntry = void 0;
-const sigstore_1 = __nccwpck_require__(8598);
+const sigstore_1 = __nccwpck_require__(266);
 const util_1 = __nccwpck_require__(6901);
 const DEFAULT_DSSE_API_VERSION = '0.0.1';
 const DEFAULT_HASHEDREKORD_API_VERSION = '0.0.1';
@@ -27040,34 +26820,167 @@ function verifyHashedrekor001TLogBody(tlogEntry, messageSignature) {
 
 /***/ }),
 
-/***/ 1108:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+/***/ 5940:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
 
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.verifyCheckpoint = void 0;
+const error_1 = __nccwpck_require__(6274);
+const util_1 = __nccwpck_require__(6901);
+// Separator between the note and the signatures in a checkpoint
+const CHECKPOINT_SEPARATOR = '\n\n';
+// Checkpoint signatures are of the following form:
+// "– <identity> <key_hint+signature_bytes>\n"
+// where:
+// - the prefix is an emdash (U+2014).
+// - <identity> gives a human-readable representation of the signing ID.
+// - <key_hint+signature_bytes> is the first 4 bytes of the SHA256 hash of the
+//   associated public key followed by the signature bytes.
+const SIGNATURE_REGEX = /\u2014 (\S+) (\S+)\n/g;
+// Verifies the checkpoint value in the given tlog entry. There are two steps
+// to the verification:
+// 1. Verify that all signatures in the checkpoint can be verified against a
+//    trusted public key
+// 2. Verify that the root hash in the checkpoint matches the root hash in the
+//    inclusion proof
+// See: https://github.com/transparency-dev/formats/blob/main/log/README.md
+function verifyCheckpoint(entry, tlogs) {
+    // Filter tlog instances to just those which were valid at the time of the
+    // entry
+    const validTLogs = filterTLogInstances(tlogs, entry.integratedTime);
+    const inclusionProof = entry.inclusionProof;
+    const signedNote = SignedNote.fromString(inclusionProof.checkpoint.envelope);
+    const checkpoint = LogCheckpoint.fromString(signedNote.note);
+    // Verify that the signatures in the checkpoint are all valid, also check
+    // that the root hash from the checkpoint matches the root hash in the
+    // inclusion proof
+    return (signedNote.verify(validTLogs) &&
+        util_1.crypto.bufferEqual(checkpoint.logHash, inclusionProof.rootHash));
+}
+exports.verifyCheckpoint = verifyCheckpoint;
+// SignedNote represents a signed note from a transparency log checkpoint. Consists
+// of a body (or note) and one more signatures calculated over the body. See
+// https://github.com/transparency-dev/formats/blob/main/log/README.md#signed-envelope
+class SignedNote {
+    constructor(note, signatures) {
+        this.note = note;
+        this.signatures = signatures;
     }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
+    // Deserialize a SignedNote from a string
+    static fromString(envelope) {
+        if (!envelope.includes(CHECKPOINT_SEPARATOR)) {
+            throw new error_1.VerificationError('malformed checkpoint: no separator');
+        }
+        // Split the note into the header and the data portions at the separator
+        const split = envelope.indexOf(CHECKPOINT_SEPARATOR);
+        const header = envelope.slice(0, split + 1);
+        const data = envelope.slice(split + CHECKPOINT_SEPARATOR.length);
+        // Find all the signature lines in the data portion
+        const matches = data.matchAll(SIGNATURE_REGEX);
+        // Parse each of the matched signature lines into the name and signature.
+        // The first four bytes of the signature are the key hint (should match the
+        // first four bytes of the log ID), and the rest is the signature itself.
+        const signatures = Array.from(matches, (match) => {
+            const [, name, signature] = match;
+            const sigBytes = Buffer.from(signature, 'base64');
+            if (sigBytes.length < 5) {
+                throw new error_1.VerificationError('malformed checkpoint: invalid signature');
+            }
+            return {
+                name,
+                keyHint: sigBytes.subarray(0, 4),
+                signature: sigBytes.subarray(4),
+            };
+        });
+        if (signatures.length === 0) {
+            throw new error_1.VerificationError('malformed checkpoint: no signatures');
+        }
+        return new SignedNote(header, signatures);
+    }
+    // Verifies the signatures in the SignedNote. For each signature, the
+    // corresponding transparency log is looked up by the key hint and the
+    // signature is verified against the public key in the transparency log.
+    // Throws an error if any of the signatures are invalid.
+    verify(tlogs) {
+        const data = Buffer.from(this.note, 'utf-8');
+        return this.signatures.every((signature) => {
+            // Find the transparency log instance with the matching key hint
+            const tlog = tlogs.find((tlog) => util_1.crypto.bufferEqual(tlog.logId.keyId.subarray(0, 4), signature.keyHint));
+            if (!tlog) {
+                return false;
+            }
+            const publicKey = util_1.crypto.createPublicKey(tlog.publicKey.rawBytes);
+            return util_1.crypto.verifyBlob(data, publicKey, signature.signature);
+        });
+    }
+}
+// LogCheckpoint represents a transparency log checkpoint. Consists of the
+// following:
+//  - origin: the name of the transparency log
+//  - logSize: the size of the log at the time of the checkpoint
+//  - logHash: the root hash of the log at the time of the checkpoint
+//  - rest: the rest of the checkpoint body, which is a list of log entries
+// See:
+// https://github.com/transparency-dev/formats/blob/main/log/README.md#checkpoint-body
+class LogCheckpoint {
+    constructor(origin, logSize, logHash, rest) {
+        this.origin = origin;
+        this.logSize = logSize;
+        this.logHash = logHash;
+        this.rest = rest;
+    }
+    static fromString(note) {
+        const lines = note.trim().split('\n');
+        if (lines.length < 4) {
+            throw new error_1.VerificationError('malformed checkpoint: too few lines in header');
+        }
+        const origin = lines[0];
+        const logSize = BigInt(lines[1]);
+        const rootHash = Buffer.from(lines[2], 'base64');
+        const rest = lines.slice(3);
+        return new LogCheckpoint(origin, logSize, rootHash, rest);
+    }
+}
+// Filter the list of tlog instances to only those which have usable public
+// keys and were valid at the given time.
+function filterTLogInstances(tlogInstances, integratedTime) {
+    const targetDate = new Date(Number(integratedTime) * 1000);
+    return tlogInstances.filter((tlog) => {
+        // Must have a log ID
+        if (!tlog.logId) {
+            return false;
+        }
+        // If the tlog doesn't have a public key, we can't use it
+        const publicKey = tlog.publicKey;
+        if (publicKey === undefined) {
+            return false;
+        }
+        // If the tlog doesn't have a rawBytes field, we can't use it
+        if (publicKey.rawBytes === undefined) {
+            return false;
+        }
+        // If the tlog doesn't have a validFor field, we don't need to check it
+        const validFor = publicKey.validFor;
+        if (validFor === undefined) {
+            return true;
+        }
+        // Check that the integrated time is within the validFor range
+        return (validFor.start !== undefined &&
+            validFor.start <= targetDate &&
+            (validFor.end === undefined || targetDate <= validFor.end));
+    });
+}
+
+
+/***/ }),
+
+/***/ 1108:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.verifyTLogEntries = void 0;
 /*
@@ -27085,31 +26998,51 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
+const bundle_1 = __nccwpck_require__(9715);
 const error_1 = __nccwpck_require__(6274);
-const sigstore = __importStar(__nccwpck_require__(8598));
 const cert_1 = __nccwpck_require__(3669);
 const body_1 = __nccwpck_require__(7878);
+const checkpoint_1 = __nccwpck_require__(5940);
+const merkle_1 = __nccwpck_require__(6673);
 const set_1 = __nccwpck_require__(6801);
 // Verifies that the number of tlog entries that pass offline verification
 // is greater than or equal to the threshold specified in the options.
 function verifyTLogEntries(bundle, trustedRoot, options) {
+    if (bundle.mediaType === bundle_1.BUNDLE_V01_MEDIA_TYPE) {
+        (0, bundle_1.assertBundleV01)(bundle);
+        verifyTLogEntriesForBundleV01(bundle, trustedRoot, options);
+    }
+    else {
+        (0, bundle_1.assertBundleLatest)(bundle);
+        verifyTLogEntriesForBundleLatest(bundle, trustedRoot, options);
+    }
+}
+exports.verifyTLogEntries = verifyTLogEntries;
+function verifyTLogEntriesForBundleV01(bundle, trustedRoot, options) {
     if (options.performOnlineVerification) {
         throw new error_1.VerificationError('Online verification not implemented');
     }
     // Extract the signing cert, if available
     const signingCert = signingCertificate(bundle);
     // Iterate over the tlog entries and verify each one
-    const verifiedEntries = bundle.verificationMaterial.tlogEntries.filter((entry) => verifyTLogEntryOffline(entry, bundle.content, trustedRoot.tlogs, signingCert));
+    const verifiedEntries = bundle.verificationMaterial.tlogEntries.filter((entry) => verifyTLogEntryWithInclusionPromise(entry, bundle.content, trustedRoot.tlogs, signingCert));
     if (verifiedEntries.length < options.threshold) {
         throw new error_1.VerificationError('tlog verification failed');
     }
 }
-exports.verifyTLogEntries = verifyTLogEntries;
-function verifyTLogEntryOffline(entry, bundleContent, tlogs, signingCert) {
-    // Check that the TLog entry has the fields necessary for verification
-    if (!sigstore.isVerifiableTransparencyLogEntry(entry)) {
-        return false;
+function verifyTLogEntriesForBundleLatest(bundle, trustedRoot, options) {
+    if (options.performOnlineVerification) {
+        throw new error_1.VerificationError('Online verification not implemented');
     }
+    // Extract the signing cert, if available
+    const signingCert = signingCertificate(bundle);
+    // Iterate over the tlog entries and verify each one
+    const verifiedEntries = bundle.verificationMaterial.tlogEntries.filter((entry) => verifyTLogEntryWithInclusionProof(entry, bundle.content, trustedRoot.tlogs, signingCert));
+    if (verifiedEntries.length < options.threshold) {
+        throw new error_1.VerificationError('tlog verification failed');
+    }
+}
+function verifyTLogEntryWithInclusionPromise(entry, bundleContent, tlogs, signingCert) {
     // If there is a signing certificate availble, check that the tlog integrated
     // time is within the certificate's validity period; otherwise, skip this
     // check.
@@ -27120,12 +27053,138 @@ function verifyTLogEntryOffline(entry, bundleContent, tlogs, signingCert) {
         (0, set_1.verifyTLogSET)(entry, tlogs) &&
         verifyTLogIntegrationTime());
 }
+function verifyTLogEntryWithInclusionProof(entry, bundleContent, tlogs, signingCert) {
+    // If there is a signing certificate availble, check that the tlog integrated
+    // time is within the certificate's validity period; otherwise, skip this
+    // check.
+    const verifyTLogIntegrationTime = signingCert
+        ? () => signingCert.validForDate(new Date(Number(entry.integratedTime) * 1000))
+        : () => true;
+    return ((0, body_1.verifyTLogBody)(entry, bundleContent) &&
+        (0, merkle_1.verifyMerkleInclusion)(entry) &&
+        (0, checkpoint_1.verifyCheckpoint)(entry, tlogs) &&
+        verifyTLogIntegrationTime());
+}
 function signingCertificate(bundle) {
-    if (!sigstore.isBundleWithCertificateChain(bundle)) {
+    if (!(0, bundle_1.isBundleWithCertificateChain)(bundle)) {
         return undefined;
     }
     const signingCert = bundle.verificationMaterial.content.x509CertificateChain.certificates[0];
     return cert_1.x509Certificate.parse(signingCert.rawBytes);
+}
+
+
+/***/ }),
+
+/***/ 6673:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.verifyMerkleInclusion = void 0;
+/*
+Copyright 2023 The Sigstore Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+const crypto_1 = __importDefault(__nccwpck_require__(6113));
+const error_1 = __nccwpck_require__(6274);
+const RFC6962_LEAF_HASH_PREFIX = Buffer.from([0x00]);
+const RFC6962_NODE_HASH_PREFIX = Buffer.from([0x01]);
+function verifyMerkleInclusion(entry) {
+    const inclusionProof = entry.inclusionProof;
+    const logIndex = BigInt(inclusionProof.logIndex);
+    const treeSize = BigInt(inclusionProof.treeSize);
+    if (logIndex < 0n || logIndex >= treeSize) {
+        throw new error_1.VerificationError('invalid inclusion proof index');
+    }
+    // Figure out which subset of hashes corresponds to the inner and border
+    // nodes
+    const { inner, border } = decompInclProof(logIndex, treeSize);
+    if (inclusionProof.hashes.length !== inner + border) {
+        throw new error_1.VerificationError('invalid inclusion proof length');
+    }
+    const innerHashes = inclusionProof.hashes.slice(0, inner);
+    const borderHashes = inclusionProof.hashes.slice(inner);
+    // The entry's hash is the leaf hash
+    const leafHash = hashLeaf(entry.canonicalizedBody);
+    // Chain the hashes belonging to the inner and border portions
+    const calculatedHash = chainBorderRight(chainInner(leafHash, innerHashes, logIndex), borderHashes);
+    // Calculated hash should match the root hash in the inclusion proof
+    return bufferEqual(calculatedHash, inclusionProof.rootHash);
+}
+exports.verifyMerkleInclusion = verifyMerkleInclusion;
+// Breaks down inclusion proof for a leaf at the specified index in a tree of
+// the specified size. The split point is where paths to the index leaf and
+// the (size - 1) leaf diverge. Returns lengths of the bottom and upper proof
+// parts.
+function decompInclProof(index, size) {
+    const inner = innerProofSize(index, size);
+    const border = onesCount(index >> BigInt(inner));
+    return { inner, border };
+}
+// Computes a subtree hash for a node on or below the tree's right border.
+// Assumes the provided proof hashes are ordered from lower to higher levels
+// and seed is the initial hash of the node specified by the index.
+function chainInner(seed, hashes, index) {
+    return hashes.reduce((acc, h, i) => {
+        if ((index >> BigInt(i)) & BigInt(1)) {
+            return hashChildren(h, acc);
+        }
+        else {
+            return hashChildren(acc, h);
+        }
+    }, seed);
+}
+// Computes a subtree hash for nodes along the tree's right border.
+function chainBorderRight(seed, hashes) {
+    return hashes.reduce((acc, h) => hashChildren(h, acc), seed);
+}
+function innerProofSize(index, size) {
+    return (index ^ (size - BigInt(1))).toString(2).length;
+}
+// Counts the number of ones in the binary representation of the given number.
+// https://en.wikipedia.org/wiki/Hamming_weight
+function onesCount(x) {
+    return x.toString(2).split('1').length - 1;
+}
+// Hashing logic according to RFC6962.
+// https://datatracker.ietf.org/doc/html/rfc6962#section-2
+function hashChildren(left, right) {
+    const hasher = crypto_1.default.createHash('sha256');
+    hasher.update(RFC6962_NODE_HASH_PREFIX);
+    hasher.update(left);
+    hasher.update(right);
+    return hasher.digest();
+}
+function hashLeaf(leaf) {
+    const hasher = crypto_1.default.createHash('sha256');
+    hasher.update(RFC6962_LEAF_HASH_PREFIX);
+    hasher.update(leaf);
+    return hasher.digest();
+}
+function bufferEqual(a, b) {
+    try {
+        return crypto_1.default.timingSafeEqual(a, b);
+    }
+    catch {
+        /* istanbul ignore next */
+        return false;
+    }
 }
 
 
@@ -27148,9 +27207,6 @@ function verifyTLogSET(entry, tlogs) {
     const validTLogs = filterTLogInstances(tlogs, entry.logId.keyId, entry.integratedTime);
     // Check to see if we can verify the SET against any of the valid tlogs
     return validTLogs.some((tlog) => {
-        if (!tlog.publicKey?.rawBytes) {
-            return false;
-        }
         const publicKey = util_1.crypto.createPublicKey(tlog.publicKey.rawBytes);
         // Re-create the original Rekor verification payload
         const payload = toVerificationPayload(entry);
@@ -27197,7 +27253,7 @@ function filterTLogInstances(tlogInstances, logID, integratedTime) {
             return true;
         }
         // Check that the integrated time is within the validFor range
-        return (publicKey.validFor.start &&
+        return (publicKey.validFor.start !== undefined &&
             publicKey.validFor.start <= targetDate &&
             (!publicKey.validFor.end || targetDate <= publicKey.validFor.end));
     });
@@ -27284,13 +27340,13 @@ exports.extractSignatureMaterial = extractSignatureMaterial;
 
 /***/ }),
 
-/***/ 8598:
+/***/ 266:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.toMessageSignatureBundle = exports.toDSSEBundle = exports.isVerifiableTransparencyLogEntry = exports.isCAVerificationOptions = exports.isBundleWithCertificateChain = exports.bundleToJSON = exports.bundleFromJSON = exports.SubjectAlternativeNameType = exports.PublicKeyDetails = exports.HashAlgorithm = exports.Envelope = void 0;
+exports.toMessageSignatureBundle = exports.toDSSEBundle = exports.isCAVerificationOptions = exports.SubjectAlternativeNameType = exports.PublicKeyDetails = exports.HashAlgorithm = exports.Envelope = void 0;
 /*
 Copyright 2023 The Sigstore Authors.
 
@@ -27306,9 +27362,9 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
+const bundle_1 = __nccwpck_require__(9715);
 const protobuf_specs_1 = __nccwpck_require__(530);
 const util_1 = __nccwpck_require__(6901);
-const validate_1 = __nccwpck_require__(6857);
 // Enums from protobuf-specs
 // TODO: Move Envelope to "type" export once @sigstore/sign is a thing
 var protobuf_specs_2 = __nccwpck_require__(530);
@@ -27316,43 +27372,18 @@ Object.defineProperty(exports, "Envelope", ({ enumerable: true, get: function ()
 Object.defineProperty(exports, "HashAlgorithm", ({ enumerable: true, get: function () { return protobuf_specs_2.HashAlgorithm; } }));
 Object.defineProperty(exports, "PublicKeyDetails", ({ enumerable: true, get: function () { return protobuf_specs_2.PublicKeyDetails; } }));
 Object.defineProperty(exports, "SubjectAlternativeNameType", ({ enumerable: true, get: function () { return protobuf_specs_2.SubjectAlternativeNameType; } }));
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const bundleFromJSON = (obj) => {
-    const bundle = protobuf_specs_1.Bundle.fromJSON(obj);
-    (0, validate_1.assertValidBundle)(bundle);
-    return bundle;
-};
-exports.bundleFromJSON = bundleFromJSON;
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const bundleToJSON = (bundle) => {
-    return protobuf_specs_1.Bundle.toJSON(bundle);
-};
-exports.bundleToJSON = bundleToJSON;
-const BUNDLE_MEDIA_TYPE = 'application/vnd.dev.sigstore.bundle+json;version=0.1';
-// Type guard for narrowing a Bundle to a BundleWithCertificateChain
-function isBundleWithCertificateChain(bundle) {
-    return (bundle.verificationMaterial.content !== undefined &&
-        bundle.verificationMaterial.content.$case === 'x509CertificateChain');
-}
-exports.isBundleWithCertificateChain = isBundleWithCertificateChain;
 function isCAVerificationOptions(options) {
     return (options.ctlogOptions !== undefined &&
         (options.signers === undefined ||
             options.signers.$case === 'certificateIdentities'));
 }
 exports.isCAVerificationOptions = isCAVerificationOptions;
-function isVerifiableTransparencyLogEntry(entry) {
-    return (entry.logId !== undefined &&
-        entry.inclusionPromise !== undefined &&
-        entry.kindVersion !== undefined);
-}
-exports.isVerifiableTransparencyLogEntry = isVerifiableTransparencyLogEntry;
 // All of the following functions are used to construct a ValidBundle
 // from various types of input. When this code moves into the
 // @sigstore/sign package, these functions will be exported from there.
 function toDSSEBundle({ envelope, signature, tlogEntry, timestamp, }) {
     return {
-        mediaType: BUNDLE_MEDIA_TYPE,
+        mediaType: bundle_1.BUNDLE_V01_MEDIA_TYPE,
         content: { $case: 'dsseEnvelope', dsseEnvelope: envelope },
         verificationMaterial: toVerificationMaterial({
             signature,
@@ -27364,7 +27395,7 @@ function toDSSEBundle({ envelope, signature, tlogEntry, timestamp, }) {
 exports.toDSSEBundle = toDSSEBundle;
 function toMessageSignatureBundle({ digest, signature, tlogEntry, timestamp, }) {
     return {
-        mediaType: BUNDLE_MEDIA_TYPE,
+        mediaType: bundle_1.BUNDLE_V01_MEDIA_TYPE,
         content: {
             $case: 'messageSignature',
             messageSignature: {
@@ -27384,6 +27415,7 @@ function toMessageSignatureBundle({ digest, signature, tlogEntry, timestamp, }) 
 }
 exports.toMessageSignatureBundle = toMessageSignatureBundle;
 function toTransparencyLogEntry(entry) {
+    /* istanbul ignore next */
     const b64SET = entry.verification?.signedEntryTimestamp || '';
     const set = Buffer.from(b64SET, 'base64');
     const logID = Buffer.from(entry.logID, 'hex');
@@ -27450,102 +27482,6 @@ function toTimestampVerificationData(timestamp) {
         rfc3161Timestamps: [{ signedTimestamp: timestamp }],
     };
 }
-
-
-/***/ }),
-
-/***/ 6857:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.assertValidBundle = void 0;
-/*
-Copyright 2023 The Sigstore Authors.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
-const error_1 = __nccwpck_require__(6274);
-// Performs basic validation of a Sigstore bundle to ensure that all required
-// fields are populated. This is not a complete validation of the bundle, but
-// rather a check that the bundle is in a valid state to be processed by the
-// rest of the code.
-function assertValidBundle(b) {
-    const invalidValues = [];
-    // Content-related validation
-    if (b.content === undefined) {
-        invalidValues.push('content');
-    }
-    else {
-        switch (b.content.$case) {
-            case 'messageSignature':
-                if (b.content.messageSignature.messageDigest === undefined) {
-                    invalidValues.push('content.messageSignature.messageDigest');
-                }
-                else {
-                    if (b.content.messageSignature.messageDigest.digest.length === 0) {
-                        invalidValues.push('content.messageSignature.messageDigest.digest');
-                    }
-                }
-                if (b.content.messageSignature.signature.length === 0) {
-                    invalidValues.push('content.messageSignature.signature');
-                }
-                break;
-            case 'dsseEnvelope':
-                if (b.content.dsseEnvelope.payload.length === 0) {
-                    invalidValues.push('content.dsseEnvelope.payload');
-                }
-                if (b.content.dsseEnvelope.signatures.length !== 1) {
-                    invalidValues.push('content.dsseEnvelope.signatures');
-                }
-                else {
-                    if (b.content.dsseEnvelope.signatures[0].sig.length === 0) {
-                        invalidValues.push('content.dsseEnvelope.signatures[0].sig');
-                    }
-                }
-                break;
-        }
-    }
-    // Verification material-related validation
-    if (b.verificationMaterial === undefined) {
-        invalidValues.push('verificationMaterial');
-    }
-    else {
-        if (b.verificationMaterial.content === undefined) {
-            invalidValues.push('verificationMaterial.content');
-        }
-        else {
-            switch (b.verificationMaterial.content.$case) {
-                case 'x509CertificateChain':
-                    if (b.verificationMaterial.content.x509CertificateChain.certificates
-                        .length === 0) {
-                        invalidValues.push('verificationMaterial.content.x509CertificateChain.certificates');
-                    }
-                    b.verificationMaterial.content.x509CertificateChain.certificates.forEach((cert, i) => {
-                        if (cert.rawBytes.length === 0) {
-                            invalidValues.push(`verificationMaterial.content.x509CertificateChain.certificates[${i}].rawBytes`);
-                        }
-                    });
-                    break;
-            }
-        }
-    }
-    if (invalidValues.length > 0) {
-        throw new error_1.ValidationError(`invalid/missing bundle values: ${invalidValues.join(', ')}`);
-    }
-}
-exports.assertValidBundle = assertValidBundle;
 
 
 /***/ }),
@@ -28077,7 +28013,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.randomBytes = exports.hash = exports.verifyBlob = exports.signBlob = exports.createPublicKey = exports.generateKeyPair = void 0;
+exports.bufferEqual = exports.randomBytes = exports.hash = exports.verifyBlob = exports.signBlob = exports.createPublicKey = exports.generateKeyPair = void 0;
 /*
 Copyright 2022 The Sigstore Authors.
 
@@ -28136,6 +28072,16 @@ function randomBytes(count) {
     return crypto_1.default.randomBytes(count);
 }
 exports.randomBytes = randomBytes;
+function bufferEqual(a, b) {
+    try {
+        return crypto_1.default.timingSafeEqual(a, b);
+    }
+    catch {
+        /* istanbul ignore next */
+        return false;
+    }
+}
+exports.bufferEqual = bufferEqual;
 
 
 /***/ }),
@@ -28698,10 +28644,26 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Verifier = void 0;
+/*
+Copyright 2023 The Sigstore Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+const bundle_1 = __nccwpck_require__(9715);
 const ca = __importStar(__nccwpck_require__(7395));
 const error_1 = __nccwpck_require__(6274);
 const tlog = __importStar(__nccwpck_require__(1108));
-const sigstore = __importStar(__nccwpck_require__(8598));
+const sigstore = __importStar(__nccwpck_require__(266));
 const util_1 = __nccwpck_require__(6901);
 class Verifier {
     constructor(trustedRoot, keySelector) {
@@ -28712,7 +28674,7 @@ class Verifier {
     // and the bundle's transparency log entries.
     verify(bundle, options, data) {
         this.verifyArtifactSignature(bundle, data);
-        if (sigstore.isBundleWithCertificateChain(bundle)) {
+        if ((0, bundle_1.isBundleWithCertificateChain)(bundle)) {
             this.verifySigningCertificate(bundle, options);
         }
         if (options.tlogOptions.disable === false) {
@@ -37465,6 +37427,10 @@ class Glob {
      * again.
      */
     constructor(pattern, opts) {
+        /* c8 ignore start */
+        if (!opts)
+            throw new TypeError('glob options required');
+        /* c8 ignore stop */
         this.withFileTypes = !!opts.withFileTypes;
         this.signal = opts.signal;
         this.follow = !!opts.follow;
@@ -43613,6 +43579,29 @@ class PathBase {
     isUnknown() {
         return (this.#type & IFMT) === UNKNOWN;
     }
+    isType(type) {
+        return this[`is${type}`]();
+    }
+    getType() {
+        return this.isUnknown()
+            ? 'Unknown'
+            : this.isDirectory()
+                ? 'Directory'
+                : this.isFile()
+                    ? 'File'
+                    : this.isSymbolicLink()
+                        ? 'SymbolicLink'
+                        : this.isFIFO()
+                            ? 'FIFO'
+                            : this.isCharacterDevice()
+                                ? 'CharacterDevice'
+                                : this.isBlockDevice()
+                                    ? 'BlockDevice'
+                                    : /* c8 ignore start */ this.isSocket()
+                                        ? 'Socket'
+                                        : 'Unknown';
+        /* c8 ignore stop */
+    }
     /**
      * Is the Path a regular file?
      */
@@ -46184,7 +46173,7 @@ class LRUCache {
         const pcall = (res, rej) => {
             const fmp = this.#fetchMethod?.(k, v, fetchOpts);
             if (fmp && fmp instanceof Promise) {
-                fmp.then(v => res(v), rej);
+                fmp.then(v => res(v === undefined ? undefined : v), rej);
             }
             // ignored, we go until we finish, regardless.
             // defer check until we are actually aborting,
@@ -46192,7 +46181,7 @@ class LRUCache {
             ac.signal.addEventListener('abort', () => {
                 if (!options.ignoreFetchAbort ||
                     options.allowStaleOnFetchAbort) {
-                    res();
+                    res(undefined);
                     // when it eventually resolves, update the cache.
                     if (options.allowStaleOnFetchAbort) {
                         res = v => cb(v, true);
@@ -46518,7 +46507,7 @@ module.exports = {"i8":"3.0.3"};
 /***/ ((module) => {
 
 "use strict";
-module.exports = {"i8":"1.7.0"};
+module.exports = {"i8":"1.8.0"};
 
 /***/ })
 
