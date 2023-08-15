@@ -89,11 +89,9 @@ runs:
         }
 
         validate_path "${UNTRUSTED_PROJECT_ROOT}"
-        project_root=$(realpath "${UNTRUSTED_PROJECT_ROOT}")
 
-        # gh_root_dir is GITHUB_WORKSPACE and is trusted.
-        # It does not require validation.
-        gh_root_dir=$(pwd)
+        # remove trailing "/"'s with `realpath`
+        project_root=$(realpath "${UNTRUSTED_PROJECT_ROOT}")
 
         mv ./__BUILDER_CHECKOUT_DIR__ ../__BUILDER_CHECKOUT_DIR__ \
           && cd ../__BUILDER_CHECKOUT_DIR__/actions/maven/publish/slsa-hashing-plugin \
@@ -102,7 +100,7 @@ runs:
           && cd "${project_root}" \
           && mvn package  -Drun.hash.jarfile=true
         mv $(dirname "${SLSA_OUTPUTS_ARTIFACTS_FILE}") "${GITHUB_WORKSPACE}/../"
-        mv target "${gh_root_dir}/"
+        mv target "${GITHUB_WORKSPACE}/"
     - name: Upload target
       id: upload-target
       uses: slsa-framework/slsa-github-generator/.github/actions/secure-upload-folder@main
