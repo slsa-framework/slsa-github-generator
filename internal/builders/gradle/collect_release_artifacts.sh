@@ -38,5 +38,5 @@ do
 
     # Move the file
     bn=$(basename -- "$path_with_version")
-    mv "$path_with_version" release-files-for-slsa/"$bn"
+    cp "$path_with_version" release-files-for-slsa/"$bn"
 done

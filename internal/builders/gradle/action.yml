@@ -60,24 +60,61 @@ runs:
         java-version: ${{ fromJson(inputs.slsa-workflow-inputs).jdk-version }}
     - name: Setup Gradle
       uses: gradle/gradle-build-action@a4cf152f482c7ca97ef56ead29bf08bcd953284c # v2.7.0
-      with:
-        arguments: build -x test
+    - name: Run gradle builder
+      shell: bash
+      env:
+        UNTRUSTED_PROJECT_ROOT: ${{ fromJson(inputs.slsa-workflow-inputs).directory }}
+      run: |
+        # Ensure no directory traversal.
+        # NOTE: the actions/download-artifact Action only creates files
+        # in the workspace directory, but this may change in the future.
+        # TODO(#1893): Consolidate directory traversal checks
+        validate_path() {
+          untrusted_path=$1
+          resolved_dir=$(readlink -m "$untrusted_path")
+          wd=$(readlink -m "${GITHUB_WORKSPACE}")
+          if [[ "${resolved_dir}" != "${wd}"/* ]] && [[ "${resolved_dir}" != "${wd}" ]]; then
+            if [[ "${RUNNER_TEMP}" != "" ]] && [[ "${resolved_dir}" != "${RUNNER_TEMP}"/* ]] && [[ "${resolved_dir}" != "${RUNNER_TEMP}" ]]; then
+              if [[ "${resolved_dir}" != /tmp/* ]] && [[ "${resolved_dir}" != "/tmp" ]]; then
+                echo "Path is not in the workspace or temp directory: $untrusted_path"
+                exit 1
+              fi
+            fi
+          fi
+        }
+        validate_path "${UNTRUSTED_PROJECT_ROOT}"
+        # remove trailing "/"'s with `realpath`
+        project_root=$(realpath "${UNTRUSTED_PROJECT_ROOT}")
+
+        cd "${project_root}" \
+          && ./gradlew build -x test
+
     - name: Put release artifacts in one directory
       shell: bash
       env:
         SLSA_OUTPUTS_ARTIFACTS_FILE: ${{ inputs.slsa-layout-file }}
         ARTIFACT_LIST: ${{ fromJson(inputs.slsa-workflow-inputs).artifact-list }}
-      run: ./../__TOOL_ACTION_DIR__/collect_release_artifacts.sh
+        PROJECT_ROOT: ${{ fromJson(inputs.slsa-workflow-inputs).directory }}
+      run: |
+        cd "${PROJECT_ROOT}" && "${GITHUB_WORKSPACE}"/../__TOOL_ACTION_DIR__/collect_release_artifacts.sh
     - name: Upload built artifacts from gradlew build
       uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
       with:
-        path: ./release-files-for-slsa/*
+        path: ${{ fromJson(inputs.slsa-workflow-inputs).directory }}/release-files-for-slsa/*
     - name: Make outputs
       id: make-outputs
       shell: bash
       env:
         SLSA_OUTPUTS_ARTIFACTS_FILE: ${{ inputs.slsa-layout-file }}
-      run: ./../__TOOL_ACTION_DIR__/create_attestation.sh
+        PROJECT_ROOT: ${{ fromJson(inputs.slsa-workflow-inputs).directory }}
+      run: |
+        cd "${PROJECT_ROOT}" && "${GITHUB_WORKSPACE}"/../__TOOL_ACTION_DIR__/create_attestation.sh
+    - name: Move build dir to avoid making it a sub-dir when uploading
+      shell: bash
+      env:
+        PROJECT_ROOT: ${{ fromJson(inputs.slsa-workflow-inputs).directory }}
+      run: |
+        mv "${PROJECT_ROOT}"/build "${GITHUB_WORKSPACE}"/
     - name: Upload build dir
       id: upload-build-dir
       uses: slsa-framework/slsa-github-generator/.github/actions/secure-upload-folder@main
