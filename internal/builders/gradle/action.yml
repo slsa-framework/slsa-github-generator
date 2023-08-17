@@ -93,7 +93,7 @@ runs:
       shell: bash
       env:
         SLSA_OUTPUTS_ARTIFACTS_FILE: ${{ inputs.slsa-layout-file }}
-        ARTIFACT_LIST: ${{ fromJson(inputs.slsa-workflow-inputs).artifact-list }}
+        UNTRUSTED_ARTIFACT_LIST: ${{ fromJson(inputs.slsa-workflow-inputs).artifact-list }}
         PROJECT_ROOT: ${{ fromJson(inputs.slsa-workflow-inputs).directory }}
       run: |
         cd "${PROJECT_ROOT}" && "${GITHUB_WORKSPACE}"/../__TOOL_ACTION_DIR__/collect_release_artifacts.sh
@@ -112,6 +112,8 @@ runs:
     - name: Move build dir to avoid making it a sub-dir when uploading
       shell: bash
       env:
+        # PROJECT_ROOT is generally untrusted, but the builder has validated
+        # it in the 'Run gradle builder' step and is therefore trusted now.
         PROJECT_ROOT: ${{ fromJson(inputs.slsa-workflow-inputs).directory }}
       run: |
         mv "${PROJECT_ROOT}"/build "${GITHUB_WORKSPACE}"/
