@@ -163,7 +163,7 @@ There are other available builders using this repository's [BYOB framework](#bui
 
 | Ecosystem |      Builder      |  Description | Status |
 |:-----------|:-----------------|:------------|:--------|
-| [JReleaser](https://jreleaser.org/) projects | [JReleaser builder](https://github.com/jreleaser/release-action/tree/java#slsa-builder) | Builds and generates provenance using [JReleaser](https://jreleaser.org/) | [Beta since v1.0.0-java](https://github.com/slsa-framework/slsa-github-generator/milestone/16) |
+| [JReleaser](https://jreleaser.org/) projects | [JReleaser builder](https://github.com/jreleaser/release-action/tree/java#slsa-builder) | Builds and generates provenance using [JReleaser](https://jreleaser.org/) | [since v1.0.0-java](https://github.com/jreleaser/release-action/tree/v1.0.0-java) |
 
 If none of these options fit your needs, use a [generator](#generators) as described below:
 
