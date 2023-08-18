@@ -100,19 +100,19 @@ See the [full change list](https://github.com/slsa-framework/slsa-github-generat
 
 ### v1.9.0: BYOB framework (beta)
 
-- **NEW**: A [new framework](https://github.com/slsa-framework/slsa-github-generator/blob/main/BYOB.md) to turn GitHub Actions into SLSA compliant builders. 
+- **New**: A [new framework](https://github.com/slsa-framework/slsa-github-generator/blob/main/BYOB.md) to turn GitHub Actions into SLSA compliant builders. 
 
 ### v1.9.0: Maven builder (beta)
 
-- **NEW**: A [Maven builder](https://github.com/slsa-framework/slsa-github-generator/tree/main/internal/builders/maven) to build Java projects and publish to Maven central.
+- **New**: A [Maven builder](https://github.com/slsa-framework/slsa-github-generator/tree/main/internal/builders/maven) to build Java projects and publish to Maven central.
 
 ### v1.9.0: Gradle builder (beta)
 
-- **NEW**: A [Gradle builder](https://github.com/slsa-framework/slsa-github-generator/tree/main/internal/builders/gradle) to build Java projects and publish to Maven central.
+- **New**: A [Gradle builder](https://github.com/slsa-framework/slsa-github-generator/tree/main/internal/builders/gradle) to build Java projects and publish to Maven central.
 
 ### v1.9.0: JReleaser builder
 
-- **NEW**: A [JReleaser builder](https://github.com/jreleaser/release-action/tree/v1.0.0-java) that wraps the official [JReleaser Action](https://github.com/jreleaser/release-action/tree/v1.0.0-java).
+- **New**: A [JReleaser builder](https://github.com/jreleaser/release-action/tree/v1.0.0-java) that wraps the official [JReleaser Action](https://github.com/jreleaser/release-action/tree/v1.0.0-java).
 
 ## v1.8.0
 
