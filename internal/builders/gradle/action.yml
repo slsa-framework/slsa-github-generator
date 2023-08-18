@@ -61,6 +61,7 @@ runs:
     - name: Setup Gradle
       uses: gradle/gradle-build-action@a4cf152f482c7ca97ef56ead29bf08bcd953284c # v2.7.0
     - name: Run gradle builder
+      id: run_gradle_builder
       shell: bash
       env:
         UNTRUSTED_PROJECT_ROOT: ${{ fromJson(inputs.slsa-workflow-inputs).directory }}
@@ -93,12 +94,11 @@ runs:
           && ./gradlew build -x test
 
     - name: Put release artifacts in one directory
-      id: collect_release_artifacts
       shell: bash
       env:
         SLSA_OUTPUTS_ARTIFACTS_FILE: ${{ inputs.slsa-layout-file }}
         UNTRUSTED_ARTIFACT_LIST: ${{ fromJson(inputs.slsa-workflow-inputs).artifact-list }}
-        PROJECT_ROOT: ${{ steps.collect_release_artifacts.outputs.validated_project_root }}
+        PROJECT_ROOT: ${{ steps.run_gradle_builder.outputs.validated_project_root }}
       run: |
         cd "${PROJECT_ROOT}" && "${GITHUB_WORKSPACE}"/../__TOOL_ACTION_DIR__/collect_release_artifacts.sh
     - name: Make outputs
@@ -106,13 +106,13 @@ runs:
       shell: bash
       env:
         SLSA_OUTPUTS_ARTIFACTS_FILE: ${{ inputs.slsa-layout-file }}
-        PROJECT_ROOT: ${{ steps.collect_release_artifacts.outputs.validated_project_root }}
+        PROJECT_ROOT: ${{ steps.run_gradle_builder.outputs.validated_project_root }}
       run: |
         cd "${PROJECT_ROOT}" && "${GITHUB_WORKSPACE}"/../__TOOL_ACTION_DIR__/create_attestation.sh
     - name: Move build dir to avoid making it a sub-dir when uploading
       shell: bash
       env:
-        PROJECT_ROOT: ${{ steps.collect_release_artifacts.outputs.validated_project_root }}
+        PROJECT_ROOT: ${{ steps.run_gradle_builder.outputs.validated_project_root }}
       run: |
         mv "${PROJECT_ROOT}"/build "${GITHUB_WORKSPACE}"/
     - name: Upload build dir
