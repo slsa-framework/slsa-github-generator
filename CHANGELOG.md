@@ -482,3 +482,4 @@ To learn how to use it, see [./README.md#golang-projects](https://github.com/sls
 @asraa @ianlewis @MarkLodato @joshuagl @laurentsimon
 
 [v1.8.0]: https://github.com/slsa-framework/slsa-github-generator/releases/tag/v1.8.0
+[v1.9.0]: https://github.com/slsa-framework/slsa-github-generator/releases/tag/v1.9.0
