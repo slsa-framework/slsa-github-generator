@@ -8,7 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 <!-- markdown-toc --bullets="-" -i CHANGELOG.md -->
 
 <!-- toc -->
-
+- [v1.9.0](#v190)
+  - [v1.9.0: BYOB framework (beta)](#v190-byob-framework-beta)
+  - [v1.9.0: Maven builder (beta)](#v190-maven-builder-beta)
+  - [v1.9.0: Gradle builder (beta)](#v190-gradle-builder-beta)
+  - [v1.9.0: JReleaser builder](#v190-jreleaser-builder)
 - [v1.8.0](#v180)
   - [v1.8.0: Generic Generator](#v180-generic-generator)
   - [v1.8.0: Node.js Builder (beta)](#v180-nodejs-builder-beta)
@@ -87,6 +91,28 @@ Information on the next release will be added here.
 Use the format "X.Y.Z: Go builder" etc. for format headers to avoid header name
 duplication."
 -->
+
+## v1.9.0
+
+Release [v1.9.0] includes bug fixes and new features.
+
+See the [full change list](https://github.com/slsa-framework/slsa-github-generator/compare/v1.8.0...v1.9.0).
+
+### v1.9.0: BYOB framework (beta)
+
+- **NEW**: A [new framework](https://github.com/slsa-framework/slsa-github-generator/blob/main/BYOB.md) to turn GitHub Actions into SLSA compliant builders. 
+
+### v1.9.0: Maven builder (beta)
+
+- **NEW**: A [Maven builder](https://github.com/slsa-framework/slsa-github-generator/tree/main/internal/builders/maven) to build Java projects and publish to Maven central.
+
+### v1.9.0: Gradle builder (beta)
+
+- **NEW**: A [Gradle builder](https://github.com/slsa-framework/slsa-github-generator/tree/main/internal/builders/gradle) to build Java projects and publish to Maven central.
+
+### v1.9.0: JReleaser builder
+
+- **NEW**: A [JReleaser builder](https://github.com/jreleaser/release-action/tree/v1.0.0-java) that wraps the official [JReleaser Action](https://github.com/jreleaser/release-action/tree/v1.0.0-java).
 
 ## v1.8.0
 
