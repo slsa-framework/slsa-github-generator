@@ -100,7 +100,7 @@ See the [full change list](https://github.com/slsa-framework/slsa-github-generat
 
 ### v1.9.0: BYOB framework (beta)
 
-- **New**: A [new framework](https://github.com/slsa-framework/slsa-github-generator/blob/main/BYOB.md) to turn GitHub Actions into SLSA compliant builders. 
+- **New**: A [new framework](https://github.com/slsa-framework/slsa-github-generator/blob/main/BYOB.md) to turn GitHub Actions into SLSA compliant builders.
 
 ### v1.9.0: Maven builder (beta)
 
