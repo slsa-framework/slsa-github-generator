@@ -260,7 +260,8 @@ publish:
       with:
         provenance-download-name: "${{ needs.build.outputs.provenance-download-name }}"
         provenance-download-sha256: "${{ needs.build.outputs.provenance-download-sha256 }}"
-        target-download-sha256: "${{ needs.build.outputs.target-download-sha256 }}"
+        build-download-name: "${{ needs.build.outputs.build-download-name }}"
+        build-download-sha256: "${{ needs.build.outputs.build-download-sha256 }}"
         maven-username: ${{ secrets.OSSRH_USERNAME }}
         maven-password: ${{ secrets.OSSRH_PASSWORD }}
         gpg-key-pass: ${{ secrets.GPG_PASSPHRASE }}
@@ -268,7 +269,7 @@ publish:
         jdk-version: "17"
 ```
 
-Set the values of "maven-username", "maven-password", "gpg-key-pass" and " gpg-private-key" for your account. The parameters to `provenance-download-name`, `provenance-download-sha256` and `target-download-sha256` should not be changed.
+Set the values of "maven-username", "maven-password", "gpg-key-pass" and " gpg-private-key" for your account. The parameters to `provenance-download-name`, `provenance-download-sha256`, `target-download-name`, and `target-download-sha256` should not be changed.
 
 Once you trigger this workflow, your artifacts and provenance files will be added to a staging repository in Maven Central. You need to close the staging repository and then release:
 

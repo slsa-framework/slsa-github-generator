@@ -21,6 +21,10 @@ inputs:
     description: "The sha256 of the package provenance artifact."
     required: true
     type: string
+  target-download-name:
+    description: "The name of the target directory."
+    required: true
+    type: string
   target-download-sha256:
     description: "The sha256 of the target directory."
     required: true
@@ -67,7 +71,7 @@ runs:
     - name: Download the target dir
       uses: slsa-framework/slsa-github-generator/.github/actions/secure-download-folder@main
       with:
-        name: target
+        name: "${{ inputs.target-download-name }}"
         path: ./
         sha256: "${{ inputs.target-download-sha256 }}"
 
