@@ -50,17 +50,17 @@ on:
         description: "The sha256 of the provenance attestation uploaded to the workflow run."
         value: "${{ jobs.slsa-run.outputs.attestations-download-sha256 }}"
 
-      target-download-name:
+      build-download-name:
         description: "The name of the build directory uploaded to the workflow run."
         # NOTE: This is an "untrusted" value returned from the build. Technically
         # the build could provide a build directory that doesn't match the
         # provenance but it would fail validation.
-        value: "${{ fromJSON(jobs.slsa-run.outputs.build-artifacts-outputs).package-download-name }}"
+        value: "${{ fromJSON(jobs.slsa-run.outputs.build-artifacts-outputs).build-download-name }}"
 
-      target-download-sha256:
-        description: "The sha256 of the target uploaded to the workflow run."
+      build-download-sha256:
+        description: "The sha256 of the build directory uploaded to the workflow run."
         # NOTE: This is an "untrusted" value returned from the build.
-        value: "${{ fromJSON(jobs.slsa-run.outputs.build-artifacts-outputs).target-download-sha256 }}"
+        value: "${{ fromJSON(jobs.slsa-run.outputs.build-artifacts-outputs).build-download-sha256 }}"
 jobs:
   slsa-setup:
     permissions:

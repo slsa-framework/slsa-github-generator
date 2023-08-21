@@ -40,14 +40,14 @@ inputs:
   slsa-workflow-secret14: {}
   slsa-workflow-secret15: {}
 outputs:
-  target-download-sha256:
+  build-download-sha256:
     description: >
       The sha256 digest of the "build" directory.
 
       Users should verify the download against this digest to prevent tampering.
     value: ${{ steps.upload-build-dir.outputs.sha256 }}
 
-  package-download-name:
+  build-download-name:
     description: "Name of the artifact to download the build directory."
     value: "${{ steps.rng.outputs.random }}-build"
 

@@ -47,7 +47,7 @@ outputs:
       Users should verify the download against this digest to prevent tampering.
     value: ${{ steps.upload-target.outputs.sha256 }}
 
-  package-download-name:
+  target-download-name:
     description: "Name of the artifact to download the target directory."
     value: "${{ steps.rng.outputs.random }}-target"
 
