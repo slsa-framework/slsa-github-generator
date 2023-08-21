@@ -102,7 +102,7 @@ This will trigger the [release workflow](https://github.com/slsa-framework/slsa-
 Update version references with the following command:
 
 ```shell
-find .github/workflows/ .github/actions/ actions/ -name '*.yaml' -o -name '*.yml' -type f | xargs sed -i "s/uses: slsa-framework\/slsa-github-generator\/\(.*\)@\(main\|v[0-9]\+\.[0-9]\+\.[0-9]\+\(-rc\.[0-9]\+\)\?\)/uses: slsa-framework\/slsa-github-generator\/\1@$BUILDER_TAG/"
+find .github/workflows/ .github/actions/ actions/ internal/builders/ -name '*.yaml' -o -name '*.yml' -type f | xargs sed -i "s/uses: slsa-framework\/slsa-github-generator\/\(.*\)@\(main\|v[0-9]\+\.[0-9]\+\.[0-9]\+\(-rc\.[0-9]\+\)\?\)/uses: slsa-framework\/slsa-github-generator\/\1@$BUILDER_TAG/"
 find actions/maven/ internal/builders/maven/ -name '*.yaml' -o -name '*.yml' -type f | xargs sed -i "s/\(ref:[ ]*\)\(main\|v[0-9]\+\.[0-9]\+\.[0-9]\+\(-rc\.[0-9]\+\)\?\)/\1$BUILDER_TAG/"
 ```
 
@@ -514,7 +514,7 @@ This will trigger the [release workflow](https://github.com/slsa-framework/slsa-
 Update version references with the following command:
 
 ```shell
-find .github/workflows/ .github/actions/ actions/ -name '*.yaml' -o -name '*.yml' -type f | xargs sed -i "s/uses: slsa-framework\/slsa-github-generator\/\(.*\)@\(main\|v[0-9]\+\.[0-9]\+\.[0-9]\+\(-rc\.[0-9]\+\)\?\)/uses: slsa-framework\/slsa-github-generator\/\1@$BUILDER_TAG/"
+find .github/workflows/ .github/actions/ actions/ internal/builders/ -name '*.yaml' -o -name '*.yml' -type f | xargs sed -i "s/uses: slsa-framework\/slsa-github-generator\/\(.*\)@\(main\|v[0-9]\+\.[0-9]\+\.[0-9]\+\(-rc\.[0-9]\+\)\?\)/uses: slsa-framework\/slsa-github-generator\/\1@$BUILDER_TAG/"
 # NOTE: The gradle builder does not need this update.
 find actions/maven/ internal/builders/maven/ -name '*.yaml' -o -name '*.yml' -type f | xargs sed -i "s/\(ref:[ ]*\)\(main\|v[0-9]\+\.[0-9]\+\.[0-9]\+\(-rc\.[0-9]\+\)\?\)/\1$BUILDER_TAG/"
 ```
