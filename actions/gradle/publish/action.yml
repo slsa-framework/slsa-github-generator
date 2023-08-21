@@ -22,6 +22,10 @@ inputs:
     description: "The sha256 of the package provenance artifact."
     required: false
     type: string
+  target-download-name:
+    description: "The name of the build directory from the build action."
+    required: true
+    type: string
   target-download-sha256:
     description: "The sha256 of the target directory."
     required: true
@@ -71,7 +75,7 @@ runs:
     - name: Download the target dir
       uses: slsa-framework/slsa-github-generator/.github/actions/secure-download-folder@main
       with:
-        name: build
+        name: "${{ inputs.target-download-name }}"
         path: ./
         sha256: "${{ inputs.target-download-sha256 }}"
     - name: Upload to Maven Central
@@ -83,7 +87,10 @@ runs:
         MAVEN_USERNAME: ${{ inputs.maven-username }}
         MAVEN_PASSWORD: ${{ inputs.maven-password }}
         PROVENANCE: "build/libs/slsa-attestations/"
+        BUILD_DIR: "./${{ inputs.target-download-name }}"
       run: |
+        # Change name of downloaded build directory
+        mv "${BUILD_DIR}" ./build
         # Collect the provenance files into a subdirectory of "./build"
         mv "${SLSA_DIR}" ./build/libs/slsa-attestations
         # Import GPG signing key

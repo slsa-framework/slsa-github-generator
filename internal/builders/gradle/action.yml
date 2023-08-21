@@ -47,6 +47,10 @@ outputs:
       Users should verify the download against this digest to prevent tampering.
     value: ${{ steps.upload-build-dir.outputs.sha256 }}
 
+  package-download-name:
+    description: "Name of the artifact to download the build directory."
+    value: "${{ steps.rng.outputs.random }}-build"
+
 on:
   workflow_call:
 runs:
@@ -93,6 +97,12 @@ runs:
         cd "${project_root}" \
           && ./gradlew build -x test
 
+    # rng generates a random number to avoid name collision in artifacts
+    # when multiple workflows run concurrently.
+    - name: Generate random 16-byte value (32-char hex encoded)
+      id: rng
+      uses: slsa-framework/slsa-github-generator/.github/actions/rng@main
+
     - name: Put release artifacts in one directory
       shell: bash
       env:
@@ -119,5 +129,5 @@ runs:
       id: upload-build-dir
       uses: slsa-framework/slsa-github-generator/.github/actions/secure-upload-folder@main
       with:
-        name: build
+        name: "${{ steps.rng.outputs.random }}-build"
         path: build

@@ -260,6 +260,7 @@ publish:
       with:
         provenance-download-name: "${{ needs.build.outputs.provenance-download-name }}"
         provenance-download-sha256: "${{ needs.build.outputs.provenance-download-sha256 }}"
+        target-download-name: "${{ needs.build.outputs.target-download-name }}"
         target-download-sha256: "${{ needs.build.outputs.target-download-sha256 }}"
         maven-username: ${{ secrets.OSSRH_USERNAME }}
         maven-password: ${{ secrets.OSSRH_PASSWORD }}
