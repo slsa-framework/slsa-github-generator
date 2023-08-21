@@ -52,7 +52,7 @@ on:
         # NOTE: This is an "untrusted" value returned from the build. Technically
         # the build could provide a target directory that doesn't match the
         # provenance but it would fail validation.
-        value: ${{ fromJSON(jobs.slsa-run.outputs.build-artifacts-outputs).package-download-name }}
+        value: "${{ fromJSON(jobs.slsa-run.outputs.build-artifacts-outputs).target-download-name }}"
 
       target-download-sha256:
         description: "The sha256 of the target uploaded to the workflow run."
