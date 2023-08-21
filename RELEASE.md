@@ -531,7 +531,6 @@ Send a PR with this update and add the following to the PR description.
 #label:release ${BUILDER_TAG}
 ```
 
-
 Once the PR is merged, immediately update the tag to point to HEAD.
 
 ```shell
