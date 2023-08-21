@@ -87,10 +87,7 @@ runs:
         MAVEN_USERNAME: ${{ inputs.maven-username }}
         MAVEN_PASSWORD: ${{ inputs.maven-password }}
         PROVENANCE: "build/libs/slsa-attestations/"
-        BUILD_DIR: "./${{ inputs.build-download-name }}"
       run: |
-        # Change name of downloaded build directory
-        mv "${BUILD_DIR}" ./build
         # Collect the provenance files into a subdirectory of "./build"
         mv "${SLSA_DIR}" ./build/libs/slsa-attestations
         # Import GPG signing key

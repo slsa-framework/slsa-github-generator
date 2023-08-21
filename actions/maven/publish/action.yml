@@ -90,10 +90,7 @@ runs:
         GPG_KEY_PASS: "${{ inputs.gpg-key-pass }}"
         SLSA_DIR: "${{ inputs.provenance-download-name }}"
         PROVENANCE_FILES: "${{ inputs.provenance-download-name }}"
-        TARGET_DIR: "${{ inputs.target-download-name }}"
       run: |
-        # Change name of downloaded target directory
-        mv "${TARGET_DIR}" ./target
         cd __BUILDER_CHECKOUT_DIR__/actions/maven/publish/slsa-hashing-plugin && mvn clean install && cd -
         mvn javadoc:jar source:jar
         # Retrieve project version
