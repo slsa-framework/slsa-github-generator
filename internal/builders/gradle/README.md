@@ -80,7 +80,7 @@ jobs:
       id-token: write
       contents: read
       actions: read
-    uses: slsa-framework/slsa-github-generator/.github/workflows/builder_gradle_slsa3.yml@v1.8.0
+    uses: slsa-framework/slsa-github-generator/.github/workflows/builder_gradle_slsa3.yml@v1.9.0-rc.0
     with:
       artifact-list: ./artifact1.jar,./artifact2.jar
 ```
