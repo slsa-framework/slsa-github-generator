@@ -154,7 +154,7 @@ publish:
 
     - name: publish
       id: publish
-      uses: slsa-framework/slsa-github-generator/actions/nodejs/publish@e55b76ce421082dfa4b34a6ac3c5e59de0f3bb58 # v1.7.0
+      uses: slsa-framework/slsa-github-generator/actions/nodejs/publish@9bc0d59bb73add013a8982b76767b428491524a7 # v1.9.0
       with:
         access: public
         node-auth-token: ${{ secrets.NPM_TOKEN }}
