@@ -66,7 +66,7 @@ runs:
       uses: slsa-framework/slsa-github-generator/.github/actions/secure-builder-checkout@v1.9.0-rc.0
       with:
         repository: slsa-framework/slsa-github-generator
-        ref: v1.9.0-rc.0
+        ref: main-rc.0
         path: __BUILDER_CHECKOUT_DIR__
     - name: Run mvn package
       shell: bash
