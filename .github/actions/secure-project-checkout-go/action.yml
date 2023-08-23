@@ -61,7 +61,7 @@ runs:
         fi
         if [ "${GO_VERSION_FILE}" != "" ]; then
           # NOTE: We use realpath to remove the trailing '/' if present.
-          echo "go_version_file=$(realpath ${INPUT_PATH})/${GO_VERSION_FILE}" >> "$GITHUB_OUTPUT"
+          echo "go_version_file=${INPUT_PATH%%/}/${GO_VERSION_FILE}" >> "$GITHUB_OUTPUT"
         fi
 
     - name: Set up Go environment
