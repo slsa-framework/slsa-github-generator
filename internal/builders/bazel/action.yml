@@ -71,11 +71,11 @@ runs:
     # when multiple workflows run concurrently.
     - name: Generate random 16-byte value (32-char hex encoded)
       id: rng
-      uses: slsa-framework/slsa-github-generator/.github/actions/rng@v1.9.0-rc.0
+      uses: slsa-framework/slsa-github-generator/.github/actions/rng@main-rc.0
 
     - name: Generate Artifacts
       id: generate-artifacts
-      uses: slsa-framework/slsa-github-generator/.github/actions/secure-upload-folder@v1.9.0-rc.0
+      uses: slsa-framework/slsa-github-generator/.github/actions/secure-upload-folder@main-rc.0
       with:
         name: "${{ steps.rng.outputs.random }}-binaries"
         path: "./bazel_builder_binaries_to_upload_to_gh_7bc972367cb286b7f36ab4457f06e369" # path-to-artifact(s)
