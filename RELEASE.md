@@ -603,7 +603,7 @@ Then, for each of the GHA builders, you will need to:
 
    Wait for the runs to complete
 
-2. Download the uploaded artifacts of each of the created releases.
+2. Download the uploaded artifacts of each of the created releases. You can make sure of [download-artifacts.sh](https://github.com/slsa-framework/slsa-verifier/blob/main/download-artifacts.sh) (not fully automated).
 
 3. Move these files to
    `./cli/slsa-verifier/testdata/gha_$BUILDER_TYPE/$BUILDER_TAG/` in the
