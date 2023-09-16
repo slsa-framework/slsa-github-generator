@@ -45,7 +45,7 @@ Users of their software can verify a tamper-proof statement of the process to kn
 ### What is SLSA?
 
 [Supply-chain Levels for Software Artifacts](https://slsa.dev), or SLSA (salsa),
-is a security framework, a check-list of standards and controls to prevent
+is a security framework, a checklist of standards and controls to prevent
 tampering, improve integrity, and secure packages and infrastructure in your
 projects, businesses or enterprises.
 
@@ -125,7 +125,7 @@ Several builders have been built using the ["Build Your Own Builder" (BYOB) fram
 Below we describe the various [builders](#builders) and [generators](#generators) in this repository. They build and / or generate non-forgeable provenance
 using a trusted / isolated re-usable workflow. You can read up on the design in our [technical design document](#technical-design).
 
-To select the right option to geneate provenance for your use case, take into account the programming language and build toolchain you already use, e.g. `go`, `mvn`, `bazel`, etc. Select a [builder](#builders) for your ecosystem.
+To select the right option to generate provenance for your use case, take into account the programming language and build toolchain you already use, e.g. `go`, `mvn`, `bazel`, etc. Select a [builder](#builders) for your ecosystem.
 For example, if you use Go, use the [Go builder](internal/builders/go/README.md). If you use Java and build Maven packages, use the [Maven builder](internal/builders/maven/README.md), and so on.
 If your release scripts are more complex than what the builder supports; or if there is no builder for your ecosystem, use a provenance [generator](#generators) instead.
 
@@ -202,7 +202,7 @@ A command line example is provided in [slsa-framework/slsa-verifier#example](htt
 ## Build Your Own Builder
 
 Use the [BYOB framework](BYOB.md) to create your own SLSA builder on GitHub. If you have an existing GitHub Action, you can use the BYOB framework to wrap it into a SLSA builder.
-This will harden the build process by runing the Action in an isolated environment. Generated artifacts will meet Build Level 3 expectations and produce Build Level 3 provenance.
+This will harden the build process by running the Action in an isolated environment. Generated artifacts will meet Build Level 3 expectations and produce Build Level 3 provenance.
 To verify the provenance, your users can use the [slsa-verifier](#verification-of-provenance).
 
 ## Project Roadmap
