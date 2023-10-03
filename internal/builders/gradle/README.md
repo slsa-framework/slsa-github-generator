@@ -41,7 +41,7 @@ tampered with.
 The Gradle builder is currently in alpha. The API could change while approaching
 a Generally Available (GA) release. You can track progress towards General
 Availability via
-[this milestone](https://github.com/slsa-framework/slsa-github-generator/milestone/17).
+[this milestone](https://github.com/slsa-framework/slsa-github-generator/milestone/15).
 
 Please try it out and
 [create an issue](https://github.com/slsa-framework/slsa-github-generator/issues/new)
