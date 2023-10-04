@@ -46,7 +46,9 @@ export async function detectWorkflowFromOIDC(
     return Promise.reject(Error("job_workflow_ref missing from OIDC token."));
   }
 
-  const [workflowPath, workflowRef] = jobWorkflowRef.split("@", 2);
+  const firstAtIndex = jobWorkflowRef.indexOf("@");
+  const workflowPath = jobWorkflowRef.slice(0, firstAtIndex);
+  const workflowRef = jobWorkflowRef.slice(firstAtIndex + 1);
   const [workflowOwner, workflowRepo, ...workflowArray] =
     workflowPath.split("/");
   const repository = [workflowOwner, workflowRepo].join("/");
