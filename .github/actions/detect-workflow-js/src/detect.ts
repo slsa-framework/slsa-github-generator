@@ -48,7 +48,7 @@ export async function detectWorkflowFromOIDC(
 
   // In some cases, the job_workflow_ref field may contain multiple `@`s
   // (e.g. `vitejs/vite/.github/workflows/publish.yml@refs/tags/create-vite@5.0.0-beta.0`).
-  // In this case, the workflow ref contains a `@`, so we can't simply use `.split`.
+  // In this case, the workflow ref contains an `@`, so we can't simply use `.split`.
   const firstAtIndex = jobWorkflowRef.indexOf("@");
   const workflowPath = jobWorkflowRef.slice(0, firstAtIndex);
   const workflowRef = jobWorkflowRef.slice(firstAtIndex + 1);
