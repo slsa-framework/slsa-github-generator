@@ -59,6 +59,26 @@ describe("detectWorkflowFromOIDC", () => {
     expect(ref).toBe("refs/heads/main");
     expect(workflow).toBe(".github/workflows/oidc.yml");
   });
+  it("workflow ref can contain '@'", async () => {
+    const job_workflow_ref =
+      "vitejs/vite/.github/workflows/publish.yml@refs/tags/create-vite@5.0.0-beta.0";
+    const payload = {
+      iss: "some_issuer",
+      aud: "some/audience",
+      job_workflow_ref: job_workflow_ref,
+    };
+
+    const jwt = `.${Buffer.from(JSON.stringify(payload)).toString("base64")}.`;
+    core.getIDToken.mockClear();
+    core.getIDToken.mockReturnValueOnce(jwt);
+
+    const [repo, ref, workflow] = await detect.detectWorkflowFromOIDC(
+      "some/audience",
+    );
+    expect(repo).toBe("vitejs/vite");
+    expect(ref).toBe("refs/tags/create-vite@5.0.0-beta.0");
+    expect(workflow).toBe(".github/workflows/publish.yml");
+  });
   it("invalid audience", async () => {
     const job_workflow_ref =
       "octo-org/octo-automation/.github/workflows/oidc.yml@refs/heads/main";
