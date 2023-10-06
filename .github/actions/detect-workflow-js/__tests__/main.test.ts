@@ -78,7 +78,7 @@ describe("detectWorkflowFromOIDC", () => {
     expect(repo).toBe("vitejs/vite");
     expect(ref).toBe("refs/tags/create-vite@5.0.0-beta.0");
     expect(workflow).toBe(".github/workflows/publish.yml");
-  })
+  });
   it("invalid audience", async () => {
     const job_workflow_ref =
       "octo-org/octo-automation/.github/workflows/oidc.yml@refs/heads/main";
