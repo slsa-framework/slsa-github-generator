@@ -79,6 +79,7 @@ runs:
       uses: actions/setup-go@fac708d6674e30b6ba41289acaab6d4b75aa0753 # v4.0.1
       with:
         go-version: ${{ inputs.go-version }}
+        cache-dependency-path: "__BUILDER_CHECKOUT_DIR__/go.sum"
 
     - name: Generate builder
       shell: bash
