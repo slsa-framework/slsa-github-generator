@@ -54,7 +54,7 @@ on:
         required: false
         type: string
       go-version-file:
-        description: "The go version to use."
+        description: "Path to the go.mod or go.work file."
         required: false
         type: string
       upload-assets:
