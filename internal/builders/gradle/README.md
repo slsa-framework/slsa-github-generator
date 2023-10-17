@@ -52,7 +52,7 @@ to send us feedback!
 The Gradle builder currently has the following limitations:
 
 1. The project must be buildable by way of `./gradlew build`. If you need the option for flags, profiles or something else to define more granular builds, please open an issue.
-2. The project must include a gradle wrapper (`gradlew`). The slsa builder does not include an installation of gradle.
+2. The project must include a gradle wrapper (`gradlew`). The Gradle builder does not include an installation of gradle.
 
 ## Generating Provenance
 
