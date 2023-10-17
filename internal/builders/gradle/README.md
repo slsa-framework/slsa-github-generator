@@ -51,7 +51,8 @@ to send us feedback!
 
 The Gradle builder currently has the following limitations:
 
-1. The project must be build'able by way of `gradle build`. If you need the option for flags, profiles or something else to define more granular builds, please open an issue.
+1. The project must be buildable by way of `./gradlew build`. If you need the option for flags, profiles or something else to define more granular builds, please open an issue.
+2. The project must include a gradle wrapper (`gradlew`). The Gradle builder does not include an installation of gradle.
 
 ## Generating Provenance
 
@@ -62,7 +63,7 @@ package and generate the provenance.
 
 Let's say you have the following build set up:
 
-1. You can build your artifacts by way of `gradle build`.
+1. You can build your artifacts by way of `./gradlew build`.
 2. You release artifacts via Github Actions.
 
 To add provenance to releases is easy. Simply use the following workflow in `.github/workflows` in your repository:
