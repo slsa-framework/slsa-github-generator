@@ -71,7 +71,7 @@ runs:
     - name: Setup Java
       if: ${{ fromJson(inputs.slsa-workflow-inputs).includes-java }} == 'true'
       id: java
-      uses: actions/setup-java@cd89f46ac9d01407894225f350157564c9c7cee2 # v3.12.0
+      uses: actions/setup-java@0ab4596768b603586c0de567f2430c30f5b0d2b0 # v3.13.0
       with:
         distribution: "${{ fromJson(inputs.slsa-workflow-inputs).user-java-distribution }}"
         java-version: "${{ fromJson(inputs.slsa-workflow-inputs).user-java-version }}"
@@ -123,7 +123,7 @@ runs:
 
     - name: Generate Artifacts
       id: generate-artifacts
-      uses: slsa-framework/slsa-github-generator/.github/actions/secure-upload-folder@v1.8.0
+      uses: slsa-framework/slsa-github-generator/.github/actions/secure-upload-folder@main
       with:
         name: "${{ steps.rng.outputs.random }}-artifacts"
         path: "./bazel_builder_binaries_to_upload_to_gh_7bc972367cb286b7f36ab4457f06e369" # path-to-artifact(s)

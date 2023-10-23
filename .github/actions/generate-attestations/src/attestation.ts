@@ -22,7 +22,7 @@ const MAX_ATTESTATION_COUNT = 50;
 export function createStatement(
   subjects: types.Subject[],
   type: string,
-  predicate: object
+  predicate: object,
 ): types.IntotoStatement {
   return {
     _type: types.INTOTO_TYPE,
@@ -35,7 +35,7 @@ export function createStatement(
 export function writeAttestations(
   layoutFile: string,
   predicateType: string,
-  predicateFile: string
+  predicateFile: string,
 ): Record<string, string> {
   // Read SLSA output layout file.
   const buffer = tscommon.safeReadFileSync(layoutFile);
@@ -68,13 +68,13 @@ export function writeAttestations(
     }
 
     const subjectJson: types.Subject[] = JSON.parse(
-      JSON.stringify(att.subjects)
+      JSON.stringify(att.subjects),
     );
 
     const attestationJSON = createStatement(
       subjectJson,
       predicateType,
-      predicateJson
+      predicateJson,
     );
 
     ret[att.name] = JSON.stringify(attestationJSON);

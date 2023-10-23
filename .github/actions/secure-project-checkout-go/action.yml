@@ -44,19 +44,28 @@ runs:
         path: ${{ inputs.path }}
 
     - name: Validate Go version.
+      id: validate
       shell: bash
       env:
         GO_VERSION: ${{ inputs.go-version }}
         GO_VERSION_FILE: ${{ inputs.go-version-file }}
+        INPUT_PATH: ${{ inputs.path }}
       run: |
         set -euo pipefail
         if [ "${GO_VERSION}" == "" ] && [ "${GO_VERSION_FILE}" == "" ]; then
             echo "::error::One of go-version or go-version-file should be specified."
             exit 1
         fi
+        if [ "${GO_VERSION}" != "" ]; then
+          echo "go_version=${GO_VERSION}" >> "$GITHUB_OUTPUT"
+        fi
+        if [ "${GO_VERSION_FILE}" != "" ]; then
+          # NOTE: We use realpath to remove the trailing '/' if present.
+          echo "go_version_file=${INPUT_PATH%%/}/${GO_VERSION_FILE}" >> "$GITHUB_OUTPUT"
+        fi
 
     - name: Set up Go environment
-      uses: actions/setup-go@fac708d6674e30b6ba41289acaab6d4b75aa0753 # v4.0.1
+      uses: actions/setup-go@93397bea11091df50f3d7e59dc26a7711a8bcfbe # v4.1.0
       with:
-        go-version: ${{ inputs.go-version }}
-        go-version-file: ${{ inputs.go-version-file }}
+        go-version: ${{ steps.validate.outputs.go_version }}
+        go-version-file: ${{ steps.validate.outputs.go_version_file }}

@@ -59,5 +59,4 @@ format: node_modules/.installed ## Formats code.
 
 .PHONY: lint
 lint: node_modules/.installed ## Runs eslint.
-	npm run format-check
 	npm run lint

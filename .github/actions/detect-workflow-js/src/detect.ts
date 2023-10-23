@@ -32,7 +32,7 @@ export function decodeToken(federatedToken: string): githubClaimsType {
 }
 
 export async function detectWorkflowFromOIDC(
-  aud: string
+  aud: string,
 ): Promise<[string, string, string]> {
   const id_token = await core.getIDToken(aud);
   const decoded = decodeToken(id_token);
@@ -46,7 +46,12 @@ export async function detectWorkflowFromOIDC(
     return Promise.reject(Error("job_workflow_ref missing from OIDC token."));
   }
 
-  const [workflowPath, workflowRef] = jobWorkflowRef.split("@", 2);
+  // In some cases, the job_workflow_ref field may contain multiple `@`s
+  // (e.g. `vitejs/vite/.github/workflows/publish.yml@refs/tags/create-vite@5.0.0-beta.0`).
+  // In this case, the workflow ref contains an `@`, so we can't simply use `.split`.
+  const firstAtIndex = jobWorkflowRef.indexOf("@");
+  const workflowPath = jobWorkflowRef.slice(0, firstAtIndex);
+  const workflowRef = jobWorkflowRef.slice(firstAtIndex + 1);
   const [workflowOwner, workflowRepo, ...workflowArray] =
     workflowPath.split("/");
   const repository = [workflowOwner, workflowRepo].join("/");
@@ -56,7 +61,7 @@ export async function detectWorkflowFromOIDC(
 
 export async function detectWorkflowFromContext(
   repoName: string,
-  token: string
+  token: string,
 ): Promise<[string, string, string]> {
   const [owner, repo] = repoName.split("/");
   const octokit = github.getOctokit(token);
@@ -70,7 +75,7 @@ export async function detectWorkflowFromContext(
 
   if (!workflowData.referenced_workflows) {
     return Promise.reject(
-      Error(`No reusable workflows detected ${JSON.stringify(workflowData)}.`)
+      Error(`No reusable workflows detected ${JSON.stringify(workflowData)}.`),
     );
   }
 
@@ -104,8 +109,8 @@ export async function detectWorkflowFromContext(
         if (!reusableWorkflow.ref) {
           return Promise.reject(
             Error(
-              "Referenced slsa-github-generator workflow missing ref: was the workflow invoked by digest?"
-            )
+              "Referenced slsa-github-generator workflow missing ref: was the workflow invoked by digest?",
+            ),
           );
         }
         const tmpRepository = [workflowOwner, workflowRepo].join("/");

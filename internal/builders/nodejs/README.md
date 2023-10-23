@@ -121,7 +121,7 @@ jobs:
       contents: read # For repo checkout.
       actions: read # For getting workflow run info.
     if: startsWith(github.ref, 'refs/tags/')
-    uses: slsa-framework/slsa-github-generator/.github/workflows/builder_nodejs_slsa3.yml@v1.8.0
+    uses: slsa-framework/slsa-github-generator/.github/workflows/builder_nodejs_slsa3.yml@v1.9.0
     with:
       run-scripts: "ci, test, build"
 ```
@@ -154,7 +154,7 @@ publish:
 
     - name: publish
       id: publish
-      uses: slsa-framework/slsa-github-generator/actions/nodejs/publish@e55b76ce421082dfa4b34a6ac3c5e59de0f3bb58 # v1.7.0
+      uses: slsa-framework/slsa-github-generator/actions/nodejs/publish@v1.9.0
       with:
         access: public
         node-auth-token: ${{ secrets.NPM_TOKEN }}
@@ -169,6 +169,10 @@ publish:
 This action downloads the package tarball and provenance before running `npm
 publish` to publish your package to the npm registry. We provide a
 `node-auth-token` so that we can authenticate with `npmjs.com`.
+
+See the full documentation for the
+[`publish` action](../../../actions/nodejs/publish/README.md) for more
+information.
 
 #### Custom publishing
 
@@ -193,14 +197,14 @@ jobs:
           registry-url: "https://registry.npmjs.org"
 
       - name: Download tarball
-        uses: slsa-framework/slsa-github-generator/actions/nodejs/secure-package-download@v1.8.0
+        uses: slsa-framework/slsa-github-generator/actions/nodejs/secure-package-download@v1.9.0
         with:
           name: ${{ needs.build.outputs.package-download-name }}
           path: ${{ needs.build.outputs.package-name }}
           sha256: ${{ needs.build.outputs.package-download-sha256 }}
 
       - name: Download provenance
-        uses: slsa-framework/slsa-github-generator/actions/nodejs/secure-attestations-download@v1.8.0
+        uses: slsa-framework/slsa-github-generator/actions/nodejs/secure-attestations-download@v1.9.0
         with:
           name: ${{ needs.build.outputs.provenance-download-name }}
           path: "attestations"
@@ -217,6 +221,12 @@ jobs:
 
 You will need a package management tool that supports providing the provenance
 file. Currently [npm], [lerna] or [pnpm] can support this.
+
+See the full documentation for the
+[`secure-attestations-download` action](../../../actions/nodejs/secure-attestations-download/README.md)
+and
+[`secure-package-download` action](../../../actions/nodejs/secure-package-download/README.md)
+for more information.
 
 ### Referencing the Node.js builder
 

@@ -47,14 +47,18 @@ outputs:
       Users should verify the download against this digest to prevent tampering.
     value: ${{ steps.upload-target.outputs.sha256 }}
 
+  target-download-name:
+    description: "Name of the artifact to download the target directory."
+    value: "${{ steps.rng.outputs.random }}-target"
+
 on:
   workflow_call:
 runs:
   using: "composite"
   steps:
-    - uses: actions/checkout@96f53100ba2a5449eb71d2e6604bbcd94b9449b5 # v 3.5.2
+    - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v 3.5.2
     - name: Set up JDK
-      uses: actions/setup-java@cd89f46ac9d01407894225f350157564c9c7cee2 # v3.12.0
+      uses: actions/setup-java@0ab4596768b603586c0de567f2430c30f5b0d2b0 # v3.13.0
       with:
         distribution: temurin
         java-version: ${{ fromJson(inputs.slsa-workflow-inputs).jdk-version }}
@@ -68,15 +72,51 @@ runs:
       shell: bash
       env:
         SLSA_OUTPUTS_ARTIFACTS_FILE: ${{ inputs.slsa-layout-file }}
+        UNTRUSTED_PROJECT_ROOT: ${{ fromJson(inputs.slsa-workflow-inputs).directory }}
       run: |
+        # Ensure no directory traversal.
+        # NOTE: the actions/download-artifact Action only creates files
+        # in the workspace directory, but this may change in the future.
+        # TODO(#1893): Consolidate directory traversal checks
+        validate_path() {
+          untrusted_path=$1
+          resolved_dir=$(readlink -m "$untrusted_path")
+          wd=$(readlink -m "${GITHUB_WORKSPACE}")
+          if [[ "${resolved_dir}" != "${wd}"/* ]] && [[ "${resolved_dir}" != "${wd}" ]]; then
+            if [[ "${RUNNER_TEMP}" != "" ]] && [[ "${resolved_dir}" != "${RUNNER_TEMP}"/* ]] && [[ "${resolved_dir}" != "${RUNNER_TEMP}" ]]; then
+              if [[ "${resolved_dir}" != /tmp/* ]] && [[ "${resolved_dir}" != "/tmp" ]]; then
+                echo "Path is not in the workspace or temp directory: $untrusted_path"
+                exit 1
+              fi
+            fi
+          fi
+        }
+
+        validate_path "${UNTRUSTED_PROJECT_ROOT}"
+
+        # remove trailing "/"'s with `realpath`
+        project_root=$(realpath "${UNTRUSTED_PROJECT_ROOT}")
+
         mv ./__BUILDER_CHECKOUT_DIR__ ../__BUILDER_CHECKOUT_DIR__ \
           && cd ../__BUILDER_CHECKOUT_DIR__/actions/maven/publish/slsa-hashing-plugin \
           && mvn clean install \
           && cd - \
+          && cd "${project_root}" \
           && mvn package  -Drun.hash.jarfile=true
+        # NOTE: SLSA_OUTPUTS_ARTIFACTS_FILE is a relative path and the project_root may
+        # not be in GITHUB_WORKSPACE, so we need to move the file.
+        mv $(dirname "${SLSA_OUTPUTS_ARTIFACTS_FILE}") "${GITHUB_WORKSPACE}/../"
+        mv target "${GITHUB_WORKSPACE}/"
+
+    # rng generates a random number to avoid name collision in artifacts
+    # when multiple workflows run concurrently.
+    - name: Generate random 16-byte value (32-char hex encoded)
+      id: rng
+      uses: slsa-framework/slsa-github-generator/.github/actions/rng@main
+
     - name: Upload target
       id: upload-target
       uses: slsa-framework/slsa-github-generator/.github/actions/secure-upload-folder@main
       with:
-        name: target
+        name: "${{ steps.rng.outputs.random }}-target"
         path: target

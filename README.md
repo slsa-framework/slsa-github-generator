@@ -45,7 +45,7 @@ Users of their software can verify a tamper-proof statement of the process to kn
 ### What is SLSA?
 
 [Supply-chain Levels for Software Artifacts](https://slsa.dev), or SLSA (salsa),
-is a security framework, a check-list of standards and controls to prevent
+is a security framework, a checklist of standards and controls to prevent
 tampering, improve integrity, and secure packages and infrastructure in your
 projects, businesses or enterprises.
 
@@ -75,17 +75,22 @@ native GitHub projects. It allows projects to generate
 
 Specifically, this repository contains:
 
-- tools for generating non-forgeable
-SLSA provenance on GitHub for your projects. The generated provenance meets the
-[provenance generation](https://slsa.dev/spec/v1.0/requirements#provenance-generation)
-and [isolation](https://slsa.dev/spec/v1.0/requirements#isolation-strength)
-requirements for [SLSA Build level 3 and above](https://slsa.dev/spec/v1.0/levels).
-See some [popular projects](#generation-of-provenance) generating provenance using this project.
-- tools for building a SLSA builder on GitHub using the [Build-Your-Own-Builder](#build-your-own-builder) framework. With this framework, you can "wrap" an existing GitHub Action into a SLSA builder. The SLSA builder will generate non-forgeable provenance meeting the
-[provenance generation](https://slsa.dev/spec/v1.0/requirements#provenance-generation)
-and [isolation](https://slsa.dev/spec/v1.0/requirements#isolation-strength)
-requirements for [SLSA Build level 3 and above](https://slsa.dev/spec/v1.0/levels).
-See some [builders](#builder-creation) created using the BYOB framework.
+- tools for generating non-forgeable SLSA provenance on GitHub for your
+  projects. The generated provenance meets the
+  [provenance generation](https://slsa.dev/spec/v1.0/requirements#provenance-generation) and
+  [isolation](https://slsa.dev/spec/v1.0/requirements#isolation-strength)
+  requirements for
+  [SLSA Build level 3 and above](https://slsa.dev/spec/v1.0/levels). See some
+  [popular projects](#hall-of-fame) generating provenance using this project.
+- tools for building a SLSA builder on GitHub using the
+  [Build-Your-Own-Builder](#build-your-own-builder) framework. With this
+  framework, you can "wrap" an existing GitHub Action into a SLSA builder. The
+  SLSA builder will generate non-forgeable provenance meeting the
+  [provenance generation](https://slsa.dev/spec/v1.0/requirements#provenance-generation) and
+  [isolation](https://slsa.dev/spec/v1.0/requirements#isolation-strength)
+  requirements for
+  [SLSA Build level 3 and above](https://slsa.dev/spec/v1.0/levels). See some
+  [builders](#builder-creation) created using the BYOB framework.
 
 While slsa-github-generator can help you achieve SLSA Build level 3, use of the provided
 [GitHub Actions reusable workflows](https://docs.github.com/en/actions/using-workflows/reusing-workflows)
@@ -101,24 +106,26 @@ You can use the [slsa-verifier](#verify-provenance) to verify the provenance.
 
 Below is a non-exhaustive list of projects that use the builders in this repository to generate provenance:
 
-[![flask stars](https://img.shields.io/github/stars/pallets/flask?logo=github&label=pallets/flask)](https://github.com/pallets/flask) [![flatbuffers stars](https://img.shields.io/github/stars/google/flatbuffers?logo=github&label=google/flatbuffers)]((https://github.com/google/flatbuffers)) [![grpc-gateway stars](https://img.shields.io/github/stars/grpc-ecosystem/grpc-gateway?logo=github&label=grpc-ecosystem/grpc-gateway)](https://github.com/grpc-ecosystem/grpc-gateway) [![click stars](https://img.shields.io/github/stars/pallets/click?logo=github&label=pallets/click)](https://github.com/pallets/click) [![argo-cd stars](https://img.shields.io/github/stars/argoproj/argo-cd?logo=github&label=argoproj/argo-cd)](https://github.com/argoproj/argo-cd) [![jib stars](https://img.shields.io/github/stars/GoogleContainerTools/jib?logo=github&label=GoogleContainerTools/jib)](https://github.com/GoogleContainerTools/jib) [![jinja stars](https://img.shields.io/github/stars/pallets/jinja?logo=github&label=pallets/jinja)](https://github.com/pallets/jinja) [![docker-bench-security stars](https://img.shields.io/github/stars/docker/docker-bench-security?logo=github&label=docker/docker-bench-security)](https://github.com/docker/docker-bench-security) [![sentencepiece stars](https://img.shields.io/github/stars/google/sentencepiece?logo=github&label=google/sentencepiece)](https://github.com/google/sentencepiece) [![werkzeug stars](https://img.shields.io/github/stars/pallets/werkzeug?logo=github&label=pallets/werkzeug)](https://github.com/pallets/werkzeug) [![ko stars](https://img.shields.io/github/stars/ko-build/ko?logo=github&label=ko-build/ko)](https://github.com/ko-build/ko) [![micronaut-core stars](https://img.shields.io/github/stars/micronaut-projects/micronaut-core?logo=github&label=micronaut-projects/micronaut-core)](https://github.com/micronaut-projects/micronaut-core) [![kubeedge stars](https://img.shields.io/github/stars/kubeedge/kubeedge?logo=github&label=kubeedge/kubeedge)](https://github.com/kubeedge/kubeedge) [![osv-scanner stars](https://img.shields.io/github/stars/google/osv-scanner?logo=github&label=google/osv-scanner)](https://github.com/google/osv-scanner) [![flux2 stars](https://img.shields.io/github/stars/fluxcd/flux2?logo=github&label=fluxcd/flux2)](https://github.com/fluxcd/flux2) [![kyverno stars](https://img.shields.io/github/stars/kyverno/kyverno?logo=github&label=kyverno/kyverno)](https://github.com/kyverno/kyverno) [![flask-sqlalchemy stars](https://img.shields.io/github/stars/pallets-eco/flask-sqlalchemy?logo=github&label=pallets-eco/flask-sqlalchemy)](https://github.com/pallets-eco/flask-sqlalchemy) [![scorecard stars](https://img.shields.io/github/stars/ossf/scorecard?logo=github&label=ossf/scorecard)](https://github.com/ossf/scorecard) [![urllib3 stars](https://img.shields.io/github/stars/urllib3/urllib3?logo=github&label=urllib3/urllib3)](https://github.com/urllib3/urllib3) [![pdns stars](https://img.shields.io/github/stars/PowerDNS/pdns?logo=github&label=PowerDNS/pdns)](https://github.com/PowerDNS/pdns) [![powertools-lambda-python stars](https://img.shields.io/github/stars/aws-powertools/powertools-lambda-python?logo=github&label=aws-powertools/powertools-lambda-python)](https://github.com/aws-powertools/powertools-lambda-python)
+[![flask stars](https://img.shields.io/github/stars/pallets/flask?logo=github&label=pallets/flask)](https://github.com/pallets/flask) [![flatbuffers stars](https://img.shields.io/github/stars/google/flatbuffers?logo=github&label=google/flatbuffers)](<(https://github.com/google/flatbuffers)>) [![grpc-gateway stars](https://img.shields.io/github/stars/grpc-ecosystem/grpc-gateway?logo=github&label=grpc-ecosystem/grpc-gateway)](https://github.com/grpc-ecosystem/grpc-gateway) [![click stars](https://img.shields.io/github/stars/pallets/click?logo=github&label=pallets/click)](https://github.com/pallets/click) [![argo-cd stars](https://img.shields.io/github/stars/argoproj/argo-cd?logo=github&label=argoproj/argo-cd)](https://github.com/argoproj/argo-cd) [![jib stars](https://img.shields.io/github/stars/GoogleContainerTools/jib?logo=github&label=GoogleContainerTools/jib)](https://github.com/GoogleContainerTools/jib) [![jinja stars](https://img.shields.io/github/stars/pallets/jinja?logo=github&label=pallets/jinja)](https://github.com/pallets/jinja) [![docker-bench-security stars](https://img.shields.io/github/stars/docker/docker-bench-security?logo=github&label=docker/docker-bench-security)](https://github.com/docker/docker-bench-security) [![sentencepiece stars](https://img.shields.io/github/stars/google/sentencepiece?logo=github&label=google/sentencepiece)](https://github.com/google/sentencepiece) [![werkzeug stars](https://img.shields.io/github/stars/pallets/werkzeug?logo=github&label=pallets/werkzeug)](https://github.com/pallets/werkzeug) [![ko stars](https://img.shields.io/github/stars/ko-build/ko?logo=github&label=ko-build/ko)](https://github.com/ko-build/ko) [![micronaut-core stars](https://img.shields.io/github/stars/micronaut-projects/micronaut-core?logo=github&label=micronaut-projects/micronaut-core)](https://github.com/micronaut-projects/micronaut-core) [![kubeedge stars](https://img.shields.io/github/stars/kubeedge/kubeedge?logo=github&label=kubeedge/kubeedge)](https://github.com/kubeedge/kubeedge) [![osv-scanner stars](https://img.shields.io/github/stars/google/osv-scanner?logo=github&label=google/osv-scanner)](https://github.com/google/osv-scanner) [![flux2 stars](https://img.shields.io/github/stars/fluxcd/flux2?logo=github&label=fluxcd/flux2)](https://github.com/fluxcd/flux2) [![kyverno stars](https://img.shields.io/github/stars/kyverno/kyverno?logo=github&label=kyverno/kyverno)](https://github.com/kyverno/kyverno) [![flask-sqlalchemy stars](https://img.shields.io/github/stars/pallets-eco/flask-sqlalchemy?logo=github&label=pallets-eco/flask-sqlalchemy)](https://github.com/pallets-eco/flask-sqlalchemy) [![scorecard stars](https://img.shields.io/github/stars/ossf/scorecard?logo=github&label=ossf/scorecard)](https://github.com/ossf/scorecard) [![urllib3 stars](https://img.shields.io/github/stars/urllib3/urllib3?logo=github&label=urllib3/urllib3)](https://github.com/urllib3/urllib3) [![pdns stars](https://img.shields.io/github/stars/PowerDNS/pdns?logo=github&label=PowerDNS/pdns)](https://github.com/PowerDNS/pdns) [![powertools-lambda-python stars](https://img.shields.io/github/stars/aws-powertools/powertools-lambda-python?logo=github&label=aws-powertools/powertools-lambda-python)](https://github.com/aws-powertools/powertools-lambda-python) [![hishtory stars](https://img.shields.io/github/stars/ddworken/hishtory?logo=github&label=ddworken/hishtory)](https://github.com/ddworken/hishtory)
+
+[Edit this file](https://github.com/slsa-framework/slsa-github-generator/edit/main/README.md) to add your repository!
 
 #### Builder Creation
 
 Several builders have been built using the ["Build Your Own Builder" (BYOB) framework](#build-your-own-builder):
 
-1. [nodejs builder](https://github.com/slsa-framework/slsa-github-generator/tree/main/internal/builders/nodejs#readme), by @ianlewis
-2. [JReleaser builder](https://github.com/jreleaser/release-action/tree/java#slsa-builder), by @aalmiray
-3. [Maven builder](https://github.com/slsa-framework/slsa-github-generator/blob/main/internal/builders/maven/README.md), by @AdamKorcz
-4. [Gradle builder](https://github.com/slsa-framework/slsa-github-generator/tree/main/internal/builders/gradle/README.md), by @AdamKorcz
-5. Coming soon! [Bazel builder](https://github.com/slsa-framework/slsa-github-generator/tree/main/internal/builders/bazel/README.md), by @enteraga6
+1. [nodejs builder](https://github.com/slsa-framework/slsa-github-generator/tree/main/internal/builders/nodejs#readme), by [@ianlewis](https://github.com/ianlewis)
+2. [JReleaser builder](https://github.com/jreleaser/release-action/tree/java#slsa-builder), by [@aalmiray](https://github.com/aalmiray)
+3. [Maven builder](https://github.com/slsa-framework/slsa-github-generator/blob/main/internal/builders/maven/README.md), by [@AdamKorcz](https://github.com/AdamKorcz)
+4. [Gradle builder](https://github.com/slsa-framework/slsa-github-generator/tree/main/internal/builders/gradle/README.md), by [@AdamKorcz](https://github.com/AdamKorcz)
+5. **Coming soon!** [Bazel builder](https://github.com/slsa-framework/slsa-github-generator/tree/main/internal/builders/bazel/README.md), by [@enteraga6](https://github.com/enteraga6)
 
 ## Generate provenance
 
 Below we describe the various [builders](#builders) and [generators](#generators) in this repository. They build and / or generate non-forgeable provenance
 using a trusted / isolated re-usable workflow. You can read up on the design in our [technical design document](#technical-design).
 
-To select the right option to geneate provenance for your use case, take into account the programming language and build toolchain you already use, e.g. `go`, `mvn`, `bazel`, etc. Select a [builder](#builders) for your ecosystem.
+To select the right option to generate provenance for your use case, take into account the programming language and build toolchain you already use, e.g. `go`, `mvn`, `bazel`, etc. Select a [builder](#builders) for your ecosystem.
 For example, if you use Go, use the [Go builder](internal/builders/go/README.md). If you use Java and build Maven packages, use the [Maven builder](internal/builders/maven/README.md), and so on.
 If your release scripts are more complex than what the builder supports; or if there is no builder for your ecosystem, use a provenance [generator](#generators) instead.
 
@@ -146,9 +153,9 @@ This repository hosts the following builders:
 |:-----------|:-----------------|:------------|:--------|
 | [Go](https://go.dev/) projects | [Go Builder](internal/builders/go/README.md) | Builds and generates provenance for Go projects | [available since v1.0.0](https://github.com/slsa-framework/slsa-github-generator/milestone/1) |
 | [Node.js](https://nodejs.org) projects | [Node.js Builder](internal/builders/nodejs/README.md)   |  Builds and generates provenance for npm packages | [Beta since v1.6.0](https://github.com/slsa-framework/slsa-github-generator/milestone/8). [Expected GA release Sept 2023](https://github.com/slsa-framework/slsa-github-generator/milestone/17)
-| [Maven](https://maven.apache.org/) projects | [Maven builder](internal/builders/maven/README.md) | Build Maven packages and generates provenance. Can be uploaded to [Maven central](https://search.maven.org) | [Beta since v1.8.0](https://github.com/slsa-framework/slsa-github-generator/milestone/14) |
-| [Gradle](https://gradle.org/) projects | [Gradle builder](internal/builders/gradle/README.md) | Build Gradle projects and generates provenance. Can be uploaded to [Maven central](https://search.maven.org) | [Beta since v1.8.0](https://github.com/slsa-framework/slsa-github-generator/milestone/15) |
-| [Bazel](https://bazel.build/) projects | [Bazel builder](internal/builders/bazel/README.md) | Builds [Bazel](https://bazel.build/) projects and generates provenance | [Beta release August 2023](https://github.com/slsa-framework/slsa-github-generator/milestone/16) |
+| [Maven](https://maven.apache.org/) projects | [Maven builder](internal/builders/maven/README.md) | Build Maven packages and generates provenance. Can be uploaded to [Maven central](https://search.maven.org) | [Beta since v1.9.0](https://github.com/slsa-framework/slsa-github-generator/milestone/14) |
+| [Gradle](https://gradle.org/) projects | [Gradle builder](internal/builders/gradle/README.md) | Build Gradle projects and generates provenance. Can be uploaded to [Maven central](https://search.maven.org) | [Beta since v1.9.0](https://github.com/slsa-framework/slsa-github-generator/milestone/15) |
+| [Bazel](https://bazel.build/) projects | [Bazel builder](internal/builders/bazel/README.md) | Builds [Bazel](https://bazel.build/) projects and generates provenance | [WIP](https://github.com/slsa-framework/slsa-github-generator/milestone/16) |
 | [docker](https://www.docker.com/) images | Container Builder | Builds docker containers and generates provenance. The generated provenance is compatible with [cosign](https://github.com/sigstore/cosign)'s attestation format | [WIP](https://github.com/slsa-framework/slsa-github-generator/milestone/5)  |
 | Any | [Container-based Builder](internal/builders/docker/README.md) | Builds projects whose build pipeline is defined with a Dockerfile | [Beta since v1.7.0](https://github.com/slsa-framework/slsa-github-generator/milestone/16) |
 
@@ -156,7 +163,7 @@ There are other available builders using this repository's [BYOB framework](#bui
 
 | Ecosystem |      Builder      |  Description | Status |
 |:-----------|:-----------------|:------------|:--------|
-| [JReleaser](https://jreleaser.org/) projects | [JReleaser builder](https://github.com/jreleaser/release-action/tree/java#slsa-builder) | Builds and generates provenance using [JReleaser](https://jreleaser.org/) | [Beta since v1.8.0](https://github.com/slsa-framework/slsa-github-generator/milestone/16) |
+| [JReleaser](https://jreleaser.org/) projects | [JReleaser builder](https://github.com/jreleaser/release-action/tree/java#slsa-builder) | Builds and generates provenance using [JReleaser](https://jreleaser.org/) | [since v1.0.0-java](https://github.com/jreleaser/release-action/tree/v1.0.0-java) |
 
 If none of these options fit your needs, use a [generator](#generators) as described below:
 
@@ -171,10 +178,10 @@ Generators create an attestation to a software artifact coming from your reposit
 
 This repository hosts the following generators:
 
-| Artifact type |      Generator    |  Description | Status |
-|:--------------|:------------------|:-------------|:-------|
-| file (binary, package tarball etc.) | [Generic generator](internal/builders/generic/README.md) | Generates provenance for arbitrary file-based artifacts, for any ecosystem and programming language | [available since v1.2.0](https://github.com/slsa-framework/slsa-github-generator/milestone/2) |
-| container | [Container generator](internal/builders/container/README.md)   |  Generate provenance for container images. The generated provenance is compatible with    [cosign](https://github.com/sigstore/cosign)'s attestation format. | [available since v1.4.0](https://github.com/slsa-framework/slsa-github-generator/milestone/3)
+| Artifact type                       | Generator                                                    | Description                                                                                                                                              | Status                                                                                        |
+| :---------------------------------- | :----------------------------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------- | :-------------------------------------------------------------------------------------------- |
+| file (binary, package tarball etc.) | [Generic generator](internal/builders/generic/README.md)     | Generates provenance for arbitrary file-based artifacts, for any ecosystem and programming language                                                      | [available since v1.2.0](https://github.com/slsa-framework/slsa-github-generator/milestone/2) |
+| container                           | [Container generator](internal/builders/container/README.md) | Generate provenance for container images. The generated provenance is compatible with [cosign](https://github.com/sigstore/cosign)'s attestation format. | [available since v1.4.0](https://github.com/slsa-framework/slsa-github-generator/milestone/3) |
 
 ## Verify provenance
 
@@ -195,7 +202,7 @@ A command line example is provided in [slsa-framework/slsa-verifier#example](htt
 ## Build Your Own Builder
 
 Use the [BYOB framework](BYOB.md) to create your own SLSA builder on GitHub. If you have an existing GitHub Action, you can use the BYOB framework to wrap it into a SLSA builder.
-This will harden the build process by runing the Action in an isolated environment. Generated artifacts will meet Build Level 3 expectations and produce Build Level 3 provenance.
+This will harden the build process by running the Action in an isolated environment. Generated artifacts will meet Build Level 3 expectations and produce Build Level 3 provenance.
 To verify the provenance, your users can use the [slsa-verifier](#verification-of-provenance).
 
 ## Project Roadmap

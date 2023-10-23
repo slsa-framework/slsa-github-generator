@@ -72,7 +72,7 @@ provenance:
     id-token: write # for creating OIDC tokens for signing.
     packages: write # for uploading attestations.
   if: startsWith(github.ref, 'refs/tags/')
-  uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v1.8.0
+  uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v1.9.0
   with:
     image: ${{ needs.build.outputs.image }}
     digest: ${{ needs.build.outputs.digest }}
@@ -143,7 +143,7 @@ jobs:
       id-token: write # for creating OIDC tokens for signing.
       packages: write # for uploading attestations.
     if: startsWith(github.ref, 'refs/tags/')
-    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v1.8.0
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v1.9.0
     with:
       image: ${{ needs.build.outputs.image }}
       digest: ${{ needs.build.outputs.digest }}
@@ -347,11 +347,11 @@ This section explains how to generate non-forgeable SLSA provenance with existin
          echo "${KO_PASSWORD}" | ko login ghcr.io --username "$KO_USER" --password-stdin
 
          # Build & push the image. Save the image name.
-         image_and_digest=$(ko build --tags="${tag}" .)
+         ko build --bare --tags="${tag}" --image-refs .digest
 
          # Output the image name and digest so we can generate provenance.
-         image=$(echo "${image_and_digest}" | cut -d'@' -f1 | cut -d':' -f1)
-         digest=$(echo "${image_and_digest}" | cut -d'@' -f2)
+         image=$(cat .digest | cut -d'@' -f1 | cut -d':' -f1)
+         digest=$(cat .digest| cut -d'@' -f2)
          echo "image=$image" >> "$GITHUB_OUTPUT"
          echo "digest=$digest" >> "$GITHUB_OUTPUT"
    ```
@@ -367,7 +367,7 @@ This section explains how to generate non-forgeable SLSA provenance with existin
        # contents: read
        packages: write
      if: startsWith(github.ref, 'refs/tags/')
-     uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v1.8.0
+     uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v1.9.0
      with:
        image: ${{ needs.build.outputs.image }}
        digest: ${{ needs.build.outputs.digest }}
@@ -432,7 +432,7 @@ This section explains how to generate non-forgeable SLSA provenance with existin
          # contents: read
          packages: write
        if: startsWith(github.ref, 'refs/tags/')
-       uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v1.8.0
+       uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v1.9.0
        with:
          image: ${{ needs.build.outputs.image }}
          digest: ${{ needs.build.outputs.digest }}

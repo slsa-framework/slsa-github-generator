@@ -53,11 +53,31 @@ describe("detectWorkflowFromOIDC", () => {
     core.getIDToken.mockReturnValueOnce(jwt);
 
     const [repo, ref, workflow] = await detect.detectWorkflowFromOIDC(
-      "some/audience"
+      "some/audience",
     );
     expect(repo).toBe("octo-org/octo-automation");
     expect(ref).toBe("refs/heads/main");
     expect(workflow).toBe(".github/workflows/oidc.yml");
+  });
+  it("workflow ref can contain '@'", async () => {
+    const job_workflow_ref =
+      "vitejs/vite/.github/workflows/publish.yml@refs/tags/create-vite@5.0.0-beta.0";
+    const payload = {
+      iss: "some_issuer",
+      aud: "some/audience",
+      job_workflow_ref: job_workflow_ref,
+    };
+
+    const jwt = `.${Buffer.from(JSON.stringify(payload)).toString("base64")}.`;
+    core.getIDToken.mockClear();
+    core.getIDToken.mockReturnValueOnce(jwt);
+
+    const [repo, ref, workflow] = await detect.detectWorkflowFromOIDC(
+      "some/audience",
+    );
+    expect(repo).toBe("vitejs/vite");
+    expect(ref).toBe("refs/tags/create-vite@5.0.0-beta.0");
+    expect(workflow).toBe(".github/workflows/publish.yml");
   });
   it("invalid audience", async () => {
     const job_workflow_ref =
@@ -73,7 +93,7 @@ describe("detectWorkflowFromOIDC", () => {
     core.getIDToken.mockReturnValueOnce(jwt);
 
     await expect(
-      detect.detectWorkflowFromOIDC("other/audience")
+      detect.detectWorkflowFromOIDC("other/audience"),
     ).rejects.toThrow();
   });
   it("missing job_workflow_ref", async () => {
@@ -87,7 +107,7 @@ describe("detectWorkflowFromOIDC", () => {
     core.getIDToken.mockReturnValueOnce(jwt);
 
     await expect(
-      detect.detectWorkflowFromOIDC("some/audience")
+      detect.detectWorkflowFromOIDC("some/audience"),
     ).rejects.toThrow();
   });
 });
@@ -120,11 +140,11 @@ describe("detectWorkflowFromContext", () => {
 
   it("no workflow run", async () => {
     octokit.rest.actions.getWorkflowRun.mockReturnValue(
-      Promise.resolve({ data: { conclusion: "failure" } })
+      Promise.resolve({ data: { conclusion: "failure" } }),
     );
 
     expect(
-      detect.detectWorkflowFromContext("unused", "unused")
+      detect.detectWorkflowFromContext("unused", "unused"),
     ).rejects.toThrow();
   });
 
@@ -145,11 +165,11 @@ describe("detectWorkflowFromContext", () => {
             },
           ],
         },
-      })
+      }),
     );
     const [repo, ref, workflow] = await detect.detectWorkflowFromContext(
       "unused",
-      "unused"
+      "unused",
     );
     expect(repo).toBe("slsa-framework/slsa-github-generator");
     expect(ref).toBe("refs/tags/v1.5.0");
@@ -173,11 +193,11 @@ describe("detectWorkflowFromContext", () => {
             },
           ],
         },
-      })
+      }),
     );
     const [repo, ref, workflow] = await detect.detectWorkflowFromContext(
       "unused",
-      "unused"
+      "unused",
     );
     expect(repo).toBe("slsa-framework/slsa-github-generator");
     expect(ref).toBe("refs/tags/v1.5.0");
@@ -201,10 +221,10 @@ describe("detectWorkflowFromContext", () => {
             },
           ],
         },
-      })
+      }),
     );
     expect(
-      detect.detectWorkflowFromContext("unused", "unused")
+      detect.detectWorkflowFromContext("unused", "unused"),
     ).rejects.toThrow();
   });
 
@@ -231,16 +251,16 @@ describe("detectWorkflowFromContext", () => {
             full_name: "asraa/slsa-github-generator",
           },
         },
-      })
+      }),
     );
     const [repo, ref, workflow] = await detect.detectWorkflowFromContext(
       "unused",
-      "unused"
+      "unused",
     );
     expect(repo).toBe("asraa/slsa-github-generator");
     expect(ref).toBe("088d04f305bd32ad4594d82e8c1571507acf03d5");
     expect(workflow).toBe(
-      ".github/workflows/pre-submit.e2e.docker-based.default.yml"
+      ".github/workflows/pre-submit.e2e.docker-based.default.yml",
     );
   });
 });

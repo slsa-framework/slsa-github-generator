@@ -30,6 +30,7 @@ echo "Directory '${UNTRUSTED_DIRECTORY}' resolved to '${untrusted_realpath}'"
 github_workspace_realpath=$(realpath -e "${GITHUB_WORKSPACE}")
 echo "GitHub workspace '${GITHUB_WORKSPACE}' resolved to '${github_workspace_realpath}'"
 
+# TODO(#1893): Consolidate directory traversal checks
 echo "Checking directory '${untrusted_realpath}' is a sub-directory of '${github_workspace_realpath}'"
 if [[ "${untrusted_realpath}" != "${github_workspace_realpath}" ]] && [[ ${untrusted_realpath} != ${github_workspace_realpath}/* ]]; then
     echo "${UNTRUSTED_DIRECTORY} not a sub-directory of ${GITHUB_WORKSPACE}"

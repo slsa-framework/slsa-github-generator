@@ -237,7 +237,7 @@ jobs:
       contents: read
       actions: read
       packages: read
-    uses: slsa-framework/slsa-github-generator/.github/workflows/builder_gradle_slsa3.yml@v1.8.0
+    uses: slsa-framework/slsa-github-generator/.github/workflows/builder_gradle_slsa3.yml@v1.9.0
     with:
       rekor-log-public: true
       artifact-list: build/libs/artifact1-0.1.18.jar,build/libs/artifact-0.1.18-javadoc.jar,build/libs/artifact-0.1.18-sources.jar
@@ -256,11 +256,12 @@ publish:
   steps:
     - name: publish
       id: publish
-      uses: slsa-framework/slsa-github-generator/actions/gradle/publish@v1.8.0
+      uses: slsa-framework/slsa-github-generator/actions/gradle/publish@v1.9.0
       with:
         provenance-download-name: "${{ needs.build.outputs.provenance-download-name }}"
         provenance-download-sha256: "${{ needs.build.outputs.provenance-download-sha256 }}"
-        target-download-sha256: "${{ needs.build.outputs.target-download-sha256 }}"
+        build-download-name: "${{ needs.build.outputs.build-download-name }}"
+        build-download-sha256: "${{ needs.build.outputs.build-download-sha256 }}"
         maven-username: ${{ secrets.OSSRH_USERNAME }}
         maven-password: ${{ secrets.OSSRH_PASSWORD }}
         gpg-key-pass: ${{ secrets.GPG_PASSPHRASE }}
@@ -268,7 +269,7 @@ publish:
         jdk-version: "17"
 ```
 
-Set the values of "maven-username", "maven-password", "gpg-key-pass" and " gpg-private-key" for your account. The parameters to `provenance-download-name`, `provenance-download-sha256` and `target-download-sha256` should not be changed.
+Set the values of "maven-username", "maven-password", "gpg-key-pass" and " gpg-private-key" for your account. The parameters to `provenance-download-name`, `provenance-download-sha256`, `target-download-name`, and `target-download-sha256` should not be changed.
 
 Once you trigger this workflow, your artifacts and provenance files will be added to a staging repository in Maven Central. You need to close the staging repository and then release:
 

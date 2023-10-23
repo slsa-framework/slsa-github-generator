@@ -68,7 +68,7 @@ export function resolvePathInput(input: string, write: Boolean): string {
 // Safe write function.
 export function safeWriteFileSync(
   outputFn: string,
-  data: string | Buffer
+  data: string | Buffer,
 ): void {
   const safeOutputFn = resolvePathInput(outputFn, true);
   // WARNING: if the call fails, the type of the error is not 'Error'.
@@ -81,7 +81,7 @@ export function safeWriteFileSync(
 // Safe mkdir function.
 export function safeMkdirSync(
   outputFn: string,
-  options: fs.MakeDirectoryOptions & { recursive: true }
+  options: fs.MakeDirectoryOptions & { recursive: true },
 ): void {
   const safeOutputFn = resolvePathInput(outputFn, true);
   fs.mkdirSync(safeOutputFn, options);
@@ -102,7 +102,7 @@ export function safeUnlinkSync(inputFn: string): void {
 // Safe remove directory function.
 export function safeRmdirSync(
   dir: string,
-  options?: fs.RmOptions | undefined
+  options?: fs.RmOptions | undefined,
 ): void {
   const safeDir = resolvePathInput(dir, true);
   return fs.rmdirSync(safeDir, options);

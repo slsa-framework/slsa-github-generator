@@ -27,6 +27,11 @@ on:
         required: false
         default: 17
         type: number
+      directory:
+        description: "Sub-directory to launch the build from. Must be under the workspace. Relative from the root of the file directory when invoking the builder."
+        required: false
+        type: string
+        default: "."
 
     outputs:
       provenance-name:
@@ -41,6 +46,13 @@ on:
       provenance-download-sha256:
         description: "The sha256 of the provenance attestation uploaded to the workflow run."
         value: "${{ jobs.slsa-run.outputs.attestations-download-sha256 }}"
+
+      target-download-name:
+        description: "The name of the target directory uploaded to the workflow run."
+        # NOTE: This is an "untrusted" value returned from the build. Technically
+        # the build could provide a target directory that doesn't match the
+        # provenance but it would fail validation.
+        value: "${{ fromJSON(jobs.slsa-run.outputs.build-artifacts-outputs).target-download-name }}"
 
       target-download-sha256:
         description: "The sha256 of the target uploaded to the workflow run."

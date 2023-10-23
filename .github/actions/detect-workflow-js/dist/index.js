@@ -74,7 +74,12 @@ function detectWorkflowFromOIDC(aud) {
         if (!jobWorkflowRef) {
             return Promise.reject(Error("job_workflow_ref missing from OIDC token."));
         }
-        const [workflowPath, workflowRef] = jobWorkflowRef.split("@", 2);
+        // In some cases, the job_workflow_ref field may contain multiple `@`s
+        // (e.g. `vitejs/vite/.github/workflows/publish.yml@refs/tags/create-vite@5.0.0-beta.0`).
+        // In this case, the workflow ref contains an `@`, so we can't simply use `.split`.
+        const firstAtIndex = jobWorkflowRef.indexOf("@");
+        const workflowPath = jobWorkflowRef.slice(0, firstAtIndex);
+        const workflowRef = jobWorkflowRef.slice(firstAtIndex + 1);
         const [workflowOwner, workflowRepo, ...workflowArray] = workflowPath.split("/");
         const repository = [workflowOwner, workflowRepo].join("/");
         const workflow = workflowArray.join("/");
@@ -828,7 +833,7 @@ class OidcClient {
                 .catch(error => {
                 throw new Error(`Failed to get ID Token. \n 
         Error Code : ${error.statusCode}\n 
-        Error Message: ${error.result.message}`);
+        Error Message: ${error.message}`);
             });
             const id_token = (_a = res.result) === null || _a === void 0 ? void 0 : _a.value;
             if (!id_token) {
