@@ -10,6 +10,6 @@
     "markdown-toc": "1.2.0",
     "markdownlint-cli": "0.37.0",
     "prettier": "3.0.3",
-    "sigstore": "1.9.0"
+    "sigstore": "1.8.0"
   }
 }
