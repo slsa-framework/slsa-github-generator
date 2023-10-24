@@ -7108,1749 +7108,6 @@ __exportStar(__nccwpck_require__(9980), exports);
 
 /***/ }),
 
-/***/ 5:
-/***/ ((__unused_webpack_module, exports) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.BaseBundleBuilder = void 0;
-// BaseBundleBuilder is a base class for BundleBuilder implementations. It
-// provides a the basic wokflow for signing and witnessing an artifact.
-// Subclasses must implement the `package` method to assemble a valid bundle
-// with the generated signature and verification material.
-class BaseBundleBuilder {
-    constructor(options) {
-        this.signer = options.signer;
-        this.witnesses = options.witnesses;
-    }
-    // Executes the signing/witnessing process for the given artifact.
-    async create(artifact) {
-        const signature = await this.prepare(artifact).then((blob) => this.signer.sign(blob));
-        const bundle = await this.package(artifact, signature);
-        // Invoke all of the witnesses in parallel
-        const verificationMaterials = await Promise.all(this.witnesses.map((witness) => witness.testify(bundle.content, publicKey(signature.key))));
-        // Collect the verification material from all of the witnesses
-        const tlogEntryList = [];
-        const timestampList = [];
-        verificationMaterials.forEach(({ tlogEntries, rfc3161Timestamps }) => {
-            tlogEntryList.push(...(tlogEntries ?? []));
-            timestampList.push(...(rfc3161Timestamps ?? []));
-        });
-        // Merge the collected verification material into the bundle
-        bundle.verificationMaterial.tlogEntries = tlogEntryList;
-        bundle.verificationMaterial.timestampVerificationData = {
-            rfc3161Timestamps: timestampList,
-        };
-        return bundle;
-    }
-    // Override this function to apply any pre-signing transformations to the
-    // artifact. The returned buffer will be signed by the signer. The default
-    // implementation simply returns the artifact data.
-    async prepare(artifact) {
-        return artifact.data;
-    }
-}
-exports.BaseBundleBuilder = BaseBundleBuilder;
-// Extracts the public key from a KeyMaterial. Returns either the public key
-// or the certificate, depending on the type of key material.
-function publicKey(key) {
-    switch (key.$case) {
-        case 'publicKey':
-            return key.publicKey;
-        case 'x509Certificate':
-            return key.certificate;
-    }
-}
-
-
-/***/ }),
-
-/***/ 6947:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.toDSSEBundle = exports.toMessageSignatureBundle = void 0;
-/*
-Copyright 2023 The Sigstore Authors.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
-const sigstore = __importStar(__nccwpck_require__(9715));
-const util_1 = __nccwpck_require__(724);
-// Helper functions for assembling the parts of a Sigstore bundle
-// Message signature bundle - $case: 'messageSignature'
-function toMessageSignatureBundle(artifact, signature) {
-    const digest = util_1.crypto.hash(artifact.data);
-    return sigstore.toMessageSignatureBundle({
-        digest,
-        signature: signature.signature,
-        certificate: signature.key.$case === 'x509Certificate'
-            ? util_1.pem.toDER(signature.key.certificate)
-            : undefined,
-        keyHint: signature.key.$case === 'publicKey' ? signature.key.hint : undefined,
-    });
-}
-exports.toMessageSignatureBundle = toMessageSignatureBundle;
-// DSSE envelope bundle - $case: 'dsseEnvelope'
-function toDSSEBundle(artifact, signature) {
-    return sigstore.toDSSEBundle({
-        artifact: artifact.data,
-        artifactType: artifact.type,
-        signature: signature.signature,
-        certificate: signature.key.$case === 'x509Certificate'
-            ? util_1.pem.toDER(signature.key.certificate)
-            : undefined,
-        keyHint: signature.key.$case === 'publicKey' ? signature.key.hint : undefined,
-    });
-}
-exports.toDSSEBundle = toDSSEBundle;
-
-
-/***/ }),
-
-/***/ 8791:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.DSSEBundleBuilder = void 0;
-/*
-Copyright 2023 The Sigstore Authors.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
-const util_1 = __nccwpck_require__(724);
-const base_1 = __nccwpck_require__(5);
-const bundle_1 = __nccwpck_require__(6947);
-// BundleBuilder implementation for DSSE wrapped attestations
-class DSSEBundleBuilder extends base_1.BaseBundleBuilder {
-    constructor(options) {
-        super(options);
-    }
-    // DSSE requires the artifact to be pre-encoded with the payload type
-    // before the signature is generated.
-    async prepare(artifact) {
-        const a = artifactDefaults(artifact);
-        return util_1.dsse.preAuthEncoding(a.type, a.data);
-    }
-    // Packages the artifact and signature into a DSSE bundle
-    async package(artifact, signature) {
-        return (0, bundle_1.toDSSEBundle)(artifactDefaults(artifact), signature);
-    }
-}
-exports.DSSEBundleBuilder = DSSEBundleBuilder;
-// Defaults the artifact type to an empty string if not provided
-function artifactDefaults(artifact) {
-    return {
-        ...artifact,
-        type: artifact.type ?? '',
-    };
-}
-
-
-/***/ }),
-
-/***/ 4929:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.MessageSignatureBundleBuilder = exports.DSSEBundleBuilder = void 0;
-var dsse_1 = __nccwpck_require__(8791);
-Object.defineProperty(exports, "DSSEBundleBuilder", ({ enumerable: true, get: function () { return dsse_1.DSSEBundleBuilder; } }));
-var message_1 = __nccwpck_require__(5243);
-Object.defineProperty(exports, "MessageSignatureBundleBuilder", ({ enumerable: true, get: function () { return message_1.MessageSignatureBundleBuilder; } }));
-
-
-/***/ }),
-
-/***/ 5243:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.MessageSignatureBundleBuilder = void 0;
-/*
-Copyright 2023 The Sigstore Authors.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
-const base_1 = __nccwpck_require__(5);
-const bundle_1 = __nccwpck_require__(6947);
-// BundleBuilder implementation for raw message signatures
-class MessageSignatureBundleBuilder extends base_1.BaseBundleBuilder {
-    constructor(options) {
-        super(options);
-    }
-    async package(artifact, signature) {
-        return (0, bundle_1.toMessageSignatureBundle)(artifact, signature);
-    }
-}
-exports.MessageSignatureBundleBuilder = MessageSignatureBundleBuilder;
-
-
-/***/ }),
-
-/***/ 532:
-/***/ ((__unused_webpack_module, exports) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.InternalError = void 0;
-class InternalError extends Error {
-    constructor({ code, message, cause, }) {
-        super(message);
-        this.name = this.constructor.name;
-        this.cause = cause;
-        this.code = code;
-    }
-}
-exports.InternalError = InternalError;
-
-
-/***/ }),
-
-/***/ 1294:
-/***/ ((__unused_webpack_module, exports) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.checkStatus = exports.HTTPError = void 0;
-class HTTPError extends Error {
-    constructor(response) {
-        super(`HTTP Error: ${response.status} ${response.statusText}`);
-        this.response = response;
-        this.statusCode = response.status;
-        this.location = response.headers?.get('Location') || undefined;
-    }
-}
-exports.HTTPError = HTTPError;
-const checkStatus = (response) => {
-    if (response.ok) {
-        return response;
-    }
-    else {
-        throw new HTTPError(response);
-    }
-};
-exports.checkStatus = checkStatus;
-
-
-/***/ }),
-
-/***/ 2960:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.Fulcio = void 0;
-/*
-Copyright 2023 The Sigstore Authors.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
-const make_fetch_happen_1 = __importDefault(__nccwpck_require__(9525));
-const util_1 = __nccwpck_require__(724);
-const error_1 = __nccwpck_require__(1294);
-/**
- * Fulcio API client.
- */
-class Fulcio {
-    constructor(options) {
-        this.fetch = make_fetch_happen_1.default.defaults({
-            retry: options.retry,
-            timeout: options.timeout,
-            headers: {
-                'Content-Type': 'application/json',
-                'User-Agent': util_1.ua.getUserAgent(),
-            },
-        });
-        this.baseUrl = options.baseURL;
-    }
-    async createSigningCertificate(request) {
-        const url = `${this.baseUrl}/api/v2/signingCert`;
-        const response = await this.fetch(url, {
-            method: 'POST',
-            body: JSON.stringify(request),
-        });
-        (0, error_1.checkStatus)(response);
-        const data = await response.json();
-        return data;
-    }
-}
-exports.Fulcio = Fulcio;
-
-
-/***/ }),
-
-/***/ 6205:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.Rekor = void 0;
-/*
-Copyright 2023 The Sigstore Authors.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
-const make_fetch_happen_1 = __importDefault(__nccwpck_require__(9525));
-const util_1 = __nccwpck_require__(724);
-const error_1 = __nccwpck_require__(1294);
-/**
- * Rekor API client.
- */
-class Rekor {
-    constructor(options) {
-        this.fetch = make_fetch_happen_1.default.defaults({
-            retry: options.retry,
-            timeout: options.timeout,
-            headers: {
-                Accept: 'application/json',
-                'User-Agent': util_1.ua.getUserAgent(),
-            },
-        });
-        this.baseUrl = options.baseURL;
-    }
-    /**
-     * Create a new entry in the Rekor log.
-     * @param propsedEntry {ProposedEntry} Data to create a new entry
-     * @returns {Promise<Entry>} The created entry
-     */
-    async createEntry(propsedEntry) {
-        const url = `${this.baseUrl}/api/v1/log/entries`;
-        const response = await this.fetch(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(propsedEntry),
-        });
-        (0, error_1.checkStatus)(response);
-        const data = await response.json();
-        return entryFromResponse(data);
-    }
-    /**
-     * Get an entry from the Rekor log.
-     * @param uuid {string} The UUID of the entry to retrieve
-     * @returns {Promise<Entry>} The retrieved entry
-     */
-    async getEntry(uuid) {
-        const url = `${this.baseUrl}/api/v1/log/entries/${uuid}`;
-        const response = await this.fetch(url);
-        (0, error_1.checkStatus)(response);
-        const data = await response.json();
-        return entryFromResponse(data);
-    }
-    /**
-     * Search the Rekor log index for entries matching the given query.
-     * @param opts {SearchIndex} Options to search the Rekor log
-     * @returns {Promise<string[]>} UUIDs of matching entries
-     */
-    async searchIndex(opts) {
-        const url = `${this.baseUrl}/api/v1/index/retrieve`;
-        const response = await this.fetch(url, {
-            method: 'POST',
-            body: JSON.stringify(opts),
-            headers: { 'Content-Type': 'application/json' },
-        });
-        (0, error_1.checkStatus)(response);
-        const data = await response.json();
-        return data;
-    }
-    /**
-     * Search the Rekor logs for matching the given query.
-     * @param opts {SearchLogQuery} Query to search the Rekor log
-     * @returns {Promise<Entry[]>} List of matching entries
-     */
-    async searchLog(opts) {
-        const url = `${this.baseUrl}/api/v1/log/entries/retrieve`;
-        const response = await this.fetch(url, {
-            method: 'POST',
-            body: JSON.stringify(opts),
-            headers: { 'Content-Type': 'application/json' },
-        });
-        (0, error_1.checkStatus)(response);
-        const rawData = await response.json();
-        const data = rawData.map((d) => entryFromResponse(d));
-        return data;
-    }
-}
-exports.Rekor = Rekor;
-// Unpack the response from the Rekor API into a more convenient format.
-function entryFromResponse(data) {
-    const entries = Object.entries(data);
-    if (entries.length != 1) {
-        throw new Error('Received multiple entries in Rekor response');
-    }
-    // Grab UUID and entry data from the response
-    const [uuid, entry] = entries[0];
-    return {
-        ...entry,
-        uuid,
-    };
-}
-
-
-/***/ }),
-
-/***/ 258:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.TimestampAuthority = void 0;
-/*
-Copyright 2023 The Sigstore Authors.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
-const make_fetch_happen_1 = __importDefault(__nccwpck_require__(9525));
-const util_1 = __nccwpck_require__(724);
-const error_1 = __nccwpck_require__(1294);
-class TimestampAuthority {
-    constructor(options) {
-        this.fetch = make_fetch_happen_1.default.defaults({
-            retry: options.retry,
-            timeout: options.timeout,
-            headers: {
-                'Content-Type': 'application/json',
-                'User-Agent': util_1.ua.getUserAgent(),
-            },
-        });
-        this.baseUrl = options.baseURL;
-    }
-    async createTimestamp(request) {
-        const url = `${this.baseUrl}/api/v1/timestamp`;
-        const response = await this.fetch(url, {
-            method: 'POST',
-            body: JSON.stringify(request),
-        });
-        (0, error_1.checkStatus)(response);
-        return response.buffer();
-    }
-}
-exports.TimestampAuthority = TimestampAuthority;
-
-
-/***/ }),
-
-/***/ 3110:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.CIContextProvider = void 0;
-/*
-Copyright 2023 The Sigstore Authors.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
-const make_fetch_happen_1 = __importDefault(__nccwpck_require__(9525));
-const util_1 = __nccwpck_require__(724);
-// Collection of all the CI-specific providers we have implemented
-const providers = [getGHAToken, getEnv];
-/**
- * CIContextProvider is a composite identity provider which will iterate
- * over all of the CI-specific providers and return the token from the first
- * one that resolves.
- */
-class CIContextProvider {
-    /* istanbul ignore next */
-    constructor(audience = 'sigstore') {
-        this.audience = audience;
-    }
-    // Invoke all registered ProviderFuncs and return the value of whichever one
-    // resolves first.
-    async getToken() {
-        return util_1.promise
-            .promiseAny(providers.map((getToken) => getToken(this.audience)))
-            .catch(() => Promise.reject('CI: no tokens available'));
-    }
-}
-exports.CIContextProvider = CIContextProvider;
-/**
- * getGHAToken can retrieve an OIDC token when running in a GitHub Actions
- * workflow
- */
-async function getGHAToken(audience) {
-    // Check to see if we're running in GitHub Actions
-    if (!process.env.ACTIONS_ID_TOKEN_REQUEST_URL ||
-        !process.env.ACTIONS_ID_TOKEN_REQUEST_TOKEN) {
-        return Promise.reject('no token available');
-    }
-    // Construct URL to request token w/ appropriate audience
-    const url = new URL(process.env.ACTIONS_ID_TOKEN_REQUEST_URL);
-    url.searchParams.append('audience', audience);
-    const response = await (0, make_fetch_happen_1.default)(url.href, {
-        retry: 2,
-        headers: {
-            Accept: 'application/json',
-            Authorization: `Bearer ${process.env.ACTIONS_ID_TOKEN_REQUEST_TOKEN}`,
-        },
-    });
-    return response.json().then((data) => data.value);
-}
-/**
- * getEnv can retrieve an OIDC token from an environment variable.
- * This matches the behavior of https://github.com/sigstore/cosign/tree/main/pkg/providers/envvar
- */
-async function getEnv() {
-    if (!process.env.SIGSTORE_ID_TOKEN) {
-        return Promise.reject('no token available');
-    }
-    return process.env.SIGSTORE_ID_TOKEN;
-}
-
-
-/***/ }),
-
-/***/ 4463:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.CIContextProvider = void 0;
-/*
-Copyright 2023 The Sigstore Authors.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
-var ci_1 = __nccwpck_require__(3110);
-Object.defineProperty(exports, "CIContextProvider", ({ enumerable: true, get: function () { return ci_1.CIContextProvider; } }));
-
-
-/***/ }),
-
-/***/ 2071:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.TSAWitness = exports.RekorWitness = exports.FulcioSigner = exports.CIContextProvider = exports.InternalError = exports.MessageSignatureBundleBuilder = exports.DSSEBundleBuilder = void 0;
-var bundler_1 = __nccwpck_require__(4929);
-Object.defineProperty(exports, "DSSEBundleBuilder", ({ enumerable: true, get: function () { return bundler_1.DSSEBundleBuilder; } }));
-Object.defineProperty(exports, "MessageSignatureBundleBuilder", ({ enumerable: true, get: function () { return bundler_1.MessageSignatureBundleBuilder; } }));
-var error_1 = __nccwpck_require__(532);
-Object.defineProperty(exports, "InternalError", ({ enumerable: true, get: function () { return error_1.InternalError; } }));
-var identity_1 = __nccwpck_require__(4463);
-Object.defineProperty(exports, "CIContextProvider", ({ enumerable: true, get: function () { return identity_1.CIContextProvider; } }));
-var signer_1 = __nccwpck_require__(7551);
-Object.defineProperty(exports, "FulcioSigner", ({ enumerable: true, get: function () { return signer_1.FulcioSigner; } }));
-var witness_1 = __nccwpck_require__(2170);
-Object.defineProperty(exports, "RekorWitness", ({ enumerable: true, get: function () { return witness_1.RekorWitness; } }));
-Object.defineProperty(exports, "TSAWitness", ({ enumerable: true, get: function () { return witness_1.TSAWitness; } }));
-
-
-/***/ }),
-
-/***/ 4606:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.CAClient = void 0;
-/*
-Copyright 2023 The Sigstore Authors.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
-const error_1 = __nccwpck_require__(532);
-const fulcio_1 = __nccwpck_require__(2960);
-class CAClient {
-    constructor(options) {
-        this.fulcio = new fulcio_1.Fulcio({
-            baseURL: options.fulcioBaseURL,
-            retry: options.retry,
-            timeout: options.timeout,
-        });
-    }
-    async createSigningCertificate(identityToken, publicKey, challenge) {
-        const request = toCertificateRequest(identityToken, publicKey, challenge);
-        try {
-            const resp = await this.fulcio.createSigningCertificate(request);
-            // Account for the fact that the response may contain either a
-            // signedCertificateEmbeddedSct or a signedCertificateDetachedSct.
-            const cert = resp.signedCertificateEmbeddedSct
-                ? resp.signedCertificateEmbeddedSct
-                : resp.signedCertificateDetachedSct;
-            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            return cert.chain.certificates;
-        }
-        catch (err) {
-            throw new error_1.InternalError({
-                code: 'CA_CREATE_SIGNING_CERTIFICATE_ERROR',
-                message: 'error creating signing certificate',
-                cause: err,
-            });
-        }
-    }
-}
-exports.CAClient = CAClient;
-function toCertificateRequest(identityToken, publicKey, challenge) {
-    return {
-        credentials: {
-            oidcIdentityToken: identityToken,
-        },
-        publicKeyRequest: {
-            publicKey: {
-                algorithm: 'ECDSA',
-                content: publicKey,
-            },
-            proofOfPossession: challenge.toString('base64'),
-        },
-    };
-}
-
-
-/***/ }),
-
-/***/ 8489:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.EphemeralSigner = void 0;
-/*
-Copyright 2023 The Sigstore Authors.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
-const crypto_1 = __importDefault(__nccwpck_require__(6113));
-const EC_KEYPAIR_TYPE = 'ec';
-const P256_CURVE = 'P-256';
-// Signer implementation which uses an ephemeral keypair to sign artifacts.
-// The private key lives only in memory and is tied to the lifetime of the
-// EphemeralSigner instance.
-class EphemeralSigner {
-    constructor() {
-        this.keypair = crypto_1.default.generateKeyPairSync(EC_KEYPAIR_TYPE, {
-            namedCurve: P256_CURVE,
-        });
-    }
-    async sign(data) {
-        const signature = crypto_1.default.sign(null, data, this.keypair.privateKey);
-        const publicKey = this.keypair.publicKey
-            .export({ format: 'pem', type: 'spki' })
-            .toString('ascii');
-        return {
-            signature: signature,
-            key: { $case: 'publicKey', publicKey },
-        };
-    }
-}
-exports.EphemeralSigner = EphemeralSigner;
-
-
-/***/ }),
-
-/***/ 7328:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.FulcioSigner = void 0;
-/*
-Copyright 2023 The Sigstore Authors.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
-const error_1 = __nccwpck_require__(532);
-const util_1 = __nccwpck_require__(724);
-const ca_1 = __nccwpck_require__(4606);
-const ephemeral_1 = __nccwpck_require__(8489);
-// Signer implementation which can be used to decorate another signer
-// with a Fulcio-issued signing certificate for the signer's public key.
-// Must be instantiated with an identity provider which can provide a JWT
-// which represents the identity to be bound to the signing certificate.
-class FulcioSigner {
-    constructor(options) {
-        this.ca = new ca_1.CAClient(options);
-        this.identityProvider = options.identityProvider;
-        this.keyHolder = options.keyHolder || new ephemeral_1.EphemeralSigner();
-    }
-    async sign(data) {
-        // Retrieve identity token from the supplied identity provider
-        const identityToken = await this.getIdentityToken();
-        // Extract challenge claim from OIDC token
-        const subject = util_1.oidc.extractJWTSubject(identityToken);
-        // Construct challenge value by signing the subject claim
-        const challenge = await this.keyHolder.sign(Buffer.from(subject));
-        if (challenge.key.$case !== 'publicKey') {
-            throw new error_1.InternalError({
-                code: 'CA_CREATE_SIGNING_CERTIFICATE_ERROR',
-                message: 'unexpected format for signing key',
-            });
-        }
-        // Create signing certificate
-        const certificates = await this.ca.createSigningCertificate(identityToken, challenge.key.publicKey, challenge.signature);
-        // Generate artifact signature
-        const signature = await this.keyHolder.sign(data);
-        // Specifically returning only the first certificate in the chain
-        // as the key.
-        return {
-            signature: signature.signature,
-            key: {
-                $case: 'x509Certificate',
-                certificate: certificates[0],
-            },
-        };
-    }
-    async getIdentityToken() {
-        try {
-            return await this.identityProvider.getToken();
-        }
-        catch (err) {
-            throw new error_1.InternalError({
-                code: 'IDENTITY_TOKEN_READ_ERROR',
-                message: 'error retrieving identity token',
-                cause: err,
-            });
-        }
-    }
-}
-exports.FulcioSigner = FulcioSigner;
-
-
-/***/ }),
-
-/***/ 7551:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.FulcioSigner = void 0;
-/*
-Copyright 2023 The Sigstore Authors.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
-var fulcio_1 = __nccwpck_require__(7328);
-Object.defineProperty(exports, "FulcioSigner", ({ enumerable: true, get: function () { return fulcio_1.FulcioSigner; } }));
-
-
-/***/ }),
-
-/***/ 5657:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.hash = void 0;
-/*
-Copyright 2023 The Sigstore Authors.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
-const crypto_1 = __importDefault(__nccwpck_require__(6113));
-const SHA256_ALGORITHM = 'sha256';
-function hash(data, algorithm = SHA256_ALGORITHM) {
-    return crypto_1.default.createHash(algorithm).update(data).digest();
-}
-exports.hash = hash;
-
-
-/***/ }),
-
-/***/ 8502:
-/***/ ((__unused_webpack_module, exports) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.preAuthEncoding = void 0;
-/*
-Copyright 2023 The Sigstore Authors.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
-const PAE_PREFIX = 'DSSEv1';
-// DSSE Pre-Authentication Encoding
-function preAuthEncoding(payloadType, payload) {
-    const prefix = Buffer.from(`${PAE_PREFIX} ${payloadType.length} ${payloadType} ${payload.length} `, 'ascii');
-    return Buffer.concat([prefix, payload]);
-}
-exports.preAuthEncoding = preAuthEncoding;
-
-
-/***/ }),
-
-/***/ 970:
-/***/ ((__unused_webpack_module, exports) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.base64Decode = exports.base64Encode = void 0;
-/*
-Copyright 2023 The Sigstore Authors.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
-const BASE64_ENCODING = 'base64';
-const UTF8_ENCODING = 'utf-8';
-function base64Encode(str) {
-    return Buffer.from(str, UTF8_ENCODING).toString(BASE64_ENCODING);
-}
-exports.base64Encode = base64Encode;
-function base64Decode(str) {
-    return Buffer.from(str, BASE64_ENCODING).toString(UTF8_ENCODING);
-}
-exports.base64Decode = base64Decode;
-
-
-/***/ }),
-
-/***/ 724:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.ua = exports.promise = exports.pem = exports.oidc = exports.json = exports.encoding = exports.dsse = exports.crypto = void 0;
-/*
-Copyright 2023 The Sigstore Authors.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
-exports.crypto = __importStar(__nccwpck_require__(5657));
-exports.dsse = __importStar(__nccwpck_require__(8502));
-exports.encoding = __importStar(__nccwpck_require__(970));
-exports.json = __importStar(__nccwpck_require__(3741));
-exports.oidc = __importStar(__nccwpck_require__(3397));
-exports.pem = __importStar(__nccwpck_require__(1483));
-exports.promise = __importStar(__nccwpck_require__(1888));
-exports.ua = __importStar(__nccwpck_require__(6253));
-
-
-/***/ }),
-
-/***/ 3741:
-/***/ ((__unused_webpack_module, exports) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.canonicalize = void 0;
-/*
-Copyright 2023 The Sigstore Authors.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
-// JSON canonicalization per https://github.com/cyberphone/json-canonicalization
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function canonicalize(object) {
-    let buffer = '';
-    if (object === null || typeof object !== 'object' || object.toJSON != null) {
-        // Primitives or toJSONable objects
-        buffer += JSON.stringify(object);
-    }
-    else if (Array.isArray(object)) {
-        // Array - maintain element order
-        buffer += '[';
-        let first = true;
-        object.forEach((element) => {
-            if (!first) {
-                buffer += ',';
-            }
-            first = false;
-            // recursive call
-            buffer += canonicalize(element);
-        });
-        buffer += ']';
-    }
-    else {
-        // Object - Sort properties before serializing
-        buffer += '{';
-        let first = true;
-        Object.keys(object)
-            .sort()
-            .forEach((property) => {
-            if (!first) {
-                buffer += ',';
-            }
-            first = false;
-            buffer += JSON.stringify(property);
-            buffer += ':';
-            // recursive call
-            buffer += canonicalize(object[property]);
-        });
-        buffer += '}';
-    }
-    return buffer;
-}
-exports.canonicalize = canonicalize;
-
-
-/***/ }),
-
-/***/ 3397:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.extractJWTSubject = void 0;
-/*
-Copyright 2023 The Sigstore Authors.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
-const enc = __importStar(__nccwpck_require__(970));
-function extractJWTSubject(jwt) {
-    const parts = jwt.split('.', 3);
-    const payload = JSON.parse(enc.base64Decode(parts[1]));
-    switch (payload.iss) {
-        case 'https://accounts.google.com':
-        case 'https://oauth2.sigstore.dev/auth':
-            return payload.email;
-        default:
-            return payload.sub;
-    }
-}
-exports.extractJWTSubject = extractJWTSubject;
-
-
-/***/ }),
-
-/***/ 1483:
-/***/ ((__unused_webpack_module, exports) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.toDER = void 0;
-/*
-Copyright 2023 The Sigstore Authors.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
-const PEM_HEADER = /-----BEGIN (.*)-----/;
-const PEM_FOOTER = /-----END (.*)-----/;
-function toDER(certificate) {
-    const lines = certificate
-        .split('\n')
-        .map((line) => line.match(PEM_HEADER) || line.match(PEM_FOOTER) ? '' : line);
-    return Buffer.from(lines.join(''), 'base64');
-}
-exports.toDER = toDER;
-
-
-/***/ }),
-
-/***/ 1888:
-/***/ ((__unused_webpack_module, exports) => {
-
-"use strict";
-
-/*
-Copyright 2023 The Sigstore Authors.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.promiseAny = void 0;
-// Implementation of Promise.any (not available until Node v15).
-// We're basically inverting the logic of Promise.all and taking advantage
-// of the fact that Promise.all will return early on the first rejection.
-// By reversing the resolve/reject logic we can use this to return early
-// on the first resolved promise.
-const promiseAny = async (values) => {
-    return Promise.all([...values].map((promise) => new Promise((resolve, reject) => promise.then(reject, resolve)))).then((errors) => Promise.reject(errors), (value) => Promise.resolve(value));
-};
-exports.promiseAny = promiseAny;
-
-
-/***/ }),
-
-/***/ 6253:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.getUserAgent = void 0;
-/*
-Copyright 2023 The Sigstore Authors.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
-const os_1 = __importDefault(__nccwpck_require__(2037));
-// Format User-Agent: <product> / <product-version> (<platform>)
-// source: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/User-Agent
-const getUserAgent = () => {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const packageVersion = (__nccwpck_require__(8992)/* .version */ .i8);
-    const nodeVersion = process.version;
-    const platformName = os_1.default.platform();
-    const archName = os_1.default.arch();
-    return `sigstore-js/${packageVersion} (Node ${nodeVersion}) (${platformName}/${archName})`;
-};
-exports.getUserAgent = getUserAgent;
-
-
-/***/ }),
-
-/***/ 2170:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.TSAWitness = exports.RekorWitness = void 0;
-/*
-Copyright 2023 The Sigstore Authors.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
-var tlog_1 = __nccwpck_require__(7843);
-Object.defineProperty(exports, "RekorWitness", ({ enumerable: true, get: function () { return tlog_1.RekorWitness; } }));
-var tsa_1 = __nccwpck_require__(49);
-Object.defineProperty(exports, "TSAWitness", ({ enumerable: true, get: function () { return tsa_1.TSAWitness; } }));
-
-
-/***/ }),
-
-/***/ 6737:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.TLogClient = void 0;
-/*
-Copyright 2023 The Sigstore Authors.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
-const error_1 = __nccwpck_require__(532);
-const error_2 = __nccwpck_require__(1294);
-const rekor_1 = __nccwpck_require__(6205);
-class TLogClient {
-    constructor(options) {
-        this.fetchOnConflict = options.fetchOnConflict ?? false;
-        this.rekor = new rekor_1.Rekor({
-            baseURL: options.rekorBaseURL,
-            retry: options.retry,
-            timeout: options.timeout,
-        });
-    }
-    async createEntry(proposedEntry) {
-        let entry;
-        try {
-            entry = await this.rekor.createEntry(proposedEntry);
-        }
-        catch (err) {
-            // If the entry already exists, fetch it (if enabled)
-            if (entryExistsError(err) && this.fetchOnConflict) {
-                // Grab the UUID of the existing entry from the location header
-                /* istanbul ignore next */
-                const uuid = err.location.split('/').pop() || '';
-                try {
-                    entry = await this.rekor.getEntry(uuid);
-                }
-                catch (err) {
-                    throw new error_1.InternalError({
-                        code: 'TLOG_FETCH_ENTRY_ERROR',
-                        message: 'error fetching tlog entry',
-                        cause: err,
-                    });
-                }
-            }
-            else {
-                throw new error_1.InternalError({
-                    code: 'TLOG_CREATE_ENTRY_ERROR',
-                    message: 'error creating tlog entry',
-                    cause: err,
-                });
-            }
-        }
-        return entry;
-    }
-}
-exports.TLogClient = TLogClient;
-function entryExistsError(value) {
-    return (value instanceof error_2.HTTPError &&
-        value.statusCode === 409 &&
-        value.location !== undefined);
-}
-
-
-/***/ }),
-
-/***/ 3776:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.toProposedEntry = void 0;
-/*
-Copyright 2023 The Sigstore Authors.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
-const bundle_1 = __nccwpck_require__(9715);
-const util_1 = __nccwpck_require__(724);
-function toProposedEntry(content, publicKey, 
-// TODO: Remove this parameter once have completely switched to 'dsse' entries
-entryType = 'intoto') {
-    switch (content.$case) {
-        case 'dsseEnvelope':
-            // TODO: Remove this conditional once have completely switched to 'dsse' entries
-            if (entryType === 'dsse') {
-                return toProposedDSSEEntry(content.dsseEnvelope, publicKey);
-            }
-            return toProposedIntotoEntry(content.dsseEnvelope, publicKey);
-        case 'messageSignature':
-            return toProposedHashedRekordEntry(content.messageSignature, publicKey);
-    }
-}
-exports.toProposedEntry = toProposedEntry;
-// Returns a properly formatted Rekor "hashedrekord" entry for the given digest
-// and signature
-function toProposedHashedRekordEntry(messageSignature, publicKey) {
-    const hexDigest = messageSignature.messageDigest.digest.toString('hex');
-    const b64Signature = messageSignature.signature.toString('base64');
-    const b64Key = util_1.encoding.base64Encode(publicKey);
-    return {
-        apiVersion: '0.0.1',
-        kind: 'hashedrekord',
-        spec: {
-            data: {
-                hash: {
-                    algorithm: 'sha256',
-                    value: hexDigest,
-                },
-            },
-            signature: {
-                content: b64Signature,
-                publicKey: {
-                    content: b64Key,
-                },
-            },
-        },
-    };
-}
-// Returns a properly formatted Rekor "dsse" entry for the given DSSE envelope
-// and signature
-function toProposedDSSEEntry(envelope, publicKey) {
-    const envelopeJSON = JSON.stringify((0, bundle_1.envelopeToJSON)(envelope));
-    const encodedKey = util_1.encoding.base64Encode(publicKey);
-    return {
-        apiVersion: '0.0.1',
-        kind: 'dsse',
-        spec: {
-            proposedContent: {
-                envelope: envelopeJSON,
-                verifiers: [encodedKey],
-            },
-        },
-    };
-}
-// Returns a properly formatted Rekor "intoto" entry for the given DSSE
-// envelope and signature
-function toProposedIntotoEntry(envelope, publicKey) {
-    // Calculate the value for the payloadHash field in the Rekor entry
-    const payloadHash = util_1.crypto.hash(envelope.payload).toString('hex');
-    // Calculate the value for the hash field in the Rekor entry
-    const envelopeHash = calculateDSSEHash(envelope, publicKey);
-    // Collect values for re-creating the DSSE envelope.
-    // Double-encode payload and signature cause that's what Rekor expects
-    const payload = util_1.encoding.base64Encode(envelope.payload.toString('base64'));
-    const sig = util_1.encoding.base64Encode(envelope.signatures[0].sig.toString('base64'));
-    const keyid = envelope.signatures[0].keyid;
-    const encodedKey = util_1.encoding.base64Encode(publicKey);
-    // Create the envelope portion of the entry. Note the inclusion of the
-    // publicKey in the signature struct is not a standard part of a DSSE
-    // envelope, but is required by Rekor.
-    const dsse = {
-        payloadType: envelope.payloadType,
-        payload: payload,
-        signatures: [{ sig, publicKey: encodedKey }],
-    };
-    // If the keyid is an empty string, Rekor seems to remove it altogether. We
-    // need to do the same here so that we can properly recreate the entry for
-    // verification.
-    if (keyid.length > 0) {
-        dsse.signatures[0].keyid = keyid;
-    }
-    return {
-        apiVersion: '0.0.2',
-        kind: 'intoto',
-        spec: {
-            content: {
-                envelope: dsse,
-                hash: { algorithm: 'sha256', value: envelopeHash },
-                payloadHash: { algorithm: 'sha256', value: payloadHash },
-            },
-        },
-    };
-}
-// Calculates the hash of a DSSE envelope for inclusion in a Rekor entry.
-// There is no standard way to do this, so the scheme we're using as as
-// follows:
-//  * payload is base64 encoded
-//  * signature is base64 encoded (only the first signature is used)
-//  * keyid is included ONLY if it is NOT an empty string
-//  * The resulting JSON is canonicalized and hashed to a hex string
-function calculateDSSEHash(envelope, publicKey) {
-    const dsse = {
-        payloadType: envelope.payloadType,
-        payload: envelope.payload.toString('base64'),
-        signatures: [
-            { sig: envelope.signatures[0].sig.toString('base64'), publicKey },
-        ],
-    };
-    // If the keyid is an empty string, Rekor seems to remove it altogether.
-    if (envelope.signatures[0].keyid.length > 0) {
-        dsse.signatures[0].keyid = envelope.signatures[0].keyid;
-    }
-    return util_1.crypto.hash(util_1.json.canonicalize(dsse)).toString('hex');
-}
-
-
-/***/ }),
-
-/***/ 7843:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.RekorWitness = void 0;
-/*
-Copyright 2023 The Sigstore Authors.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
-const util_1 = __nccwpck_require__(724);
-const client_1 = __nccwpck_require__(6737);
-const entry_1 = __nccwpck_require__(3776);
-class RekorWitness {
-    constructor(options) {
-        this.tlog = new client_1.TLogClient(options);
-    }
-    async testify(content, publicKey) {
-        const proposedEntry = (0, entry_1.toProposedEntry)(content, publicKey);
-        const entry = await this.tlog.createEntry(proposedEntry);
-        return toTransparencyLogEntry(entry);
-    }
-}
-exports.RekorWitness = RekorWitness;
-function toTransparencyLogEntry(entry) {
-    const logID = Buffer.from(entry.logID, 'hex');
-    // Parse entry body so we can extract the kind and version.
-    const bodyJSON = util_1.encoding.base64Decode(entry.body);
-    const entryBody = JSON.parse(bodyJSON);
-    const promise = entry?.verification?.signedEntryTimestamp
-        ? inclusionPromise(entry.verification.signedEntryTimestamp)
-        : undefined;
-    const proof = entry?.verification?.inclusionProof
-        ? inclusionProof(entry.verification.inclusionProof)
-        : undefined;
-    const tlogEntry = {
-        logIndex: entry.logIndex.toString(),
-        logId: {
-            keyId: logID,
-        },
-        integratedTime: entry.integratedTime.toString(),
-        kindVersion: {
-            kind: entryBody.kind,
-            version: entryBody.apiVersion,
-        },
-        inclusionPromise: promise,
-        inclusionProof: proof,
-        canonicalizedBody: Buffer.from(entry.body, 'base64'),
-    };
-    return {
-        tlogEntries: [tlogEntry],
-    };
-}
-function inclusionPromise(promise) {
-    return {
-        signedEntryTimestamp: Buffer.from(promise, 'base64'),
-    };
-}
-function inclusionProof(proof) {
-    return {
-        logIndex: proof.logIndex.toString(),
-        treeSize: proof.treeSize.toString(),
-        rootHash: Buffer.from(proof.rootHash, 'hex'),
-        hashes: proof.hashes.map((h) => Buffer.from(h, 'hex')),
-        checkpoint: {
-            envelope: proof.checkpoint,
-        },
-    };
-}
-
-
-/***/ }),
-
-/***/ 2239:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.TSAClient = void 0;
-/*
-Copyright 2023 The Sigstore Authors.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
-const error_1 = __nccwpck_require__(532);
-const tsa_1 = __nccwpck_require__(258);
-const util_1 = __nccwpck_require__(724);
-class TSAClient {
-    constructor(options) {
-        this.tsa = new tsa_1.TimestampAuthority({
-            baseURL: options.tsaBaseURL,
-            retry: options.retry,
-            timeout: options.timeout,
-        });
-    }
-    async createTimestamp(signature) {
-        const request = {
-            artifactHash: util_1.crypto.hash(signature).toString('base64'),
-            hashAlgorithm: 'sha256',
-        };
-        try {
-            return await this.tsa.createTimestamp(request);
-        }
-        catch (err) {
-            throw new error_1.InternalError({
-                code: 'TSA_CREATE_TIMESTAMP_ERROR',
-                message: 'error creating timestamp',
-                cause: err,
-            });
-        }
-    }
-}
-exports.TSAClient = TSAClient;
-
-
-/***/ }),
-
-/***/ 49:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.TSAWitness = void 0;
-/*
-Copyright 2023 The Sigstore Authors.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
-const client_1 = __nccwpck_require__(2239);
-class TSAWitness {
-    constructor(options) {
-        this.tsa = new client_1.TSAClient({
-            tsaBaseURL: options.tsaBaseURL,
-            retry: options.retry,
-            timeout: options.timeout,
-        });
-    }
-    async testify(content) {
-        const signature = extractSignature(content);
-        const timestamp = await this.tsa.createTimestamp(signature);
-        return {
-            rfc3161Timestamps: [{ signedTimestamp: timestamp }],
-        };
-    }
-}
-exports.TSAWitness = TSAWitness;
-function extractSignature(content) {
-    switch (content.$case) {
-        case 'dsseEnvelope':
-            return content.dsseEnvelope.signatures[0].sig;
-        case 'messageSignature':
-            return content.messageSignature.signature;
-    }
-}
-
-
-/***/ }),
-
 /***/ 8134:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
@@ -34382,6 +32639,81 @@ module.exports = validRange
 
 /***/ }),
 
+/***/ 609:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.toCertificateRequest = void 0;
+function toCertificateRequest(identityToken, publicKey, challenge) {
+    return {
+        credentials: {
+            oidcIdentityToken: identityToken,
+        },
+        publicKeyRequest: {
+            publicKey: {
+                algorithm: 'ECDSA',
+                content: publicKey
+                    .export({ format: 'pem', type: 'spki' })
+                    .toString('ascii'),
+            },
+            proofOfPossession: challenge.toString('base64'),
+        },
+    };
+}
+exports.toCertificateRequest = toCertificateRequest;
+
+
+/***/ }),
+
+/***/ 7021:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.CAClient = void 0;
+const error_1 = __nccwpck_require__(6274);
+const external_1 = __nccwpck_require__(9069);
+const format_1 = __nccwpck_require__(609);
+class CAClient {
+    constructor(options) {
+        this.fulcio = new external_1.Fulcio({
+            baseURL: options.fulcioBaseURL,
+            retry: options.retry,
+            timeout: options.timeout,
+        });
+    }
+    async createSigningCertificate(identityToken, publicKey, challenge) {
+        const request = (0, format_1.toCertificateRequest)(identityToken, publicKey, challenge);
+        try {
+            const resp = await this.fulcio.createSigningCertificate(request);
+            // Account for the fact that the response may contain either a
+            // signedCertificateEmbeddedSct or a signedCertificateDetachedSct.
+            const cert = resp.signedCertificateEmbeddedSct
+                ? resp.signedCertificateEmbeddedSct
+                : resp.signedCertificateDetachedSct;
+            // Return the first certificate in the chain, which is the signing
+            // certificate. Specifically not returning the rest of the chain to
+            // mitigate the risk of errors when verifying the certificate chain.
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+            return cert.chain.certificates.slice(0, 1);
+        }
+        catch (err) {
+            throw new error_1.InternalError({
+                code: 'CA_CREATE_SIGNING_CERTIFICATE_ERROR',
+                message: 'error creating signing certificate',
+                cause: err,
+            });
+        }
+    }
+}
+exports.CAClient = CAClient;
+
+
+/***/ }),
+
 /***/ 302:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
@@ -34704,7 +33036,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.artifactVerificationOptions = exports.createBundleBuilder = exports.DEFAULT_TIMEOUT = exports.DEFAULT_RETRY = exports.DEFAULT_REKOR_URL = exports.DEFAULT_FULCIO_URL = void 0;
+exports.identityProviders = exports.artifactVerificationOptions = exports.createTSAClient = exports.createTLogClient = exports.createCAClient = exports.DEFAULT_TIMEOUT = exports.DEFAULT_RETRY = exports.DEFAULT_REKOR_URL = exports.DEFAULT_FULCIO_URL = void 0;
 /*
 Copyright 2023 The Sigstore Authors.
 
@@ -34720,96 +33052,41 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-const sign_1 = __nccwpck_require__(2071);
+const ca_1 = __nccwpck_require__(7021);
 const identity_1 = __importDefault(__nccwpck_require__(8761));
-const signature_1 = __nccwpck_require__(2787);
+const tlog_1 = __nccwpck_require__(2030);
+const tsa_1 = __nccwpck_require__(8880);
 const sigstore = __importStar(__nccwpck_require__(266));
 exports.DEFAULT_FULCIO_URL = 'https://fulcio.sigstore.dev';
 exports.DEFAULT_REKOR_URL = 'https://rekor.sigstore.dev';
 exports.DEFAULT_RETRY = { retries: 2 };
 exports.DEFAULT_TIMEOUT = 5000;
-function createBundleBuilder(bundleType, options) {
-    const bundlerOptions = {
-        signer: initSigner(options),
-        witnesses: initWitnesses(options),
-    };
-    switch (bundleType) {
-        case 'messageSignature':
-            return new sign_1.MessageSignatureBundleBuilder(bundlerOptions);
-        case 'dsseEnvelope':
-            return new sign_1.DSSEBundleBuilder(bundlerOptions);
-    }
+function createCAClient(options) {
+    return new ca_1.CAClient({
+        fulcioBaseURL: options.fulcioURL || exports.DEFAULT_FULCIO_URL,
+        retry: options.retry ?? exports.DEFAULT_RETRY,
+        timeout: options.timeout ?? exports.DEFAULT_TIMEOUT,
+    });
 }
-exports.createBundleBuilder = createBundleBuilder;
-// Instantiate a signer based on the supplied options. If a signer function is
-// provided, use that. Otherwise, if a Fulcio URL is provided, use the Fulcio
-// signer. Otherwise, throw an error.
-function initSigner(options) {
-    if (isCallbackSignerEnabled(options)) {
-        return new signature_1.CallbackSigner(options);
-    }
-    else {
-        return new sign_1.FulcioSigner({
-            fulcioBaseURL: options.fulcioURL || exports.DEFAULT_FULCIO_URL,
-            identityProvider: options.identityProvider || initIdentityProvider(options),
-            retry: options.retry ?? exports.DEFAULT_RETRY,
-            timeout: options.timeout ?? exports.DEFAULT_TIMEOUT,
-        });
-    }
+exports.createCAClient = createCAClient;
+function createTLogClient(options) {
+    return new tlog_1.TLogClient({
+        rekorBaseURL: options.rekorURL || exports.DEFAULT_REKOR_URL,
+        retry: options.retry ?? exports.DEFAULT_RETRY,
+        timeout: options.timeout ?? exports.DEFAULT_TIMEOUT,
+    });
 }
-// Instantiate an identity provider based on the supplied options. If an
-// explicit identity token is provided, use that. Otherwise, if an OIDC issuer
-// and client ID are provided, use the OIDC provider. Otherwise, use the CI
-// context provider.
-function initIdentityProvider(options) {
-    const token = options.identityToken;
-    if (token) {
-        return { getToken: () => Promise.resolve(token) };
-    }
-    else if (options.oidcIssuer && options.oidcClientID) {
-        return identity_1.default.oauthProvider({
-            issuer: options.oidcIssuer,
-            clientID: options.oidcClientID,
-            clientSecret: options.oidcClientSecret,
-            redirectURL: options.oidcRedirectURL,
-        });
-    }
-    else {
-        return new sign_1.CIContextProvider('sigstore');
-    }
-}
-// Instantiate a collection of witnesses based on the supplied options.
-function initWitnesses(options) {
-    const witnesses = [];
-    if (isRekorEnabled(options)) {
-        witnesses.push(new sign_1.RekorWitness({
-            rekorBaseURL: options.rekorURL || exports.DEFAULT_REKOR_URL,
-            fetchOnConflict: false,
-            retry: options.retry ?? exports.DEFAULT_RETRY,
-            timeout: options.timeout ?? exports.DEFAULT_TIMEOUT,
-        }));
-    }
-    if (isTSAEnabled(options)) {
-        witnesses.push(new sign_1.TSAWitness({
+exports.createTLogClient = createTLogClient;
+function createTSAClient(options) {
+    return options.tsaServerURL
+        ? new tsa_1.TSAClient({
             tsaBaseURL: options.tsaServerURL,
             retry: options.retry ?? exports.DEFAULT_RETRY,
             timeout: options.timeout ?? exports.DEFAULT_TIMEOUT,
-        }));
-    }
-    return witnesses;
+        })
+        : undefined;
 }
-// Type assertion to ensure that the signer is enabled
-function isCallbackSignerEnabled(options) {
-    return options.signer !== undefined;
-}
-// Type assertion to ensure that Rekor is enabled
-function isRekorEnabled(options) {
-    return options.tlogUpload !== false;
-}
-// Type assertion to ensure that TSA is enabled
-function isTSAEnabled(options) {
-    return options.tsaServerURL !== undefined;
-}
+exports.createTSAClient = createTSAClient;
 // Assembles the AtifactVerificationOptions from the supplied VerifyOptions.
 function artifactVerificationOptions(options) {
     // The trusted signers are only used if the options contain a certificate
@@ -34835,7 +33112,7 @@ function artifactVerificationOptions(options) {
                 },
             };
         }
-        const oids = Object.entries(options.certificateOIDs || /* istanbul ignore next */ {}).map(([oid, value]) => ({
+        const oids = Object.entries(options.certificateOIDs || {}).map(([oid, value]) => ({
             oid: { id: oid.split('.').map((s) => parseInt(s, 10)) },
             value: Buffer.from(value),
         }));
@@ -34868,6 +33145,31 @@ function artifactVerificationOptions(options) {
     };
 }
 exports.artifactVerificationOptions = artifactVerificationOptions;
+// Translates the IdenityProviderOptions into a list of Providers which
+// should be queried to retrieve an identity token.
+function identityProviders(options) {
+    const idps = [];
+    const token = options.identityToken;
+    // If an explicit identity token is provided, use that. Setup a dummy
+    // provider that just returns the token. Otherwise, setup the CI context
+    // provider and (optionally) the OAuth provider.
+    if (token) {
+        idps.push({ getToken: () => Promise.resolve(token) });
+    }
+    else {
+        idps.push(identity_1.default.ciContextProvider());
+        if (options.oidcIssuer && options.oidcClientID) {
+            idps.push(identity_1.default.oauthProvider({
+                issuer: options.oidcIssuer,
+                clientID: options.oidcClientID,
+                clientSecret: options.oidcClientSecret,
+                redirectURL: options.oidcRedirectURL,
+            }));
+        }
+    }
+    return idps;
+}
+exports.identityProviders = identityProviders;
 
 
 /***/ }),
@@ -34878,7 +33180,7 @@ exports.artifactVerificationOptions = artifactVerificationOptions;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.SignatureError = exports.InternalError = exports.PolicyError = exports.VerificationError = void 0;
+exports.InternalError = exports.PolicyError = exports.VerificationError = void 0;
 /*
 Copyright 2023 The Sigstore Authors.
 
@@ -34902,25 +33204,402 @@ class BaseError extends Error {
         this.cause = cause;
     }
 }
-class ErrorWithCode extends BaseError {
-    constructor({ code, message, cause, }) {
-        super(message, cause);
-        this.code = code;
-        this.name = this.constructor.name;
-    }
-}
 class VerificationError extends BaseError {
 }
 exports.VerificationError = VerificationError;
 class PolicyError extends BaseError {
 }
 exports.PolicyError = PolicyError;
-class InternalError extends ErrorWithCode {
+class InternalError extends BaseError {
+    constructor({ code, message, cause, }) {
+        super(message, cause);
+        this.code = code;
+    }
 }
 exports.InternalError = InternalError;
-class SignatureError extends ErrorWithCode {
+
+
+/***/ }),
+
+/***/ 5005:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.checkStatus = exports.HTTPError = void 0;
+class HTTPError extends Error {
+    constructor(response) {
+        super(`HTTP Error: ${response.status} ${response.statusText}`);
+        this.response = response;
+        this.statusCode = response.status;
+        this.location = response.headers?.get('Location') || undefined;
+    }
 }
-exports.SignatureError = SignatureError;
+exports.HTTPError = HTTPError;
+const checkStatus = (response) => {
+    if (response.ok) {
+        return response;
+    }
+    else {
+        throw new HTTPError(response);
+    }
+};
+exports.checkStatus = checkStatus;
+
+
+/***/ }),
+
+/***/ 8387:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Fulcio = void 0;
+/*
+Copyright 2022 The Sigstore Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+const make_fetch_happen_1 = __importDefault(__nccwpck_require__(9525));
+const util_1 = __nccwpck_require__(6901);
+const error_1 = __nccwpck_require__(5005);
+/**
+ * Fulcio API client.
+ */
+class Fulcio {
+    constructor(options) {
+        this.fetch = make_fetch_happen_1.default.defaults({
+            retry: options.retry,
+            timeout: options.timeout,
+            headers: {
+                'Content-Type': 'application/json',
+                'User-Agent': util_1.ua.getUserAgent(),
+            },
+        });
+        this.baseUrl = options.baseURL;
+    }
+    async createSigningCertificate(request) {
+        const url = `${this.baseUrl}/api/v2/signingCert`;
+        const response = await this.fetch(url, {
+            method: 'POST',
+            body: JSON.stringify(request),
+        });
+        (0, error_1.checkStatus)(response);
+        const data = await response.json();
+        return data;
+    }
+}
+exports.Fulcio = Fulcio;
+
+
+/***/ }),
+
+/***/ 9069:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.TimestampAuthority = exports.Rekor = exports.Fulcio = exports.HTTPError = void 0;
+/*
+Copyright 2022 The Sigstore Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+var error_1 = __nccwpck_require__(5005);
+Object.defineProperty(exports, "HTTPError", ({ enumerable: true, get: function () { return error_1.HTTPError; } }));
+var fulcio_1 = __nccwpck_require__(8387);
+Object.defineProperty(exports, "Fulcio", ({ enumerable: true, get: function () { return fulcio_1.Fulcio; } }));
+var rekor_1 = __nccwpck_require__(9047);
+Object.defineProperty(exports, "Rekor", ({ enumerable: true, get: function () { return rekor_1.Rekor; } }));
+var tsa_1 = __nccwpck_require__(1679);
+Object.defineProperty(exports, "TimestampAuthority", ({ enumerable: true, get: function () { return tsa_1.TimestampAuthority; } }));
+
+
+/***/ }),
+
+/***/ 9047:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Rekor = void 0;
+/*
+Copyright 2022 The Sigstore Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+const make_fetch_happen_1 = __importDefault(__nccwpck_require__(9525));
+const util_1 = __nccwpck_require__(6901);
+const error_1 = __nccwpck_require__(5005);
+/**
+ * Rekor API client.
+ */
+class Rekor {
+    constructor(options) {
+        this.fetch = make_fetch_happen_1.default.defaults({
+            retry: options.retry,
+            timeout: options.timeout,
+            headers: {
+                Accept: 'application/json',
+                'User-Agent': util_1.ua.getUserAgent(),
+            },
+        });
+        this.baseUrl = options.baseURL;
+    }
+    /**
+     * Create a new entry in the Rekor log.
+     * @param propsedEntry {ProposedEntry} Data to create a new entry
+     * @returns {Promise<Entry>} The created entry
+     */
+    async createEntry(propsedEntry) {
+        const url = `${this.baseUrl}/api/v1/log/entries`;
+        const response = await this.fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(propsedEntry),
+        });
+        (0, error_1.checkStatus)(response);
+        const data = await response.json();
+        return entryFromResponse(data);
+    }
+    /**
+     * Get an entry from the Rekor log.
+     * @param uuid {string} The UUID of the entry to retrieve
+     * @returns {Promise<Entry>} The retrieved entry
+     */
+    async getEntry(uuid) {
+        const url = `${this.baseUrl}/api/v1/log/entries/${uuid}`;
+        const response = await this.fetch(url);
+        (0, error_1.checkStatus)(response);
+        const data = await response.json();
+        return entryFromResponse(data);
+    }
+    /**
+     * Search the Rekor log index for entries matching the given query.
+     * @param opts {SearchIndex} Options to search the Rekor log
+     * @returns {Promise<string[]>} UUIDs of matching entries
+     */
+    async searchIndex(opts) {
+        const url = `${this.baseUrl}/api/v1/index/retrieve`;
+        const response = await this.fetch(url, {
+            method: 'POST',
+            body: JSON.stringify(opts),
+            headers: { 'Content-Type': 'application/json' },
+        });
+        (0, error_1.checkStatus)(response);
+        const data = await response.json();
+        return data;
+    }
+    /**
+     * Search the Rekor logs for matching the given query.
+     * @param opts {SearchLogQuery} Query to search the Rekor log
+     * @returns {Promise<Entry[]>} List of matching entries
+     */
+    async searchLog(opts) {
+        const url = `${this.baseUrl}/api/v1/log/entries/retrieve`;
+        const response = await this.fetch(url, {
+            method: 'POST',
+            body: JSON.stringify(opts),
+            headers: { 'Content-Type': 'application/json' },
+        });
+        (0, error_1.checkStatus)(response);
+        const rawData = await response.json();
+        const data = rawData.map((d) => entryFromResponse(d));
+        return data;
+    }
+}
+exports.Rekor = Rekor;
+// Unpack the response from the Rekor API into a more convenient format.
+function entryFromResponse(data) {
+    const entries = Object.entries(data);
+    if (entries.length != 1) {
+        throw new Error('Received multiple entries in Rekor response');
+    }
+    // Grab UUID and entry data from the response
+    const [uuid, entry] = entries[0];
+    return {
+        ...entry,
+        uuid,
+    };
+}
+
+
+/***/ }),
+
+/***/ 1679:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.TimestampAuthority = void 0;
+/*
+Copyright 2023 The Sigstore Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+const make_fetch_happen_1 = __importDefault(__nccwpck_require__(9525));
+const util_1 = __nccwpck_require__(6901);
+const error_1 = __nccwpck_require__(5005);
+class TimestampAuthority {
+    constructor(options) {
+        this.fetch = make_fetch_happen_1.default.defaults({
+            retry: options.retry,
+            timeout: options.timeout,
+            headers: {
+                'Content-Type': 'application/json',
+                'User-Agent': util_1.ua.getUserAgent(),
+            },
+        });
+        this.baseUrl = options.baseURL;
+    }
+    async createTimestamp(request) {
+        const url = `${this.baseUrl}/api/v1/timestamp`;
+        const response = await this.fetch(url, {
+            method: 'POST',
+            body: JSON.stringify(request),
+        });
+        (0, error_1.checkStatus)(response);
+        return response.buffer();
+    }
+}
+exports.TimestampAuthority = TimestampAuthority;
+
+
+/***/ }),
+
+/***/ 8225:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.CIContextProvider = void 0;
+/*
+Copyright 2022 The Sigstore Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+const make_fetch_happen_1 = __importDefault(__nccwpck_require__(9525));
+const util_1 = __nccwpck_require__(6901);
+// Collection of all the CI-specific providers we have implemented
+const providers = [getGHAToken, getEnv];
+/**
+ * CIContextProvider is a composite identity provider which will iterate
+ * over all of the CI-specific providers and return the token from the first
+ * one that resolves.
+ */
+class CIContextProvider {
+    constructor(audience) {
+        this.audience = audience;
+    }
+    // Invoke all registered ProviderFuncs and return the value of whichever one
+    // resolves first.
+    async getToken() {
+        return util_1.promise
+            .promiseAny(providers.map((getToken) => getToken(this.audience)))
+            .catch(() => Promise.reject('CI: no tokens available'));
+    }
+}
+exports.CIContextProvider = CIContextProvider;
+/**
+ * getGHAToken can retrieve an OIDC token when running in a GitHub Actions
+ * workflow
+ */
+async function getGHAToken(audience) {
+    // Check to see if we're running in GitHub Actions
+    if (!process.env.ACTIONS_ID_TOKEN_REQUEST_URL ||
+        !process.env.ACTIONS_ID_TOKEN_REQUEST_TOKEN) {
+        return Promise.reject('no token available');
+    }
+    // Construct URL to request token w/ appropriate audience
+    const url = new URL(process.env.ACTIONS_ID_TOKEN_REQUEST_URL);
+    url.searchParams.append('audience', audience);
+    const response = await (0, make_fetch_happen_1.default)(url.href, {
+        retry: 2,
+        headers: {
+            Accept: 'application/json',
+            Authorization: `Bearer ${process.env.ACTIONS_ID_TOKEN_REQUEST_TOKEN}`,
+        },
+    });
+    return response.json().then((data) => data.value);
+}
+/**
+ * getEnv can retrieve an OIDC token from an environment variable.
+ * This matches the behavior of https://github.com/sigstore/cosign/tree/main/pkg/providers/envvar
+ */
+async function getEnv() {
+    if (!process.env.SIGSTORE_ID_TOKEN) {
+        return Promise.reject('no token available');
+    }
+    return process.env.SIGSTORE_ID_TOKEN;
+}
 
 
 /***/ }),
@@ -34931,6 +33610,22 @@ exports.SignatureError = SignatureError;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
+/*
+Copyright 2022 The Sigstore Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+const ci_1 = __nccwpck_require__(8225);
 const issuer_1 = __nccwpck_require__(9135);
 const oauth_1 = __nccwpck_require__(7141);
 /**
@@ -34940,7 +33635,7 @@ const oauth_1 = __nccwpck_require__(7141);
  * @param issuer Base URL of the issuer
  * @param clientID Client ID for the issuer
  * @param clientSecret Client secret for the issuer (optional)
- * @returns {IdentityProvider}
+ * @returns {Provider}
  */
 function oauthProvider(options) {
     return new oauth_1.OAuthProvider({
@@ -34950,7 +33645,18 @@ function oauthProvider(options) {
         redirectURL: options.redirectURL,
     });
 }
+/**
+ * ciContextProvider returns a new Provider instance which attempts to retrieve
+ * an identity token from the CI context.
+ *
+ * @param audience audience claim for the generated token
+ * @returns {Provider}
+ */
+function ciContextProvider(audience = 'sigstore') {
+    return new ci_1.CIContextProvider(audience);
+}
 exports["default"] = {
+    ciContextProvider,
     oauthProvider,
 };
 
@@ -35258,11 +33964,162 @@ exports.sigstore = __importStar(__nccwpck_require__(1111));
 
 /***/ }),
 
-/***/ 2021:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+/***/ 9884:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
 
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Signer = void 0;
+const sigstore = __importStar(__nccwpck_require__(266));
+const util_1 = __nccwpck_require__(6901);
+class Signer {
+    constructor(options) {
+        this.identityProviders = [];
+        this.ca = options.ca;
+        this.tlog = options.tlog;
+        this.tsa = options.tsa;
+        this.identityProviders = options.identityProviders;
+        this.tlogUpload = options.tlogUpload ?? true;
+        this.signer = options.signer || this.signWithEphemeralKey.bind(this);
+    }
+    async signBlob(payload) {
+        // Get signature and verification material for payload
+        const sigMaterial = await this.signer(payload);
+        // Calculate artifact digest
+        const digest = util_1.crypto.hash(payload);
+        // Create a Rekor entry (if tlogUpload is enabled)
+        const entry = this.tlogUpload
+            ? await this.tlog.createMessageSignatureEntry(digest, sigMaterial)
+            : undefined;
+        return sigstore.toMessageSignatureBundle({
+            digest,
+            signature: sigMaterial,
+            tlogEntry: entry,
+            timestamp: this.tsa
+                ? await this.tsa.createTimestamp(sigMaterial.signature)
+                : undefined,
+        });
+    }
+    async signAttestation(payload, payloadType) {
+        // Pre-authentication encoding to be signed
+        const paeBuffer = util_1.dsse.preAuthEncoding(payloadType, payload);
+        // Get signature and verification material for pae
+        const sigMaterial = await this.signer(paeBuffer);
+        const envelope = {
+            payloadType,
+            payload: payload,
+            signatures: [
+                {
+                    keyid: sigMaterial.key?.id || '',
+                    sig: sigMaterial.signature,
+                },
+            ],
+        };
+        // Create a Rekor entry (if tlogUpload is enabled)
+        const entry = this.tlogUpload
+            ? await this.tlog.createDSSEEntry(envelope, sigMaterial)
+            : undefined;
+        return sigstore.toDSSEBundle({
+            envelope,
+            signature: sigMaterial,
+            tlogEntry: entry,
+            timestamp: this.tsa
+                ? await this.tsa.createTimestamp(sigMaterial.signature)
+                : undefined,
+        });
+    }
+    async signWithEphemeralKey(payload) {
+        // Create emphemeral key pair
+        const keypair = util_1.crypto.generateKeyPair();
+        // Retrieve identity token from one of the supplied identity providers
+        const identityToken = await this.getIdentityToken();
+        // Extract challenge claim from OIDC token
+        const subject = util_1.oidc.extractJWTSubject(identityToken);
+        // Construct challenge value by encrypting subject with private key
+        const challenge = util_1.crypto.signBlob(Buffer.from(subject), keypair.privateKey);
+        // Create signing certificate
+        const certificates = await this.ca.createSigningCertificate(identityToken, keypair.publicKey, challenge);
+        // Generate artifact signature
+        const signature = util_1.crypto.signBlob(payload, keypair.privateKey);
+        return {
+            signature,
+            certificates,
+            key: undefined,
+        };
+    }
+    async getIdentityToken() {
+        const aggErrs = [];
+        for (const provider of this.identityProviders) {
+            try {
+                const token = await provider.getToken();
+                if (token) {
+                    return token;
+                }
+            }
+            catch (err) {
+                aggErrs.push(err);
+            }
+        }
+        throw new Error(`Identity token providers failed: ${aggErrs}`);
+    }
+}
+exports.Signer = Signer;
+
+
+/***/ }),
+
+/***/ 2021:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.createRekorEntry = exports.createDSSEEnvelope = void 0;
 /*
@@ -35281,39 +34138,42 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 const bundle_1 = __nccwpck_require__(9715);
-const sign_1 = __nccwpck_require__(2071);
 const config_1 = __nccwpck_require__(3430);
+const signature_1 = __nccwpck_require__(2787);
+const sigstore = __importStar(__nccwpck_require__(266));
+const util_1 = __nccwpck_require__(6901);
 async function createDSSEEnvelope(payload, payloadType, options) {
-    const bundler = (0, config_1.createBundleBuilder)('dsseEnvelope', {
-        signer: options.signer,
-        tlogUpload: false,
-    });
-    const bundle = await bundler.create({ data: payload, type: payloadType });
-    return (0, bundle_1.envelopeToJSON)(bundle.content.dsseEnvelope);
+    // Pre-authentication encoding to be signed
+    const paeBuffer = util_1.dsse.preAuthEncoding(payloadType, payload);
+    // Get signature and verification material for pae
+    const sigMaterial = await options.signer(paeBuffer);
+    const envelope = {
+        payloadType,
+        payload,
+        signatures: [
+            {
+                keyid: sigMaterial.key?.id || '',
+                sig: sigMaterial.signature,
+            },
+        ],
+    };
+    return sigstore.Envelope.toJSON(envelope);
 }
 exports.createDSSEEnvelope = createDSSEEnvelope;
 // Accepts a signed DSSE envelope and a PEM-encoded public key to be added to the
 // transparency log. Returns a Sigstore bundle suitable for offline verification.
-async function createRekorEntry(dsseEnvelope, publicKey, 
-/* istanbul ignore next */
-options = {}) {
-    const envelope = (0, bundle_1.envelopeFromJSON)(dsseEnvelope);
-    const bundle = (0, bundle_1.toDSSEBundle)({
-        artifact: envelope.payload,
-        artifactType: envelope.payloadType,
-        signature: envelope.signatures[0].sig,
-        keyHint: envelope.signatures[0].keyid,
-    });
-    const tlog = new sign_1.RekorWitness({
-        rekorBaseURL: options.rekorURL || /* istanbul ignore next */ config_1.DEFAULT_REKOR_URL,
+async function createRekorEntry(dsseEnvelope, publicKey, options = {}) {
+    const envelope = sigstore.Envelope.fromJSON(dsseEnvelope);
+    const tlog = (0, config_1.createTLogClient)(options);
+    const sigMaterial = (0, signature_1.extractSignatureMaterial)(envelope, publicKey);
+    const entry = await tlog.createDSSEEntry(envelope, sigMaterial, {
         fetchOnConflict: true,
-        retry: options.retry ?? config_1.DEFAULT_RETRY,
-        timeout: options.timeout ?? config_1.DEFAULT_TIMEOUT,
     });
-    // Add entry to transparency log
-    const vm = await tlog.testify(bundle.content, publicKey);
-    // Add transparency log entries to bundle
-    bundle.verificationMaterial.tlogEntries = [...vm.tlogEntries];
+    const bundle = sigstore.toDSSEBundle({
+        envelope,
+        signature: sigMaterial,
+        tlogEntry: entry,
+    });
     return (0, bundle_1.bundleToJSON)(bundle);
 }
 exports.createRekorEntry = createRekorEntry;
@@ -35369,16 +34229,39 @@ limitations under the License.
 const bundle_1 = __nccwpck_require__(9715);
 const tuf = __importStar(__nccwpck_require__(8567));
 const config = __importStar(__nccwpck_require__(3430));
+const sign_1 = __nccwpck_require__(9884);
 const verify_1 = __nccwpck_require__(7995);
 async function sign(payload, options = {}) {
-    const bundler = config.createBundleBuilder('messageSignature', options);
-    const bundle = await bundler.create({ data: payload });
+    const ca = config.createCAClient(options);
+    const tlog = config.createTLogClient(options);
+    const idps = config.identityProviders(options);
+    const signer = new sign_1.Signer({
+        ca,
+        tlog,
+        identityProviders: options.identityProvider
+            ? [options.identityProvider]
+            : idps,
+        tlogUpload: options.tlogUpload,
+    });
+    const bundle = await signer.signBlob(payload);
     return (0, bundle_1.bundleToJSON)(bundle);
 }
 exports.sign = sign;
 async function attest(payload, payloadType, options = {}) {
-    const bundler = config.createBundleBuilder('dsseEnvelope', options);
-    const bundle = await bundler.create({ data: payload, type: payloadType });
+    const ca = config.createCAClient(options);
+    const tlog = config.createTLogClient(options);
+    const tsa = config.createTSAClient(options);
+    const idps = config.identityProviders(options);
+    const signer = new sign_1.Signer({
+        ca,
+        tlog,
+        tsa,
+        identityProviders: options.identityProvider
+            ? [options.identityProvider]
+            : idps,
+        tlogUpload: options.tlogUpload,
+    });
+    const bundle = await signer.signAttestation(payload, payloadType);
     return (0, bundle_1.bundleToJSON)(bundle);
 }
 exports.attest = attest;
@@ -35449,6 +34332,231 @@ Object.defineProperty(exports, "VerificationError", ({ enumerable: true, get: fu
 exports.utils = __importStar(__nccwpck_require__(2021));
 exports.DEFAULT_FULCIO_URL = config.DEFAULT_FULCIO_URL;
 exports.DEFAULT_REKOR_URL = config.DEFAULT_REKOR_URL;
+
+
+/***/ }),
+
+/***/ 8810:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.toProposedIntotoEntry = exports.toProposedHashedRekordEntry = exports.toProposedDSSEEntry = void 0;
+const sigstore_1 = __nccwpck_require__(266);
+const util_1 = __nccwpck_require__(6901);
+const DEFAULT_DSSE_API_VERSION = '0.0.1';
+const DEFAULT_HASHEDREKORD_API_VERSION = '0.0.1';
+const DEFAULT_INTOTO_API_VERSION = '0.0.2';
+// Returns a properly formatted Rekor "dsse" entry for the given DSSE
+// envelope and signature
+function toProposedDSSEEntry(envelope, signature, apiVersion = DEFAULT_DSSE_API_VERSION) {
+    switch (apiVersion) {
+        case '0.0.1':
+            return toProposedDSSEV001Entry(envelope, signature);
+        default:
+            throw new Error(`Unsupported dsse kind API version: ${apiVersion}`);
+    }
+}
+exports.toProposedDSSEEntry = toProposedDSSEEntry;
+// Returns a properly formatted Rekor "hashedrekord" entry for the given digest
+// and signature
+function toProposedHashedRekordEntry(digest, signature) {
+    const hexDigest = digest.toString('hex');
+    const b64Signature = signature.signature.toString('base64');
+    const b64Key = util_1.encoding.base64Encode(toPublicKey(signature));
+    return {
+        apiVersion: DEFAULT_HASHEDREKORD_API_VERSION,
+        kind: 'hashedrekord',
+        spec: {
+            data: {
+                hash: {
+                    algorithm: 'sha256',
+                    value: hexDigest,
+                },
+            },
+            signature: {
+                content: b64Signature,
+                publicKey: {
+                    content: b64Key,
+                },
+            },
+        },
+    };
+}
+exports.toProposedHashedRekordEntry = toProposedHashedRekordEntry;
+// Returns a properly formatted Rekor "intoto" entry for the given DSSE
+// envelope and signature
+function toProposedIntotoEntry(envelope, signature, apiVersion = DEFAULT_INTOTO_API_VERSION) {
+    switch (apiVersion) {
+        case '0.0.2':
+            return toProposedIntotoV002Entry(envelope, signature);
+        default:
+            throw new Error(`Unsupported intoto kind API version: ${apiVersion}`);
+    }
+}
+exports.toProposedIntotoEntry = toProposedIntotoEntry;
+function toProposedDSSEV001Entry(envelope, signature) {
+    return {
+        apiVersion: '0.0.1',
+        kind: 'dsse',
+        spec: {
+            proposedContent: {
+                envelope: JSON.stringify(sigstore_1.Envelope.toJSON(envelope)),
+                verifiers: [util_1.encoding.base64Encode(toPublicKey(signature))],
+            },
+        },
+    };
+}
+function toProposedIntotoV002Entry(envelope, signature) {
+    // Calculate the value for the payloadHash field in the Rekor entry
+    const payloadHash = util_1.crypto.hash(envelope.payload).toString('hex');
+    // Calculate the value for the hash field in the Rekor entry
+    const envelopeHash = calculateDSSEHash(envelope, signature);
+    // Collect values for re-creating the DSSE envelope.
+    // Double-encode payload and signature cause that's what Rekor expects
+    const payload = util_1.encoding.base64Encode(envelope.payload.toString('base64'));
+    const sig = util_1.encoding.base64Encode(envelope.signatures[0].sig.toString('base64'));
+    const keyid = envelope.signatures[0].keyid;
+    const publicKey = util_1.encoding.base64Encode(toPublicKey(signature));
+    // Create the envelope portion of the entry. Note the inclusion of the
+    // publicKey in the signature struct is not a standard part of a DSSE
+    // envelope, but is required by Rekor.
+    const dsseEnv = {
+        payloadType: envelope.payloadType,
+        payload: payload,
+        signatures: [{ sig, publicKey }],
+    };
+    // If the keyid is an empty string, Rekor seems to remove it altogether. We
+    // need to do the same here so that we can properly recreate the entry for
+    // verification.
+    if (keyid.length > 0) {
+        dsseEnv.signatures[0].keyid = keyid;
+    }
+    return {
+        apiVersion: '0.0.2',
+        kind: 'intoto',
+        spec: {
+            content: {
+                envelope: dsseEnv,
+                hash: { algorithm: 'sha256', value: envelopeHash },
+                payloadHash: { algorithm: 'sha256', value: payloadHash },
+            },
+        },
+    };
+}
+// Calculates the hash of a DSSE envelope for inclusion in a Rekor entry.
+// There is no standard way to do this, so the scheme we're using as as
+// follows:
+//  * payload is base64 encoded
+//  * signature is base64 encoded (only the first signature is used)
+//  * keyid is included ONLY if it is NOT an empty string
+//  * The resulting JSON is canonicalized and hashed to a hex string
+function calculateDSSEHash(envelope, signature) {
+    const dsseEnv = {
+        payloadType: envelope.payloadType,
+        payload: envelope.payload.toString('base64'),
+        signatures: [
+            {
+                sig: envelope.signatures[0].sig.toString('base64'),
+                publicKey: toPublicKey(signature),
+            },
+        ],
+    };
+    // If the keyid is an empty string, Rekor seems to remove it altogether.
+    if (envelope.signatures[0].keyid.length > 0) {
+        dsseEnv.signatures[0].keyid = envelope.signatures[0].keyid;
+    }
+    return util_1.crypto.hash(util_1.json.canonicalize(dsseEnv)).toString('hex');
+}
+function toPublicKey(signature) {
+    return signature.certificates
+        ? signature.certificates[0]
+        : signature.key.value;
+}
+
+
+/***/ }),
+
+/***/ 2030:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.TLogClient = void 0;
+/*
+Copyright 2022 The Sigstore Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+const error_1 = __nccwpck_require__(6274);
+const external_1 = __nccwpck_require__(9069);
+const format_1 = __nccwpck_require__(8810);
+class TLogClient {
+    constructor(options) {
+        this.rekor = new external_1.Rekor({
+            baseURL: options.rekorBaseURL,
+            retry: options.retry,
+            timeout: options.timeout,
+        });
+    }
+    async createMessageSignatureEntry(digest, sigMaterial, options = {}) {
+        const proposedEntry = (0, format_1.toProposedHashedRekordEntry)(digest, sigMaterial);
+        return this.createEntry(proposedEntry, options.fetchOnConflict);
+    }
+    async createDSSEEntry(envelope, sigMaterial, options = {}) {
+        const proposedEntry = (0, format_1.toProposedIntotoEntry)(envelope, sigMaterial);
+        return this.createEntry(proposedEntry, options.fetchOnConflict);
+    }
+    async createEntry(proposedEntry, fetchOnConflict = false) {
+        let entry;
+        try {
+            entry = await this.rekor.createEntry(proposedEntry);
+        }
+        catch (err) {
+            // If the entry already exists, fetch it (if enabled)
+            if (entryExistsError(err) && fetchOnConflict) {
+                // Grab the UUID of the existing entry from the location header
+                const uuid = err.location.split('/').pop() || '';
+                try {
+                    entry = await this.rekor.getEntry(uuid);
+                }
+                catch (err) {
+                    throw new error_1.InternalError({
+                        code: 'TLOG_FETCH_ENTRY_ERROR',
+                        message: 'error fetching tlog entry',
+                        cause: err,
+                    });
+                }
+            }
+            else {
+                throw new error_1.InternalError({
+                    code: 'TLOG_CREATE_ENTRY_ERROR',
+                    message: 'error creating tlog entry',
+                    cause: err,
+                });
+            }
+        }
+        return entry;
+    }
+}
+exports.TLogClient = TLogClient;
+function entryExistsError(value) {
+    return (value instanceof external_1.HTTPError &&
+        value.statusCode === 409 &&
+        value.location !== undefined);
+}
 
 
 /***/ }),
@@ -35948,19 +35056,12 @@ function chainBorderRight(seed, hashes) {
     return hashes.reduce((acc, h) => hashChildren(h, acc), seed);
 }
 function innerProofSize(index, size) {
-    return bitLength(index ^ (size - BigInt(1)));
+    return (index ^ (size - BigInt(1))).toString(2).length;
 }
 // Counts the number of ones in the binary representation of the given number.
 // https://en.wikipedia.org/wiki/Hamming_weight
 function onesCount(x) {
     return x.toString(2).split('1').length - 1;
-}
-// Returns the number of bits necessary to represent an integer in binary.
-function bitLength(n) {
-    if (n === 0n) {
-        return 0;
-    }
-    return n.toString(2).length;
 }
 // Hashing logic according to RFC6962.
 // https://datatracker.ietf.org/doc/html/rfc6962#section-2
@@ -36062,47 +35163,80 @@ function filterTLogInstances(tlogInstances, logID, integratedTime) {
 
 /***/ }),
 
-/***/ 2787:
+/***/ 8880:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.CallbackSigner = void 0;
+exports.TSAClient = void 0;
+/*
+Copyright 2022 The Sigstore Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
 const error_1 = __nccwpck_require__(6274);
-// Adapter to allow the legacy SignerFunc callback to be used as a new Signer
-// interface.
-class CallbackSigner {
+const external_1 = __nccwpck_require__(9069);
+const util_1 = __nccwpck_require__(6901);
+class TSAClient {
     constructor(options) {
-        this.signer = options.signer;
+        this.tsa = new external_1.TimestampAuthority({
+            baseURL: options.tsaBaseURL,
+            retry: options.retry,
+            timeout: options.timeout,
+        });
     }
-    async sign(data) {
-        const sigMaterial = await this.signer(data);
-        // Since we're getting data from an external source, we need to validate
-        // that it's well-formed and complete.
-        if (!sigMaterial.signature) {
-            throw new error_1.SignatureError({
-                code: 'MISSING_SIGNATURE_ERROR',
-                message: 'no signature returned from signer',
-            });
-        }
-        if (!sigMaterial.key?.value) {
-            throw new error_1.SignatureError({
-                code: 'MISSING_PUBLIC_KEY_ERROR',
-                message: 'no key returned from signer',
-            });
-        }
-        return {
-            signature: sigMaterial.signature,
-            key: {
-                $case: 'publicKey',
-                hint: sigMaterial.key.id,
-                publicKey: sigMaterial.key.value,
-            },
+    async createTimestamp(signature) {
+        const request = {
+            artifactHash: util_1.crypto.hash(signature).toString('base64'),
+            hashAlgorithm: 'sha256',
         };
+        try {
+            return await this.tsa.createTimestamp(request);
+        }
+        catch (err) {
+            throw new error_1.InternalError({
+                code: 'TSA_CREATE_TIMESTAMP_ERROR',
+                message: 'error creating timestamp',
+                cause: err,
+            });
+        }
     }
 }
-exports.CallbackSigner = CallbackSigner;
+exports.TSAClient = TSAClient;
+
+
+/***/ }),
+
+/***/ 2787:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.extractSignatureMaterial = void 0;
+function extractSignatureMaterial(dsseEnvelope, publicKey) {
+    const signature = dsseEnvelope.signatures[0];
+    return {
+        signature: signature.sig,
+        key: {
+            id: signature.keyid,
+            value: publicKey,
+        },
+        certificates: undefined,
+    };
+}
+exports.extractSignatureMaterial = extractSignatureMaterial;
 
 
 /***/ }),
@@ -36112,6 +35246,8 @@ exports.CallbackSigner = CallbackSigner;
 
 "use strict";
 
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.toMessageSignatureBundle = exports.toDSSEBundle = exports.isCAVerificationOptions = exports.SubjectAlternativeNameType = exports.PublicKeyDetails = exports.HashAlgorithm = exports.Envelope = void 0;
 /*
 Copyright 2023 The Sigstore Authors.
 
@@ -36127,17 +35263,126 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.isCAVerificationOptions = exports.SubjectAlternativeNameType = void 0;
+const bundle_1 = __nccwpck_require__(9715);
+const protobuf_specs_1 = __nccwpck_require__(530);
+const util_1 = __nccwpck_require__(6901);
 // Enums from protobuf-specs
-var protobuf_specs_1 = __nccwpck_require__(530);
-Object.defineProperty(exports, "SubjectAlternativeNameType", ({ enumerable: true, get: function () { return protobuf_specs_1.SubjectAlternativeNameType; } }));
+// TODO: Move Envelope to "type" export once @sigstore/sign is a thing
+var protobuf_specs_2 = __nccwpck_require__(530);
+Object.defineProperty(exports, "Envelope", ({ enumerable: true, get: function () { return protobuf_specs_2.Envelope; } }));
+Object.defineProperty(exports, "HashAlgorithm", ({ enumerable: true, get: function () { return protobuf_specs_2.HashAlgorithm; } }));
+Object.defineProperty(exports, "PublicKeyDetails", ({ enumerable: true, get: function () { return protobuf_specs_2.PublicKeyDetails; } }));
+Object.defineProperty(exports, "SubjectAlternativeNameType", ({ enumerable: true, get: function () { return protobuf_specs_2.SubjectAlternativeNameType; } }));
 function isCAVerificationOptions(options) {
     return (options.ctlogOptions !== undefined &&
         (options.signers === undefined ||
             options.signers.$case === 'certificateIdentities'));
 }
 exports.isCAVerificationOptions = isCAVerificationOptions;
+// All of the following functions are used to construct a ValidBundle
+// from various types of input. When this code moves into the
+// @sigstore/sign package, these functions will be exported from there.
+function toDSSEBundle({ envelope, signature, tlogEntry, timestamp, }) {
+    return {
+        mediaType: bundle_1.BUNDLE_V01_MEDIA_TYPE,
+        content: { $case: 'dsseEnvelope', dsseEnvelope: envelope },
+        verificationMaterial: toVerificationMaterial({
+            signature,
+            tlogEntry,
+            timestamp,
+        }),
+    };
+}
+exports.toDSSEBundle = toDSSEBundle;
+function toMessageSignatureBundle({ digest, signature, tlogEntry, timestamp, }) {
+    return {
+        mediaType: bundle_1.BUNDLE_V01_MEDIA_TYPE,
+        content: {
+            $case: 'messageSignature',
+            messageSignature: {
+                messageDigest: {
+                    algorithm: protobuf_specs_1.HashAlgorithm.SHA2_256,
+                    digest: digest,
+                },
+                signature: signature.signature,
+            },
+        },
+        verificationMaterial: toVerificationMaterial({
+            signature,
+            tlogEntry,
+            timestamp,
+        }),
+    };
+}
+exports.toMessageSignatureBundle = toMessageSignatureBundle;
+function toTransparencyLogEntry(entry) {
+    /* istanbul ignore next */
+    const b64SET = entry.verification?.signedEntryTimestamp || '';
+    const set = Buffer.from(b64SET, 'base64');
+    const logID = Buffer.from(entry.logID, 'hex');
+    const proof = entry.verification?.inclusionProof
+        ? toInclusionProof(entry.verification.inclusionProof)
+        : undefined;
+    // Parse entry body so we can extract the kind and version.
+    const bodyJSON = util_1.encoding.base64Decode(entry.body);
+    const entryBody = JSON.parse(bodyJSON);
+    return {
+        inclusionPromise: {
+            signedEntryTimestamp: set,
+        },
+        logIndex: entry.logIndex.toString(),
+        logId: {
+            keyId: logID,
+        },
+        integratedTime: entry.integratedTime.toString(),
+        kindVersion: {
+            kind: entryBody.kind,
+            version: entryBody.apiVersion,
+        },
+        inclusionProof: proof,
+        canonicalizedBody: Buffer.from(entry.body, 'base64'),
+    };
+}
+function toInclusionProof(proof) {
+    return {
+        logIndex: proof.logIndex.toString(),
+        rootHash: Buffer.from(proof.rootHash, 'hex'),
+        treeSize: proof.treeSize.toString(),
+        checkpoint: {
+            envelope: proof.checkpoint,
+        },
+        hashes: proof.hashes.map((h) => Buffer.from(h, 'hex')),
+    };
+}
+function toVerificationMaterial({ signature, tlogEntry, timestamp, }) {
+    return {
+        content: signature.certificates
+            ? toVerificationMaterialx509CertificateChain(signature.certificates)
+            : toVerificationMaterialPublicKey(signature.key.id || ''),
+        tlogEntries: tlogEntry ? [toTransparencyLogEntry(tlogEntry)] : [],
+        timestampVerificationData: timestamp
+            ? toTimestampVerificationData(timestamp)
+            : undefined,
+    };
+}
+function toVerificationMaterialx509CertificateChain(certificates) {
+    return {
+        $case: 'x509CertificateChain',
+        x509CertificateChain: {
+            certificates: certificates.map((c) => ({
+                rawBytes: util_1.pem.toDER(c),
+            })),
+        },
+    };
+}
+function toVerificationMaterialPublicKey(hint) {
+    return { $case: 'publicKey', publicKey: { hint } };
+}
+function toTimestampVerificationData(timestamp) {
+    return {
+        rfc3161Timestamps: [{ signedTimestamp: timestamp }],
+    };
+}
 
 
 /***/ }),
@@ -36669,7 +35914,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.bufferEqual = exports.randomBytes = exports.hash = exports.verifyBlob = exports.createPublicKey = void 0;
+exports.bufferEqual = exports.randomBytes = exports.hash = exports.verifyBlob = exports.signBlob = exports.createPublicKey = exports.generateKeyPair = void 0;
 /*
 Copyright 2022 The Sigstore Authors.
 
@@ -36686,7 +35931,15 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 const crypto_1 = __importDefault(__nccwpck_require__(6113));
+const EC_KEYPAIR_TYPE = 'ec';
+const P256_CURVE = 'P-256';
 const SHA256_ALGORITHM = 'sha256';
+function generateKeyPair() {
+    return crypto_1.default.generateKeyPairSync(EC_KEYPAIR_TYPE, {
+        namedCurve: P256_CURVE,
+    });
+}
+exports.generateKeyPair = generateKeyPair;
 function createPublicKey(key) {
     if (typeof key === 'string') {
         return crypto_1.default.createPublicKey(key);
@@ -36696,6 +35949,10 @@ function createPublicKey(key) {
     }
 }
 exports.createPublicKey = createPublicKey;
+function signBlob(data, privateKey) {
+    return crypto_1.default.sign(null, data, privateKey);
+}
+exports.signBlob = signBlob;
 function verifyBlob(data, key, signature, algorithm) {
     // The try/catch is to work around an issue in Node 14.x where verify throws
     // an error in some scenarios if the signature is invalid.
@@ -36703,7 +35960,6 @@ function verifyBlob(data, key, signature, algorithm) {
         return crypto_1.default.verify(algorithm, data, key, signature);
     }
     catch (e) {
-        /* istanbul ignore next */
         return false;
     }
 }
@@ -36847,7 +36103,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.pem = exports.json = exports.encoding = exports.dsse = exports.crypto = exports.asn1 = void 0;
+exports.ua = exports.promise = exports.pem = exports.oidc = exports.json = exports.encoding = exports.dsse = exports.crypto = exports.asn1 = void 0;
 /*
 Copyright 2022 The Sigstore Authors.
 
@@ -36868,7 +36124,10 @@ exports.crypto = __importStar(__nccwpck_require__(3684));
 exports.dsse = __importStar(__nccwpck_require__(5073));
 exports.encoding = __importStar(__nccwpck_require__(1378));
 exports.json = __importStar(__nccwpck_require__(9902));
+exports.oidc = __importStar(__nccwpck_require__(7747));
 exports.pem = __importStar(__nccwpck_require__(6220));
+exports.promise = __importStar(__nccwpck_require__(9370));
+exports.ua = __importStar(__nccwpck_require__(741));
 
 
 /***/ }),
@@ -36942,6 +36201,68 @@ exports.canonicalize = canonicalize;
 
 /***/ }),
 
+/***/ 7747:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.extractJWTSubject = void 0;
+/*
+Copyright 2022 The Sigstore Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+const enc = __importStar(__nccwpck_require__(1378));
+function extractJWTSubject(jwt) {
+    const parts = jwt.split('.', 3);
+    const payload = JSON.parse(enc.base64Decode(parts[1]));
+    switch (payload.iss) {
+        case 'https://accounts.google.com':
+        case 'https://oauth2.sigstore.dev/auth':
+            return payload.email;
+        default:
+            return payload.sub;
+    }
+}
+exports.extractJWTSubject = extractJWTSubject;
+
+
+/***/ }),
+
 /***/ 6220:
 /***/ ((__unused_webpack_module, exports) => {
 
@@ -36990,6 +36311,41 @@ function fromDER(certificate, type = 'CERTIFICATE') {
         .concat('\n');
 }
 exports.fromDER = fromDER;
+
+
+/***/ }),
+
+/***/ 9370:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+/*
+Copyright 2022 The Sigstore Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.promiseAny = void 0;
+// Implementation of Promise.any (not available until Node v15).
+// We're basically inverting the logic of Promise.all and taking advantage
+// of the fact that Promise.all will return early on the first rejection.
+// By reversing the resolve/reject logic we can use this to return early
+// on the first resolved promise.
+const promiseAny = async (values) => {
+    return Promise.all([...values].map((promise) => new Promise((resolve, reject) => promise.then(reject, resolve)))).then((errors) => Promise.reject(errors), (value) => Promise.resolve(value));
+};
+exports.promiseAny = promiseAny;
 
 
 /***/ }),
@@ -37114,6 +36470,47 @@ class ByteStream {
 }
 exports.ByteStream = ByteStream;
 ByteStream.BLOCK_SIZE = 1024;
+
+
+/***/ }),
+
+/***/ 741:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.getUserAgent = void 0;
+/*
+Copyright 2022 The Sigstore Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+const os_1 = __importDefault(__nccwpck_require__(2037));
+// Format User-Agent: <product> / <product-version> (<platform>)
+// source: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/User-Agent
+const getUserAgent = () => {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const packageVersion = (__nccwpck_require__(7526)/* .version */ .i8);
+    const nodeVersion = process.version;
+    const platformName = os_1.default.platform();
+    const archName = os_1.default.arch();
+    return `sigstore-js/${packageVersion} (Node ${nodeVersion}) (${platformName}/${archName})`;
+};
+exports.getUserAgent = getUserAgent;
 
 
 /***/ }),
@@ -57211,14 +56608,6 @@ exports.LRUCache = LRUCache;
 
 /***/ }),
 
-/***/ 8992:
-/***/ ((module) => {
-
-"use strict";
-module.exports = {"i8":"1.0.0"};
-
-/***/ }),
-
 /***/ 1526:
 /***/ ((module) => {
 
@@ -57304,6 +56693,14 @@ module.exports = JSON.parse('{"name":"make-fetch-happen","version":"11.1.1","des
 
 "use strict";
 module.exports = {"i8":"3.0.3"};
+
+/***/ }),
+
+/***/ 7526:
+/***/ ((module) => {
+
+"use strict";
+module.exports = {"i8":"1.8.0"};
 
 /***/ }),
 
