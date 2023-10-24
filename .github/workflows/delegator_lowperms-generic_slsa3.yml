@@ -105,7 +105,7 @@ jobs:
     steps:
       - name: Verify token
         id: verify
-        uses: enteraga6/slsa-github-generator/.github/actions/verify-token@sigstore1.8-revert
+        uses: slsa-framework/slsa-github-generator/.github/actions/verify-token@main
         with:
           slsa-workflow-recipient: "delegator_lowperms-generic_slsa3.yml"
           slsa-unverified-token: ${{ inputs.slsa-token }}
@@ -278,7 +278,7 @@ jobs:
 
       - name: Sign attestations
         id: sign
-        uses: enteraga6/slsa-github-generator/.github/actions/sign-attestations@sigstore1.8-revert
+        uses: slsa-framework/slsa-github-generator/.github/actions/sign-attestations@main
         with:
           attestations: attestations
           output-folder: "${{ needs.rng.outputs.value }}-slsa-attestations"
