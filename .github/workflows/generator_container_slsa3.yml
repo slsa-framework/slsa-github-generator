@@ -32,10 +32,11 @@ on:
         description: "Username to log into the container registry."
       registry-password:
         description: "Password to log in the container registry."
+      image:
+        description: "The OCI image name. This must not include a tag or digest."
     inputs:
       image:
         description: "The OCI image name. This must not include a tag or digest."
-        required: true
         type: string
       digest:
         description: "The OCI image digest. The image digest of the form '<algorithm>:<digest>' (e.g. 'sha256:abcdef...')"
@@ -157,6 +158,7 @@ jobs:
         continue-on-error: true
         env:
           UNTRUSTED_IMAGE: "${{ inputs.image }}"
+          UNTRUSTED_SECRET_IMAGE: "${{ secrets.image }}"
           UNTRUSTED_INPUT_USERNAME: "${{ inputs.registry-username }}"
           UNTRUSTED_SECRET_USERNAME: "${{ secrets.registry-username }}"
           UNTRUSTED_PASSWORD: "${{ secrets.registry-password }}"
@@ -170,7 +172,7 @@ jobs:
           # See: https://stackoverflow.com/questions/37861791/how-are-docker-image-names-parsed#37867949
           untrusted_registry="docker.io"
           # NOTE: Do not fail the script if grep does not match.
-          maybe_domain=$(echo "${UNTRUSTED_IMAGE}" | cut -f1 -d "/" | { grep -E "\.|:" || true; })
+          maybe_domain=$(echo "${UNTRUSTED_SECRET_IMAGE:-${UNTRUSTED_IMAGE}}" | cut -f1 -d "/" | { grep -E "\.|:" || true; })
           if [ "${maybe_domain}" != "" ]; then
             untrusted_registry="${maybe_domain}"
           fi
@@ -199,6 +201,7 @@ jobs:
         continue-on-error: true
         env:
           UNTRUSTED_IMAGE: "${{ inputs.image }}"
+          UNTRUSTED_SECRET_IMAGE: "${{ secrets.image }}"
           UNTRUSTED_DIGEST: "${{ inputs.digest }}"
           GITHUB_CONTEXT: "${{ toJSON(github) }}"
         run: |
@@ -211,7 +214,7 @@ jobs:
           COSIGN_EXPERIMENTAL=1 cosign attest --predicate="$predicate_name" \
             --type slsaprovenance \
             --yes \
-            "${UNTRUSTED_IMAGE}@${UNTRUSTED_DIGEST}"
+            "${UNTRUSTED_SECRET_IMAGE:-${UNTRUSTED_IMAGE}}@${UNTRUSTED_DIGEST}"
 
       - name: Final outcome
         id: final
