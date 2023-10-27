@@ -103,7 +103,7 @@ This section includes upcoming changes which are not included in the latest rele
 
 #### Container generator
 
-- **Fixed**: Passing an image name to the `generator_container_salsa3.yml` containing secret values. (See [#2917](https://github.com/slsa-framework/slsa-github-generator/issues/2917))
+- **Added**: Passing an image name to the `generator_container_salsa3.yml` containing secret values. (See [#2917](https://github.com/slsa-framework/slsa-github-generator/issues/2917))
 
 ## v1.9.0
 
