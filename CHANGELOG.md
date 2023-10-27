@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- toc -->
 
+- [Unreleased](#unreleased)
+  - [Changes](#changes)
+    - [Container generator](#container-generator)
 - [v1.9.0](#v190)
   - [v1.9.0: BYOB framework (beta)](#v190-byob-framework-beta)
   - [v1.9.0: Maven builder (beta)](#v190-maven-builder-beta)
@@ -25,7 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
       - [New Features](#new-features)
     - [Generic generator](#generic-generator)
       - [New Features](#new-features-1)
-    - [Container generator](#container-generator)
+    - [Container generator](#container-generator-1)
   - [Changelog since v1.5.0](#changelog-since-v150)
 - [v1.5.0](#v150)
   - [Summary of changes](#summary-of-changes-1)
@@ -33,7 +36,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
       - [New Features](#new-features-2)
     - [Generic generator](#generic-generator-1)
       - [New Features](#new-features-3)
-    - [Container generator](#container-generator-1)
+    - [Container generator](#container-generator-2)
       - [New Features](#new-features-4)
   - [Changelog since v1.4.0](#changelog-since-v140)
 - [v1.4.0](#v140)
@@ -92,6 +95,15 @@ Information on the next release will be added here.
 Use the format "X.Y.Z: Go builder" etc. for format headers to avoid header name
 duplication."
 -->
+## Unreleased
+
+This section includes upcoming changes which are not included in the latest release.
+
+### Changes
+
+#### Container generator
+
+- **Added**: Passing an image name to the `generator_container_salsa3.yml` containing secret values. (See [#2917](https://github.com/slsa-framework/slsa-github-generator/issues/2917))
 
 ## v1.9.0
 
