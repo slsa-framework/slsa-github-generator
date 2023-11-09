@@ -468,6 +468,8 @@ jobs:
       upload-assets: true # upload to a new release
 ```
 
+For more details, follow the great blog post on [goreleaser.com](https://goreleaser.com/blog/slsa-generation-for-your-artifacts).
+
 ### Provenance for JReleaser
 
 If you use [JReleaser](https://github.com/jreleaser/release-action) to generate your build, you can easily
