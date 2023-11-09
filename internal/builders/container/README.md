@@ -30,6 +30,7 @@ project simply generates provenance as a separate step in an existing workflow.
   - [Provenance Example](#provenance-example)
 - [Integration With Other Build Systems](#integration-with-other-build-systems)
   - [Ko](#ko)
+  - [GoReleaser](#goreleaser)
 - [Provenance for matrix strategy builds](#provenance-for-matrix-strategy-builds)
 - [Verification](#verification)
   - [slsa-verifier](#slsa-verifier)
@@ -442,6 +443,10 @@ This section explains how to generate non-forgeable SLSA provenance with existin
        secrets:
          registry-password: ${{ secrets.GITHUB_TOKEN }}
    ```
+
+### [GoReleaser](#goreleaser)
+
+Follow the great blog post of [goreleaser.com](https://goreleaser.com/blog/slsa-generation-for-your-artifacts).
 
 ## Provenance for matrix strategy builds
 
