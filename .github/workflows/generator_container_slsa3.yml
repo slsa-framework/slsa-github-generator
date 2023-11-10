@@ -29,9 +29,9 @@ on:
   workflow_call:
     secrets:
       registry-username:
-        description: "Username to log into the container registry."
+        description: "Username to log into the container registry. Username must be specific to `cosign-repository` input when set"
       registry-password:
-        description: "Password to log in the container registry."
+        description: "Password to log in the container registry. Password must be specific to `cosign-repository` input when set"
       image:
         description: "The OCI image name. This must not include a tag or digest."
     inputs:
@@ -43,7 +43,7 @@ on:
         required: true
         type: string
       registry-username:
-        description: "Username to log into the container registry."
+        description: "Username to log into the container registry. Username must be specific to `cosign-repository` input when set"
         type: string
       compile-generator:
         description: "Build the generator from source. This increases build time by ~2m."
@@ -67,6 +67,11 @@ on:
         default: ""
       gcp-service-account:
         description: "Email address or unique identifier of the Google Cloud service account for which to generate credentials."
+        required: false
+        type: string
+        default: ""
+      cosign-repository:
+        description: "If set, provenance attestations will be pushed to external repository instead of image repository"
         required: false
         type: string
         default: ""
@@ -204,6 +209,7 @@ jobs:
           UNTRUSTED_SECRET_IMAGE: "${{ secrets.image }}"
           UNTRUSTED_DIGEST: "${{ inputs.digest }}"
           GITHUB_CONTEXT: "${{ toJSON(github) }}"
+          COSIGN_REPOSITORY: "${{ inputs.cosign-repository }}"
         run: |
           set -euo pipefail
 
