@@ -28,18 +28,18 @@ defaults:
 on:
   workflow_call:
     secrets:
-      # Note: "This should only be used for high entropy values such as AWS Access Key.
-      # See https://github.com/slsa-framework/slsa-github-generator/tree/main/internal/builders/container#workflow-inputs" for more information.
+      # Note: This should only be used for high entropy values such as AWS Access Key.
+      # See https://github.com/slsa-framework/slsa-github-generator/tree/main/internal/builders/container#workflow-inputs for more information.
       registry-username:
         description: "Username to log into the container registry."
       registry-password:
         description: "Password to log in the container registry."
       image:
         description: "The OCI image name. This must not include a tag or digest."
-      # Note: "This should only be used for high entropy values such as AWS Access Key.
-      # See https://github.com/slsa-framework/slsa-github-generator/tree/main/internal/builders/container#workflow-inputs" for more information.
+      # Note: This should only be used for high entropy values such as AWS Access Key.
+      # See https://github.com/slsa-framework/slsa-github-generator/tree/main/internal/builders/container#workflow-inputs for more information.
       provenance-registry-username:
-        description: "Username when publishing to provenance registry instead of image registry."
+        description: "Username when publishing to provenance registry (option 'provenance-registry') instead of image registry."
       provenance-registry-password:
         description: "Password when publishing to provenance registry instead of image registry."
     inputs:
@@ -79,11 +79,11 @@ on:
         type: string
         default: ""
       provenance-registry-username:
-          description: "Username when publishing to provenance registry (option 'prove') instead of image registry."
+          description: "Username when publishing to provenance registry (option 'provenance-registry') instead of image registry."
           required: false
           type: string
       provenance-registry:
-        description: "If set, Provenance is pushed to this registry instead of image registry."
+        description: "If set, provenance is pushed to this registry instead of image registry."
         required: false
         type: string
     outputs:
@@ -223,7 +223,7 @@ jobs:
           UNTRUSTED_PROVENANCE_REGISTRY: "${{ inputs.provenance-registry  }}"
           UNTRUSTED_INPUT_PROVENANCE_USERNAME: "${{ inputs.provenance-registry-username }}"
           UNTRUSTED_SECRET_PROVENANCE_USERNAME: "${{ secrets.provenance-registry-username }}"
-          UNTRUSTED_PROVENANCE_PASSWORD: "${{ secrets.provenance-password }}"
+          UNTRUSTED_PROVENANCE_PASSWORD: "${{ secrets.provenance-registry-password }}"
           GCP_ACCESS_TOKEN: "${{ steps.auth.outputs.access_token }}"
         if: ${{ env.UNTRUSTED_PROVENANCE_REGISTRY != '' }}
         run: |
@@ -234,10 +234,10 @@ jobs:
           # character in it to see if it's a domain name.
           # See: https://stackoverflow.com/questions/37861791/how-are-docker-image-names-parsed#37867949
 
-          untrusted_provenance_registry="docker.io" 
+          untrusted_provenance_domain="docker.io"
           maybe_provenance_domain=$(echo "${UNTRUSTED_PROVENANCE_REGISTRY}" | cut -f1 -d "/" | { grep -E "\.|:" || true; })
           if [ "${maybe_provenance_domain}" != "" ]; then
-            untrusted_provenance_registry="${maybe_provenance_domain}"
+            untrusted_provenance_domain="${maybe_provenance_domain}"
           fi
 
           if [ "${GCP_ACCESS_TOKEN}" != "" ]; then
@@ -246,18 +246,18 @@ jobs:
           else
             username="${UNTRUSTED_SECRET_PROVENANCE_USERNAME:-${UNTRUSTED_INPUT_PROVENANCE_USERNAME}}"
             if [ "${username}" == "" ]; then
-                echo "provenance-registry username is required." >&2
+                echo "provenance-registry-username is required." >&2
                 exit 1
             fi
             password="${UNTRUSTED_PROVENANCE_PASSWORD}"
             if [ "${password}" == "" ]; then
-                echo "provenance-registry password is required." >&2
+                echo "provenance-registry-password is required." >&2
                 exit 1
             fi
           fi
           
-          echo "login to provenance registry: ${untrusted_provenance_registry}"
-          cosign login "${untrusted_provenance_registry}" -u "${username}" -p "${password}"
+          echo "login to provenance registry: ${untrusted_provenance_domain}"
+          cosign login "${untrusted_provenance_domain}" -u "${username}" -p "${password}"
 
       - name: Create and sign provenance
         id: sign-prov
@@ -275,8 +275,11 @@ jobs:
           predicate_name="predicate.json"
           "$GITHUB_WORKSPACE/$BUILDER_BINARY" generate --predicate="$predicate_name"
 
+          if [[ ! -z "${UNTRUSTED_PROVENANCE_REGISTRY}" ]]; then
+            export COSIGN_REPOSITORY="${UNTRUSTED_PROVENANCE_REGISTRY}"
+          fi
+
           COSIGN_EXPERIMENTAL=1 \
-          COSIGN_REPOSITORY="${UNTRUSTED_PROVENANCE_REGISTRY}" \
           cosign attest --predicate="$predicate_name" \
             --type slsaprovenance \
             --yes \
