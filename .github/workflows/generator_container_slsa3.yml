@@ -95,7 +95,7 @@ jobs:
       - name: Detect the generator ref
         id: detect
         continue-on-error: true
-        uses: slsa-framework/slsa-github-generator/.github/actions/detect-workflow-js@main
+        uses: slsa-framework/slsa-github-generator/.github/actions/detect-workflow-js@v1.10.0
 
       - name: Final outcome
         id: final
@@ -127,7 +127,7 @@ jobs:
       - name: Generate builder
         id: generate-builder
         continue-on-error: true
-        uses: slsa-framework/slsa-github-generator/.github/actions/generate-builder@main
+        uses: slsa-framework/slsa-github-generator/.github/actions/generate-builder@v1.10.0
         with:
           repository: "${{ needs.detect-env.outputs.repository }}"
           ref: "${{ needs.detect-env.outputs.ref }}"

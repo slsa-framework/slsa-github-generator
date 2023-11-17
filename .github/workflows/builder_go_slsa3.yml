@@ -130,7 +130,7 @@ jobs:
     steps:
       - name: Generate random 16-byte value (32-char hex encoded)
         id: rng
-        uses: slsa-framework/slsa-github-generator/.github/actions/rng@main
+        uses: slsa-framework/slsa-github-generator/.github/actions/rng@v1.10.0
 
   detect-env:
     outputs:
@@ -142,7 +142,7 @@ jobs:
     steps:
       - name: Detect the builder ref
         id: detect
-        uses: slsa-framework/slsa-github-generator/.github/actions/detect-workflow-js@main
+        uses: slsa-framework/slsa-github-generator/.github/actions/detect-workflow-js@v1.10.0
 
   ###################################################################
   #                                                                 #
@@ -157,7 +157,7 @@ jobs:
     steps:
       - name: Generate builder binary
         id: generate
-        uses: slsa-framework/slsa-github-generator/.github/actions/generate-builder@main
+        uses: slsa-framework/slsa-github-generator/.github/actions/generate-builder@v1.10.0
         with:
           repository: "${{ needs.detect-env.outputs.repository }}"
           ref: "${{ needs.detect-env.outputs.ref }}"
@@ -191,7 +191,7 @@ jobs:
     needs: [builder, rng, detect-env]
     steps:
       - name: Checkout builder repository
-        uses: slsa-framework/slsa-github-generator/.github/actions/secure-builder-checkout@main
+        uses: slsa-framework/slsa-github-generator/.github/actions/secure-builder-checkout@v1.10.0
         with:
           repository: "${{ needs.detect-env.outputs.repository }}"
           ref: "${{ needs.detect-env.outputs.ref }}"
@@ -238,7 +238,7 @@ jobs:
     needs: [builder, build-dry, rng, detect-env]
     steps:
       - name: Checkout builder repository
-        uses: slsa-framework/slsa-github-generator/.github/actions/secure-builder-checkout@main
+        uses: slsa-framework/slsa-github-generator/.github/actions/secure-builder-checkout@v1.10.0
         with:
           repository: "${{ needs.detect-env.outputs.repository }}"
           ref: "${{ needs.detect-env.outputs.ref }}"
@@ -320,7 +320,7 @@ jobs:
       go-provenance-sha256: ${{ steps.sign-prov.outputs.signed-provenance-sha256 }}
     steps:
       - name: Checkout builder repository
-        uses: slsa-framework/slsa-github-generator/.github/actions/secure-builder-checkout@main
+        uses: slsa-framework/slsa-github-generator/.github/actions/secure-builder-checkout@v1.10.0
         with:
           repository: "${{ needs.detect-env.outputs.repository }}"
           ref: "${{ needs.detect-env.outputs.ref }}"
@@ -378,7 +378,7 @@ jobs:
     if: inputs.upload-assets && (startsWith(github.ref, 'refs/tags/') || inputs.upload-tag-name != '')
     steps:
       - name: Checkout builder repository
-        uses: slsa-framework/slsa-github-generator/.github/actions/secure-builder-checkout@main
+        uses: slsa-framework/slsa-github-generator/.github/actions/secure-builder-checkout@v1.10.0
         with:
           repository: "${{ needs.detect-env.outputs.repository }}"
           ref: "${{ needs.detect-env.outputs.ref }}"

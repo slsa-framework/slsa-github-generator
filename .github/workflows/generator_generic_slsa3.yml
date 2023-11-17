@@ -128,7 +128,7 @@ jobs:
       - name: Detect the generator ref
         id: detect
         continue-on-error: true
-        uses: slsa-framework/slsa-github-generator/.github/actions/detect-workflow-js@main
+        uses: slsa-framework/slsa-github-generator/.github/actions/detect-workflow-js@v1.10.0
 
       - name: Final outcome
         id: final
@@ -163,7 +163,7 @@ jobs:
       - name: Generate builder
         id: generate-builder
         continue-on-error: true
-        uses: slsa-framework/slsa-github-generator/.github/actions/generate-builder@main
+        uses: slsa-framework/slsa-github-generator/.github/actions/generate-builder@v1.10.0
         with:
           repository: "${{ needs.detect-env.outputs.repository }}"
           ref: "${{ needs.detect-env.outputs.ref }}"
@@ -196,7 +196,7 @@ jobs:
         id: download-file
         continue-on-error: true
         if: inputs.base64-subjects-as-file != ''
-        uses: slsa-framework/slsa-github-generator/.github/actions/secure-download-artifact@main
+        uses: slsa-framework/slsa-github-generator/.github/actions/secure-download-artifact@v1.10.0
         with:
           name: "${{ steps.metadata.outputs.artifact_name }}"
           path: "${{ steps.metadata.outputs.filename }}"
@@ -281,7 +281,7 @@ jobs:
       - name: Checkout builder repository
         id: checkout-builder
         continue-on-error: true
-        uses: slsa-framework/slsa-github-generator/.github/actions/secure-builder-checkout@main
+        uses: slsa-framework/slsa-github-generator/.github/actions/secure-builder-checkout@v1.10.0
         with:
           repository: "${{ needs.detect-env.outputs.repository }}"
           ref: "${{ needs.detect-env.outputs.ref }}"

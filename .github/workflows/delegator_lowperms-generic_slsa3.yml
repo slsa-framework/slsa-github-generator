@@ -89,7 +89,7 @@ jobs:
     steps:
       - name: Generate random 16-byte value (32-char hex encoded)
         id: rng
-        uses: slsa-framework/slsa-github-generator/.github/actions/rng@main
+        uses: slsa-framework/slsa-github-generator/.github/actions/rng@v1.10.0
 
   # verify-token verifies the slsa token.
   verify-token:
@@ -105,7 +105,7 @@ jobs:
     steps:
       - name: Verify token
         id: verify
-        uses: slsa-framework/slsa-github-generator/.github/actions/verify-token@main
+        uses: slsa-framework/slsa-github-generator/.github/actions/verify-token@v1.10.0
         with:
           slsa-workflow-recipient: "delegator_lowperms-generic_slsa3.yml"
           slsa-unverified-token: ${{ inputs.slsa-token }}
@@ -114,7 +114,7 @@ jobs:
 
       - name: Upload predicate
         id: upload
-        uses: slsa-framework/slsa-github-generator/.github/actions/secure-upload-artifact@main
+        uses: slsa-framework/slsa-github-generator/.github/actions/secure-upload-artifact@v1.10.0
         with:
           name: "${{ needs.rng.outputs.value }}-${{ env.SLSA_PREDICATE_FILE }}"
           path: ${{ env.SLSA_PREDICATE_FILE }}
@@ -125,7 +125,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check private repos
-        uses: slsa-framework/slsa-github-generator/.github/actions/privacy-check@main
+        uses: slsa-framework/slsa-github-generator/.github/actions/privacy-check@v1.10.0
         with:
           error_message: "Repository is private. The workflow has halted in order to keep the repository name from being exposed in the public transparency log. Set 'private-repository' to override."
           override: ${{ fromJson(needs.verify-token.outputs.slsa-verified-token).builder.rekor_log_public }}
@@ -150,7 +150,7 @@ jobs:
           echo "$RUNNER: $RUNNER"
 
       - name: Checkout the tool repository
-        uses: slsa-framework/slsa-github-generator/.github/actions/secure-builder-checkout@main
+        uses: slsa-framework/slsa-github-generator/.github/actions/secure-builder-checkout@v1.10.0
         with:
           repository: ${{ needs.verify-token.outputs.tool-repository }}
           ref: ${{ needs.verify-token.outputs.tool-ref }}
@@ -174,7 +174,7 @@ jobs:
           tree
 
       - name: Checkout the project repository
-        uses: slsa-framework/slsa-github-generator/.github/actions/secure-project-checkout@main
+        uses: slsa-framework/slsa-github-generator/.github/actions/secure-project-checkout@v1.10.0
         with:
           fetch-depth: ${{ fromJson(needs.verify-token.outputs.slsa-verified-token).source.checkout.fetch_depth }}
           checkout-sha1: ${{ fromJson(needs.verify-token.outputs.slsa-verified-token).source.checkout.sha1 }}
@@ -216,7 +216,7 @@ jobs:
 
       - name: Upload artifact layout file
         id: upload
-        uses: slsa-framework/slsa-github-generator/.github/actions/secure-upload-artifact@main
+        uses: slsa-framework/slsa-github-generator/.github/actions/secure-upload-artifact@v1.10.0
         with:
           name: "${{ needs.rng.outputs.value }}-${{ env.SLSA_ARTIFACTS_FILE }}"
           path: "${{ env.SLSA_ARTIFACTS_FILE }}"
@@ -232,14 +232,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Download the artifact layout file
-        uses: slsa-framework/slsa-github-generator/.github/actions/secure-download-artifact@main
+        uses: slsa-framework/slsa-github-generator/.github/actions/secure-download-artifact@v1.10.0
         with:
           name: "${{ needs.rng.outputs.value }}-${{ env.SLSA_ARTIFACTS_FILE }}"
           path: "${{ env.SLSA_ARTIFACTS_FILE }}"
           sha256: ${{ needs.build-artifacts-ubuntu.outputs.artifacts-layout-sha256 }}
 
       - name: Download the predicate file
-        uses: slsa-framework/slsa-github-generator/.github/actions/secure-download-artifact@main
+        uses: slsa-framework/slsa-github-generator/.github/actions/secure-download-artifact@v1.10.0
         with:
           name: "${{ needs.rng.outputs.value }}-${{ env.SLSA_PREDICATE_FILE }}"
           path: ${{ env.SLSA_PREDICATE_FILE }}
@@ -269,7 +269,7 @@ jobs:
 
       - name: Generate attestations
         id: attestations
-        uses: slsa-framework/slsa-github-generator/.github/actions/generate-attestations@main
+        uses: slsa-framework/slsa-github-generator/.github/actions/generate-attestations@v1.10.0
         with:
           slsa-layout-file: ${{ env.SLSA_ARTIFACTS_FILE }}
           predicate-type: ${{ steps.predicate-type.outputs.predicate-type }}
@@ -278,14 +278,14 @@ jobs:
 
       - name: Sign attestations
         id: sign
-        uses: slsa-framework/slsa-github-generator/.github/actions/sign-attestations@main
+        uses: slsa-framework/slsa-github-generator/.github/actions/sign-attestations@v1.10.0
         with:
           attestations: attestations
           output-folder: "${{ needs.rng.outputs.value }}-slsa-attestations"
 
       - name: Upload attestations
         id: upload
-        uses: slsa-framework/slsa-github-generator/.github/actions/secure-upload-folder@main
+        uses: slsa-framework/slsa-github-generator/.github/actions/secure-upload-folder@v1.10.0
         with:
           name: "${{ needs.rng.outputs.value }}-slsa-attestations"
           path: "${{ needs.rng.outputs.value }}-slsa-attestations"
