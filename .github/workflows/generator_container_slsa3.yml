@@ -275,7 +275,7 @@ jobs:
           predicate_name="predicate.json"
           "$GITHUB_WORKSPACE/$BUILDER_BINARY" generate --predicate="$predicate_name"
 
-          if [[ ! -z "${UNTRUSTED_PROVENANCE_REGISTRY}" ]]; then
+          if [[ -n "${UNTRUSTED_PROVENANCE_REGISTRY}" ]]; then
             export COSIGN_REPOSITORY="${UNTRUSTED_PROVENANCE_REGISTRY}"
           fi
 
