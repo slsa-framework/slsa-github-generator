@@ -79,9 +79,9 @@ on:
         type: string
         default: ""
       provenance-registry-username:
-          description: "Username when publishing to provenance registry (option 'provenance-registry') instead of image registry."
-          required: false
-          type: string
+        description: "Username when publishing to provenance registry (option 'provenance-registry') instead of image registry."
+        required: false
+        type: string
       provenance-registry:
         description: "If set, provenance is pushed to this registry instead of image registry."
         required: false
@@ -213,7 +213,7 @@ jobs:
 
           echo "login to ${untrusted_registry}"
           cosign login "${untrusted_registry}" -u "${username}" -p "${password}"
-      
+
       # TODO(#2974): consolidate this code into a script
       # The script below is a duplicate of the code used for signing into the main registry
       - name: Provenance registry login
@@ -255,7 +255,7 @@ jobs:
                 exit 1
             fi
           fi
-          
+
           echo "login to provenance registry: ${untrusted_provenance_domain}"
           cosign login "${untrusted_provenance_domain}" -u "${username}" -p "${password}"
 
