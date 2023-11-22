@@ -94,7 +94,7 @@ Specifically, this repository contains:
 
 While slsa-github-generator can help you achieve SLSA Build level 3, use of the provided
 [GitHub Actions reusable workflows](https://docs.github.com/en/actions/using-workflows/reusing-workflows)
-only is not sufficient to meet all of the requirements at SLSA Build level 3.
+alone is not sufficient to meet all of the requirements at SLSA Build level 3.
 Specifically, these workflows do not address provenance
 [distribution](https://slsa.dev/spec/v1.0/distributing-provenance) or
 [verification](https://slsa.dev/spec/v1.0/verifying-artifacts).
