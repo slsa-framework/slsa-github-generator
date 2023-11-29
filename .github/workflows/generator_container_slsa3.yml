@@ -166,7 +166,7 @@ jobs:
       - id: cosign-install
         uses: sigstore/cosign-installer@1fc5bd396d372bee37d608f955b336615edf79c8 # v3.2.0
         with:
-          cosign-release: v2.0.0
+          cosign-release: v2.2.1
         continue-on-error: true
 
       # TODO(#2974): consolidate this code into a script
