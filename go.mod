@@ -6,8 +6,8 @@ require (
 	github.com/coreos/go-oidc/v3 v3.6.0
 	github.com/go-openapi/strfmt v0.21.7
 	github.com/go-openapi/swag v0.22.4
-	github.com/google/go-cmp v0.5.9
-	github.com/google/go-github/v55 v55.0.0
+	github.com/google/go-cmp v0.6.0
+	github.com/google/go-github/v57 v57.0.0
 	github.com/in-toto/in-toto-golang v0.9.0
 	github.com/pelletier/go-toml v1.9.5
 	github.com/secure-systems-lab/go-securesystemslib v0.7.0
