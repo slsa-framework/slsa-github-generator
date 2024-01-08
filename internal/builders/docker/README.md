@@ -42,6 +42,8 @@ type that provides the full details on the build process.
   - [The `build` subcommand](#the-build-subcommand)
   - [The `verify` command](#the-verify-command)
 - [Users](#users)
+- [Known Issues](#known-issues)
+  - [Compatibility with `actions/download-artifact`](#compatibility-with-actionsdownload-artifact)
 
 <!-- tocstop -->
 
@@ -172,14 +174,6 @@ Inputs:
 | `upload-tag-name`                | If non-empty and `upload-assets` is set to true, the provenance is uploaded to the GitHub release identified by the tag name. If a workflow is run on a new tag and `upload-tag-name` is non-empty, the new tag is ignored and the value of `upload-tag-name` is used instead to upload the assets.           |
 | `prerelease`                     | If true, GitHub Release is created as a pre-release.                                                                                                                                                                                                                                                          |
 | `draft-release`                  | If true, the release is created as a draft. Defaults to false.                                                                                                                                                                                                                                                |
-
-> [!NOTE]
-> To download provenance (e.g., if you don't use `upload-assets`) you have to
-> use [`actions/download-artifact@v3`](https://github.com/actions/download-artifact).
-> The workflow uses [`actions/upload-artifact@3`](https://github.com/actions/upload-artifact)
-> which is
-> [not compatible](https://github.com/actions/download-artifact?tab=readme-ov-file#breaking-changes)
-> with `actions/download-artifact@v4`.
 
 Secrets:
 
@@ -411,3 +405,14 @@ The following project currently use the container-based workflow:
 
 We welcome any success stories. Please create a PR to add your project to the
 list, if you are using the container-based workflow.
+
+## Known Issues
+
+### Compatibility with `actions/download-artifact`
+
+To download provenance (e.g., if you don't use `upload-assets`) you have to
+use [`actions/download-artifact@v3`](https://github.com/actions/download-artifact).
+The workflow uses [`actions/upload-artifact@3`](https://github.com/actions/upload-artifact)
+which is
+[not compatible](https://github.com/actions/download-artifact?tab=readme-ov-file#breaking-changes)
+with `actions/download-artifact@v4`.

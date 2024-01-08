@@ -22,6 +22,7 @@ This document explains how to use the builder for [Go](https://go.dev/) projects
   - [BuildConfig Format](#buildconfig-format)
 - [Known Issues](#known-issues)
   - [error updating to TUF remote mirror: tuf: invalid key](#error-updating-to-tuf-remote-mirror-tuf-invalid-key)
+  - [Compatibility with `actions/download-artifact`](#compatibility-with-actionsdownload-artifact)
 
 <!-- tocstop -->
 
@@ -195,14 +196,6 @@ The builder workflow [slsa-framework/slsa-github-generator/.github/workflows/bui
 | `prerelease`         | no       |                                         | If specified and `upload-assets` is set to true, the release is created as prerelease.                                                                                                                                                                    |
 | `private-repository` | no       | false                                   | Set to true to opt-in to posting to the public transparency log. Will generate an error if false for private repositories. This input has no effect for public repositories. See [Private Repositories](#private-repositories).                           |
 | `draft-release`      | no       | false                                   | If true, the release is created as a draft                                                                                                                                                                                                                |
-
-> [!NOTE]
-> To download provenance (e.g., if you don't use `upload-assets`) you have to
-> use [`actions/download-artifact@v3`](https://github.com/actions/download-artifact).
-> The workflow uses [`actions/upload-artifact@3`](https://github.com/actions/upload-artifact)
-> which is
-> [not compatible](https://github.com/actions/download-artifact?tab=readme-ov-file#breaking-changes)
-> with `actions/download-artifact@v4`.
 
 ### Workflow Outputs
 
@@ -429,3 +422,12 @@ release tag in order to allow verification by `slsa-verifier`.
 ```yaml
 uses: slsa-framework/slsa-github-generator/.github/workflows/builder_go_slsa3.yml@v1.9.0
 ```
+
+### Compatibility with `actions/download-artifact`
+
+To download provenance (e.g., if you don't use `upload-assets`) you have to
+use [`actions/download-artifact@v3`](https://github.com/actions/download-artifact).
+The workflow uses [`actions/upload-artifact@3`](https://github.com/actions/upload-artifact)
+which is
+[not compatible](https://github.com/actions/download-artifact?tab=readme-ov-file#breaking-changes)
+with `actions/download-artifact@v4`.
