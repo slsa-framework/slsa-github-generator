@@ -173,6 +173,14 @@ Inputs:
 | `prerelease`                     | If true, GitHub Release is created as a pre-release.                                                                                                                                                                                                                                                          |
 | `draft-release`                  | If true, the release is created as a draft. Defaults to false.                                                                                                                                                                                                                                                |
 
+> [!NOTE]
+> To download provenance (e.g., if you don't use `upload-assets`) you have to
+> use [`actions/download-artifact@v3`](https://github.com/actions/download-artifact).
+> The workflow uses [`actions/upload-artifact@3`](https://github.com/actions/upload-artifact)
+> which is
+> [not compatible](https://github.com/actions/download-artifact?tab=readme-ov-file#breaking-changes)
+> with `actions/download-artifact@v4`.
+
 Secrets:
 
 | Name                | Description                                                                                                                                                                                                                                                                                                                                                                                                        |

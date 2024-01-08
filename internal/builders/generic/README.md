@@ -269,6 +269,14 @@ The [generic workflow](https://github.com/slsa-framework/slsa-github-generator/b
 | `continue-on-error`       | no                                                                 | false                                                                                           | Set to true to ignore errors. This option is useful if you won't want a failure to fail your entire workflow.                                                                                                                                                                      |
 | `draft-release`           | no                                                                 | false                                                                                           | If true, the release is created as a draft                                                                                                                                                                                                                                         |
 
+> [!NOTE]
+> To download provenance (e.g., if you don't use `upload-assets`) you have to
+> use [`actions/download-artifact@v3`](https://github.com/actions/download-artifact).
+> The workflow uses [`actions/upload-artifact@3`](https://github.com/actions/upload-artifact)
+> which is
+> [not compatible](https://github.com/actions/download-artifact?tab=readme-ov-file#breaking-changes)
+> with `actions/download-artifact@v4`.
+
 ### Workflow Outputs
 
 The [generic workflow](https://github.com/slsa-framework/slsa-github-generator/blob/main/.github/workflows/generator_generic_slsa3.yml) produces the following outputs:
