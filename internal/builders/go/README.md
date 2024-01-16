@@ -22,6 +22,7 @@ This document explains how to use the builder for [Go](https://go.dev/) projects
   - [BuildConfig Format](#buildconfig-format)
 - [Known Issues](#known-issues)
   - [error updating to TUF remote mirror: tuf: invalid key](#error-updating-to-tuf-remote-mirror-tuf-invalid-key)
+  - [Compatibility with `actions/download-artifact`](#compatibility-with-actionsdownload-artifact)
 
 <!-- tocstop -->
 
@@ -421,3 +422,12 @@ release tag in order to allow verification by `slsa-verifier`.
 ```yaml
 uses: slsa-framework/slsa-github-generator/.github/workflows/builder_go_slsa3.yml@v1.9.0
 ```
+
+### Compatibility with `actions/download-artifact`
+
+To download provenance (e.g., if you don't use `upload-assets`) you have to
+use [`actions/download-artifact@v3`](https://github.com/actions/download-artifact).
+The workflow uses [`actions/upload-artifact@3`](https://github.com/actions/upload-artifact)
+which is
+[not compatible](https://github.com/actions/download-artifact?tab=readme-ov-file#breaking-changes)
+with `actions/download-artifact@v4`.

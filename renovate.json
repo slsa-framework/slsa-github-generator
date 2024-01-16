@@ -1,7 +1,10 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": ["config:base", ":gitSignOff"],
-  "schedule": ["every weekend"],
+  "schedule": ["before 4 am on the first day of the month"],
+  "vulnerabilityAlerts": {
+    "schedule": "before 4am"
+  },
   "postUpdateOptions": ["gomodTidy", "gomodUpdateImportPaths"],
   "packageRules": [
     {
