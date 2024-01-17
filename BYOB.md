@@ -39,7 +39,7 @@
 
 ## Design Overview
 
-The Build Your Own Builder (BYOB) framework makes it simple to make an existing GitHub Acton SLSA3 compliant. Instead of handling the complexity around reuseable workflows, signing, intoto, Sigstore, etc, you can simply delegate orchestration and provenance generation to the BYOB framework.
+The Build Your Own Builder (BYOB) framework makes it simple to make an existing GitHub Action SLSA3 compliant. Instead of handling the complexity around reuseable workflows, signing, intoto, Sigstore, etc, you can simply delegate orchestration and provenance generation to the BYOB framework.
 
 The diagram below depicts the different components of the BYOB framework. We'll cover the different portions in our overview.
 
