@@ -147,7 +147,7 @@ jobs:
           echo "$RUNNER: $RUNNER"
 
       - name: Checkout the tool repository
-        uses: slsa-framework/slsa-github-generator/.github/actions/secure-builder-checkout@main
+        uses: pandaninjas/slsa-github-generator/.github/actions/secure-builder-checkout@patch-2-test
         with:
           repository: ${{ needs.verify-token.outputs.tool-repository }}
           ref: ${{ needs.verify-token.outputs.tool-ref }}
