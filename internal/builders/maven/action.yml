@@ -105,8 +105,8 @@ runs:
           && mvn package  -Drun.hash.jarfile=true
         # NOTE: SLSA_OUTPUTS_ARTIFACTS_FILE is a relative path and the project_root may
         # not be in GITHUB_WORKSPACE, so we need to move the file.
-        # rsync is more resilient when files are the same
-        mv $(dirname "${SLSA_OUTPUTS_ARTIFACTS_FILE}")/* "${GITHUB_WORKSPACE}/../__SLSA_OUTPUTS_DIR__"
+        echo $(dirname "${SLSA_OUTPUTS_ARTIFACTS_FILE}") "${GITHUB_WORKSPACE}/../__SLSA_OUTPUTS_DIR__"
+        exit 1
         [[ target -ef "${GITHUB_WORKSPACE}/"target ]] || mv target "${GITHUB_WORKSPACE}/"
 
     # rng generates a random number to avoid name collision in artifacts
