@@ -205,8 +205,8 @@ The [container workflow](https://github.com/slsa-framework/slsa-github-generator
 Inputs:
 
 | Name                             | Description                                                                                                                                                                                                                                                                             |
-|----------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `image`                          | The OCI image name. This must not include a tag or digest. Either `image` input or `image` secret is **required**. Secret `image` value takes precedence on `image` input value.                                                                                                        |
+| -------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `image`                          | **(Required)** The OCI image name. This must not include a tag or digest.                                                                                                                                                                                                               |
 | `digest`                         | **(Required)** The OCI image digest. The image digest of the form '<algorithm>:<digest>' (e.g. 'sha256:abcdef...')                                                                                                                                                                      |
 | `registry-username`              | Username to log in the container registry. Either `registry-username` input or `registry-username` secret is required.                                                                                                                                                                  |
 | `compile-generator`              | Whether to build the generator from source. This increases build time by ~2m.<br>Default: `false`.                                                                                                                                                                                      |
@@ -232,7 +232,7 @@ Secrets:
 The [container workflow](https://github.com/slsa-framework/slsa-github-generator/blob/main/.github/workflows/generator_container_slsa3.yml) accepts the following outputs:
 
 | Name      | Description                                                                                     |
-|-----------|-------------------------------------------------------------------------------------------------|
+| --------- | ----------------------------------------------------------------------------------------------- |
 | `outcome` | If `continue-on-error` is `true`, will contain the outcome of the run (`success` or `failure`). |
 
 ### Provenance Format
@@ -240,7 +240,7 @@ The [container workflow](https://github.com/slsa-framework/slsa-github-generator
 The project generates SLSA provenance with the following values.
 
 | Name                         | Value                                                                    | Description                                                                                                                                                                                                            |
-|------------------------------|--------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| ---------------------------- | ------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `buildType`                  | `"https://github.com/slsa-framework/slsa-github-generator/container@v1"` | Identifies a the GitHub Actions build.                                                                                                                                                                                 |
 | `metadata.buildInvocationID` | `"[run_id]-[run_attempt]"`                                               | The GitHub Actions [`run_id`](https://docs.github.com/en/actions/learn-github-actions/contexts#github-context) does not update when a workflow is re-run. Run attempt is added to make the build invocation ID unique. |
 
