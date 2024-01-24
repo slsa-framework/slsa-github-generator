@@ -39,12 +39,13 @@ on:
       # Note: This should only be used for high entropy values such as AWS Access Key.
       # See https://github.com/slsa-framework/slsa-github-generator/tree/main/internal/builders/container#workflow-inputs for more information.
       provenance-registry-username:
-        description: "Username when publishing to provenance registry (option 'provenance-registry') instead of image registry."
+        description: "Username when publishing to provenance repository (option 'provenance-repository') instead of image repository."
       provenance-registry-password:
-        description: "Password when publishing to provenance registry instead of image registry."
+        description: "Password when publishing to provenance repository instead of image repository."
     inputs:
       image:
         description: "The OCI image name. This must not include a tag or digest."
+        required: true
         type: string
       digest:
         description: "The OCI image digest. The image digest of the form '<algorithm>:<digest>' (e.g. 'sha256:abcdef...')"
@@ -79,10 +80,10 @@ on:
         type: string
         default: ""
       provenance-registry-username:
-        description: "Username when publishing to provenance registry (option 'provenance-registry') instead of image registry."
+        description: "Username when publishing to provenance registry (option 'provenance-repository') instead of image repository."
         required: false
         type: string
-      provenance-registry:
+      provenance-repository:
         description: "If set, provenance is pushed to this registry instead of image registry."
         required: false
         type: string
@@ -176,7 +177,6 @@ jobs:
         continue-on-error: true
         env:
           UNTRUSTED_IMAGE: "${{ inputs.image }}"
-          UNTRUSTED_SECRET_IMAGE: "${{ secrets.image }}"
           UNTRUSTED_INPUT_USERNAME: "${{ inputs.registry-username }}"
           UNTRUSTED_SECRET_USERNAME: "${{ secrets.registry-username }}"
           UNTRUSTED_PASSWORD: "${{ secrets.registry-password }}"
@@ -190,7 +190,7 @@ jobs:
           # See: https://stackoverflow.com/questions/37861791/how-are-docker-image-names-parsed#37867949
           untrusted_registry="docker.io"
           # NOTE: Do not fail the script if grep does not match.
-          maybe_domain=$(echo "${UNTRUSTED_SECRET_IMAGE:-${UNTRUSTED_IMAGE}}" | cut -f1 -d "/" | { grep -E "\.|:" || true; })
+          maybe_domain=$(echo "${UNTRUSTED_IMAGE}" | cut -f1 -d "/" | { grep -E "\.|:" || true; })
           if [ "${maybe_domain}" != "" ]; then
             untrusted_registry="${maybe_domain}"
           fi
@@ -220,12 +220,12 @@ jobs:
         id: provenance-registry-login
         continue-on-error: true
         env:
-          UNTRUSTED_PROVENANCE_REGISTRY: "${{ inputs.provenance-registry  }}"
+          UNTRUSTED_PROVENANCE_REPOSITORY: "${{ inputs.provenance-repository  }}"
           UNTRUSTED_INPUT_PROVENANCE_USERNAME: "${{ inputs.provenance-registry-username }}"
           UNTRUSTED_SECRET_PROVENANCE_USERNAME: "${{ secrets.provenance-registry-username }}"
           UNTRUSTED_PROVENANCE_PASSWORD: "${{ secrets.provenance-registry-password }}"
           GCP_ACCESS_TOKEN: "${{ steps.auth.outputs.access_token }}"
-        if: ${{ env.UNTRUSTED_PROVENANCE_REGISTRY != '' }}
+        if: ${{ env.UNTRUSTED_PROVENANCE_REPOSITORY != '' }}
         run: |
           set -euo pipefail
 
@@ -235,7 +235,7 @@ jobs:
           # See: https://stackoverflow.com/questions/37861791/how-are-docker-image-names-parsed#37867949
 
           untrusted_provenance_domain="docker.io"
-          maybe_provenance_domain=$(echo "${UNTRUSTED_PROVENANCE_REGISTRY}" | cut -f1 -d "/" | { grep -E "\.|:" || true; })
+          maybe_provenance_domain=$(echo "${UNTRUSTED_PROVENANCE_REPOSITORY}" | cut -f1 -d "/" | { grep -E "\.|:" || true; })
           if [ "${maybe_provenance_domain}" != "" ]; then
             untrusted_provenance_domain="${maybe_provenance_domain}"
           fi
@@ -264,10 +264,9 @@ jobs:
         continue-on-error: true
         env:
           UNTRUSTED_IMAGE: "${{ inputs.image }}"
-          UNTRUSTED_SECRET_IMAGE: "${{ secrets.image }}"
           UNTRUSTED_DIGEST: "${{ inputs.digest }}"
           GITHUB_CONTEXT: "${{ toJSON(github) }}"
-          UNTRUSTED_PROVENANCE_REGISTRY: "${{ inputs.provenance-registry }}"
+          UNTRUSTED_PROVENANCE_REPOSITORY: "${{ inputs.provenance-repository }}"
         run: |
           set -euo pipefail
 
@@ -275,15 +274,15 @@ jobs:
           predicate_name="predicate.json"
           "$GITHUB_WORKSPACE/$BUILDER_BINARY" generate --predicate="$predicate_name"
 
-          if [[ -n "${UNTRUSTED_PROVENANCE_REGISTRY}" ]]; then
-            export COSIGN_REPOSITORY="${UNTRUSTED_PROVENANCE_REGISTRY}"
+          if [[ -n "${UNTRUSTED_PROVENANCE_REPOSITORY}" ]]; then
+            export COSIGN_REPOSITORY="${UNTRUSTED_PROVENANCE_REPOSITORY}"
           fi
 
           COSIGN_EXPERIMENTAL=1 \
           cosign attest --predicate="$predicate_name" \
             --type slsaprovenance \
             --yes \
-            "${UNTRUSTED_SECRET_IMAGE:-${UNTRUSTED_IMAGE}}@${UNTRUSTED_DIGEST}"
+            "${UNTRUSTED_IMAGE}@${UNTRUSTED_DIGEST}"
 
       - name: Final outcome
         id: final
