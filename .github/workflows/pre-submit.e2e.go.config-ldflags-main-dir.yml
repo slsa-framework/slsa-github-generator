@@ -50,7 +50,7 @@ jobs:
       actions: read # For the entry point.
     uses: ./.github/workflows/builder_go_slsa3.yml
     with:
-      go-version: "1.20"
+      go-version: "1.21"
       config-file: .github/workflows/configs-go/config-ldflags-main-dir.yml
       evaluated-envs: "VERSION:${{needs.args.outputs.version}},COMMIT:${{needs.args.outputs.commit}},BRANCH:${{needs.args.outputs.branch}}"
       compile-builder: true
