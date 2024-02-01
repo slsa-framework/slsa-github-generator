@@ -45,13 +45,15 @@ do
     path_with_version="${i//GRADLE_VERSION/"$GRADLE_VERSION"}"
 
     echo path_with_version: $path_with_version
+
+    # Move the file
+    bn=$(basename -- "$path_with_version")
+
     echo bn: $bn
     echo pwd:
     pwd
     echo "ls: -lahR"
     ls -lahR
 
-    # Move the file
-    bn=$(basename -- "$path_with_version")
     cp "$path_with_version" release-files-for-slsa/"$bn"
 done
