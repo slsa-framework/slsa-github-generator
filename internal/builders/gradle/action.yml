@@ -131,7 +131,7 @@ runs:
         echo ls -lahR:
         ls -lahR
         echo ls -lahR proj root:
-        ls -lahR "${PROJECT_ROOT}"
+        ls -lahR $PROJECT_ROOT
         mv "${PROJECT_ROOT}"/build "${GITHUB_WORKSPACE}"/
     - name: Upload build dir
       id: upload-build-dir
