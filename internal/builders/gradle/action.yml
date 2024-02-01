@@ -138,4 +138,5 @@ runs:
       uses: slsa-framework/slsa-github-generator/.github/actions/secure-upload-folder@main
       with:
         name: "${{ steps.rng.outputs.random }}-build"
-        path: build
+        # path: build
+        path: ./release-files-for-slsa
