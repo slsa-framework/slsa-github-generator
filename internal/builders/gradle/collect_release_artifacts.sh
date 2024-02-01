@@ -21,6 +21,11 @@ GRADLE_VERSION=$(./gradlew properties -q | grep "version:" | awk '{print $2}')
 
 # Move artifacts from the user-supplied artifact list
 IFS=',' read -ra artifact_array <<< "$UNTRUSTED_ARTIFACT_LIST"
+
+echo "******  DEBUG  *******"
+echo artifact_array: $artifact_array
+echo UNTRUSTED_ARTIFACT_LIST: $UNTRUSTED_ARTIFACT_LIST
+
 for i in "${artifact_array[@]}"
 do
     i="${i#"${i%%[![:space:]]*}"}" # trim leading whitespace                                                                                                                                                                                                                                                                                                                                         
@@ -32,9 +37,19 @@ do
     then
         continue
     fi
+
+    echo i: $i
+    echo GRADLE_VERSION: $GRADLE_VERSION
     
     # Replace 'GRADLE_VERSION' with $GRADLE_VERSION
     path_with_version="${i//GRADLE_VERSION/"$GRADLE_VERSION"}"
+
+    echo path_with_version: $path_with_version
+    echo bn: $bn
+    echo pwd:
+    pwd
+    echo "ls: -lahR"
+    ls -lahR
 
     # Move the file
     bn=$(basename -- "$path_with_version")
