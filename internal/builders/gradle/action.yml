@@ -128,9 +128,9 @@ runs:
         echo GITHUB_WORKSPACE: $GITHUB_WORKSPACE
         echo pwd:
         pwd
-        echo "ls -lahR:"""
+        echo "ls -lahR:"
         ls -lahR
-        echo "ls -lahR proj root:""
+        echo "ls -lahR proj root:"
         ls -lahR $PROJECT_ROOT
         mv "${PROJECT_ROOT}"/build "${GITHUB_WORKSPACE}"/
     - name: Upload build dir
