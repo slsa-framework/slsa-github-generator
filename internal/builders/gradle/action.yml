@@ -126,9 +126,13 @@ runs:
       run: |
         echo PROJECT_ROOT: $PROJECT_ROOT
         echo GITHUB_WORKSPACE: $GITHUB_WORKSPACE
+        echo pwd:
+        pwd
         echo ls -lahR:
         ls -lahR
         mv "${PROJECT_ROOT}"/build "${GITHUB_WORKSPACE}"/
+        echo ls -lahR proj root:
+        ls -lahR "${PROJECT_ROOT}"/build
     - name: Upload build dir
       id: upload-build-dir
       uses: slsa-framework/slsa-github-generator/.github/actions/secure-upload-folder@main
