@@ -124,6 +124,10 @@ runs:
       env:
         PROJECT_ROOT: ${{ steps.run_gradle_builder.outputs.validated_project_root }}
       run: |
+        echo PROJECT_ROOT: $PROJECT_ROOT
+        echo GITHUB_WORKSPACE: $GITHUB_WORKSPACE
+        echo ls -lahR:
+        ls -lahR
         mv "${PROJECT_ROOT}"/build "${GITHUB_WORKSPACE}"/
     - name: Upload build dir
       id: upload-build-dir
