@@ -21,11 +21,11 @@ SLSA_OUTPUTS_ARTIFACTS_FILE="${GITHUB_WORKSPACE}/${SLSA_OUTPUTS_ARTIFACTS_FILE}"
 # "version" and "attestations" fields:
 echo -e -n "{\n  \"version\": 1,\n  \"attestations\": [" >> "$SLSA_OUTPUTS_ARTIFACTS_FILE"
 
-num_jar_files=$(find ./release-files-for-slsa -type f | wc -l)
+num_jar_files=$(find ./slsa-build -type f | wc -l)
 counter=1
         
 # Add one attestation per .jar file:
-find ./release-files-for-slsa -type f -print0 | while read -r -d $'\0' fname
+find ./slsa-build -type f -print0 | while read -r -d $'\0' fname
 do
           
     bn=$(basename -- "$fname")

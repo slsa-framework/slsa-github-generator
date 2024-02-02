@@ -16,7 +16,7 @@
 
 set -euo pipefail
 
-mkdir release-files-for-slsa
+mkdir slsa-build
 GRADLE_VERSION=$(./gradlew properties -q | grep "version:" | awk '{print $2}')
 
 # Move artifacts from the user-supplied artifact list
@@ -38,5 +38,5 @@ do
 
     # Move the file
     bn=$(basename -- "$path_with_version")
-    cp "$path_with_version" release-files-for-slsa/"$bn"
+    cp "$path_with_version" slsa-build/"$bn"
 done

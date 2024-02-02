@@ -119,15 +119,9 @@ runs:
         PROJECT_ROOT: ${{ steps.run_gradle_builder.outputs.validated_project_root }}
       run: |
         cd "${PROJECT_ROOT}" && "${GITHUB_WORKSPACE}"/../__TOOL_ACTION_DIR__/create_attestation.sh
-    - name: Move artifacts to a new "build/" folder for upload
-      shell: bash
-      env:
-        PROJECT_ROOT: ${{ steps.run_gradle_builder.outputs.validated_project_root }}
-      run: |
-        mv ./release-files-for-slsa "${GITHUB_WORKSPACE}"/build
     - name: Upload build dir
       id: upload-build-dir
       uses: slsa-framework/slsa-github-generator/.github/actions/secure-upload-folder@main
       with:
         name: "${{ steps.rng.outputs.random }}-build"
-        path: build
+        path: slsa-build
