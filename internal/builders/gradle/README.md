@@ -83,12 +83,14 @@ jobs:
       actions: read
     uses: slsa-framework/slsa-github-generator/.github/workflows/builder_gradle_slsa3.yml@v1.9.0
     with:
-      artifact-list: ./artifact1.jar,./artifact2.jar
+      artifact-list: >-
+        ./app/build/libs/app.jar,
+        ./my/other/artifact.txt
 ```
 
 Now, when you invoke this workflow, the Gradle builder will build both your artifacts and the provenance files for them.
 
-The Gradle builder requires you to specify the artifacts that you wish to attest to. To do so, you add a comma-separated list of paths to the artifacts as shown in the example. The paths are relative from the root of your project directory.
+The Gradle builder requires you to specify the artifacts that you wish to attest to. To do so, you add a comma-separated list of paths to the artifacts as shown in the example. The paths are relative from the root of your repository.
 
 ### Private Repositories
 
