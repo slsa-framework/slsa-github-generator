@@ -217,6 +217,8 @@ signing {
 }
 ```
 
+
+
 You don't need to configure anything inside that code snippet; Adding them to your `build.gradle.kts` file is enough.
 
 ### Add the publish action to your release workflow
@@ -280,3 +282,7 @@ Closing the staging repository:
 Releasing:
 
 ![releasing the Gradle artefacts](/actions/gradle/publish/images/gradle-publisher-release-closed-repository.png)
+
+### Multi-Project Builds
+
+See the same guidance in the [build docs](../../../internal/builders/gradle/README.md#multi-project-builds) for consolidating files from multi-project builds.
