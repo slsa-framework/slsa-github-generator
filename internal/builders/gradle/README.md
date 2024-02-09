@@ -19,6 +19,7 @@ workflow the "Gradle builder" from now on.
 - [Limitations](#limitations)
 - [Generating Provenance](#generating-provenance)
   - [Getting Started](#getting-started)
+    - [Multi-Project Builds](#multi-project-builds)
   - [Private Repositories](#private-repositories)
 - [Verification](#verification)
 
@@ -98,7 +99,8 @@ The Gradle builder requires you to specify the artifacts that you wish to attest
 If you are using [multi-project builds](https://docs.gradle.org/current/userguide/intro_multi_project_builds.html), where each of your sub-projects' `src` are in separate subfolders, then you will need to add a task to copy over the artifact files to the root `./build` folder.
 
 See this example to add to your sub-projects' `build.gradle.kts` file.
-```
+
+```kotlin
 tasks.register<Copy>("copySubProjectBuild") {
     from(layout.buildDirectory)
     into("${rootProject.projectDir}/build/${project.name}")
@@ -111,7 +113,7 @@ tasks.named("build") {
 
 This, for example, It will move `./app1/build/` and `./app2/build/` to `./build/app1/` and `./build/app2/`. You must then alter your input to `artifact-list`.
 
-```
+```yaml
 ...
       artifact-list: >-
         ./build/app1/libs/app.jar,
