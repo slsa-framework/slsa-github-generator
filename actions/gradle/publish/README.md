@@ -217,8 +217,6 @@ signing {
 }
 ```
 
-
-
 You don't need to configure anything inside that code snippet; Adding them to your `build.gradle.kts` file is enough.
 
 ### Add the publish action to your release workflow
