@@ -111,7 +111,7 @@ tasks.named("build") {
 }
 ```
 
-This, for example, It will move `./app1/build/` and `./app2/build/` to `./build/app1/` and `./build/app2/`. You must then alter your input to `artifact-list`.
+This, for example, will move `./app1/build/` and `./app2/build/` to `./build/app1/` and `./build/app2/`. You must then alter your input to `artifact-list`.
 
 ```yaml
 ...
