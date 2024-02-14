@@ -1438,13 +1438,13 @@ The other complexity arises from the fact that the utilities used to compute the
 digest (`sha256sum`) and the base 64 encoding (`base64`) have different
 behaviors across the operating systems:
 
-* On MacOS, the utlity to compute the digest is called `shasum` and the
+- On MacOS, the utlity to compute the digest is called `shasum` and the
   algorithm is passed via the `-a 256` algorithm
-* On Windows, we need to tell `sha256sum` to treat all files as text by using
+- On Windows, we need to tell `sha256sum` to treat all files as text by using
   the `-t` switch, otherwise the output will contain an extra `*` in front of
   the filename. This will later be wrongly interpretted as a glob pattern, so we
   should avoid it.
-* On MacOS, `base64` does not have a `-w0` option, the line wrapping is
+- On MacOS, `base64` does not have a `-w0` option, the line wrapping is
   implicit.
 
 One way to merge all these differences is to use the bash `||` operator:
