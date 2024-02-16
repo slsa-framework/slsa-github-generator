@@ -105,7 +105,8 @@ runs:
           && mvn package  -Drun.hash.jarfile=true
         # NOTE: SLSA_OUTPUTS_ARTIFACTS_FILE is a relative path and the project_root may
         # not be in GITHUB_WORKSPACE, so we need to move the file.
-        mv $(dirname "${SLSA_OUTPUTS_ARTIFACTS_FILE}") "${GITHUB_WORKSPACE}/../"
+        # The following checks if the directories are different before executing the command, fixing an error when SLSA is generated from the root of a repository.
+        [[ $(dirname "${SLSA_OUTPUTS_ARTIFACTS_FILE}") -ef "${GITHUB_WORKSPACE}/../" ]] || mv $(dirname "${SLSA_OUTPUTS_ARTIFACTS_FILE}") "${GITHUB_WORKSPACE}/../"
         mv target "${GITHUB_WORKSPACE}/"
 
     # rng generates a random number to avoid name collision in artifacts

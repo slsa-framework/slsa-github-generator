@@ -280,3 +280,7 @@ Closing the staging repository:
 Releasing:
 
 ![releasing the Gradle artefacts](/actions/gradle/publish/images/gradle-publisher-release-closed-repository.png)
+
+### Multi-Project Builds
+
+See the same guidance in the [build docs](../../../internal/builders/gradle/README.md#multi-project-builds) for consolidating files from multi-project builds.
