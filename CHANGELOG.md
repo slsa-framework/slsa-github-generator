@@ -93,6 +93,23 @@ Use the format "X.Y.Z: Go builder" etc. for format headers to avoid header name
 duplication."
 -->
 
+## Unreleased
+
+### Unreleased: Gradle Builder
+
+- The Gradle Builder was fixed when the project root is the same as the
+  repository root (#2727)
+
+### Unreleased: Go Builder
+
+- The `go-version-file` input was fixed so that it can find the `go.mod` file
+  (#2661)
+
+### Unreleased: Container Generator
+
+- A new `provenance-repository` input was added to allow reading provenance from
+  a different container repository than the image itself (#2956)
+
 ## v1.9.0
 
 Release [v1.9.0] includes bug fixes and new features.
