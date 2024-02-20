@@ -28,5 +28,5 @@ outputs:
     description: The path to the workflow relative to the repository, for example ".github/workflows/example.yml"
 
 runs:
-  using: node16
+  using: "node20"
   main: "dist/index.js"
