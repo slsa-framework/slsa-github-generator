@@ -19,6 +19,9 @@ import * as core from "@actions/core";
 type ApiWorkflowRun =
   Endpoints["GET /repos/{owner}/{repo}/actions/runs/{run_id}"]["response"]["data"];
 
+type ApiJobsForWorkflowRun =
+  Endpoints["GET /repos/{owner}/{repo}/actions/runs/{run_id}/jobs"]["response"]["data"];
+
 type githubClaimsType = {
   aud?: string;
   job_workflow_ref?: string;
@@ -133,4 +136,31 @@ export async function detectWorkflowFromContext(
   }
 
   return [repository, ref, workflow];
+}
+
+export async function isGithubHostedRunner(  repoName: string,
+  token: string,
+): Promise<boolean> {
+  // `getWorkflowRun` does not include information about the runner envoronment.
+  // We must get that information either from the OIDC token or from `listJobsForWorkflowRun`
+  // Here we use `listJobsForWorkflowRun` for more compatibility, described in the docs for `detectWorkflowFromOIDC`
+  // We cannot use `getJobForWorkflowRun` because there seems to be no way to get the required `JOB_ID` as a number, 
+  // rather than as a string title for the job. See https://github.com/actions/toolkit/issues/550.
+  const [owner, repo] = repoName.split("/");
+  const octokit = github.getOctokit(token);
+  const res = await octokit.rest.actions.listJobsForWorkflowRun({
+    owner,
+    repo,
+    run_id: Number(process.env.GITHUB_RUN_ID),
+  });
+  const jobsData: ApiJobsForWorkflowRun = res.data;
+  // check that all jobs in the workflow were run in a GithubHostedRunner
+  const self_hosted_label = "self-hosted";
+  const onlyGithubHostedRunners: boolean = jobsData.jobs.reduce<boolean>(
+    (result: boolean, job: ApiJobsForWorkflowRun["jobs"][0]) => {
+      return result && !job.labels.includes(self_hosted_label);
+    },
+    true
+  )
+  return onlyGithubHostedRunners;
 }
