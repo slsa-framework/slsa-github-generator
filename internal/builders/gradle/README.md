@@ -19,6 +19,7 @@ workflow the "Gradle builder" from now on.
 - [Limitations](#limitations)
 - [Generating Provenance](#generating-provenance)
   - [Getting Started](#getting-started)
+    - [Multi-Project Builds](#multi-project-builds)
   - [Private Repositories](#private-repositories)
 - [Verification](#verification)
 
@@ -53,6 +54,7 @@ The Gradle builder currently has the following limitations:
 
 1. The project must be buildable by way of `./gradlew build`. If you need the option for flags, profiles or something else to define more granular builds, please open an issue.
 2. The project must include a gradle wrapper (`gradlew`). The Gradle builder does not include an installation of gradle.
+3. The project's build scripts must place the artifacts into `./build`, relative to the `directory` workflow input. If you are doing [multi-project builds](https://docs.gradle.org/current/userguide/intro_multi_project_builds.html), you may need to follow the [example below](#multi-project-builds)
 
 ## Generating Provenance
 
@@ -83,12 +85,41 @@ jobs:
       actions: read
     uses: slsa-framework/slsa-github-generator/.github/workflows/builder_gradle_slsa3.yml@v1.9.0
     with:
-      artifact-list: ./artifact1.jar,./artifact2.jar
+      artifact-list: >-
+        ./build/artifact1.jar,
+        ./build/artifact2.jar
 ```
 
 Now, when you invoke this workflow, the Gradle builder will build both your artifacts and the provenance files for them.
 
 The Gradle builder requires you to specify the artifacts that you wish to attest to. To do so, you add a comma-separated list of paths to the artifacts as shown in the example. The paths are relative from the root of your project directory.
+
+#### Multi-Project Builds
+
+If you are using [multi-project builds](https://docs.gradle.org/current/userguide/intro_multi_project_builds.html), where each of your sub-projects' `src` are in separate subfolders, then you will need to add a task to copy over the artifact files to the root `./build` folder.
+
+See this example to add to your sub-projects' `build.gradle.kts` file.
+
+```kotlin
+tasks.register<Copy>("copySubProjectBuild") {
+    from(layout.buildDirectory)
+    into("${rootProject.projectDir}/build/${project.name}")
+}
+
+tasks.named("build") {
+    finalizedBy("copySubProjectBuild")
+}
+```
+
+This, for example, will move `./app1/build/` and `./app2/build/` to `./build/app1/` and `./build/app2/`. You must then alter your input to `artifact-list`.
+
+```yaml
+...
+      artifact-list: >-
+        ./build/app1/libs/app.jar,
+        ./build/app2/libs/app.jar,
+...
+```
 
 ### Private Repositories
 

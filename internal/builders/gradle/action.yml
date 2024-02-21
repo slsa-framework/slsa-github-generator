@@ -124,7 +124,8 @@ runs:
       env:
         PROJECT_ROOT: ${{ steps.run_gradle_builder.outputs.validated_project_root }}
       run: |
-        mv "${PROJECT_ROOT}"/build "${GITHUB_WORKSPACE}"/
+        # Ensure that directories are not the same before moving them, preventing an error when running action from the root of the repository.
+        [[ "${PROJECT_ROOT}" -ef "${GITHUB_WORKSPACE}" ]] || mv "${PROJECT_ROOT}"/build "${GITHUB_WORKSPACE}"/
     - name: Upload build dir
       id: upload-build-dir
       uses: slsa-framework/slsa-github-generator/.github/actions/secure-upload-folder@main

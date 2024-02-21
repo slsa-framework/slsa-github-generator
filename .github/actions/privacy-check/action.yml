@@ -33,5 +33,5 @@ outputs:
     description: "True if the repository is private."
 
 runs:
-  using: node16
+  using: "node20"
   main: "dist/index.js"
