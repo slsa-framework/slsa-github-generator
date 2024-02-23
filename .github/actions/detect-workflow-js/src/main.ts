@@ -14,7 +14,11 @@
 
 import * as core from "@actions/core";
 import path from "path";
-import { detectWorkflowFromOIDC, detectWorkflowFromContext } from "./detect";
+import {
+  detectWorkflowFromOIDC,
+  detectWorkflowFromContext,
+  ensureOnlyGithubHostedRunners,
+} from "./detect";
 
 async function run(): Promise<void> {
   /* Test locally. Requires a GitHub token:
@@ -58,6 +62,8 @@ async function run(): Promise<void> {
         token,
       );
     }
+    // ensure that all all sibling Jobs in the workflow are using Github-hosted Runners
+    ensureOnlyGithubHostedRunners(repoName, token);
   } catch (error) {
     if (error instanceof Error) {
       core.setFailed(error.message);
