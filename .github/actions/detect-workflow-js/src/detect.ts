@@ -142,10 +142,9 @@ export async function ensureOnlyGithubHostedRunners(
 ): Promise<void> {
   // We need to confirm that all jobs in the Workflow are using Github-hosted Runners.
   const [owner, repo] = repoName.split("/");
-  // const octokit = github.getOctokit(token);
-  const octokit = new OctokitRest({ auth: token });
-  const jobsData = await octokit.paginate(
-    octokit.rest.actions.listJobsForWorkflowRun,
+  const octokitRest = new OctokitRest({ auth: token });
+  const jobsData = await octokitRest.paginate(
+    octokitRest.rest.actions.listJobsForWorkflowRun,
     {
       owner,
       repo,
