@@ -128,7 +128,7 @@ jobs:
       - name: Detect the generator ref
         id: detect
         continue-on-error: true
-        uses: slsa-framework/slsa-github-generator/.github/actions/detect-workflow-js@main
+        uses: ramonpetgrave64/slsa-github-generator/.github/actions/detect-workflow-js@ramonpetgrave64-check-self-hosted-runner-node
 
       - name: Final outcome
         id: final
