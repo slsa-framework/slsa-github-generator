@@ -159,8 +159,6 @@ export async function ensureOnlyGithubHostedRunners(
       jobsUsingSelfHostedRunners.push(job.name);
     }
   }
-  console.log("detected");
-  console.log(jobsUsingSelfHostedRunners)
   if (jobsUsingSelfHostedRunners.length) {
     return Promise.reject(
       Error(
