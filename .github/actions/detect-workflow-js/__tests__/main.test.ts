@@ -334,12 +334,20 @@ describe("ensureOnlyGithubHostedRunners", () => {
               name: "myjob",
               labels: ["self-hosted", "foo", "bar"],
             },
+            {
+              id: 399444497,
+              run_id: 29679449,
+              name: "otherjob",
+              labels: ["self-hosted", "baz"],
+            },
           ],
         },
       }),
     );
     expect(
       detect.ensureOnlyGithubHostedRunners("unused", "unused"),
-    ).rejects.toThrow();
+    ).rejects.toThrow(
+      new Error(`Self-hosted Runners are not allowed: jobs: myjob,otherjob`),
+    );
   });
 });
