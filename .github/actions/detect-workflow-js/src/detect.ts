@@ -151,6 +151,10 @@ export async function ensureOnlyGithubHostedRunners(
       run_id: Number(process.env.GITHUB_RUN_ID),
     },
   );
+
+  console.log("jobsData");
+  console.log(jobsData);
+
   const selfHostedLabel = "self-hosted";
   const jobsUsingSelfHostedRunners: string[] = [];
   for (const job of jobsData.jobs) {

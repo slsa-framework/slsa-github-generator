@@ -161,6 +161,8 @@ function ensureOnlyGithubHostedRunners(repoName, token) {
             repo,
             run_id: Number(process.env.GITHUB_RUN_ID),
         });
+        console.log("jobsData");
+        console.log(jobsData);
         const selfHostedLabel = "self-hosted";
         const jobsUsingSelfHostedRunners = [];
         for (const job of jobsData.jobs) {
