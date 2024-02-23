@@ -53,9 +53,8 @@ describe("detectWorkflowFromOIDC", () => {
     core.getIDToken.mockClear();
     core.getIDToken.mockReturnValueOnce(jwt);
 
-    const [repo, ref, workflow] = await detect.detectWorkflowFromOIDC(
-      "some/audience",
-    );
+    const [repo, ref, workflow] =
+      await detect.detectWorkflowFromOIDC("some/audience");
     expect(repo).toBe("octo-org/octo-automation");
     expect(ref).toBe("refs/heads/main");
     expect(workflow).toBe(".github/workflows/oidc.yml");
@@ -73,9 +72,8 @@ describe("detectWorkflowFromOIDC", () => {
     core.getIDToken.mockClear();
     core.getIDToken.mockReturnValueOnce(jwt);
 
-    const [repo, ref, workflow] = await detect.detectWorkflowFromOIDC(
-      "some/audience",
-    );
+    const [repo, ref, workflow] =
+      await detect.detectWorkflowFromOIDC("some/audience");
     expect(repo).toBe("vitejs/vite");
     expect(ref).toBe("refs/tags/create-vite@5.0.0-beta.0");
     expect(workflow).toBe(".github/workflows/publish.yml");
@@ -267,18 +265,20 @@ describe("detectWorkflowFromContext", () => {
   });
 });
 
-
-// mock octokit, but also with the special paginator's passthrough responses
+// mock `Octokit` from `@octokit/rest"`, doing pagination pass-through to our existing `octokit` mock
 jest.mock("@octokit/rest", () => {
   return {
     Octokit: jest.fn().mockImplementation(() => {
+      type octokitResponse = OctokitResponse<object, number>;
+      type octokitArg = object;
       return {
+        // re-use our existing mock
         ...octokit,
         // `paginate` takes a target method and it's arguments
         paginate: async (
-          method: (arg: object) => Promise<OctokitResponse<any, any>["data"]>,
-          arg: object
-        ) => {
+          method: (arg: octokitArg) => Promise<octokitResponse>,
+          arg: octokitArg,
+        ): Promise<octokitResponse["data"]> => {
           // passthrough to the original method
           const resp = await method(arg);
           const data = resp.data;
@@ -286,13 +286,12 @@ jest.mock("@octokit/rest", () => {
           return data;
         },
       };
-    })
-  }
+    }),
+  };
 });
 
 describe("ensureOnlyGithubHostedRunners", () => {
   it("no workflow run", async () => {
-
     octokit.rest.actions.listJobsForWorkflowRun.mockReturnValue(
       Promise.resolve({ data: { conclusion: "failure" } }),
     );
@@ -306,19 +305,16 @@ describe("ensureOnlyGithubHostedRunners", () => {
     octokit.rest.actions.listJobsForWorkflowRun.mockReturnValue(
       Promise.resolve({
         data: {
-          "total_count": 1,
-          "jobs": [
+          total_count: 1,
+          jobs: [
             {
-              "id": 399444496,
-              "run_id": 29679449,
-              "name": "myjob",
-              "labels": [
-                "foo",
-                "bar"
-              ]
-            }
-          ]
-        }
+              id: 399444496,
+              run_id: 29679449,
+              name: "myjob",
+              labels: ["foo", "bar"],
+            },
+          ],
+        },
       }),
     );
     expect(
@@ -330,24 +326,20 @@ describe("ensureOnlyGithubHostedRunners", () => {
     octokit.rest.actions.listJobsForWorkflowRun.mockReturnValue(
       Promise.resolve({
         data: {
-          "total_count": 1,
-          "jobs": [
+          total_count: 1,
+          jobs: [
             {
-              "id": 399444496,
-              "run_id": 29679449,
-              "name": "myjob",
-              "labels": [
-                "self-hosted",
-                "foo",
-                "bar"
-              ]
-            }
-          ]
-        }
+              id: 399444496,
+              run_id: 29679449,
+              name: "myjob",
+              labels: ["self-hosted", "foo", "bar"],
+            },
+          ],
+        },
       }),
     );
     expect(
       detect.ensureOnlyGithubHostedRunners("unused", "unused"),
     ).rejects.toThrow();
   });
-})
+});
