@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import { create } from "domain";
+import { OctokitResponse } from "@octokit/types";
 
 const core = require("@actions/core");
 const detect = require("../src/detect");
@@ -125,6 +126,7 @@ function createOctokitMock() {
         listWorkflowRuns: jest.fn(),
         getWorkflowRun: jest.fn(),
         reRunWorkflow: jest.fn(),
+        listJobsForWorkflowRun: jest.fn(),
       },
       pulls: {
         get: jest.fn(),
@@ -133,11 +135,11 @@ function createOctokitMock() {
   };
 }
 
-describe("detectWorkflowFromContext", () => {
-  github.getOctokit.mockClear();
-  const octokit = createOctokitMock();
-  github.getOctokit.mockReturnValue(octokit);
+github.getOctokit.mockClear();
+const octokit = createOctokitMock();
+github.getOctokit.mockReturnValue(octokit);
 
+describe("detectWorkflowFromContext", () => {
   it("no workflow run", async () => {
     octokit.rest.actions.getWorkflowRun.mockReturnValue(
       Promise.resolve({ data: { conclusion: "failure" } }),
@@ -264,3 +266,88 @@ describe("detectWorkflowFromContext", () => {
     );
   });
 });
+
+
+// mock octokit, but also with the special paginator's passthrough responses
+jest.mock("@octokit/rest", () => {
+  return {
+    Octokit: jest.fn().mockImplementation(() => {
+      return {
+        ...octokit,
+        // `paginate` takes a target method and it's arguments
+        paginate: async (
+          method: (arg: object) => Promise<OctokitResponse<any, any>["data"]>,
+          arg: object
+        ) => {
+          // passthrough to the original method
+          const resp = await method(arg);
+          const data = resp.data;
+          // paginator will always return the contents of `OctokitResponse.data`
+          return data;
+        },
+      };
+    })
+  }
+});
+
+describe("ensureOnlyGithubHostedRunners", () => {
+  it("no workflow run", async () => {
+
+    octokit.rest.actions.listJobsForWorkflowRun.mockReturnValue(
+      Promise.resolve({ data: { conclusion: "failure" } }),
+    );
+
+    expect(
+      detect.ensureOnlyGithubHostedRunners("unused", "unused"),
+    ).rejects.toThrow();
+  });
+
+  it("success", async () => {
+    octokit.rest.actions.listJobsForWorkflowRun.mockReturnValue(
+      Promise.resolve({
+        data: {
+          "total_count": 1,
+          "jobs": [
+            {
+              "id": 399444496,
+              "run_id": 29679449,
+              "name": "myjob",
+              "labels": [
+                "foo",
+                "bar"
+              ]
+            }
+          ]
+        }
+      }),
+    );
+    expect(
+      detect.ensureOnlyGithubHostedRunners("unused", "unused"),
+    ).resolves.toBeUndefined();
+  });
+
+  it("failure", async () => {
+    octokit.rest.actions.listJobsForWorkflowRun.mockReturnValue(
+      Promise.resolve({
+        data: {
+          "total_count": 1,
+          "jobs": [
+            {
+              "id": 399444496,
+              "run_id": 29679449,
+              "name": "myjob",
+              "labels": [
+                "self-hosted",
+                "foo",
+                "bar"
+              ]
+            }
+          ]
+        }
+      }),
+    );
+    expect(
+      detect.ensureOnlyGithubHostedRunners("unused", "unused"),
+    ).rejects.toThrow();
+  });
+})
