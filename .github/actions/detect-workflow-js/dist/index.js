@@ -156,16 +156,14 @@ function ensureOnlyGithubHostedRunners(repoName, token) {
         // We need to confirm that all jobs in the Workflow are using Github-hosted Runners.
         const [owner, repo] = repoName.split("/");
         const octokitRest = new rest_1.Octokit({ auth: token });
-        const jobsData = yield octokitRest.paginate(octokitRest.rest.actions.listJobsForWorkflowRun, {
+        const jobs = yield octokitRest.paginate(octokitRest.rest.actions.listJobsForWorkflowRun, {
             owner,
             repo,
             run_id: Number(process.env.GITHUB_RUN_ID),
         });
-        console.log("jobsData");
-        console.log(jobsData);
         const selfHostedLabel = "self-hosted";
         const jobsUsingSelfHostedRunners = [];
-        for (const job of jobsData.jobs) {
+        for (const job of jobs) {
             if (job.labels.includes(selfHostedLabel)) {
                 jobsUsingSelfHostedRunners.push(job.name);
             }

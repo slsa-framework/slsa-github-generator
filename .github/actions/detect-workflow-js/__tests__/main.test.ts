@@ -18,6 +18,7 @@ import { OctokitResponse } from "@octokit/types";
 const core = require("@actions/core");
 const detect = require("../src/detect");
 const github = require("@actions/github");
+const OctokitRest = require("@octokit/rest");
 
 describe("decodeToken", () => {
   it("return email and job_workflow_ref", () => {
@@ -133,11 +134,11 @@ function createOctokitMock() {
   };
 }
 
-github.getOctokit.mockClear();
-const octokit = createOctokitMock();
-github.getOctokit.mockReturnValue(octokit);
-
 describe("detectWorkflowFromContext", () => {
+  github.getOctokit.mockClear();
+  const octokit = createOctokitMock();
+  github.getOctokit.mockReturnValue(octokit);
+
   it("no workflow run", async () => {
     octokit.rest.actions.getWorkflowRun.mockReturnValue(
       Promise.resolve({ data: { conclusion: "failure" } }),
@@ -265,36 +266,22 @@ describe("detectWorkflowFromContext", () => {
   });
 });
 
-// mock `Octokit` from `@octokit/rest"`, doing pagination pass-through to our existing `octokit` mock
-jest.mock("@octokit/rest", () => {
+function createOctokitRestMock() {
   return {
-    Octokit: jest.fn().mockImplementation(() => {
-      type octokitResponse = OctokitResponse<object, number>;
-      type octokitArg = object;
-      return {
-        // re-use our existing mock
-        ...octokit,
-        // `paginate` takes a target method and it's arguments
-        paginate: async (
-          method: (arg: octokitArg) => Promise<octokitResponse>,
-          arg: octokitArg,
-        ): Promise<octokitResponse["data"]> => {
-          // passthrough to the original method
-          const resp = await method(arg);
-          const data = resp.data;
-          // paginator will always return the contents of `OctokitResponse.data`
-          return data;
-        },
-      };
-    }),
+    ...createOctokitMock(),
+    paginate: jest.fn(),
   };
-});
+}
+
+jest.mock("@octokit/rest", () => ({ Octokit: jest.fn() }));
 
 describe("ensureOnlyGithubHostedRunners", () => {
+  OctokitRest.Octokit.mockClear();
+  const octokitRest = createOctokitRestMock();
+  OctokitRest.Octokit.mockReturnValue(octokitRest);
+
   it("no workflow run", async () => {
-    octokit.rest.actions.listJobsForWorkflowRun.mockReturnValue(
-      Promise.resolve({ data: { conclusion: "failure" } }),
-    );
+    octokitRest.paginate.mockRejectedValue(new Error("any"));
 
     expect(
       detect.ensureOnlyGithubHostedRunners("unused", "unused"),
@@ -302,20 +289,15 @@ describe("ensureOnlyGithubHostedRunners", () => {
   });
 
   it("success", async () => {
-    octokit.rest.actions.listJobsForWorkflowRun.mockReturnValue(
-      Promise.resolve({
-        data: {
-          total_count: 1,
-          jobs: [
-            {
-              id: 399444496,
-              run_id: 29679449,
-              name: "myjob",
-              labels: ["foo", "bar"],
-            },
-          ],
+    octokitRest.paginate.mockReturnValue(
+      Promise.resolve([
+        {
+          id: 399444496,
+          run_id: 29679449,
+          name: "myjob",
+          labels: ["foo", "bar"],
         },
-      }),
+      ]),
     );
     expect(
       detect.ensureOnlyGithubHostedRunners("unused", "unused"),
@@ -323,27 +305,23 @@ describe("ensureOnlyGithubHostedRunners", () => {
   });
 
   it("failure", async () => {
-    octokit.rest.actions.listJobsForWorkflowRun.mockReturnValue(
-      Promise.resolve({
-        data: {
-          total_count: 1,
-          jobs: [
-            {
-              id: 399444496,
-              run_id: 29679449,
-              name: "myjob",
-              labels: ["self-hosted", "foo", "bar"],
-            },
-            {
-              id: 399444497,
-              run_id: 29679449,
-              name: "otherjob",
-              labels: ["self-hosted", "baz"],
-            },
-          ],
+    octokitRest.paginate.mockReturnValue(
+      Promise.resolve([
+        {
+          id: 399444496,
+          run_id: 29679449,
+          name: "myjob",
+          labels: ["self-hosted", "foo", "bar"],
         },
-      }),
+        {
+          id: 399444497,
+          run_id: 29679449,
+          name: "otherjob",
+          labels: ["self-hosted", "baz"],
+        },
+      ]),
     );
+
     expect(
       detect.ensureOnlyGithubHostedRunners("unused", "unused"),
     ).rejects.toThrow(
