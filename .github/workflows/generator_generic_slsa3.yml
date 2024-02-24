@@ -163,7 +163,7 @@ jobs:
       - name: Generate builder
         id: generate-builder
         continue-on-error: true
-        uses: ramonpetgrave64/slsa-github-generator/.github/actions/generate-builder@v1.0.0
+        uses: ramonpetgrave64/slsa-github-generator/.github/actions/generate-builder@v1.0.1
         with:
           repository: "${{ needs.detect-env.outputs.repository }}"
           ref: "${{ needs.detect-env.outputs.ref }}"
