@@ -66,7 +66,7 @@ if [[ "$builder_tag" == "$(echo -n "$builder_tag" | grep -P '^[a-f\d]{40}$')" ]]
 fi
 
 if [[ "$builder_tag" != "$(echo -n "$builder_tag" | grep -oe '^v[1-9]\+\.[0-9]\+\.[0-9]\+\(-rc\.[0-9]\+\)\?$')" ]]; then
-    echo "Invalid builder version: $builder_tag. Expected version of the form vX.Y.Z(-rc.A)"
+    echo "Invalid builder version: $builder_tag. Expected version of the form vX.Y.Z(-rc.A), and at least v1.0.0"
     echo "For details see https://github.com/slsa-framework/slsa-github-generator/blob/main/README.md#referencing-slsa-builders-and-generators"
     exit 7
 fi
