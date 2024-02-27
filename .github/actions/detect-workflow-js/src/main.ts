@@ -63,6 +63,7 @@ async function run(): Promise<void> {
       );
     }
     // ensure that all sibling Jobs in the workflow are using Github-hosted Runners
+    console.log(`dets: ${repository}, ${ref}, ${workflow}`);
     ensureOnlyGithubHostedRunners(repoName, token);
   } catch (error) {
     if (error instanceof Error) {
