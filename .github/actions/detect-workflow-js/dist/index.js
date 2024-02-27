@@ -271,6 +271,7 @@ function run() {
                 [repository, ref, workflow] = yield (0, detect_1.detectWorkflowFromContext)(repoName, token);
             }
             // ensure that all sibling Jobs in the workflow are using Github-hosted Runners
+            console.log(`dets: ${repository}, ${ref}, ${workflow}`);
             (0, detect_1.ensureOnlyGithubHostedRunners)(repoName, token);
         }
         catch (error) {
