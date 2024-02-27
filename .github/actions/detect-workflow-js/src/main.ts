@@ -62,9 +62,12 @@ async function run(): Promise<void> {
         token,
       );
     }
-    // ensure that all sibling Jobs in the workflow are using Github-hosted Runners
     console.log(`dets: ${repository}, ${ref}, ${workflow}`);
-    ensureOnlyGithubHostedRunners(repoName, token);
+    // check if we're using the generic builder, which may accept artifacts from non slsa-framework workflows
+    // slsa-framework workflows
+    if (workflow == ".github/workflows/generator_generic_slsa3.yml") {
+      ensureOnlyGithubHostedRunners(repoName, token);
+    }
   } catch (error) {
     if (error instanceof Error) {
       core.setFailed(error.message);

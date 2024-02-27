@@ -270,9 +270,18 @@ function run() {
                 core.info("Failed to retrieve OIDC token. This may be due to missing id-token: write permissions.");
                 [repository, ref, workflow] = yield (0, detect_1.detectWorkflowFromContext)(repoName, token);
             }
-            // ensure that all sibling Jobs in the workflow are using Github-hosted Runners
             console.log(`dets: ${repository}, ${ref}, ${workflow}`);
-            (0, detect_1.ensureOnlyGithubHostedRunners)(repoName, token);
+            // check if we're using the generic builder, which may accept artifacts from non slsa-framework workflows
+            // slsa-framework workflows
+            if (workflow == ".github/workflows/generator_generic_slsa3.yml") {
+                // ensure that all sibling Jobs in the calling workflow are using Github-hosted Runners
+                // this check requires the caller to specify a github token with an additional `administration:read` permissions
+                // example:
+                // uses: slsa-framewrok/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml'
+                //   secrets:
+                //     token: ${{ secrets.MY_TOKEN_WITH_EXTRA_PERM }}
+                (0, detect_1.ensureOnlyGithubHostedRunners)(repoName, token);
+            }
         }
         catch (error) {
             if (error instanceof Error) {

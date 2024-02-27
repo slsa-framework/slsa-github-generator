@@ -136,11 +136,23 @@ export async function detectWorkflowFromContext(
   return [repository, ref, workflow];
 }
 
+/**
+ Confirm that all jobs in the calling workflow are not using self-hosted Runners.
+ This check is only needed when calling from the generic builders, check if we're using a "generic builder", 
+ where the user may attempt to supply artifacts produced on self-hosted runners.
+
+ This check requires the caller to specify a github token with an additional `administration:read` permissions.
+ example:
+ ```
+ uses: slsa-framewrok/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml'
+   secrets:
+     token: ${{ secrets.MY_TOKEN_WITH_EXTRA_PERM }}
+  ```
+*/
 export async function ensureOnlyGithubHostedRunners(
   repoName: string,
   token: string,
 ): Promise<void> {
-  // We need to confirm that all jobs in the Workflow are using Github-hosted Runners.
   const [owner, repo] = repoName.split("/");
   const octokitRest = new OctokitRest({ auth: token });
   const jobs = await octokitRest.paginate(
@@ -151,19 +163,29 @@ export async function ensureOnlyGithubHostedRunners(
       run_id: Number(process.env.GITHUB_RUN_ID),
     },
   );
-  const selfHostedLabel = "self-hosted";
-  const jobsUsingSelfHostedRunners: string[] = [];
-  for (const job of jobs) {
-    if (job.labels.includes(selfHostedLabel)) {
-      jobsUsingSelfHostedRunners.push(job.name);
-    }
-  }
-  if (jobsUsingSelfHostedRunners.length) {
+  const selfHostedRunners = await octokitRest.paginate(
+    octokitRest.rest.actions.listSelfHostedRunnersForRepo,
+    {
+      owner: owner,
+      repo: repo,
+    },
+  );
+  const selfHostedRunnerLabels: Set<string> = new Set<string>(
+    selfHostedRunners
+      .map((runner) => runner.labels.map((label) => label.name))
+      .flat(),
+  );
+  const jobLabels: Set<string> = new Set<string>(
+    jobs.map((job) => job.labels).flat(),
+  );
+  const commonLabels = [...jobLabels].filter((label) =>
+    selfHostedRunnerLabels.has(label),
+  );
+  if (commonLabels.length) {
     return Promise.reject(
       Error(
-        `Self-hosted Runners are not allowed: jobs: ${jobsUsingSelfHostedRunners}`,
+        `Self-hosted runners are not allowed in SLSA Level 3 workflows. labels: ${commonLabels}`,
       ),
     );
   }
-  return;
 }
