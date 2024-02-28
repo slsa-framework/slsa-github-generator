@@ -64,7 +64,11 @@ async function run(): Promise<void> {
     }
     // check if we're using the generic builder, where the user may attempt to
     // supply artifacts made with jobs on self-hosted runners
-    if (workflow === ".github/workflows/generator_generic_slsa3.yml") {
+    const genericWorkflwos = [
+      ".github/workflows/generator_generic_slsa3.yml",
+      ".github/workflows/generator_container_slsa3.yml",
+    ];
+    if (genericWorkflwos.includes(workflow)) {
       ensureOnlyGithubHostedRunners(repoName, token);
     }
   } catch (error) {
