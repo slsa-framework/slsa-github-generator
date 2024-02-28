@@ -62,10 +62,9 @@ async function run(): Promise<void> {
         token,
       );
     }
-    console.log(`dets: ${repository}, ${ref}, ${workflow}`);
-    // check if we're using the generic builder, which may accept artifacts from non slsa-framework workflows
-    // slsa-framework workflows
-    if (workflow == ".github/workflows/generator_generic_slsa3.yml") {
+    // check if we're using the generic builder, which may accept artifacts
+    // from non slsa-framework workflows
+    if (workflow === ".github/workflows/generator_generic_slsa3.yml") {
       ensureOnlyGithubHostedRunners(repoName, token);
     }
   } catch (error) {

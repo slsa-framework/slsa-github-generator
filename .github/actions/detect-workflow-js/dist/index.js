@@ -174,8 +174,8 @@ function ensureOnlyGithubHostedRunners(repoName, token) {
             run_id: Number(process.env.GITHUB_RUN_ID),
         });
         const selfHostedRunners = yield octokitRest.paginate(octokitRest.rest.actions.listSelfHostedRunnersForRepo, {
-            owner: owner,
-            repo: repo,
+            owner,
+            repo,
         });
         const selfHostedRunnerLabels = new Set(selfHostedRunners
             .map((runner) => runner.labels.map((label) => label.name))
@@ -283,10 +283,9 @@ function run() {
                 core.info("Failed to retrieve OIDC token. This may be due to missing id-token: write permissions.");
                 [repository, ref, workflow] = yield (0, detect_1.detectWorkflowFromContext)(repoName, token);
             }
-            console.log(`dets: ${repository}, ${ref}, ${workflow}`);
-            // check if we're using the generic builder, which may accept artifacts from non slsa-framework workflows
-            // slsa-framework workflows
-            if (workflow == ".github/workflows/generator_generic_slsa3.yml") {
+            // check if we're using the generic builder, which may accept artifacts
+            // from non slsa-framework workflows
+            if (workflow === ".github/workflows/generator_generic_slsa3.yml") {
                 (0, detect_1.ensureOnlyGithubHostedRunners)(repoName, token);
             }
         }

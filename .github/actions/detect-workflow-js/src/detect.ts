@@ -166,8 +166,8 @@ export async function ensureOnlyGithubHostedRunners(
   const selfHostedRunners = await octokitRest.paginate(
     octokitRest.rest.actions.listSelfHostedRunnersForRepo,
     {
-      owner: owner,
-      repo: repo,
+      owner,
+      repo,
     },
   );
   const selfHostedRunnerLabels: Set<string> = new Set<string>(

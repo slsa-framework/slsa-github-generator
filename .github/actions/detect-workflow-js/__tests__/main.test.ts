@@ -126,6 +126,7 @@ function createOctokitMock() {
         getWorkflowRun: jest.fn(),
         reRunWorkflow: jest.fn(),
         listJobsForWorkflowRun: jest.fn(),
+        listSelfHostedRunnersForRepo: jest.fn(),
       },
       pulls: {
         get: jest.fn(),
@@ -280,6 +281,38 @@ describe("ensureOnlyGithubHostedRunners", () => {
   const octokitRest = createOctokitRestMock();
   OctokitRest.Octokit.mockReturnValue(octokitRest);
 
+  const customRunnerLabel = "cloudtop";
+  const goodListJobsResp = [
+    {
+      id: 399444496,
+      run_id: 29679449,
+      name: "myjob",
+      labels: ["foo", "bar"],
+    },
+  ];
+  const badListJobsResp = [
+    ...goodListJobsResp,
+    {
+      ...goodListJobsResp[0],
+      labels: [customRunnerLabel, "baz"],
+    },
+  ];
+  const listRunnersResp = [
+    {
+      id: 24,
+      name: "my-gh-runner",
+      os: "Linux",
+      status: "online",
+      busy: true,
+      labels: [
+        { id: 1, name: "self-hosted", type: "read-only" },
+        { id: 2, name: "Linux", type: "read-only" },
+        { id: 3, name: "X64", type: "read-only" },
+        { id: 7, name: customRunnerLabel, type: "custom" },
+      ],
+    },
+  ];
+
   it("no workflow run", async () => {
     octokitRest.paginate.mockRejectedValue(new Error("any"));
 
@@ -288,44 +321,35 @@ describe("ensureOnlyGithubHostedRunners", () => {
     ).rejects.toThrow();
   });
 
-  it("success", async () => {
-    octokitRest.paginate.mockReturnValue(
-      Promise.resolve([
-        {
-          id: 399444496,
-          run_id: 29679449,
-          name: "myjob",
-          labels: ["foo", "bar"],
-        },
-      ]),
-    );
+  it("success: no jobs not using self-hosted runner", async () => {
+    octokitRest.paginate.mockImplementation((method: any, args: any) => {
+      switch (method) {
+        case octokitRest.rest.actions.listJobsForWorkflowRun:
+          return Promise.resolve(goodListJobsResp);
+        case octokitRest.rest.actions.listSelfHostedRunnersForRepo:
+          return Promise.resolve(listRunnersResp);
+      }
+    });
     expect(
       detect.ensureOnlyGithubHostedRunners("unused", "unused"),
     ).resolves.toBeUndefined();
   });
 
-  it("failure", async () => {
-    octokitRest.paginate.mockReturnValue(
-      Promise.resolve([
-        {
-          id: 399444496,
-          run_id: 29679449,
-          name: "myjob",
-          labels: ["self-hosted", "foo", "bar"],
-        },
-        {
-          id: 399444497,
-          run_id: 29679449,
-          name: "otherjob",
-          labels: ["self-hosted", "baz"],
-        },
-      ]),
-    );
-
+  it("failure: some jobs using self-hosted runner", async () => {
+    octokitRest.paginate.mockImplementation((method: any, args: any) => {
+      switch (method) {
+        case octokitRest.rest.actions.listJobsForWorkflowRun:
+          return Promise.resolve(badListJobsResp);
+        case octokitRest.rest.actions.listSelfHostedRunnersForRepo:
+          return Promise.resolve(listRunnersResp);
+      }
+    });
     expect(
       detect.ensureOnlyGithubHostedRunners("unused", "unused"),
     ).rejects.toThrow(
-      new Error(`Self-hosted Runners are not allowed: jobs: myjob,otherjob`),
+      new Error(
+        `Self-hosted runners are not allowed in SLSA Level 3 workflows. labels: ${customRunnerLabel}`,
+      ),
     );
   });
 });
