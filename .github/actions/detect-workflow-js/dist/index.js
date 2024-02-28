@@ -283,8 +283,8 @@ function run() {
                 core.info("Failed to retrieve OIDC token. This may be due to missing id-token: write permissions.");
                 [repository, ref, workflow] = yield (0, detect_1.detectWorkflowFromContext)(repoName, token);
             }
-            // check if we're using the generic builder, which may accept artifacts
-            // from non slsa-framework workflows
+            // check if we're using the generic builder, where the user may attempt to
+            // supply artifacts made with jobs on self-hosted runners
             if (workflow === ".github/workflows/generator_generic_slsa3.yml") {
                 (0, detect_1.ensureOnlyGithubHostedRunners)(repoName, token);
             }

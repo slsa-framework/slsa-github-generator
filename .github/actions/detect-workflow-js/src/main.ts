@@ -62,8 +62,8 @@ async function run(): Promise<void> {
         token,
       );
     }
-    // check if we're using the generic builder, which may accept artifacts
-    // from non slsa-framework workflows
+    // check if we're using the generic builder, where the user may attempt to
+    // supply artifacts made with jobs on self-hosted runners
     if (workflow === ".github/workflows/generator_generic_slsa3.yml") {
       ensureOnlyGithubHostedRunners(repoName, token);
     }
