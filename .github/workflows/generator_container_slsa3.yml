@@ -43,8 +43,8 @@ on:
       provenance-registry-password:
         description: "Password when publishing to provenance repository instead of image repository."
       token:
-          description: "The GitHub Actions token."
-          required: false
+        description: "The GitHub Actions token."
+        required: false
     inputs:
       image:
         description: "The OCI image name. This must not include a tag or digest."
