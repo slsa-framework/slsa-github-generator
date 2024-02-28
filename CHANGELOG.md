@@ -105,7 +105,6 @@ duplication."
 - The workflow that calls the provenance generator re-usable workflows
   will fail if an adjacent Jobs in the calling workflow are using self-hosted runners.
 
-
 ### Unreleased: Gradle Builder
 
 - The Gradle Builder was fixed when the project root is the same as the
