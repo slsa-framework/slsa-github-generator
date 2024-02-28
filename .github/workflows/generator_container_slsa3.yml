@@ -42,6 +42,9 @@ on:
         description: "Username when publishing to provenance repository (option 'provenance-repository') instead of image repository."
       provenance-registry-password:
         description: "Password when publishing to provenance repository instead of image repository."
+      token:
+          description: "The GitHub Actions token."
+          required: false
     inputs:
       image:
         description: "The OCI image name. This must not include a tag or digest."
@@ -113,6 +116,8 @@ jobs:
         id: detect
         continue-on-error: true
         uses: slsa-framework/slsa-github-generator/.github/actions/detect-workflow-js@main
+        with:
+          token: ${{ secrets.token }}
 
       - name: Final outcome
         id: final
