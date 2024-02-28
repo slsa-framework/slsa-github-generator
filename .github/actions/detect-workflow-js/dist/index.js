@@ -151,9 +151,21 @@ function detectWorkflowFromContext(repoName, token) {
     });
 }
 exports.detectWorkflowFromContext = detectWorkflowFromContext;
+/**
+ Confirm that all jobs in the calling workflow are not using self-hosted Runners.
+ This check is only needed when calling from the generic builders, check if we're using a "generic builder",
+ where the user may attempt to supply artifacts produced on self-hosted runners.
+
+ This check requires the caller to specify a github token with an additional `administration:read` permissions.
+ example:
+ ```
+ uses: slsa-framewrok/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml'
+   secrets:
+     token: ${{ secrets.MY_TOKEN_WITH_EXTRA_PERM }}
+  ```
+*/
 function ensureOnlyGithubHostedRunners(repoName, token) {
     return __awaiter(this, void 0, void 0, function* () {
-        // We need to confirm that all jobs in the Workflow are using Github-hosted Runners.
         const [owner, repo] = repoName.split("/");
         const octokitRest = new rest_1.Octokit({ auth: token });
         const jobs = yield octokitRest.paginate(octokitRest.rest.actions.listJobsForWorkflowRun, {
@@ -161,17 +173,18 @@ function ensureOnlyGithubHostedRunners(repoName, token) {
             repo,
             run_id: Number(process.env.GITHUB_RUN_ID),
         });
-        const selfHostedLabel = "self-hosted";
-        const jobsUsingSelfHostedRunners = [];
-        for (const job of jobs) {
-            if (job.labels.includes(selfHostedLabel)) {
-                jobsUsingSelfHostedRunners.push(job.name);
-            }
+        const selfHostedRunners = yield octokitRest.paginate(octokitRest.rest.actions.listSelfHostedRunnersForRepo, {
+            owner: owner,
+            repo: repo,
+        });
+        const selfHostedRunnerLabels = new Set(selfHostedRunners
+            .map((runner) => runner.labels.map((label) => label.name))
+            .flat());
+        const jobLabels = new Set(jobs.map((job) => job.labels).flat());
+        const commonLabels = [...jobLabels].filter((label) => selfHostedRunnerLabels.has(label));
+        if (commonLabels.length) {
+            return Promise.reject(Error(`Self-hosted runners are not allowed in SLSA Level 3 workflows. labels: ${commonLabels}`));
         }
-        if (jobsUsingSelfHostedRunners.length) {
-            return Promise.reject(Error(`Self-hosted Runners are not allowed: jobs: ${jobsUsingSelfHostedRunners}`));
-        }
-        return;
     });
 }
 exports.ensureOnlyGithubHostedRunners = ensureOnlyGithubHostedRunners;
@@ -274,12 +287,6 @@ function run() {
             // check if we're using the generic builder, which may accept artifacts from non slsa-framework workflows
             // slsa-framework workflows
             if (workflow == ".github/workflows/generator_generic_slsa3.yml") {
-                // ensure that all sibling Jobs in the calling workflow are using Github-hosted Runners
-                // this check requires the caller to specify a github token with an additional `administration:read` permissions
-                // example:
-                // uses: slsa-framewrok/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml'
-                //   secrets:
-                //     token: ${{ secrets.MY_TOKEN_WITH_EXTRA_PERM }}
                 (0, detect_1.ensureOnlyGithubHostedRunners)(repoName, token);
             }
         }

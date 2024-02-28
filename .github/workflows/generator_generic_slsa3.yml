@@ -90,6 +90,10 @@ on:
         required: false
         type: string
         default: ""
+    secrets:
+      token:
+        description: "The GitHub Actions token."
+        required: false
     outputs:
       release-id:
         description: >
@@ -129,6 +133,8 @@ jobs:
         id: detect
         continue-on-error: true
         uses: ramonpetgrave64/slsa-github-generator/.github/actions/detect-workflow-js@ramonpetgrave64-check-self-hosted-runner-node
+        with:
+          token: ${{ secrets.token }}
 
       - name: Final outcome
         id: final
