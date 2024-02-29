@@ -117,7 +117,7 @@ jobs:
         continue-on-error: true
         uses: slsa-framework/slsa-github-generator/.github/actions/detect-workflow-js@main
         with:
-          token: ${{ secrets.token }}
+          token: ${{ secrets.token || github.token }}
 
       - name: Final outcome
         id: final
