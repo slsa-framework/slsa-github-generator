@@ -1,0 +1,604 @@
+# Copyright 2023 SLSA Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+
+# Same as pre-submit.actions.yml, but doing a local checkout of the PR's changes first
+# So we can test changes to the actions, themselves
+name: pre-submit actions for PR
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions: read-all
+
+jobs:
+  checkout:
+    name: verify no checkout in Actions
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        with:
+          repository: ${{github.event.pull_request.head.repo.full_name}}
+          ref: ${{ github.event.pull_request.head.sha }}
+      - run: ./.github/workflows/scripts/pre-submit.actions/checkout.sh
+
+  check-tscommon-tarball:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        with:
+          repository: ${{github.event.pull_request.head.repo.full_name}}
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Untar the package tarball
+        working-directory: .github/actions/tscommon
+        run: |
+          set -euo pipefail
+          # NOTE: The package is extracted to package/
+          tar xvzf "tscommon-0.0.0.tgz"
+
+      - name: Build the package source
+        working-directory: .github/actions/tscommon
+        run: |
+          set -euo pipefail
+          make action
+
+      - name: Compare the expected and actual dist/ directories
+        working-directory: .github/actions/tscommon
+        id: diff
+        run: |
+          set -euo pipefail
+          # NOTE: Diff detects when files in directories differ as well as contents.
+          # NOTE: Don't use 'git diff' since files are not checked in.
+          if ! diff --ignore-trailing-space package/dist/ dist/; then
+            echo "Detected uncommitted changes after build.  See status below:"
+            git diff
+            exit 1
+          fi
+
+  check-dist-matrix:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        action:
+          - .github/actions/compute-sha256
+          - .github/actions/privacy-check
+          - .github/actions/generate-attestations
+          - .github/actions/sign-attestations
+          - .github/actions/create-container_based-predicate
+          - ./actions/delegator/setup-generic
+          - .github/actions/verify-token
+          - .github/actions/detect-workflow-js
+    steps:
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        with:
+          repository: ${{github.event.pull_request.head.repo.full_name}}
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Set Node.js 18
+        uses: actions/setup-node@5e21ff4d9bc1a8cf6de233a3057d20ec6b3fb69d # v3.8.1
+        with:
+          node-version: 18
+
+      - name: Rebuild the dist/ directory
+        working-directory: ${{ matrix.action }}
+        run: make clean package
+
+      - name: Compare the expected and actual dist/ directories
+        working-directory: ${{ matrix.action }}
+        id: diff
+        run: |
+          set -euo pipefail
+          if [ "$(git diff --ignore-space-at-eol dist/ | wc -l)" -gt "0" ]; then
+            echo "Detected uncommitted changes after build.  See status below:"
+            git diff
+            exit 1
+          fi
+
+      # If index.js was different from expected, upload the expected version as an artifact
+      - uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v3.1.3
+        if: ${{ failure() && steps.diff.conclusion == 'failure' }}
+        with:
+          name: dist
+          path: ${{ matrix.action }}/dist/
+
+  # NOTE: needed for protected branch checks.
+  check-dist:
+    runs-on: ubuntu-latest
+    needs: [checkout, check-dist-matrix]
+    if: ${{ always() }}
+    env:
+      CHECKOUT_RESULT: ${{ needs.checkout.result }}
+      CHECK_DIST_RESULT: ${{ needs.check-dist-matrix.result }}
+    steps:
+      - run: |
+          set -euo pipefail
+          # exit 0 if checks were successful.
+          [ "${CHECK_DIST_RESULT}" == "success" ] && [ "${CHECKOUT_RESULT}" == "success" ]
+
+  compute-sha256:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        with:
+          repository: ${{github.event.pull_request.head.repo.full_name}}
+          ref: ${{ github.event.pull_request.head.sha }}
+      - run: |
+          echo "foo" > artifact
+      - id: compute-sha256
+        uses: ./.github/actions/compute-sha256
+        with:
+          path: artifact
+      - env:
+          OUTPUT: ${{steps.compute-sha256.outputs.sha256}}
+        run: |
+          [[ "$OUTPUT" == "b5bb9d8014a0f9b1d61e21e796d78dccdf1352f23cd32812f4850b878ae4944c" ]]
+
+  rng:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        with:
+          repository: ${{github.event.pull_request.head.repo.full_name}}
+          ref: ${{ github.event.pull_request.head.sha }}
+      - run: |
+          echo "foo" > artifact
+      - id: rng
+        uses: ./.github/actions/rng
+      - env:
+          OUTPUT: ${{steps.rng.outputs.random}}
+        run: |
+          echo "Got output: $OUTPUT"
+          [[ "$OUTPUT" != "" ]]
+
+  references:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        with:
+          repository: ${{github.event.pull_request.head.repo.full_name}}
+          ref: ${{ github.event.pull_request.head.sha }}
+          path: __THIS_REPO__
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        with:
+          repository: slsa-framework/example-package
+          ref: main
+          path: __EXAMPLE_PACKAGE__
+      - name: Verify main references
+        if: ${{ !contains(github.event.pull_request.body, '#label:release') }}
+        run: ./__THIS_REPO__/.github/workflows/scripts/pre-submit.actions/references.sh
+      - name: Verify version references
+        if: ${{ contains(github.event.pull_request.body, '#label:release') }}
+        env:
+          BODY: "${{ github.event.pull_request.body }}"
+        run: |
+          # match the first instance of a line with 'label:release vX.Y.Z' with only leading or trailing whitespace.
+          set -euo pipefail
+          # NOTE: grep is not matching if there is a trailing '$' in the pattern for some reason...
+          RELEASE_TAG=$(echo "$BODY" | grep -oe '^[[:blank:]]*#label:release[[:blank:]]*v[0-9]\+\.[0-9]\+\.[0-9]\+\(-rc\.[0-9]\+\)\?[[:blank:]]*' | head -n1 | sed -n 's/^[[:blank:]]*#label:release[[:blank:]]*\([^[:blank:]]*\)[[:blank:]]*/\1/p')
+          RELEASE_TAG=${RELEASE_TAG} ./__THIS_REPO__/.github/workflows/scripts/pre-release/references.sh
+
+  secure-project-checkout-go:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        with:
+          repository: ${{github.event.pull_request.head.repo.full_name}}
+          ref: ${{ github.event.pull_request.head.sha }}
+          path: __BUILDER_CHECKOUT_DIR__
+
+      - name: Checkout the Go repository
+        uses: ./__BUILDER_CHECKOUT_DIR__/.github/actions/secure-project-checkout-go
+        with:
+          path: __PROJECT_CHECKOUT_DIR__
+          go-version: "1.20"
+
+  secure-project-checkout-node:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        with:
+          repository: ${{github.event.pull_request.head.repo.full_name}}
+          ref: ${{ github.event.pull_request.head.sha }}
+          path: __BUILDER_CHECKOUT_DIR__
+
+      - name: Checkout the JS repository
+        uses: ./__BUILDER_CHECKOUT_DIR__/.github/actions/secure-project-checkout-node
+        with:
+          path: __PROJECT_CHECKOUT_DIR__
+          node-version: 16
+
+  secure-upload-folder:
+    runs-on: ubuntu-latest
+    env:
+      ARTIFACT_NAME: "my-artifact"
+      UPLOAD_FOLDER_NAME: "upload-folder"
+      DOWNLOAD_FOLDER_NAME: "download-folder"
+      ARTIFACT_NO_ROOT_NAME: "my-artifact-noroot"
+      UPLOAD_FOLDER_NO_ROOT_NAME: "upload-root/upload-folder"
+      DOWNLOAD_FOLDER_NO_ROOT_NAME: "download-root/download-folder"
+    steps:
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        with:
+          repository: ${{github.event.pull_request.head.repo.full_name}}
+          ref: ${{ github.event.pull_request.head.sha }}
+      - name: Create folder
+        run: |
+          set -euo pipefail
+
+          # Folder in the root of GITHUB_WORKSPACE
+          mkdir -p "${UPLOAD_FOLDER_NAME}/inside"
+          mkdir -p "${UPLOAD_FOLDER_NAME}/empty"
+
+          echo file1 > "${UPLOAD_FOLDER_NAME}/file1"
+          echo file2 > "${UPLOAD_FOLDER_NAME}/file2"
+          echo file3 > "${UPLOAD_FOLDER_NAME}/inside/file3"
+          echo file4 > "${UPLOAD_FOLDER_NAME}/inside/file4"
+
+          tree "${UPLOAD_FOLDER_NAME}"
+
+          # Folder not in the root of GITHUB_WORKSPACE
+          mkdir -p "${UPLOAD_FOLDER_NO_ROOT_NAME}"
+          cp -R "${UPLOAD_FOLDER_NAME}"/* "${UPLOAD_FOLDER_NO_ROOT_NAME}"/
+
+          tree "${UPLOAD_FOLDER_NO_ROOT_NAME}"
+
+      - name: Upload
+        id: upload
+        uses: ./.github/actions/secure-upload-folder
+        with:
+          name: "${{ env.ARTIFACT_NAME }}"
+          path: "${{ env.UPLOAD_FOLDER_NAME }}"
+
+      - name: Upload
+        id: upload-noroot
+        uses: ./.github/actions/secure-upload-folder
+        with:
+          name: "${{ env.ARTIFACT_NO_ROOT_NAME }}"
+          path: "${{ env.UPLOAD_FOLDER_NO_ROOT_NAME }}"
+
+      - name: Download in new folder
+        uses: ./.github/actions/secure-download-folder
+        with:
+          name: "${{ env.ARTIFACT_NAME }}"
+          path: "${{ env.DOWNLOAD_FOLDER_NAME }}"
+          sha256: ${{ steps.upload.outputs.sha256 }}
+
+      - name: Download in new folder noroot
+        uses: ./.github/actions/secure-download-folder
+        with:
+          name: "${{ env.ARTIFACT_NO_ROOT_NAME }}"
+          path: "${{ env.DOWNLOAD_FOLDER_NO_ROOT_NAME }}"
+          sha256: ${{ steps.upload-noroot.outputs.sha256 }}
+
+      - name: Validate contents
+        run: |
+          set -euo pipefail
+          ./.github/workflows/scripts/pre-submit.actions/secure-upload-folder.sh "${DOWNLOAD_FOLDER_NAME}" "${UPLOAD_FOLDER_NAME}"
+          ./.github/workflows/scripts/pre-submit.actions/secure-upload-folder.sh "${DOWNLOAD_FOLDER_NO_ROOT_NAME}" "${UPLOAD_FOLDER_NO_ROOT_NAME}"
+
+      - name: Cleanup workspace
+        run: |
+          set -euo pipefail
+          # NOTE: We don't remove DOWNLOAD_FOLDER_NAME to ensure that download-existing-file fails.
+          rm -rf "${UPLOAD_FOLDER_NAME}"
+          rm -rf "$(dirname "${UPLOAD_FOLDER_NO_ROOT_NAME}")" "$(dirname "${DOWNLOAD_FOLDER_NO_ROOT_NAME}")"
+
+      - name: Download locally
+        uses: ./.github/actions/secure-download-folder
+        with:
+          name: "${{ env.ARTIFACT_NAME }}"
+          sha256: ${{ steps.upload.outputs.sha256 }}
+
+      - name: Download locally noroot
+        uses: ./.github/actions/secure-download-folder
+        with:
+          name: "${{ env.ARTIFACT_NO_ROOT_NAME }}"
+          sha256: ${{ steps.upload-noroot.outputs.sha256 }}
+
+      - name: Download to /tmp
+        uses: ./.github/actions/secure-download-folder
+        with:
+          name: "${{ env.ARTIFACT_NAME }}"
+          path: "/tmp"
+          sha256: ${{ steps.upload.outputs.sha256 }}
+
+      - name: Get RUNNER_TEMP
+        id: runner-temp
+        run: |
+          echo "runner_temp=${RUNNER_TEMP}" >>"${GITHUB_OUTPUT}"
+
+      - name: Download to RUNNER_TEMP
+        uses: ./.github/actions/secure-download-folder
+        with:
+          name: "${{ env.ARTIFACT_NAME }}"
+          path: "${{ steps.runner-temp.outputs.runner_temp }}"
+          sha256: ${{ steps.upload.outputs.sha256 }}
+
+      - name: Download incorrect hash
+        id: download-incorrect-hash
+        continue-on-error: true
+        uses: ./.github/actions/secure-download-folder
+        with:
+          name: "${{ env.ARTIFACT_NAME }}"
+          path: "${{ env.DOWNLOAD_FOLDER_NAME }}"
+          sha256: 977b0c871b048d6578f5d5b40a5b6030a22fc130831a2d7b45b6868da7b51431
+
+      - name: Download existing file
+        id: download-existing-file
+        continue-on-error: true
+        uses: ./.github/actions/secure-download-folder
+        with:
+          name: "${{ env.ARTIFACT_NAME }}"
+          path: "${{ env.DOWNLOAD_FOLDER_NAME }}"
+          sha256: ${{ steps.upload.outputs.sha256 }}
+
+      - name: Download path traversal
+        id: download-traversal
+        continue-on-error: true
+        uses: ./.github/actions/secure-download-folder
+        with:
+          name: "${{ env.ARTIFACT_NAME }}"
+          path: ".."
+          sha256: ${{ steps.upload.outputs.sha256 }}
+
+      - name: Download outside workspace
+        id: download-outside
+        continue-on-error: true
+        uses: ./.github/actions/secure-download-folder
+        with:
+          name: "${{ env.ARTIFACT_NAME }}"
+          path: "/etc"
+          sha256: ${{ steps.upload.outputs.sha256 }}
+
+      - name: Upload path traversal
+        id: upload-traversal
+        continue-on-error: true
+        uses: ./.github/actions/secure-upload-folder
+        with:
+          name: "${{ env.ARTIFACT_NAME }}"
+          path: "../"
+
+      - name: Upload outside workspace
+        id: upload-outside
+        continue-on-error: true
+        uses: ./.github/actions/secure-upload-folder
+        with:
+          name: "${{ env.ARTIFACT_NAME }}"
+          path: "/tmp/"
+
+      - name: fail check
+        env:
+          # NOTE: These are all adversarial tests. They should fail.
+          SUCCESS: ${{ steps.download-incorrect-hash.outcome == 'failure' && steps.download-existing-file.outcome == 'failure' && steps.download-traversal.outcome == 'failure' && steps.upload-traversal.outcome == 'failure' && steps.upload-outside.outcome == 'failure' && steps.download-outside.outcome == 'failure' }}
+        run: |
+          set -euo pipefail
+          [ "$SUCCESS" == "true" ]
+
+  secure-download-artifact:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        with:
+          repository: ${{github.event.pull_request.head.repo.full_name}}
+          ref: ${{ github.event.pull_request.head.sha }}
+          path: __BUILDER_CHECKOUT_DIR__
+
+      - name: Create artifact
+        run: |
+          echo artifact > artifact1
+
+      - name: Upload generated binary
+        uses: ./__BUILDER_CHECKOUT_DIR__/.github/actions/secure-upload-artifact
+        with:
+          name: artifact1
+          path: artifact1
+
+      - name: Create artifact
+        run: rm artifact1
+
+      - name: Download artifact
+        uses: ./__BUILDER_CHECKOUT_DIR__/.github/actions/secure-download-artifact
+        with:
+          name: artifact1
+          path: artifact1
+          sha256: 5b3513f580c8397212ff2c8f459c199efc0c90e4354a5f3533adf0a3fff3a530
+
+  secure-download-artifact-builder-name:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        with:
+          repository: ${{github.event.pull_request.head.repo.full_name}}
+          ref: ${{ github.event.pull_request.head.sha }}
+          path: __BUILDER_CHECKOUT_DIR__
+
+      - name: Create artifact
+        run: |
+          echo artifact > artifact2
+
+      - name: Upload generated binary
+        uses: ./__BUILDER_CHECKOUT_DIR__/.github/actions/secure-upload-artifact
+        with:
+          name: artifact2
+          path: artifact2
+
+      - name: Download artifact
+        id: download-artifact
+        uses: ./__BUILDER_CHECKOUT_DIR__/.github/actions/secure-download-artifact
+        continue-on-error: true
+        with:
+          name: artifact2
+          path: path/to/__BUILDER_CHECKOUT_DIR__/artifact2
+          sha256: 5b3513f580c8397212ff2c8f459c199efc0c90e4354a5f3533adf0a3fff3a530
+
+      - name: fail check
+        env:
+          OUTCOME: ${{ steps.download-artifact.outcome }}
+        run: |
+          set -euo pipefail
+          [ "${OUTCOME}" == "failure" ]
+
+  secure-download-artifact-builder-repo-folder:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        with:
+          repository: ${{github.event.pull_request.head.repo.full_name}}
+          ref: ${{ github.event.pull_request.head.sha }}
+          path: __BUILDER_CHECKOUT_DIR__
+
+      - name: Create artifact and folder
+        run: |
+          mkdir some-folder
+          echo artifact > artifact3
+
+      - name: Upload generated binary
+        uses: ./__BUILDER_CHECKOUT_DIR__/.github/actions/secure-upload-artifact
+        with:
+          name: artifact3
+          path: artifact3
+
+      - name: Download artifact
+        id: download-artifact
+        uses: ./__BUILDER_CHECKOUT_DIR__/.github/actions/secure-download-artifact
+        continue-on-error: true
+        with:
+          name: artifact3
+          path: some-folder
+          sha256: 5b3513f580c8397212ff2c8f459c199efc0c90e4354a5f3533adf0a3fff3a530
+
+      - name: fail check
+        env:
+          OUTCOME: ${{ steps.download-artifact.outcome }}
+        run: |
+          set -euo pipefail
+          [ "${OUTCOME}" == "failure" ]
+
+  secure-download-artifact-builder-repo-file:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        with:
+          repository: ${{github.event.pull_request.head.repo.full_name}}
+          ref: ${{ github.event.pull_request.head.sha }}
+          path: __BUILDER_CHECKOUT_DIR__
+
+      - name: Create artifact
+        run: |
+          echo artifact > artifact4
+
+      - name: Upload generated binary
+        uses: ./__BUILDER_CHECKOUT_DIR__/.github/actions/secure-upload-artifact
+        with:
+          name: artifact4
+          path: artifact4
+
+      - name: Download artifact
+        id: download-artifact
+        uses: ./__BUILDER_CHECKOUT_DIR__/.github/actions/secure-download-artifact
+        continue-on-error: true
+        with:
+          name: artifact4
+          path: artifact4
+          sha256: 5b3513f580c8397212ff2c8f459c199efc0c90e4354a5f3533adf0a3fff3a530
+
+      - name: fail check
+        env:
+          OUTCOME: ${{ steps.download-artifact.outcome }}
+        run: |
+          set -euo pipefail
+          [ "${OUTCOME}" == "failure" ]
+
+  # Tests that generate-builder works with compile-builder=true.
+  generate-builder-generic-compile:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        with:
+          repository: ${{github.event.pull_request.head.repo.full_name}}
+          ref: ${{ github.event.pull_request.head.sha }}
+      - uses: ./.github/actions/generate-builder
+        with:
+          repository: "slsa-framework/slsa-github-generator"
+          ref: "main"
+          compile-builder: true
+          go-version: "1.20"
+          binary: "slsa-generator-generic-linux-amd64"
+          directory: "internal/builders/generic"
+
+  # Tests that generate-builder works with compile-builder=false.
+  generate-builder-generic-no-compile:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        with:
+          repository: ${{github.event.pull_request.head.repo.full_name}}
+          ref: ${{ github.event.pull_request.head.sha }}
+      - name: Detect the builder ref
+        id: detect
+        uses: ./.github/actions/detect-workflow-js
+      - uses: ./.github/actions/generate-builder
+        with:
+          repository: ${{ steps.detect.outputs.repository }}
+          ref: ${{ steps.detect.outputs.ref }}
+          builder-ref: "refs/tags/v1.6.0"
+          go-version: "1.20"
+          binary: "slsa-generator-generic-linux-amd64"
+          directory: "internal/builders/generic"
+          # NOTE: compile-builder explicitly set to false.
+          compile-builder: false
+
+  generate-attestations:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        with:
+          repository: ${{github.event.pull_request.head.repo.full_name}}
+          ref: ${{ github.event.pull_request.head.sha }}
+      - name: Test generate attestations
+        id: generate
+        uses: ./.github/actions/generate-attestations
+        with:
+          slsa-layout-file: .github/actions/generate-attestations/testdata/layouts/valid-layout.json
+          predicate-type: "https://slsa.dev/provenance/v0.2"
+          predicate-file: .github/actions/generate-attestations/testdata/predicates/valid-slsa-v02.json
+          output-folder: attestations
+      - name: Verify outputs
+        env:
+          OUTPUT_FOLDER: attestations
+        run: |
+          set -euo pipefail
+          ls "$OUTPUT_FOLDER"
+          artifact11=$(jq -r '.subject[0].name' "$OUTPUT_FOLDER/attestation1.intoto")
+          if [[ $artifact11 != "artifact11" ]]; then
+            echo "expected artifact11 name"
+            exit 2
+          fi
+          digest11=$(jq -r '.subject[0].digest["sha256"]' "$OUTPUT_FOLDER/attestation1.intoto")
+          if [[ $digest11 != "deadbeaf" ]]; then
+            echo "expected deadbeaf digest"
+            exit 2
+          fi
+          artifact21=$(jq -r '.subject[0].name' "$OUTPUT_FOLDER/attestation2.intoto")
+          if [[ $artifact21 != "artifact21" ]]; then
+            echo "expected artifact21 name"
+            exit 2
+          fi
+          digest21=$(jq -r '.subject[0].digest["sha256"]' "$OUTPUT_FOLDER/attestation2.intoto")
+          if [[ $digest21 != "deadbeat" ]]; then
+            echo "expected deadbeat digest"
+            exit 2
+          fi
