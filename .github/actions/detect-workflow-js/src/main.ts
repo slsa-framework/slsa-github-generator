@@ -20,7 +20,7 @@ import {
   ensureOnlyGithubHostedRunners,
 } from "./detect";
 
-async function run(): Promise<void> {
+export async function run(): Promise<void> {
   /* Test locally. Requires a GitHub token:
         $ env INPUT_TOKEN="$(gh auth token)" \
         GITHUB_RUN_ID="4449301889" \
@@ -31,7 +31,7 @@ async function run(): Promise<void> {
 
   const repoName = process.env.GITHUB_REPOSITORY;
   if (!repoName) {
-    core.setFailed("No repository detected.");
+    core.setFailed("No repository detected.xxx");
     return;
   }
 
@@ -64,12 +64,12 @@ async function run(): Promise<void> {
     }
     // check if we're using the generic builder, where the user may attempt to
     // supply artifacts made with jobs on self-hosted runners
-    const genericWorkflwos = [
+    const genericWorkflows = [
       ".github/workflows/generator_generic_slsa3.yml",
       ".github/workflows/generator_container_slsa3.yml",
     ];
-    if (genericWorkflwos.includes(workflow)) {
-      ensureOnlyGithubHostedRunners(repoName, token);
+    if (genericWorkflows.includes(workflow)) {
+      await ensureOnlyGithubHostedRunners(repoName, token);
     }
   } catch (error) {
     if (error instanceof Error) {
@@ -96,6 +96,6 @@ async function run(): Promise<void> {
   core.setOutput("ref", ref);
   core.setOutput("workflow", workflow);
 
-  console.info(`repository: ${repository}, ref: ${ref}, workflow: ${workflow}`); // eslint-disable-line no-console
+  core.info(`repository: ${repository}, ref: ${ref}, workflow: ${workflow}`);
 }
 run();

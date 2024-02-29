@@ -188,5 +188,5 @@ export async function ensureOnlyGithubHostedRunners(
       ),
     );
   }
-  console.info("No self-hosted runners detected"); // eslint-disable-line no-console
+  core.info("No self-hosted runners detected");
 }
