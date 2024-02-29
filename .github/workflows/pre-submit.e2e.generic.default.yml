@@ -24,24 +24,27 @@ permissions: read-all
 
 env:
   GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  PR_WORKFLOW: ${{ github.event.pull_request.head.sha }}/.github/workflows/generator_generic_slsa3.yml@${{ github.event.pull_request.head.sha }}
 
 jobs:
-  checkout:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v4
-      with:
-        repository: ${{github.event.pull_request.head.repo.full_name}}
-        ref: ${{ github.event.pull_request.head.sha }}
+  # dooesnt do it
+  # checkout:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #   - uses: actions/checkout@v4
+  #     with:
+  #       repository: ${{github.event.pull_request.head.repo.full_name}}
+  #       ref: ${{ github.event.pull_request.head.sha }}
 
 
   build:
-    needs: [checkout]
+    # needs: [checkout]
     permissions:
       id-token: write # For signing.
       contents: write # For asset uploads.
       actions: read # For reading workflow info.
-    uses: ./.github/workflows/generator_generic_slsa3.yml
+    # uses: ./.github/workflows/generator_generic_slsa3.yml
+    uses: ${{ env.PR_WORKFLOW }}
     with:
       # echo "2e0390eb024a52963db7b95e84a9c2b12c004054a7bad9a97ec0c7c89d4681d2    binary-name" | base64 -w0
       base64-subjects: "MmUwMzkwZWIwMjRhNTI5NjNkYjdiOTVlODRhOWMyYjEyYzAwNDA1NGE3YmFkOWE5N2VjMGM3Yzg5ZDQ2ODFkMiAgICBiaW5hcnktbmFtZQo="
@@ -66,7 +69,7 @@ jobs:
         run: ./.github/workflows/scripts/pre-submit.e2e.generic.default.sh
 
   build-continue-no-error:
-    needs: [checkout]
+    # needs: [checkout]
     permissions:
       id-token: write # For signing.
       contents: write # For asset uploads.
@@ -98,7 +101,7 @@ jobs:
           [ "$OUTCOME" == "success" ] && ./.github/workflows/scripts/pre-submit.e2e.generic.default.sh
 
   build-continue-invalid-subjects:
-    needs: [checkout]
+    # needs: [checkout]
     permissions:
       id-token: write # For signing.
       contents: write # For asset uploads.
