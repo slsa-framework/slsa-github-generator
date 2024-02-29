@@ -185,7 +185,7 @@ function ensureOnlyGithubHostedRunners(repoName, token) {
         if (commonLabels.length) {
             return Promise.reject(Error(`Self-hosted runners are not allowed in SLSA Level 3 workflows. labels: ${commonLabels}`));
         }
-        console.info("No self-hosted runners detected"); // eslint-disable-line no-console
+        core.info("No self-hosted runners detected");
     });
 }
 exports.ensureOnlyGithubHostedRunners = ensureOnlyGithubHostedRunners;
@@ -247,6 +247,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.run = void 0;
 const core = __importStar(__nccwpck_require__(2186));
 const path_1 = __importDefault(__nccwpck_require__(1017));
 const detect_1 = __nccwpck_require__(2955);
@@ -261,7 +262,7 @@ function run() {
         const token = core.getInput("token");
         const repoName = process.env.GITHUB_REPOSITORY;
         if (!repoName) {
-            core.setFailed("No repository detected.");
+            core.setFailed("No repository detected.xxx");
             return;
         }
         // Set outputs.
@@ -286,12 +287,12 @@ function run() {
             }
             // check if we're using the generic builder, where the user may attempt to
             // supply artifacts made with jobs on self-hosted runners
-            const genericWorkflwos = [
+            const genericWorkflows = [
                 ".github/workflows/generator_generic_slsa3.yml",
                 ".github/workflows/generator_container_slsa3.yml",
             ];
-            if (genericWorkflwos.includes(workflow)) {
-                (0, detect_1.ensureOnlyGithubHostedRunners)(repoName, token);
+            if (genericWorkflows.includes(workflow)) {
+                yield (0, detect_1.ensureOnlyGithubHostedRunners)(repoName, token);
             }
         }
         catch (error) {
@@ -317,9 +318,10 @@ function run() {
         core.setOutput("repository", repository);
         core.setOutput("ref", ref);
         core.setOutput("workflow", workflow);
-        console.info(`repository: ${repository}, ref: ${ref}, workflow: ${workflow}`); // eslint-disable-line no-console
+        core.info(`repository: ${repository}, ref: ${ref}, workflow: ${workflow}`);
     });
 }
+exports.run = run;
 run();
 
 

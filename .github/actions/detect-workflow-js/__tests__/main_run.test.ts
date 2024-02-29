@@ -22,19 +22,22 @@ jest.mock("@actions/core");
 
 beforeEach(() => {
   jest.resetModules();
-  process.env.GITHUB_REPOSITORY = repo;
   core.setFailed.mockClear();
   core.setOutput.mockClear();
   detect.ensureOnlyGithubHostedRunners.mockClear();
   detect.detectWorkflowFromContext.mockClear();
 });
 
-describe("main.run", () =>{
-  const [repo, ref, builderWorkflow] = ["abc", "123", "xyz"];
-  const genericGeneratorWorkflow = ".github/workflows/generator_generic_slsa3.yml";
+describe("main.run", () => {
+  const [repo, ref, builderWorkflow] = ["slsa-framework/gundam", "123", "xyz"];
+  const genericGeneratorWorkflow =
+    ".github/workflows/generator_generic_slsa3.yml";
+  process.env.GITHUB_REPOSITORY = repo;
 
   it("run succeeds: workflow is NOT generic generator", async () => {
-    detect.detectWorkflowFromContext.mockReturnValue(Promise.resolve([repo, ref, builderWorkflow]));
+    detect.detectWorkflowFromContext.mockReturnValue(
+      Promise.resolve([repo, ref, builderWorkflow]),
+    );
 
     await main.run();
 
@@ -48,9 +51,10 @@ describe("main.run", () =>{
     expect(core.setOutput).toHaveBeenCalledWith("workflow", builderWorkflow);
   });
 
-
   it("run succeeds: workflow is a generic generator, no self-hosted runners", async () => {
-    detect.detectWorkflowFromContext.mockReturnValue(Promise.resolve([repo, ref, genericGeneratorWorkflow]));
+    detect.detectWorkflowFromContext.mockReturnValue(
+      Promise.resolve([repo, ref, genericGeneratorWorkflow]),
+    );
     detect.ensureOnlyGithubHostedRunners.mockReturnValue(Promise.resolve(null));
 
     await main.run();
@@ -62,7 +66,10 @@ describe("main.run", () =>{
 
     expect(core.setOutput).toHaveBeenCalledWith("repository", repo);
     expect(core.setOutput).toHaveBeenCalledWith("ref", ref);
-    expect(core.setOutput).toHaveBeenCalledWith("workflow", genericGeneratorWorkflow);
+    expect(core.setOutput).toHaveBeenCalledWith(
+      "workflow",
+      genericGeneratorWorkflow,
+    );
   });
 
   it("run fails: can't get workflow details", async () => {
@@ -84,7 +91,9 @@ describe("main.run", () =>{
 
   it("run fails: generic workflow, but using self-hosted runner", async () => {
     const errMsg = "no self-hosted runners allowed";
-    detect.detectWorkflowFromContext.mockReturnValue(Promise.resolve([repo, ref, genericGeneratorWorkflow]));
+    detect.detectWorkflowFromContext.mockReturnValue(
+      Promise.resolve([repo, ref, genericGeneratorWorkflow]),
+    );
     detect.ensureOnlyGithubHostedRunners.mockRejectedValue(new Error(errMsg));
 
     await main.run();
@@ -96,6 +105,9 @@ describe("main.run", () =>{
 
     expect(core.setOutput).toHaveBeenCalledWith("repository", repo);
     expect(core.setOutput).toHaveBeenCalledWith("ref", ref);
-    expect(core.setOutput).toHaveBeenCalledWith("workflow", genericGeneratorWorkflow);
+    expect(core.setOutput).toHaveBeenCalledWith(
+      "workflow",
+      genericGeneratorWorkflow,
+    );
   });
 });
