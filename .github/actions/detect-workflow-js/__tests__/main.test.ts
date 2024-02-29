@@ -12,9 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { create } from "domain";
-import { OctokitResponse } from "@octokit/types";
-
 const core = require("@actions/core");
 const detect = require("../src/detect");
 const github = require("@actions/github");
