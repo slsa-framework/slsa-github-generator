@@ -15,7 +15,6 @@
 const core = require("@actions/core");
 const detect = require("../src/detect");
 const main = require("../src/main");
-const repo = "slsa-framework/gundam";
 
 jest.mock("../src/detect");
 jest.mock("@actions/core");

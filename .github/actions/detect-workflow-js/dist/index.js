@@ -318,7 +318,7 @@ function run() {
         core.setOutput("repository", repository);
         core.setOutput("ref", ref);
         core.setOutput("workflow", workflow);
-        core.info(`repository: ${repository}, ref: ${ref}, workflow: ${workflow}`);
+        core.info(`Detected repository: ${repository}, ref: ${ref}, workflow: ${workflow}`);
     });
 }
 exports.run = run;
