@@ -31,7 +31,7 @@ export async function run(): Promise<void> {
 
   const repoName = process.env.GITHUB_REPOSITORY;
   if (!repoName) {
-    core.setFailed("No repository detected");
+    core.setFailed("No repository detected.");
     return;
   }
 
