@@ -26,7 +26,13 @@ env:
   GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 jobs:
+  checkout:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
   build:
+    needs: [checkout]
     permissions:
       id-token: write # For signing.
       contents: write # For asset uploads.
@@ -56,6 +62,7 @@ jobs:
         run: ./.github/workflows/scripts/pre-submit.e2e.generic.default.sh
 
   build-continue-no-error:
+    needs: [checkout]
     permissions:
       id-token: write # For signing.
       contents: write # For asset uploads.
@@ -87,6 +94,7 @@ jobs:
           [ "$OUTCOME" == "success" ] && ./.github/workflows/scripts/pre-submit.e2e.generic.default.sh
 
   build-continue-invalid-subjects:
+    needs: [checkout]
     permissions:
       id-token: write # For signing.
       contents: write # For asset uploads.
