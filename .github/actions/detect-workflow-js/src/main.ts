@@ -95,5 +95,7 @@ async function run(): Promise<void> {
   core.setOutput("repository", repository);
   core.setOutput("ref", ref);
   core.setOutput("workflow", workflow);
+
+  console.info(`repository: ${repository}, ref: ${ref}, workflow: ${workflow}`); // eslint-disable-line no-console
 }
 run();

@@ -185,6 +185,7 @@ function ensureOnlyGithubHostedRunners(repoName, token) {
         if (commonLabels.length) {
             return Promise.reject(Error(`Self-hosted runners are not allowed in SLSA Level 3 workflows. labels: ${commonLabels}`));
         }
+        console.info("No self-hosted runners detected"); // eslint-disable-line no-console
     });
 }
 exports.ensureOnlyGithubHostedRunners = ensureOnlyGithubHostedRunners;
@@ -316,6 +317,7 @@ function run() {
         core.setOutput("repository", repository);
         core.setOutput("ref", ref);
         core.setOutput("workflow", workflow);
+        console.info(`repository: ${repository}, ref: ${ref}, workflow: ${workflow}`); // eslint-disable-line no-console
     });
 }
 run();
