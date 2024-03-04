@@ -1,0 +1,9 @@
+name: 'Ensure Github-hosted Runners'
+description: 'Check if all Jobs in a Workflow are not using self-hosted runners.'
+inputs:
+  token:
+    description: "The GitHub Actions token."
+    required: true
+runs:
+  using: 'node20'
+  main: 'dist/index.js'
