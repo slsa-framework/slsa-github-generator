@@ -14,13 +14,9 @@
 
 import * as core from "@actions/core";
 import path from "path";
-import {
-  detectWorkflowFromOIDC,
-  detectWorkflowFromContext,
-  ensureOnlyGithubHostedRunners,
-} from "./detect";
+import { detectWorkflowFromOIDC, detectWorkflowFromContext } from "./detect";
 
-export async function run(): Promise<void> {
+async function run(): Promise<void> {
   /* Test locally. Requires a GitHub token:
         $ env INPUT_TOKEN="$(gh auth token)" \
         GITHUB_RUN_ID="4449301889" \
@@ -62,15 +58,6 @@ export async function run(): Promise<void> {
         token,
       );
     }
-    // check if we're using the generic builder, where the user may attempt to
-    // supply artifacts made with jobs on self-hosted runners
-    const genericWorkflows = [
-      ".github/workflows/generator_generic_slsa3.yml",
-      ".github/workflows/generator_container_slsa3.yml",
-    ];
-    if (genericWorkflows.includes(workflow)) {
-      await ensureOnlyGithubHostedRunners(repoName, token);
-    }
   } catch (error) {
     if (error instanceof Error) {
       core.setFailed(error.message);
@@ -95,9 +82,5 @@ export async function run(): Promise<void> {
   core.setOutput("repository", repository);
   core.setOutput("ref", ref);
   core.setOutput("workflow", workflow);
-
-  core.info(
-    `Detected repository: ${repository}, ref: ${ref}, workflow: ${workflow}`,
-  );
 }
 run();

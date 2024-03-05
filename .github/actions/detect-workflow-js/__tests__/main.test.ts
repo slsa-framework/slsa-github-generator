@@ -17,7 +17,6 @@ import { create } from "domain";
 const core = require("@actions/core");
 const detect = require("../src/detect");
 const github = require("@actions/github");
-const OctokitRest = require("@octokit/rest");
 
 describe("decodeToken", () => {
   it("return email and job_workflow_ref", () => {
@@ -53,8 +52,9 @@ describe("detectWorkflowFromOIDC", () => {
     core.getIDToken.mockClear();
     core.getIDToken.mockReturnValueOnce(jwt);
 
-    const [repo, ref, workflow] =
-      await detect.detectWorkflowFromOIDC("some/audience");
+    const [repo, ref, workflow] = await detect.detectWorkflowFromOIDC(
+      "some/audience",
+    );
     expect(repo).toBe("octo-org/octo-automation");
     expect(ref).toBe("refs/heads/main");
     expect(workflow).toBe(".github/workflows/oidc.yml");
@@ -72,8 +72,9 @@ describe("detectWorkflowFromOIDC", () => {
     core.getIDToken.mockClear();
     core.getIDToken.mockReturnValueOnce(jwt);
 
-    const [repo, ref, workflow] =
-      await detect.detectWorkflowFromOIDC("some/audience");
+    const [repo, ref, workflow] = await detect.detectWorkflowFromOIDC(
+      "some/audience",
+    );
     expect(repo).toBe("vitejs/vite");
     expect(ref).toBe("refs/tags/create-vite@5.0.0-beta.0");
     expect(workflow).toBe(".github/workflows/publish.yml");
@@ -124,8 +125,6 @@ function createOctokitMock() {
         listWorkflowRuns: jest.fn(),
         getWorkflowRun: jest.fn(),
         reRunWorkflow: jest.fn(),
-        listJobsForWorkflowRun: jest.fn(),
-        listSelfHostedRunnersForRepo: jest.fn(),
       },
       pulls: {
         get: jest.fn(),
@@ -262,93 +261,6 @@ describe("detectWorkflowFromContext", () => {
     expect(ref).toBe("088d04f305bd32ad4594d82e8c1571507acf03d5");
     expect(workflow).toBe(
       ".github/workflows/pre-submit.e2e.docker-based.default.yml",
-    );
-  });
-});
-
-function createOctokitRestMock() {
-  return {
-    ...createOctokitMock(),
-    paginate: jest.fn(),
-  };
-}
-
-jest.mock("@octokit/rest", () => ({ Octokit: jest.fn() }));
-
-describe("ensureOnlyGithubHostedRunners", () => {
-  OctokitRest.Octokit.mockClear();
-  const octokitRest = createOctokitRestMock();
-  OctokitRest.Octokit.mockReturnValue(octokitRest);
-
-  const customRunnerLabel = "cloudtop";
-  const goodListJobsResp = [
-    {
-      id: 399444496,
-      run_id: 29679449,
-      name: "myjob",
-      labels: ["foo", "bar"],
-    },
-  ];
-  const badListJobsResp = [
-    ...goodListJobsResp,
-    {
-      ...goodListJobsResp[0],
-      labels: [customRunnerLabel, "baz"],
-    },
-  ];
-  const listRunnersResp = [
-    {
-      id: 24,
-      name: "my-gh-runner",
-      os: "Linux",
-      status: "online",
-      busy: true,
-      labels: [
-        { id: 1, name: "self-hosted", type: "read-only" },
-        { id: 2, name: "Linux", type: "read-only" },
-        { id: 3, name: "X64", type: "read-only" },
-        { id: 7, name: customRunnerLabel, type: "custom" },
-      ],
-    },
-  ];
-
-  it("no workflow run", async () => {
-    octokitRest.paginate.mockRejectedValue(new Error("any"));
-
-    expect(
-      detect.ensureOnlyGithubHostedRunners("unused", "unused"),
-    ).rejects.toThrow();
-  });
-
-  it("success: no jobs not using self-hosted runner", async () => {
-    octokitRest.paginate.mockImplementation((method: any, args: any) => {
-      switch (method) {
-        case octokitRest.rest.actions.listJobsForWorkflowRun:
-          return Promise.resolve(goodListJobsResp);
-        case octokitRest.rest.actions.listSelfHostedRunnersForRepo:
-          return Promise.resolve(listRunnersResp);
-      }
-    });
-    expect(
-      detect.ensureOnlyGithubHostedRunners("unused", "unused"),
-    ).resolves.toBeUndefined();
-  });
-
-  it("failure: some jobs using self-hosted runner", async () => {
-    octokitRest.paginate.mockImplementation((method: any, args: any) => {
-      switch (method) {
-        case octokitRest.rest.actions.listJobsForWorkflowRun:
-          return Promise.resolve(badListJobsResp);
-        case octokitRest.rest.actions.listSelfHostedRunnersForRepo:
-          return Promise.resolve(listRunnersResp);
-      }
-    });
-    expect(
-      detect.ensureOnlyGithubHostedRunners("unused", "unused"),
-    ).rejects.toThrow(
-      new Error(
-        `Self-hosted runners are not allowed in SLSA Level 3 workflows. labels: ${customRunnerLabel}`,
-      ),
     );
   });
 });
