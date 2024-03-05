@@ -35,6 +35,18 @@ pass the token along.
 2. Add the token as a Repository Secret, `my-slsa-gh-token`, for example
 3. Supply token to the action
 
+The generic generator workflows will expect this token when they pass
+along to this action, so you can also use them like
+
+```yaml
+jobs:
+  detect-workflow:
+    runs-on: ubuntu-latest
+      uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.9.0@<git hash>
+      secrets:
+        token: ${{ secrets.my-slsa-gh-token }}
+```
+
 ### Race conditon
 
 We acknowledge that a malicious repository woner could still workaround this mechanism.
@@ -74,16 +86,4 @@ jobs:
         uses: slsa-framework/slsa-github-generator/.github/actions/ensure-github-hosted-runners@<git hash>
         with:
           token: ${{ secrets.my-slsa-gh-token }}
-```
-
-The generic generator workflows will expect this token when they pass
-along to this action, so you can also use them like
-
-```yaml
-jobs:
-  detect-workflow:
-    runs-on: ubuntu-latest
-      uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.9.0@<git hash>
-      secrets:
-        token: ${{ secrets.my-slsa-gh-token }}
 ```
