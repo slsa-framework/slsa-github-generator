@@ -51,19 +51,20 @@ export async function run(): Promise<void> {
   try {
     const [owner, repo] = `${process.env.GITHUB_REPOSITORY}`.split("/");
     labels = await getUsedSelfHostedRunnerLabels(token, owner, repo);
+    if (labels.length) {
+      setFailed(
+        `Self-hosted runners are not allowed in SLSA Level 3 workflows. labels: ${labels}`,
+      );
+    } else {
+      info("No self-hosted runners detected");
+    }
   } catch (error) {
     if (error instanceof Error) {
       setFailed(error.message);
     } else {
       setFailed(`Unexpected error: ${error}`);
     }
-  }
-  if (labels.length) {
-    setFailed(
-      `Self-hosted runners are not allowed in SLSA Level 3 workflows. labels: ${labels}`,
-    );
-  } else {
-    info("No self-hosted runners detected");
+    info("You may need to grant the token permissions for administration:read against yout repo.")
   }
 }
 

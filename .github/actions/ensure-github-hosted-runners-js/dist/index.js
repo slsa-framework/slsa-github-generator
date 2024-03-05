@@ -123,6 +123,12 @@ function run() {
         try {
             const [owner, repo] = `${process.env.GITHUB_REPOSITORY}`.split("/");
             labels = yield getUsedSelfHostedRunnerLabels(token, owner, repo);
+            if (labels.length) {
+                (0, core_1.setFailed)(`Self-hosted runners are not allowed in SLSA Level 3 workflows. labels: ${labels}`);
+            }
+            else {
+                (0, core_1.info)("No self-hosted runners detected");
+            }
         }
         catch (error) {
             if (error instanceof Error) {
@@ -131,12 +137,6 @@ function run() {
             else {
                 (0, core_1.setFailed)(`Unexpected error: ${error}`);
             }
-        }
-        if (labels.length) {
-            (0, core_1.setFailed)(`Self-hosted runners are not allowed in SLSA Level 3 workflows. labels: ${labels}`);
-        }
-        else {
-            (0, core_1.info)("No self-hosted runners detected");
         }
     });
 }

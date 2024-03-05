@@ -78,6 +78,7 @@ describe("run", () => {
     await main.run();
     expect(core.getInput).toHaveBeenCalledWith("token");
     expect(core.setFailed).toHaveBeenCalledWith(msg);
+    expect(core.info).not.toHaveBeenCalled();
   });
 
   it("failure: self-hosted runners are used", async () => {
@@ -89,6 +90,7 @@ describe("run", () => {
     await main.run();
     expect(core.getInput).toHaveBeenCalledWith("token");
     expect(core.setFailed).toHaveBeenCalledWith(msg);
+    expect(core.info).not.toHaveBeenCalled();
   });
 
   it("success: no use of self-hosted runners", async () => {
