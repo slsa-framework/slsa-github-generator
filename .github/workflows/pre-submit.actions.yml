@@ -74,6 +74,7 @@ jobs:
           - ./actions/delegator/setup-generic
           - .github/actions/verify-token
           - .github/actions/detect-workflow-js
+          - .github/actions/ensure-github-hosted-runners-js
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
 
