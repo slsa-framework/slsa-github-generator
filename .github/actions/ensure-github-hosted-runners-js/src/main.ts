@@ -59,7 +59,9 @@ export async function run(): Promise<void> {
       info("No self-hosted runners detected");
     }
   } catch (error) {
-    info("You may need to grant the token permissions for administration:read against yout repo.")
+    info(
+      "You may need to grant the token permissions for administration:read against yout repo.",
+    );
     if (error instanceof Error) {
       setFailed(`error: ${error.message}`);
     } else {

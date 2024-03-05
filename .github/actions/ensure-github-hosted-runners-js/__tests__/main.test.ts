@@ -77,8 +77,8 @@ describe("run", () => {
     labels.getJobLabels.mockRejectedValue(new Error(msg));
     await main.run();
     expect(core.getInput).toHaveBeenCalledWith("token");
-    expect(core.setFailed).toHaveBeenCalledWith(msg);
-    expect(core.info).not.toHaveBeenCalled();
+    expect(core.setFailed).toHaveBeenCalledWith(`error: ${msg}`);
+    // expect(core.info).not.toHaveBeenCalled();
   });
 
   it("failure: self-hosted runners are used", async () => {

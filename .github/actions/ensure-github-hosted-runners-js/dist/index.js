@@ -131,8 +131,9 @@ function run() {
             }
         }
         catch (error) {
+            (0, core_1.info)("You may need to grant the token permissions for administration:read against yout repo.");
             if (error instanceof Error) {
-                (0, core_1.setFailed)(error.message);
+                (0, core_1.setFailed)(`error: ${error.message}`);
             }
             else {
                 (0, core_1.setFailed)(`Unexpected error: ${error}`);
