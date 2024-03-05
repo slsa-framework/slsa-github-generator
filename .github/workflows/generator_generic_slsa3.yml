@@ -131,7 +131,7 @@ jobs:
     steps:
       - name: Ensure Github-hosted Runners
         id: checkrunner
-        uses: ramonpetgrave64/slsa-github-generator/.github/actions/ensure-github-hosted-runners-js@ramonpetgrave-new-check-as-action
+        uses: slsa-framework/slsa-github-generator/.github/actions/ensure-github-hosted-runners-js@main
         continue-on-error: true
         with:
           token: ${{ secrets.token  || github.token }}
