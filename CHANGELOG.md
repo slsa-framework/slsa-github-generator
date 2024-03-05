@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 <!-- markdown-toc --bullets="-" -i CHANGELOG.md -->
 
 <!-- toc -->
+
 - [Breaking Changes](#breaking-changes)
   - [Unreleased: Generic Generator](#unreleased-generic-generator)
 - [Unreleased](#unreleased)
