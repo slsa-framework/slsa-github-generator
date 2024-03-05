@@ -32,8 +32,8 @@ pass the token along.
 1. Create a new Token for your repository, with:
   1. actions:read
   2. administration:read
-2. Add the token as a Repository Secret, `my-slsa-gh-token`
-3. Supply token to the actio
+2. Add the token as a Repository Secret, `my-slsa-gh-token`, for example
+3. Supply token to the action
 
 ### Race conditon
 
@@ -58,73 +58,32 @@ using these IDs against the known self-hsoted runner IDs, but it still does not 
 because a user may delete their self-hosted runner before this action executes. And Github does not publish
 a list of github-hosted runner IDs.
 
-
 TODO: usage docs
-
-
-```yaml
-myjob:
-  permissions:
-    id-token: write
-    contents: read
-    actions: read
-  # {owner}/{repository}{/path}@{ref}
-  uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@<tag>
-  with:
-    subjects: "${{ needs.build.outputs.digest }}"
-```
-
-However, it is not trivial to determine the repository and ref because the
-[GitHub Actions
-contexts](https://docs.github.com/en/actions/learn-github-actions/contexts)
-refer to the user workflow that called the reusable workflow. The reusable
-workflow should also ideally avoid hard-coding this information as the
-repository could be a fork and the ref used is unpredictable.
-
-In the case of a pull request to the slsa-github-generator, we use the head
-SHA as the ref and the head repository as the repository.
 
 ## Usage
 
-To use detect-workflow-js, add a job to your reusable workflow with `repository`, `ref`, and `workflow` as an output. You can then use the output from the job in later jobs
-in the workflow.
+First create a Token and Secret described [above](#administrationread-permissions)
 
 ```yaml
 jobs:
   detect-workflow:
     runs-on: ubuntu-latest
-    permissions:
-      id-token: write # Needed to detect the current reusable repository and ref.
-      contents: read
-    outputs:
-      repository: ${{ steps.detect.outputs.repository }}
-      ref: ${{ steps.detect.outputs.ref }}
     steps:
       - name: Detect the repository and ref
         id: detect
-        uses: slsa-framework/slsa-github-generator/.github/actions/detect-workflow-js@<git hash>
-
-  # example of using the output from detect-workflow
-  print:
-    shell: bash
-    env:
-      REPO: "${{ steps.detect-workflow.outputs.repository }}"
-      REF: "${{ steps.detect-workflow.outputs.ref }}"
-      WORKFLOW: "${{ steps.detect-workflow.outputs.workflow }}"
-    run: |
-      echo $REPO
-      echo $REF
-      echo $WORKFLOW
+        uses: slsa-framework/slsa-github-generator/.github/actions/ensure-github-hosted-runners@<git hash>
+        with:
+          token: ${{ secrets.my-slsa-gh-token }}
 ```
 
-In the example above, `REPO`, `WORKFLOW` and `REF` will be equal to the
-repository, workflow path, and ref from the user workflow's call to the
-reusable workflow.
+The generic generator workflows will expect this token when they pass
+along to this action, so you can also use them like
 
-## Outputs
-
-| Name         | Description                                                                    |
-| ------------ | ------------------------------------------------------------------------------ |
-| `repository` | The repository of the reusable workflow (`{owner}/{repository name}`)          |
-| `ref`        | The ref (branch, tag, or commit SHA) specified by the user.                    |
-| `workflow`   | The workflow path, relative to the `repository` (`.github/workflows/test.yml`) |
+```yaml
+jobs:
+  detect-workflow:
+    runs-on: ubuntu-latest
+      uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.9.0@<git hash>
+      secrets:
+        token: ${{ secrets.my-slsa-gh-token }}
+```

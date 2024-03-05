@@ -25,6 +25,8 @@ myjob:
   uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@<tag>
   with:
     subjects: "${{ needs.build.outputs.digest }}"
+  secrets:
+    token: ${{ secrets.my-slsa-gh-token }}
 ```
 
 However, it is not trivial to determine the repository and ref because the
