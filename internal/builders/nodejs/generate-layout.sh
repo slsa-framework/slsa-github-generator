@@ -73,14 +73,14 @@ digest=$(echo "${integrity_digest}" | cut -d'-' -f2- | base64 -d | od -A n -v -t
 
 # NOTE: the name of the attestation should be configurable.
 filename=${PACKAGE_FILENAME:-}
-attestation_name="${filename%.*}"
+provenance_name="${filename%.*}"
 cat <<EOF | jq | tee "${SLSA_OUTPUTS_ARTIFACTS_FILE}"
 {
   "version": 1,
   "attestations":
   [
     {
-      "name": "${attestation_name}",
+      "name": "${provenance_name}",
       "subjects":
       [
         {
@@ -96,4 +96,4 @@ cat <<EOF | jq | tee "${SLSA_OUTPUTS_ARTIFACTS_FILE}"
 }
 EOF
 
-echo "attestation-name=${attestation_name}.build.slsa" >>"${GITHUB_OUTPUT}"
+echo "provenance-name=${provenance_name}.build.slsa" >>"${GITHUB_OUTPUT}"

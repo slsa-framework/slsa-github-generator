@@ -69,7 +69,7 @@ on:
       provenance-name:
         description: "The file name of the attestation upload artifact."
         # NOTE: This is an "untrusted" value returned from the build.
-        value: ${{ fromJSON(jobs.slsa-run.outputs.build-artifacts-outputs).attestation-name }}
+        value: ${{ fromJSON(jobs.slsa-run.outputs.build-artifacts-outputs).provenance-name }}
 
       provenance-download-name:
         description: "The name of the provenance attestation uploaded to the workflow run."

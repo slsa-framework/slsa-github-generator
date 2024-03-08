@@ -42,9 +42,9 @@ inputs:
   slsa-workflow-secret15: {}
 
 outputs:
-  attestation-name:
+  provenance-name:
     description: "The name of the attestation in the generated layout file."
-    value: ${{ steps.generate-layout.outputs.attestation-name }}
+    value: ${{ steps.generate-layout.outputs.provenance-name }}
 
   package-download-name:
     description: "Name of the artifact to download the package tarball."
