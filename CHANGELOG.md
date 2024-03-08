@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 <!-- toc -->
 
 - [Unreleased](#unreleased)
+  - [Unreleased: attestation-name Workflow Input](#attestation-name-workflow-input)
   - [Unreleased: Gradle Builder](#unreleased-gradle-builder)
   - [Unreleased: Go Builder](#unreleased-go-builder)
   - [Unreleased: Container Generator](#unreleased-container-generator)
@@ -98,6 +99,10 @@ duplication."
 -->
 
 ## Unreleased
+
+### Unreleased: attestation-name Workflow Input
+
+- `attestation-name` as a workflow input is now removed. Use `provenance-name` instead.
 
 ### Unreleased: Gradle Builder
 
