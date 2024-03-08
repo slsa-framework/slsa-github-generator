@@ -29,8 +29,8 @@ jobs:
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
         with:
-          repository: ${{github.event.pull_request.head.repo.full_name}}
-          ref: ${{ github.event.pull_request.head.sha }}
+          repository: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name || github.repository }}
+          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
       - run: ./.github/workflows/scripts/pre-submit.actions/checkout.sh
 
   check-tscommon-tarball:
@@ -38,8 +38,8 @@ jobs:
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
         with:
-          repository: ${{github.event.pull_request.head.repo.full_name}}
-          ref: ${{ github.event.pull_request.head.sha }}
+          repository: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name || github.repository }}
+          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
 
       - name: Untar the package tarball
         working-directory: .github/actions/tscommon
@@ -83,8 +83,8 @@ jobs:
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
         with:
-          repository: ${{github.event.pull_request.head.repo.full_name}}
-          ref: ${{ github.event.pull_request.head.sha }}
+          repository: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name || github.repository }}
+          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
 
       - name: Set Node.js 18
         uses: actions/setup-node@5e21ff4d9bc1a8cf6de233a3057d20ec6b3fb69d # v3.8.1
@@ -132,8 +132,8 @@ jobs:
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
         with:
-          repository: ${{github.event.pull_request.head.repo.full_name}}
-          ref: ${{ github.event.pull_request.head.sha }}
+          repository: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name || github.repository }}
+          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
       - run: |
           echo "foo" > artifact
       - id: compute-sha256
@@ -150,8 +150,8 @@ jobs:
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
         with:
-          repository: ${{github.event.pull_request.head.repo.full_name}}
-          ref: ${{ github.event.pull_request.head.sha }}
+          repository: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name || github.repository }}
+          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
       - run: |
           echo "foo" > artifact
       - id: rng
@@ -167,8 +167,8 @@ jobs:
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
         with:
-          repository: ${{github.event.pull_request.head.repo.full_name}}
-          ref: ${{ github.event.pull_request.head.sha }}
+          repository: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name || github.repository }}
+          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
           path: __THIS_REPO__
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
         with:
@@ -194,8 +194,8 @@ jobs:
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
         with:
-          repository: ${{github.event.pull_request.head.repo.full_name}}
-          ref: ${{ github.event.pull_request.head.sha }}
+          repository: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name || github.repository }}
+          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
           path: __BUILDER_CHECKOUT_DIR__
 
       - name: Checkout the Go repository
@@ -209,8 +209,8 @@ jobs:
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
         with:
-          repository: ${{github.event.pull_request.head.repo.full_name}}
-          ref: ${{ github.event.pull_request.head.sha }}
+          repository: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name || github.repository }}
+          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
           path: __BUILDER_CHECKOUT_DIR__
 
       - name: Checkout the JS repository
@@ -231,8 +231,8 @@ jobs:
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
         with:
-          repository: ${{github.event.pull_request.head.repo.full_name}}
-          ref: ${{ github.event.pull_request.head.sha }}
+          repository: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name || github.repository }}
+          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
       - name: Create folder
         run: |
           set -euo pipefail
@@ -391,8 +391,8 @@ jobs:
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
         with:
-          repository: ${{github.event.pull_request.head.repo.full_name}}
-          ref: ${{ github.event.pull_request.head.sha }}
+          repository: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name || github.repository }}
+          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
           path: __BUILDER_CHECKOUT_DIR__
 
       - name: Create artifact
@@ -420,8 +420,8 @@ jobs:
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
         with:
-          repository: ${{github.event.pull_request.head.repo.full_name}}
-          ref: ${{ github.event.pull_request.head.sha }}
+          repository: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name || github.repository }}
+          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
           path: __BUILDER_CHECKOUT_DIR__
 
       - name: Create artifact
@@ -455,8 +455,8 @@ jobs:
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
         with:
-          repository: ${{github.event.pull_request.head.repo.full_name}}
-          ref: ${{ github.event.pull_request.head.sha }}
+          repository: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name || github.repository }}
+          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
           path: __BUILDER_CHECKOUT_DIR__
 
       - name: Create artifact and folder
@@ -491,8 +491,8 @@ jobs:
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
         with:
-          repository: ${{github.event.pull_request.head.repo.full_name}}
-          ref: ${{ github.event.pull_request.head.sha }}
+          repository: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name || github.repository }}
+          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
           path: __BUILDER_CHECKOUT_DIR__
 
       - name: Create artifact
@@ -527,8 +527,8 @@ jobs:
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
         with:
-          repository: ${{github.event.pull_request.head.repo.full_name}}
-          ref: ${{ github.event.pull_request.head.sha }}
+          repository: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name || github.repository }}
+          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
       - uses: ./.github/actions/generate-builder
         with:
           repository: "slsa-framework/slsa-github-generator"
@@ -544,8 +544,8 @@ jobs:
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
         with:
-          repository: ${{github.event.pull_request.head.repo.full_name}}
-          ref: ${{ github.event.pull_request.head.sha }}
+          repository: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name || github.repository }}
+          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
       - name: Detect the builder ref
         id: detect
         uses: ./.github/actions/detect-workflow-js
@@ -565,8 +565,8 @@ jobs:
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
         with:
-          repository: ${{github.event.pull_request.head.repo.full_name}}
-          ref: ${{ github.event.pull_request.head.sha }}
+          repository: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name || github.repository }}
+          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
       - name: Test generate attestations
         id: generate
         uses: ./.github/actions/generate-attestations
