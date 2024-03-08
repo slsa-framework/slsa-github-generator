@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 <!-- toc -->
 
 - [Unreleased](#unreleased)
+  - [Unleased: Breaking Change:](#unreleased-breaking-change-upload-artifact-and-download-artifact)
   - [Unreleased: Gradle Builder](#unreleased-gradle-builder)
   - [Unreleased: Go Builder](#unreleased-go-builder)
   - [Unreleased: Container Generator](#unreleased-container-generator)
@@ -98,6 +99,10 @@ duplication."
 -->
 
 ## Unreleased
+
+### Unreleased: Breaking Change: upload-artifact and download-artifact
+
+- Our workflows now use the new `@v4`s of `actions/upload-artifact` and `actions/download-artifact`, which are incompatiblle with the prior `@v3`. See Our docs on the [generic generator](./internal/builders/generic/README.md#compatibility-with-actionsdownload-artifact).
 
 ### Unreleased: Gradle Builder
 

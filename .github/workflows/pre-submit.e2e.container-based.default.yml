@@ -46,7 +46,7 @@ jobs:
       GITHUB_HEAD_REPOSITORY: ${{ github.event.pull_request.head.repo.full_name }}
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
-      - uses: actions/download-artifact@e9ef242655d12993efdcda9058dee2db83a2cb9b
+      - uses: actions/download-artifact@c850b930e6ba138125429b7e5c93fc707a7f8427 # v4.1.4
         with:
           name: ${{ needs.build-container-based.outputs.build-outputs-name }}
           path: outputs
@@ -57,7 +57,7 @@ jobs:
           name=$(find outputs/ -type f | head -1)
           cp "$name" .
           echo "name=$(basename "$name")" >> "$GITHUB_OUTPUT"
-      - uses: actions/download-artifact@e9ef242655d12993efdcda9058dee2db83a2cb9b
+      - uses: actions/download-artifact@c850b930e6ba138125429b7e5c93fc707a7f8427 # v4.1.4
         with:
           name: ${{ needs.build-container-based.outputs.attestations-download-name }}
       - env:
