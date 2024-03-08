@@ -24,6 +24,14 @@ inputs:
   path:
     description: 'Path to the folder'
     required: true
+  repo:
+    description: 'repo of secure-upload-artifact to use'
+    required: false
+    default: 'slsa-framework/slsa-github-generator'
+  ref:
+    description: 'ref of secure-upload-artifact to use'
+    required: false
+    default: 'main'
 outputs:
   sha256:
     description: "SHA256 of the uploaded tarball."
@@ -60,7 +68,7 @@ runs:
 
     - name: Upload the artifact
       id: upload
-      uses: slsa-framework/slsa-github-generator/.github/actions/secure-upload-artifact@main
+      uses: "${{ inputs.repo }}.github/actions/secure-upload-artifact@${{ inputs.ref }}"
       with:
         name: "${{ inputs.name }}"
         path: "${{ steps.create.outputs.tarball-path }}"

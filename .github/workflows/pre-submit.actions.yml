@@ -260,6 +260,7 @@ jobs:
         with:
           name: "${{ env.ARTIFACT_NAME }}"
           path: "${{ env.UPLOAD_FOLDER_NAME }}"
+          repo: 
 
       - name: Upload
         id: upload-noroot
@@ -267,6 +268,8 @@ jobs:
         with:
           name: "${{ env.ARTIFACT_NO_ROOT_NAME }}"
           path: "${{ env.UPLOAD_FOLDER_NO_ROOT_NAME }}"
+          repo: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name || github.repository }}
+          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
 
       - name: Download in new folder
         uses: ./.github/actions/secure-download-folder
