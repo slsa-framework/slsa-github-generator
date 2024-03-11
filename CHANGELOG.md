@@ -102,7 +102,7 @@ duplication."
 
 ### Unreleased: attestation-name Workflow Input and Output
 
-- `attestation-name` as a workflow input is now removed. Use `provenance-name` instead.
+- `attestation-name` as a workflow input to `.github/workflows/generator_generic_slsa3.yml` is now removed. Use `provenance-name` instead.
 
 ### Unreleased: Gradle Builder
 
