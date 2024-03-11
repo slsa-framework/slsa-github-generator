@@ -102,7 +102,7 @@ duplication."
 
 ### Unreleased: Breaking Change: upload-artifact and download-artifact
 
-- Our workflows now use the new `@v4`s of `actions/upload-artifact` and `actions/download-artifact`, which are incompatiblle with the prior `@v3`. See Our docs on the [generic generator](./internal/builders/generic/README.md#compatibility-with-actionsdownload-artifact).
+- Our workflows now use the new `@v4`s of `actions/upload-artifact` and `actions/download-artifact`, which are incompatiblle with the prior `@v3`. See Our docs on the [generic generator](./internal/builders/generic/README.md#compatibility-with-actionsdownload-artifact) for more information and how to upgrade.
 
 ### Unreleased: Gradle Builder
 
