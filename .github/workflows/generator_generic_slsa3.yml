@@ -56,10 +56,6 @@ on:
           the assets.
         type: string
         default: ""
-      attestation-name:
-        description: "The artifact name of the signed provenance. The file must have the intoto.jsonl extension. Defaults to <filename>.intoto.jsonl for single artifact or multiple.intoto.jsonl for multiple artifacts. DEPRECATED: Use provenance-name instead."
-        required: false
-        type: string
       provenance-name:
         description: The artifact name of the signed provenance. The file must have the intoto.jsonl extension. Defaults to <filename>.intoto.jsonl for single artifact or multiple.intoto.jsonl for multiple artifacts.
         required: false
@@ -98,9 +94,6 @@ on:
           Note: This value is non-empty only when a release asset is uploaded, according to
           the values of `upload-assets` and `upload-tag-name`.
         value: ${{ jobs.upload-assets.outputs.release-id }}
-      attestation-name:
-        description: "DEPRECATED: use the provenance-name output instead."
-        value: ${{ jobs.generator.outputs.provenance-name }}
       provenance-name:
         description: "The artifact name of the signed provenance. (A file with the intoto.jsonl extension)."
         value: ${{ jobs.generator.outputs.provenance-name }}
@@ -226,17 +219,11 @@ jobs:
         env:
           GITHUB_CONTEXT: "${{ toJSON(github) }}"
           UNTRUSTED_PROVENANCE_NAME: "${{ inputs.provenance-name }}"
-          UNTRUSTED_DEPRECATED_ATTESTATION_NAME: "${{ inputs.attestation-name }}"
         run: |
           set -euo pipefail
           untrusted_prov_name=""
           if [ "$UNTRUSTED_PROVENANCE_NAME" != "" ]; then
             untrusted_prov_name="$UNTRUSTED_PROVENANCE_NAME"
-          else
-            if [ "$UNTRUSTED_DEPRECATED_ATTESTATION_NAME" != "" ]; then
-              echo "WARNING: deprecated attestation-name was used. Use provenance-name instead."
-              untrusted_prov_name="$UNTRUSTED_DEPRECATED_ATTESTATION_NAME"
-            fi
           fi
           # Create and sign provenance.
           # NOTE: The builder verifies that the provenance path is located

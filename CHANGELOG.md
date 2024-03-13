@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - [Unreleased](#unreleased)
   - [Unreleased: Breaking Change: upload-artifact and download-artifact](#unreleased-breaking-change-upload-artifact-and-download-artifact)
+  - [Unreleased: Breaking Change: attestation-name Workflow Input and Output](#unreleased-breaking-change-attestation-name-workflow-input-and-output)
   - [Unreleased: Gradle Builder](#unreleased-gradle-builder)
   - [Unreleased: Go Builder](#unreleased-go-builder)
   - [Unreleased: Container Generator](#unreleased-container-generator)
@@ -103,6 +104,10 @@ duplication."
 ### Unreleased: Breaking Change: upload-artifact and download-artifact
 
 - Our workflows now use the new `@v4`s of `actions/upload-artifact` and `actions/download-artifact`, which are incompatiblle with the prior `@v3`. See Our docs on the [generic generator](./internal/builders/generic/README.md#compatibility-with-actionsdownload-artifact) for more information and how to upgrade.
+
+### Unreleased: Breaking Change: attestation-name Workflow Input and Output
+
+- `attestation-name` as a workflow input to `.github/workflows/generator_generic_slsa3.yml` is now removed. Use `provenance-name` instead.
 
 ### Unreleased: Gradle Builder
 
