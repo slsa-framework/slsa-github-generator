@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 <!-- toc -->
 
 - [Unreleased](#unreleased)
+  - [Unreleased: Breaking Change: attestation-name Workflow Input and Output](#unreleased-breaking-change-attestation-name-workflow-input-and-output)
   - [Unreleased: Gradle Builder](#unreleased-gradle-builder)
   - [Unreleased: Go Builder](#unreleased-go-builder)
   - [Unreleased: Container Generator](#unreleased-container-generator)
@@ -98,6 +99,10 @@ duplication."
 -->
 
 ## Unreleased
+
+### Unreleased: Breaking Change: attestation-name Workflow Input and Output
+
+- `attestation-name` as a workflow input to `.github/workflows/generator_generic_slsa3.yml` is now removed. Use `provenance-name` instead.
 
 ### Unreleased: Gradle Builder
 
