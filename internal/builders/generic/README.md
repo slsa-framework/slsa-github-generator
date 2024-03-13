@@ -1645,7 +1645,8 @@ uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_s
 The interface remains the same, however. If your own workflows want to download artifacts produced by our workflows, they must begin using `actions/download-artifact@v4`. For your other dependent workflows, you may find that you need to upgrade all of your uses of both of the actions to `@v4` to maintain compatibility.
 
 See more migration guidance
- * https://github.com/actions/upload-artifact/blob/main/docs/MIGRATION.md
- * https://github.com/actions/download-artifact/blob/main/docs/MIGRATION.md
+
+- https://github.com/actions/upload-artifact/blob/main/docs/MIGRATION.md
+- https://github.com/actions/download-artifact/blob/main/docs/MIGRATION.md
 
 This is part of our effort to upgrade from the now-deprecated node16 that the `@v3`s used. `@v4s` use node20.
