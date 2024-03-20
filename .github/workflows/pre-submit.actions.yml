@@ -183,7 +183,7 @@ jobs:
         uses: ./__BUILDER_CHECKOUT_DIR__/.github/actions/secure-project-checkout-go
         with:
           path: __PROJECT_CHECKOUT_DIR__
-          go-version: "1.20"
+          go-version: "1.21"
 
   secure-project-checkout-node:
     runs-on: ubuntu-latest
@@ -499,7 +499,7 @@ jobs:
           repository: "slsa-framework/slsa-github-generator"
           ref: "main"
           compile-builder: true
-          go-version: "1.20"
+          go-version: "1.21"
           binary: "slsa-generator-generic-linux-amd64"
           directory: "internal/builders/generic"
 
@@ -516,7 +516,7 @@ jobs:
           repository: ${{ steps.detect.outputs.repository }}
           ref: ${{ steps.detect.outputs.ref }}
           builder-ref: "refs/tags/v1.6.0"
-          go-version: "1.20"
+          go-version: "1.21"
           binary: "slsa-generator-generic-linux-amd64"
           directory: "internal/builders/generic"
           # NOTE: compile-builder explicitly set to false.
