@@ -47,7 +47,7 @@ func attestCmd(provider slsa.ClientProvider, check func(error),
 and upload to a Rekor transparency log. This command assumes that it is being
 run in the context of a Github Actions workflow.`,
 
-		Run: func(cmd *cobra.Command, args []string) {
+		Run: func(_ *cobra.Command, _ []string) {
 			ghContext, err := github.GetWorkflowContext()
 			check(err)
 

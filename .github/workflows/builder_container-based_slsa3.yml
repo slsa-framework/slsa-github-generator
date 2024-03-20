@@ -201,7 +201,7 @@ jobs:
         with:
           repository: "${{ needs.detect-env.outputs.repository }}"
           ref: "${{ needs.detect-env.outputs.ref }}"
-          go-version: "1.20"
+          go-version: "1.21"
           # Note: This must be the non-randomized binary name, so that it can be downloaded from the release assets.
           binary: "${{ env.BUILDER_BINARY }}"
           compile-builder: "${{ inputs.compile-builder }}"

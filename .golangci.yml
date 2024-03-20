@@ -16,6 +16,7 @@
 run:
   concurrency: 2
   deadline: 5m
+  timeout: 5m
 issues:
   # TODO(github.com/slsa-framework/slsa-github-generator/issues/450): revive `package-comments` and `exported` rules.
   include:
