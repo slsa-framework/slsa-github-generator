@@ -209,7 +209,7 @@ This will occur only when generating provenance with all builders and generators
 
 **Affected versions:** all versions up and including v1.9.0
 
-```
+```shell
 error updating to TUF remote mirror: invalid
 ```
 
