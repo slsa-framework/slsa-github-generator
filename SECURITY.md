@@ -172,7 +172,8 @@ Actions and build provenance.
 
 Security Team:
 
-- Kris Kooi (@kpk47)
+- Asraa Ali (@asraa)
+- Ian Lewis (@ianlewis)
 - Joshua Locke (@joshuagl)
 - Laurent Simon (@laurentsimon)
 
