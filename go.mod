@@ -2,8 +2,6 @@ module github.com/slsa-framework/slsa-github-generator
 
 go 1.21
 
-toolchain go1.22.1
-
 require (
 	github.com/coreos/go-oidc/v3 v3.9.0
 	github.com/go-openapi/strfmt v0.22.0
