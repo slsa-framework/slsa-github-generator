@@ -27,6 +27,8 @@
   - [Installation](#installation)
   - [Inputs](#inputs)
   - [Command line examples](#command-line-examples)
+- [Known Issues](#known-issues)
+  - [error updating to TUF remote mirror: invalid](#error-updating-to-tuf-remote-mirror-invalid)
 - [Build Your Own Builder](#build-your-own-builder)
 - [Project Roadmap](#project-roadmap)
 - [Technical design](#technical-design)
@@ -198,6 +200,20 @@ The inputs of the verifier are described in [slsa-framework/slsa-verifier#availa
 ### Command line examples
 
 A command line example is provided in [slsa-framework/slsa-verifier#example](https://github.com/slsa-framework/slsa-verifier#example).
+
+## Known Issues
+
+### error updating to TUF remote mirror: invalid
+
+This will occur only when generating provenance with all builders and generators.
+
+**Affected versions:** all versions up and including v1.9.0
+
+```shell
+error updating to TUF remote mirror: invalid
+```
+
+This issue is tracked by [issue #3350](https://github.com/slsa-framework/slsa-github-generator/issues/3350). You _must_ update to the newest patch versions of each minor release to fix this issue.
 
 ## Build Your Own Builder
 
