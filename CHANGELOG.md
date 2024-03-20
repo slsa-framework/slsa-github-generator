@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 <!-- toc -->
 
 - [Unreleased](#unreleased)
-  - [Unreleased: Breaking Change: attestation-name Workflow Input and Output](#unreleased-breaking-change-attestation-name-workflow-input-and-output)
+  - [Unreleased: TUF root fix](#unreleased-tuf-root-fix)
   - [Unreleased: Gradle Builder](#unreleased-gradle-builder)
   - [Unreleased: Go Builder](#unreleased-go-builder)
   - [Unreleased: Container Generator](#unreleased-container-generator)
