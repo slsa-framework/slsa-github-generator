@@ -9,10 +9,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- toc -->
 
-- [Unreleased](#unreleased)
-  - [Unreleased: Gradle Builder](#unreleased-gradle-builder)
-  - [Unreleased: Go Builder](#unreleased-go-builder)
-  - [Unreleased: Container Generator](#unreleased-container-generator)
 - [v1.9.0](#v190)
   - [v1.9.0: BYOB framework (beta)](#v190-byob-framework-beta)
   - [v1.9.0: Maven builder (beta)](#v190-maven-builder-beta)
@@ -96,23 +92,6 @@ Information on the next release will be added here.
 Use the format "X.Y.Z: Go builder" etc. for format headers to avoid header name
 duplication."
 -->
-
-## Unreleased
-
-### Unreleased: Gradle Builder
-
-- The Gradle Builder was fixed when the project root is the same as the
-  repository root (#2727)
-
-### Unreleased: Go Builder
-
-- The `go-version-file` input was fixed so that it can find the `go.mod` file
-  (#2661)
-
-### Unreleased: Container Generator
-
-- A new `provenance-repository` input was added to allow reading provenance from
-  a different container repository than the image itself (#2956)
 
 ## v1.9.0
 
