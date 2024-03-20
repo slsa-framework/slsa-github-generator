@@ -65,12 +65,7 @@ runs:
         set -euo pipefail
 
         object="{\"artifact_name\": \"${UNTRUSTED_ARTIFACT_NAME}\", \"sha256\": \"${SHA256}\", \"filename\": \"${UNTRUSTED_FILENAME}\"}"
-
-        if test "$RUNNER_OS" = "macOS"
-        then
-            base64_object=$(echo "$object" | base64)
-        else
-            base64_object=$(echo "$object" | base64 -w0)
-        fi
         echo "$object" | jq
+        base64_object=$(echo "$object" | base64 -w0)
+
         echo "base64=${base64_object}" >> "$GITHUB_OUTPUT"
