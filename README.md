@@ -28,6 +28,7 @@
   - [Inputs](#inputs)
   - [Command line examples](#command-line-examples)
 - [Known Issues](#known-issues)
+  - [error updating to TUF remote mirror: invalid](#error-updating-to-tuf-remote-mirror-invalid)
 - [Build Your Own Builder](#build-your-own-builder)
 - [Project Roadmap](#project-roadmap)
 - [Technical design](#technical-design)
