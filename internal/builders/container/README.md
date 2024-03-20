@@ -353,11 +353,11 @@ This section explains how to generate non-forgeable SLSA provenance with existin
          echo "${KO_PASSWORD}" | ko login ghcr.io --username "$KO_USER" --password-stdin
 
          # Build & push the image. Save the image name.
-         ko build --bare --tags="${tag}" --image-refs .digest
+         image_and_digest=$(ko build --tags="${tag}" .)
 
          # Output the image name and digest so we can generate provenance.
-         image=$(cat .digest | cut -d'@' -f1 | cut -d':' -f1)
-         digest=$(cat .digest| cut -d'@' -f2)
+         image=$(echo "${image_and_digest}" | cut -d'@' -f1 | cut -d':' -f1)
+         digest=$(echo "${image_and_digest}" | cut -d'@' -f2)
          echo "image=$image" >> "$GITHUB_OUTPUT"
          echo "digest=$digest" >> "$GITHUB_OUTPUT"
    ```
