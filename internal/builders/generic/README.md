@@ -193,12 +193,12 @@ jobs:
     if: startsWith(github.ref, 'refs/tags/')
     steps:
       - name: Download artifact1
-        uses: actions/download-artifact@c850b930e6ba138125429b7e5c93fc707a7f8427 # v4.1.4
+        uses: actions/download-artifact@fb598a63ae348fa914e94cd0ff38f362e927b741 # tag=v2.1.0
         with:
           name: artifact1
 
       - name: Download artifact2
-        uses: actions/download-artifact@c850b930e6ba138125429b7e5c93fc707a7f8427 # v4.1.4
+        uses: actions/download-artifact@fb598a63ae348fa914e94cd0ff38f362e927b741 # tag=v2.1.0
         with:
           name: artifact2
 
@@ -1483,7 +1483,7 @@ jobs:
       # Do the build to create release_artifact_${{ runner.os }}
       - run: ...
 
-      - uses: actions/upload-artifact@5d5d22a31266ced268874388b861e4b58bb5c2f3 # v4.3.1
+      - uses: actions/upload-artifact@26f96dfa697d77e81fd5907df203aa23a56210a8 # v4.3.0
         with:
           path: release_artifact_${{ runner.os }}
           name: release_artifact_${{ runner.os }}
@@ -1538,7 +1538,7 @@ jobs:
       # Do the build to create release_artifact_${{ runner.os }}
       - run: ...
 
-      - uses: actions/upload-artifact@5d5d22a31266ced268874388b861e4b58bb5c2f3 # v4.3.1
+      - uses: actions/upload-artifact@26f96dfa697d77e81fd5907df203aa23a56210a8 # v4.3.0
         with:
           path: release_artifact_${{ runner.os }}
           name: release_artifact_${{ runner.os }}
@@ -1639,12 +1639,9 @@ uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_s
 
 ### Compatibility with `actions/download-artifact`
 
-`slsa-github-generator@v1.9.0` and prior use [`actions/upload-artifact@v3`](https://github.com/actions/upload-artifact) and [`actions/download-artifact@v3`](https://github.com/actions/download-artifact) which are not backwards compatible the `@v4`s used in current versions of `slsa-github-generator`.
-The interface remains the same, however. If your own workflows want to download artifacts produced by our workflows, they must begin using `actions/download-artifact@v4`. For your other dependent workflows, you may find that you need to upgrade all of your uses of both of the actions to `@v4` to maintain compatibility.
-
-See more migration guidance
-
-- https://github.com/actions/upload-artifact/blob/main/docs/MIGRATION.md
-- https://github.com/actions/download-artifact/blob/main/docs/MIGRATION.md
-
-This is part of our effort to upgrade from the now-deprecated node16 that the `@v3`s used. `@v4s` use node20.
+To download provenance (e.g., if you don't use `upload-assets`) you have to
+use [`actions/download-artifact@v3`](https://github.com/actions/download-artifact).
+The workflow uses [`actions/upload-artifact@3`](https://github.com/actions/upload-artifact)
+which is
+[not compatible](https://github.com/actions/download-artifact?tab=readme-ov-file#breaking-changes)
+with `actions/download-artifact@v4`.
