@@ -10,10 +10,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 <!-- toc -->
 
 - [v1.10.0](#v1100)
-  - [v1.10.0: TUF fix](#v1.10.0-tuf-fix)
-  - [v1.10.0: Gradle Builder](#v1.10.0-gradle-builder)
-  - [v1.10.0: Go Builder](#v1.10.0-go-builder)
-  - [v1.10.0: Container Generator](#v1.10.0-container-generator)
+  - [v1.10.0: TUF fix](#v1100-tuf-fix)
+  - [v1.10.0: Gradle Builder](#v1100-gradle-builder)
+  - [v1.10.0: Go Builder](#v1100-go-builder)
+  - [v1.10.0: Container Generator](#v1100-container-generator)
 - [v1.9.0](#v190)
   - [v1.9.0: BYOB framework (beta)](#v190-byob-framework-beta)
   - [v1.9.0: Maven builder (beta)](#v190-maven-builder-beta)
