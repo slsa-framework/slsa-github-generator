@@ -508,7 +508,7 @@ and verifier's code.
 3. Tick the `This is a pre-release` option.
 4. Click `Publish release`.
 
-This will trigger the [release workflow](https://github.com/slsa-framework/slsa-github-generator/actions/workflows/release.yml). Cancel this in the [UI](https://github.com/slsa-framework/slsa-github-generator/actions/workflows/release.yml).
+This will trigger the [release workflow](https://github.com/slsa-framework/slsa-github-generator/actions/workflows/release.yml). Let it complete; you can folow its progress in the [UI](https://github.com/slsa-framework/slsa-github-generator/actions/workflows/release.yml).
 
 ### Verify final version references
 
