@@ -106,7 +106,7 @@ See the [full change list](https://github.com/slsa-framework/slsa-github-generat
 
 ### v1.10.0: TUF fix
 
-- The cosign TUF roots were fixed (#3350). See https://github.com/slsa-framework/slsa-github-generator/blob/v1.10.0/README.md#error-updating-to-tuf-remote-mirror-invalid
+- The cosign TUF roots were fixed (#3350). See [here](https://github.com/slsa-framework/slsa-github-generator/blob/v1.10.0/README.md#error-updating-to-tuf-remote-mirror-invalid).
 
 ### v1.10.0: Gradle Builder
 
