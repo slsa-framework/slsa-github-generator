@@ -18,7 +18,7 @@ jobs:
       contents: read
       actions: read
     if: startsWith(github.ref, 'refs/tags/')
-    uses: slsa-framework/slsa-github-generator/.github/workflows/builder_nodejs_slsa3.yml@v1.9.0
+    uses: slsa-framework/slsa-github-generator/.github/workflows/builder_nodejs_slsa3.yml@v1.9.1
     with:
       run-scripts: "ci, build"
 
@@ -34,7 +34,7 @@ jobs:
 
       - name: publish
         id: publish
-        uses: slsa-framework/slsa-github-generator/actions/nodejs/publish@v1.9.0
+        uses: slsa-framework/slsa-github-generator/actions/nodejs/publish@v1.9.1
         with:
           access: public
           node-auth-token: ${{ secrets.NPM_TOKEN }}
