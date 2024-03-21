@@ -165,6 +165,7 @@ jobs:
         if: ${{ contains(github.event.pull_request.body, '#label:release') }}
         env:
           BODY: "${{ github.event.pull_request.body }}"
+	  GH_TOKEN: ${{ github.token }}
         run: |
           # match the first instance of a line with 'label:release vX.Y.Z' with only leading or trailing whitespace.
           set -euo pipefail
