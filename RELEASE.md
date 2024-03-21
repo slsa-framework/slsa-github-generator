@@ -213,7 +213,7 @@ There is one integration test we cannot easily test "live", so we need to simula
 
 9. Commit and push the changes
 
-10. Create a release for the builders for this branch. WARNING: Delete any existing release from your "$BUILDER_REPOSITORY" repository with the same "$BUILDER_TAG" prior to running this command.
+10. Create a release for the builders for this branch. WARNING: Delete any existing release from your "$BUILDER_REPOSITORY" repository with the same "$BUILDER_TAG" title prior to running this command.
 
     ```shell
     "$GH" release -R "$BUILDER_REPOSITORY" create "$BUILDER_TAG" --title "$BUILDER_TAG" --notes "pre-release tests for $BUILDER_TAG $(date)" --target "$BUILDER_REF"
