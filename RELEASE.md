@@ -48,11 +48,12 @@ Set up env variables:
 
 ```shell
 export GITHUB_USERNAME="laurentsimon"
-# This is the existing slsa-verifier version used by the builder. (https://github.com/slsa-framework/slsa-github-generator/blob/main/.github/actions/generate-builder/action.yml#L55)
-export VERIFIER_TAG="v2.1.0"
+# This is the existing slsa-verifier version used by the builder.
+# hhttps://github.com/slsa-framework/slsa-github-generator/blob/main/.github/actions/generate-builder/action.yml#L95C27-L95C33
+export VERIFIER_TAG="v2.4.1"
 export VERIFIER_REPOSITORY="$GITHUB_USERNAME/slsa-verifier"
 # Release tag of the builder we want to release. Release Candidates end with "-rc.#"
-export BUILDER_TAG="v1.5.0-rc.0"
+export BUILDER_TAG="v1.10.0-rc.0"
 # Branch name for our test
 export BUILDER_REF="release/bad-verifier-$BUILDER_TAG"
 export BUILDER_REPOSITORY="$GITHUB_USERNAME/slsa-github-generator"
