@@ -612,7 +612,7 @@ Then, for each of the GHA builders, you will need to:
 
 4. Determine the digest that was uploaded by the build to the
    [example-package.verifier-e2e.all.tag.main.default.slsa3](https://github.com/slsa-framework/example-package/pkgs/container/example-package.verifier-e2e.all.tag.main.default.slsa3)
-   package.
+   package. Create the file `./cli/slsa-verifier/testdata/gha_generic_container/$BUILDER_TAG/container_workflow_dispatch.digest` with the content `sha256:digest` (no new line).
 
 5. Export the image to the
    `./cli/slsa-verifier/testdata/gha_generic_container/$BUILDER_TAG/` directory
