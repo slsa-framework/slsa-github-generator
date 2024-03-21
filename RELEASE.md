@@ -133,7 +133,7 @@ There is one integration test we cannot easily test "live", so we need to simula
    "$GH" release -R "$VERIFIER_REPOSITORY" create "$VERIFIER_TAG" --title "$VERIFIER_TAG" --notes "pre-release tests for builder $BUILDER_TAG $(date)"
    ```
 
-   Simulate uploading a malicious binary.
+   Simulate uploading a malicious binary. 
 
    ```shell
    echo hello > slsa-verifier-linux-amd64
