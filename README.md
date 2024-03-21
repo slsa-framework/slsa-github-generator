@@ -205,7 +205,7 @@ A command line example is provided in [slsa-framework/slsa-verifier#example](htt
 
 ### error updating to TUF remote mirror: invalid
 
-This will occur only when generating provenance with all builders and generators.
+This will occur when generating provenance with all builders and generators.
 
 **Affected versions:** all versions up and including v1.9.0
 
@@ -213,7 +213,7 @@ This will occur only when generating provenance with all builders and generators
 error updating to TUF remote mirror: invalid
 ```
 
-This issue is tracked by [issue #3350](https://github.com/slsa-framework/slsa-github-generator/issues/3350). You _must_ update to the newest patch versions of each minor release to fix this issue.
+This issue is tracked by [issue #3350](https://github.com/slsa-framework/slsa-github-generator/issues/3350). You _must_ update to v1.10.0 to fix this issue.
 
 ## Build Your Own Builder
 
