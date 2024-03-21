@@ -44,11 +44,13 @@ jobs:
           path: __EXAMPLE_PACKAGE__
       - name: manual release ref
         env:
+          GH_TOKEN: ${{ github.token }}
           RELEASE_TAG: "${{ inputs.release-tag }}"
         if: github.ref_type != 'tag'
         run: ./__THIS_REPO__/.github/workflows/scripts/pre-release/references.sh
       - name: new tag release ref
         env:
+          GH_TOKEN: ${{ github.token }}
           RELEASE_TAG: "${{ github.ref_name }}"
         if: github.ref_type == 'tag'
         run: ./__THIS_REPO__/.github/workflows/scripts/pre-release/references.sh
