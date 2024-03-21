@@ -44,11 +44,13 @@ jobs:
           path: __EXAMPLE_PACKAGE__
       - name: manual release ref
         env:
+          GH_TOKEN: ${{ github.token }}
           RELEASE_TAG: "${{ inputs.release-tag }}"
         if: github.ref_type != 'tag'
         run: ./__THIS_REPO__/.github/workflows/scripts/pre-release/references.sh
       - name: new tag release ref
         env:
+          GH_TOKEN: ${{ github.token }}
           RELEASE_TAG: "${{ github.ref_name }}"
         if: github.ref_type == 'tag'
         run: ./__THIS_REPO__/.github/workflows/scripts/pre-release/references.sh
@@ -60,7 +62,7 @@ jobs:
       id-token: write # For signing.
       contents: write # For asset uploads.
       actions: read # For the entrypoint.
-    uses: slsa-framework/slsa-github-generator/.github/workflows/builder_go_slsa3.yml@main
+    uses: slsa-framework/slsa-github-generator/.github/workflows/builder_go_slsa3.yml@v1.9.1-rc.0
     with:
       go-version: "1.21"
       config-file: .github/workflows/configs-container/config-release.yml
@@ -73,7 +75,7 @@ jobs:
       id-token: write # For signing.
       contents: write # For asset uploads.
       actions: read # For the entrypoint.
-    uses: slsa-framework/slsa-github-generator/.github/workflows/builder_go_slsa3.yml@main
+    uses: slsa-framework/slsa-github-generator/.github/workflows/builder_go_slsa3.yml@v1.9.1-rc.0
     with:
       go-version: "1.21"
       config-file: .github/workflows/configs-generic/config-release.yml
@@ -86,7 +88,7 @@ jobs:
       id-token: write # For signing.
       contents: write # For asset uploads.
       actions: read # For the entrypoint.
-    uses: slsa-framework/slsa-github-generator/.github/workflows/builder_go_slsa3.yml@main
+    uses: slsa-framework/slsa-github-generator/.github/workflows/builder_go_slsa3.yml@v1.9.1-rc.0
     with:
       go-version: "1.21"
       config-file: .github/workflows/configs-go/config-release.yml
@@ -99,7 +101,7 @@ jobs:
       id-token: write # For signing.
       contents: write # For asset uploads.
       actions: read # For the entrypoint.
-    uses: slsa-framework/slsa-github-generator/.github/workflows/builder_go_slsa3.yml@main
+    uses: slsa-framework/slsa-github-generator/.github/workflows/builder_go_slsa3.yml@v1.9.1-rc.0
     with:
       go-version: "1.21"
       config-file: .github/workflows/configs-docker/config-release.yml
