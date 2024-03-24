@@ -76,7 +76,7 @@ func NewTestOIDCServer(t *testing.T, now time.Time, token *OIDCToken) (*httptest
 
 	// FIXME: Fix creating a test server that can return tokens that can be verified.
 	var issuerURL string
-	s, c := newTestOIDCServer(t, now, func(w http.ResponseWriter, r *http.Request) {
+	s, c := newTestOIDCServer(t, now, func(w http.ResponseWriter, _ *http.Request) {
 		// Allow the token to override the issuer for verification testing.
 		issuer := issuerURL
 		if token.Issuer != "" {
@@ -116,7 +116,7 @@ func NewTestOIDCServer(t *testing.T, now time.Time, token *OIDCToken) (*httptest
 }
 
 func newRawTestOIDCServer(t *testing.T, now time.Time, status int, raw string) (*httptest.Server, *OIDCClient) {
-	return newTestOIDCServer(t, now, func(w http.ResponseWriter, r *http.Request) {
+	return newTestOIDCServer(t, now, func(w http.ResponseWriter, _ *http.Request) {
 		// Respond with a very basic 3-part JWT token.
 		w.WriteHeader(status)
 		fmt.Fprintln(w, raw)
@@ -144,7 +144,7 @@ func newTestOIDCServer(t *testing.T, now time.Time, f http.HandlerFunc) (*httpte
 	}
 	c := OIDCClient{
 		requestURL: requestURL,
-		verifierFunc: func(ctx context.Context) (*oidc.IDTokenVerifier, error) {
+		verifierFunc: func(_ context.Context) (*oidc.IDTokenVerifier, error) {
 			return oidc.NewVerifier(s.URL, &testKeySet{}, &oidc.Config{
 				Now:               func() time.Time { return now },
 				SkipClientIDCheck: true,

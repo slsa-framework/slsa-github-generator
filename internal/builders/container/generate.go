@@ -37,7 +37,7 @@ func generateCmd(provider slsa.ClientProvider, check func(error)) *cobra.Command
 		Long: `Generate SLSA provenance predicate from a GitHub Action. This command assumes
 that it is being run in the context of a Github Actions workflow.`,
 
-		Run: func(cmd *cobra.Command, args []string) {
+		Run: func(_ *cobra.Command, _ []string) {
 			ghContext, err := github.GetWorkflowContext()
 			check(err)
 
