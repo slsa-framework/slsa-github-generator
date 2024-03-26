@@ -109,7 +109,7 @@ duplication."
 
 ## v1.10.0
 
-Release [v1.10.0] includes bug fixes and new features.
+Release [v1.10.0](https://github.com/slsa-framework/slsa-github-generator/releases/tag/v1.10.0) includes bug fixes and new features.
 
 See the [full change list](https://github.com/slsa-framework/slsa-github-generator/compare/v1.9.0...v1.10.0).
 
