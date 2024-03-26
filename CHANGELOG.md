@@ -10,9 +10,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 <!-- toc -->
 
 - [Unreleased](#unreleased)
-  - [Unreleased: Gradle Builder](#unreleased-gradle-builder)
-  - [Unreleased: Go Builder](#unreleased-go-builder)
-  - [Unreleased: Container Generator](#unreleased-container-generator)
+  - [Unreleased: DSSE Rekor Type](#unreleased-dsse-rekor-type)
+- [v1.10.0](#v1100)
+  - [v1.10.0: TUF fix](#v1100-tuf-fix)
+  - [v1.10.0: Gradle Builder](#v1100-gradle-builder)
+  - [v1.10.0: Go Builder](#v1100-go-builder)
+  - [v1.10.0: Container Generator](#v1100-container-generator)
 - [v1.9.0](#v190)
   - [v1.9.0: BYOB framework (beta)](#v190-byob-framework-beta)
   - [v1.9.0: Maven builder (beta)](#v190-maven-builder-beta)
@@ -99,17 +102,34 @@ duplication."
 
 ## Unreleased
 
-### Unreleased: Gradle Builder
+### Unreleased: DSSE Rekor Type
+
+- When uploading signed provenance to the log, the entry created in the log is now
+  a DSSE Rekor type. This fixes a bug where the current intoto type does not
+  persist provenance signatures. The attestation will no longer be persisted
+  in Rekor (#3299)
+
+## v1.10.0
+
+Release [v1.10.0](https://github.com/slsa-framework/slsa-github-generator/releases/tag/v1.10.0) includes bug fixes and new features.
+
+See the [full change list](https://github.com/slsa-framework/slsa-github-generator/compare/v1.9.0...v1.10.0).
+
+### v1.10.0: TUF fix
+
+- The cosign TUF roots were fixed (#3350). More details [here](https://github.com/slsa-framework/slsa-github-generator/blob/v1.10.0/README.md#error-updating-to-tuf-remote-mirror-invalid).
+
+### v1.10.0: Gradle Builder
 
 - The Gradle Builder was fixed when the project root is the same as the
   repository root (#2727)
 
-### Unreleased: Go Builder
+### v1.10.0: Go Builder
 
 - The `go-version-file` input was fixed so that it can find the `go.mod` file
   (#2661)
 
-### Unreleased: Container Generator
+### v1.10.0: Container Generator
 
 - A new `provenance-repository` input was added to allow reading provenance from
   a different container repository than the image itself (#2956)
