@@ -10,9 +10,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 <!-- toc -->
 
 - [Unreleased](#unreleased)
-  - [Unreleased: Gradle Builder](#unreleased-gradle-builder)
-  - [Unreleased: Go Builder](#unreleased-go-builder)
-  - [Unreleased: Container Generator](#unreleased-container-generator)
   - [Unreleased: DSSE Rekor Type](#unreleased-dsse-rekor-type)
 - [v1.10.0](#v1100)
   - [v1.10.0: TUF fix](#v1100-tuf-fix)
