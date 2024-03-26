@@ -100,6 +100,8 @@ Use the format "X.Y.Z: Go builder" etc. for format headers to avoid header name
 duplication."
 -->
 
+## Unreleased
+
 ### Unreleased: DSSE Rekor Type
 
 - When uploading signed provenance to the log, the entry created in the log is now
