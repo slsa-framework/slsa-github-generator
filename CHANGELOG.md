@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- toc -->
 
+- [Unreleased](#unreleased)
+  - [Unreleased: DSSE Rekor Type](#unreleased-dsse-rekor-type)
 - [v1.10.0](#v1100)
   - [v1.10.0: TUF fix](#v1100-tuf-fix)
   - [v1.10.0: Gradle Builder](#v1100-gradle-builder)
@@ -98,9 +100,18 @@ Use the format "X.Y.Z: Go builder" etc. for format headers to avoid header name
 duplication."
 -->
 
+## Unreleased
+
+### Unreleased: DSSE Rekor Type
+
+- When uploading signed provenance to the log, the entry created in the log is now
+  a DSSE Rekor type. This fixes a bug where the current intoto type does not
+  persist provenance signatures. The attestation will no longer be persisted
+  in Rekor (#3299)
+
 ## v1.10.0
 
-Release [v1.10.0] includes bug fixes and new features.
+Release [v1.10.0](https://github.com/slsa-framework/slsa-github-generator/releases/tag/v1.10.0) includes bug fixes and new features.
 
 See the [full change list](https://github.com/slsa-framework/slsa-github-generator/compare/v1.9.0...v1.10.0).
 
