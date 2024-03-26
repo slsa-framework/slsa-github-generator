@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 <!-- toc -->
 
 - [Unreleased](#unreleased)
+  - [Unreleased: Breaking Change: attestation-name Workflow Input and Output]
   - [Unreleased: DSSE Rekor Type](#unreleased-dsse-rekor-type)
 - [v1.10.0](#v1100)
   - [v1.10.0: TUF fix](#v1100-tuf-fix)
@@ -101,6 +102,10 @@ duplication."
 -->
 
 ## Unreleased
+
+### Unreleased: Breaking Change: attestation-name Workflow Input and Output
+
+- `attestation-name` as a workflow input to `.github/workflows/generator_generic_slsa3.yml` is now removed. Use `provenance-name` instead.
 
 ### Unreleased: DSSE Rekor Type
 
