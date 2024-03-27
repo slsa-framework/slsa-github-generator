@@ -41,6 +41,23 @@ inputs:
   slsa-workflow-secret14: {}
   slsa-workflow-secret15: {}
 
+outputs:
+  artifacts-download-name:
+    description: "The name of binaries folder to download"
+    # NOTE: This is an "untrusted" value returned from the build.
+    value: "${{ steps.rng.outputs.random }}-artifacts"
+  artifacts-download-sha256:
+    description: "SHA256 of the uploaded tarball of artifacts."
+    value: ${{ steps.generate-artifacts.outputs.sha256 }}
+  artifacts-actual-name:
+    description: >
+      The name of the folder which contains the artifacts.
+
+      After downloading artifacts-download-name and extracting
+      the folder.tgz from inside. A folder with artifacts with
+      this name will be extracted.
+    value: "bazel_builder_binaries_to_upload_to_gh_7bc972367cb286b7f36ab4457f06e369"
+
 runs:
   using: "composite"
   steps:
@@ -52,20 +69,51 @@ runs:
       uses: bazelbuild/setup-bazelisk@95c9bf48d0c570bb3e28e57108f3450cd67c1a44 # v2.0.0
 
     - name: Setup Java
+      if: ${{ fromJson(inputs.slsa-workflow-inputs).includes-java }} == 'true'
       id: java
       uses: actions/setup-java@0ab4596768b603586c0de567f2430c30f5b0d2b0 # v3.13.0
       with:
         distribution: "${{ fromJson(inputs.slsa-workflow-inputs).user-java-distribution }}"
         java-version: "${{ fromJson(inputs.slsa-workflow-inputs).user-java-version }}"
 
-    - id: build
-      env:
-        TARGETS: ${{ fromJson(inputs.slsa-workflow-inputs).targets }}
-        FLAGS: ${{ fromJson(inputs.slsa-workflow-inputs).flags }}
-        NEEDS_RUNFILES: ${{ fromJson(inputs.slsa-workflow-inputs).needs-runfiles }}
-        INCLUDES_JAVA: ${{ fromJson(inputs.slsa-workflow-inputs).includes-java }}
+    - name: Check for Environment Image
+      id: env-image
       shell: bash
-      run: ./../__TOOL_ACTION_DIR__/build.sh
+      run: |
+        if [[ -z "${{ fromJson(inputs.slsa-workflow-inputs).env-image }}" ]]
+        then
+          echo "No Environment Image provided. Will build without."
+          echo "use_env_image=false" >> $GITHUB_OUTPUT
+        else
+          echo "Docker image provided. Running build on Docker Image."
+          echo "use_env_image=true"  >> $GITHUB_OUTPUT
+        fi
+
+    - name: Build on Environment Image
+      if: ${{ steps.env-image.outputs.use_env_image == 'true' }}
+      env:
+        UNTRUSTED_TARGETS: ${{ fromJson(inputs.slsa-workflow-inputs).targets }}
+        UNTRUSTED_FLAGS: ${{ fromJson(inputs.slsa-workflow-inputs).flags }}
+        UNTRUSTED_NEEDS_RUNFILES: ${{ fromJson(inputs.slsa-workflow-inputs).needs-runfiles }}
+        UNTRUSTED_INCLUDES_JAVA: ${{ fromJson(inputs.slsa-workflow-inputs).includes-java }}
+        UNTRUSTED_ENV_IMAGE: ${{ fromJson(inputs.slsa-workflow-inputs).env-image }}
+      shell: bash
+      run: |
+        set -euo pipefail
+        docker pull $UNTRUSTED_ENV_IMAGE
+        curr_dir=$(basename "$(pwd)")
+        docker run --rm --env UNTRUSTED_TARGETS=${UNTRUSTED_TARGETS} --env UNTRUSTED_FLAGS=${UNTRUSTED_FLAGS} --env UNTRUSTED_NEEDS_RUNFILES=${UNTRUSTED_NEEDS_RUNFILES} --env UNTRUSTED_INCLUDES_JAVA=${UNTRUSTED_INCLUDES_JAVA} -v $PWD/../:/src -w /src $UNTRUSTED_ENV_IMAGE /bin/sh -c "ls && tree && cd $curr_dir && ls && tree && ./../__TOOL_ACTION_DIR__/build.sh"
+
+    - id: build
+      if: ${{ steps.env-image.outputs.use_env_image == 'false' }}
+      env:
+        UNTRUSTED_TARGETS: ${{ fromJson(inputs.slsa-workflow-inputs).targets }}
+        UNTRUSTED_FLAGS: ${{ fromJson(inputs.slsa-workflow-inputs).flags }}
+        UNTRUSTED_NEEDS_RUNFILES: ${{ fromJson(inputs.slsa-workflow-inputs).needs-runfiles }}
+        UNTRUSTED_INCLUDES_JAVA: ${{ fromJson(inputs.slsa-workflow-inputs).includes-java }}
+      shell: bash
+      run: |
+        ./../__TOOL_ACTION_DIR__/build.sh
 
     # rng generates a random number to avoid name collision in artifacts
     # when multiple workflows run concurrently.
@@ -77,7 +125,7 @@ runs:
       id: generate-artifacts
       uses: slsa-framework/slsa-github-generator/.github/actions/secure-upload-folder@main
       with:
-        name: "${{ steps.rng.outputs.random }}-binaries"
+        name: "${{ steps.rng.outputs.random }}-artifacts"
         path: "./bazel_builder_binaries_to_upload_to_gh_7bc972367cb286b7f36ab4457f06e369" # path-to-artifact(s)
 
     - name: Echo statement

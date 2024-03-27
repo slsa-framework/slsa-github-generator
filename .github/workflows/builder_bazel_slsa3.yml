@@ -35,6 +35,18 @@ on:
         required: false
         type: string
         default: ""
+      env-image:
+        description: "Image for build environment to run on"
+        required: false
+        type: string
+        default: ""
+      env-image-digest:
+        description: >
+          TODO(#2630): Add verification method for digest.
+          The image digest of the environment image.
+          This must be specified in order to verify the image.
+        required: false
+        type: string
       needs-runfiles:
         description: >
           A boolean input that if true will package the artifact's runfiles along with the artifact.
@@ -75,6 +87,32 @@ on:
           When run on a `pull_request` trigger, attestations are not signed and have an ".intoto" extension.
           When run on other triggers, attestations are signed and have an "intoto.sigstore" extension.
         value: ${{ jobs.slsa-run.outputs.attestations-download-name }}
+
+      provenance-download-sha256:
+        description: >
+          The sha256 digest of the attestations.
+
+          Users should verify the download against this digest to prevent tampering.
+        value: ${{ jobs.slsa-run.outputs.attestations-download-sha256 }}
+
+      artifacts-download-name:
+        description: >
+          The name of the folder containing the built artifacts. There is a random hash at the
+          beginning of it in form <hash>-binaries to avoid collisions.
+        value: ${{ fromJSON(jobs.slsa-run.outputs.build-artifacts-outputs).artifacts-download-name }}
+
+      artifacts-download-sha256:
+        description: "SHA256 of the uploaded tarball of built artifacts."
+        value: ${{ fromJSON(jobs.slsa-run.outputs.build-artifacts-outputs).artifacts-download-sha256 }}
+
+      artifacts-actual-name:
+        description: >
+          The name of the folder which contains the artifacts.
+
+          After downloading artifacts-download-name and extracting
+          the folder.tgz from inside. A folder with artifacts with
+          this name will be extracted.
+        value: ${{ fromJSON(jobs.slsa-run.outputs.build-artifacts-outputs).artifacts-actual-name }}
 
 jobs:
   slsa-setup:
