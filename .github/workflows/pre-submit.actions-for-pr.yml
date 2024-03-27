@@ -12,13 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-name: pre-submit actions
+
+# Same as pre-submit.actions.yml, but doing a local checkout of the PR's changes first
+# So we can test changes to the actions, themselves
+name: pre-submit actions for PR
 
 on:
   pull_request:
     branches: [main]
-  merge_group:
-  workflow_dispatch:
 
 permissions: read-all
 
@@ -28,12 +29,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        with:
+          repository: ${{github.event.pull_request.head.repo.full_name}}
+          ref: ${{ github.event.pull_request.head.sha }}
       - run: ./.github/workflows/scripts/pre-submit.actions/checkout.sh
 
   check-tscommon-tarball:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        with:
+          repository: ${{github.event.pull_request.head.repo.full_name}}
+          ref: ${{ github.event.pull_request.head.sha }}
 
       - name: Untar the package tarball
         working-directory: .github/actions/tscommon
@@ -77,6 +84,9 @@ jobs:
           - .github/actions/ensure-github-hosted-runners-js
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        with:
+          repository: ${{github.event.pull_request.head.repo.full_name}}
+          ref: ${{ github.event.pull_request.head.sha }}
 
       - name: Set Node.js 18
         uses: actions/setup-node@5e21ff4d9bc1a8cf6de233a3057d20ec6b3fb69d # v3.8.1
@@ -123,6 +133,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        with:
+          repository: ${{github.event.pull_request.head.repo.full_name}}
+          ref: ${{ github.event.pull_request.head.sha }}
       - run: |
           echo "foo" > artifact
       - id: compute-sha256
@@ -138,6 +151,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        with:
+          repository: ${{github.event.pull_request.head.repo.full_name}}
+          ref: ${{ github.event.pull_request.head.sha }}
       - run: |
           echo "foo" > artifact
       - id: rng
@@ -153,6 +169,8 @@ jobs:
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
         with:
+          repository: ${{github.event.pull_request.head.repo.full_name}}
+          ref: ${{ github.event.pull_request.head.sha }}
           path: __THIS_REPO__
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
         with:
@@ -166,7 +184,6 @@ jobs:
         if: ${{ contains(github.event.pull_request.body, '#label:release') }}
         env:
           BODY: "${{ github.event.pull_request.body }}"
-          GH_TOKEN: ${{ github.token }}
         run: |
           # match the first instance of a line with 'label:release vX.Y.Z' with only leading or trailing whitespace.
           set -euo pipefail
@@ -179,19 +196,23 @@ jobs:
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
         with:
+          repository: ${{github.event.pull_request.head.repo.full_name}}
+          ref: ${{ github.event.pull_request.head.sha }}
           path: __BUILDER_CHECKOUT_DIR__
 
       - name: Checkout the Go repository
         uses: ./__BUILDER_CHECKOUT_DIR__/.github/actions/secure-project-checkout-go
         with:
           path: __PROJECT_CHECKOUT_DIR__
-          go-version: "1.21"
+          go-version: "1.20"
 
   secure-project-checkout-node:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
         with:
+          repository: ${{github.event.pull_request.head.repo.full_name}}
+          ref: ${{ github.event.pull_request.head.sha }}
           path: __BUILDER_CHECKOUT_DIR__
 
       - name: Checkout the JS repository
@@ -211,6 +232,9 @@ jobs:
       DOWNLOAD_FOLDER_NO_ROOT_NAME: "download-root/download-folder"
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        with:
+          repository: ${{github.event.pull_request.head.repo.full_name}}
+          ref: ${{ github.event.pull_request.head.sha }}
       - name: Create folder
         run: |
           set -euo pipefail
@@ -369,6 +393,8 @@ jobs:
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
         with:
+          repository: ${{github.event.pull_request.head.repo.full_name}}
+          ref: ${{ github.event.pull_request.head.sha }}
           path: __BUILDER_CHECKOUT_DIR__
 
       - name: Create artifact
@@ -396,6 +422,8 @@ jobs:
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
         with:
+          repository: ${{github.event.pull_request.head.repo.full_name}}
+          ref: ${{ github.event.pull_request.head.sha }}
           path: __BUILDER_CHECKOUT_DIR__
 
       - name: Create artifact
@@ -429,6 +457,8 @@ jobs:
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
         with:
+          repository: ${{github.event.pull_request.head.repo.full_name}}
+          ref: ${{ github.event.pull_request.head.sha }}
           path: __BUILDER_CHECKOUT_DIR__
 
       - name: Create artifact and folder
@@ -463,6 +493,8 @@ jobs:
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
         with:
+          repository: ${{github.event.pull_request.head.repo.full_name}}
+          ref: ${{ github.event.pull_request.head.sha }}
           path: __BUILDER_CHECKOUT_DIR__
 
       - name: Create artifact
@@ -496,12 +528,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        with:
+          repository: ${{github.event.pull_request.head.repo.full_name}}
+          ref: ${{ github.event.pull_request.head.sha }}
       - uses: ./.github/actions/generate-builder
         with:
           repository: "slsa-framework/slsa-github-generator"
           ref: "main"
           compile-builder: true
-          go-version: "1.21"
+          go-version: "1.20"
           binary: "slsa-generator-generic-linux-amd64"
           directory: "internal/builders/generic"
 
@@ -510,6 +545,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        with:
+          repository: ${{github.event.pull_request.head.repo.full_name}}
+          ref: ${{ github.event.pull_request.head.sha }}
       - name: Detect the builder ref
         id: detect
         uses: ./.github/actions/detect-workflow-js
@@ -518,7 +556,7 @@ jobs:
           repository: ${{ steps.detect.outputs.repository }}
           ref: ${{ steps.detect.outputs.ref }}
           builder-ref: "refs/tags/v1.6.0"
-          go-version: "1.21"
+          go-version: "1.20"
           binary: "slsa-generator-generic-linux-amd64"
           directory: "internal/builders/generic"
           # NOTE: compile-builder explicitly set to false.
@@ -528,6 +566,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        with:
+          repository: ${{github.event.pull_request.head.repo.full_name}}
+          ref: ${{ github.event.pull_request.head.sha }}
       - name: Test generate attestations
         id: generate
         uses: ./.github/actions/generate-attestations
@@ -562,3 +603,48 @@ jobs:
             echo "expected deadbeat digest"
             exit 2
           fi
+
+  ensure-github-hosted-runners:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        with:
+          repository: ${{github.event.pull_request.head.repo.full_name}}
+          ref: ${{ github.event.pull_request.head.sha }}
+      # All these jobs need a user-token with admin:read,
+      # so the the regular github.token will not be enough
+
+      # It's most conveniet if the toekn is named as a secret called "token",
+      # so you can access it with `secrets.token`.
+
+      # If this PR is from a fork, then all of these steps should fail because
+      # the base repo's secrets are not avaiable to forks.
+      - uses: ./.github/actions/ensure-github-hosted-runners-js
+        continue-on-error: true
+        id: checkwithgithubtoken
+        with:
+          token: ${{ github.token }}
+      - uses: ./.github/actions/ensure-github-hosted-runners-js
+        continue-on-error: true
+        id: checkwithusertoken
+        with:
+          token: ${{ secrets.token }}
+      - uses: ./.github/actions/ensure-github-hosted-runners-js
+        continue-on-error: true
+        id: checkwitheithertoken
+        with:
+          token: ${{ secrets.token || github.token }}
+      - name: Final outcome - non-fork
+        if: github.event.pull_request.head.repo.full_name == github.event.pull_request.base.repo.full_name 
+        env:
+          SUCCESS: ${{ steps.checkwithgithubtoken.outcome == 'failure' && steps.checkwithusertoken.outcome != 'failure' && steps.checkwitheithertoken.outcome != 'failure'}}
+        run: |
+          set -euo pipefail
+          echo "outcome=$([ "$SUCCESS" == "true" ] && echo "success" || echo "failure")" >> "$GITHUB_OUTPUT"
+      - name: Final outcome - is-fork
+        if: github.event.pull_request.head.repo.full_name != github.event.pull_request.base.repo.full_name 
+        env:
+          SUCCESS: ${{ steps.checkwithgithubtoken.outcome == 'failure' && steps.checkwithusertoken.outcome == 'failure' && steps.checkwitheithertoken.outcome == 'failure'}}
+        run: |
+          set -euo pipefail
+          echo "outcome=$([ "$SUCCESS" == "true" ] && echo "success" || echo "failure")" >> "$GITHUB_OUTPUT"

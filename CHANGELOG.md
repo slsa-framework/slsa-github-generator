@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- toc -->
 
+- [Breaking Changes](#breaking-changes)
+  - [Unreleased: Generic Generator](#unreleased-generic-generator)
 - [Unreleased](#unreleased)
   - [Unreleased: Breaking Change: attestation-name Workflow Input and Output](#unreleased-breaking-change-attestation-name-workflow-input-and-output)
   - [Unreleased: DSSE Rekor Type](#unreleased-dsse-rekor-type)
@@ -100,6 +102,13 @@ Information on the next release will be added here.
 Use the format "X.Y.Z: Go builder" etc. for format headers to avoid header name
 duplication."
 -->
+
+## Breaking Changes
+
+### Unreleased: Generic Generator
+
+- The workflow that calls the provenance generator re-usable workflows
+  will fail if an adjacent Jobs in the calling workflow are using self-hosted runners. See how to migrate in the [docs](./.github/actions/ensure-github-hosted-runners-js/README.md#administrationread-permissions).
 
 ## Unreleased
 
