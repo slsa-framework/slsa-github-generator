@@ -17,11 +17,6 @@ import * as process from "process";
 import { sigstore } from "sigstore";
 import * as tscommon from "tscommon";
 
-const signOptions = {
-  oidcClientID: "sigstore",
-  oidcIssuer: "https://oauth2.sigstore.dev/auth",
-};
-
 async function run(): Promise<void> {
   try {
     /* Test locally:
@@ -133,10 +128,7 @@ async function run(): Promise<void> {
     core.info(`unsignedB64Token: ${unsignedB64Token}`);
 
     // Sign and prepare the base64 bundle.
-    const bundle = await sigstore.sign(
-      Buffer.from(unsignedB64Token),
-      signOptions,
-    );
+    const bundle = await sigstore.sign(Buffer.from(unsignedB64Token));
 
     // Verify just to double check.
     // NOTE: this is an offline verification.
