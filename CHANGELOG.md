@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 <!-- toc -->
 
 - [Unreleased](#unreleased)
-  - [Unreleased: Breaking Change: attestation-name Workflow Input and Output]
+  - [Unreleased: Breaking Change: attestation-name Workflow Input and Output](#unreleased-breaking-change-attestation-name-workflow-input-and-output)
   - [Unreleased: DSSE Rekor Type](#unreleased-dsse-rekor-type)
 - [v1.10.0](#v1100)
   - [v1.10.0: TUF fix](#v1100-tuf-fix)
