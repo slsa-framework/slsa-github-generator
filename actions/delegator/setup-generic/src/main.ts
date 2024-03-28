@@ -14,7 +14,7 @@ limitations under the License.
 import * as github from "@actions/github";
 import * as core from "@actions/core";
 import * as process from "process";
-import { sigstore } from "sigstore";
+import * as sigstore from "sigstore";
 import * as tscommon from "tscommon";
 
 async function run(): Promise<void> {

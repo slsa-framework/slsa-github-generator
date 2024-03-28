@@ -14,7 +14,7 @@
 
 import { rawTokenInterface } from "./types";
 import * as core from "@actions/core";
-import { sigstore } from "sigstore";
+import * as sigstore from "sigstore";
 import * as child_process from "child_process";
 import * as tscommon from "tscommon";
 import * as github from "@actions/github";

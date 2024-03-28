@@ -12,7 +12,7 @@ limitations under the License.
 */
 
 import * as core from "@actions/core";
-import { sigstore } from "sigstore";
+import * as sigstore from "sigstore";
 import {
   validateField,
   validateFieldAnyOf,
