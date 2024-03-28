@@ -54,7 +54,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 const github = __importStar(__nccwpck_require__(5438));
 const core = __importStar(__nccwpck_require__(2186));
 const process = __importStar(__nccwpck_require__(7282));
-const sigstore = __importStar(__nccwpck_require__(9149));
+const sigstore_1 = __nccwpck_require__(9149);
 const tscommon = __importStar(__nccwpck_require__(6634));
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
@@ -159,7 +159,7 @@ function run() {
             core.info(`unsignedToken: ${unsignedToken}`);
             core.info(`unsignedB64Token: ${unsignedB64Token}`);
             // Sign and prepare the base64 bundle.
-            const bundle = yield sigstore.sign(Buffer.from(unsignedB64Token));
+            const bundle = yield (0, sigstore_1.sign)(Buffer.from(unsignedB64Token));
             // Verify just to double check.
             // NOTE: this is an offline verification.
             // TODO(#1668): re-enable verification.

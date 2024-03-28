@@ -53,7 +53,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core = __importStar(__nccwpck_require__(2186));
-const sigstore = __importStar(__nccwpck_require__(9149));
+const sigstore_1 = __nccwpck_require__(9149);
 const path = __importStar(__nccwpck_require__(1017));
 const tscommon = __importStar(__nccwpck_require__(6634));
 function run() {
@@ -78,7 +78,7 @@ function run() {
                 if (stat.isFile()) {
                     core.debug(`Signing ${fpath}...`);
                     const buffer = tscommon.safeReadFileSync(fpath);
-                    const bundle = yield sigstore.attest(buffer, payloadType);
+                    const bundle = yield (0, sigstore_1.attest)(buffer, payloadType);
                     const bundleStr = JSON.stringify(bundle);
                     const outputPath = path.join(outputFolder, `${path.basename(fpath)}.build.slsa`);
                     // We detect path traversal for outputPath in safeWriteFileSync.
@@ -88,7 +88,7 @@ function run() {
             }
         }
         catch (error) {
-            if (error instanceof sigstore.InternalError) {
+            if (error instanceof sigstore_1.InternalError) {
                 core.setFailed(`${error}: ${error.cause}`);
             }
             else {

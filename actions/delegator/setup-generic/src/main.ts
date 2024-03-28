@@ -14,7 +14,7 @@ limitations under the License.
 import * as github from "@actions/github";
 import * as core from "@actions/core";
 import * as process from "process";
-import * as sigstore from "sigstore";
+import { sign } from "sigstore";
 import * as tscommon from "tscommon";
 
 async function run(): Promise<void> {
@@ -128,7 +128,7 @@ async function run(): Promise<void> {
     core.info(`unsignedB64Token: ${unsignedB64Token}`);
 
     // Sign and prepare the base64 bundle.
-    const bundle = await sigstore.sign(Buffer.from(unsignedB64Token));
+    const bundle = await sign(Buffer.from(unsignedB64Token));
 
     // Verify just to double check.
     // NOTE: this is an offline verification.

@@ -52,7 +52,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core = __importStar(__nccwpck_require__(2186));
-const sigstore = __importStar(__nccwpck_require__(9149));
+const sigstore_1 = __nccwpck_require__(9149);
 const validate_1 = __nccwpck_require__(1997);
 const predicate1_1 = __nccwpck_require__(2338);
 const predicate02_1 = __nccwpck_require__(4816);
@@ -125,7 +125,7 @@ function run() {
             const bundle = JSON.parse(bundleStr);
             // First, verify the signature, i.e., that it is signed by a certificate that
             // chains up to Fulcio.
-            yield sigstore.verify(bundle, Buffer.from(b64Token));
+            yield (0, sigstore_1.verify)(bundle, Buffer.from(b64Token));
             const rawToken = Buffer.from(b64Token, "base64");
             core.debug(`bundle: ${bundleStr}`);
             core.debug(`token: ${rawToken}`);

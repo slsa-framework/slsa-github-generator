@@ -12,7 +12,7 @@ limitations under the License.
 */
 
 import * as core from "@actions/core";
-import * as sigstore from "sigstore";
+import { verify } from "sigstore";
 import {
   validateField,
   validateFieldAnyOf,
@@ -97,7 +97,7 @@ async function run(): Promise<void> {
 
     // First, verify the signature, i.e., that it is signed by a certificate that
     // chains up to Fulcio.
-    await sigstore.verify(bundle, Buffer.from(b64Token));
+    await verify(bundle, Buffer.from(b64Token));
 
     const rawToken = Buffer.from(b64Token, "base64");
     core.debug(`bundle: ${bundleStr}`);
