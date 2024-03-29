@@ -13,14 +13,9 @@
 // limitations under the License.
 
 import * as core from "@actions/core";
-import { sigstore } from "sigstore";
+import { attest, InternalError } from "sigstore";
 import * as path from "path";
 import * as tscommon from "tscommon";
-
-const signOptions = {
-  oidcClientID: "sigstore",
-  oidcIssuer: "https://oauth2.sigstore.dev/auth",
-};
 
 async function run(): Promise<void> {
   try {
@@ -46,7 +41,7 @@ async function run(): Promise<void> {
       if (stat.isFile()) {
         core.debug(`Signing ${fpath}...`);
         const buffer = tscommon.safeReadFileSync(fpath);
-        const bundle = await sigstore.attest(buffer, payloadType, signOptions);
+        const bundle = await attest(buffer, payloadType);
         const bundleStr = JSON.stringify(bundle);
         const outputPath = path.join(
           outputFolder,
@@ -58,7 +53,7 @@ async function run(): Promise<void> {
       }
     }
   } catch (error) {
-    if (error instanceof sigstore.InternalError) {
+    if (error instanceof InternalError) {
       core.setFailed(`${error}: ${error.cause}`);
     } else {
       core.setFailed(`Unexpected error: ${error}`);

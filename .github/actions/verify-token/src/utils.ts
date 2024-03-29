@@ -14,7 +14,7 @@
 
 import { rawTokenInterface } from "./types";
 import * as core from "@actions/core";
-import { sigstore } from "sigstore";
+import { Bundle } from "sigstore";
 import * as child_process from "child_process";
 import * as tscommon from "tscommon";
 import * as github from "@actions/github";
@@ -119,7 +119,7 @@ export function asMap<T>(inputs: Map<string, T>): Map<string, T> {
 }
 
 export function parseCertificate(
-  bundle: sigstore.Bundle,
+  bundle: Bundle,
 ): [string, string, string, string, string] {
   if (bundle === undefined) {
     throw new Error(`undefined bundle.`);
