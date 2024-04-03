@@ -36,6 +36,7 @@ jobs:
       # echo "2e0390eb024a52963db7b95e84a9c2b12c004054a7bad9a97ec0c7c89d4681d2    binary-name" | base64 -w0
       base64-subjects: "MmUwMzkwZWIwMjRhNTI5NjNkYjdiOTVlODRhOWMyYjEyYzAwNDA1NGE3YmFkOWE5N2VjMGM3Yzg5ZDQ2ODFkMiAgICBiaW5hcnktbmFtZQo="
       compile-generator: true
+      provenance-name: build.intoto.jsonl
 
   verify:
     # NOTE: this name is used as the status check name and by protected
@@ -66,6 +67,7 @@ jobs:
       base64-subjects: "MmUwMzkwZWIwMjRhNTI5NjNkYjdiOTVlODRhOWMyYjEyYzAwNDA1NGE3YmFkOWE5N2VjMGM3Yzg5ZDQ2ODFkMiAgICBiaW5hcnktbmFtZQo="
       compile-generator: true
       continue-on-error: true
+      provenance-name: build-continue-no-error.intoto.jsonl
 
   verify-continue-no-error:
     # NOTE: this name is used as the status check name and by protected
@@ -96,6 +98,7 @@ jobs:
       base64-subjects: "invalid base64 subjects"
       compile-generator: true
       continue-on-error: true
+      provenance-name: build-continue-invalid-subjects.intoto.jsonl
 
   verify-continue-invalid-subjects:
     # NOTE: this name is used as the status check name and by protected
