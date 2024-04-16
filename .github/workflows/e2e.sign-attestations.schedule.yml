@@ -44,13 +44,13 @@ jobs:
         with:
           node-version: 16
       - name: install sigstore-js
-        run: npm ci
+        run: npm install -g @sigstore/cli
       # TODO: Add subject verification. This only verifies the signature on the DSSE envelope.
       - name: run verify
         run: |
           set -euo pipefail
           for file in outputs/*; do
-            ./node_modules/.bin/sigstore verify "$file"
+            sigstore verify "$file"
           done
 
   if-succeed:
