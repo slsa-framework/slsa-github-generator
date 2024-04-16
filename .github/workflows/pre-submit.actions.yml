@@ -561,32 +561,3 @@ jobs:
             echo "expected deadbeat digest"
             exit 2
           fi
-
-  # copied from .github/workflows/e2e.sign-attestations.schedule.yml
-  sign-attestations:
-    env:
-      GH_TOKEN: ${{ github.token }}
-    permissions:
-      contents: read
-      id-token: write
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
-      - id: setup
-        uses: ./.github/actions/sign-attestations
-        with:
-          attestations: .github/actions/sign-attestations/testdata/attestations
-          output-folder: outputs
-      - name: Setup node
-        uses: actions/setup-node@5e21ff4d9bc1a8cf6de233a3057d20ec6b3fb69d # v3
-        with:
-          node-version: 16
-      - name: install sigstore-js
-        run: npm install -g @sigstore/cli@^0.8.0
-      # TODO: Add subject verification. This only verifies the signature on the DSSE envelope.
-      - name: run verify
-        run: |
-          set -euo pipefail
-          for file in outputs/*; do
-            sigstore verify "$file"
-          done
