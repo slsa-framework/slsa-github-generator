@@ -102,17 +102,17 @@ Use the format "X.Y.Z: Go builder" etc. for format headers to avoid header name
 duplication."
 -->
 
-## Unreleased
+## v1.11.0
 
-### Unreleased: Breaking Change: upload-artifact and download-artifact
+### v1.11.0: Breaking Change: upload-artifact and download-artifact
 
 - Our workflows now use the new `@v4`s of `actions/upload-artifact` and `actions/download-artifact`, which are incompatiblle with the prior `@v3`. See Our docs on the [generic generator](./internal/builders/generic/README.md#compatibility-with-actionsdownload-artifact) for more information and how to upgrade.
 
-### Unreleased: Breaking Change: attestation-name Workflow Input and Output
+### v1.11.0: Breaking Change: attestation-name Workflow Input and Output
 
 - `attestation-name` as a workflow input to `.github/workflows/generator_generic_slsa3.yml` is now removed. Use `provenance-name` instead.
 
-### Unreleased: DSSE Rekor Type
+### v1.11.0: DSSE Rekor Type
 
 - When uploading signed provenance to the log, the entry created in the log is now
   a DSSE Rekor type. This fixes a bug where the current intoto type does not
