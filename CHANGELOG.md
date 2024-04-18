@@ -9,10 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- toc -->
 
-- [Unreleased](#unreleased)
-  - [Unreleased: Breaking Change: upload-artifact and download-artifact](#unreleased-breaking-change-upload-artifact-and-download-artifact)
-  - [Unreleased: Breaking Change: attestation-name Workflow Input and Output](#unreleased-breaking-change-attestation-name-workflow-input-and-output)
-  - [Unreleased: DSSE Rekor Type](#unreleased-dsse-rekor-type)
+- [v1.11.0](#v1110)
+  - [v1.11.0: Breaking Change: upload-artifact and download-artifact](#v1110-breaking-change-upload-artifact-and-download-artifact)
+  - [v1.11.0: Breaking Change: attestation-name Workflow Input and Output](#v1110-breaking-change-attestation-name-workflow-input-and-output)
+  - [v1.11.0: DSSE Rekor Type](#v1110-dsse-rekor-type)
 - [v1.10.0](#v1100)
   - [v1.10.0: TUF fix](#v1100-tuf-fix)
   - [v1.10.0: Gradle Builder](#v1100-gradle-builder)
