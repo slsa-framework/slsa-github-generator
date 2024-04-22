@@ -15,7 +15,7 @@ jobs:
       contents: read
       actions: read
     if: startsWith(github.ref, 'refs/tags/')
-    uses: slsa-framework/slsa-github-generator/.github/workflows/builder_nodejs_slsa3.yml@v1.10.0
+    uses: slsa-framework/slsa-github-generator/.github/workflows/builder_nodejs_slsa3.yml@v2.0.0
     with:
       run-scripts: "ci, build"
 
@@ -24,7 +24,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Download tarball
-        uses: slsa-framework/slsa-github-generator/actions/nodejs/secure-package-download@v1.10.0
+        uses: slsa-framework/slsa-github-generator/actions/nodejs/secure-package-download@v2.0.0
         with:
           name: ${{ needs.build.outputs.package-download-name }}
           path: ${{ needs.build.outputs.package-name }}

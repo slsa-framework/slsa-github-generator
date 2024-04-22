@@ -237,7 +237,7 @@ jobs:
       contents: read
       actions: read
       packages: read
-    uses: slsa-framework/slsa-github-generator/.github/workflows/builder_gradle_slsa3.yml@v1.10.0
+    uses: slsa-framework/slsa-github-generator/.github/workflows/builder_gradle_slsa3.yml@v2.0.0
     with:
       rekor-log-public: true
       artifact-list: build/libs/artifact1-0.1.18.jar,build/libs/artifact-0.1.18-javadoc.jar,build/libs/artifact-0.1.18-sources.jar
@@ -256,7 +256,7 @@ publish:
   steps:
     - name: publish
       id: publish
-      uses: slsa-framework/slsa-github-generator/actions/gradle/publish@v1.10.0
+      uses: slsa-framework/slsa-github-generator/actions/gradle/publish@v2.0.0
       with:
         provenance-download-name: "${{ needs.build.outputs.provenance-download-name }}"
         provenance-download-sha256: "${{ needs.build.outputs.provenance-download-sha256 }}"
