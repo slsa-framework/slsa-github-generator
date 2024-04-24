@@ -121,7 +121,7 @@ jobs:
       contents: read # For repo checkout.
       actions: read # For getting workflow run info.
     if: startsWith(github.ref, 'refs/tags/')
-    uses: slsa-framework/slsa-github-generator/.github/workflows/builder_nodejs_slsa3.yml@v1.10.0
+    uses: slsa-framework/slsa-github-generator/.github/workflows/builder_nodejs_slsa3.yml@v2.0.0
     with:
       run-scripts: "ci, test, build"
 ```
@@ -154,7 +154,7 @@ publish:
 
     - name: publish
       id: publish
-      uses: slsa-framework/slsa-github-generator/actions/nodejs/publish@v1.10.0
+      uses: slsa-framework/slsa-github-generator/actions/nodejs/publish@v2.0.0
       with:
         access: public
         node-auth-token: ${{ secrets.NPM_TOKEN }}
@@ -197,14 +197,14 @@ jobs:
           registry-url: "https://registry.npmjs.org"
 
       - name: Download tarball
-        uses: slsa-framework/slsa-github-generator/actions/nodejs/secure-package-download@v1.10.0
+        uses: slsa-framework/slsa-github-generator/actions/nodejs/secure-package-download@v2.0.0
         with:
           name: ${{ needs.build.outputs.package-download-name }}
           path: ${{ needs.build.outputs.package-name }}
           sha256: ${{ needs.build.outputs.package-download-sha256 }}
 
       - name: Download provenance
-        uses: slsa-framework/slsa-github-generator/actions/nodejs/secure-attestations-download@v1.10.0
+        uses: slsa-framework/slsa-github-generator/actions/nodejs/secure-attestations-download@v2.0.0
         with:
           name: ${{ needs.build.outputs.provenance-download-name }}
           path: "attestations"

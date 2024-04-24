@@ -9,10 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- toc -->
 
-- [Unreleased](#unreleased)
-  - [Unreleased: Breaking Change: upload-artifact and download-artifact](#unreleased-breaking-change-upload-artifact-and-download-artifact)
-  - [Unreleased: Breaking Change: attestation-name Workflow Input and Output](#unreleased-breaking-change-attestation-name-workflow-input-and-output)
-  - [Unreleased: DSSE Rekor Type](#unreleased-dsse-rekor-type)
+- [v2.0.0](#v200)
+  - [v2.0.0: Breaking Change: upload-artifact and download-artifact](#v200-breaking-change-upload-artifact-and-download-artifact)
+  - [v2.0.0: Breaking Change: attestation-name Workflow Input and Output](#v200-breaking-change-attestation-name-workflow-input-and-output)
+  - [v2.0.0: DSSE Rekor Type](#v200-dsse-rekor-type)
 - [v1.10.0](#v1100)
   - [v1.10.0: TUF fix](#v1100-tuf-fix)
   - [v1.10.0: Gradle Builder](#v1100-gradle-builder)
@@ -102,17 +102,17 @@ Use the format "X.Y.Z: Go builder" etc. for format headers to avoid header name
 duplication."
 -->
 
-## Unreleased
+## v2.0.0
 
-### Unreleased: Breaking Change: upload-artifact and download-artifact
+### v2.0.0: Breaking Change: upload-artifact and download-artifact
 
 - Our workflows now use the new `@v4`s of `actions/upload-artifact` and `actions/download-artifact`, which are incompatiblle with the prior `@v3`. See Our docs on the [generic generator](./internal/builders/generic/README.md#compatibility-with-actionsdownload-artifact) for more information and how to upgrade.
 
-### Unreleased: Breaking Change: attestation-name Workflow Input and Output
+### v2.0.0: Breaking Change: attestation-name Workflow Input and Output
 
 - `attestation-name` as a workflow input to `.github/workflows/generator_generic_slsa3.yml` is now removed. Use `provenance-name` instead.
 
-### Unreleased: DSSE Rekor Type
+### v2.0.0: DSSE Rekor Type
 
 - When uploading signed provenance to the log, the entry created in the log is now
   a DSSE Rekor type. This fixes a bug where the current intoto type does not

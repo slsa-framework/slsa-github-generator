@@ -83,7 +83,7 @@ jobs:
       id-token: write
       contents: read
       actions: read
-    uses: slsa-framework/slsa-github-generator/.github/workflows/builder_maven_slsa3.yml@v1.10.0
+    uses: slsa-framework/slsa-github-generator/.github/workflows/builder_maven_slsa3.yml@v2.0.0
 ```
 
 Now, when you invoke this workflow, the Maven builder will build both your artifacts and the provenance files for them.
