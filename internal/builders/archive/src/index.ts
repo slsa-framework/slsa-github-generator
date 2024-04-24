@@ -40,6 +40,12 @@ async function run(): Promise<void> {
     const formats = inputs.parseFormats(f);
     const apiFormats = inputs.formatsToAPI(formats);
 
+    // Verify that upload-assets is set to true.
+    const uploadAssets = jsonInputs["upload-assets"].trim();
+    if (uploadAssets !== "true") {
+      throw new Error(`expected upload-assets to be true, got ${uploadAssets}`);
+    }
+
     // Get layout file.
     const layoutFile = inputs.getActionInput("slsa-layout-file");
     // See https://docs.github.com/en/actions/learn-github-actions/variables.
