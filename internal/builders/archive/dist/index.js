@@ -107,13 +107,13 @@ function run() {
                     },
                 });
                 // Get release information.
-                const releaseInfo = yield octokit.request('GET /repos/{owner}/{repo}/releases/tags/{tag}', {
+                const releaseInfo = yield octokit.request("GET /repos/{owner}/{repo}/releases/tags/{tag}", {
                     owner: parts[0],
                     repo: parts[1],
                     tag: ghRef,
                     headers: {
-                        'X-GitHub-Api-Version': '2022-11-28'
-                    }
+                        "X-GitHub-Api-Version": "2022-11-28",
+                    },
                 });
                 core.debug(`release.id: ${releaseInfo.data.id}`);
                 // NOTE: The code snippet from https://docs.github.com/en/rest/releases/assets?apiVersion=2022-11-28#upload-a-release-asset

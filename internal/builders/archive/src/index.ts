@@ -14,7 +14,6 @@ limitations under the License.
 import * as github from "@actions/github";
 import * as core from "@actions/core";
 import * as inputs from "./inputs";
-import * as tscommon from "tscommon";
 
 async function run(): Promise<void> {
   /* Test locally. Requires a GitHub token:
@@ -62,23 +61,29 @@ async function run(): Promise<void> {
     for (const format of apiFormats) {
       core.debug(`format: ${format}`);
       // https://docs.github.com/en/rest/repos/contents?apiVersion=2022-11-28#download-a-repository-archive-tar
-      const result = await octokit.request(`GET /repos/{owner}/{repo}/${format}/{ref}`, {
-        owner: parts[0],
-        repo: parts[1],
-        ref: ghRef,
-        headers: {
-          "X-GitHub-Api-Version": "2022-11-28",
+      const result = await octokit.request(
+        `GET /repos/{owner}/{repo}/${format}/{ref}`,
+        {
+          owner: parts[0],
+          repo: parts[1],
+          ref: ghRef,
+          headers: {
+            "X-GitHub-Api-Version": "2022-11-28",
+          },
         },
-      });
+      );
       // Get release information.
-      const releaseInfo = await octokit.request('GET /repos/{owner}/{repo}/releases/tags/{tag}', {
-        owner: parts[0],
-        repo: parts[1],
-        tag: ghRef,
-        headers: {
-          'X-GitHub-Api-Version': '2022-11-28'
-        }
-      });
+      const releaseInfo = await octokit.request(
+        "GET /repos/{owner}/{repo}/releases/tags/{tag}",
+        {
+          owner: parts[0],
+          repo: parts[1],
+          tag: ghRef,
+          headers: {
+            "X-GitHub-Api-Version": "2022-11-28",
+          },
+        },
+      );
       core.debug(`release.id: ${releaseInfo.data.id}`);
       // NOTE: The code snippet from https://docs.github.com/en/rest/releases/assets?apiVersion=2022-11-28#upload-a-release-asset
       // did not work and return HTTP error Not Found.
