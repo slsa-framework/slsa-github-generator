@@ -34,8 +34,6 @@ on:
         required: false
         type: boolean
         default: true
-      # NOTE: the additional inputs below are to support additional
-      # functionality of the workflow.
       rekor-log-public:
         description: "Allow publication of your repository name on the public Rekor log"
         required: false
@@ -69,3 +67,5 @@ jobs:
     uses: slsa-framework/slsa-github-generator/.github/workflows/delegator_generic_slsa3.yml@main
     with:
       slsa-token: ${{ needs.slsa-setup.outputs.slsa-token }}
+
+  # TODO(): upload attestation as release assets using needs.slsa-run.outputs.attestations-download-name and attestations-download-sha256
