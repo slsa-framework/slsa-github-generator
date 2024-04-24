@@ -62,7 +62,8 @@ jobs:
     needs: [slsa-setup]
     permissions:
       id-token: write # For signing.
-      contents: read # For repo checkout of private repos.
+      contents: write # To release assets.
+      packages: write # To publish to GitHub packages.
       actions: read # For getting workflow run on private repos.
     uses: slsa-framework/slsa-github-generator/.github/workflows/delegator_generic_slsa3.yml@main
     with:
