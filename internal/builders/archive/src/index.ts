@@ -14,12 +14,16 @@ limitations under the License.
 import * as github from "@actions/github";
 import * as core from "@actions/core";
 import * as inputs from "./inputs";
+import * as attestation from "./attestation";
+import * as crypto from "crypto";
+import * as tscommon from "tscommon";
 
 async function run(): Promise<void> {
   /* Test locally. Requires a GitHub token:
     $ env INPUT_SLSA-WORKFLOW-INPUTS='{"formats":"zip tar.gz"}' \
     GITHUB_REPOSITORY="slsa-framework/slsa-policy" \
     GITHUB_REF_NAME="v0.0.1" \
+    SLSA_OUTPUTS_ARTIFACTS_FILE="output.json" \
     GITHUB_TOKEN="$(echo $GH_TOKEN)" \
     nodejs ./dist/index.js
   */
@@ -58,6 +62,7 @@ async function run(): Promise<void> {
     // Create octokit instance.
     const octokit = github.getOctokit(ghToken);
     let i = 0;
+    const hashes: string[] = [];
     for (const format of apiFormats) {
       core.debug(`format: ${format}`);
       // https://docs.github.com/en/rest/repos/contents?apiVersion=2022-11-28#download-a-repository-archive-tar
@@ -72,6 +77,14 @@ async function run(): Promise<void> {
           },
         },
       );
+      // Compute the hash.
+      hashes.push(
+        crypto
+          .createHash("sha256")
+          .update(Buffer.from(result.data))
+          .digest("hex"),
+      );
+
       // Get release information.
       const releaseInfo = await octokit.request(
         "GET /repos/{owner}/{repo}/releases/tags/{tag}",
@@ -96,6 +109,31 @@ async function run(): Promise<void> {
       });
       i += 1;
     }
+
+    // Now create the results.
+    i = 0;
+    const subj: attestation.subjectObject[] = [];
+    for (const format of formats) {
+      subj.push({
+        name: `${parts[1]}-${ghRef}.${format}`,
+        digest: {
+          sha256: hashes[i],
+        },
+      });
+      i += 1;
+    }
+    const att: attestation.result = {
+      version: 1,
+      attestations: [
+        {
+          name: `${parts[1]}-${ghRef}`,
+          subjects: subj,
+        },
+      ],
+    };
+    core.debug(`att: ${Buffer.from(JSON.stringify(att))}`);
+    const attFile = inputs.getEnvVariable("SLSA_OUTPUTS_ARTIFACTS_FILE");
+    tscommon.safeWriteFileSync(attFile, Buffer.from(JSON.stringify(att)));
   } catch (error) {
     if (error instanceof Error) {
       core.setFailed(error.message);
