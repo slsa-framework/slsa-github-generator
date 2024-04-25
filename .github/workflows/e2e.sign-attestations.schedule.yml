@@ -42,7 +42,7 @@ jobs:
       - name: Setup node
         uses: actions/setup-node@5e21ff4d9bc1a8cf6de233a3057d20ec6b3fb69d # v3
         with:
-          node-version: 16
+          node-version: 20
       - name: install sigstore-js
         run: npm ci
       # TODO: Add subject verification. This only verifies the signature on the DSSE envelope.
@@ -50,7 +50,7 @@ jobs:
         run: |
           set -euo pipefail
           for file in outputs/*; do
-            ./node_modules/.bin/sigstore verify "$file"
+            npx sigstore verify "$file"
           done
 
   if-succeed:
