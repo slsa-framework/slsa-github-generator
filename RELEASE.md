@@ -618,6 +618,13 @@ Then, for each of the GHA builders, you will need to:
    `./cli/slsa-verifier/testdata/gha_generic_container/$BUILDER_TAG/` directory
    in the slsa-verifier repository.
 
+   login to Github's container registry
+
+   ```shell
+   gh auth login --scopes=read:packages
+   echo `gh auth token` | docker login ghcr.io -u ramonpetgrave64 --password-stdin
+   ```
+
    ```shell
    cosign save \
        --dir ./cli/slsa-verifier/testdata/gha_generic_container/$BUILDER_TAG/container_workflow_dispatch \
