@@ -163,7 +163,7 @@ There is one integration test we cannot easily test "live", so we need to simula
    using this command:
 
    ```shell
-   sed -i "s/uses: slsa-framework\/slsa-github-generator\/\.github\/actions\/generate-builder@\(main\|v[0-9]\+\.[0-9]\+\.[0-9]\+\(-rc\.[0-9]\+\)\?\)/uses: ${BUILDER_REPOSITORY/\//\\\/}\/.github\/actions\/generate-builder@${BUILDER_TAG}/" .github/workflows/builder_go_slsa3.yml
+   sed -i "s/uses: slsa-framework\/slsa-github-generator\/\.github\/actions\/generate-builder@\(main\|v[0-9]\+\.[0-9]\+\.[0-9]\+\(-rc\.[0-9]\+\)\?\)/uses: ${BUILDER_REPOSITORY/\//\/}\/.github\/actions\/generate-builder@${BUILDER_TAG}/" .github/workflows/builder_go_slsa3.yml
    ```
 
    Add `testing: true` as an input.
@@ -177,7 +177,7 @@ There is one integration test we cannot easily test "live", so we need to simula
    using this command:
 
    ```shell
-   sed -i "s/uses: slsa-framework\/slsa-github-generator\/\.github\/actions\/generate-builder@\(main\|v[0-9]\+\.[0-9]\+\.[0-9]\+\(-rc\.[0-9]\+\)\?\)/uses: ${BUILDER_REPOSITORY/\//\\\/}\/.github\/actions\/generate-builder@${BUILDER_TAG}/" .github/workflows/generator_generic_slsa3.yml
+   sed -i "s/uses: slsa-framework\/slsa-github-generator\/\.github\/actions\/generate-builder@\(main\|v[0-9]\+\.[0-9]\+\.[0-9]\+\(-rc\.[0-9]\+\)\?\)/uses: ${BUILDER_REPOSITORY/\//\/}\/.github\/actions\/generate-builder@${BUILDER_TAG}/" .github/workflows/generator_generic_slsa3.yml
    ```
 
    Add `testing: true` as an input.
@@ -191,7 +191,7 @@ There is one integration test we cannot easily test "live", so we need to simula
    using this command:
 
    ```shell
-   sed -i "s/uses: slsa-framework\/slsa-github-generator\/\.github\/actions\/generate-builder@\(main\|v[0-9]\+\.[0-9]\+\.[0-9]\+\(-rc\.[0-9]\+\)\?\)/uses: ${BUILDER_REPOSITORY/\//\\\/}\/.github\/actions\/generate-builder@${BUILDER_TAG}/" .github/workflows/generator_container_slsa3.yml
+   sed -i "s/uses: slsa-framework\/slsa-github-generator\/\.github\/actions\/generate-builder@\(main\|v[0-9]\+\.[0-9]\+\.[0-9]\+\(-rc\.[0-9]\+\)\?\)/uses: ${BUILDER_REPOSITORY/\//\/}\/.github\/actions\/generate-builder@${BUILDER_TAG}/" .github/workflows/generator_container_slsa3.yml
    ```
 
    Add `testing: true` as an input.
@@ -205,7 +205,7 @@ There is one integration test we cannot easily test "live", so we need to simula
    using this command:
 
    ```shell
-   sed -i "s/uses: slsa-framework\/slsa-github-generator\/\.github\/actions\/generate-builder@\(main\|v[0-9]\+\.[0-9]\+\.[0-9]\+\(-rc\.[0-9]\+\)\?\)/uses: ${BUILDER_REPOSITORY/\//\\\/}\/.github\/actions\/generate-builder@${BUILDER_TAG}/" .github/workflows/builder_container-based_slsa3.yml
+   sed -i "s/uses: slsa-framework\/slsa-github-generator\/\.github\/actions\/generate-builder@\(main\|v[0-9]\+\.[0-9]\+\.[0-9]\+\(-rc\.[0-9]\+\)\?\)/uses: ${BUILDER_REPOSITORY/\//\/}\/.github\/actions\/generate-builder@${BUILDER_TAG}/" .github/workflows/builder_container-based_slsa3.yml
    ```
 
    Add `testing: true` as an input.
