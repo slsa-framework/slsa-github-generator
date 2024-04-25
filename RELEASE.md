@@ -116,7 +116,7 @@ Once the PR is merged, immediately update the tag to point to HEAD.
 
 ```shell
 git tag $BUILDER_TAG -f
-git push origin $BUILDER_TAG -f
+git push upstream $BUILDER_TAG -f
 ```
 
 This will trigger the [release workflow](https://github.com/slsa-framework/slsa-github-generator/actions/workflows/release.yml). Ensure this workflow succeeds and that the release assets are updated.
@@ -535,7 +535,7 @@ Once the PR is merged, immediately update the tag to point to HEAD.
 
 ```shell
 git tag $BUILDER_TAG -f
-git push origin $BUILDER_TAG -f
+git push upstream $BUILDER_TAG -f
 ```
 
 This will trigger the [release workflow](https://github.com/slsa-framework/slsa-github-generator/actions/workflows/release.yml). Ensure this workflow succeeds and that the release assets are updated.
