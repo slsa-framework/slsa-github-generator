@@ -399,7 +399,7 @@ This section explains how to generate non-forgeable SLSA provenance with existin
          - name: Checkout the repository
            uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # v2.3.4
 
-         - uses: actions/setup-go@v3.3.0
+         - uses: actions/setup-go@v5.0.0
            with:
              go-version: 1.19
 
