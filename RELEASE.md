@@ -622,7 +622,7 @@ Then, for each of the GHA builders, you will need to:
 
    ```shell
    gh auth login --scopes=read:packages
-   echo `gh auth token` | docker login ghcr.io -u ramonpetgrave64 --password-stdin
+   echo `gh auth token` | docker login ghcr.io -u $GITHUB_USERNAME --password-stdin
    ```
 
    ```shell
