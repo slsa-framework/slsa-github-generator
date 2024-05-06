@@ -650,7 +650,7 @@ Update the `Supported Versions` section in [SECURITY.md](./SECURITY.md).
 Update:
 
 1. [Go builder's workflow](https://github.com/actions/starter-workflows/blob/main/ci/go-ossf-slsa3-publish.yml)
-2. [Generic generator's workflow](https://github.com/actions/starter-workflows/blob/main/ci/generic-generator-ossf-slsa3-publish.yml)
+2. [Generic generator's workflow](https://github.com/actions/starter-workflows/blob/main/ci/generator-generic-ossf-slsa3-publish.yml)
 
 ### Announce
 
