@@ -625,6 +625,8 @@ Then, for each of the GHA builders, you will need to:
    echo `gh auth token` | docker login ghcr.io -u $GITHUB_USERNAME --password-stdin
    ```
 
+   Export the image:
+
    ```shell
    cosign save \
        --dir ./cli/slsa-verifier/testdata/gha_generic_container/$BUILDER_TAG/container_workflow_dispatch \
