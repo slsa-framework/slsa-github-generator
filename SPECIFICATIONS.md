@@ -200,7 +200,7 @@ jobs:
         with:
           name: ${{ needs.build.outputs.go-binary-name }}.intoto.jsonl
       - name: Release
-        uses: softprops/action-gh-release@1e07f4398721186383de40550babbdf2b84acfc5
+        uses: softprops/action-gh-release@69320dbe05506a9a39fc8ae11030b214ec2d1f87 # v2.0.5
         if: startsWith(github.ref, 'refs/tags/')
         with:
           files: |
