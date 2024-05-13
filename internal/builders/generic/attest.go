@@ -51,6 +51,9 @@ run in the context of a Github Actions workflow.`,
 			ghContext, err := github.GetWorkflowContext()
 			check(err)
 
+			varsContext, err := github.GetVarsContext()
+			check(err)
+
 			subjectsBytes, err := utils.SafeReadFile(subjectsFilename)
 			check(err)
 			parsedSubjects, err := parseSubjects(string(subjectsBytes))
@@ -78,7 +81,7 @@ run in the context of a Github Actions workflow.`,
 			ctx := context.Background()
 
 			b := common.GenericBuild{
-				GithubActionsBuild: slsa.NewGithubActionsBuild(parsedSubjects, &ghContext),
+				GithubActionsBuild: slsa.NewGithubActionsBuild(parsedSubjects, &ghContext, varsContext),
 				BuildTypeURI:       provenanceOnlyBuildType,
 			}
 			if provider != nil {

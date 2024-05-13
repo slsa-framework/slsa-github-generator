@@ -54,6 +54,7 @@ type BuildType interface {
 // GithubActionsBuild is a basic build type for builders running in GitHub Actions.
 type GithubActionsBuild struct {
 	Context github.WorkflowContext
+	Vars    github.VarsContext
 	Clients ClientProvider
 	subject []intoto.Subject
 }
@@ -62,14 +63,19 @@ type GithubActionsBuild struct {
 type WorkflowParameters struct {
 	// EventInputs is the inputs for the event that triggered the workflow.
 	EventInputs interface{} `json:"event_inputs,omitempty"`
+
+	// VarsContext includes the input parameters provided as part of the `vars`
+	// context. This includes environment and repository variables.
+	VarsContext interface{} `json:"vars"`
 }
 
 // NewGithubActionsBuild returns a new GithubActionsBuild that uses the
 // GitHub context to generate information.
-func NewGithubActionsBuild(s []intoto.Subject, c *github.WorkflowContext) *GithubActionsBuild {
+func NewGithubActionsBuild(s []intoto.Subject, c *github.WorkflowContext, v github.VarsContext) *GithubActionsBuild {
 	return &GithubActionsBuild{
 		subject: s,
 		Context: *c,
+		Vars:    v,
 		Clients: &DefaultClientProvider{},
 	}
 }
@@ -223,12 +229,14 @@ func (b *GithubActionsBuild) Invocation(ctx context.Context) (slsa.ProvenanceInv
 		}
 	}
 
-	if b.Context.Event != nil {
-		// Parameters coming from the trigger event.
-		i.Parameters = WorkflowParameters{
-			EventInputs: b.Context.Event["inputs"],
-		}
+	// Parameters coming from the trigger event.
+	params := WorkflowParameters{
+		VarsContext: b.Vars,
 	}
+	if b.Context.Event != nil {
+		params.EventInputs = b.Context.Event["inputs"]
+	}
+	i.Parameters = params
 
 	return i, nil
 }

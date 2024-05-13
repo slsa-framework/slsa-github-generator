@@ -343,6 +343,7 @@ jobs:
           UNTRUSTED_ENV: "${{ needs.build-dry.outputs.go-env }}"
           UNTRUSTED_WORKING_DIR: "${{ needs.build-dry.outputs.go-working-dir }}"
           GITHUB_CONTEXT: "${{ toJSON(github) }}"
+          VARS_CONTEXT: "${{ toJSON(vars) }}"
         run: |
           set -euo pipefail
 
