@@ -55,7 +55,8 @@ func TestHostedActionsProvenance(t *testing.T) {
 		{
 			name: "empty",
 			b: &TestBuild{
-				GithubActionsBuild: NewGithubActionsBuild(nil, &github.WorkflowContext{}).WithClients(&NilClientProvider{}),
+				GithubActionsBuild: NewGithubActionsBuild(
+					nil, &github.WorkflowContext{}, github.VarsContext{}).WithClients(&NilClientProvider{}),
 			},
 			token: &github.OIDCToken{
 				Audience: []string{""},
@@ -86,6 +87,9 @@ func TestHostedActionsProvenance(t *testing.T) {
 							"github_run_number":       "",
 							"github_sha1":             "",
 						},
+						Parameters: WorkflowParameters{
+							VarsContext: github.VarsContext{},
+						},
 					},
 					Metadata: &slsa02.ProvenanceMetadata{},
 				},
@@ -105,6 +109,8 @@ func TestHostedActionsProvenance(t *testing.T) {
 					HeadRef:    "some/head_ref",
 					RunNumber:  "102937",
 					Actor:      "user",
+				}, github.VarsContext{
+					"REPO_VAR": "value",
 				}).WithClients(&NilClientProvider{}),
 			},
 			token: &github.OIDCToken{
@@ -135,6 +141,11 @@ func TestHostedActionsProvenance(t *testing.T) {
 							"github_repository_owner": "",
 							"github_run_number":       "102937",
 							"github_sha1":             "abcde",
+						},
+						Parameters: WorkflowParameters{
+							VarsContext: github.VarsContext{
+								"REPO_VAR": "value",
+							},
 						},
 						ConfigSource: slsa02.ConfigSource{
 							Digest: slsacommon.DigestSet{

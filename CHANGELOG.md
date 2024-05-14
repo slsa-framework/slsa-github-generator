@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- toc -->
 
+- [Unreleased](#unreleased)
 - [v2.0.0](#v200)
   - [v2.0.0: Breaking Change: upload-artifact and download-artifact](#v200-breaking-change-upload-artifact-and-download-artifact)
   - [v2.0.0: Breaking Change: attestation-name Workflow Input and Output](#v200-breaking-change-attestation-name-workflow-input-and-output)
@@ -101,6 +102,11 @@ Information on the next release will be added here.
 Use the format "X.Y.Z: Go builder" etc. for format headers to avoid header name
 duplication."
 -->
+
+## Unreleased
+
+- GitHub `vars` context is now recorded in provenance for the generic and
+  container generators, Go builder, and BYOB builders.
 
 ## v2.0.0
 

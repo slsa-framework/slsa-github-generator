@@ -35,6 +35,7 @@ func checkTest(t *testing.T) func(err error) {
 
 func Test_generateCmd_default_predicate(t *testing.T) {
 	t.Setenv("GITHUB_CONTEXT", "{}")
+	t.Setenv("VARS_CONTEXT", "{}")
 
 	// Change to temporary dir
 	currentDir, err := os.Getwd()
@@ -69,6 +70,7 @@ func Test_generateCmd_default_predicate(t *testing.T) {
 
 func Test_generateCmd_custom_predicate(t *testing.T) {
 	t.Setenv("GITHUB_CONTEXT", "{}")
+	t.Setenv("VARS_CONTEXT", "{}")
 
 	// Change to temporary dir
 	currentDir, err := os.Getwd()
@@ -104,6 +106,7 @@ func Test_generateCmd_custom_predicate(t *testing.T) {
 
 func Test_generateCmd_invalid_path(t *testing.T) {
 	t.Setenv("GITHUB_CONTEXT", "{}")
+	t.Setenv("VARS_CONTEXT", "{}")
 
 	// Change to temporary dir
 	currentDir, err := os.Getwd()
