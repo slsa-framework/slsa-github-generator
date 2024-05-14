@@ -83,7 +83,7 @@ inputs:
     type: string
     required: false
 
-  slsa-workflow-vars:
+  slsa-vars:
     description: >
       A JSON object containing the vars to the Tool Reusable Workflow (TRW).
       The vars will be recorded in the provenance as the builder's inputs and
@@ -93,7 +93,7 @@ inputs:
     type: string
     required: true
 
-  slsa-workflow-masked-vars:
+  slsa-masked-vars:
     description: >
       A comma-separated list of vars to mask in the provenance.
       It should be used for fields that have low-entropy values

@@ -86,8 +86,8 @@ function run() {
             const workflowsInputsText = core.getInput("slsa-workflow-inputs");
             const workflowsInputsMask = core.getInput("slsa-workflow-masked-inputs");
             // The workflow vars are represented as a JSON object (vars context).
-            const workflowsVarsText = core.getInput("slsa-workflow-vars");
-            const workflowsVarsMask = core.getInput("slsa-workflow-masked-vars");
+            const workflowsVarsText = core.getInput("slsa-vars");
+            const workflowsVarsMask = core.getInput("slsa-masked-vars");
             // Log the inputs for troubleshooting.
             core.debug(`workflowsInputsText: ${workflowsInputsText}`);
             core.debug(`workfowInputs: `);
