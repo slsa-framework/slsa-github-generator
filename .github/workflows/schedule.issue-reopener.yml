@@ -1,4 +1,4 @@
-# Copyright 2023 SLSA Authors
+# Copyright 2024 SLSA Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,21 +12,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-name: PR Title
+name: "TODO Issue Reopener"
 
 on:
-  pull_request:
-    types: [opened, edited, reopened, synchronize]
-  merge_group:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 0 * * *"
 
-permissions: read-all
+permissions: {}
 
 jobs:
-  validate:
-    name: Validate PR Title
+  issue-reopener:
     runs-on: ubuntu-latest
+    permissions:
+      issues: write
     steps:
-      - uses: thehanimo/pr-title-checker@1d8cd483a2b73118406a187f54dca8a9415f1375 # v1.4.2
-        with:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          configuration_path: ".github/pr-title-checker-config.json"
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+      - name: Issue Reopener
+        uses: ianlewis/todo-issue-reopener@8727d6c42adc4085ffb838abcfe92e646c1f40bd # v1.2.0
