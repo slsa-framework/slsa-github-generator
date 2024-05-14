@@ -83,6 +83,16 @@ inputs:
     type: string
     required: false
 
+  slsa-vars:
+    description: >
+      A JSON object containing the vars to the Tool Reusable Workflow (TRW).
+      The vars will be recorded in the provenance as the builder's inputs and
+      passed to the tool's build Action.
+
+      Note: The TRW is the reusable workflow calling this Action.
+    type: string
+    required: true
+
   slsa-masked-vars:
     description: >
       A comma-separated list of vars to mask in the provenance.
@@ -98,27 +108,7 @@ inputs:
 outputs:
   slsa-token:
     description: "SLSA token"
-    value: "${{ steps.setup-geneci.outputs.slsa-token }}"
 
 runs:
-  # This action is a simple composite action wrapper around the JavaScript
-  # action .github/actions/setup-generic. We do this to capture the vars context without
-  # requiring TRWs to pass it explicitly.
-  using: "composite"
-  steps:
-    - name: Generate SLSA Token
-      id: setup-generic
-      uses: slsa-framework/slsa-github-generator/.github/actions/setup-generic@main
-      with:
-        slsa-version: ${{ inputs.slsa-version }}
-        slsa-workflow-recipient: ${{ inputs.slsa-workflow-recipient }}
-        slsa-rekor-log-public: ${{ inputs.slsa-rekor-log-public }}
-        slsa-build-action-path: ${{ inputs.slsa-build-action-path }}
-        slsa-checkout-sha1: ${{ inputs.slsa-checkout-sha1 }}
-        slsa-runner-label: ${{ inputs.slsa-runner-label }}
-        slsa-checkout-fetch-depth: ${{ inputs.slsa-checkout-fetch-depth }}
-        slsa-workflow-inputs: ${{ inputs.slsa-workflow-inputs }}
-        slsa-workflow-masked-inputs: ${{ inputs.slsa-workflow-masked-inputs }}
-        # NOTE: The vars context is available to all actions and workflows running in the repo.
-        slsa-vars: ${{ toJSON(vars) }}
-        slsa-masked-vars: ${{ inputs.slsa-masked-vars }}
+  using: "node20"
+  main: "dist/index.js"
