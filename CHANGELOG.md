@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 <!-- toc -->
 
 - [Unreleased](#unreleased)
+  - [Unreleased: Vars context recorded in provenance](#unreleased-vars-context-recorded-in-provenance)
 - [v2.0.0](#v200)
   - [v2.0.0: Breaking Change: upload-artifact and download-artifact](#v200-breaking-change-upload-artifact-and-download-artifact)
   - [v2.0.0: Breaking Change: attestation-name Workflow Input and Output](#v200-breaking-change-attestation-name-workflow-input-and-output)
@@ -105,8 +106,10 @@ duplication."
 
 ## Unreleased
 
-- GitHub `vars` context is now recorded in provenance for the generic and
-  container generators, Go builder, and BYOB builders.
+### Unreleased: Vars context recorded in provenance
+
+- **Updated**: GitHub `vars` context is now recorded in provenance for the generic and
+  container generators, and Go builder.
 
 ## v2.0.0
 
