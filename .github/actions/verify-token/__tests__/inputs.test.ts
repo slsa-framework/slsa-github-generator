@@ -20,9 +20,10 @@ import { updateSLSAToken } from "../src/inputs";
 import { rawTokenInterface } from "../src/types";
 
 describe("updateSLSAToken", () => {
-  it("no inputs", async () => {
-    const inputs = JSON.parse("{}");
-    const token = createToken(inputs);
+  it("no inputs, no vars", async () => {
+    const inputs = new Map<string, string>();
+    const vars = new Map<string, string>();
+    const token = createToken(inputs, vars);
     const content = `
 on:
   workflow_call:
@@ -33,11 +34,12 @@ on:
     );
   });
 
-  it("remove bool", async () => {
+  it("remove bool input", async () => {
     const inputs = JSON.parse(
       '{"name1": "value1", "name2": 2, "name3": "", "name4": true}',
     );
-    const token = createToken(inputs);
+    const vars = new Map<string, string>();
+    const token = createToken(inputs, vars);
     const content = `
 on:
   workflow_call:
@@ -61,11 +63,12 @@ on:
     );
   });
 
-  it("remove empty string", async () => {
+  it("remove empty string input", async () => {
     const inputs = JSON.parse(
       '{"name1": "value1", "name2": 2, "name3": "", "name4": true}',
     );
-    const token = createToken(inputs);
+    const vars = new Map<string, string>();
+    const token = createToken(inputs, vars);
     const content = `
 on:
   workflow_call:
@@ -89,11 +92,12 @@ on:
     );
   });
 
-  it("remove integer", async () => {
+  it("remove integer input", async () => {
     const inputs = JSON.parse(
       '{"name1": "value1", "name2": 2, "name3": "", "name4": true}',
     );
-    const token = createToken(inputs);
+    const vars = new Map<string, string>();
+    const token = createToken(inputs, vars);
     const content = `
 on:
   workflow_call:
@@ -117,11 +121,12 @@ on:
     );
   });
 
-  it("remove string", async () => {
+  it("remove string input", async () => {
     const inputs = JSON.parse(
       '{"name1": "value1", "name2": 2, "name3": "", "name4": true}',
     );
-    const token = createToken(inputs);
+    const vars = new Map<string, string>();
+    const token = createToken(inputs, vars);
     const content = `
 on:
   workflow_call:
@@ -146,22 +151,12 @@ on:
   });
 
   it("no 'on' field", async () => {
-    const inputs = JSON.parse(
-      '{"name1": "value1", "name2": 2, "name3": "", "name4": true}',
-    );
-    const token = createToken(inputs);
+    const inputs = new Map<string, string>();
+    const vars = new Map<string, string>();
+    const token = createToken(inputs, vars);
     const content = `
 ona:
   workflow_call:
-    secrets:
-      registry-password:
-    inputs:
-        name1:
-            required: false
-        name3:
-            required: false
-        name4:
-            required: false
 `;
 
     expect(() => {
@@ -170,22 +165,12 @@ ona:
   });
 
   it("no 'workflow_call' field", async () => {
-    const inputs = JSON.parse(
-      '{"name1": "value1", "name2": 2, "name3": "", "name4": true}',
-    );
-    const token = createToken(inputs);
+    const inputs = new Map<string, string>();
+    const vars = new Map<string, string>();
+    const token = createToken(inputs, vars);
     const content = `
 on:
   workflow_calla:
-    secrets:
-      registry-password:
-    inputs:
-        name1:
-            required: false
-        name3:
-            required: false
-        name4:
-            required: false
 `;
 
     expect(() => {
@@ -197,7 +182,8 @@ on:
     const inputs = JSON.parse(
       '{"name1": "value1", "name2": 2, "name3": "", "name4": true}',
     );
-    const token = createToken(inputs);
+    const vars = new Map<string, string>();
+    const token = createToken(inputs, vars);
     const content = `
 on:
   workflow_call:
@@ -214,7 +200,8 @@ on:
     const inputs = JSON.parse(
       '{"name1": "value1", "name2": 2, "name3": "", "name4": true}',
     );
-    const token = createToken(inputs);
+    const vars = new Map<string, string>();
+    const token = createToken(inputs, vars);
     const content = `
 on:
   workflow_call:
@@ -229,8 +216,9 @@ on:
   });
 
   it("no 'inputs' field no workflow inputs", async () => {
-    const inputs = JSON.parse("{}");
-    const token = createToken(inputs);
+    const inputs = new Map<string, string>();
+    const vars = new Map<string, string>();
+    const token = createToken(inputs, vars);
     const content = `
 on:
   workflow_call:
@@ -244,8 +232,9 @@ on:
   });
 
   it("empty 'inputs' field no workflow inputs", async () => {
-    const inputs = JSON.parse("{}");
-    const token = createToken(inputs);
+    const inputs = new Map<string, string>();
+    const vars = new Map<string, string>();
+    const token = createToken(inputs, vars);
     const content = `
 on:
   workflow_call:
@@ -262,6 +251,7 @@ on:
 
 function createToken(
   inputs: Map<string, string | number | boolean>,
+  vars: Map<string, string>,
 ): rawTokenInterface {
   const token: rawTokenInterface = {
     version: 1,
@@ -314,6 +304,8 @@ function createToken(
       },
       inputs: inputs,
       masked_inputs: [],
+      vars: vars,
+      masked_vars: [],
     },
   };
   return token;

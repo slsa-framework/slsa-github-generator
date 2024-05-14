@@ -147,7 +147,9 @@ describe("validateFieldNonEmpty", () => {
 
 function createToken(
   inputs: Map<string, string | number | boolean>,
-  masked: string[],
+  maskedInputs: string[],
+  vars: Map<string, string>,
+  maskedVars: string[],
 ): rawTokenInterface {
   const token: rawTokenInterface = {
     version: 1,
@@ -199,7 +201,9 @@ function createToken(
         },
       },
       inputs: inputs,
-      masked_inputs: masked,
+      masked_inputs: maskedInputs,
+      vars: vars,
+      masked_vars: maskedVars,
     },
   };
   return token;
@@ -210,8 +214,10 @@ describe("validateAndMaskInputs", () => {
     const inputs = JSON.parse(
       '{"name1": "value1", "name2": 2, "name3": "", "name4": true}',
     );
-    const masked = ["name2", "name3", "name4"];
-    const token = createToken(inputs, masked);
+    const maskedInputs = ["name2", "name3", "name4"];
+    const vars = new Map<string, string>();
+    const maskedVars: string[] = [];
+    const token = createToken(inputs, maskedInputs, vars, maskedVars);
     expect(validateAndMaskInputs(token).tool.inputs).toEqual(
       new Map<string, string | number | boolean>([
         ["name1", "value1"],
@@ -226,8 +232,10 @@ describe("validateAndMaskInputs", () => {
     const inputs = JSON.parse(
       '{"name1": "value1", "name2": 2, "name3": "", "name4": true}',
     );
-    const masked = ["name2"];
-    const token = createToken(inputs, masked);
+    const maskedInputs = ["name2"];
+    const vars = new Map<string, string>();
+    const maskedVars: string[] = [];
+    const token = createToken(inputs, maskedInputs, vars, maskedVars);
     expect(validateAndMaskInputs(token).tool.inputs).toEqual(
       new Map<string, string | number | boolean>([
         ["name1", "value1"],
@@ -242,8 +250,10 @@ describe("validateAndMaskInputs", () => {
     const inputs = JSON.parse(
       '{"name1": "value1", "name2": 2, "name3": "", "name4": true}',
     );
-    const masked = [""];
-    const token = createToken(inputs, masked);
+    const maskedInputs = [""];
+    const vars = new Map<string, string>();
+    const maskedVars: string[] = [];
+    const token = createToken(inputs, maskedInputs, vars, maskedVars);
     expect(validateAndMaskInputs(token).tool.inputs).toEqual(
       new Map<string, string | number | boolean>([
         ["name1", "value1"],
@@ -258,8 +268,10 @@ describe("validateAndMaskInputs", () => {
     const inputs = JSON.parse(
       '{"name1": "value1", "name2": 2, "name3": "", "name4": true}',
     );
-    const masked = ["does-not-exist"];
-    const token = createToken(inputs, masked);
+    const maskedInputs = ["does-not-exist"];
+    const vars = new Map<string, string>();
+    const maskedVars: string[] = [];
+    const token = createToken(inputs, maskedInputs, vars, maskedVars);
     expect(() => {
       validateAndMaskInputs(token);
     }).toThrow();
