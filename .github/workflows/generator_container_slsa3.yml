@@ -266,6 +266,7 @@ jobs:
           UNTRUSTED_IMAGE: "${{ inputs.image }}"
           UNTRUSTED_DIGEST: "${{ inputs.digest }}"
           GITHUB_CONTEXT: "${{ toJSON(github) }}"
+          VARS_CONTEXT: "${{ toJSON(vars) }}"
           UNTRUSTED_PROVENANCE_REPOSITORY: "${{ inputs.provenance-repository }}"
         run: |
           set -euo pipefail
