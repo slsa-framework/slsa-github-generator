@@ -991,13 +991,15 @@ function validateGitHubFields(gho) {
 }
 exports.validateGitHubFields = validateGitHubFields;
 function validateAndMaskInputs(slsaToken) {
-    const toolInputs = slsaToken.tool.masked_inputs;
+    let toolInputs = slsaToken.tool.masked_inputs;
     slsaToken.tool.inputs = (0, utils_1.asMap)(slsaToken.tool.inputs);
+    let toolVars = slsaToken.tool.masked_vars;
+    slsaToken.tool.vars = (0, utils_1.asMap)(slsaToken.tool.vars);
     if (toolInputs === undefined ||
         // If TRW provides an empty argument, it's a 1-length array
         // with an empty string value.
         (toolInputs.length === 1 && toolInputs[0].length === 0)) {
-        return slsaToken;
+        toolInputs = [];
     }
     for (const key of toolInputs) {
         // verify non-empty keys.
@@ -1009,6 +1011,23 @@ function validateAndMaskInputs(slsaToken) {
         }
         // NOTE: This mask is the same used by GitHub for encrypted secrets and masked values.
         slsaToken.tool.inputs.set(key, "***");
+    }
+    if (toolVars === undefined ||
+        // If TRW provides an empty argument, it's a 1-length array
+        // with an empty string value.
+        (toolVars.length === 1 && toolVars[0].length === 0)) {
+        toolVars = [];
+    }
+    for (const key of toolVars) {
+        // verify non-empty keys.
+        if (key === undefined || key.trim().length === 0) {
+            throw new Error("empty key in the vars map");
+        }
+        if (!slsaToken.tool.vars.has(key)) {
+            throw new Error(`var '${key}' does not exist in the vars map`);
+        }
+        // NOTE: This mask is the same used by GitHub for encrypted secrets and masked values.
+        slsaToken.tool.vars.set(key, "***");
     }
     return slsaToken;
 }
