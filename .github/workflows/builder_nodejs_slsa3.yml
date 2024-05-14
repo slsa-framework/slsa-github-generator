@@ -89,7 +89,8 @@ jobs:
     steps:
       - name: Generate the token
         id: generate
-        uses: slsa-framework/slsa-github-generator/actions/delegator/setup-generic@main
+        # uses: slsa-framework/slsa-github-generator/actions/delegator/setup-generic@main
+        uses: ianlewis/slsa-github-generator/actions/delegator/setup-generic@1555-feature-report-variables-in-provenance
         with:
           slsa-workflow-recipient: "delegator_lowperms-generic_slsa3.yml"
           slsa-rekor-log-public: ${{ inputs.rekor-log-public }}
