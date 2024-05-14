@@ -102,6 +102,11 @@ Use the format "X.Y.Z: Go builder" etc. for format headers to avoid header name
 duplication."
 -->
 
+## Unreleased
+
+- GitHub `vars` context is now recorded in provenance for the generic and
+  container generators, Go builder, and BYOB builders.
+
 ## v2.0.0
 
 ### v2.0.0: Breaking Change: upload-artifact and download-artifact
