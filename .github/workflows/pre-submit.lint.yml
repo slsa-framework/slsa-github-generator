@@ -34,17 +34,16 @@ jobs:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
       - uses: actions/setup-node@5e21ff4d9bc1a8cf6de233a3057d20ec6b3fb69d # v3.8.1
         with:
-          node-version: 16
+          node-version: 20
       - run: make markdownlint
 
   markdown-toc:
     name: markdown-toc
     runs-on: ubuntu-latest
     steps:
-      - name: Setup Node.js 16
-        uses: actions/setup-node@5e21ff4d9bc1a8cf6de233a3057d20ec6b3fb69d # v3.8.1
+      - uses: actions/setup-node@5e21ff4d9bc1a8cf6de233a3057d20ec6b3fb69d # v3.8.1
         with:
-          node-version: 16
+          node-version: 20
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
       - run: make markdown-toc
       - name: markdown-toc
@@ -118,9 +117,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
-      - env:
-          YAMLLINT_VERSION: "1.26.3"
-        run: |
+      - run: |
           set -euo pipefail
 
           # Install yamllint
@@ -135,8 +132,17 @@ jobs:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
       - uses: actions/setup-node@5e21ff4d9bc1a8cf6de233a3057d20ec6b3fb69d # v3.8.1
         with:
-          node-version: 16
+          node-version: 20
       - run: make eslint
+
+  renovate-config-validator:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+      - uses: actions/setup-node@5e21ff4d9bc1a8cf6de233a3057d20ec6b3fb69d # v3.8.1
+        with:
+          node-version: 20
+      - run: make renovate-config-validator
 
   autogen:
     runs-on: ubuntu-latest
