@@ -41,7 +41,6 @@ jobs:
           node-version: 20
       - run: make format
       - name: Check for unformatted files
-        working-directory: ${{ matrix.action }}
         id: diff
         run: |
           set -euo pipefail
