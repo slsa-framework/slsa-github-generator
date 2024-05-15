@@ -58,8 +58,8 @@ jobs:
               run: gh pr checkout "$PR_NUMBER"
             - name: run-command
               run: |
-                find ./ -name "dist" -not -path "*/node_modules/*" \
-                  | xargs dirname \
+                find ./ -name "dist" -not -path "*/node_modules/*" -print0 \
+                  | xargs -0 dirname \
                   | xargs -I {} sh -c '(
                     echo "Updating {}" && \
                     cd {} && \
