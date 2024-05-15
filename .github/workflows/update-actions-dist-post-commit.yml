@@ -39,14 +39,19 @@ jobs:
             - name: checkout-pr
               env:
                   GH_TOKEN: ${{ github.token }}
-              run: gh pr checkout ${{ inputs.pr_number }}
+                  PR_NUMBER: ${{ inputs.pr_number }}
+              run: gh pr checkout "$PR_NUMBER"
             - name: run-command
               run: |
-                (
-                    cd ./actions/installer/dist/../ && \
-                    make clean && \
-                    make package
-                )
+                find ./ -name "dist" -not -path "*/node_modules/*" \
+                  | xargs dirname \
+                  | xargs -I {} sh -c '(
+                    echo "Updating {}" && \
+                    cd {} && \
+                    make clean \
+                    && make package
+                  )'
+
             - name: diff
               id: diff
               run: |
@@ -75,7 +80,8 @@ jobs:
             - name: checkout-pr
               env:
                   GH_TOKEN: ${{ github.token }}
-              run: gh pr checkout ${{ inputs.pr_number }}
+                  PR_NUMBER: ${{ inputs.pr_number }}
+              run: gh pr checkout "$PR_NUMBER"
             - name: download-patch
               uses: actions/download-artifact@c850b930e6ba138125429b7e5c93fc707a7f8427 # v4.1.4
               with:
