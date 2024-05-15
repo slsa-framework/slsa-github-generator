@@ -1,0 +1,96 @@
+# A workflow to run against renovate-bot's PRs,
+# such as `make package` after it updates the package.json and package-lock.json files.
+
+# The potentially untrusted code is first run inside a low-privilege Job, and the diff is uploaded as an artifact.
+# Then a higher-privilege Job applies the diff and pushes the changes to the PR.
+# It's important to only run this workflow against PRs from trusted sources, after also reviewing the changes!
+
+# There have been vulnerabilities with using `git apply` https://github.blog/2023-04-25-git-security-vulnerabilities-announced-4/
+# At this point a compromised git binary cannot modify any of this repo's branches, only the PR fork's branch,
+# due to our branch protection rules and CODEOWNERS.
+# It aslso cannot submit a new release or modify exsiting releases due to tag protection rules.
+
+name: Update actions dist post-commit
+
+permissions: {}
+
+on:
+    workflow_dispatch:
+        inputs:
+            pr_number:
+                description: "The pull request number."
+                required: true
+                type: number
+
+jobs:
+    diff:
+        permissions:
+            # This Job executes the PR's untrusted code, so it must how low permissions.
+            pull-requests: read
+        outputs:
+            patch_not_empty: ${{ steps.diff.outputs.patch_not_empty }}
+        runs-on: ubuntu-latest
+        steps:
+            - name: checkout
+              uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+              with:
+                  repository: ${{ github.repository }}
+                  persist-credentials: false
+            - name: checkout-pr
+              env:
+                  GH_TOKEN: ${{ github.token }}
+              run: gh pr checkout ${{ inputs.pr_number }}
+            - name: run-command
+              run: |
+                (
+                    cd ./actions/installer/dist/../ && \
+                    make clean && \
+                    make package
+                )
+            - name: diff
+              id: diff
+              run: |
+                  git add .
+                  git status
+                  git diff HEAD > changes.patch
+                  [ -z "$(cat changes.patch)" ] && RESULT=false || RESULT=true
+                  echo "patch_not_empty=$RESULT" >> "$GITHUB_OUTPUT"
+            - name: upload
+              uses: actions/upload-artifact@5d5d22a31266ced268874388b861e4b58bb5c2f3 # v4.3.1
+              with:
+                  name: changes.patch
+                  path: changes.patch
+
+    push:
+        if: needs.diff.outputs.patch_not_empty == 'true'
+        needs: diff
+        runs-on: ubuntu-latest
+        permissions:
+            # This Job does not run untrusted code, but it does need to push changes to the PR's branch.
+            pull-requests: read
+            contents: write
+        steps:
+            - name: checkout
+              uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+            - name: checkout-pr
+              env:
+                  GH_TOKEN: ${{ github.token }}
+              run: gh pr checkout ${{ inputs.pr_number }}
+            - name: download-patch
+              uses: actions/download-artifact@c850b930e6ba138125429b7e5c93fc707a7f8427 # v4.1.4
+              with:
+                  name: changes.patch
+            - id: apply
+              run: |
+                  git apply changes.patch
+                  rm changes.patch
+            # example from
+            # https://github.com/actions/checkout/blob/cd7d8d697e10461458bc61a30d094dc601a8b017/README.md#push-a-commit-using-the-built-in-token
+            - name: push
+              run: |
+                  git config user.name github-actions
+                  git config user.email github-actions@github.com
+                  git add .
+                  git status
+                  git commit -m "update actions dist"
+                  git push
