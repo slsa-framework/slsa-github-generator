@@ -26,6 +26,8 @@ welcome!
     - [Development Basics](#development-basics)
     - [Make your changes](#make-your-changes)
     - [Run tests](#run-tests)
+    - [Updating Github Actions Dependencies](#updating-github-actions-dependencies)
+      - [Renovate-Bot PRs](#renovate-bot-prs)
     - [Submit a PR](#submit-a-pr)
   - [Preferred Languages](#preferred-languages)
 - [Testing](#testing)
