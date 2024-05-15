@@ -98,5 +98,5 @@ jobs:
                   git config user.email github-actions@github.com
                   git add .
                   git status
-                  git commit -m "update actions dist"
+                  git commit -s -m "update actions dist"
                   git push
