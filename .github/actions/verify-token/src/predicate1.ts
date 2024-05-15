@@ -124,8 +124,10 @@ export async function createPredicate(
       // BYOB framework. Some of these values may be masked by the TRW.
       // NOTE: the Map object needs to be converted to an object to serialize to JSON.
       inputs: Object.fromEntries(rawTokenObj.tool.inputs),
-      // Variables are always empty for BYOB / builders.
-      vars: {},
+
+      // BYOB TRW workflows could potentially allow arbitrary untrusted code to
+      // be run which may make use of vars if used in the TCA.
+      vars: Object.fromEntries(rawTokenObj.tool.vars),
     };
   }
 

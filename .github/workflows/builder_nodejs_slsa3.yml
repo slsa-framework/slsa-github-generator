@@ -97,6 +97,7 @@ jobs:
           slsa-build-action-path: "./internal/builders/nodejs"
           slsa-version: "v0.2"
           slsa-workflow-inputs: ${{ toJson(inputs) }}
+          slsa-vars: ${{ toJson(vars) }}
 
   slsa-run:
     needs: [slsa-setup]

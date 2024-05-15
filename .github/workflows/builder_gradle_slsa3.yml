@@ -78,13 +78,14 @@ jobs:
           slsa-runner-label: "ubuntu-latest"
           slsa-build-action-path: "./internal/builders/gradle"
           slsa-workflow-inputs: ${{ toJson(inputs) }}
+          slsa-vars: ${{ toJson(vars) }}
 
   slsa-run:
     needs: [slsa-setup]
     permissions:
       id-token: write # For signing.
       contents: read # For asset uploads.
-      actions: read   # For the entrypoint.
+      actions: read # For the entrypoint.
     uses: slsa-framework/slsa-github-generator/.github/workflows/delegator_lowperms-generic_slsa3.yml@main
     with:
       slsa-token: ${{ needs.slsa-setup.outputs.slsa-token }}
