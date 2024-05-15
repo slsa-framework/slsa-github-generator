@@ -268,7 +268,7 @@ yamllint: ## Runs the yamllint linter.
 
 .PHONY: renovate-config-validator
 renovate-config-validator: node_modules/.installed ## Runs renovate-config-validator
-	@npm run renovate-config-validator --strict
+	@npm run renovate-config-validator
 
 ## Maintenance
 #####################################################################
