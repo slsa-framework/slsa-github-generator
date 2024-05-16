@@ -157,7 +157,7 @@ markdown-toc: node_modules/.installed ## Runs markdown-toc on markdown files.
 		md_files=$$( \
 			git ls-files \
 				'*.md' '**/*.md' \
-				':!:*/.github/ISSUE_TEMPLATE/*.md' \
+				':!:.github/ISSUE_TEMPLATE/*.md' \
 				':!:third_party/*' ':!:third_party/**/*' \
 		); \
 		for filename in $${md_files}; do \
