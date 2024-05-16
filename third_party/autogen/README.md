@@ -62,21 +62,21 @@ The flag `--no-runline` skips adding runline to source files.
 
 Sample outputs:
 
-- [Apache 2.0, Haskell](tests/testdata/apache-acme-hs.out)
-- [3-clause BSD, Erlang](tests/testdata/bsd3-acme-erl.out)
-- [GPL 2, Ruby](tests/testdata/gpl2-acme-rb.out)
-- [LGPL 2.1, C++](tests/testdata/lgpl2.1-acme-cpp.out)
-- [MIT, Makefile](tests/testdata/mit-acme-makefile.out)
+* [Apache 2.0, Haskell](tests/testdata/apache-acme-hs.out)
+* [3-clause BSD, Erlang](tests/testdata/bsd3-acme-erl.out)
+* [GPL 2, Ruby](tests/testdata/gpl2-acme-rb.out)
+* [LGPL 2.1, C++](tests/testdata/lgpl2.1-acme-cpp.out)
+* [MIT, Makefile](tests/testdata/mit-acme-makefile.out)
 
 ## Developing
 
 To add a new file type or feature, change [`autogen`](autogen) and add
 several files to the [`tests/testdata`](tests/testdata) directory, namely:
 
-- `<feature>.in` - the input file containing command-line args to pass
+* `<feature>.in` - the input file containing command-line args to pass
   to `autogen`
-- `<feature>.out` - expected stdout for the test
-- `<feature>.err` - expected stderr for the test
+* `<feature>.out` - expected stdout for the test
+* `<feature>.err` - expected stderr for the test
 
 To generate the `*.out` and `*.err` files automatically, just add the `*.in`
 files and run `regen_testdata.sh`. Then, examine the resulting `*.out` and
@@ -98,8 +98,8 @@ bazel test //...
 
 ## Related work
 
-- [addlicense](https://github.com/google/addlicense)
-- [License Up](https://github.com/nikitavoloboev/license-up)
+* [addlicense](https://github.com/google/addlicense)
+* [License Up](https://github.com/nikitavoloboev/license-up)
 
 ## Contributing
 
