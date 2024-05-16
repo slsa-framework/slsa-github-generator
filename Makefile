@@ -56,7 +56,12 @@ go-test: ## Run Go unit tests.
 ts-test: ## Run TypeScript tests.
 	@# Run unit tests for all TS actions where tests are found.
 	@set -e;\
-		PATHS=$$(find .github/actions/ actions/ -not -path '*/node_modules/*' -name __tests__ -type d | xargs dirname); \
+		PATHS=$$( \
+			find .github/actions/ actions/ \
+				-name __tests__ -type d \
+				-not -path '*/node_modules/*' \
+				-not -iwholename '*/third_party/*' | xargs dirname \
+		); \
 		for path in $$PATHS; do \
 			make -C $$path unit-test; \
 		done
@@ -65,20 +70,16 @@ ts-test: ## Run TypeScript tests.
 #####################################################################
 
 .PHONY: format
-format: yaml-format md-format ts-format go-format ## Runs all code formatters.
+format: yaml-format md-format ts-format go-format markdown-toc shfmt autogen ## Runs all code formatters.
 
 .PHONY: yaml-format
 yaml-format: node_modules/.installed ## Runs code formatter for YAML files.
 	@set -e;\
 		yml_files=$$( \
-			find . -type f \
-				\( \
-					-name '*.yml' -o \
-					-name '*.yaml' \
-				\) \
-				-not -iwholename '*/.git/*' \
-				-not -iwholename '*/vendor/*' \
-				-not -iwholename '*/node_modules/*' \
+			git ls-files \
+				'*.yaml' '**/*.yaml' \
+				'*.yml' '**/*.yml' \
+				':!:third_party/*' ':!:third_party/**/*' \
 		); \
 		for path in $$yml_files; do \
 			./node_modules/.bin/prettier --write $$path; \
@@ -88,10 +89,9 @@ yaml-format: node_modules/.installed ## Runs code formatter for YAML files.
 md-format: node_modules/.installed ## Runs code formatter for Markdown files.
 	@set -e;\
 		md_files=$$( \
-			find . -type f -name '*.md' \
-				-not -iwholename '*/.git/*' \
-				-not -iwholename '*/vendor/*' \
-				-not -iwholename '*/node_modules/*' \
+			git ls-files \
+				'*.md' '**/*.md' \
+				':!:third_party/*' ':!:third_party/**/*' \
 		); \
 		for path in $$md_files; do \
 			./node_modules/.bin/prettier --write $$path; \
@@ -100,7 +100,12 @@ md-format: node_modules/.installed ## Runs code formatter for Markdown files.
 .PHONY: ts-format
 ts-format: ## Runs code formatter for TypeScript files.
 	@set -e;\
-		actions_paths=$$(find .github/actions/ actions/ -not -path '*/node_modules/*' -name package.json -type f | xargs dirname); \
+		actions_paths=$$( \
+			find .github/actions/ actions/ \
+				-name package.json -type f \
+				-not -path '*/node_modules/*' \
+				-not -iwholename '*/third_party/*' | xargs dirname \
+		); \
 		for path in $$actions_paths; do \
 			make -C $$path format; \
 		done
@@ -109,10 +114,9 @@ ts-format: ## Runs code formatter for TypeScript files.
 go-format: ## Runs code formatter for Go files.
 	@set -e;\
 		go_files=$$( \
-			find . -type f -name '*.go' \
-				-not -iwholename '*/.git/*' \
-				-not -iwholename '*/vendor/*' \
-				-not -iwholename '*/node_modules/*' \
+			git ls-files \
+				'*.go' '**/*.go' \
+				':!:third_party/*' ':!:third_party/**/*' \
 		); \
 		for path in $$go_files; do \
 			gofumpt -w $$path; \
@@ -125,24 +129,21 @@ LICENSE ?= apache
 autogen: ## Runs autogen on code files.
 	@set -euo pipefail; \
 		code_files=$$( \
-			find . -type f \
-				\( \
-					-name '*.go' -o \
-					-name '*.ts' -o \
-					-name '*.sh' -o \
-					-name '*.yaml' -o \
-					-name '*.yml' -o \
-					-name 'Makefile' \
-				\) \
-				-not -iwholename '*/.git/*' \
-				-not -iwholename '*/vendor/*' \
-				-not -iwholename '*/node_modules/*' \
+			git ls-files \
+				'*.go' '**/*.go' \
+				'*.ts' '**/*.ts' \
+				'*.sh' '**/*.sh' \
+				'*.yaml' '**/*.yaml' \
+				'*.yml' '**/*.yml' \
+				'Makefile' \
+				':!:third_party/*' ':!:third_party/**/*' \
 		); \
+		git_root="$$(git rev-parse --show-toplevel)"; \
 		for filename in $${code_files}; do \
 			if ! ( head "$${filename}" | grep -iL $(COPYRIGHT) > /dev/null ); then \
 				echo $${filename}; \
 				cd $$(dirname "$${filename}"); \
-				autogen -i --no-code --no-tlc -c $(COPYRIGHT) -l $(LICENSE) $$(basename "$${filename}"); \
+				"$${git_root}/third_party/autogen/autogen.sh" -i --no-code --no-tlc -c $(COPYRIGHT) -l $(LICENSE) $$(basename "$${filename}"); \
 				cd - > /dev/null; \
 			fi; \
 		done
@@ -154,14 +155,28 @@ markdown-toc: node_modules/.installed ## Runs markdown-toc on markdown files.
 	@# See: https://github.com/jonschlinkert/markdown-toc/issues/151
 	@set -euo pipefail; \
 		md_files=$$( \
-			find . -name '*.md' -type f \
-				-not -iwholename '*/.git/*' \
-				-not -iwholename '*/vendor/*' \
-				-not -iwholename '*/node_modules/*' \
-				-not -iwholename '*/.github/ISSUE_TEMPLATE/*' \
+			git ls-files \
+				'*.md' '**/*.md' \
+				':!:*/.github/ISSUE_TEMPLATE/*.md' \
+				':!:third_party/*' ':!:third_party/**/*' \
 		); \
 		for filename in $${md_files}; do \
 			npm run markdown-toc "$${filename}"; \
+		done;
+
+.PHONY: shfmt
+shfmt: ## Runs the shfmt formatter.
+	@set -e;\
+		sh_files=$$( \
+			find . -type f \
+				-not -iwholename '*/.git/*' \
+				-not -iwholename '*/vendor/*' \
+				-not -iwholename '*/node_modules/*' \
+				-not -iwholename '*/third_party/*' \
+				-exec bash -c 'file "$$1" | cut -d':' -f2 | grep --quiet shell' _ {} \; -print \
+		); \
+		for filename in $${sh_files}; do \
+			shfmt -w -i 2 "$${filename}"; \
 		done;
 
 ## Linters
@@ -220,7 +235,14 @@ SHELLCHECK_ARGS = --severity=style --external-sources
 .PHONY: shellcheck
 shellcheck: ## Runs the shellcheck linter.
 	@set -e;\
-		files=$$(find . -type f -not -iwholename '*/.git/*' -not -iwholename '*/vendor/*' -not -iwholename '*/node_modules/*' -exec bash -c 'file "$$1" | cut -d':' -f2 | grep --quiet shell' _ {} \; -print); \
+		files=$$( \
+			find . -type f \
+				-not -iwholename '*/.git/*' \
+				-not -iwholename '*/vendor/*' \
+				-not -iwholename '*/node_modules/*' \
+				-not -iwholename '*/third_party/*' \
+				-exec bash -c 'file "$$1" | cut -d':' -f2 | grep --quiet shell' _ {} \; -print \
+		); \
 		if [ "$(OUTPUT_FORMAT)" == "github" ]; then \
 			exit_code=0; \
 			while IFS="" read -r p && [ -n "$$p" ]; do \
@@ -252,7 +274,11 @@ shellcheck: ## Runs the shellcheck linter.
 .PHONY: eslint
 eslint: ## Runs the eslint linter.
 	@set -e;\
-		PATHS=$$(find .github/actions/ actions/ -not -path '*/node_modules/*' -name package.json -type f | xargs dirname); \
+		PATHS=$$( \
+			find .github/actions/ actions/ \
+				-name package.json -type f \
+				-not -path '*/node_modules/*' \
+				-not -path '*/third_party/*' | xargs dirname); \
 		for path in $$PATHS; do \
 			make -C $$path lint; \
 		done

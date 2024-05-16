@@ -61,18 +61,6 @@ jobs:
           node-version: 20
       - run: make markdownlint
 
-  markdown-toc:
-    name: markdown-toc
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/setup-node@5e21ff4d9bc1a8cf6de233a3057d20ec6b3fb69d # v3.8.1
-        with:
-          node-version: 20
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
-      - run: make markdown-toc
-      - name: markdown-toc
-        run: ./.github/workflows/scripts/pre-submit.markdown/markdown-toc.sh
-
   golangci-lint:
     runs-on: ubuntu-latest
     steps:
@@ -167,24 +155,3 @@ jobs:
         with:
           node-version: 20
       - run: make renovate-config-validator
-
-  autogen:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
-        with:
-          repository: mbrukman/autogen
-          ref: 9026b78e17573b5dda4bff79033c352443551dc5
-          path: autogen
-      - run: |
-          echo "${GITHUB_WORKSPACE}/autogen" >> "${GITHUB_PATH}"
-      - run: make autogen
-      - name: check diff
-        run: |
-          set -euo pipefail
-          if [ "$(GIT_PAGER="cat" git diff --ignore-space-at-eol | wc -l)" -gt "0" ]; then
-              echo "Detected license header changes.  See status below:"
-              GIT_PAGER="cat" git diff
-              exit 1
-          fi

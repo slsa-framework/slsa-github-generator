@@ -20,6 +20,10 @@ welcome!
     - [Create a GitHub account](#create-a-github-account)
     - [Code of Conduct](#code-of-conduct)
     - [Setting up your development environment](#setting-up-your-development-environment)
+- [Conventions](#conventions)
+  - [Code style and formatting](#code-style-and-formatting)
+  - [Semantic Versioning](#semantic-versioning)
+  - [Conventional Commits](#conventional-commits)
   - [Making Changes](#making-changes)
     - [Create a fork](#create-a-fork)
     - [Create a test repo](#create-a-test-repo)
@@ -66,7 +70,7 @@ existing issue where you would like to contribute, or create a new issue. See
 
 ### Prerequisites
 
-Before submitting code, you should first complete the following
+Before starting development, you should first complete the following
 prerequisites.
 
 #### Create a GitHub account
@@ -91,19 +95,76 @@ are written in [YAML](https://yaml.org/) and make heavy use of Bash scripts.
 - [Install Go](https://go.dev/doc/install)
 - [Install Node.js](https://nodejs.org/en/download/)
 
-Some Node.js projects require Jest as a testing framework.
+This project also uses several formatters and linters in order to maintain code
+quality. If you wish to run these tools locally, follow the instructions for
+each of these to install them on your development machine.
 
-- [Install Jest](https://jestjs.io/docs/getting-started)
+- [`actionlint`] For linting GitHub actions workflows.
+- [`gofumpt`]: For formatting Go code.
+- [`golangci-lint`]: For linting Go code.
+- [`shfmt`]: For formatting shell code.
+- [`shellcheck`]: For linting shell code.
+- [`yamllint`]: For linting YAML.
 
-This project also uses several linters in order to maintain code quality. If you
-wish to run these linters locally, follow the instructions for each of these to
-install them on your development machine.
+The following tools are used but are vendored or installed automatically you
+don't need to install them.
 
-- [yamllint](https://yamllint.readthedocs.io/)
-- [golangci-lint](https://golangci-lint.run/)
-- [shellcheck](https://www.shellcheck.net/)
-- [eslint](https://eslint.org/) (NOTE: eslint is installed automatically so you
-  don't need to install it)
+- [`autogen`]: For maintaining license headers.
+- [`prettier`]: For formatting Markdown, YAML, and TypeScript code.
+- [`markdown-toc`]: For updating Table of Contents in markdown.
+- [`eslint`]: For linting TypeScript code
+
+## Conventions
+
+This section contains info on general software development conventions used by
+this project.
+
+### Code style and formatting
+
+Code, scripts, and documentation should be formatted using a formatting tool.
+
+1. Go code should be is formatted using [`gofumpt`].
+2. TypeScript code should be formatted using [`prettier`].
+3. YAML should be formatted using [`prettier`].
+4. Markdown should be formatted using [`prettier`].
+5. Shell scripts should be formatted using [`shfmt`].
+6. Markdown files may have a table of contents which should be synced using [`markdown-toc`].
+7. All code files should include a copyright notice and license header.
+
+You can format code by running `make format`. See
+[Prerequisites](#prerequisites) for more info on the required tools.
+
+### Semantic Versioning
+
+slsa-github-generator uses [Semantic Versioning] for release versions.
+
+This means that when creating a new release version, in general, given a version
+number MAJOR.MINOR.PATCH, increment the:
+
+1. MAJOR version when you make incompatible API changes
+2. MINOR version when you add functionality in a backward compatible manner
+3. PATCH version when you make backward compatible bug fixes
+
+### Conventional Commits
+
+PR titles should be in [Conventional Commits] format.
+
+The following prefixes are supported:
+
+1. `fix`: patches a bug
+2. `feat`: introduces a new feature
+3. `docs`: a change in the documentation.
+4. `chore`: a change that performs a task but doesn't change functionality, such as updating dependencies.
+5. `refactor`: a code change that improves code quality
+6. `style`: coding style or format changes
+7. `build`: changes that affect the build system
+8. `ci`: changes to CI/CD configuration files or scripts
+9. `perf`: change to improve performance
+10. `revert`: reverts a previous change
+11. `test`: adds missing tests or corrects existing tests
+
+See [pr-title-checker-config.json](.github/pr-title-checker-config.json) for the
+full configuration.
 
 ### Making Changes
 
@@ -170,6 +231,8 @@ changes are ready to go. See the [Testing](#testing) section for more info.
 #### Submit a PR
 
 Once your change is ready you can submit a PR via the website.
+
+Make sure your change adheres to the
 
 The title of your PR should include a [Conventional Commits] prefix label. For
 example, bug fixes should be prefixed with "fix:". PRs for new features should
@@ -268,3 +331,13 @@ Communication about bugs, usage, and new feature development is also done on
 [good first issue]: https://github.com/slsa-framework/slsa-github-generator/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22
 [help wanted]: https://github.com/slsa-framework/slsa-github-generator/issues?q=is%3Aissue+is%3Aopen+label%3A%22status%3Ahelp+wanted%22
 [open issues]: https://github.com/slsa-framework/slsa-github-generator/issues
+[`actionlint`]: https://github.com/rhysd/actionlint
+[`autogen`]: https://github.com/mbrukman/autogen
+[`eslint`]: https://eslint.org/
+[`gofumpt`]: https://github.com/mvdan/gofumpt
+[`golangci-lint`]: https://golangci-lint.run/
+[`markdown-toc`]: https://github.com/jonschlinkert/markdown-toc
+[`prettier`]: https://prettier.io/
+[`shellcheck`]: https://www.shellcheck.net/
+[`shfmt`]: https://github.com/patrickvane/shfmt
+[`yamllint`]: https://yamllint.readthedocs.io/
