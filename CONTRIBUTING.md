@@ -114,12 +114,12 @@ don't need to install them.
 - [`markdown-toc`]: For updating Table of Contents in markdown.
 - [`eslint`]: For linting TypeScript code
 
-## Conventions
+### Conventions
 
 This section contains info on general software development conventions used by
 this project.
 
-### Code style and formatting
+#### Code style and formatting
 
 Code, scripts, and documentation should be formatted using a formatting tool.
 
@@ -134,7 +134,7 @@ Code, scripts, and documentation should be formatted using a formatting tool.
 You can format code by running `make format`. See
 [Prerequisites](#prerequisites) for more info on the required tools.
 
-### Semantic Versioning
+#### Semantic Versioning
 
 slsa-github-generator uses [Semantic Versioning] for release versions.
 
@@ -145,7 +145,7 @@ number MAJOR.MINOR.PATCH, increment the:
 2. MINOR version when you add functionality in a backward compatible manner
 3. PATCH version when you make backward compatible bug fixes
 
-### Conventional Commits
+#### Conventional Commits
 
 PR titles should be in [Conventional Commits] format.
 
@@ -232,7 +232,8 @@ changes are ready to go. See the [Testing](#testing) section for more info.
 
 Once your change is ready you can submit a PR via the website.
 
-Make sure your change adheres to the
+Make sure your change adheres to the [Code style and formatting
+guidelines](#code-style-and-formatting).
 
 The title of your PR should include a [Conventional Commits] prefix label. For
 example, bug fixes should be prefixed with "fix:". PRs for new features should
