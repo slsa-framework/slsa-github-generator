@@ -20,10 +20,10 @@ welcome!
     - [Create a GitHub account](#create-a-github-account)
     - [Code of Conduct](#code-of-conduct)
     - [Setting up your development environment](#setting-up-your-development-environment)
-- [Conventions](#conventions)
-  - [Code style and formatting](#code-style-and-formatting)
-  - [Semantic Versioning](#semantic-versioning)
-  - [Conventional Commits](#conventional-commits)
+  - [Conventions](#conventions)
+    - [Code style and formatting](#code-style-and-formatting)
+    - [Semantic Versioning](#semantic-versioning)
+    - [Conventional Commits](#conventional-commits)
   - [Making Changes](#making-changes)
     - [Create a fork](#create-a-fork)
     - [Create a test repo](#create-a-test-repo)
@@ -340,5 +340,5 @@ Communication about bugs, usage, and new feature development is also done on
 [`markdown-toc`]: https://github.com/jonschlinkert/markdown-toc
 [`prettier`]: https://prettier.io/
 [`shellcheck`]: https://www.shellcheck.net/
-[`shfmt`]: https://github.com/patrickvane/shfmt
+[`shfmt`]: https://github.com/mvdan/sh
 [`yamllint`]: https://yamllint.readthedocs.io/
