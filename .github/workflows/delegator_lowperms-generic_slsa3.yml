@@ -297,9 +297,9 @@ jobs:
     env:
       RNG: ${{ needs.rng.outputs.value }}
     steps:
-      - uses: geekyeggo/delete-artifact@54ab544f12cdb7b71613a16a2b5a37a9ade990af # v2.0.0
+      - uses: geekyeggo/delete-artifact@24928e75e6e6590170563b8ddae9fac674508aa1 # v5.0.0
         with:
           name: "${{ env.RNG }}-${{ env.SLSA_PREDICATE_FILE }}"
-      - uses: geekyeggo/delete-artifact@54ab544f12cdb7b71613a16a2b5a37a9ade990af # v2.0.0
+      - uses: geekyeggo/delete-artifact@24928e75e6e6590170563b8ddae9fac674508aa1 # v5.0.0
         with:
           name: "${{ env.RNG }}-${{ env.SLSA_ARTIFACTS_FILE }}"
