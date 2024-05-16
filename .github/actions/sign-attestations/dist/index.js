@@ -3377,7 +3377,9 @@ const bundle_1 = __nccwpck_require__(2712);
 // Message signature bundle - $case: 'messageSignature'
 function toMessageSignatureBundle(options) {
     return {
-        mediaType: bundle_1.BUNDLE_V02_MEDIA_TYPE,
+        mediaType: options.singleCertificate
+            ? bundle_1.BUNDLE_V03_MEDIA_TYPE
+            : bundle_1.BUNDLE_V02_MEDIA_TYPE,
         content: {
             $case: 'messageSignature',
             messageSignature: {
@@ -3395,7 +3397,9 @@ exports.toMessageSignatureBundle = toMessageSignatureBundle;
 // DSSE envelope bundle - $case: 'dsseEnvelope'
 function toDSSEBundle(options) {
     return {
-        mediaType: bundle_1.BUNDLE_V02_MEDIA_TYPE,
+        mediaType: options.singleCertificate
+            ? bundle_1.BUNDLE_V03_MEDIA_TYPE
+            : bundle_1.BUNDLE_V02_MEDIA_TYPE,
         content: {
             $case: 'dsseEnvelope',
             dsseEnvelope: toEnvelope(options),
@@ -3427,12 +3431,20 @@ function toVerificationMaterial(options) {
 }
 function toKeyContent(options) {
     if (options.certificate) {
-        return {
-            $case: 'x509CertificateChain',
-            x509CertificateChain: {
-                certificates: [{ rawBytes: options.certificate }],
-            },
-        };
+        if (options.singleCertificate) {
+            return {
+                $case: 'certificate',
+                certificate: { rawBytes: options.certificate },
+            };
+        }
+        else {
+            return {
+                $case: 'x509CertificateChain',
+                x509CertificateChain: {
+                    certificates: [{ rawBytes: options.certificate }],
+                },
+            };
+        }
     }
     else {
         return {
@@ -3453,10 +3465,11 @@ function toKeyContent(options) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.isBundleWithDsseEnvelope = exports.isBundleWithMessageSignature = exports.isBundleWithPublicKey = exports.isBundleWithCertificateChain = exports.BUNDLE_V03_MEDIA_TYPE = exports.BUNDLE_V02_MEDIA_TYPE = exports.BUNDLE_V01_MEDIA_TYPE = void 0;
+exports.isBundleWithDsseEnvelope = exports.isBundleWithMessageSignature = exports.isBundleWithPublicKey = exports.isBundleWithCertificateChain = exports.BUNDLE_V03_MEDIA_TYPE = exports.BUNDLE_V03_LEGACY_MEDIA_TYPE = exports.BUNDLE_V02_MEDIA_TYPE = exports.BUNDLE_V01_MEDIA_TYPE = void 0;
 exports.BUNDLE_V01_MEDIA_TYPE = 'application/vnd.dev.sigstore.bundle+json;version=0.1';
 exports.BUNDLE_V02_MEDIA_TYPE = 'application/vnd.dev.sigstore.bundle+json;version=0.2';
-exports.BUNDLE_V03_MEDIA_TYPE = 'application/vnd.dev.sigstore.bundle+json;version=0.3';
+exports.BUNDLE_V03_LEGACY_MEDIA_TYPE = 'application/vnd.dev.sigstore.bundle+json;version=0.3';
+exports.BUNDLE_V03_MEDIA_TYPE = 'application/vnd.dev.sigstore.bundle.v0.3+json';
 // Type guards for bundle variants.
 function isBundleWithCertificateChain(b) {
     return b.verificationMaterial.content.$case === 'x509CertificateChain';
@@ -3517,7 +3530,7 @@ exports.ValidationError = ValidationError;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.isBundleV01 = exports.assertBundleV02 = exports.assertBundleV01 = exports.assertBundleLatest = exports.assertBundle = exports.envelopeToJSON = exports.envelopeFromJSON = exports.bundleToJSON = exports.bundleFromJSON = exports.ValidationError = exports.isBundleWithPublicKey = exports.isBundleWithMessageSignature = exports.isBundleWithDsseEnvelope = exports.isBundleWithCertificateChain = exports.BUNDLE_V03_MEDIA_TYPE = exports.BUNDLE_V02_MEDIA_TYPE = exports.BUNDLE_V01_MEDIA_TYPE = exports.toMessageSignatureBundle = exports.toDSSEBundle = void 0;
+exports.isBundleV01 = exports.assertBundleV02 = exports.assertBundleV01 = exports.assertBundleLatest = exports.assertBundle = exports.envelopeToJSON = exports.envelopeFromJSON = exports.bundleToJSON = exports.bundleFromJSON = exports.ValidationError = exports.isBundleWithPublicKey = exports.isBundleWithMessageSignature = exports.isBundleWithDsseEnvelope = exports.isBundleWithCertificateChain = exports.BUNDLE_V03_MEDIA_TYPE = exports.BUNDLE_V03_LEGACY_MEDIA_TYPE = exports.BUNDLE_V02_MEDIA_TYPE = exports.BUNDLE_V01_MEDIA_TYPE = exports.toMessageSignatureBundle = exports.toDSSEBundle = void 0;
 /*
 Copyright 2023 The Sigstore Authors.
 
@@ -3539,6 +3552,7 @@ Object.defineProperty(exports, "toMessageSignatureBundle", ({ enumerable: true, 
 var bundle_1 = __nccwpck_require__(2712);
 Object.defineProperty(exports, "BUNDLE_V01_MEDIA_TYPE", ({ enumerable: true, get: function () { return bundle_1.BUNDLE_V01_MEDIA_TYPE; } }));
 Object.defineProperty(exports, "BUNDLE_V02_MEDIA_TYPE", ({ enumerable: true, get: function () { return bundle_1.BUNDLE_V02_MEDIA_TYPE; } }));
+Object.defineProperty(exports, "BUNDLE_V03_LEGACY_MEDIA_TYPE", ({ enumerable: true, get: function () { return bundle_1.BUNDLE_V03_LEGACY_MEDIA_TYPE; } }));
 Object.defineProperty(exports, "BUNDLE_V03_MEDIA_TYPE", ({ enumerable: true, get: function () { return bundle_1.BUNDLE_V03_MEDIA_TYPE; } }));
 Object.defineProperty(exports, "isBundleWithCertificateChain", ({ enumerable: true, get: function () { return bundle_1.isBundleWithCertificateChain; } }));
 Object.defineProperty(exports, "isBundleWithDsseEnvelope", ({ enumerable: true, get: function () { return bundle_1.isBundleWithDsseEnvelope; } }));
@@ -3698,7 +3712,8 @@ function validateBundleBase(b) {
     const invalidValues = [];
     // Media type validation
     if (b.mediaType === undefined ||
-        !b.mediaType.startsWith('application/vnd.dev.sigstore.bundle+json;version=')) {
+        (!b.mediaType.match(/^application\/vnd\.dev\.sigstore\.bundle\+json;version=\d\.\d/) &&
+            !b.mediaType.match(/^application\/vnd\.dev\.sigstore\.bundle\.v\d\.\d\+json/))) {
         invalidValues.push('mediaType');
     }
     // Content-related validation
@@ -6754,11 +6769,11 @@ function isSet(value) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.TrustedRoot = exports.CertificateAuthority = exports.TransparencyLogInstance = void 0;
+exports.ClientTrustConfig = exports.SigningConfig = exports.TrustedRoot = exports.CertificateAuthority = exports.TransparencyLogInstance = void 0;
 /* eslint-disable */
 const sigstore_common_1 = __nccwpck_require__(2193);
 function createBaseTransparencyLogInstance() {
-    return { baseUrl: "", hashAlgorithm: 0, publicKey: undefined, logId: undefined };
+    return { baseUrl: "", hashAlgorithm: 0, publicKey: undefined, logId: undefined, checkpointKeyId: undefined };
 }
 exports.TransparencyLogInstance = {
     fromJSON(object) {
@@ -6767,6 +6782,7 @@ exports.TransparencyLogInstance = {
             hashAlgorithm: isSet(object.hashAlgorithm) ? (0, sigstore_common_1.hashAlgorithmFromJSON)(object.hashAlgorithm) : 0,
             publicKey: isSet(object.publicKey) ? sigstore_common_1.PublicKey.fromJSON(object.publicKey) : undefined,
             logId: isSet(object.logId) ? sigstore_common_1.LogId.fromJSON(object.logId) : undefined,
+            checkpointKeyId: isSet(object.checkpointKeyId) ? sigstore_common_1.LogId.fromJSON(object.checkpointKeyId) : undefined,
         };
     },
     toJSON(message) {
@@ -6776,6 +6792,8 @@ exports.TransparencyLogInstance = {
         message.publicKey !== undefined &&
             (obj.publicKey = message.publicKey ? sigstore_common_1.PublicKey.toJSON(message.publicKey) : undefined);
         message.logId !== undefined && (obj.logId = message.logId ? sigstore_common_1.LogId.toJSON(message.logId) : undefined);
+        message.checkpointKeyId !== undefined &&
+            (obj.checkpointKeyId = message.checkpointKeyId ? sigstore_common_1.LogId.toJSON(message.checkpointKeyId) : undefined);
         return obj;
     },
 };
@@ -6849,6 +6867,58 @@ exports.TrustedRoot = {
         else {
             obj.timestampAuthorities = [];
         }
+        return obj;
+    },
+};
+function createBaseSigningConfig() {
+    return { caUrl: "", oidcUrl: "", tlogUrls: [], tsaUrls: [] };
+}
+exports.SigningConfig = {
+    fromJSON(object) {
+        return {
+            caUrl: isSet(object.caUrl) ? String(object.caUrl) : "",
+            oidcUrl: isSet(object.oidcUrl) ? String(object.oidcUrl) : "",
+            tlogUrls: Array.isArray(object?.tlogUrls) ? object.tlogUrls.map((e) => String(e)) : [],
+            tsaUrls: Array.isArray(object?.tsaUrls) ? object.tsaUrls.map((e) => String(e)) : [],
+        };
+    },
+    toJSON(message) {
+        const obj = {};
+        message.caUrl !== undefined && (obj.caUrl = message.caUrl);
+        message.oidcUrl !== undefined && (obj.oidcUrl = message.oidcUrl);
+        if (message.tlogUrls) {
+            obj.tlogUrls = message.tlogUrls.map((e) => e);
+        }
+        else {
+            obj.tlogUrls = [];
+        }
+        if (message.tsaUrls) {
+            obj.tsaUrls = message.tsaUrls.map((e) => e);
+        }
+        else {
+            obj.tsaUrls = [];
+        }
+        return obj;
+    },
+};
+function createBaseClientTrustConfig() {
+    return { mediaType: "", trustedRoot: undefined, signingConfig: undefined };
+}
+exports.ClientTrustConfig = {
+    fromJSON(object) {
+        return {
+            mediaType: isSet(object.mediaType) ? String(object.mediaType) : "",
+            trustedRoot: isSet(object.trustedRoot) ? exports.TrustedRoot.fromJSON(object.trustedRoot) : undefined,
+            signingConfig: isSet(object.signingConfig) ? exports.SigningConfig.fromJSON(object.signingConfig) : undefined,
+        };
+    },
+    toJSON(message) {
+        const obj = {};
+        message.mediaType !== undefined && (obj.mediaType = message.mediaType);
+        message.trustedRoot !== undefined &&
+            (obj.trustedRoot = message.trustedRoot ? exports.TrustedRoot.toJSON(message.trustedRoot) : undefined);
+        message.signingConfig !== undefined &&
+            (obj.signingConfig = message.signingConfig ? exports.SigningConfig.toJSON(message.signingConfig) : undefined);
         return obj;
     },
 };
@@ -7356,7 +7426,7 @@ function toMessageSignatureBundle(artifact, signature) {
 }
 exports.toMessageSignatureBundle = toMessageSignatureBundle;
 // DSSE envelope bundle - $case: 'dsseEnvelope'
-function toDSSEBundle(artifact, signature) {
+function toDSSEBundle(artifact, signature, singleCertificate) {
     return sigstore.toDSSEBundle({
         artifact: artifact.data,
         artifactType: artifact.type,
@@ -7365,6 +7435,7 @@ function toDSSEBundle(artifact, signature) {
             ? util_1.pem.toDER(signature.key.certificate)
             : undefined,
         keyHint: signature.key.$case === 'publicKey' ? signature.key.hint : undefined,
+        singleCertificate,
     });
 }
 exports.toDSSEBundle = toDSSEBundle;
@@ -7401,6 +7472,7 @@ const bundle_1 = __nccwpck_require__(6947);
 class DSSEBundleBuilder extends base_1.BaseBundleBuilder {
     constructor(options) {
         super(options);
+        this.singleCertificate = options.singleCertificate ?? false;
     }
     // DSSE requires the artifact to be pre-encoded with the payload type
     // before the signature is generated.
@@ -7410,7 +7482,7 @@ class DSSEBundleBuilder extends base_1.BaseBundleBuilder {
     }
     // Packages the artifact and signature into a DSSE bundle
     async package(artifact, signature) {
-        return (0, bundle_1.toDSSEBundle)(artifactDefaults(artifact), signature);
+        return (0, bundle_1.toDSSEBundle)(artifactDefaults(artifact), signature, this.singleCertificate);
     }
 }
 exports.DSSEBundleBuilder = DSSEBundleBuilder;
@@ -7530,8 +7602,23 @@ exports.internalError = internalError;
 
 "use strict";
 
+/*
+Copyright 2023 The Sigstore Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.checkStatus = exports.HTTPError = void 0;
+exports.HTTPError = void 0;
 class HTTPError extends Error {
     constructor({ status, message, location, }) {
         super(`(${status}) ${message}`);
@@ -7540,38 +7627,11 @@ class HTTPError extends Error {
     }
 }
 exports.HTTPError = HTTPError;
-const checkStatus = async (response) => {
-    if (response.ok) {
-        return response;
-    }
-    else {
-        let message = response.statusText;
-        const location = response.headers?.get('Location') || undefined;
-        const contentType = response.headers?.get('Content-Type');
-        // If response type is JSON, try to parse the body for a message
-        if (contentType?.includes('application/json')) {
-            try {
-                await response.json().then((body) => {
-                    message = body.message;
-                });
-            }
-            catch (e) {
-                // ignore
-            }
-        }
-        throw new HTTPError({
-            status: response.status,
-            message: message,
-            location: location,
-        });
-    }
-};
-exports.checkStatus = checkStatus;
 
 
 /***/ }),
 
-/***/ 269:
+/***/ 8509:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
@@ -7579,6 +7639,110 @@ exports.checkStatus = checkStatus;
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.fetchWithRetry = void 0;
+/*
+Copyright 2023 The Sigstore Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+const http2_1 = __nccwpck_require__(5158);
+const make_fetch_happen_1 = __importDefault(__nccwpck_require__(9525));
+const proc_log_1 = __nccwpck_require__(6528);
+const promise_retry_1 = __importDefault(__nccwpck_require__(4742));
+const util_1 = __nccwpck_require__(724);
+const error_1 = __nccwpck_require__(1294);
+const { HTTP2_HEADER_LOCATION, HTTP2_HEADER_CONTENT_TYPE, HTTP2_HEADER_USER_AGENT, HTTP_STATUS_INTERNAL_SERVER_ERROR, HTTP_STATUS_TOO_MANY_REQUESTS, HTTP_STATUS_REQUEST_TIMEOUT, } = http2_1.constants;
+async function fetchWithRetry(url, options) {
+    return (0, promise_retry_1.default)(async (retry, attemptNum) => {
+        const method = options.method || 'POST';
+        const headers = {
+            [HTTP2_HEADER_USER_AGENT]: util_1.ua.getUserAgent(),
+            ...options.headers,
+        };
+        const response = await (0, make_fetch_happen_1.default)(url, {
+            method,
+            headers,
+            body: options.body,
+            timeout: options.timeout,
+            retry: false, // We're handling retries ourselves
+        }).catch((reason) => {
+            proc_log_1.log.http('fetch', `${method} ${url} attempt ${attemptNum} failed with ${reason}`);
+            return retry(reason);
+        });
+        if (response.ok) {
+            return response;
+        }
+        else {
+            const error = await errorFromResponse(response);
+            proc_log_1.log.http('fetch', `${method} ${url} attempt ${attemptNum} failed with ${response.status}`);
+            if (retryable(response.status)) {
+                return retry(error);
+            }
+            else {
+                throw error;
+            }
+        }
+    }, retryOpts(options.retry));
+}
+exports.fetchWithRetry = fetchWithRetry;
+// Translate a Response into an HTTPError instance. This will attempt to parse
+// the response body for a message, but will default to the statusText if none
+// is found.
+const errorFromResponse = async (response) => {
+    let message = response.statusText;
+    const location = response.headers?.get(HTTP2_HEADER_LOCATION) || undefined;
+    const contentType = response.headers?.get(HTTP2_HEADER_CONTENT_TYPE);
+    // If response type is JSON, try to parse the body for a message
+    if (contentType?.includes('application/json')) {
+        try {
+            const body = await response.json();
+            message = body.message || message;
+        }
+        catch (e) {
+            // ignore
+        }
+    }
+    return new error_1.HTTPError({
+        status: response.status,
+        message: message,
+        location: location,
+    });
+};
+// Determine if a status code is retryable. This includes 5xx errors, 408, and
+// 429.
+const retryable = (status) => [HTTP_STATUS_REQUEST_TIMEOUT, HTTP_STATUS_TOO_MANY_REQUESTS].includes(status) || status >= HTTP_STATUS_INTERNAL_SERVER_ERROR;
+// Normalize the retry options to the format expected by promise-retry
+const retryOpts = (retry) => {
+    if (typeof retry === 'boolean') {
+        return { retries: retry ? 1 : 0 };
+    }
+    else if (typeof retry === 'number') {
+        return { retries: retry };
+    }
+    else {
+        return { retries: 0, ...retry };
+    }
+};
+
+
+/***/ }),
+
+/***/ 269:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Fulcio = void 0;
 /*
@@ -7596,33 +7760,26 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-const make_fetch_happen_1 = __importDefault(__nccwpck_require__(9525));
-const util_1 = __nccwpck_require__(724);
-const error_1 = __nccwpck_require__(1294);
+const fetch_1 = __nccwpck_require__(8509);
 /**
  * Fulcio API client.
  */
 class Fulcio {
     constructor(options) {
-        this.fetch = make_fetch_happen_1.default.defaults({
-            retry: options.retry,
-            timeout: options.timeout,
-            headers: {
-                'Content-Type': 'application/json',
-                'User-Agent': util_1.ua.getUserAgent(),
-            },
-        });
-        this.baseUrl = options.baseURL;
+        this.options = options;
     }
     async createSigningCertificate(request) {
-        const url = `${this.baseUrl}/api/v2/signingCert`;
-        const response = await this.fetch(url, {
-            method: 'POST',
+        const { baseURL, retry, timeout } = this.options;
+        const url = `${baseURL}/api/v2/signingCert`;
+        const response = await (0, fetch_1.fetchWithRetry)(url, {
+            headers: {
+                'Content-Type': 'application/json',
+            },
             body: JSON.stringify(request),
+            timeout,
+            retry,
         });
-        await (0, error_1.checkStatus)(response);
-        const data = await response.json();
-        return data;
+        return response.json();
     }
 }
 exports.Fulcio = Fulcio;
@@ -7631,13 +7788,10 @@ exports.Fulcio = Fulcio;
 /***/ }),
 
 /***/ 6205:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
 
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Rekor = void 0;
 /*
@@ -7655,23 +7809,13 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-const make_fetch_happen_1 = __importDefault(__nccwpck_require__(9525));
-const util_1 = __nccwpck_require__(724);
-const error_1 = __nccwpck_require__(1294);
+const fetch_1 = __nccwpck_require__(8509);
 /**
  * Rekor API client.
  */
 class Rekor {
     constructor(options) {
-        this.fetch = make_fetch_happen_1.default.defaults({
-            retry: options.retry,
-            timeout: options.timeout,
-            headers: {
-                Accept: 'application/json',
-                'User-Agent': util_1.ua.getUserAgent(),
-            },
-        });
-        this.baseUrl = options.baseURL;
+        this.options = options;
     }
     /**
      * Create a new entry in the Rekor log.
@@ -7679,13 +7823,17 @@ class Rekor {
      * @returns {Promise<Entry>} The created entry
      */
     async createEntry(propsedEntry) {
-        const url = `${this.baseUrl}/api/v1/log/entries`;
-        const response = await this.fetch(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+        const { baseURL, timeout, retry } = this.options;
+        const url = `${baseURL}/api/v1/log/entries`;
+        const response = await (0, fetch_1.fetchWithRetry)(url, {
+            headers: {
+                'Content-Type': 'application/json',
+                Accept: 'application/json',
+            },
             body: JSON.stringify(propsedEntry),
+            timeout,
+            retry,
         });
-        await (0, error_1.checkStatus)(response);
         const data = await response.json();
         return entryFromResponse(data);
     }
@@ -7695,44 +7843,18 @@ class Rekor {
      * @returns {Promise<Entry>} The retrieved entry
      */
     async getEntry(uuid) {
-        const url = `${this.baseUrl}/api/v1/log/entries/${uuid}`;
-        const response = await this.fetch(url);
-        await (0, error_1.checkStatus)(response);
+        const { baseURL, timeout, retry } = this.options;
+        const url = `${baseURL}/api/v1/log/entries/${uuid}`;
+        const response = await (0, fetch_1.fetchWithRetry)(url, {
+            method: 'GET',
+            headers: {
+                Accept: 'application/json',
+            },
+            timeout,
+            retry,
+        });
         const data = await response.json();
         return entryFromResponse(data);
-    }
-    /**
-     * Search the Rekor log index for entries matching the given query.
-     * @param opts {SearchIndex} Options to search the Rekor log
-     * @returns {Promise<string[]>} UUIDs of matching entries
-     */
-    async searchIndex(opts) {
-        const url = `${this.baseUrl}/api/v1/index/retrieve`;
-        const response = await this.fetch(url, {
-            method: 'POST',
-            body: JSON.stringify(opts),
-            headers: { 'Content-Type': 'application/json' },
-        });
-        await (0, error_1.checkStatus)(response);
-        const data = await response.json();
-        return data;
-    }
-    /**
-     * Search the Rekor logs for matching the given query.
-     * @param opts {SearchLogQuery} Query to search the Rekor log
-     * @returns {Promise<Entry[]>} List of matching entries
-     */
-    async searchLog(opts) {
-        const url = `${this.baseUrl}/api/v1/log/entries/retrieve`;
-        const response = await this.fetch(url, {
-            method: 'POST',
-            body: JSON.stringify(opts),
-            headers: { 'Content-Type': 'application/json' },
-        });
-        await (0, error_1.checkStatus)(response);
-        const rawData = await response.json();
-        const data = rawData.map((d) => entryFromResponse(d));
-        return data;
     }
 }
 exports.Rekor = Rekor;
@@ -7754,13 +7876,10 @@ function entryFromResponse(data) {
 /***/ }),
 
 /***/ 2759:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
 
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.TimestampAuthority = void 0;
 /*
@@ -7778,28 +7897,22 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-const make_fetch_happen_1 = __importDefault(__nccwpck_require__(9525));
-const util_1 = __nccwpck_require__(724);
-const error_1 = __nccwpck_require__(1294);
+const fetch_1 = __nccwpck_require__(8509);
 class TimestampAuthority {
     constructor(options) {
-        this.fetch = make_fetch_happen_1.default.defaults({
-            retry: options.retry,
-            timeout: options.timeout,
-            headers: {
-                'Content-Type': 'application/json',
-                'User-Agent': util_1.ua.getUserAgent(),
-            },
-        });
-        this.baseUrl = options.baseURL;
+        this.options = options;
     }
     async createTimestamp(request) {
-        const url = `${this.baseUrl}/api/v1/timestamp`;
-        const response = await this.fetch(url, {
-            method: 'POST',
+        const { baseURL, timeout, retry } = this.options;
+        const url = `${baseURL}/api/v1/timestamp`;
+        const response = await (0, fetch_1.fetchWithRetry)(url, {
+            headers: {
+                'Content-Type': 'application/json',
+            },
             body: JSON.stringify(request),
+            timeout,
+            retry,
         });
-        await (0, error_1.checkStatus)(response);
         return response.buffer();
     }
 }
@@ -21266,6 +21379,8 @@ class CacheEntry {
       const cacheWritePromise = new Promise((resolve, reject) => {
         cacheWriteResolve = resolve
         cacheWriteReject = reject
+      }).catch((err) => {
+        body.emit('error', err)
       })
 
       body = new CachingMinipassPipeline({ events: ['integrity', 'size'] }, new MinipassFlush({
@@ -22020,6 +22135,7 @@ const { Minipass } = __nccwpck_require__(4968)
 const fetch = __nccwpck_require__(8998)
 const promiseRetry = __nccwpck_require__(4742)
 const ssri = __nccwpck_require__(4406)
+const { log } = __nccwpck_require__(6528)
 
 const CachingMinipassPipeline = __nccwpck_require__(1064)
 const { getAgent } = __nccwpck_require__(9907)
@@ -22107,6 +22223,8 @@ const remoteFetch = (request, options) => {
           options.onRetry(res)
         }
 
+        /* eslint-disable-next-line max-len */
+        log.http('fetch', `${req.method} ${req.url} attempt ${attemptNum} failed with ${res.status}`)
         return retryHandler(res)
       }
 
@@ -22130,6 +22248,7 @@ const remoteFetch = (request, options) => {
         options.onRetry(err)
       }
 
+      log.http('fetch', `${req.method} ${req.url} attempt ${attemptNum} failed with ${err.code}`)
       return retryHandler(err)
     }
   }, options.retry).catch((err) => {
@@ -28364,6 +28483,166 @@ module.exports = async (
 		}
 	});
 };
+
+
+/***/ }),
+
+/***/ 6528:
+/***/ ((module) => {
+
+const META = Symbol('proc-log.meta')
+module.exports = {
+  META: META,
+  output: {
+    LEVELS: [
+      'standard',
+      'error',
+      'buffer',
+      'flush',
+    ],
+    KEYS: {
+      standard: 'standard',
+      error: 'error',
+      buffer: 'buffer',
+      flush: 'flush',
+    },
+    standard: function (...args) {
+      return process.emit('output', 'standard', ...args)
+    },
+    error: function (...args) {
+      return process.emit('output', 'error', ...args)
+    },
+    buffer: function (...args) {
+      return process.emit('output', 'buffer', ...args)
+    },
+    flush: function (...args) {
+      return process.emit('output', 'flush', ...args)
+    },
+  },
+  log: {
+    LEVELS: [
+      'notice',
+      'error',
+      'warn',
+      'info',
+      'verbose',
+      'http',
+      'silly',
+      'timing',
+      'pause',
+      'resume',
+    ],
+    KEYS: {
+      notice: 'notice',
+      error: 'error',
+      warn: 'warn',
+      info: 'info',
+      verbose: 'verbose',
+      http: 'http',
+      silly: 'silly',
+      timing: 'timing',
+      pause: 'pause',
+      resume: 'resume',
+    },
+    error: function (...args) {
+      return process.emit('log', 'error', ...args)
+    },
+    notice: function (...args) {
+      return process.emit('log', 'notice', ...args)
+    },
+    warn: function (...args) {
+      return process.emit('log', 'warn', ...args)
+    },
+    info: function (...args) {
+      return process.emit('log', 'info', ...args)
+    },
+    verbose: function (...args) {
+      return process.emit('log', 'verbose', ...args)
+    },
+    http: function (...args) {
+      return process.emit('log', 'http', ...args)
+    },
+    silly: function (...args) {
+      return process.emit('log', 'silly', ...args)
+    },
+    timing: function (...args) {
+      return process.emit('log', 'timing', ...args)
+    },
+    pause: function () {
+      return process.emit('log', 'pause')
+    },
+    resume: function () {
+      return process.emit('log', 'resume')
+    },
+  },
+  time: {
+    LEVELS: [
+      'start',
+      'end',
+    ],
+    KEYS: {
+      start: 'start',
+      end: 'end',
+    },
+    start: function (name, fn) {
+      process.emit('time', 'start', name)
+      function end () {
+        return process.emit('time', 'end', name)
+      }
+      if (typeof fn === 'function') {
+        const res = fn()
+        if (res && res.finally) {
+          return res.finally(end)
+        }
+        end()
+        return res
+      }
+      return end
+    },
+    end: function (name) {
+      return process.emit('time', 'end', name)
+    },
+  },
+  input: {
+    LEVELS: [
+      'start',
+      'end',
+      'read',
+    ],
+    KEYS: {
+      start: 'start',
+      end: 'end',
+      read: 'read',
+    },
+    start: function (fn) {
+      process.emit('input', 'start')
+      function end () {
+        return process.emit('input', 'end')
+      }
+      if (typeof fn === 'function') {
+        const res = fn()
+        if (res && res.finally) {
+          return res.finally(end)
+        }
+        end()
+        return res
+      }
+      return end
+    },
+    end: function () {
+      return process.emit('input', 'end')
+    },
+    read: function (...args) {
+      let resolve, reject
+      const promise = new Promise((_resolve, _reject) => {
+        resolve = _resolve
+        reject = _reject
+      })
+      process.emit('input', 'read', resolve, reject, ...args)
+      return promise
+    },
+  },
+}
 
 
 /***/ }),
@@ -74147,7 +74426,7 @@ exports.LRUCache = LRUCache;
 /***/ ((module) => {
 
 "use strict";
-module.exports = {"i8":"2.2.3"};
+module.exports = {"i8":"2.3.1"};
 
 /***/ }),
 
@@ -74171,7 +74450,7 @@ module.exports = JSON.parse('{"Jw":{"k":"2","K":"5"}}');
 /***/ ((module) => {
 
 "use strict";
-module.exports = JSON.parse('{"name":"make-fetch-happen","version":"13.0.0","description":"Opinionated, caching, retrying fetch client","main":"lib/index.js","files":["bin/","lib/"],"scripts":{"test":"tap","posttest":"npm run lint","eslint":"eslint","lint":"eslint \\"**/*.js\\"","lintfix":"npm run lint -- --fix","postlint":"template-oss-check","snap":"tap","template-oss-apply":"template-oss-apply --force"},"repository":{"type":"git","url":"https://github.com/npm/make-fetch-happen.git"},"keywords":["http","request","fetch","mean girls","caching","cache","subresource integrity"],"author":"GitHub Inc.","license":"ISC","dependencies":{"@npmcli/agent":"^2.0.0","cacache":"^18.0.0","http-cache-semantics":"^4.1.1","is-lambda":"^1.0.1","minipass":"^7.0.2","minipass-fetch":"^3.0.0","minipass-flush":"^1.0.5","minipass-pipeline":"^1.2.4","negotiator":"^0.6.3","promise-retry":"^2.0.1","ssri":"^10.0.0"},"devDependencies":{"@npmcli/eslint-config":"^4.0.0","@npmcli/template-oss":"4.18.0","nock":"^13.2.4","safe-buffer":"^5.2.1","standard-version":"^9.3.2","tap":"^16.0.0"},"engines":{"node":"^16.14.0 || >=18.0.0"},"tap":{"color":1,"files":"test/*.js","check-coverage":true,"timeout":60,"nyc-arg":["--exclude","tap-snapshots/**"]},"templateOSS":{"//@npmcli/template-oss":"This file is partially managed by @npmcli/template-oss. Edits may be overwritten.","ciVersions":["16.14.0","16.x","18.0.0","18.x"],"version":"4.18.0","publish":"true"}}');
+module.exports = JSON.parse('{"name":"make-fetch-happen","version":"13.0.1","description":"Opinionated, caching, retrying fetch client","main":"lib/index.js","files":["bin/","lib/"],"scripts":{"test":"tap","posttest":"npm run lint","eslint":"eslint","lint":"eslint \\"**/*.{js,cjs,ts,mjs,jsx,tsx}\\"","lintfix":"npm run lint -- --fix","postlint":"template-oss-check","snap":"tap","template-oss-apply":"template-oss-apply --force"},"repository":{"type":"git","url":"https://github.com/npm/make-fetch-happen.git"},"keywords":["http","request","fetch","mean girls","caching","cache","subresource integrity"],"author":"GitHub Inc.","license":"ISC","dependencies":{"@npmcli/agent":"^2.0.0","cacache":"^18.0.0","http-cache-semantics":"^4.1.1","is-lambda":"^1.0.1","minipass":"^7.0.2","minipass-fetch":"^3.0.0","minipass-flush":"^1.0.5","minipass-pipeline":"^1.2.4","negotiator":"^0.6.3","proc-log":"^4.2.0","promise-retry":"^2.0.1","ssri":"^10.0.0"},"devDependencies":{"@npmcli/eslint-config":"^4.0.0","@npmcli/template-oss":"4.21.4","nock":"^13.2.4","safe-buffer":"^5.2.1","standard-version":"^9.3.2","tap":"^16.0.0"},"engines":{"node":"^16.14.0 || >=18.0.0"},"tap":{"color":1,"files":"test/*.js","check-coverage":true,"timeout":60,"nyc-arg":["--exclude","tap-snapshots/**"]},"templateOSS":{"//@npmcli/template-oss":"This file is partially managed by @npmcli/template-oss. Edits may be overwritten.","version":"4.21.4","publish":"true"}}');
 
 /***/ }),
 
