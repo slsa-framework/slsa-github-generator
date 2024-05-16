@@ -15,14 +15,13 @@ require (
 	github.com/sigstore/rekor v1.3.6
 	github.com/sigstore/sigstore v1.8.3
 	github.com/spf13/cobra v1.8.0
-	golang.org/x/oauth2 v0.19.0
+	golang.org/x/oauth2 v0.20.0
 	gopkg.in/square/go-jose.v2 v2.6.0
 	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (
-	cloud.google.com/go/compute v1.25.0 // indirect
-	cloud.google.com/go/compute/metadata v0.2.3 // indirect
+	cloud.google.com/go/compute/metadata v0.3.0 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/AliyunContainerService/ack-ram-tool/pkg/credentials/alibabacloudsdkgo/helper v0.2.0 // indirect
 	github.com/Azure/azure-sdk-for-go v68.0.0+incompatible // indirect
