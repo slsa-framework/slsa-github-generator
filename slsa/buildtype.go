@@ -39,7 +39,7 @@ type BuildType interface {
 	Subject(context.Context) ([]intoto.Subject, error)
 
 	// BuildConfig returns the buildConfig for this build type.
-	BuildConfig(context.Context) (interface{}, error)
+	BuildConfig(context.Context) (any, error)
 
 	// Invocation returns an invocation for this build type.
 	Invocation(context.Context) (slsa02.ProvenanceInvocation, error)
@@ -53,45 +53,45 @@ type BuildType interface {
 
 // GithubActionsBuild is a basic build type for builders running in GitHub Actions.
 type GithubActionsBuild struct {
-	Context github.WorkflowContext
-	Vars    github.VarsContext
-	Clients ClientProvider
-	subject []intoto.Subject
+	Subjects []intoto.Subject
+	Context  github.WorkflowContext
+	Vars     github.VarsContext
+	Clients  ClientProvider
 }
 
 // WorkflowParameters contains parameters given to the workflow invocation.
 type WorkflowParameters struct {
 	// EventInputs is the inputs for the event that triggered the workflow.
-	EventInputs interface{} `json:"event_inputs,omitempty"`
+	EventInputs any `json:"event_inputs,omitempty"`
 
 	// VarsContext includes the input parameters provided as part of the `vars`
 	// context. This includes environment and repository variables.
-	VarsContext interface{} `json:"vars"`
+	VarsContext any `json:"vars"`
 }
 
 // NewGithubActionsBuild returns a new GithubActionsBuild that uses the
 // GitHub context to generate information.
 func NewGithubActionsBuild(s []intoto.Subject, c *github.WorkflowContext, v github.VarsContext) *GithubActionsBuild {
 	return &GithubActionsBuild{
-		subject: s,
-		Context: *c,
-		Vars:    v,
-		Clients: &DefaultClientProvider{},
+		Subjects: s,
+		Context:  *c,
+		Vars:     v,
+		Clients:  &DefaultClientProvider{},
 	}
 }
 
 // Subject implements BuildType.Subject.
 func (b *GithubActionsBuild) Subject(context.Context) ([]intoto.Subject, error) {
-	return b.subject, nil
+	return b.Subjects, nil
 }
 
 // BuildConfig implements BuildType.BuildConfig.
-func (b *GithubActionsBuild) BuildConfig(context.Context) (interface{}, error) {
+func (b *GithubActionsBuild) BuildConfig(context.Context) (any, error) {
 	// The default build config is nil.
 	return nil, nil
 }
 
-func addEnvKeyString(m map[string]interface{}, k, v string) {
+func addEnvKeyString(m map[string]any, k, v string) {
 	// Always record the value, even if it's empty. Let
 	// the consumer/verifier decide how to interpret their meaning.
 	m[k] = v
@@ -148,7 +148,7 @@ func (b *GithubActionsBuild) Invocation(ctx context.Context) (slsa.ProvenanceInv
 
 	// Builder-controlled environment vars needed
 	// to reproduce the build.
-	env := map[string]interface{}{}
+	env := map[string]any{}
 
 	// TODO(github.com/slsa-framework/slsa-github-generator/issues/5): set "arch" in environment.
 	addEnvKeyString(env, "github_run_number", b.Context.RunNumber)
@@ -230,13 +230,16 @@ func (b *GithubActionsBuild) Invocation(ctx context.Context) (slsa.ProvenanceInv
 	}
 
 	// Parameters coming from the trigger event.
-	params := WorkflowParameters{
-		VarsContext: b.Vars,
+	params := WorkflowParameters{}
+	if b.Vars != nil {
+		params.VarsContext = b.Vars
 	}
 	if b.Context.Event != nil {
 		params.EventInputs = b.Context.Event["inputs"]
 	}
-	i.Parameters = params
+	if params.VarsContext != nil || params.EventInputs != nil {
+		i.Parameters = params
+	}
 
 	return i, nil
 }
@@ -267,6 +270,8 @@ func (b *GithubActionsBuild) Metadata(context.Context) (*slsa.ProvenanceMetadata
 		metadata.BuildInvocationID = fmt.Sprintf("%s-%s", b.Context.RunID, b.Context.RunAttempt)
 	}
 
+	// NOTE: We don't check the vars context for completeness as they may not
+	// affect the build for builders.
 	if b.Context.Event != nil {
 		// Parameters come from the trigger event.
 		// If we have the event then mark parameters as complete.

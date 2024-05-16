@@ -72,11 +72,6 @@ func GenerateProvenance(name, digest, command, envs, workingDir string,
 		return nil, err
 	}
 
-	vars, err := github.GetVarsContext()
-	if err != nil {
-		return nil, err
-	}
-
 	if _, err := hex.DecodeString(digest); err != nil || len(digest) != 64 {
 		return nil, fmt.Errorf("sha256 digest is not valid: %s", digest)
 	}
@@ -104,7 +99,7 @@ func GenerateProvenance(name, digest, command, envs, workingDir string,
 					"sha256": digest,
 				},
 			},
-		}, &gh, vars),
+		}, &gh, nil),
 		buildConfig: buildConfig{
 			Version: buildConfigVersion,
 			Steps: []step{
