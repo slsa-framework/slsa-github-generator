@@ -274,10 +274,10 @@ The [generic workflow](https://github.com/slsa-framework/slsa-github-generator/b
 
 The [generic workflow](https://github.com/slsa-framework/slsa-github-generator/blob/main/.github/workflows/generator_generic_slsa3.yml) produces the following outputs:
 
-| Name               | Description                                                                                     |
-| ------------------ | ----------------------------------------------------------------------------------------------- |
-| `provenance-name`  | The artifact name of the signed provenance.                                                     |
-| `outcome`          | If `continue-on-error` is `true`, will contain the outcome of the run (`success` or `failure`). |
+| Name              | Description                                                                                     |
+| ----------------- | ----------------------------------------------------------------------------------------------- |
+| `provenance-name` | The artifact name of the signed provenance.                                                     |
+| `outcome`         | If `continue-on-error` is `true`, will contain the outcome of the run (`success` or `failure`). |
 
 ### Provenance Format
 
@@ -1425,11 +1425,11 @@ matrix strategy), there are a few more caveats to consider:
    terminator even on Windows:
 
    ```yaml
-       - run: git config --global core.autocrlf input
-       # Alternatively, also force line endings for every file
-       # - run: |
-       #     git config --global core.eol lf
-       #     git config --global core.autocrlf input
+   - run: git config --global core.autocrlf input
+   # Alternatively, also force line endings for every file
+   # - run: |
+   #     git config --global core.eol lf
+   #     git config --global core.autocrlf input
    ```
 
 The other complexity arises from the fact that the utilities used to compute the
@@ -1448,11 +1448,11 @@ behaviors across the operating systems:
 One way to merge all these differences is to use the bash `||` operator:
 
 ```yaml
-      - id: hash
-        run: |
-          set -euo pipefail
-          (sha256sum -t release_artifact_${{ runner.os }} || shasum -a 256 release_artifact_${{ runner.os }}) > checksum
-          echo "hash-${{ matrix.os }}=$(base64 -w0 checksum || base64 checksum)" >> "${GITHUB_OUTPUT}"
+- id: hash
+  run: |
+    set -euo pipefail
+    (sha256sum -t release_artifact_${{ runner.os }} || shasum -a 256 release_artifact_${{ runner.os }}) > checksum
+    echo "hash-${{ matrix.os }}=$(base64 -w0 checksum || base64 checksum)" >> "${GITHUB_OUTPUT}"
 ```
 
 Thus, to generate a single provenance for artifacts built on all 3 operating
@@ -1573,14 +1573,13 @@ jobs:
     with:
       base64-subjects: "${{ needs.combine_hashes.outputs.hashes }}"
       upload-assets: true # NOTE: This does nothing unless 'upload-tag-name' parameter is also set to an existing tag
-
 ```
 
 ## Known Issues
 
 ### Skip output 'hashes' since it may contain secret
 
-The GitHub Actions runner sometimes masks the job output if it potentially contains a secret. One solution is to use the ``base64-subjects-as-file`` option to pass the artifact hashes using an existing file instead. See the instructions [here](#getting-started) to use the ``base64-subjects-as-file`` option.
+The GitHub Actions runner sometimes masks the job output if it potentially contains a secret. One solution is to use the `base64-subjects-as-file` option to pass the artifact hashes using an existing file instead. See the instructions [here](#getting-started) to use the `base64-subjects-as-file` option.
 
 ### 'internal error' when using `upload-assets`
 

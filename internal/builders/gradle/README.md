@@ -114,11 +114,9 @@ tasks.named("build") {
 This, for example, will move `./app1/build/` and `./app2/build/` to `./build/app1/` and `./build/app2/`. You must then alter your input to `artifact-list`.
 
 ```yaml
-...
-      artifact-list: >-
-        ./build/app1/libs/app.jar,
-        ./build/app2/libs/app.jar,
-...
+artifact-list: >-
+  ./build/app1/libs/app.jar,
+  ./build/app2/libs/app.jar,
 ```
 
 ### Private Repositories
