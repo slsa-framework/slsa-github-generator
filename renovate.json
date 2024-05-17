@@ -4,6 +4,7 @@
   "vulnerabilityAlerts": {
     "schedule": "* 0-4 * * *"
   },
+  "configWarningReuseIssue": false,
   "postUpdateOptions": ["gomodTidy", "gomodUpdateImportPaths"],
   "packageRules": [
     {
