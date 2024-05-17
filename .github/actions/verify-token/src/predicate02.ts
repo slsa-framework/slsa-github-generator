@@ -66,10 +66,6 @@ export async function createPredicate(
       parameters: {
         // NOTE: the Map object needs to be converted to an object to serialize to JSON.
         inputs: Object.fromEntries(rawTokenObj.tool.inputs),
-
-        // BYOB TRW workflows could potentially allow arbitrary untrusted code to
-        // be run which may make use of vars if used in the TCA.
-        vars: Object.fromEntries(rawTokenObj.tool.vars),
       },
       environment: {
         GITHUB_ACTOR_ID: rawTokenObj.github.actor_id,
@@ -113,6 +109,13 @@ export async function createPredicate(
       },
     ],
   };
+
+  // BYOB TRW workflows could potentially use vars.
+  if (rawTokenObj.tool.vars !== undefined) {
+    predicate.invocation.parameters.vars = Object.fromEntries(
+      rawTokenObj.tool.vars,
+    );
+  }
 
   return predicate;
 }
