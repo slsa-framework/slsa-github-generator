@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 <!-- toc -->
 
 - [Unreleased](#unreleased)
-  - [Unreleased: Vars context recorded in provenance](#unreleased-vars-context-recorded-in-provenance)
+  - [Unreleased: BYOB supports recording the vars context](#unreleased-byob-supports-recording-the-vars-context)
 - [v2.0.0](#v200)
   - [v2.0.0: Breaking Change: upload-artifact and download-artifact](#v200-breaking-change-upload-artifact-and-download-artifact)
   - [v2.0.0: Breaking Change: attestation-name Workflow Input and Output](#v200-breaking-change-attestation-name-workflow-input-and-output)

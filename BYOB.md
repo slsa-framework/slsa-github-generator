@@ -14,6 +14,7 @@
   - [Before you begin: understand supported triggers](#before-you-begin-understand-supported-triggers)
   - [Step 1: TRW inputs](#step-1-trw-inputs)
     - [Inputs](#inputs)
+    - [Vars](#vars)
     - [Secrets](#secrets)
     - [Outputs](#outputs)
     - [Important Notes](#important-notes)
