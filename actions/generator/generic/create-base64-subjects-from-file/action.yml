@@ -16,7 +16,7 @@ name: "Secure subjects file sharing generic generator"
 description: "Create a list of subjects from a file"
 inputs:
   path:
-    description: 'A path to a file containing the base64-subjects.'
+    description: "A path to a file containing the base64-subjects."
     required: true
 outputs:
   handle:

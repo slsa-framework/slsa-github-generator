@@ -148,7 +148,7 @@ Secrets should only be high-entropy values. Do not set username or other low-ent
 
 #### Outputs
 
-The outputs from the TCA may be returned to the PW as well. To do this, use the [outputs section](https://github.com/laurentsimon/byob-doc/tree/v0.0.1/.github/workflows/builder_example_slsa3.yml#L61-L67) to define the artifact and the status. Our example uses [additional outputs](https://github.com/laurentsimon/byob-doc/tree/v0.0.1/.github/workflows/builder_example_slsa3.yml#L69-L75) to  provide metadata about the built artifacts and their provenance. We will discuss them in [Section: Upload Attestations](#upload-attestations).
+The outputs from the TCA may be returned to the PW as well. To do this, use the [outputs section](https://github.com/laurentsimon/byob-doc/tree/v0.0.1/.github/workflows/builder_example_slsa3.yml#L61-L67) to define the artifact and the status. Our example uses [additional outputs](https://github.com/laurentsimon/byob-doc/tree/v0.0.1/.github/workflows/builder_example_slsa3.yml#L69-L75) to provide metadata about the built artifacts and their provenance. We will discuss them in [Section: Upload Attestations](#upload-attestations).
 
 #### Important Notes
 
