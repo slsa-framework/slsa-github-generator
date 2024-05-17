@@ -136,9 +136,60 @@ The first step for our integration is to create our TRW file and define its inpu
 
 #### Inputs
 
-Inputs that have low entropy are defined under the [inputs section](https://github.com/laurentsimon/byob-doc/tree/v0.0.1/.github/workflows/builder_example_slsa3.yml#L25-L39). Unlike Action inputs, you may define the type ([boolean, number, or string](https://docs.github.com/en/actions/using-workflows/reusing-workflows)) of each input. You may also provide a default value. The inputs will be attested to in the generated provenance. We will discuss in [Section: SRW Setup](#srw-setup) how to redact certain inputs that might be sensitive, such as username, from the provenance.
+Inputs that have low entropy are defined under the [`on.workflow_call.inputs` section](https://docs.github.com/en/enterprise-cloud@latest/actions/using-workflows/workflow-syntax-for-github-actions#onworkflow_callinputs) of the TRW. Unlike Action inputs, you may define the type ([boolean, number, or string](https://docs.github.com/en/actions/using-workflows/reusing-workflows)) of each input. You may also provide a default value. The inputs will be attested to in the generated provenance. We will discuss in [Section: SRW Setup](#srw-setup) how to redact certain inputs that might be sensitive, such as username, from the provenance.
 
-We also declare an additional [rekor-log-public](https://github.com/laurentsimon/byob-doc/tree/v0.0.1/.github/workflows/builder_example_slsa3.yml#L43-L47) boolean input. Given that the name of the repository will be available in the provenance and will be uploaded to the public transparency log, we need users to acknowledge that they are aware that private repository names will be made public. We encourage all TRWs to define this option. For public repositories, the value of the input is set to true by default by the SRW. For private repositories, users should set if to true when calling the TRW.
+```yaml
+on:
+  workflow_call:
+    inputs:
+      input_name1:
+        description: "First input value."
+        required: false
+        type: string
+        default: "first default value"
+
+      input_name2:
+        description: "Second input is required."
+        required: true
+        type: number
+```
+
+We also declare an additional `rekor-log-public` boolean input. Given that the name of the repository will be available in the provenance and will be uploaded to the public transparency log, we need users to acknowledge that they are aware that private repository names will be made public. We encourage all TRWs to define this option. For public repositories, the value of the input is set to true by default by the SRW. For private repositories, users should set if to true when calling the TRW.
+
+```yaml
+on:
+  workflow_call:
+    rekor-log-public:
+      description: "Allow publication of your repository name on the public Rekor log"
+      required: false
+      type: boolean
+      default: false
+```
+
+#### Vars
+
+GitHub provides a way to set repository configuration variable values via the
+[`vars` context](https://docs.github.com/en/actions/learn-github-actions/variables#using-the-vars-context-to-access-configuration-variable-values).
+This can serve as a type of input to a GitHub actions workflow.
+
+Normally a TRW should have the TRW caller use [`inputs`](#inputs) to pass values
+explicitly, including values in the `vars` context. However, in the rare case
+that a TRW needs to use the `vars` context it should record the vars context by
+passing it to `actions/delegator/setup-generic` in the `slsa-vars` field.
+Certain low entropy vars may also be masked via the `slsa-masked-vars` field.
+
+```yaml
+uses: slsa-framework/slsa-github-generator/actions/delegator/setup-generic@v2.0.0
+  with:
+    slsa-workflow-recipient: "delegator_generic_slsa3.yml"
+    slsa-rekor-log-public: ${{ inputs.rekor-log-public }}
+    slsa-runner-label: "ubuntu-latest"
+    slsa-build-action-path: "./internal/callback_action"
+    slsa-workflow-inputs: ${{ toJson(inputs) }}
+    slsa-workflow-masked-inputs: username
+    slsa-vars: ${{ toJson(vars) }}
+    slsa-masked-vars: AWS_ACCOUNT_ID
+```
 
 #### Secrets
 

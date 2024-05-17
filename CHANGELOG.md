@@ -106,11 +106,25 @@ duplication."
 
 ## Unreleased
 
-### Unreleased: Vars context recorded in provenance
+### Unreleased: BYOB supports recording the vars context
 
-- **Updated**: GitHub `vars` context is now recorded in provenance for BYOB
-  workflows; the Bazel builder, Maven builder, Gradle builder, and Node.js
-  builder.
+- **Updated**: The BYOB framework GitHub `vars` context. In general, TRWs should
+  use `inputs` to get values from users. However, in the case that `vars` need
+  to be used by the TRW, it should set them in `actions/delegator/setup-generic`
+  in the `slsa-vars` parameter.
+
+  ```yaml
+  uses: slsa-framework/slsa-github-generator/actions/delegator/setup-generic@v2.0.0
+    with:
+      slsa-workflow-recipient: "delegator_generic_slsa3.yml"
+      slsa-rekor-log-public: ${{ inputs.rekor-log-public }}
+      slsa-runner-label: "ubuntu-latest"
+      slsa-build-action-path: "./internal/callback_action"
+      slsa-workflow-inputs: ${{ toJson(inputs) }}
+      slsa-workflow-masked-inputs: username
+      slsa-vars: ${{ toJson(vars) }}
+      slsa-masked-vars: AWS_ACCOUNT_ID
+  ```
 
 ## v2.0.0
 
