@@ -83,6 +83,28 @@ inputs:
     type: string
     required: false
 
+  slsa-vars:
+    description: >
+      A JSON object containing the vars to the Tool Reusable Workflow (TRW).
+      The vars will be recorded in the provenance as the builder's inputs and
+      passed to the tool's build Action.
+
+      Note: The TRW is the reusable workflow calling this Action.
+    type: string
+    required: true
+
+  slsa-masked-vars:
+    description: >
+      A comma-separated list of vars to mask in the provenance.
+      It should be used for fields that have low-entropy values
+      but need to be kept private. The masking will replace
+      the value of the fields with '***'. Use this option to mask
+      usernames, emails or other PII vars.
+
+      Example: var1, var2, var3
+    type: string
+    required: false
+
 outputs:
   slsa-token:
     description: "SLSA token"

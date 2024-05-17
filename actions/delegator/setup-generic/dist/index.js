@@ -82,20 +82,34 @@ function run() {
             const checkoutDepth = core.getInput("slsa-checkout-fetch-depth");
             const checkoutSha1 = core.getInput("slsa-checkout-sha1");
             const buildArtifactsActionPath = core.getInput("slsa-build-action-path");
-            const workflowsInputsMask = core.getInput("slsa-workflow-masked-inputs");
-            // The workflow inputs are represented as a JSON object theselves.
+            // The workflow inputs are represented as a JSON object (inputs context).
             const workflowsInputsText = core.getInput("slsa-workflow-inputs");
+            const workflowsInputsMask = core.getInput("slsa-workflow-masked-inputs");
+            // The workflow vars are represented as a JSON object (vars context).
+            const workflowsVarsText = core.getInput("slsa-vars");
+            const workflowsVarsMask = core.getInput("slsa-masked-vars");
             // Log the inputs for troubleshooting.
             core.debug(`workflowsInputsText: ${workflowsInputsText}`);
             core.debug(`workfowInputs: `);
             const workflowInputs = JSON.parse(workflowsInputsText);
-            const workflowInputsMap = new Map(Object.entries(workflowInputs));
-            for (const [key, value] of workflowInputsMap) {
-                core.info(` ${key}: ${value}`);
+            for (const key in workflowInputs) {
+                core.info(` ${key}: ${workflowInputs[key]}`);
             }
-            const workflowMaskedInputs = getMaskedInputs(workflowsInputsMask);
+            const workflowMaskedInputs = parseCSV(workflowsInputsMask);
             core.info(`maskedInputs: `);
             for (const value of workflowMaskedInputs) {
+                core.info(` ${value}`);
+            }
+            // Log the vars for troubleshooting.
+            core.debug(`workflowsVarsText: ${workflowsVarsText}`);
+            core.debug(`workfowVars: `);
+            const workflowVars = JSON.parse(workflowsVarsText);
+            for (const key in workflowVars) {
+                core.info(` ${key}: ${workflowVars[key]}`);
+            }
+            const workflowMaskedVars = parseCSV(workflowsVarsMask);
+            core.info(`maskedVars: `);
+            for (const value of workflowMaskedVars) {
                 core.info(` ${value}`);
             }
             const payload = JSON.stringify(github.context.payload, undefined, 2);
@@ -151,6 +165,8 @@ function run() {
                     },
                     inputs: workflowInputs,
                     masked_inputs: workflowMaskedInputs,
+                    vars: workflowVars,
+                    masked_vars: workflowMaskedVars,
                 },
             };
             // Prepare the base64 unsigned token.
@@ -182,11 +198,10 @@ function run() {
         }
     });
 }
-function getMaskedInputs(inputsStr) {
+function parseCSV(csvText) {
     const ret = [];
-    const inputArr = inputsStr.split(",");
-    for (const input of inputArr) {
-        ret.push(input.trim());
+    for (const part of csvText.split(",")) {
+        ret.push(part.trim());
     }
     return ret;
 }

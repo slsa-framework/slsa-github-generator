@@ -102,21 +102,28 @@ export async function createPredicate(
   };
 
   // Construct the predicate according to the type of builder.
+  // TODO(#2186): Add source:URI under externalParameters
   if (isGenerator) {
+    // TODO(#2202): Re-visit generator's source reporting
     predicate.buildDefinition.externalParameters = {
       workflow: {
         ref: triggerRef,
         repository: `git+https://github.com/${triggerRepository}`,
         path: triggerPath,
       },
-      // TODO(#1555): record the vars.
-      vars: {},
+
+      // Generators should always record the vars as generators do not have
+      // insight into which, if any, vars affect the build.
+      vars: Object.fromEntries(rawTokenObj.tool.vars),
+
       // TODO(#2164): record the inputs, depending on the type of trigger events.
       inputs: {},
     };
+
+    // TODO(#2164): Support generators in BYOB.
     // Throw an error for now. We have no generators using v1.0 yet
     // and it's not supported in the slsa-verifier.
-    throw new Error("not supported: #2164, #1555, #2202, #2186");
+    throw new Error("not supported");
   } else {
     // NOTE: the workflow information is available in the internalParameters.GITHUB_WORKFLOW_REF.
     predicate.buildDefinition.externalParameters = {
@@ -124,9 +131,14 @@ export async function createPredicate(
       // BYOB framework. Some of these values may be masked by the TRW.
       // NOTE: the Map object needs to be converted to an object to serialize to JSON.
       inputs: Object.fromEntries(rawTokenObj.tool.inputs),
-      // Variables are always empty for BYOB / builders.
-      vars: {},
     };
+
+    // BYOB TRW workflows could potentially use vars.
+    if (rawTokenObj.tool.vars !== undefined) {
+      predicate.buildDefinition.externalParameters.vars = Object.fromEntries(
+        rawTokenObj.tool.vars,
+      );
+    }
   }
 
   // Put GitHub event payload into internalParameters.

@@ -97,6 +97,8 @@ jobs:
           slsa-build-action-path: "./internal/builders/nodejs"
           slsa-version: "v0.2"
           slsa-workflow-inputs: ${{ toJson(inputs) }}
+          # NOTE: vars not recorded because they aren't used in this TRW
+          # or in the callback action.
 
   slsa-run:
     needs: [slsa-setup]

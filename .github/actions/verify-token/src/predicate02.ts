@@ -110,5 +110,12 @@ export async function createPredicate(
     ],
   };
 
+  // BYOB TRW workflows could potentially use vars.
+  if (rawTokenObj.tool.vars !== undefined) {
+    predicate.invocation.parameters.vars = Object.fromEntries(
+      rawTokenObj.tool.vars,
+    );
+  }
+
   return predicate;
 }

@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- toc -->
 
+- [Unreleased](#unreleased)
+  - [Unreleased: BYOB supports recording the vars context](#unreleased-byob-supports-recording-the-vars-context)
 - [v2.0.0](#v200)
   - [v2.0.0: Breaking Change: upload-artifact and download-artifact](#v200-breaking-change-upload-artifact-and-download-artifact)
   - [v2.0.0: Breaking Change: attestation-name Workflow Input and Output](#v200-breaking-change-attestation-name-workflow-input-and-output)
@@ -101,6 +103,28 @@ Information on the next release will be added here.
 Use the format "X.Y.Z: Go builder" etc. for format headers to avoid header name
 duplication."
 -->
+
+## Unreleased
+
+### Unreleased: BYOB supports recording the vars context
+
+- **Updated**: The BYOB framework GitHub `vars` context. In general, TRWs should
+  use `inputs` to get values from users. However, in the case that `vars` need
+  to be used by the TRW, it should set them in `actions/delegator/setup-generic`
+  in the `slsa-vars` parameter.
+
+  ```yaml
+  uses: slsa-framework/slsa-github-generator/actions/delegator/setup-generic@v2.0.0
+    with:
+      slsa-workflow-recipient: "delegator_generic_slsa3.yml"
+      slsa-rekor-log-public: ${{ inputs.rekor-log-public }}
+      slsa-runner-label: "ubuntu-latest"
+      slsa-build-action-path: "./internal/callback_action"
+      slsa-workflow-inputs: ${{ toJson(inputs) }}
+      slsa-workflow-masked-inputs: username
+      slsa-vars: ${{ toJson(vars) }}
+      slsa-masked-vars: AWS_ACCOUNT_ID
+  ```
 
 ## v2.0.0
 

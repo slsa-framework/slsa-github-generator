@@ -74,6 +74,8 @@ jobs:
           slsa-runner-label: "ubuntu-latest"
           slsa-build-action-path: "./internal/builders/maven"
           slsa-workflow-inputs: "${{ toJson(inputs) }}"
+          # NOTE: vars not recorded because they aren't used in this TRW
+          # or in the callback action.
 
   slsa-run:
     needs: slsa-setup

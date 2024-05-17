@@ -112,6 +112,8 @@ function createToken(obj: githubObj, sha1: string): rawTokenInterface {
       },
       inputs: new Map(),
       masked_inputs: [],
+      vars: new Map(),
+      masked_vars: [],
     },
   };
   return token;

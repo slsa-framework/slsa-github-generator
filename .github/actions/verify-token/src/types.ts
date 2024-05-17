@@ -70,6 +70,11 @@ export interface rawTokenInterface {
     inputs: Map<string, string | number | boolean>;
     // masked_inputs is a list of input names who's value should be masked in the provenance.
     masked_inputs: string[];
+
+    // vars holds the vars context.
+    vars: Map<string, string>;
+    // masked_vars is a list of var names who's value should be masked in the provenance.
+    masked_vars: string[];
   };
 }
 
