@@ -132,6 +132,7 @@ Below is a non-exhaustive list of projects that use the builders in this reposit
 [![hishtory stars](https://img.shields.io/github/stars/ddworken/hishtory?logo=github&label=ddworken/hishtory)](https://github.com/ddworken/hishtory)
 [![PrivateBin stars](https://img.shields.io/github/stars/PrivateBin/PrivateBin?logo=github&label=PrivateBin/PrivateBin)](https://github.com/PrivateBin/PrivateBin)
 [![NoPorts stars](https://img.shields.io/github/stars/atsign-foundation/noports?logo=github&label=Atsign-Foundation/NoPorts)](https://github.com/atsign-foundation/noports)
+[![openfga stars](https://img.shields.io/github/stars/openfga/openfga?logo=github&label=openfga/openfga)](https://github.com/openfga/openfga)
 
 [Edit this file](https://github.com/slsa-framework/slsa-github-generator/edit/main/README.md) to add your repository!
 
