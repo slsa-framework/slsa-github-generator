@@ -53,9 +53,13 @@ type BuildType interface {
 
 // GithubActionsBuild is a basic build type for builders running in GitHub Actions.
 type GithubActionsBuild struct {
-	Context  github.WorkflowContext
-	Vars     github.VarsContext
-	Clients  ClientProvider
+	// Context is the build's `github` context.
+	Context github.WorkflowContext
+	// Vars is the build's `vars` context.
+	Vars github.VarsContext
+	// Clients are the GitHub OIDC and API clients.
+	Clients ClientProvider
+	// Subjects are the build subjects.
 	Subjects []intoto.Subject
 }
 
