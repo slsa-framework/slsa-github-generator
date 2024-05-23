@@ -6,7 +6,7 @@
 [![Slack](https://img.shields.io/static/v1?label=openssf.slack.com&message=%23slsa-tooling&color=4A154B&logo=slack)](https://slack.openssf.org/)
 [![SLSA 3](https://slsa.dev/images/gh-badge-level3.svg)](https://slsa.dev)
 
-<img align="right" src="https://slsa.dev/images/logo-mono.svg" width="140" height="140">
+<img alt="SLSA logo" align="right" src="https://slsa.dev/images/logo-mono.svg" width="140" height="140">
 
 <!-- markdown-toc --bullets="-" -i README.md -->
 
@@ -132,6 +132,7 @@ Below is a non-exhaustive list of projects that use the builders in this reposit
 [![hishtory stars](https://img.shields.io/github/stars/ddworken/hishtory?logo=github&label=ddworken/hishtory)](https://github.com/ddworken/hishtory)
 [![PrivateBin stars](https://img.shields.io/github/stars/PrivateBin/PrivateBin?logo=github&label=PrivateBin/PrivateBin)](https://github.com/PrivateBin/PrivateBin)
 [![NoPorts stars](https://img.shields.io/github/stars/atsign-foundation/noports?logo=github&label=Atsign-Foundation/NoPorts)](https://github.com/atsign-foundation/noports)
+[![openfga stars](https://img.shields.io/github/stars/openfga/openfga?logo=github&label=openfga/openfga)](https://github.com/openfga/openfga)
 
 [Edit this file](https://github.com/slsa-framework/slsa-github-generator/edit/main/README.md) to add your repository!
 
@@ -174,20 +175,20 @@ requirements for [SLSA Build level 3 and above](https://slsa.dev/spec/v1.0/level
 
 This repository hosts the following builders:
 
-| Ecosystem |      Builder      |  Description | Status |
-|:-----------|:-----------------|:------------|:--------|
-| [Go](https://go.dev/) projects | [Go Builder](internal/builders/go/README.md) | Builds and generates provenance for Go projects | [available since v1.0.0](https://github.com/slsa-framework/slsa-github-generator/milestone/1) |
-| [Node.js](https://nodejs.org) projects | [Node.js Builder](internal/builders/nodejs/README.md)   |  Builds and generates provenance for npm packages | [Beta since v1.6.0](https://github.com/slsa-framework/slsa-github-generator/milestone/8). [Expected GA release Sept 2023](https://github.com/slsa-framework/slsa-github-generator/milestone/17)
-| [Maven](https://maven.apache.org/) projects | [Maven builder](internal/builders/maven/README.md) | Build Maven packages and generates provenance. Can be uploaded to [Maven central](https://search.maven.org) | [Beta since v1.9.0](https://github.com/slsa-framework/slsa-github-generator/milestone/14) |
-| [Gradle](https://gradle.org/) projects | [Gradle builder](internal/builders/gradle/README.md) | Build Gradle projects and generates provenance. Can be uploaded to [Maven central](https://search.maven.org) | [Beta since v1.9.0](https://github.com/slsa-framework/slsa-github-generator/milestone/15) |
-| [Bazel](https://bazel.build/) projects | [Bazel builder](internal/builders/bazel/README.md) | Builds [Bazel](https://bazel.build/) projects and generates provenance | [WIP](https://github.com/slsa-framework/slsa-github-generator/milestone/16) |
-| [docker](https://www.docker.com/) images | Container Builder | Builds docker containers and generates provenance. The generated provenance is compatible with [cosign](https://github.com/sigstore/cosign)'s attestation format | [WIP](https://github.com/slsa-framework/slsa-github-generator/milestone/5)  |
-| Any | [Container-based Builder](internal/builders/docker/README.md) | Builds projects whose build pipeline is defined with a Dockerfile | [Beta since v1.7.0](https://github.com/slsa-framework/slsa-github-generator/milestone/16) |
+| Ecosystem                                   | Builder                                                       | Description                                                                                                                                                      | Status                                                                                                                                                                                          |
+| :------------------------------------------ | :------------------------------------------------------------ | :--------------------------------------------------------------------------------------------------------------------------------------------------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [Go](https://go.dev/) projects              | [Go Builder](internal/builders/go/README.md)                  | Builds and generates provenance for Go projects                                                                                                                  | [available since v1.0.0](https://github.com/slsa-framework/slsa-github-generator/milestone/1)                                                                                                   |
+| [Node.js](https://nodejs.org) projects      | [Node.js Builder](internal/builders/nodejs/README.md)         | Builds and generates provenance for npm packages                                                                                                                 | [Beta since v1.6.0](https://github.com/slsa-framework/slsa-github-generator/milestone/8). [Expected GA release Sept 2023](https://github.com/slsa-framework/slsa-github-generator/milestone/17) |
+| [Maven](https://maven.apache.org/) projects | [Maven builder](internal/builders/maven/README.md)            | Build Maven packages and generates provenance. Can be uploaded to [Maven central](https://search.maven.org)                                                      | [Beta since v1.9.0](https://github.com/slsa-framework/slsa-github-generator/milestone/14)                                                                                                       |
+| [Gradle](https://gradle.org/) projects      | [Gradle builder](internal/builders/gradle/README.md)          | Build Gradle projects and generates provenance. Can be uploaded to [Maven central](https://search.maven.org)                                                     | [Beta since v1.9.0](https://github.com/slsa-framework/slsa-github-generator/milestone/15)                                                                                                       |
+| [Bazel](https://bazel.build/) projects      | [Bazel builder](internal/builders/bazel/README.md)            | Builds [Bazel](https://bazel.build/) projects and generates provenance                                                                                           | [WIP](https://github.com/slsa-framework/slsa-github-generator/milestone/16)                                                                                                                     |
+| [docker](https://www.docker.com/) images    | Container Builder                                             | Builds docker containers and generates provenance. The generated provenance is compatible with [cosign](https://github.com/sigstore/cosign)'s attestation format | [WIP](https://github.com/slsa-framework/slsa-github-generator/milestone/5)                                                                                                                      |
+| Any                                         | [Container-based Builder](internal/builders/docker/README.md) | Builds projects whose build pipeline is defined with a Dockerfile                                                                                                | [Beta since v1.7.0](https://github.com/slsa-framework/slsa-github-generator/milestone/16)                                                                                                       |
 
 There are other available builders using this repository's [BYOB framework](#build-your-own-builder) and not hosted in this repository:
 
-| Ecosystem |      Builder      |  Description | Status |
-|:-----------|:-----------------|:------------|:--------|
+| Ecosystem                                    | Builder                                                                                 | Description                                                               | Status                                                                            |
+| :------------------------------------------- | :-------------------------------------------------------------------------------------- | :------------------------------------------------------------------------ | :-------------------------------------------------------------------------------- |
 | [JReleaser](https://jreleaser.org/) projects | [JReleaser builder](https://github.com/jreleaser/release-action/tree/java#slsa-builder) | Builds and generates provenance using [JReleaser](https://jreleaser.org/) | [since v1.0.0-java](https://github.com/jreleaser/release-action/tree/v1.0.0-java) |
 
 If none of these options fit your needs, use a [generator](#generators) as described below:
