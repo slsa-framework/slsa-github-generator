@@ -109,7 +109,8 @@ duplication."
 ### Unreleased: Vars context recorded in provenance
 
 - **Updated**: GitHub `vars` context is now recorded in provenance for the generic and
-  container generators, and Go builder.
+  container generators. The `vars` context cannot affect the build in the Go
+  builder so it is not recorded.
 
 ## v2.0.0
 

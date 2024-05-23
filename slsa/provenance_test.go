@@ -39,7 +39,7 @@ func (*TestBuild) URI() string {
 	return testBuildType
 }
 
-func (*TestBuild) BuildConfig(context.Context) (interface{}, error) {
+func (*TestBuild) BuildConfig(context.Context) (any, error) {
 	return testBuildConfig, nil
 }
 
@@ -74,7 +74,7 @@ func TestHostedActionsProvenance(t *testing.T) {
 					BuildType:   testBuildType,
 					BuildConfig: testBuildConfig,
 					Invocation: slsa02.ProvenanceInvocation{
-						Environment: map[string]interface{}{
+						Environment: map[string]any{
 							"github_run_id":           "",
 							"github_run_attempt":      "",
 							"github_actor":            "",
@@ -96,7 +96,231 @@ func TestHostedActionsProvenance(t *testing.T) {
 			},
 		},
 		{
-			name: "invocation env",
+			name: "invocation complete",
+			b: &TestBuild{
+				GithubActionsBuild: NewGithubActionsBuild(nil, &github.WorkflowContext{
+					RunID:      "12345",
+					RunAttempt: "1",
+					EventName:  "pull_request",
+					Event: map[string]any{
+						"inputs": map[string]any{
+							"key1": "value1",
+							"key2": 2,
+							"key3": true,
+						},
+					},
+					SHA:       "abcde",
+					RefType:   "branch",
+					Ref:       "some/ref",
+					BaseRef:   "some/base_ref",
+					HeadRef:   "some/head_ref",
+					RunNumber: "102937",
+					Actor:     "user",
+				}, github.VarsContext{
+					"REPO_VAR": "value",
+				}).WithClients(&NilClientProvider{}),
+			},
+			token: &github.OIDCToken{
+				Audience: []string{"hoge"},
+				Expiry:   now.Add(1 * time.Hour),
+			},
+			expected: &intoto.ProvenanceStatement{
+				StatementHeader: intoto.StatementHeader{
+					Type:          intoto.StatementInTotoV01,
+					PredicateType: slsa02.PredicateSLSAProvenance,
+				},
+				Predicate: slsa02.ProvenancePredicate{
+					Builder: slsacommon.ProvenanceBuilder{
+						ID: GithubHostedActionsBuilderID,
+					},
+					BuildType:   testBuildType,
+					BuildConfig: testBuildConfig,
+					Invocation: slsa02.ProvenanceInvocation{
+						Environment: map[string]any{
+							"github_run_id":      "12345",
+							"github_run_attempt": "1",
+							"github_actor":       "user",
+							"github_base_ref":    "some/base_ref",
+							"github_event_name":  "pull_request",
+							"github_event_payload": map[string]any{
+								"inputs": map[string]any{
+									"key1": "value1",
+									"key2": 2,
+									"key3": true,
+								},
+							},
+							"github_head_ref":         "some/head_ref",
+							"github_ref":              "some/ref",
+							"github_ref_type":         "branch",
+							"github_repository_owner": "",
+							"github_run_number":       "102937",
+							"github_sha1":             "abcde",
+						},
+						Parameters: WorkflowParameters{
+							EventInputs: map[string]any{
+								"key1": "value1",
+								"key2": 2,
+								"key3": true,
+							},
+							VarsContext: github.VarsContext{
+								"REPO_VAR": "value",
+							},
+						},
+						ConfigSource: slsa02.ConfigSource{
+							Digest: slsacommon.DigestSet{
+								"sha1": "abcde",
+							},
+						},
+					},
+					Metadata: &slsa02.ProvenanceMetadata{
+						BuildInvocationID: "12345-1",
+						Completeness: slsa02.ProvenanceComplete{
+							Parameters: true,
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "empty invocation parameters",
+			b: &TestBuild{
+				GithubActionsBuild: NewGithubActionsBuild(nil, &github.WorkflowContext{
+					RunID:      "12345",
+					RunAttempt: "1",
+					EventName:  "pull_request",
+					SHA:        "abcde",
+					RefType:    "branch",
+					Ref:        "some/ref",
+					BaseRef:    "some/base_ref",
+					HeadRef:    "some/head_ref",
+					RunNumber:  "102937",
+					Actor:      "user",
+				}, nil).WithClients(&NilClientProvider{}),
+			},
+			token: &github.OIDCToken{
+				Audience: []string{"hoge"},
+				Expiry:   now.Add(1 * time.Hour),
+			},
+			expected: &intoto.ProvenanceStatement{
+				StatementHeader: intoto.StatementHeader{
+					Type:          intoto.StatementInTotoV01,
+					PredicateType: slsa02.PredicateSLSAProvenance,
+				},
+				Predicate: slsa02.ProvenancePredicate{
+					Builder: slsacommon.ProvenanceBuilder{
+						ID: GithubHostedActionsBuilderID,
+					},
+					BuildType:   testBuildType,
+					BuildConfig: testBuildConfig,
+					Invocation: slsa02.ProvenanceInvocation{
+						Environment: map[string]any{
+							"github_run_id":           "12345",
+							"github_run_attempt":      "1",
+							"github_actor":            "user",
+							"github_base_ref":         "some/base_ref",
+							"github_event_name":       "pull_request",
+							"github_head_ref":         "some/head_ref",
+							"github_ref":              "some/ref",
+							"github_ref_type":         "branch",
+							"github_repository_owner": "",
+							"github_run_number":       "102937",
+							"github_sha1":             "abcde",
+						},
+						ConfigSource: slsa02.ConfigSource{
+							Digest: slsacommon.DigestSet{
+								"sha1": "abcde",
+							},
+						},
+					},
+					Metadata: &slsa02.ProvenanceMetadata{
+						BuildInvocationID: "12345-1",
+					},
+				},
+			},
+		},
+		{
+			name: "invocation with inputs",
+			b: &TestBuild{
+				GithubActionsBuild: NewGithubActionsBuild(nil, &github.WorkflowContext{
+					RunID:      "12345",
+					RunAttempt: "1",
+					EventName:  "pull_request",
+					Event: map[string]any{
+						"inputs": map[string]any{
+							"key1": "value1",
+							"key2": 2,
+							"key3": true,
+						},
+					},
+					SHA:       "abcde",
+					RefType:   "branch",
+					Ref:       "some/ref",
+					BaseRef:   "some/base_ref",
+					HeadRef:   "some/head_ref",
+					RunNumber: "102937",
+					Actor:     "user",
+				}, nil).WithClients(&NilClientProvider{}),
+			},
+			token: &github.OIDCToken{
+				Audience: []string{"hoge"},
+				Expiry:   now.Add(1 * time.Hour),
+			},
+			expected: &intoto.ProvenanceStatement{
+				StatementHeader: intoto.StatementHeader{
+					Type:          intoto.StatementInTotoV01,
+					PredicateType: slsa02.PredicateSLSAProvenance,
+				},
+				Predicate: slsa02.ProvenancePredicate{
+					Builder: slsacommon.ProvenanceBuilder{
+						ID: GithubHostedActionsBuilderID,
+					},
+					BuildType:   testBuildType,
+					BuildConfig: testBuildConfig,
+					Invocation: slsa02.ProvenanceInvocation{
+						Environment: map[string]any{
+							"github_run_id":      "12345",
+							"github_run_attempt": "1",
+							"github_actor":       "user",
+							"github_base_ref":    "some/base_ref",
+							"github_event_name":  "pull_request",
+							"github_event_payload": map[string]any{
+								"inputs": map[string]any{
+									"key1": "value1",
+									"key2": 2,
+									"key3": true,
+								},
+							},
+							"github_head_ref":         "some/head_ref",
+							"github_ref":              "some/ref",
+							"github_ref_type":         "branch",
+							"github_repository_owner": "",
+							"github_run_number":       "102937",
+							"github_sha1":             "abcde",
+						},
+						Parameters: WorkflowParameters{
+							EventInputs: map[string]any{
+								"key1": "value1",
+								"key2": 2,
+								"key3": true,
+							},
+						},
+						ConfigSource: slsa02.ConfigSource{
+							Digest: slsacommon.DigestSet{
+								"sha1": "abcde",
+							},
+						},
+					},
+					Metadata: &slsa02.ProvenanceMetadata{
+						BuildInvocationID: "12345-1",
+						Completeness: slsa02.ProvenanceComplete{
+							Parameters: true,
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "invocation with vars",
 			b: &TestBuild{
 				GithubActionsBuild: NewGithubActionsBuild(nil, &github.WorkflowContext{
 					RunID:      "12345",
@@ -129,7 +353,7 @@ func TestHostedActionsProvenance(t *testing.T) {
 					BuildType:   testBuildType,
 					BuildConfig: testBuildConfig,
 					Invocation: slsa02.ProvenanceInvocation{
-						Environment: map[string]interface{}{
+						Environment: map[string]any{
 							"github_run_id":           "12345",
 							"github_run_attempt":      "1",
 							"github_actor":            "user",
