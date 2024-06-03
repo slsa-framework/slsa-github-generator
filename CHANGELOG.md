@@ -10,8 +10,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 <!-- toc -->
 
 - [Unreleased](#unreleased)
-  - [Unreleased: Breaking Change: attestation-name Workflow Input and Output](#unreleased-breaking-change-attestation-name-workflow-input-and-output)
-  - [Unreleased: DSSE Rekor Type](#unreleased-dsse-rekor-type)
+  - [Unreleased: Vars context recorded in provenance](#unreleased-vars-context-recorded-in-provenance)
+- [v2.0.0](#v200)
+  - [v2.0.0: Breaking Change: upload-artifact and download-artifact](#v200-breaking-change-upload-artifact-and-download-artifact)
+  - [v2.0.0: Breaking Change: attestation-name Workflow Input and Output](#v200-breaking-change-attestation-name-workflow-input-and-output)
+  - [v2.0.0: DSSE Rekor Type](#v200-dsse-rekor-type)
 - [v1.10.0](#v1100)
   - [v1.10.0: TUF fix](#v1100-tuf-fix)
   - [v1.10.0: Gradle Builder](#v1100-gradle-builder)
@@ -103,16 +106,33 @@ duplication."
 
 ## Unreleased
 
-### Unreleased: Breaking Change: attestation-name Workflow Input and Output
+### Unreleased: Vars context recorded in provenance
 
-- `attestation-name` as a workflow input to `.github/workflows/generator_generic_slsa3.yml` is now removed. Use `provenance-name` instead.
+- **Updated**: GitHub `vars` context is now recorded in provenance for the generic and
+  container generators. The `vars` context cannot affect the build in the Go
+  builder so it is not recorded.
 
-### Unreleased: DSSE Rekor Type
+## v2.0.0
+
+### v2.0.0: Breaking Change: upload-artifact and download-artifact
+
+- Our workflows now use the new `@v4`s of `actions/upload-artifact` and
+  `actions/download-artifact`, which are incompatiblle with the prior `@v3`. See
+  Our docs on the [generic generator](./internal/builders/generic/README.md#compatibility-with-actionsdownload-artifact)
+  for more information and how to upgrade.
+
+### v2.0.0: Breaking Change: attestation-name Workflow Input and Output
+
+- `attestation-name` as a workflow input to
+  `.github/workflows/generator_generic_slsa3.yml` is now removed. Use
+  `provenance-name` instead.
+
+### v2.0.0: DSSE Rekor Type
 
 - When uploading signed provenance to the log, the entry created in the log is now
   a DSSE Rekor type. This fixes a bug where the current intoto type does not
   persist provenance signatures. The attestation will no longer be persisted
-  in Rekor (#3299)
+  in Rekor ([#3299](https://github.com/slsa-framework/slsa-github-generator/issues/3299))
 
 ## v1.10.0
 
@@ -122,22 +142,23 @@ See the [full change list](https://github.com/slsa-framework/slsa-github-generat
 
 ### v1.10.0: TUF fix
 
-- The cosign TUF roots were fixed (#3350). More details [here](https://github.com/slsa-framework/slsa-github-generator/blob/v1.10.0/README.md#error-updating-to-tuf-remote-mirror-invalid).
+- The cosign TUF roots were fixed ([#3350](https://github.com/slsa-framework/slsa-github-generator/issues/3350)).
+  More details [here](https://github.com/slsa-framework/slsa-github-generator/blob/v1.10.0/README.md#error-updating-to-tuf-remote-mirror-invalid).
 
 ### v1.10.0: Gradle Builder
 
 - The Gradle Builder was fixed when the project root is the same as the
-  repository root (#2727)
+  repository root ([#2727](https://github.com/slsa-framework/slsa-github-generator/issues/2727))
 
 ### v1.10.0: Go Builder
 
 - The `go-version-file` input was fixed so that it can find the `go.mod` file
-  (#2661)
+  ([#2661](https://github.com/slsa-framework/slsa-github-generator/issues/2661))
 
 ### v1.10.0: Container Generator
 
 - A new `provenance-repository` input was added to allow reading provenance from
-  a different container repository than the image itself (#2956)
+  a different container repository than the image itself ([#2956](https://github.com/slsa-framework/slsa-github-generator/issues/2956))
 
 ## v1.9.0
 

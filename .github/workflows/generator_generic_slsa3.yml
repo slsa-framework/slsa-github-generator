@@ -218,6 +218,7 @@ jobs:
         # See: https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions#understanding-the-risk-of-script-injections
         env:
           GITHUB_CONTEXT: "${{ toJSON(github) }}"
+          VARS_CONTEXT: "${{ toJSON(vars) }}"
           UNTRUSTED_PROVENANCE_NAME: "${{ inputs.provenance-name }}"
         run: |
           set -euo pipefail
@@ -238,7 +239,7 @@ jobs:
       - name: Upload the signed provenance
         id: upload-prov
         continue-on-error: true
-        uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v3.1.3
+        uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808 # v4.3.3
         with:
           name: "${{ steps.sign-prov.outputs.provenance-name }}"
           path: "${{ steps.sign-prov.outputs.provenance-name }}"
@@ -284,7 +285,7 @@ jobs:
           sha256: "${{ needs.generator.outputs.provenance-sha256 }}"
 
       - name: Upload provenance
-        uses: softprops/action-gh-release@de2c0eb89ae2a093876385947365aca7b0e5f844 # v0.1.15
+        uses: softprops/action-gh-release@69320dbe05506a9a39fc8ae11030b214ec2d1f87 # v2.0.5
         id: release
         with:
           draft: ${{ inputs.draft-release }}

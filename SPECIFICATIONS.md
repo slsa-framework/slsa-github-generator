@@ -193,14 +193,14 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     steps:
-      - uses: actions/download-artifact@fb598a63ae348fa914e94cd0ff38f362e927b741
+      - uses: actions/download-artifact@c850b930e6ba138125429b7e5c93fc707a7f8427 # v4.1.4
         with:
           name: ${{ needs.build.outputs.go-binary-name }}
-      - uses: actions/download-artifact@fb598a63ae348fa914e94cd0ff38f362e927b741
+      - uses: actions/download-artifact@c850b930e6ba138125429b7e5c93fc707a7f8427 # v4.1.4
         with:
           name: ${{ needs.build.outputs.go-binary-name }}.intoto.jsonl
       - name: Release
-        uses: softprops/action-gh-release@1e07f4398721186383de40550babbdf2b84acfc5
+        uses: softprops/action-gh-release@69320dbe05506a9a39fc8ae11030b214ec2d1f87 # v2.0.5
         if: startsWith(github.ref, 'refs/tags/')
         with:
           files: |
@@ -234,7 +234,7 @@ Given an artifact and a signed provenance, we perform the following steps:
 
 3. **Extract the builder identity from the signing certificate**: Extract certificate information (see [here](https://github.com/sigstore/fulcio/blob/c74e2cfb763dd32def5dc921ff49f579fa262d96/docs/oid-info.md#136141572641--fulcio) for extension OIDs). Verify that the signing certificate’s subject name (job_workflow_ref) is the trusted builder ID at a trusted hash (calling repository SHA in the diagram below). This verifies authenticity of the provenance and guarantees the provenance was correctly populated.
 
-   <img src="images/cert.svg" width="70%" height="70%">
+   <img alt="certificate OIDs" src="images/cert.svg" width="70%" height="70%">
 
 4. **Verify the provenance attestation against a policy, as usual**: Parse the authenticated provenance and match the subject digest inside the provenance with the artifact digest. Additionally verify builder ID, configSource, and other properties according to policy.
 
@@ -277,7 +277,7 @@ More specifically, below are a list of threats we aim to protect against:
 | Build same repo same version but non-default branch                                | Branch and versions both added to provenance using GitHub's trigger payload                                                                                                                                                                                   | Verify provenance info                         |
 | Build same repo different builder                                                  | Sigstore embeds trusted builder's path in cert                                                                                                                                                                                                                | Verify cert's workflow path                    |
 | Build same repo using user-defined workflow                                        | Sigstore embeds builder's path in cert                                                                                                                                                                                                                        | Verify cert's workflow path                    |
-| Forge valid certificate with different repo/hash/builder through GitHub token leak | Token expires when job is complete, cleared after unmarshalling                                                                                                                                                                                               |
+| Forge valid certificate with different repo/hash/builder through GitHub token leak | Token expires when job is complete, cleared after unmarshalling                                                                                                                                                                                               |                                                |
 | Malicious env variables                                                            | Only accepts `CGO_*` and `GO*` env variables                                                                                                                                                                                                                  | Note: should be left to the verifier to decide |
 | Script injections                                                                  | Filter option names using allow-list + use execve()                                                                                                                                                                                                           | Note: should be left to the verifier to decide |
 | Malicious compiler options                                                         | Use allow-list                                                                                                                                                                                                                                                | Note: should be left to the verifier to decide |

@@ -87,7 +87,7 @@ jobs:
       contents: read # For repo checkout.
       actions: read # For getting workflow run info.
     if: startsWith(github.ref, 'refs/tags/')
-    uses: slsa-framework/slsa-github-generator/.github/workflows/builder_bazel_slsa3.yml@v1.10.0
+    uses: slsa-framework/slsa-github-generator/.github/workflows/builder_bazel_slsa3.yml@v2.0.0
     with:
       targets: "//src:fib //src:hello"
       flags: "--strip=always"
@@ -113,7 +113,7 @@ jobs:
       contents: read # For repo checkout.
       actions: read # For getting workflow run info.
     if: startsWith(github.ref, 'refs/tags/')
-    uses: slsa-framework/slsa-github-generator/.github/workflows/builder_bazel_slsa3.yml@v1.10.0
+    uses: slsa-framework/slsa-github-generator/.github/workflows/builder_bazel_slsa3.yml@v2.0.0
     with:
       targets: "//src:fib //src:hello"
       flags: "--strip=always"
@@ -137,7 +137,7 @@ jobs:
       contents: read # For repo checkout.
       actions: read # For getting workflow run info.
     if: startsWith(github.ref, 'refs/tags/')
-    uses: slsa-framework/slsa-github-generator/.github/workflows/builder_bazel_slsa3.yml@v1.10.0
+    uses: slsa-framework/slsa-github-generator/.github/workflows/builder_bazel_slsa3.yml@v2.0.0
     with:
       targets: "//src:fib //src:hello"
       flags: "--strip=always"
@@ -153,13 +153,13 @@ packaged with it. For instance if there is a Java target named Main it would be 
 │   ├── Main # This is the run-script <br />
 │   └── Main_deploy.jar <br />
 
-Each Java target, whether specified as in the targets input as a `_deploy.jar` or not, will be built as a [_deploy.jar](https://bazel.build/reference/be/java) which contains all classes found by classloader and native libraries for dependencies.
+Each Java target, whether specified as in the targets input as a `_deploy.jar` or not, will be built as a [\_deploy.jar](https://bazel.build/reference/be/java) which contains all classes found by classloader and native libraries for dependencies.
 Since the artifact is built on a Github Runner, the run-script has the VM's Java bin path hardcoded in. However, the run-script has been modified to include an additional flag, `--local_javabin` to change the Java Bin path to the user's. To run the JAR using
 the run-script the `--singlejar` flag must be specified to signal to the run-script that the JAR is a `_deploy.jar`. Additionally, `--local_javabin` must be set to the path of the user's Java Bin to run it. Therefore running the JAR would look like the following:
 
 `./Main --singlejar --local_javabin="path/to/user/bin/java"`
 
-Note that Java targets do not need to have the `needs-runfiles` flag to be true in order to create the _deploy.jar and run-script for it.
+Note that Java targets do not need to have the `needs-runfiles` flag to be true in order to create the \_deploy.jar and run-script for it.
 
 ### Referencing the Bazel builder
 
@@ -222,37 +222,37 @@ The Bazel builder accepts the following inputs:
 
 Inputs:
 
-| Name              | Required | Default            | Description                                                                                                                                                                                                                                         |
-| ----------------- | -------- | ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| rekor-log-public  | No       | false              | Set to true to opt-in to posting to the public transparency log. Will generate an error if false for private repositories. This input has no effect for public repositories. See [Private Repositories](#private-repositories).<br>Default: `false` |
-| targets           | Yes      |                    | A space separated list of targets to build and generate artifacts for. See [targets](https://bazel.build/concepts/build-ref#targets) for more information. \                                                                                        |
-| flags             | No       | ""                 | A space separated list of flags to modify the build by. See [flags](https://bazel.build/docs/user-manual#build-options) for more information. \                                                                                                     |
+| Name             | Required | Default | Description                                                                                                                                                                                                                                         |
+| ---------------- | -------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| rekor-log-public | No       | false   | Set to true to opt-in to posting to the public transparency log. Will generate an error if false for private repositories. This input has no effect for public repositories. See [Private Repositories](#private-repositories).<br>Default: `false` |
+| targets          | Yes      |         | A space separated list of targets to build and generate artifacts for. See [targets](https://bazel.build/concepts/build-ref#targets) for more information. \                                                                                        |
+| flags            | No       | ""      | A space separated list of flags to modify the build by. See [flags](https://bazel.build/docs/user-manual#build-options) for more information. \                                                                                                     |
 
 ### Workflow Outputs
 
 The Bazel builder produces the following outputs:
 
-| Name                       | Description                                                            |
-| -------------------------- | ---------------------------------------------------------------------- |
-| provenance-download-name   | The name of the provenance attestation uploaded to the workflow run.   |
+| Name                     | Description                                                          |
+| ------------------------ | -------------------------------------------------------------------- |
+| provenance-download-name | The name of the provenance attestation uploaded to the workflow run. |
 
 ### Provenance Format
 
 Provenance is generated as an [in-toto](https://in-toto.io/) statement with a
 SLSA v1.0 predicate.
 
-| Name           | Value                                                          | Description                                                                                    |
-| -------------- | -------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
-| `subject.name` | Artifact Name | The subject identifies the artifact built by the builder. The provenance attests the build process for the artifact listed.                     |
+| Name           | Value         | Description                                                                                                                 |
+| -------------- | ------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| `subject.name` | Artifact Name | The subject identifies the artifact built by the builder. The provenance attests the build process for the artifact listed. |
 
 The project generates SLSA v1.0 provenance predicate with the following values.
 
-| Name                         | Value                                                                                                                  | Description                                                                                                                                                                                                            |
-| ---------------------------- | ---------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `runDetails.builder.id`      | `https://github.com/slsa-framework/slsa-github-generator/.github/workflows/builder_bazel_slsa3.yml@refs/tags/v1.7.0"`  | Identifies the Bazel builder                                                                                                                                                                                           |
-| `buildDefinition.buildType`  | `"https://github.com/slsa-framework/slsa-github-generator/delegator-generic@v0"`                                       | Identifies a the GitHub Actions build.                                                                                                                                                                                 |
-| `runDetails.metadata.invocationID` | `"[run_id]-[run_attempt]"`                                                                                       | The GitHub Actions [`run_id`](https://docs.github.com/en/actions/learn-github-actions/contexts#github-context) does not update when a workflow is re-run. Run attempt is added to make the build invocation ID unique. |
-| `externalParameters.inputs   | User Inputted Values                                                                                                   | Identifies the inputs to the Bazel Builder that were passed in                                                                                                                                                         |
+| Name                               | Value                                                                                                                 | Description                                                                                                                                                                                                            |
+| ---------------------------------- | --------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `runDetails.builder.id`            | `https://github.com/slsa-framework/slsa-github-generator/.github/workflows/builder_bazel_slsa3.yml@refs/tags/v1.7.0"` | Identifies the Bazel builder                                                                                                                                                                                           |
+| `buildDefinition.buildType`        | `"https://github.com/slsa-framework/slsa-github-generator/delegator-generic@v0"`                                      | Identifies a the GitHub Actions build.                                                                                                                                                                                 |
+| `runDetails.metadata.invocationID` | `"[run_id]-[run_attempt]"`                                                                                            | The GitHub Actions [`run_id`](https://docs.github.com/en/actions/learn-github-actions/contexts#github-context) does not update when a workflow is re-run. Run attempt is added to make the build invocation ID unique. |
+| `externalParameters.inputs         | User Inputted Values                                                                                                  | Identifies the inputs to the Bazel Builder that were passed in                                                                                                                                                         |
 
 ### Provenance Example
 

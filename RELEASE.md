@@ -163,7 +163,7 @@ There is one integration test we cannot easily test "live", so we need to simula
    using this command:
 
    ```shell
-   sed -i "s/uses: slsa-framework\/slsa-github-generator\/\.github\/actions\/generate-builder@\(main\|v[0-9]\+\.[0-9]\+\.[0-9]\+\(-rc\.[0-9]\+\)\?\)/uses: ${BUILDER_REPOSITORY/\//\\\/}\/.github\/actions\/generate-builder@${BUILDER_TAG}/" .github/workflows/builder_go_slsa3.yml
+   sed -i "s/uses: slsa-framework\/slsa-github-generator\/\.github\/actions\/generate-builder@\(main\|v[0-9]\+\.[0-9]\+\.[0-9]\+\(-rc\.[0-9]\+\)\?\)/uses: ${BUILDER_REPOSITORY/\//\/}\/.github\/actions\/generate-builder@${BUILDER_TAG}/" .github/workflows/builder_go_slsa3.yml
    ```
 
    Add `testing: true` as an input.
@@ -177,7 +177,7 @@ There is one integration test we cannot easily test "live", so we need to simula
    using this command:
 
    ```shell
-   sed -i "s/uses: slsa-framework\/slsa-github-generator\/\.github\/actions\/generate-builder@\(main\|v[0-9]\+\.[0-9]\+\.[0-9]\+\(-rc\.[0-9]\+\)\?\)/uses: ${BUILDER_REPOSITORY/\//\\\/}\/.github\/actions\/generate-builder@${BUILDER_TAG}/" .github/workflows/generator_generic_slsa3.yml
+   sed -i "s/uses: slsa-framework\/slsa-github-generator\/\.github\/actions\/generate-builder@\(main\|v[0-9]\+\.[0-9]\+\.[0-9]\+\(-rc\.[0-9]\+\)\?\)/uses: ${BUILDER_REPOSITORY/\//\/}\/.github\/actions\/generate-builder@${BUILDER_TAG}/" .github/workflows/generator_generic_slsa3.yml
    ```
 
    Add `testing: true` as an input.
@@ -191,7 +191,7 @@ There is one integration test we cannot easily test "live", so we need to simula
    using this command:
 
    ```shell
-   sed -i "s/uses: slsa-framework\/slsa-github-generator\/\.github\/actions\/generate-builder@\(main\|v[0-9]\+\.[0-9]\+\.[0-9]\+\(-rc\.[0-9]\+\)\?\)/uses: ${BUILDER_REPOSITORY/\//\\\/}\/.github\/actions\/generate-builder@${BUILDER_TAG}/" .github/workflows/generator_container_slsa3.yml
+   sed -i "s/uses: slsa-framework\/slsa-github-generator\/\.github\/actions\/generate-builder@\(main\|v[0-9]\+\.[0-9]\+\.[0-9]\+\(-rc\.[0-9]\+\)\?\)/uses: ${BUILDER_REPOSITORY/\//\/}\/.github\/actions\/generate-builder@${BUILDER_TAG}/" .github/workflows/generator_container_slsa3.yml
    ```
 
    Add `testing: true` as an input.
@@ -205,7 +205,7 @@ There is one integration test we cannot easily test "live", so we need to simula
    using this command:
 
    ```shell
-   sed -i "s/uses: slsa-framework\/slsa-github-generator\/\.github\/actions\/generate-builder@\(main\|v[0-9]\+\.[0-9]\+\.[0-9]\+\(-rc\.[0-9]\+\)\?\)/uses: ${BUILDER_REPOSITORY/\//\\\/}\/.github\/actions\/generate-builder@${BUILDER_TAG}/" .github/workflows/builder_container-based_slsa3.yml
+   sed -i "s/uses: slsa-framework\/slsa-github-generator\/\.github\/actions\/generate-builder@\(main\|v[0-9]\+\.[0-9]\+\.[0-9]\+\(-rc\.[0-9]\+\)\?\)/uses: ${BUILDER_REPOSITORY/\//\/}\/.github\/actions\/generate-builder@${BUILDER_TAG}/" .github/workflows/builder_container-based_slsa3.yml
    ```
 
    Add `testing: true` as an input.
@@ -618,6 +618,15 @@ Then, for each of the GHA builders, you will need to:
    `./cli/slsa-verifier/testdata/gha_generic_container/$BUILDER_TAG/` directory
    in the slsa-verifier repository.
 
+   Make sure you are authenticated to GitHub's Container registry:
+
+   ```shell
+   gh auth login --scopes=read:packages
+   echo `gh auth token` | docker login ghcr.io -u $GITHUB_USERNAME --password-stdin
+   ```
+
+   Export the image:
+
    ```shell
    cosign save \
        --dir ./cli/slsa-verifier/testdata/gha_generic_container/$BUILDER_TAG/container_workflow_dispatch \
@@ -643,7 +652,7 @@ Update the `Supported Versions` section in [SECURITY.md](./SECURITY.md).
 Update:
 
 1. [Go builder's workflow](https://github.com/actions/starter-workflows/blob/main/ci/go-ossf-slsa3-publish.yml)
-2. [Generic generator's workflow](https://github.com/actions/starter-workflows/blob/main/ci/generic-generator-ossf-slsa3-publish.yml)
+2. [Generic generator's workflow](https://github.com/actions/starter-workflows/blob/main/ci/generator-generic-ossf-slsa3-publish.yml)
 
 ### Announce
 

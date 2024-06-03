@@ -36,6 +36,7 @@ jobs:
       # echo "2e0390eb024a52963db7b95e84a9c2b12c004054a7bad9a97ec0c7c89d4681d2    binary-name" | base64 -w0
       base64-subjects: "MmUwMzkwZWIwMjRhNTI5NjNkYjdiOTVlODRhOWMyYjEyYzAwNDA1NGE3YmFkOWE5N2VjMGM3Yzg5ZDQ2ODFkMiAgICBiaW5hcnktbmFtZQo="
       compile-generator: true
+      provenance-name: build.intoto.jsonl
 
   verify:
     # NOTE: this name is used as the status check name and by protected
@@ -46,8 +47,8 @@ jobs:
     needs: [build]
     if: ${{ always() }}
     steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
-      - uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
+      - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4.1.6
+      - uses: actions/download-artifact@65a9edc5881444af0b9093a5e628f2fe47ea3b2e # v4.1.7
         with:
           name: ${{ needs.build.outputs.provenance-name }}
       - env:
@@ -66,6 +67,7 @@ jobs:
       base64-subjects: "MmUwMzkwZWIwMjRhNTI5NjNkYjdiOTVlODRhOWMyYjEyYzAwNDA1NGE3YmFkOWE5N2VjMGM3Yzg5ZDQ2ODFkMiAgICBiaW5hcnktbmFtZQo="
       compile-generator: true
       continue-on-error: true
+      provenance-name: build-continue-no-error.intoto.jsonl
 
   verify-continue-no-error:
     # NOTE: this name is used as the status check name and by protected
@@ -75,8 +77,8 @@ jobs:
     runs-on: ubuntu-latest
     needs: [build-continue-no-error]
     steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
-      - uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
+      - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4.1.6
+      - uses: actions/download-artifact@65a9edc5881444af0b9093a5e628f2fe47ea3b2e # v4.1.7
         with:
           name: ${{ needs.build-continue-no-error.outputs.provenance-name }}
       - env:
@@ -96,6 +98,7 @@ jobs:
       base64-subjects: "invalid base64 subjects"
       compile-generator: true
       continue-on-error: true
+      provenance-name: build-continue-invalid-subjects.intoto.jsonl
 
   verify-continue-invalid-subjects:
     # NOTE: this name is used as the status check name and by protected
@@ -105,8 +108,8 @@ jobs:
     runs-on: ubuntu-latest
     needs: [build, build-continue-invalid-subjects]
     steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
-      - uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
+      - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4.1.6
+      - uses: actions/download-artifact@65a9edc5881444af0b9093a5e628f2fe47ea3b2e # v4.1.7
         with:
           name: ${{ needs.build.outputs.provenance-name }}
       - env:

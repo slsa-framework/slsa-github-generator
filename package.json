@@ -4,12 +4,15 @@
     "format-yaml-check": "prettier --check  '**/*.yml'  '**/*.yaml'",
     "markdownlint": "markdownlint --dot .",
     "markdownlint-fix": "markdownlint --dot --fix .",
-    "markdown-toc": "markdown-toc --bullets='-' -i"
+    "markdown-toc": "markdown-toc --bullets='-' -i",
+    "renovate-config-validator": "renovate-config-validator --strict"
   },
   "devDependencies": {
+    "@sigstore/cli": "0.8.0",
     "markdown-toc": "1.2.0",
-    "markdownlint-cli": "0.37.0",
-    "prettier": "3.0.3",
-    "sigstore": "2.2.2"
+    "markdownlint-cli": "0.40.0",
+    "prettier": "3.2.5",
+    "renovate": "37.371.0",
+    "sigstore": "2.3.1"
   }
 }

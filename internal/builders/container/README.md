@@ -73,7 +73,7 @@ provenance:
     id-token: write # for creating OIDC tokens for signing.
     packages: write # for uploading attestations.
   if: startsWith(github.ref, 'refs/tags/')
-  uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v1.10.0
+  uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v2.0.0
   with:
     image: ${{ needs.build.outputs.image }}
     digest: ${{ needs.build.outputs.digest }}
@@ -144,7 +144,7 @@ jobs:
       id-token: write # for creating OIDC tokens for signing.
       packages: write # for uploading attestations.
     if: startsWith(github.ref, 'refs/tags/')
-    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v1.10.0
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v2.0.0
     with:
       image: ${{ needs.build.outputs.image }}
       digest: ${{ needs.build.outputs.digest }}
@@ -214,18 +214,18 @@ Inputs:
 | `continue-on-error`              | Set to true to ignore errors. This option is useful if you won't want a failure to fail your entire workflow.<br>Default: `false`                                                                                                                                                       |
 | `gcp-workload-identity-provider` | The full identifier of the Workload Identity Provider, including the project number, pool name, and provider name. If provided, this must be the full identifier which includes all parts:<br>`projects/123456789/locations/global/workloadIdentityPools/my-pool/providers/my-provider` |
 | `gcp-service-account`            | Email address or unique identifier of the Google Cloud service account for which to generate credentials. For example:<br>`my-service-account@my-project.iam.gserviceaccount.com`                                                                                                       |
-| `provenance-registry-username`   | Username when publishing to provenance registry (option 'provenance-registry') instead of image registry. Either `provenance-registry-username` input or `provenance-registry-username` secret is required.                                                                                                                                                                                                                 |
-| `provenance-registry`            | If set, provenance is pushed to this registry instead of image registry. (e.g. `gcr.io/my-new-repo`)                                                                                          |
+| `provenance-registry-username`   | Username when publishing to provenance registry (option 'provenance-registry') instead of image registry. Either `provenance-registry-username` input or `provenance-registry-username` secret is required.                                                                             |
+| `provenance-registry`            | If set, provenance is pushed to this registry instead of image registry. (e.g. `gcr.io/my-new-repo`)                                                                                                                                                                                    |
 
 Secrets:
 
-| Name                | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
-|---------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `image`                        | The OCI image name. This must not include a tag or digest. Either `image` input or `image` secret is **required**. Secret `image` value takes precedence on `image` input value. Should be used in scenarios when the image name contains secret values, and therefore can't be provided directly. Use case - an undisclosed private registry use.                                                                                                                                             |
-| `registry-username`            | Username to log in the container registry. Either `registry-username` input or `registry-username` secret is required. This should only be used for high entropy values such as AWS Access Key as described [here](https://github.com/docker/login-action#aws-elastic-container-registry-ecr). Normal username values could match other input values and cause them to be ignored by GitHub Actions and causing your build to fail. In those cases, use the `registry-username` input instead. |
-| `registry-password`            | **(Required)** Password to log in the container registry.                                                                                                                                                                                                                                                                                                                                                                                                                                      |
-| `provenance-registry-username` | Username when publishing to provenance registry (option 'provenance-registry') instead of image registry. Either `provenance-registry-username` input or `provenance-registry-username` secret is required. This should only be used for high entropy values such as AWS Access Key as described [here](https://github.com/docker/login-action#aws-elastic-container-registry-ecr). Normal username values could match other input values and cause them to be ignored by GitHub Actions and causing your build to fail. In those cases, use the registry-username input instead.                                                                                                                                                                                            |
-| `provenance-registry-password` | Password when publishing to provenance registry instead of image registry.                                               |
+| Name                           | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| ------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `image`                        | The OCI image name. This must not include a tag or digest. Either `image` input or `image` secret is **required**. Secret `image` value takes precedence on `image` input value. Should be used in scenarios when the image name contains secret values, and therefore can't be provided directly. Use case - an undisclosed private registry use.                                                                                                                                                                                                                                |
+| `registry-username`            | Username to log in the container registry. Either `registry-username` input or `registry-username` secret is required. This should only be used for high entropy values such as AWS Access Key as described [here](https://github.com/docker/login-action#aws-elastic-container-registry-ecr). Normal username values could match other input values and cause them to be ignored by GitHub Actions and causing your build to fail. In those cases, use the `registry-username` input instead.                                                                                    |
+| `registry-password`            | **(Required)** Password to log in the container registry.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| `provenance-registry-username` | Username when publishing to provenance registry (option 'provenance-registry') instead of image registry. Either `provenance-registry-username` input or `provenance-registry-username` secret is required. This should only be used for high entropy values such as AWS Access Key as described [here](https://github.com/docker/login-action#aws-elastic-container-registry-ecr). Normal username values could match other input values and cause them to be ignored by GitHub Actions and causing your build to fail. In those cases, use the registry-username input instead. |
+| `provenance-registry-password` | Password when publishing to provenance registry instead of image registry.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
 
 ### Workflow Outputs
 
@@ -373,7 +373,7 @@ This section explains how to generate non-forgeable SLSA provenance with existin
        # contents: read
        packages: write
      if: startsWith(github.ref, 'refs/tags/')
-     uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v1.10.0
+     uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v2.0.0
      with:
        image: ${{ needs.build.outputs.image }}
        digest: ${{ needs.build.outputs.digest }}
@@ -399,7 +399,7 @@ This section explains how to generate non-forgeable SLSA provenance with existin
          - name: Checkout the repository
            uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # v2.3.4
 
-         - uses: actions/setup-go@v3.3.0
+         - uses: actions/setup-go@v5.0.1
            with:
              go-version: 1.19
 
@@ -438,7 +438,7 @@ This section explains how to generate non-forgeable SLSA provenance with existin
          # contents: read
          packages: write
        if: startsWith(github.ref, 'refs/tags/')
-       uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v1.10.0
+       uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v2.0.0
        with:
          image: ${{ needs.build.outputs.image }}
          digest: ${{ needs.build.outputs.digest }}

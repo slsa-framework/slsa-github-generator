@@ -1,4 +1,4 @@
-# Copyright 2023 SLSA Authors
+# Copyright 2024 SLSA Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,19 +12,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-version: 1
-env:
-  - GO111MODULE=on
-  # https://stackoverflow.com/a/62821358/19407
-  - CGO_ENABLED=0
+name: "TODO Issue Reopener"
 
-flags:
-  - -trimpath
-  - -tags=netgo
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 0 * * *"
 
-main: ../path/to/main.go
-goos: linux
-goarch: amd64
-binary: binary-{{ .Os }}-{{ .Arch }}
-ldflags:
-  - "something-{{ .Env.ELSE }}"
+permissions: {}
+
+jobs:
+  issue-reopener:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4.1.6
+      - name: Issue Reopener
+        uses: ianlewis/todo-issue-reopener@339a05bfcc934adf6aa425b968a2d2f2af4f12ad # v1.2.1

@@ -33,16 +33,16 @@ jobs:
       id-token: write
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+      - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4.1.6
       - id: setup
         uses: ./.github/actions/sign-attestations
         with:
           attestations: .github/actions/sign-attestations/testdata/attestations
           output-folder: outputs
       - name: Setup node
-        uses: actions/setup-node@5e21ff4d9bc1a8cf6de233a3057d20ec6b3fb69d # v3
+        uses: actions/setup-node@60edb5dd545a775178f52524783378180af0d1f8 # v4
         with:
-          node-version: 16
+          node-version: 20
       - name: install sigstore-js
         run: npm ci
       # TODO: Add subject verification. This only verifies the signature on the DSSE envelope.
@@ -50,7 +50,7 @@ jobs:
         run: |
           set -euo pipefail
           for file in outputs/*; do
-            ./node_modules/.bin/sigstore verify "$file"
+            npx sigstore verify "$file"
           done
 
   if-succeed:
@@ -62,7 +62,7 @@ jobs:
       contents: read
       issues: write
     steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+      - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4.1.6
         with:
           repository: slsa-framework/example-package
           ref: main
@@ -76,7 +76,7 @@ jobs:
       contents: read
       issues: write
     steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+      - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4.1.6
         with:
           repository: slsa-framework/example-package
           ref: main
