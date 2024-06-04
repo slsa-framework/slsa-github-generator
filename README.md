@@ -6,7 +6,7 @@
 [![Slack](https://img.shields.io/static/v1?label=openssf.slack.com&message=%23slsa-tooling&color=4A154B&logo=slack)](https://slack.openssf.org/)
 [![SLSA 3](https://slsa.dev/images/gh-badge-level3.svg)](https://slsa.dev)
 
-<img align="right" src="https://slsa.dev/images/logo-mono.svg" width="140" height="140">
+<img alt="SLSA logo" align="right" src="https://slsa.dev/images/logo-mono.svg" width="140" height="140">
 
 <!-- markdown-toc --bullets="-" -i README.md -->
 

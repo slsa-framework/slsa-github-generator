@@ -218,6 +218,7 @@ jobs:
         # See: https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions#understanding-the-risk-of-script-injections
         env:
           GITHUB_CONTEXT: "${{ toJSON(github) }}"
+          VARS_CONTEXT: "${{ toJSON(vars) }}"
           UNTRUSTED_PROVENANCE_NAME: "${{ inputs.provenance-name }}"
         run: |
           set -euo pipefail

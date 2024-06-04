@@ -41,11 +41,14 @@ that it is being run in the context of a Github Actions workflow.`,
 			ghContext, err := github.GetWorkflowContext()
 			check(err)
 
+			varsContext, err := github.GetVarsContext()
+			check(err)
+
 			ctx := context.Background()
 
 			b := common.GenericBuild{
 				// NOTE: Subjects are nil because we are only writing the predicate.
-				GithubActionsBuild: slsa.NewGithubActionsBuild(nil, &ghContext),
+				GithubActionsBuild: slsa.NewGithubActionsBuild(nil, &ghContext, varsContext),
 				BuildTypeURI:       containerBuildType,
 			}
 
