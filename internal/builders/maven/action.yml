@@ -56,9 +56,9 @@ on:
 runs:
   using: "composite"
   steps:
-    - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v 3.5.2
+    - uses: actions/checkout@b80ff79f1755d06ba70441c368a6fe801f5f3a62 # v 3.5.2
     - name: Set up JDK
-      uses: actions/setup-java@0ab4596768b603586c0de567f2430c30f5b0d2b0 # v3.13.0
+      uses: actions/setup-java@99b8673ff64fbf99d8d325f52d9a5bdedb8483e9 # v4.2.1
       with:
         distribution: temurin
         java-version: ${{ fromJson(inputs.slsa-workflow-inputs).jdk-version }}

@@ -54,7 +54,7 @@ publishing {
         create<MavenPublication>("maven") {
             artifactId = "test-java-project"
             from(components["java"])
-            
+
             pom {
                 name.set("test-java-project")
                 description.set("Adam's test java project")
@@ -173,7 +173,7 @@ publishing {
                         extension = ext
                     }
                 }
-            }            
+            }
             pom {
                 name.set("test-java-project")
                 description.set("Adams test java project")

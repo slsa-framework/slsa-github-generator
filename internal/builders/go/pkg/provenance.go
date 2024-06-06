@@ -99,7 +99,7 @@ func GenerateProvenance(name, digest, command, envs, workingDir string,
 					"sha256": digest,
 				},
 			},
-		}, &gh),
+		}, &gh, nil),
 		buildConfig: buildConfig{
 			Version: buildConfigVersion,
 			Steps: []step{
