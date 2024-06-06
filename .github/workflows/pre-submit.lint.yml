@@ -28,6 +28,48 @@ permissions:
   contents: read
 
 jobs:
+  formatting:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+      - uses: actions/setup-go@cdcb36043654635271a94b9a6d1392de5bb323a7 # v5.0.1
+        with:
+          go-version: "1.22.3"
+      - uses: actions/setup-node@5e21ff4d9bc1a8cf6de233a3057d20ec6b3fb69d # v3.8.1
+        with:
+          node-version: 20
+
+      - name: Install gofumpt
+        run: go install mvdan.cc/gofumpt@v0.6.0
+
+      - name: Install shfmt
+        env:
+          SHFMT_VERSION: "3.8.0"
+          SHFMT_CHECKSUM: "27b3c6f9d9592fc5b4856c341d1ff2c88856709b9e76469313642a1d7b558fe0"
+        run: |
+          set -euo pipefail
+
+          #Install golangci-lint
+          curl -sSLo shfmt "https://github.com/mvdan/sh/releases/download/v${SHFMT_VERSION}/shfmt_v${SHFMT_VERSION}_linux_amd64"
+          echo "shfmt checksum is $(sha256sum shfmt | awk '{ print $1 }')"
+          echo "expected checksum is ${SHFMT_CHECKSUM}"
+          echo "${SHFMT_CHECKSUM}  shfmt" | sha256sum --strict --check --status || exit 1
+          chmod +x shfmt
+          mv shfmt /usr/local/bin
+
+      - run: make format
+      - name: Check for unformatted files
+        id: diff
+        run: |
+          set -euo pipefail
+          if [ "$(git diff --ignore-space-at-eol . | wc -l)" -gt "0" ]; then
+            echo "Detected uncommitted changes after formatting."
+            echo "Run 'make format' to format files in your PR."
+            echo "See status below:"
+            git diff
+            exit 1
+          fi
+
   markdownlint:
     runs-on: ubuntu-latest
     steps:
@@ -36,18 +78,6 @@ jobs:
         with:
           node-version: 20
       - run: make markdownlint
-
-  markdown-toc:
-    name: markdown-toc
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/setup-node@60edb5dd545a775178f52524783378180af0d1f8 # v4.0.2
-        with:
-          node-version: 20
-      - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4.1.6
-      - run: make markdown-toc
-      - name: markdown-toc
-        run: ./.github/workflows/scripts/pre-submit.markdown/markdown-toc.sh
 
   golangci-lint:
     runs-on: ubuntu-latest
@@ -143,24 +173,3 @@ jobs:
         with:
           node-version: 20
       - run: make renovate-config-validator
-
-  autogen:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4.1.6
-      - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4.1.6
-        with:
-          repository: mbrukman/autogen
-          ref: 9026b78e17573b5dda4bff79033c352443551dc5
-          path: autogen
-      - run: |
-          echo "${GITHUB_WORKSPACE}/autogen" >> "${GITHUB_PATH}"
-      - run: make autogen
-      - name: check diff
-        run: |
-          set -euo pipefail
-          if [ "$(GIT_PAGER="cat" git diff --ignore-space-at-eol | wc -l)" -gt "0" ]; then
-              echo "Detected license header changes.  See status below:"
-              GIT_PAGER="cat" git diff
-              exit 1
-          fi

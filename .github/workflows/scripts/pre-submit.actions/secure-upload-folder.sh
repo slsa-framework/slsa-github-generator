@@ -17,14 +17,14 @@
 set -euo pipefail
 
 compare_trees() {
-    local upload_tree="$1"
-    local download_tree="$2"
-    if [[ "${upload_tree}" != "${download_tree}" ]]; then
-        echo "Folder trees differ: ${upload_tree} != ${download_tree}"
-        echo "Upload tree: ${upload_tree}"
-        echo "Download tree: ${download_tree}"
-        exit 1
-    fi
+  local upload_tree="$1"
+  local download_tree="$2"
+  if [[ "${upload_tree}" != "${download_tree}" ]]; then
+    echo "Folder trees differ: ${upload_tree} != ${download_tree}"
+    echo "Upload tree: ${upload_tree}"
+    echo "Download tree: ${download_tree}"
+    exit 1
+  fi
 }
 
 original_wd="$PWD"

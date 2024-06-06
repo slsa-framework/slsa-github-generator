@@ -20,7 +20,7 @@
 set -euo pipefail
 
 if [ "$(GIT_PAGER="cat" git diff --ignore-space-at-eol | wc -l)" -gt "0" ]; then
-    echo "Detected TOC changes.  See status below:"
-    GIT_PAGER="cat" git diff
-    exit 1
+  echo "Detected TOC changes.  See status below:"
+  GIT_PAGER="cat" git diff
+  exit 1
 fi

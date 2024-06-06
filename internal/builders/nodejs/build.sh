@@ -20,8 +20,8 @@ echo "** Using the following npm version **"
 npm version
 
 if [ "${GITHUB_WORKSPACE}" == "" ]; then
-    echo "\$GITHUB_WORKSPACE is empty."
-    exit 1
+  echo "\$GITHUB_WORKSPACE is empty."
+  exit 1
 fi
 
 untrusted_realpath=$(realpath -e "${UNTRUSTED_DIRECTORY}")
@@ -33,8 +33,8 @@ echo "GitHub workspace '${GITHUB_WORKSPACE}' resolved to '${github_workspace_rea
 # TODO(#1893): Consolidate directory traversal checks
 echo "Checking directory '${untrusted_realpath}' is a sub-directory of '${github_workspace_realpath}'"
 if [[ "${untrusted_realpath}" != "${github_workspace_realpath}" ]] && [[ ${untrusted_realpath} != ${github_workspace_realpath}/* ]]; then
-    echo "${UNTRUSTED_DIRECTORY} not a sub-directory of ${GITHUB_WORKSPACE}"
-    exit 1
+  echo "${UNTRUSTED_DIRECTORY} not a sub-directory of ${GITHUB_WORKSPACE}"
+  exit 1
 fi
 # Directory was validated. Explicitly trust it.
 directory="${UNTRUSTED_DIRECTORY}"
@@ -45,9 +45,9 @@ cd "${directory}"
 run_scripts=$(echo "${UNTRUSTED_RUN_SCRIPTS//[$'\t\r\n ']/}" | tr "," "\n")
 
 for script in $run_scripts; do
-    echo "** Running 'npm run $script' **"
-    npm run "$script"
-    echo
+  echo "** Running 'npm run $script' **"
+  npm run "$script"
+  echo
 done
 
 echo "** Running 'npm pack' **"
@@ -59,23 +59,23 @@ package_name=$(echo "${pack_json}" | jq -r '.[0].name')
 package_version=$(echo "${pack_json}" | jq -r '.[0].version')
 package_integrity=$(echo "${pack_json}" | jq -r '.[0].integrity')
 if [ ! -f "${package_filename}" ]; then
-    echo "** ${package_filename} not found. **"
-    ls -lh
-    # NOTE: Some versions of npm pack --json returns a filename that is incorrect
-    # attempt to determine the name by converting the package name and version
-    # into the filename '<namespace>-<name>-<version>.tgz'.
-    package_name=$(cut -d "=" -f 2 <<<"$(npm run env | grep "npm_package_name")")
-    package_filename="$(echo "${package_name}" | sed 's/^@//' | sed 's/\//-/g')-${package_version}.tgz"
-    echo "** Trying ${package_filename}... **"
+  echo "** ${package_filename} not found. **"
+  ls -lh
+  # NOTE: Some versions of npm pack --json returns a filename that is incorrect
+  # attempt to determine the name by converting the package name and version
+  # into the filename '<namespace>-<name>-<version>.tgz'.
+  package_name=$(cut -d "=" -f 2 <<<"$(npm run env | grep "npm_package_name")")
+  package_filename="$(echo "${package_name}" | sed 's/^@//' | sed 's/\//-/g')-${package_version}.tgz"
+  echo "** Trying ${package_filename}... **"
 fi
 
 # NOTE: Get the absolute path of the file since we could be in a subdirectory.
 resolved_filename=$(realpath -e "${package_filename}")
 
 {
-    echo "file-path=${resolved_filename}"
-    echo "package-filename=${package_filename}"
-    echo "package-name=${package_name}"
-    echo "package-version=${package_version}"
-    echo "package-integrity=${package_integrity}"
-}>>"$GITHUB_OUTPUT"
+  echo "file-path=${resolved_filename}"
+  echo "package-filename=${package_filename}"
+  echo "package-name=${package_name}"
+  echo "package-version=${package_version}"
+  echo "package-integrity=${package_integrity}"
+} >>"${GITHUB_OUTPUT}"

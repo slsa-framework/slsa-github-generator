@@ -37,93 +37,92 @@ echo "rc: $rc"
 cd -
 
 if [ "$RELEASE_TAG" == "" ]; then
-    echo "Release tag is empty: \"$RELEASE_TAG\""
-    exit 1
+  echo "Release tag is empty: \"$RELEASE_TAG\""
+  exit 1
 fi
 
 cd __THIS_REPO__
 
 # Verify our Actions are referenced by the release tag in workflows.
 results=$(
-    find .github/workflows/ -maxdepth 1 -name '*.yaml' -o -name '*.yml' -type f -print0 |
-        xargs -0 grep -Pn "slsa-framework/slsa-github-generator/.*@(?!$RELEASE_TAG)" |
-        sed 's/\(.*:\) *uses:.*\(\/.*\)/\1 [...]\2/' ||
-        true
+  find .github/workflows/ -maxdepth 1 -name '*.yaml' -o -name '*.yml' -type f -print0 |
+    xargs -0 grep -Pn "slsa-framework/slsa-github-generator/.*@(?!$RELEASE_TAG)" |
+    sed 's/\(.*:\) *uses:.*\(\/.*\)/\1 [...]\2/' ||
+    true
 )
 if [[ "$results" != "" ]]; then
-    echo "Some Actions are not referenced via the correct release tag \"$RELEASE_TAG\" in workflows"
-    echo "$results"
-    exit 1
+  echo "Some Actions are not referenced via the correct release tag \"$RELEASE_TAG\" in workflows"
+  echo "$results"
+  exit 1
 fi
 
 # Verify our Actions are referenced by the release tag in internal actions.
 results=$(
-    find .github/actions/ -maxdepth 2 -name '*.yaml' -o -name '*.yml' -type f -print0 |
-        xargs -0 grep -Pn "slsa-framework/slsa-github-generator/.*@(?!$RELEASE_TAG)" |
-        sed 's/\(.*:\) *uses:.*\(\/.*\)/\1 [...]\2/' ||
-        true
+  find .github/actions/ -maxdepth 2 -name '*.yaml' -o -name '*.yml' -type f -print0 |
+    xargs -0 grep -Pn "slsa-framework/slsa-github-generator/.*@(?!$RELEASE_TAG)" |
+    sed 's/\(.*:\) *uses:.*\(\/.*\)/\1 [...]\2/' ||
+    true
 )
 if [[ "$results" != "" ]]; then
-    echo "Some Actions are not referenced via the correct release tag \"$RELEASE_TAG\" in internal actions"
-    echo "$results"
-    exit 1
+  echo "Some Actions are not referenced via the correct release tag \"$RELEASE_TAG\" in internal actions"
+  echo "$results"
+  exit 1
 fi
 
 # Verify our Actions are referenced by the release tag in external actions.
 results=$(
-    find actions/ -maxdepth 3 -name '*.yaml' -o -name '*.yml' -type f -print0 |
-        xargs -0 grep -Pn "slsa-framework/slsa-github-generator/.*@(?!$RELEASE_TAG)" |
-        sed 's/\(.*:\) *uses:.*\(\/.*\)/\1 [...]\2/' ||
-        true
+  find actions/ -maxdepth 3 -name '*.yaml' -o -name '*.yml' -type f -print0 |
+    xargs -0 grep -Pn "slsa-framework/slsa-github-generator/.*@(?!$RELEASE_TAG)" |
+    sed 's/\(.*:\) *uses:.*\(\/.*\)/\1 [...]\2/' ||
+    true
 )
 if [[ "$results" != "" ]]; then
-    echo "Some Actions are not referenced via the correct release tag \"$RELEASE_TAG\" in external actions"
-    echo "$results"
-    exit 1
+  echo "Some Actions are not referenced via the correct release tag \"$RELEASE_TAG\" in external actions"
+  echo "$results"
+  exit 1
 fi
 
 # Verify our Actions are referenced by the release tag in BYOB actions.
 results=$(
-    find internal/builders/ -maxdepth 2 -name '*.yaml' -o -name '*.yml' -type f -print0 |
-        xargs -0 grep -Pn "slsa-framework/slsa-github-generator/.*@(?!$RELEASE_TAG)" |
-        sed 's/\(.*:\) *uses:.*\(\/.*\)/\1 [...]\2/' ||
-        true
+  find internal/builders/ -maxdepth 2 -name '*.yaml' -o -name '*.yml' -type f -print0 |
+    xargs -0 grep -Pn "slsa-framework/slsa-github-generator/.*@(?!$RELEASE_TAG)" |
+    sed 's/\(.*:\) *uses:.*\(\/.*\)/\1 [...]\2/' ||
+    true
 )
 if [[ "$results" != "" ]]; then
-    echo "Some Actions are not referenced via the correct release tag \"$RELEASE_TAG\" in BYOB actions"
-    echo "$results"
-    exit 1
+  echo "Some Actions are not referenced via the correct release tag \"$RELEASE_TAG\" in BYOB actions"
+  echo "$results"
+  exit 1
 fi
 
 # Verify the Maven Actions use the correct builder ref.
 results=$(
-    find actions/maven/ internal/builders/maven/ -name '*.yaml' -o -name '*.yml' -type f -print0 |
-        xargs -0 grep -Pn "ref:(\s*(?!$RELEASE_TAG)[^\s]+)" ||
-        true
+  find actions/maven/ internal/builders/maven/ -name '*.yaml' -o -name '*.yml' -type f -print0 |
+    xargs -0 grep -Pn "ref:(\s*(?!$RELEASE_TAG)[^\s]+)" ||
+    true
 )
 if [[ "$results" != "" ]]; then
-    echo "Some Maven Actions are referencing the builder at the incorrect tag \"$RELEASE_TAG\""
-    echo "$results"
-    exit 1
+  echo "Some Maven Actions are referencing the builder at the incorrect tag \"$RELEASE_TAG\""
+  echo "$results"
+  exit 1
 fi
 
-
 if [[ "$RELEASE_TAG" =~ .*-rc\.[0-9]*$ ]]; then
-    # don't check documentation for release candidates
-    exit 0
+  # don't check documentation for release candidates
+  exit 0
 fi
 
 # Verify documentation refers to the most recent release tag
 results=$(
-    find . -name "*.md" -print0 |
-        xargs -0 grep -Pn "uses: slsa-framework/slsa-github-generator/.*@(?!<|$RELEASE_TAG)" |
-        sed "s/\(.*:\) *uses:.*\(\/.*\)/\1 [...]\2/" ||
-        true
+  find . -name "*.md" -print0 |
+    xargs -0 grep -Pn "uses: slsa-framework/slsa-github-generator/.*@(?!<|$RELEASE_TAG)" |
+    sed "s/\(.*:\) *uses:.*\(\/.*\)/\1 [...]\2/" ||
+    true
 )
 
 if [[ "$results" != "" ]]; then
-    echo "Some documentation refers to an incorrect release tag"
-    echo "Allowed tags are \"<pseudo_tags>\" or \"$RELEASE_TAG\""
-    echo "$results"
-    exit 1
+  echo "Some documentation refers to an incorrect release tag"
+  echo "Allowed tags are \"<pseudo_tags>\" or \"$RELEASE_TAG\""
+  echo "$results"
+  exit 1
 fi

@@ -30,3 +30,7 @@ rules:
     # Allow Github Actions keys like 'on'
     check-keys: false
   comments-indentation: false
+  indentation:
+    spaces: 2
+    indent-sequences: true
+    check-multi-line-strings: false
