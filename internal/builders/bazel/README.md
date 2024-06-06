@@ -27,6 +27,9 @@ workflow the "Bazel builder" from now on.
   - [Workflow Outputs](#workflow-outputs)
   - [Provenance Format](#provenance-format)
   - [Provenance Example](#provenance-example)
+- [Verification and Rebuilding](#verification-and-rebuilding)
+  - [Verification](#verification)
+  - [Rebuilding](#rebuilding)
 
 <!-- tocstop -->
 
@@ -319,3 +322,48 @@ The following is an example of the generated provenance.
   }
 }
 ```
+
+## Verification and Rebuilding
+
+### Verification
+
+Verification of the provenance generated for an artifact can be done with one of two ways. Using the [`slsa-verifier`](https://github.com/slsa-framework/slsa-verifier)
+as follows on their [instructions](https://github.com/slsa-framework/slsa-verifier#verification-for-github-builders) for verification of Github builder artifacts.
+
+Verification can also be done through the passing the `--verify` flag to the rebuilder.
+
+### Rebuilding
+
+To rebuild your artifacts and check for reproducible builds use the Bazel Rebuilder,
+which takes in the following arguments on the command line.
+
+Arguments:
+
+| Argument Name to Rebuilder     | Required For Rebuilder | Additionally Required for Verification   | Description                                                                                                                                                                                                                                         |
+| ------------------------- | -------- | ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `--artifact_path=<path>`  | Yes       |               | Path to the artifact to rebuild and compares checksums with. |
+| `--prov_path=<path>`           | Yes      |                    | Path to the provenance of the artifact that is being rebuilt.   |
+| `--source_uri=<uri>`             | Yes       |                  | expected source repository that should have produced the binary, e.g. github.com/some/repo
+| `--builder_id=<id>`             | No       | Yes                 | The unique builder ID who created the provenance
+| `--env_image=<image>`            | No       |                  | A published image to be pull to build on top of
+| `--verify`            | No       | Yes                 | Flag to verify provenance for artifact being rebuilt
+| `--verbose`            | No       |                  | Flag to include extra output to track progress
+| `--cleanup`           | No       |                  | Removes cloned repos (`source_uri` and `slsa-verifier`) as well as directory for rebuilt artifacts
+
+The rebuilder does the following:
+
+1. Verifies the provenance for the artifact to rebuild,
+2. Parses out the attested build process from the provenance,
+3. Clones the repo that produced it,
+4. Rebuilds the inputted artifact with the attest build process,
+5. Compares checksums for reproducibility
+
+An example usage of the rebuilder is the following command:
+`./rebuilder.sh --artifact_path==<path> --prov_path=<path> --source_uri=<uri> --builder_id=<id> --env_image=<image> --verify --verbose`
+
+Using an image that dictates the build environment is needed to make reproducible rebuilding possible. The artifact
+must be built on an image from a registry originally during the Github Actions Workflow run to also build on a provided image during the rebuilding process.
+
+If no image was provided or if the artifact was not originally built on an image, the rebuilding process will use
+the user's local environment, thus diminishing the chances of a reproducible rebuild due to non-determinism from the
+different build environments.
