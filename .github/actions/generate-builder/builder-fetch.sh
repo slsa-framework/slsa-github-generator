@@ -29,46 +29,46 @@ PREFIX="refs/tags/"
 
 # Extract version.
 if [[ "$BUILDER_REF" != "$PREFIX"* ]]; then
-    echo "Invalid ref: $BUILDER_REF. Expected ref of the form refs/tags/vX.Y.Z"
-    exit 2
+  echo "Invalid ref: $BUILDER_REF. Expected ref of the form refs/tags/vX.Y.Z"
+  exit 2
 fi
 
 builder_tag="${BUILDER_REF#"$PREFIX"}"
 
 if [[ "$builder_tag" == "$(echo -n "$builder_tag" | grep -P '^[a-f\d]{40}$')" ]]; then
-    echo "Builder referenced by hash: $builder_tag"
-    echo "Resolving..."
+  echo "Builder referenced by hash: $builder_tag"
+  echo "Resolving..."
 
-    release_tag=""
+  release_tag=""
 
-    # List the releases and find the corresponding hash.
-    release_list=$(gh release -R "$BUILDER_REPOSITORY" -L 50 list)
-    while read -r line; do
-        tag=$(echo "$line" | cut -f1)
-        branch=$(gh release -R "$BUILDER_REPOSITORY" view "$tag" --json targetCommitish --jq '.targetCommitish')
-        if [[ "$branch" != "main" ]]; then
-            continue
-        fi
-        commit=$(gh api /repos/"$BUILDER_REPOSITORY"/git/ref/tags/"$tag" | jq -r '.object.sha')
-        if [[ "$commit" == "$builder_tag" ]]; then
-            release_tag="$tag"
-            echo "Found tag $builder_tag match at tag $tag and commit $commit"
-            break
-        fi
-    done <<<"$release_list"
-
-    if [[ -z "$release_tag" ]]; then
-        echo "Tag not found for $builder_tag"
-        exit 3
+  # List the releases and find the corresponding hash.
+  release_list=$(gh release -R "$BUILDER_REPOSITORY" -L 50 list)
+  while read -r line; do
+    tag=$(echo "$line" | cut -f1)
+    branch=$(gh release -R "$BUILDER_REPOSITORY" view "$tag" --json targetCommitish --jq '.targetCommitish')
+    if [[ "$branch" != "main" ]]; then
+      continue
     fi
+    commit=$(gh api /repos/"$BUILDER_REPOSITORY"/git/ref/tags/"$tag" | jq -r '.object.sha')
+    if [[ "$commit" == "$builder_tag" ]]; then
+      release_tag="$tag"
+      echo "Found tag $builder_tag match at tag $tag and commit $commit"
+      break
+    fi
+  done <<<"$release_list"
 
-    builder_tag="$release_tag"
+  if [[ -z "$release_tag" ]]; then
+    echo "Tag not found for $builder_tag"
+    exit 3
+  fi
+
+  builder_tag="$release_tag"
 fi
 
 if [[ "$builder_tag" != "$(echo -n "$builder_tag" | grep -oe '^v[1-9]\+\.[0-9]\+\.[0-9]\+\(-rc\.[0-9]\+\)\?$')" ]]; then
-    echo "Invalid builder version: $builder_tag. Expected version of the form vX.Y.Z(-rc.A)"
-    echo "For details see https://github.com/slsa-framework/slsa-github-generator/blob/main/README.md#referencing-slsa-builders-and-generators"
-    exit 7
+  echo "Invalid builder version: $builder_tag. Expected version of the form vX.Y.Z(-rc.A)"
+  echo "For details see https://github.com/slsa-framework/slsa-github-generator/blob/main/README.md#referencing-slsa-builders-and-generators"
+  exit 7
 fi
 
 echo "Builder version: $builder_tag"
@@ -88,23 +88,23 @@ echo "verifier hash verification has passed"
 # If this is a pre-release, set SLSA_VERIFIER_TESTING
 pre_release=$(echo "${builder_tag#"v"}" | cut -s -d '-' -f2)
 if [ "${pre_release}" != "" ]; then
-    export SLSA_VERIFIER_TESTING="true"
+  export SLSA_VERIFIER_TESTING="true"
 fi
 
 # Verify the provenance of the builder.
 chmod a+x "$VERIFIER_RELEASE_BINARY"
 ./"$VERIFIER_RELEASE_BINARY" verify-artifact \
-    --source-branch "main" \
-    --source-tag "$builder_tag" \
-    --provenance-path "$BUILDER_RELEASE_BINARY.intoto.jsonl" \
-    --source-uri "github.com/$BUILDER_REPOSITORY" \
-    "$BUILDER_RELEASE_BINARY" || exit 6
+  --source-branch "main" \
+  --source-tag "$builder_tag" \
+  --provenance-path "$BUILDER_RELEASE_BINARY.intoto.jsonl" \
+  --source-uri "github.com/$BUILDER_REPOSITORY" \
+  "$BUILDER_RELEASE_BINARY" || exit 6
 
 builder_commit=$(gh api /repos/"$BUILDER_REPOSITORY"/git/ref/tags/"$builder_tag" | jq -r '.object.sha')
 provenance_commit=$(jq -r '.payload' <"$BUILDER_RELEASE_BINARY.intoto.jsonl" | base64 -d | jq -r '.predicate.materials[0].digest.sha1')
 if [[ "$builder_commit" != "$provenance_commit" ]]; then
-    echo "Builder commit sha $builder_commit != provenance material $provenance_commit"
-    exit 5
+  echo "Builder commit sha $builder_commit != provenance material $provenance_commit"
+  exit 5
 fi
 
 #TODO: verify the command
