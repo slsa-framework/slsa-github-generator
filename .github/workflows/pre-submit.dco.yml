@@ -23,7 +23,7 @@ on:
 permissions: read-all
 
 jobs:
-  check:
+  dco-check:
     runs-on: ubuntu-latest
     steps:
       - uses: KineticCafe/actions-dco@50a0f2afff9433641a18fa909c60eb3805db583e # v1.3.0
