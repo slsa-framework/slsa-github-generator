@@ -54,8 +54,6 @@ export function writeAttestations(
   const predicateBuffer = tscommon.safeReadFileSync(predicateFile);
   const predicateJson = JSON.parse(predicateBuffer.toString());
 
-  // TODO(https://github.com/slsa-framework/slsa-github-generator/issues/1422): Add other predicate validations.
-
   // Iterate through SLSA output layout and create attestations
   const ret: Record<string, string> = {};
   if (layout.attestations.length === 0) {
