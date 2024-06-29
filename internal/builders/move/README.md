@@ -15,6 +15,8 @@ This can be done by adding a step to your GitHub Actions workflow to call a [reu
 - [Limitations](#limitations)
 - [Generating Provenance](#generating-provenance)
   - [Getting Started](#getting-started)
+- [Verification](#verification)
+  - [slsa-verifier](#slsa-verifier)
 
 <!-- tocstop -->
 
@@ -36,8 +38,8 @@ Please try it out and [create an issue](https://github.com/slsa-framework/slsa-g
 
 The **Move builder** currently has the following limitations:
 
-1.	The project must be buildable using move builder. If you need options for flags, profiles, or something else to define more granular builds, please [open an issue](https://github.com/slsa-framework/slsa-github-generator/issues/new).
-2.	The **Move builder** is limited to projects that output artifacts in a build directory, which is the default for the vast majority of projects.
+1. The project must be buildable using move builder. If you need options for flags, profiles, or something else to define more granular builds, please [open an issue](https://github.com/slsa-framework/slsa-github-generator/issues/new).
+2. The **Move builder** is limited to projects that output artifacts in a build directory, which is the default for the vast majority of projects.
 
 ## Generating Provenance
 
@@ -47,8 +49,8 @@ The **Move builder** uses a GitHub Actions reusable workflow to build your packa
 
 Let’s say you have the following build setup:
 
-1.	You can build your artifacts using **Move builder**.
-2.	You release artifacts via GitHub Actions.
+1. You can build your artifacts using **Move builder**.
+2. You release artifacts via GitHub Actions.
 
 To add provenance to releases, simply use the following workflow in .github/workflows in your repository:
 
@@ -61,8 +63,16 @@ jobs:
       actions: read # For getting workflow run info.
     uses: slsa-framework/slsa-github-generator/.github/workflows/builder_move_slsa3.yml@v2.0.0
     with:
-        move-compiler: "Select a CLI to compile the Move language. Examples include tools such as `sui` and `aptos`."
-        move-directory: "The root directory of the Move project refers to the directory containing the Move.toml file."
+      move-compiler: "Select a CLI to compile the Move language. Examples include tools such as `sui` and `aptos`."
+      move-directory: "The root directory of the Move project refers to the directory containing the Move.toml file."
 ```
 
 Now, when you invoke this workflow, the **Move builder** will build both your artifacts and the provenance files for them.
+
+## Verification
+
+### slsa-verifier
+
+The `slsa-verifier` tool includes support for Node.js packages published on the official npm registry and provides the most flexibility in verifying the content against an expected `builder.id`, source repository, and source tag, package name, and package version.
+
+Please see the [documentation](https://github.com/slsa-framework/slsa-verifier) for more information.
