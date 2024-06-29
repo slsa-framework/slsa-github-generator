@@ -43,6 +43,10 @@ inputs:
   slsa-workflow-secret15: {}
 
 outputs:
+  package-path:
+    description: "The name of the package build path."
+    value: ${{ steps.build.outputs.package-path }}
+
   package-name:
     description: "The name of the package."
     value: ${{ steps.build.outputs.package-name }}
@@ -108,7 +112,6 @@ runs:
         cd "${directory}"
         toml_file="Move.toml"
         package_name=$(grep -oP '(?<=name = ").*(?=")' "${toml_file}")
-        package_version=$(grep -oP '(?<=version = ").*(?=")' "${toml_file}")
         package_framework=$(grep -oP '(?<=rev = ").*?(?=")' "${toml_file}")
         if [ "${MOVE_COMPILER}" = "sui" ]; then
             echo "Compiling Sui compiler..."
@@ -120,11 +123,10 @@ runs:
             echo "Unknown compiler: ${MOVE_COMPILER}"
             exit 1
         fi
-        mv build "${GITHUB_WORKSPACE}/"
         {
+          echo "package-path=${directory}/build"
           echo "package-name=${package_name}"
           echo "package-framework=${package_framework}"
-          echo "package-version=${package_version}"
         } >>"${GITHUB_OUTPUT}"
 
     # rng generates a random number to avoid name collision in artifacts
@@ -137,4 +139,4 @@ runs:
       id: upload
       with:
         name: ${{ steps.rng.outputs.random }}-build
-        path: build
+        path: ${{ steps.build.outputs.package-path }}
