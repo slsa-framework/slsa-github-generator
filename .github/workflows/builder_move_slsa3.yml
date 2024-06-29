@@ -1,0 +1,88 @@
+# Copyright 2023 SLSA Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+name: SLSA Move builder
+
+permissions: {}
+
+on:
+  workflow_call:
+    inputs:
+      rekor-log-public:
+        description: "Allow publication of your repository name on the public Rekor log"
+        required: false
+        type: boolean
+        default: false
+      move-compiler:
+        description: "Select a CLI to compile the Move language. Examples include tools such as `sui` and `aptos`."
+        required: true
+        type: string
+      move-directory:
+        description: "The root directory of the Move project refers to the directory containing the Move.toml file."
+        required: true
+        type: string
+
+    outputs:
+      provenance-name:
+        description: "The file name of the attestation upload artifact."
+        # NOTE: This is an "untrusted" value returned from the build.
+        value: ${{ fromJSON(jobs.slsa-run.outputs.build-artifacts-outputs).attestation-name }}
+
+      provenance-download-name:
+        description: "The name of the provenance attestation uploaded to the workflow run."
+        value: ${{ jobs.slsa-run.outputs.attestations-download-name }}
+
+      provenance-download-sha256:
+        description: "The sha256 of the provenance attestation uploaded to the workflow run."
+        value: ${{ jobs.slsa-run.outputs.attestations-download-sha256 }}
+
+      package-download-name:
+        description: "The name of the target directory uploaded to the workflow run."
+        # NOTE: This is an "untrusted" value returned from the build. Technically
+        # the build could provide a package file that doesn't match the
+        # provenance but it would fail validation.
+        value: ${{ fromJSON(jobs.slsa-run.outputs.build-artifacts-outputs).package-download-name }}
+
+      package-download-sha256:
+        description: "The sha256 of the target uploaded to the workflow run."
+        # NOTE: This is an "untrusted" value returned from the build.
+        value: ${{ fromJSON(jobs.slsa-run.outputs.build-artifacts-outputs).package-download-sha256 }}
+
+jobs:
+  slsa-setup:
+    permissions:
+      id-token: write # For token creation.
+    outputs:
+      slsa-token: ${{ steps.generate.outputs.slsa-token }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Generate the token
+        id: generate
+        uses: slsa-framework/slsa-github-generator/actions/delegator/setup-generic@main
+        with:
+          slsa-workflow-recipient: "delegator_lowperms-generic_slsa3.yml"
+          slsa-rekor-log-public: ${{ inputs.rekor-log-public }}
+          slsa-runner-label: "ubuntu-latest"
+          slsa-build-action-path: "./internal/builders/move"
+          slsa-workflow-inputs: ${{ toJson(inputs) }}
+
+  slsa-run:
+    needs: [slsa-setup]
+    permissions:
+      id-token: write # For signing.
+      contents: read # For asset uploads.
+      actions: read # For the entrypoint.
+    uses: slsa-framework/slsa-github-generator/.github/workflows/delegator_lowperms-generic_slsa3.yml@main
+    with:
+      slsa-token: ${{ needs.slsa-setup.outputs.slsa-token }}
