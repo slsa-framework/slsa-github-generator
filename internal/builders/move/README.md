@@ -15,8 +15,6 @@ This can be done by adding a step to your GitHub Actions workflow to call a [reu
 - [Limitations](#limitations)
 - [Generating Provenance](#generating-provenance)
   - [Getting Started](#getting-started)
-- [Verification](#verification)
-  - [slsa-verifier](#slsa-verifier)
 
 <!-- tocstop -->
 
@@ -68,11 +66,3 @@ jobs:
 ```
 
 Now, when you invoke this workflow, the **Move builder** will build both your artifacts and the provenance files for them.
-
-## Verification
-
-### slsa-verifier
-
-The `slsa-verifier` tool includes support for Node.js packages published on the official npm registry and provides the most flexibility in verifying the content against an expected `builder.id`, source repository, and source tag, package name, and package version.
-
-Please see the [documentation](https://github.com/slsa-framework/slsa-verifier) for more information.
