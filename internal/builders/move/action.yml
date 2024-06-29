@@ -47,12 +47,16 @@ outputs:
     description: "The name of the package."
     value: ${{ steps.build.outputs.package-name }}
 
+  package-framework:
+    description: "The name of the network where the package is deployed."
+    value: ${{ steps.build.outputs.package-framework }}
+
   package-download-name:
-    description: "Name of the artifact to download the target directory."
+    description: "The name of the 'build' directory uploaded to the workflow run."
     value: ${{ steps.rng.outputs.random }}-build
 
   package-download-sha256:
-    description: "The sha256 digest of the 'build' directory."
+    description: "The sha256 of the 'build' uploaded to the workflow run."
     value: ${{ steps.upload.outputs.sha256 }}
 
 runs:
@@ -105,6 +109,7 @@ runs:
         toml_file="Move.toml"
         package_name=$(grep -oP '(?<=name = ").*(?=")' "${toml_file}")
         package_version=$(grep -oP '(?<=version = ").*(?=")' "${toml_file}")
+        package_framework=$(grep -oP '(?<=rev = ").*?(?=")' "${toml_file}")
         if [ "${MOVE_COMPILER}" = "sui" ]; then
             echo "Compiling Sui compiler..."
             sui move build
@@ -118,6 +123,7 @@ runs:
         mv build "${GITHUB_WORKSPACE}/"
         {
           echo "package-name=${package_name}"
+          echo "package-framework=${package_framework}"
           echo "package-version=${package_version}"
         } >>"${GITHUB_OUTPUT}"
 
