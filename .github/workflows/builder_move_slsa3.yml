@@ -56,14 +56,14 @@ on:
         value: ${{ fromJSON(jobs.slsa-run.outputs.build-artifacts-outputs).package-framework }}
       
       package-download-name:
-        description: "The name of the 'build' directory uploaded to the workflow run."
+        description: "The name of the build directory uploaded to the workflow run."
         # NOTE: This is an "untrusted" value returned from the build. Technically
         # the build could provide a package file that doesn't match the
         # provenance but it would fail validation.
         value: ${{ fromJSON(jobs.slsa-run.outputs.build-artifacts-outputs).package-download-name }}
 
       package-download-sha256:
-        description: "The sha256 of the 'build' uploaded to the workflow run."
+        description: "The sha256 of the build uploaded to the workflow run."
         # NOTE: This is an "untrusted" value returned from the build.
         value: ${{ fromJSON(jobs.slsa-run.outputs.build-artifacts-outputs).package-download-sha256 }}
 
