@@ -52,11 +52,11 @@ outputs:
     value: ${{ steps.build.outputs.package-framework }}
 
   package-download-name:
-    description: "The name of the 'build' directory uploaded to the workflow run."
+    description: "The name of the build directory uploaded to the workflow run."
     value: ${{ steps.rng.outputs.random }}-build
 
   package-download-sha256:
-    description: "The sha256 of the 'build' uploaded to the workflow run."
+    description: "The sha256 of the build uploaded to the workflow run."
     value: ${{ steps.upload.outputs.sha256 }}
 
 runs:
