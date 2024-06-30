@@ -28,7 +28,7 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - name: Download the target directory
+    - name: Download the package
       uses: slsa-framework/slsa-github-generator/.github/actions/secure-download-folder@main
       with:
         name: ${{ inputs.name }}
