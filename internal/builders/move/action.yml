@@ -43,10 +43,6 @@ inputs:
   slsa-workflow-secret15: {}
 
 outputs:
-  package-path:
-    description: "The name of the package build path."
-    value: ${{ steps.build.outputs.package-path }}
-
   package-name:
     description: "The name of the package."
     value: ${{ steps.build.outputs.package-name }}
@@ -54,6 +50,10 @@ outputs:
   package-framework:
     description: "The name of the network where the package is deployed."
     value: ${{ steps.build.outputs.package-framework }}
+
+  package-download-path:
+    description: "The name of the package build path."
+    value: ${{ steps.build.outputs.package-path }}
 
   package-download-name:
     description: "The name of the build directory uploaded to the workflow run."
@@ -126,7 +126,7 @@ runs:
         {
           echo "package-path=${directory}/build"
           echo "package-name=${package_name}"
-          echo "package-framework=${package_framework}"
+          echo "package-framework=${MOVE_COMPILER}:${package_framework}"
         } >>"${GITHUB_OUTPUT}"
 
     # rng generates a random number to avoid name collision in artifacts
