@@ -38,6 +38,7 @@ The **Move builder** currently has the following limitations:
 
 1. The project must be buildable using move builder. If you need options for flags, profiles, or something else to define more granular builds, please [open an issue](https://github.com/slsa-framework/slsa-github-generator/issues/new).
 2. The **Move builder** is limited to projects that output artifacts in a build directory, which is the default for the vast majority of projects.
+3. Only one package can be deployed or upgraded at a time. Therefore, the **Move.toml** must contain only one `Address` in the `[addresses]` section.
 
 ## Generating Provenance
 

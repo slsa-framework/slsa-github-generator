@@ -113,6 +113,11 @@ runs:
         toml_file="Move.toml"
         package_name=$(grep -oP '(?<=name = ").*(?=")' "${toml_file}")
         package_framework=$(grep -oP '(?<=rev = ").*?(?=")' "${toml_file}")
+        address_count=$(awk '/\[addresses\]/,/^\[/{if ($0 !~ /\[addresses\]/ && $0 !~ /^\[|^$/) print $0}' "${toml_file}" | wc -l)
+        if [ "$address_count" -ne 1 ]; then
+          echo "Error: The [addresses] section must contain exactly one Address."
+          exit 1
+        fi
         if [ "${MOVE_COMPILER}" = "sui" ]; then
             echo "Compiling Sui compiler..."
             sui move build
