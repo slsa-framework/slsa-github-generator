@@ -180,7 +180,7 @@ jobs:
           UNTRUSTED_PASSWORD: "${{ secrets.registry-password }}"
           GCP_ACCESS_TOKEN: "${{ steps.auth.outputs.access_token }}"
         run: |
-          ./scripts/registry-login.sh "${UNTRUSTED_IMAGE}" "${UNTRUSTED_SECRET_USERNAME-:${UNTRUSTED_INPUT_USERNAME}}" "${UNTRUSTED_PASSWORD}" "${GCP_ACCESS_TOKEN}"
+          ./scripts/registry-login.sh "${UNTRUSTED_IMAGE}" "${UNTRUSTED_SECRET_USERNAME:-${UNTRUSTED_INPUT_USERNAME}}" "${UNTRUSTED_PASSWORD}" "${GCP_ACCESS_TOKEN}"
 
       - name: Provenance registry login
         id: provenance-registry-login
