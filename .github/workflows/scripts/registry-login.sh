@@ -26,7 +26,7 @@ default_registry="docker.io"
 # Here we get the first part and check if it has a '.' or ':'
 # character in it to see if it's a domain name.
 # See: https://stackoverflow.com/questions/37861791/how-are-docker-image-names-parsed#37867949
-maybe_domain=$(echo "${image_or_repo}" | cut -f1 -d "/" | grep -E "\.|:" || true)
+maybe_domain=$(echo "${image_or_repo}" | cut -f1 -d "/" | { grep -E "\.|:" || true; })
 if [ -n "${maybe_domain}" ]; then
   registry="${maybe_domain}"
 else
