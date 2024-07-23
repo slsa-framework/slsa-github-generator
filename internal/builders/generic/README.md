@@ -277,6 +277,7 @@ The [generic workflow](https://github.com/slsa-framework/slsa-github-generator/b
 | Name              | Description                                                                                     |
 | ----------------- | ----------------------------------------------------------------------------------------------- |
 | `provenance-name` | The artifact name of the signed provenance.                                                     |
+| `provenance-rekor-uuid` | You could also use the Rekor Search UI: https://search.sigstore.dev/?uuid= to view the log entry details.|
 | `outcome`         | If `continue-on-error` is `true`, will contain the outcome of the run (`success` or `failure`). |
 
 ### Provenance Format
