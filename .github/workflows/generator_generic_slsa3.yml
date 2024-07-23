@@ -98,7 +98,7 @@ on:
         description: "The artifact name of the signed provenance. (A file with the intoto.jsonl extension)."
         value: ${{ jobs.generator.outputs.provenance-name }}
       provenance-rekor-uuid:
-        description: "You could also use the Rekor Search UI: https://search.sigstore.dev/?uuid= to view the log entry details."
+        description: "The Rekor UUID is a unique identifier that can be used to search for and view specific log entry details on the Rekor Search UI."
         value: ${{ jobs.generator.outputs.uuid }}
       # Note: we use this output because there is no buildt-in `outcome` and `result` is always `success`
       # if `continue-on-error` is set to `true`.
