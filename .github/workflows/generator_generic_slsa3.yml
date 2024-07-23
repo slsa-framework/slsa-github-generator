@@ -145,7 +145,7 @@ jobs:
       outcome: ${{ steps.final.outputs.outcome }}
       provenance-sha256: ${{ steps.sign-prov.outputs.provenance-sha256 }}
       provenance-name: ${{ steps.sign-prov.outputs.provenance-name }}
-      uuid: ${{ secrets.sign-prov.outputs.uuid }}
+      uuid: ${{ steps.sign-prov.outputs.uuid }}
       subject-artifact-name: ${{ steps.metadata.outputs.artifact_name }}
     runs-on: ubuntu-latest
     needs: [detect-env]
