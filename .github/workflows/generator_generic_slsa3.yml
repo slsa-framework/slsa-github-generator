@@ -223,6 +223,7 @@ jobs:
           UNTRUSTED_PROVENANCE_NAME: "${{ inputs.provenance-name }}"
         run: |
           set -euo pipefail
+          chmod +x "$GITHUB_WORKSPACE/$BUILDER_BINARY"
           untrusted_prov_name=""
           if [ "$UNTRUSTED_PROVENANCE_NAME" != "" ]; then
             untrusted_prov_name="$UNTRUSTED_PROVENANCE_NAME"
