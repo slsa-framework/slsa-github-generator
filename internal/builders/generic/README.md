@@ -96,7 +96,7 @@ provenance:
     actions: read # Needed for detection of GitHub Actions environment.
     id-token: write # Needed for provenance signing and ID
     contents: write # Needed for release uploads
-  uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v2.0.0
+  uses: zktx-io/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v2.0.0
   with:
     base64-subjects: "${{ needs.build.outputs.hashes }}"
 ```
@@ -107,14 +107,14 @@ The `base64-subjects` input has a maximum length as defined by [ARG_MAX](https:/
 sha256sum artifact1 artifact2 ... | base64 -w0 > large_digests_file.text
 ```
 
-The you must then share this file with the generator using the [actions/generator/generic/create-base64-subjects-from-file Action](https://github.com/slsa-framework/slsa-github-generator/tree/main/actions/generator/generic/create-base64-subjects-from-file):
+The you must then share this file with the generator using the [actions/generator/generic/create-base64-subjects-from-file Action](https://github.com/zktx-io/slsa-github-generator/tree/main/actions/generator/generic/create-base64-subjects-from-file):
 
 ```yaml
 build:
   outputs:
     subjects-as-file: ${{ steps.hashes.outputs.handle }}
   ...
-    uses: slsa-framework/slsa-github-generator/actions/generator/generic/create-base64-subjects-from-file@v2.0.0
+    uses: zktx-io/slsa-github-generator/actions/generator/generic/create-base64-subjects-from-file@v2.0.0
     id: hashes
     with:
       path: large_digests_file.text
@@ -123,7 +123,7 @@ provenance:
     actions: read # Needed for detection of GitHub Actions environment.
     id-token: write # Needed for provenance signing and ID
     contents: write # Needed for release uploads
-  uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v2.0.0
+  uses: zktx-io/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v2.0.0
   with:
     base64-subjects-as-file: "${{ needs.build.outputs.subjects-as-file }}"
 ```
@@ -180,7 +180,7 @@ jobs:
       actions: read
       id-token: write
       contents: write
-    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v2.0.0
+    uses: zktx-io/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v2.0.0
     with:
       base64-subjects: "${{ needs.build.outputs.hashes }}"
       # Upload provenance to a new release
@@ -238,7 +238,7 @@ If you do not set this flag then private repositories will generate an error in
 order to prevent leaking repository name information.
 
 Support for private transparency log instances that would not leak repository
-name information is tracked on [issue #372](https://github.com/slsa-framework/slsa-github-generator/issues/372).
+name information is tracked on [issue #372](https://github.com/zktx-io/slsa-github-generator/issues/372).
 
 ### Supported Triggers
 
@@ -251,18 +251,18 @@ The following [GitHub trigger events](https://docs.github.com/en/actions/using-w
 
 However, in practice, most triggers should work with the exception of
 `pull_request`. If you would like support for `pull_request`, please tell us
-about your use case on [issue #358](https://github.com/slsa-framework/slsa-github-generator/issues/358). If
+about your use case on [issue #358](https://github.com/zktx-io/slsa-github-generator/issues/358). If
 you have an issue with any other triggers please submit a [new
-issue](https://github.com/slsa-framework/slsa-github-generator/issues/new/choose).
+issue](https://github.com/zktx-io/slsa-github-generator/issues/new/choose).
 
 ### Workflow Inputs
 
-The [generic workflow](https://github.com/slsa-framework/slsa-github-generator/blob/main/.github/workflows/generator_generic_slsa3.yml) accepts the following inputs:
+The [generic workflow](https://github.com/zktx-io/slsa-github-generator/blob/main/.github/workflows/generator_generic_slsa3.yml) accepts the following inputs:
 
 | Name                      | Required                                                           | Default                                                                                         | Description                                                                                                                                                                                                                                                                        |
 | ------------------------- | ------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `base64-subjects`         | One of `base64-subjects` or `base64-subjects-as-file` is required. |                                                                                                 | Artifact(s) for which to generate provenance, formatted the same as the output of sha256sum (SHA256 NAME\n[...]) and base64 encoded. The encoded value should decode to, for example: `90f3f7d6c862883ab9d856563a81ea6466eb1123b55bff11198b4ed0030cac86 foo.zip`                   |
-| `base64-subjects-as-file` | One of `base64-subjects` or `base64-subjects-as-file` is required. |                                                                                                 | The name of a artifacts containing formatted subjects as uploaded by the [actions/generator/generic/create-base64-subjects-from-file Action](https://github.com/slsa-framework/slsa-github-generator/tree/main/actions/generator/generic/create-base64-subjects-from-file) action. |
+| `base64-subjects-as-file` | One of `base64-subjects` or `base64-subjects-as-file` is required. |                                                                                                 | The name of a artifacts containing formatted subjects as uploaded by the [actions/generator/generic/create-base64-subjects-from-file Action](https://github.com/zktx-io/slsa-github-generator/tree/main/actions/generator/generic/create-base64-subjects-from-file) action. |
 | `upload-assets`           | no                                                                 | false                                                                                           | If true provenance is uploaded to a GitHub release for new tags.                                                                                                                                                                                                                   |
 | `upload-tag-name`         | no                                                                 |                                                                                                 | If specified and `upload-assets` is set to true, the provenance will be uploaded to a Github release identified by the tag-name regardless of the triggering event.                                                                                                                |
 | `provenance-name`         | no                                                                 | "(subject name).intoto.jsonl" if a single subject. "multiple.intoto.json" if multiple subjects. | The artifact name of the signed provenance. The file must have the `intoto.jsonl` extension.                                                                                                                                                                                       |
@@ -272,7 +272,7 @@ The [generic workflow](https://github.com/slsa-framework/slsa-github-generator/b
 
 ### Workflow Outputs
 
-The [generic workflow](https://github.com/slsa-framework/slsa-github-generator/blob/main/.github/workflows/generator_generic_slsa3.yml) produces the following outputs:
+The [generic workflow](https://github.com/zktx-io/slsa-github-generator/blob/main/.github/workflows/generator_generic_slsa3.yml) produces the following outputs:
 
 | Name              | Description                                                                                     |
 | ----------------- | ----------------------------------------------------------------------------------------------- |
@@ -285,7 +285,7 @@ The project generates SLSA provenance with the following values.
 
 | Name                         | Value                                                                  | Description                                                                                                                                                                                                            |
 | ---------------------------- | ---------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `buildType`                  | `"https://github.com/slsa-framework/slsa-github-generator/generic@v1"` | Identifies a generic GitHub Actions build.                                                                                                                                                                             |
+| `buildType`                  | `"https://github.com/zktx-io/slsa-github-generator/generic@v1"` | Identifies a generic GitHub Actions build.                                                                                                                                                                             |
 | `metadata.buildInvocationID` | `"[run_id]-[run_attempt]"`                                             | The GitHub Actions [`run_id`](https://docs.github.com/en/actions/learn-github-actions/contexts#github-context) does not update when a workflow is re-run. Run attempt is added to make the build invocation ID unique. |
 
 **Note**: The generated provenance will probably be wrapped in a [DSSE](https://github.com/secure-systems-lab/dsse) envelope and encoded in base64. Check the human-readable result running `cat encoded-artifact.intoto.jsonl | jq -r '.payload' | base64 -d | jq`.
@@ -309,9 +309,9 @@ generated as an [in-toto](https://in-toto.io/) statement with a SLSA predicate.
   ],
   "predicate": {
     "builder": {
-      "id": "https://github.com/slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@refs/tags/v1.2.2"
+      "id": "https://github.com/zktx-io/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@refs/tags/v1.2.2"
     },
-    "buildType": "https://github.com/slsa-framework/slsa-github-generator/generic@v1",
+    "buildType": "https://github.com/zktx-io/slsa-github-generator/generic@v1",
     "invocation": {
       "configSource": {
         "uri": "git+https://github.com/ianlewis/actions-test@refs/heads/main.git",
@@ -420,7 +420,7 @@ generate SLSA3 provenance by updating your existing workflow with the steps indi
        actions: read # To read the workflow path.
        id-token: write # To sign the provenance.
        contents: write # To add assets to a release.
-     uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v2.0.0
+     uses: zktx-io/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v2.0.0
      with:
        base64-subjects: "${{ needs.goreleaser.outputs.hashes }}"
        upload-assets: true # upload to a new release
@@ -462,7 +462,7 @@ jobs:
       actions: read # To read the workflow path.
       id-token: write # To sign the provenance.
       contents: write # To add assets to a release.
-    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v2.0.0
+    uses: zktx-io/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v2.0.0
     with:
       base64-subjects: "${{ needs.goreleaser.outputs.hashes }}"
       upload-assets: true # upload to a new release
@@ -524,7 +524,7 @@ generate SLSA3 provenance by updating your existing workflow with the steps indi
        actions: read # To read the workflow path.
        id-token: write # To sign the provenance.
        contents: write # To add assets to a release.
-     uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v2.0.0
+     uses: zktx-io/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v2.0.0
      with:
        base64-subjects: ${{ needs.release.outputs.hashes }}
        upload-assets: true # upload to a new release
@@ -572,7 +572,7 @@ jobs:
       actions: read # To read the workflow path.
       id-token: write # To sign the provenance.
       contents: write # To add assets to a release.
-    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v2.0.0
+    uses: zktx-io/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v2.0.0
     with:
       base64-subjects: ${{ needs.release.outputs.hashes }}
       upload-assets: true # upload to a new release
@@ -629,7 +629,7 @@ If you use [Bazel](https://bazel.build/) to generate your artifacts, you can eas
        actions: read # To read the workflow path.
        id-token: write # To sign the provenance.
        contents: write # To add assets to a release.
-     uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v2.0.0
+     uses: zktx-io/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v2.0.0
      with:
        base64-subjects: "${{ needs.build.outputs.hashes }}"
        upload-assets: true # Optional: Upload to a new release
@@ -671,7 +671,7 @@ jobs:
       actions: read # To read the workflow path.
       id-token: write # To sign the provenance.
       contents: write # To add assets to a release.
-    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v2.0.0
+    uses: zktx-io/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v2.0.0
     with:
       base64-subjects: "${{ needs.build.outputs.hashes }}"
       upload-assets: true # Optional: Upload to a new release
@@ -729,7 +729,7 @@ steps indicated in the workflow below:
        actions: read # To read the workflow path.
        id-token: write # To sign the provenance.
        contents: write # To add assets to a release.
-     uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v2.0.0
+     uses: zktx-io/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v2.0.0
      with:
        base64-subjects: "${{ needs.build.outputs.hashes }}"
        upload-assets: true # Optional: Upload to a new release
@@ -776,7 +776,7 @@ jobs:
       actions: read # To read the workflow path.
       id-token: write # To sign the provenance.
       contents: write # To add assets to a release.
-    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v2.0.0
+    uses: zktx-io/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v2.0.0
     with:
       base64-subjects: "${{ needs.build.outputs.hashes }}"
       upload-assets: true # Optional: Upload to a new release
@@ -825,7 +825,7 @@ jobs:
        actions: read
        id-token: write
        contents: write
-     uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v2.0.0
+     uses: zktx-io/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v2.0.0
      with:
        base64-subjects: "${{ needs.build.outputs.hashes }}"
        upload-assets: true # Optional: Upload to a new release
@@ -868,7 +868,7 @@ Jobs:
       actions: read
       id-token: write
       contents: write
-    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v2.0.0
+    uses: zktx-io/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v2.0.0
     with:
       base64-subjects: "${{ needs.build.outputs.hashes }}"
       upload-assets: true # Optional: Upload to a new release
@@ -919,7 +919,7 @@ steps indicated in the workflow below:
        actions: read # To read the workflow path.
        id-token: write # To sign the provenance.
        contents: write # To add assets to a release.
-     uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v2.0.0
+     uses: zktx-io/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v2.0.0
      with:
        base64-subjects: "${{ needs.build.outputs.hashes }}"
        upload-assets: true # Optional: Upload to a new release
@@ -958,7 +958,7 @@ jobs:
       actions: read # To read the workflow path.
       id-token: write # To sign the provenance.
       contents: write # To add assets to a release.
-    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v2.0.0
+    uses: zktx-io/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v2.0.0
     with:
       base64-subjects: "${{ needs.build.outputs.hashes }}"
       upload-assets: true # Optional: Upload to a new release
@@ -1015,7 +1015,7 @@ workflow with the steps indicated in the workflow below.
        actions: read # To read the workflow path.
        id-token: write # To sign the provenance.
        contents: write # To add assets to a release.
-     uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v2.0.0
+     uses: zktx-io/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v2.0.0
      with:
        base64-subjects: "${{ needs.build.outputs.hashes }}"
        upload-assets: true # Optional: Upload to a new release
@@ -1060,7 +1060,7 @@ jobs:
       actions: read # To read the workflow path.
       id-token: write # To sign the provenance.
       contents: write # To add assets to a release.
-    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v2.0.0
+    uses: zktx-io/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v2.0.0
     with:
       base64-subjects: "${{ needs.build.outputs.hashes }}"
       upload-assets: true # Optional: Upload to a new release
@@ -1125,7 +1125,7 @@ steps indicated in the workflow below:
        actions: read # To read the workflow path.
        id-token: write # To sign the provenance.
        contents: write # To add assets to a release.
-     uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v2.0.0
+     uses: zktx-io/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v2.0.0
      with:
        base64-subjects: "${{ needs.build.outputs.hashes }}"
        upload-assets: true # Optional: Upload to a new release
@@ -1172,7 +1172,7 @@ jobs:
       actions: read # To read the workflow path.
       id-token: write # To sign the provenance.
       contents: write # To add assets to a release.
-    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v2.0.0
+    uses: zktx-io/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v2.0.0
     with:
       base64-subjects: "${{ needs.build.outputs.hashes }}"
       upload-assets: true # Optional: Upload to a new release
@@ -1263,7 +1263,7 @@ Regardless of your choice, there's unfortunately a bit of necessary boilerplate.
        actions: read # To read the workflow path.
        id-token: write # To sign the provenance.
        contents: write # To add assets to a release.
-     uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v2.0.0
+     uses: zktx-io/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v2.0.0
      with:
        base64-subjects: "${{ needs.combine_hashes.outputs.hashes }}"
        upload-assets: true # Optional: Upload to a new release
@@ -1316,7 +1316,7 @@ jobs:
       actions: read # To read the workflow path.
       id-token: write # To sign the provenance.
       contents: write # To add assets to a release.
-    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v2.0.0
+    uses: zktx-io/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v2.0.0
     with:
       base64-subjects: "${{ needs.combine_hashes.outputs.hashes }}"
       upload-assets: true # Optional: Upload to a new release
@@ -1356,7 +1356,7 @@ provenance:
     actions: read # To read the workflow path.
     id-token: write # To sign the provenance.
     contents: write # To add assets to a release.
-  uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v2.0.0
+  uses: zktx-io/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v2.0.0
   with:
     base64-subjects: "${{ needs.build.outputs[format('hash-{0}-{1}', matrix.color, matrix.flavor)] }}"
     upload-assets: true # Optional: Upload to a new release
@@ -1401,7 +1401,7 @@ jobs:
       actions: read # To read the workflow path.
       id-token: write # To sign the provenance.
       contents: write # To add assets to a release.
-    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v2.0.0
+    uses: zktx-io/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v2.0.0
     with:
       base64-subjects: "${{ needs.build.outputs[format('hash-{0}-{1}', matrix.color, matrix.flavor)] }}"
       upload-assets: true # Optional: Upload to a new release
@@ -1504,7 +1504,7 @@ jobs:
       actions: read
       id-token: write
       contents: write
-    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v2.0.0
+    uses: zktx-io/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v2.0.0
     with:
       base64-subjects: "${{ needs.build.outputs[format('hash-{0}', matrix.os)] }}"
       upload-assets: true # NOTE: This does nothing unless 'upload-tag-name' parameter is also set to an existing tag
@@ -1569,7 +1569,7 @@ jobs:
       actions: read
       id-token: write
       contents: write
-    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v2.0.0
+    uses: zktx-io/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v2.0.0
     with:
       base64-subjects: "${{ needs.combine_hashes.outputs.hashes }}"
       upload-assets: true # NOTE: This does nothing unless 'upload-tag-name' parameter is also set to an existing tag
@@ -1606,7 +1606,7 @@ upload-tag-name: "v1.0.0"
 ```
 
 See issue
-[#1702](https://github.com/slsa-framework/slsa-github-generator/issues/1702) for
+[#1702](https://github.com/zktx-io/slsa-github-generator/issues/1702) for
 more details.
 
 ### error updating to TUF remote mirror: tuf: invalid key
@@ -1619,7 +1619,7 @@ Workflows are currently failing with the error:
 validating log entry: unable to fetch Rekor public keys from TUF repository, and not trusting the Rekor API for fetching public keys: updating local metadata and targets: error updating to TUF remote mirror: tuf: invalid key
 ```
 
-This issue is currently tracked by [issue #1163](https://github.com/slsa-framework/slsa-github-generator/issues/1163)
+This issue is currently tracked by [issue #1163](https://github.com/zktx-io/slsa-github-generator/issues/1163)
 
 You can work around this error by setting `compile-generator` input flag.
 
@@ -1633,7 +1633,7 @@ downloading the latest release. Make sure you continue to reference the workflow
 using a release tag in order to allow verification by `slsa-verifier`.
 
 ```yaml
-uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v2.0.0
+uses: zktx-io/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v2.0.0
 ```
 
 ### Compatibility with `actions/download-artifact`

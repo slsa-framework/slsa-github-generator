@@ -28,7 +28,7 @@ import (
 
 func Test_CreateBuildDefinition(t *testing.T) {
 	config := &DockerBuildConfig{
-		SourceRepo:   "git+https://github.com/slsa-framework/slsa-github-generator@refs/heads/main",
+		SourceRepo:   "git+https://github.com/zktx-io/slsa-github-generator@refs/heads/main",
 		SourceDigest: Digest{Alg: "sha1", Value: "cf5804b5c6f1a4b2a0b03401a487dfdfbe3a5f00"},
 		BuilderImage: DockerImage{
 			Name:   "bash",
@@ -329,7 +329,7 @@ func Test_ProvenanceStatementSLSA1_ToDockerBuildConfig(t *testing.T) {
 	}
 
 	want := &DockerBuildConfig{
-		SourceRepo: "git+https://github.com/slsa-framework/slsa-github-generator@refs/heads/main",
+		SourceRepo: "git+https://github.com/zktx-io/slsa-github-generator@refs/heads/main",
 		SourceDigest: Digest{
 			Alg:   "sha1",
 			Value: "cf5804b5c6f1a4b2a0b03401a487dfdfbe3a5f00",

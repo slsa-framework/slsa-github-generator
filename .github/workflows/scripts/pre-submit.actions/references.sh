@@ -25,7 +25,7 @@ cd __THIS_REPO__
 # Verify our Actions are referenced at main in workflows.
 results=$(
   find .github/workflows/ -maxdepth 1 -name '*.yaml' -o -name '*.yml' -type f -print0 |
-    xargs -0 grep -P "slsa-framework/slsa-github-generator/.*@(?!main)" ||
+    xargs -0 grep -P "zktx-io/slsa-github-generator/.*@(?!main)" ||
     true
 )
 if [[ "$results" != "" ]]; then
@@ -37,7 +37,7 @@ fi
 # Verify our Actions are referenced at main in internal actions.
 results=$(
   find .github/actions/ -maxdepth 2 -name '*.yaml' -o -name '*.yml' -type f -print0 |
-    xargs -0 grep -P "slsa-framework/slsa-github-generator/.*@(?!main)" ||
+    xargs -0 grep -P "zktx-io/slsa-github-generator/.*@(?!main)" ||
     true
 )
 if [[ "$results" != "" ]]; then
@@ -49,7 +49,7 @@ fi
 # Verify our Actions are referenced at main in external actions.
 results=$(
   find actions/ -maxdepth 3 -name '*.yaml' -o -name '*.yml' -type f -print0 |
-    xargs -0 grep -Pn "slsa-framework/slsa-github-generator/.*@(?!main)" ||
+    xargs -0 grep -Pn "zktx-io/slsa-github-generator/.*@(?!main)" ||
     true
 )
 if [[ "$results" != "" ]]; then
@@ -61,7 +61,7 @@ fi
 # Verify our Actions are referenced at main in BYOB actions.
 results=$(
   find internal/builders/ -maxdepth 2 -name '*.yaml' -o -name '*.yml' -type f -print0 |
-    xargs -0 grep -P "slsa-framework/slsa-github-generator/.*@(?!main)" ||
+    xargs -0 grep -P "zktx-io/slsa-github-generator/.*@(?!main)" ||
     true
 )
 if [[ "$results" != "" ]]; then

@@ -47,7 +47,7 @@ tampered with.
 The Bazel builder is currently in development.
 
 Please try it out and
-[create an issue](https://github.com/slsa-framework/slsa-github-generator/issues/new)
+[create an issue](https://github.com/zktx-io/slsa-github-generator/issues/new)
 to send us feedback!
 
 ## Generating Provenance
@@ -87,7 +87,7 @@ jobs:
       contents: read # For repo checkout.
       actions: read # For getting workflow run info.
     if: startsWith(github.ref, 'refs/tags/')
-    uses: slsa-framework/slsa-github-generator/.github/workflows/builder_bazel_slsa3.yml@v2.0.0
+    uses: zktx-io/slsa-github-generator/.github/workflows/builder_bazel_slsa3.yml@v2.0.0
     with:
       targets: "//src:fib //src:hello"
       flags: "--strip=always"
@@ -113,7 +113,7 @@ jobs:
       contents: read # For repo checkout.
       actions: read # For getting workflow run info.
     if: startsWith(github.ref, 'refs/tags/')
-    uses: slsa-framework/slsa-github-generator/.github/workflows/builder_bazel_slsa3.yml@v2.0.0
+    uses: zktx-io/slsa-github-generator/.github/workflows/builder_bazel_slsa3.yml@v2.0.0
     with:
       targets: "//src:fib //src:hello"
       flags: "--strip=always"
@@ -137,7 +137,7 @@ jobs:
       contents: read # For repo checkout.
       actions: read # For getting workflow run info.
     if: startsWith(github.ref, 'refs/tags/')
-    uses: slsa-framework/slsa-github-generator/.github/workflows/builder_bazel_slsa3.yml@v2.0.0
+    uses: zktx-io/slsa-github-generator/.github/workflows/builder_bazel_slsa3.yml@v2.0.0
     with:
       targets: "//src:fib //src:hello"
       flags: "--strip=always"
@@ -191,7 +191,7 @@ If you do not set this flag then private repositories will generate an error in
 order to prevent leaking repository name information.
 
 Support for private transparency log instances that would not leak repository
-name information is tracked on [issue #372](https://github.com/slsa-framework/slsa-github-generator/issues/372).
+name information is tracked on [issue #372](https://github.com/zktx-io/slsa-github-generator/issues/372).
 
 ### Supported Triggers
 
@@ -206,9 +206,9 @@ Only the following [event types] are supported:
 
 `pull_request` events are currently not supported. If you would like support for
 `pull_request`, please tell us about your use case on
-[issue #358](https://github.com/slsa-framework/slsa-github-generator/issues/358). If
+[issue #358](https://github.com/zktx-io/slsa-github-generator/issues/358). If
 you have an issue in all other triggers please submit a
-[new issue](https://github.com/slsa-framework/slsa-github-generator/issues/new/choose).
+[new issue](https://github.com/zktx-io/slsa-github-generator/issues/new/choose).
 
 [event types]: https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows
 [`create`]: https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#create
@@ -249,8 +249,8 @@ The project generates SLSA v1.0 provenance predicate with the following values.
 
 | Name                               | Value                                                                                                                 | Description                                                                                                                                                                                                            |
 | ---------------------------------- | --------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `runDetails.builder.id`            | `https://github.com/slsa-framework/slsa-github-generator/.github/workflows/builder_bazel_slsa3.yml@refs/tags/v1.7.0"` | Identifies the Bazel builder                                                                                                                                                                                           |
-| `buildDefinition.buildType`        | `"https://github.com/slsa-framework/slsa-github-generator/delegator-generic@v0"`                                      | Identifies a the GitHub Actions build.                                                                                                                                                                                 |
+| `runDetails.builder.id`            | `https://github.com/zktx-io/slsa-github-generator/.github/workflows/builder_bazel_slsa3.yml@refs/tags/v1.7.0"` | Identifies the Bazel builder                                                                                                                                                                                           |
+| `buildDefinition.buildType`        | `"https://github.com/zktx-io/slsa-github-generator/delegator-generic@v0"`                                      | Identifies a the GitHub Actions build.                                                                                                                                                                                 |
 | `runDetails.metadata.invocationID` | `"[run_id]-[run_attempt]"`                                                                                            | The GitHub Actions [`run_id`](https://docs.github.com/en/actions/learn-github-actions/contexts#github-context) does not update when a workflow is re-run. Run attempt is added to make the build invocation ID unique. |
 | `externalParameters.inputs         | User Inputted Values                                                                                                  | Identifies the inputs to the Bazel Builder that were passed in                                                                                                                                                         |
 
@@ -272,7 +272,7 @@ The following is an example of the generated provenance.
   "predicateType": "https://slsa.dev/provenance/v1",
   "predicate": {
     "buildDefinition": {
-      "buildType": "https://github.com/slsa-framework/slsa-github-generator/delegator-generic@v0",
+      "buildType": "https://github.com/zktx-io/slsa-github-generator/delegator-generic@v0",
       "externalParameters": {
         "inputs": {
           "rekor-log-public": false,

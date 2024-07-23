@@ -73,14 +73,14 @@ The "Tool Callback Action" (TCA) is the GitHub Action that is invoked by the BYO
 
 ### SLSA GitHub Repository
 
-The [slsa-github-generator](https://github.com/slsa-framework/slsa-github-generator) repository hosts the code for the BYOB framework maintained by the OpenSSF SLSA tooling team. There are two main components you will use for your integration, the SLSA Setup Action and the SLSA Reuseable Workflow.
+The [slsa-github-generator](https://github.com/zktx-io/slsa-github-generator) repository hosts the code for the BYOB framework maintained by the OpenSSF SLSA tooling team. There are two main components you will use for your integration, the SLSA Setup Action and the SLSA Reuseable Workflow.
 
 #### SLSA Setup Action (SSA)
 
-The [setup-generic](https://github.com/slsa-framework/slsa-github-generator/blob/main/actions/delegator/setup-generic) Action is used to initialize the BYOB framework. It returns a so-called "SLSA token" which is used in later steps:
+The [setup-generic](https://github.com/zktx-io/slsa-github-generator/blob/main/actions/delegator/setup-generic) Action is used to initialize the BYOB framework. It returns a so-called "SLSA token" which is used in later steps:
 
 ```yaml
-- uses: slsa-framework/slsa-github-generator/actions/delegator/setup-generic@v2.0.0
+- uses: zktx-io/slsa-github-generator/actions/delegator/setup-generic@v2.0.0
 ```
 
 #### SLSA Reusable Workflow (SRW)
@@ -88,7 +88,7 @@ The [setup-generic](https://github.com/slsa-framework/slsa-github-generator/blob
 The SLSA Reuseable Workflow (SRW) acts as the build's orchestrator. It calls the TCA, generates provenance, and returns the provenance to its TRW caller. A TRW would typically call the SRW as follows:
 
 ```yaml
-- uses: slsa-framework/slsa-github-generator/.github/workflow/delegator_generic_slsa3.yml@v2.0.0
+- uses: zktx-io/slsa-github-generator/.github/workflow/delegator_generic_slsa3.yml@v2.0.0
   with:
     slsa-token: ${{ needs.slsa-setup.outputs.slsa-token }}
 ```
@@ -120,9 +120,9 @@ Only the following [event types] are supported as recommended by the [SLSA speci
 
 `pull_request` events are currently not supported. If you would like support for
 `pull_request`, please tell us about your use case on
-[issue #358](https://github.com/slsa-framework/slsa-github-generator/issues/358). If
+[issue #358](https://github.com/zktx-io/slsa-github-generator/issues/358). If
 you have an issue related to any other triggers please submit a
-[new issue](https://github.com/slsa-framework/slsa-github-generator/issues/new/choose).
+[new issue](https://github.com/zktx-io/slsa-github-generator/issues/new/choose).
 
 [event types]: https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows
 [`create`]: https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#create
@@ -156,10 +156,10 @@ One key difference between the Action and reusable workflow is isolation. The SR
 
 ### Step 2: SRW Setup
 
-Our next step is to initialize the SRW framework. To do this, the TRW must invoke the [setup-generic Action](https://github.com/slsa-framework/slsa-github-generator/blob/main/actions/delegator/setup-generic/action.yml). The [relevant code](https://github.com/laurentsimon/byob-doc/blob/v0.0.1/.github/workflows/builder_example_slsa3.yml#L85-L94) calls the SSA as follows:
+Our next step is to initialize the SRW framework. To do this, the TRW must invoke the [setup-generic Action](https://github.com/zktx-io/slsa-github-generator/blob/main/actions/delegator/setup-generic/action.yml). The [relevant code](https://github.com/laurentsimon/byob-doc/blob/v0.0.1/.github/workflows/builder_example_slsa3.yml#L85-L94) calls the SSA as follows:
 
 ```yaml
-uses: slsa-framework/slsa-github-generator/actions/delegator/setup-generic@v2.0.0
+uses: zktx-io/slsa-github-generator/actions/delegator/setup-generic@v2.0.0
   with:
     slsa-workflow-recipient: "delegator_generic_slsa3.yml"
     slsa-rekor-log-public: ${{ inputs.rekor-log-public }}
@@ -190,7 +190,7 @@ slsa-run:
     contents: write # For asset uploads.
     packages: write # For package uploads.
     actions: read # For the entrypoint.
-  uses: slsa-framework/slsa-github-generator/.github/workflows/delegator_generic_slsa3.yml@v2.0.0
+  uses: zktx-io/slsa-github-generator/.github/workflows/delegator_generic_slsa3.yml@v2.0.0
   with:
     slsa-token: ${{ needs.slsa-setup.outputs.slsa-token }}
   secrets:
@@ -306,7 +306,7 @@ Building an artifact or a package includes downloading dependencies. Every once 
 
 #### Low-Permission SRW
 
-The first thing to do is to use a "low permission SRW". The SRW we used in our original integration is [delegator_generic_slsa3.yml](https://github.com/slsa-framework/slsa-github-generator/blob/main/.github/workflows/delegator_generic_slsa3.yml), which calls the TCA with the [permissions for pushing release assets and publishing packages](https://github.com/slsa-framework/slsa-github-generator/blob/01daa2e7c2c1c28d3bfbc3882102aed5da60121f/.github/workflows/delegator_generic_slsa3.yml#L137-L140). In order to reduce the number of permissions the TCA is called with, we recommend you use [delegator_lowperms-generic_slsa3.yml](https://github.com/slsa-framework/slsa-github-generator/blob/main/.github/workflows/delegator_lowperms-generic_slsa3.yml) instead. This workflow does _not_ give the TCA the dangerous permissions above, and [only gives it `contents: read`](https://github.com/slsa-framework/slsa-github-generator/blob/01daa2e7c2c1c28d3bfbc3882102aed5da60121f/.github/workflows/delegator_lowperms-generic_slsa3.yml#L142-L143) for repository read access. To update your integration:
+The first thing to do is to use a "low permission SRW". The SRW we used in our original integration is [delegator_generic_slsa3.yml](https://github.com/zktx-io/slsa-github-generator/blob/main/.github/workflows/delegator_generic_slsa3.yml), which calls the TCA with the [permissions for pushing release assets and publishing packages](https://github.com/zktx-io/slsa-github-generator/blob/01daa2e7c2c1c28d3bfbc3882102aed5da60121f/.github/workflows/delegator_generic_slsa3.yml#L137-L140). In order to reduce the number of permissions the TCA is called with, we recommend you use [delegator_lowperms-generic_slsa3.yml](https://github.com/zktx-io/slsa-github-generator/blob/main/.github/workflows/delegator_lowperms-generic_slsa3.yml) instead. This workflow does _not_ give the TCA the dangerous permissions above, and [only gives it `contents: read`](https://github.com/zktx-io/slsa-github-generator/blob/01daa2e7c2c1c28d3bfbc3882102aed5da60121f/.github/workflows/delegator_lowperms-generic_slsa3.yml#L142-L143) for repository read access. To update your integration:
 
 - Update the [`slsa-workflow-receipient` argument to the SSA](https://github.com/laurentsimon/byob-doc/tree/v0.0.2/.github/workflows/builder_example_slsa3.yml#L89) to `delegator_lowperms-generic_slsa3.yml`.
 - Update your SRW call to use [delegator_lowperms-generic_slsa3.yml](https://github.com/laurentsimon/byob-doc/tree/v0.0.2/.github/workflows/builder_example_slsa3.yml#L102).
@@ -318,7 +318,7 @@ The next thing to do is to [_not_ upload the asset to the GitHub release](https:
 
 - [Generate a random value](https://github.com/laurentsimon/byob-doc/tree/v0.0.2/internal/callback_action/action.yml#L81-L86) to uniquely name your artifact. This is necessary to avoid name collisions if multiple builders run concurrently. This could be concurrent runs of your builder, or someone else's builder.
 - [Create a folder with all the generated artifacts](https://github.com/laurentsimon/byob-doc/tree/v0.0.2/internal/callback_action/action.yml#L88-L98). In our case, we build a single artifact.
-- [Securely share the built artifacts with the TRW](https://github.com/laurentsimon/byob-doc/tree/v0.0.2/internal/callback_action/action.yml#L100-L106). For this you need to use the [secure-upload-folder Action](https://github.com/slsa-framework/slsa-github-generator/tree/main/actions/delegator/secure-upload-folder). This Action uploads the entire folder and returns the sha256 digest as its output, which we will use during download. It's important to note that the "artifact name" refers to the unique name given to the object shared with the TRW, and can be different from the artifact filename our TCA built.
+- [Securely share the built artifacts with the TRW](https://github.com/laurentsimon/byob-doc/tree/v0.0.2/internal/callback_action/action.yml#L100-L106). For this you need to use the [secure-upload-folder Action](https://github.com/zktx-io/slsa-github-generator/tree/main/actions/delegator/secure-upload-folder). This Action uploads the entire folder and returns the sha256 digest as its output, which we will use during download. It's important to note that the "artifact name" refers to the unique name given to the object shared with the TRW, and can be different from the artifact filename our TCA built.
 - [Add outputs to return the name and digest of the uploaded artifact](https://github.com/laurentsimon/byob-doc/tree/v0.0.2/internal/callback_action/action.yml#L48-L53).
 
 #### Update TRW
@@ -333,6 +333,6 @@ Now we need to download the artifact and publish it from the TRW. To do that, fo
 It is important you follow best development practices for your code, including your TRW, TCA and existing Action. In particular:
 
 - Harden your CI, e.g., set your [top-level workflow permissions](https://docs.github.com/en/actions/using-jobs/assigning-permissions-to-jobs#example-assigning-permissions-to-github_token) to `read-only`.
-- Pin your depenencies by hash except the [delegator workflow](https://github.com/slsa-framework/slsa-github-generator/tree/main#referencing-slsa-builders-and-generators), to avoid dependency confusion attacks and speed up incidence response.
+- Pin your depenencies by hash except the [delegator workflow](https://github.com/zktx-io/slsa-github-generator/tree/main#referencing-slsa-builders-and-generators), to avoid dependency confusion attacks and speed up incidence response.
 - If you download binaries, verify their SLSA provenance before running them. Use the [`installer`](https://github.com/slsa-framework/slsa-verifier/tree/main/actions/installer) action to install and use `slsa-verifier`.
 - Install or use a tool like [OSSF Scorecard](https://github.com/ossf/scorecard) to verify you're comprehensively looking at your SDLC.

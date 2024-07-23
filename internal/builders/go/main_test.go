@@ -26,8 +26,8 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 
-	"github.com/slsa-framework/slsa-github-generator/internal/builders/go/pkg"
-	"github.com/slsa-framework/slsa-github-generator/internal/utils"
+	"github.com/zktx-io/slsa-github-generator/internal/builders/go/pkg"
+	"github.com/zktx-io/slsa-github-generator/internal/utils"
 )
 
 func checkWorkingDir(t *testing.T, wd, expected string) {

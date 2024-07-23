@@ -22,7 +22,7 @@ myjob:
     contents: read
     actions: read
   # {owner}/{repository}{/path}@{ref}
-  uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@<tag>
+  uses: zktx-io/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@<tag>
   with:
     subjects: "${{ needs.build.outputs.digest }}"
 ```
@@ -55,7 +55,7 @@ jobs:
     steps:
       - name: Detect the repository and ref
         id: detect
-        uses: slsa-framework/slsa-github-generator/.github/actions/detect-workflow-js@<git hash>
+        uses: zktx-io/slsa-github-generator/.github/actions/detect-workflow-js@<git hash>
 
   # example of using the output from detect-workflow
   print:

@@ -53,7 +53,7 @@ var (
 	wsSplit = regexp.MustCompile(`[\t ]`)
 
 	// provenanceOnlyBuildType is the URI for provenance only SLSA generation.
-	provenanceOnlyBuildType = "https://github.com/slsa-framework/slsa-github-generator/generic@v1"
+	provenanceOnlyBuildType = "https://github.com/zktx-io/slsa-github-generator/generic@v1"
 )
 
 var (

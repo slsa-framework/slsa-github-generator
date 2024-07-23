@@ -10,7 +10,7 @@ To add an exception to this rule for slsa-github-generator add the following pac
 "packageRules": [
     {
       "matchManagers": ["github-actions"],
-      "matchPackageNames": ["slsa-framework/slsa-github-generator"],
+      "matchPackageNames": ["zktx-io/slsa-github-generator"],
       "pinDigests": false
     }
   ]

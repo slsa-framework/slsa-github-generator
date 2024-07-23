@@ -61,7 +61,7 @@ If you do not set this flag then private repositories will generate an error in
 order to prevent leaking repository name information.
 
 Support for private transparency log instances that would not leak repository
-name information is tracked on [issue #372](https://github.com/slsa-framework/slsa-github-generator/issues/372).
+name information is tracked on [issue #372](https://github.com/zktx-io/slsa-github-generator/issues/372).
 
 ### Supported Triggers
 
@@ -72,7 +72,7 @@ The following [GitHub trigger events](https://docs.github.com/en/actions/using-w
 - `release`
 - Manual run via `workflow_dispatch`
 
-In practice, most triggers should work with the exception of `pull_request`. If you would like support for `pull_request`, please tell us about your use case on [issue #358](https://github.com/slsa-framework/slsa-github-generator/issues/358). If you have an issue with any other triggers please submit a [new issue](https://github.com/slsa-framework/slsa-github-generator/issues/new/choose).
+In practice, most triggers should work with the exception of `pull_request`. If you would like support for `pull_request`, please tell us about your use case on [issue #358](https://github.com/zktx-io/slsa-github-generator/issues/358). If you have an issue with any other triggers please submit a [new issue](https://github.com/zktx-io/slsa-github-generator/issues/new/choose).
 
 ### Configuration File
 
@@ -153,7 +153,7 @@ The configuration file accepts many of the common fields GoReleaser uses, as you
 | `{{ .Minor }}`       | `$(git describe --tags --always --dirty \| cut -d '.' -f2`                                                                       | `2`                                        |
 | `{{ .Patch }}`       | `$(git describe --tags --always --dirty \| cut -d '.' -f3 \| cut -d '-' -f1 \| cut -d '+' -f1`                                   | `3`                                        |
 
-If you think you need support for other variables, please [open an issue](https://github.com/slsa-framework/slsa-github-generator/issues/new).
+If you think you need support for other variables, please [open an issue](https://github.com/zktx-io/slsa-github-generator/issues/new).
 
 ### Multi-platform builds
 
@@ -174,7 +174,7 @@ build:
       arch:
         - amd64
         - arm64
-  uses: slsa-framework/slsa-github-generator/.github/workflows/builder_go_slsa3.yml@v2.0.0
+  uses: zktx-io/slsa-github-generator/.github/workflows/builder_go_slsa3.yml@v2.0.0
   with:
     go-version: 1.19
     config-file: .slsa-goreleaser/${{matrix.os}}-${{matrix.arch}}.yml
@@ -183,7 +183,7 @@ build:
 
 ### Workflow Inputs
 
-The builder workflow [slsa-framework/slsa-github-generator/.github/workflows/builder_go_slsa3.yml](https://github.com/slsa-framework/slsa-github-generator/blob/main/.github/workflows/builder_go_slsa3.yml) accepts the following inputs:
+The builder workflow [zktx-io/slsa-github-generator/.github/workflows/builder_go_slsa3.yml](https://github.com/zktx-io/slsa-github-generator/blob/main/.github/workflows/builder_go_slsa3.yml) accepts the following inputs:
 
 | Name                 | Required | Default                                 | Description                                                                                                                                                                                                                                               |
 | -------------------- | -------- | --------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -199,7 +199,7 @@ The builder workflow [slsa-framework/slsa-github-generator/.github/workflows/bui
 
 ### Workflow Outputs
 
-The builder workflow [slsa-framework/slsa-github-generator/.github/workflows/builder_go_slsa3.yml](https://github.com/slsa-framework/slsa-github-generator/blob/main/.github/workflows/builder_go_slsa3.yml) provides the following outputs:
+The builder workflow [zktx-io/slsa-github-generator/.github/workflows/builder_go_slsa3.yml](https://github.com/zktx-io/slsa-github-generator/blob/main/.github/workflows/builder_go_slsa3.yml) provides the following outputs:
 
 | Name                 | Description                                                                           |
 | -------------------- | ------------------------------------------------------------------------------------- |
@@ -251,7 +251,7 @@ jobs:
       contents: write # To upload assets to release.
       actions: read # To read the workflow path.
     needs: args
-    uses: slsa-framework/slsa-github-generator/.github/workflows/builder_go_slsa3.yml@v2.0.0
+    uses: zktx-io/slsa-github-generator/.github/workflows/builder_go_slsa3.yml@v2.0.0
     with:
       go-version: 1.17
       # Optional: only needed if using ldflags.
@@ -276,9 +276,9 @@ An example of the provenance generated from this repo is below:
   ],
   "predicate": {
     "builder": {
-      "id": "https://github.com/slsa-framework/slsa-github-generator/.github/workflows/builder_go_slsa3.yml@v1.4.0"
+      "id": "https://github.com/zktx-io/slsa-github-generator/.github/workflows/builder_go_slsa3.yml@v1.4.0"
     },
-    "buildType": "https://github.com/slsa-framework/slsa-github-generator/go@v1",
+    "buildType": "https://github.com/zktx-io/slsa-github-generator/go@v1",
     "invocation": {
       "configSource": {
         "uri": "git+https://github.com/ianlewis/actions-test@refs/heads/main",
@@ -406,7 +406,7 @@ Workflows are currently failing with the error:
 validating log entry: unable to fetch Rekor public keys from TUF repository, and not trusting the Rekor API for fetching public keys: updating local metadata and targets: error updating to TUF remote mirror: tuf: invalid key
 ```
 
-This issue is currently tracked by [issue #1163](https://github.com/slsa-framework/slsa-github-generator/issues/1163)
+This issue is currently tracked by [issue #1163](https://github.com/zktx-io/slsa-github-generator/issues/1163)
 
 You can work around this error by setting `compile-builder` input flag.
 
@@ -420,7 +420,7 @@ the latest release. Make sure you continue to reference the workflow using a
 release tag in order to allow verification by `slsa-verifier`.
 
 ```yaml
-uses: slsa-framework/slsa-github-generator/.github/workflows/builder_go_slsa3.yml@v2.0.0
+uses: zktx-io/slsa-github-generator/.github/workflows/builder_go_slsa3.yml@v2.0.0
 ```
 
 ### Compatibility with `actions/download-artifact`

@@ -21,8 +21,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/slsa-framework/slsa-github-generator/internal/utils"
-	"github.com/slsa-framework/slsa-github-generator/slsa"
+	"github.com/zktx-io/slsa-github-generator/internal/utils"
+	"github.com/zktx-io/slsa-github-generator/slsa"
 )
 
 func checkTest(t *testing.T) func(err error) {

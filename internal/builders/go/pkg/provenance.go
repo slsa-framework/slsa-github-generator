@@ -20,18 +20,18 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/slsa-framework/slsa-github-generator/signing"
+	"github.com/zktx-io/slsa-github-generator/signing"
 
 	intoto "github.com/in-toto/in-toto-golang/in_toto"
 	slsacommon "github.com/in-toto/in-toto-golang/in_toto/slsa_provenance/common"
-	"github.com/slsa-framework/slsa-github-generator/github"
-	"github.com/slsa-framework/slsa-github-generator/internal/utils"
-	"github.com/slsa-framework/slsa-github-generator/slsa"
+	"github.com/zktx-io/slsa-github-generator/github"
+	"github.com/zktx-io/slsa-github-generator/internal/utils"
+	"github.com/zktx-io/slsa-github-generator/slsa"
 )
 
 const (
 	buildConfigVersion int = 1
-	buildType              = "https://github.com/slsa-framework/slsa-github-generator/go@v1"
+	buildType              = "https://github.com/zktx-io/slsa-github-generator/go@v1"
 )
 
 type (
@@ -126,7 +126,7 @@ func GenerateProvenance(name, digest, command, envs, workingDir string,
 	if provider != nil {
 		b.WithClients(provider)
 	} else if utils.IsPresubmitTests() {
-		// TODO(github.com/slsa-framework/slsa-github-generator/issues/124): Remove
+		// TODO(github.com/zktx-io/slsa-github-generator/issues/124): Remove
 		b.GithubActionsBuild.WithClients(&slsa.NilClientProvider{})
 	}
 
@@ -136,7 +136,7 @@ func GenerateProvenance(name, digest, command, envs, workingDir string,
 	if provider != nil {
 		g.WithClients(provider)
 	} else if utils.IsPresubmitTests() {
-		// TODO(github.com/slsa-framework/slsa-github-generator/issues/124): Remove
+		// TODO(github.com/zktx-io/slsa-github-generator/issues/124): Remove
 		g.WithClients(&slsa.NilClientProvider{})
 	}
 	p, err := g.Generate(ctx)

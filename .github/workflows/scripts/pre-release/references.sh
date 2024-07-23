@@ -46,7 +46,7 @@ cd __THIS_REPO__
 # Verify our Actions are referenced by the release tag in workflows.
 results=$(
   find .github/workflows/ -maxdepth 1 -name '*.yaml' -o -name '*.yml' -type f -print0 |
-    xargs -0 grep -Pn "slsa-framework/slsa-github-generator/.*@(?!$RELEASE_TAG)" |
+    xargs -0 grep -Pn "zktx-io/slsa-github-generator/.*@(?!$RELEASE_TAG)" |
     sed 's/\(.*:\) *uses:.*\(\/.*\)/\1 [...]\2/' ||
     true
 )
@@ -59,7 +59,7 @@ fi
 # Verify our Actions are referenced by the release tag in internal actions.
 results=$(
   find .github/actions/ -maxdepth 2 -name '*.yaml' -o -name '*.yml' -type f -print0 |
-    xargs -0 grep -Pn "slsa-framework/slsa-github-generator/.*@(?!$RELEASE_TAG)" |
+    xargs -0 grep -Pn "zktx-io/slsa-github-generator/.*@(?!$RELEASE_TAG)" |
     sed 's/\(.*:\) *uses:.*\(\/.*\)/\1 [...]\2/' ||
     true
 )
@@ -72,7 +72,7 @@ fi
 # Verify our Actions are referenced by the release tag in external actions.
 results=$(
   find actions/ -maxdepth 3 -name '*.yaml' -o -name '*.yml' -type f -print0 |
-    xargs -0 grep -Pn "slsa-framework/slsa-github-generator/.*@(?!$RELEASE_TAG)" |
+    xargs -0 grep -Pn "zktx-io/slsa-github-generator/.*@(?!$RELEASE_TAG)" |
     sed 's/\(.*:\) *uses:.*\(\/.*\)/\1 [...]\2/' ||
     true
 )
@@ -85,7 +85,7 @@ fi
 # Verify our Actions are referenced by the release tag in BYOB actions.
 results=$(
   find internal/builders/ -maxdepth 2 -name '*.yaml' -o -name '*.yml' -type f -print0 |
-    xargs -0 grep -Pn "slsa-framework/slsa-github-generator/.*@(?!$RELEASE_TAG)" |
+    xargs -0 grep -Pn "zktx-io/slsa-github-generator/.*@(?!$RELEASE_TAG)" |
     sed 's/\(.*:\) *uses:.*\(\/.*\)/\1 [...]\2/' ||
     true
 )
@@ -115,7 +115,7 @@ fi
 # Verify documentation refers to the most recent release tag
 results=$(
   find . -name "*.md" -print0 |
-    xargs -0 grep -Pn "uses: slsa-framework/slsa-github-generator/.*@(?!<|$RELEASE_TAG)" |
+    xargs -0 grep -Pn "uses: zktx-io/slsa-github-generator/.*@(?!<|$RELEASE_TAG)" |
     sed "s/\(.*:\) *uses:.*\(\/.*\)/\1 [...]\2/" ||
     true
 )

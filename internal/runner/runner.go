@@ -122,7 +122,7 @@ func (r *CommandRunner) runStep(ctx context.Context, step *CommandStep, dry bool
 	// the command, However, we won't include the builder's environment
 	// variables into the provenance as they are environment specific and
 	// inhibit reproducibility.
-	// See: https://github.com/slsa-framework/slsa-github-generator/issues/822
+	// See: https://github.com/zktx-io/slsa-github-generator/issues/822
 
 	var userEnv []string
 	userEnv = append(userEnv, r.Env...)

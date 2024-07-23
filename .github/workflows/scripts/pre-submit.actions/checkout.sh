@@ -22,8 +22,8 @@ set -euo pipefail
 # NOTE: All actions and workflows should not use actions/checkout. They should
 # use an action that uses secure-checkout such as checkout-go, checkout-node
 # etc. or use secure-checkout directly.
-# TODO(github.com/slsa-framework/slsa-github-generator/issues/626): Check workflows as well and not just actions.
-# TODO(github.com/slsa-framework/slsa-github-generator/issues/626): Disallow checkouts for repos other than the repo that triggered the action(i.e. github.repository).
+# TODO(github.com/zktx-io/slsa-github-generator/issues/626): Check workflows as well and not just actions.
+# TODO(github.com/zktx-io/slsa-github-generator/issues/626): Disallow checkouts for repos other than the repo that triggered the action(i.e. github.repository).
 results=$(
   grep -r \
     --include='*.yml' \

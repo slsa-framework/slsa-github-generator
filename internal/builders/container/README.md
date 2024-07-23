@@ -73,7 +73,7 @@ provenance:
     id-token: write # for creating OIDC tokens for signing.
     packages: write # for uploading attestations.
   if: startsWith(github.ref, 'refs/tags/')
-  uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v2.0.0
+  uses: zktx-io/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v2.0.0
   with:
     image: ${{ needs.build.outputs.image }}
     digest: ${{ needs.build.outputs.digest }}
@@ -144,7 +144,7 @@ jobs:
       id-token: write # for creating OIDC tokens for signing.
       packages: write # for uploading attestations.
     if: startsWith(github.ref, 'refs/tags/')
-    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v2.0.0
+    uses: zktx-io/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v2.0.0
     with:
       image: ${{ needs.build.outputs.image }}
       digest: ${{ needs.build.outputs.digest }}
@@ -181,7 +181,7 @@ If you do not set this flag then private repositories will generate an error in
 order to prevent leaking repository name information.
 
 Support for private transparency log instances that would not leak repository
-name information is tracked on [issue #372](https://github.com/slsa-framework/slsa-github-generator/issues/372).
+name information is tracked on [issue #372](https://github.com/zktx-io/slsa-github-generator/issues/372).
 
 ### Supported Triggers
 
@@ -194,13 +194,13 @@ The following [GitHub trigger events](https://docs.github.com/en/actions/using-w
 
 However, in practice, most triggers should work with the exception of
 `pull_request`. If you would like support for `pull_request`, please tell us
-about your use case on [issue #358](https://github.com/slsa-framework/slsa-github-generator/issues/358). If
+about your use case on [issue #358](https://github.com/zktx-io/slsa-github-generator/issues/358). If
 you have an issue in all other triggers please submit a [new
-issue](https://github.com/slsa-framework/slsa-github-generator/issues/new/choose).
+issue](https://github.com/zktx-io/slsa-github-generator/issues/new/choose).
 
 ### Workflow Inputs
 
-The [container workflow](https://github.com/slsa-framework/slsa-github-generator/blob/main/.github/workflows/generator_container_slsa3.yml) accepts the following inputs:
+The [container workflow](https://github.com/zktx-io/slsa-github-generator/blob/main/.github/workflows/generator_container_slsa3.yml) accepts the following inputs:
 
 Inputs:
 
@@ -229,7 +229,7 @@ Secrets:
 
 ### Workflow Outputs
 
-The [container workflow](https://github.com/slsa-framework/slsa-github-generator/blob/main/.github/workflows/generator_container_slsa3.yml) accepts the following outputs:
+The [container workflow](https://github.com/zktx-io/slsa-github-generator/blob/main/.github/workflows/generator_container_slsa3.yml) accepts the following outputs:
 
 | Name      | Description                                                                                     |
 | --------- | ----------------------------------------------------------------------------------------------- |
@@ -241,7 +241,7 @@ The project generates SLSA provenance with the following values.
 
 | Name                         | Value                                                                    | Description                                                                                                                                                                                                            |
 | ---------------------------- | ------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `buildType`                  | `"https://github.com/slsa-framework/slsa-github-generator/container@v1"` | Identifies a the GitHub Actions build.                                                                                                                                                                                 |
+| `buildType`                  | `"https://github.com/zktx-io/slsa-github-generator/container@v1"` | Identifies a the GitHub Actions build.                                                                                                                                                                                 |
 | `metadata.buildInvocationID` | `"[run_id]-[run_attempt]"`                                               | The GitHub Actions [`run_id`](https://docs.github.com/en/actions/learn-github-actions/contexts#github-context) does not update when a workflow is re-run. Run attempt is added to make the build invocation ID unique. |
 
 ### Provenance Example
@@ -263,9 +263,9 @@ generated as an [in-toto](https://in-toto.io/) statement with a SLSA predicate.
   ],
   "predicate": {
     "builder": {
-      "id": "https://github.com/slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@refs/tags/v1.4.0"
+      "id": "https://github.com/zktx-io/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@refs/tags/v1.4.0"
     },
-    "buildType": "https://github.com/slsa-framework/slsa-github-generator/container@v1",
+    "buildType": "https://github.com/zktx-io/slsa-github-generator/container@v1",
     "invocation": {
       "configSource": {
         "uri": "git+https://github.com/ianlewis/actions-test@refs/heads/main.git",
@@ -373,7 +373,7 @@ This section explains how to generate non-forgeable SLSA provenance with existin
        # contents: read
        packages: write
      if: startsWith(github.ref, 'refs/tags/')
-     uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v2.0.0
+     uses: zktx-io/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v2.0.0
      with:
        image: ${{ needs.build.outputs.image }}
        digest: ${{ needs.build.outputs.digest }}
@@ -438,7 +438,7 @@ This section explains how to generate non-forgeable SLSA provenance with existin
          # contents: read
          packages: write
        if: startsWith(github.ref, 'refs/tags/')
-       uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v2.0.0
+       uses: zktx-io/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v2.0.0
        with:
          image: ${{ needs.build.outputs.image }}
          digest: ${{ needs.build.outputs.digest }}
@@ -482,7 +482,7 @@ predicate: {
   // unmodified. It verifies that the builder is the container
   // workflow.
   builder: {
-    id: =~"^https://github.com/slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@refs/tags/v[0-9]+.[0-9]+.[0-9]+$"
+    id: =~"^https://github.com/zktx-io/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@refs/tags/v[0-9]+.[0-9]+.[0-9]+$"
   }
   invocation: {
     configSource: {
@@ -506,7 +506,7 @@ We can then use `cosign` to verify the attestation using the policy.
 COSIGN_EXPERIMENTAL=1 cosign verify-attestation \
   --type slsaprovenance \
   --certificate-oidc-issuer https://token.actions.githubusercontent.com \
-  --certificate-identity-regexp '^https://github.com/slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@refs/tags/v[0-9]+.[0-9]+.[0-9]+$' \
+  --certificate-identity-regexp '^https://github.com/zktx-io/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@refs/tags/v[0-9]+.[0-9]+.[0-9]+$' \
   --policy policy.cue \
   ghcr.io/ianlewis/actions-test:v0.0.79
 ```
@@ -521,7 +521,7 @@ The following checks were performed on each of these signatures:
   - The cosign claims were validated
   - Existence of the claims in the transparency log was verified offline
   - The code-signing certificate was verified using trusted certificate authority certificates
-Certificate subject:  https://github.com/slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@refs/tags/v1.4.0
+Certificate subject:  https://github.com/zktx-io/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@refs/tags/v1.4.0
 Certificate issuer URL:  https://token.actions.githubusercontent.com
 GitHub Workflow Trigger: push
 GitHub Workflow SHA: 3f938aae461d2a8bc7897ff975e77a876e3d9123
@@ -579,7 +579,7 @@ spec:
                 // unmodified. It verifies that the builder is the container
                 // workflow.
                 builder: {
-                  id: =~"^https://github.com/slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@refs/tags/v[0-9]+.[0-9]+.[0-9]+$"
+                  id: =~"^https://github.com/zktx-io/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@refs/tags/v[0-9]+.[0-9]+.[0-9]+$"
                 }
                 invocation: {
                   configSource: {
@@ -653,7 +653,7 @@ spec:
             # identity.
             - entries:
                 - keyless:
-                    subject: "https://github.com/slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@refs/tags/v1.4.0"
+                    subject: "https://github.com/zktx-io/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@refs/tags/v1.4.0"
                     issuer: "https://token.actions.githubusercontent.com"
           # This section declares some policy conditions acting on the provenance itself.
           attestations:
@@ -678,7 +678,7 @@ spec:
                     # expect and trust. The following condition can be used
                     # unmodified. It verifies that the builder is the container
                     # workflow.
-                    - key: "{{ regex_match('^https://github.com/slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@refs/tags/v[0-9].[0-9].[0-9]$','{{ builder.id}}') }}"
+                    - key: "{{ regex_match('^https://github.com/zktx-io/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@refs/tags/v[0-9].[0-9].[0-9]$','{{ builder.id}}') }}"
                       operator: Equals
                       value: true
 ```

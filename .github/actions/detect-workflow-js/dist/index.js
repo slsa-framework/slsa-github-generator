@@ -103,12 +103,12 @@ function detectWorkflowFromContext(repoName, token) {
         }
         let [repository, ref, workflow] = ["", "", ""];
         // If this is a pull request on the main repository
-        // (slsa-framework/slsa-github-generator), then look for the repo and head
+        // (zktx-io/slsa-github-generator), then look for the repo and head
         // SHA from the pull_request event value. Pull requests on forks are not
         // supported.
         if ((workflowData.event === "pull_request" ||
             workflowData.event === "merge_group") &&
-            workflowData.repository.full_name === "slsa-framework/slsa-github-generator") {
+            workflowData.repository.full_name === "zktx-io/slsa-github-generator") {
             ref = workflowData.head_sha;
             repository = workflowData.head_repository.full_name;
             workflow = workflowData.path;
@@ -216,7 +216,7 @@ function run() {
         /* Test locally. Requires a GitHub token:
               $ env INPUT_TOKEN="$(gh auth token)" \
               GITHUB_RUN_ID="4449301889" \
-              GITHUB_REPOSITORY="slsa-framework/slsa-github-generator" \
+              GITHUB_REPOSITORY="zktx-io/slsa-github-generator" \
               nodejs ./dist/index.js
           */
         const token = core.getInput("token");

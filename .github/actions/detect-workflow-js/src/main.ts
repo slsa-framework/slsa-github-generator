@@ -20,7 +20,7 @@ async function run(): Promise<void> {
   /* Test locally. Requires a GitHub token:
         $ env INPUT_TOKEN="$(gh auth token)" \
         GITHUB_RUN_ID="4449301889" \
-        GITHUB_REPOSITORY="slsa-framework/slsa-github-generator" \
+        GITHUB_REPOSITORY="zktx-io/slsa-github-generator" \
         nodejs ./dist/index.js
     */
   const token = core.getInput("token");

@@ -13,7 +13,7 @@ fields of the SLSA provenance predicate attested to are below.
 
 ```json
 "builder": {
-  "id": "https://github.com/slsa-framework/slsa-github-generator/.github/workflows/builder_go_slsa3.yml@refs/tags/v0.0.1"
+  "id": "https://github.com/zktx-io/slsa-github-generator/.github/workflows/builder_go_slsa3.yml@refs/tags/v0.0.1"
 }
 ```
 
@@ -22,7 +22,7 @@ fields of the SLSA provenance predicate attested to are below.
 `buildType`: This is the URI for the particular provenance builder. For example, this is the `buildType` for the Go builder:
 
 ```json
-"buildType": "https://github.com/slsa-framework/slsa-github-generator/go@v1"
+"buildType": "https://github.com/zktx-io/slsa-github-generator/go@v1"
 ```
 
 In SLSA the [buildType](https://slsa.dev/provenance/v0.2#buildType) defines how
@@ -94,7 +94,7 @@ many other fields are formatted including all of those below.
 
 `buildConfig`: This contains information on the steps of the build. The default is nil, specific builders implement their own. See:
 
-- [Golang BuildConfig Format](https://github.com/slsa-framework/slsa-github-generator/blob/main/internal/builders/go/README.md#buildconfig-format).
+- [Golang BuildConfig Format](https://github.com/zktx-io/slsa-github-generator/blob/main/internal/builders/go/README.md#buildconfig-format).
 
 ### Materials
 

@@ -55,7 +55,7 @@ on:
           Username to log into the container registry. This should only be used for high
           entropy values.
 
-          See https://github.com/slsa-framework/slsa-github-generator/blob/main/internal/builders/docker/README.md#workflow-inputs
+          See https://github.com/zktx-io/slsa-github-generator/blob/main/internal/builders/docker/README.md#workflow-inputs
       registry-password:
         description: "Password to log in the container registry."
     inputs:
@@ -165,7 +165,7 @@ jobs:
     steps:
       - name: Generate random 16-byte value (32-char hex encoded)
         id: rng
-        uses: slsa-framework/slsa-github-generator/.github/actions/rng@main
+        uses: zktx-io/slsa-github-generator/.github/actions/rng@main
 
   # This detects the repository and ref of the reusable workflow.
   # For pull request, this gets the referenced slsa-github-generator workflow.
@@ -180,7 +180,7 @@ jobs:
     steps:
       - name: Detect the builder ref
         id: detect
-        uses: slsa-framework/slsa-github-generator/.github/actions/detect-workflow-js@main
+        uses: zktx-io/slsa-github-generator/.github/actions/detect-workflow-js@main
 
   ###################################################################
   #                                                                 #
@@ -197,7 +197,7 @@ jobs:
     steps:
       - name: Generate builder binary
         id: generate
-        uses: slsa-framework/slsa-github-generator/.github/actions/generate-builder@main
+        uses: zktx-io/slsa-github-generator/.github/actions/generate-builder@main
         with:
           repository: "${{ needs.detect-env.outputs.repository }}"
           ref: "${{ needs.detect-env.outputs.ref }}"
@@ -230,7 +230,7 @@ jobs:
     steps:
       - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
       - name: Checkout builder repository
-        uses: slsa-framework/slsa-github-generator/.github/actions/secure-builder-checkout@main
+        uses: zktx-io/slsa-github-generator/.github/actions/secure-builder-checkout@main
         with:
           repository: "${{ needs.detect-env.outputs.repository }}"
           ref: "${{ needs.detect-env.outputs.ref }}"
@@ -357,7 +357,7 @@ jobs:
           docker login "${untrusted_registry}" -u "${username}" -p "${password}"
 
       - name: Checkout builder repository
-        uses: slsa-framework/slsa-github-generator/.github/actions/secure-builder-checkout@main
+        uses: zktx-io/slsa-github-generator/.github/actions/secure-builder-checkout@main
         with:
           repository: "${{ needs.detect-env.outputs.repository }}"
           ref: "${{ needs.detect-env.outputs.ref }}"
@@ -459,7 +459,7 @@ jobs:
           path: "${{ steps.build.outputs.slsa-outputs-name }}"
 
       - name: Upload output artifacts
-        # TODO(https://github.com/slsa-framework/slsa-github-generator/issues/1655): Use a
+        # TODO(https://github.com/zktx-io/slsa-github-generator/issues/1655): Use a
         # secure upload or verify this against the SLSA layout file.
         id: upload-artifacts
         uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808 # v4.3.3
@@ -485,7 +485,7 @@ jobs:
       provenance-sha256: ${{ steps.upload-signed.outputs.sha256 }}
     steps:
       - name: Checkout builder repository
-        uses: slsa-framework/slsa-github-generator/.github/actions/secure-builder-checkout@main
+        uses: zktx-io/slsa-github-generator/.github/actions/secure-builder-checkout@main
         with:
           repository: "${{ needs.detect-env.outputs.repository }}"
           ref: "${{ needs.detect-env.outputs.ref }}"
@@ -575,13 +575,13 @@ jobs:
     if: inputs.upload-assets && (startsWith(github.ref, 'refs/tags/') || inputs.upload-tag-name != '')
     steps:
       - name: Checkout builder repository
-        uses: slsa-framework/slsa-github-generator/.github/actions/secure-builder-checkout@main
+        uses: zktx-io/slsa-github-generator/.github/actions/secure-builder-checkout@main
         with:
           repository: "${{ needs.detect-env.outputs.repository }}"
           ref: "${{ needs.detect-env.outputs.ref }}"
           path: __BUILDER_CHECKOUT_DIR__
 
-      # TODO(https://github.com/slsa-framework/slsa-github-generator/issues/1655): Use the SLSA
+      # TODO(https://github.com/zktx-io/slsa-github-generator/issues/1655): Use the SLSA
       # layout files and their checksums to validate the artifacts.
       - name: Download artifacts
         uses: actions/download-artifact@65a9edc5881444af0b9093a5e628f2fe47ea3b2e # v4.1.7
@@ -589,7 +589,7 @@ jobs:
           name: "${{ needs.build.outputs.build-outputs-name }}"
           path: "${{ needs.build.outputs.build-outputs-name }}"
 
-      # TODO(https://github.com/slsa-framework/slsa-github-generator/issues/1655): Use the
+      # TODO(https://github.com/zktx-io/slsa-github-generator/issues/1655): Use the
       # secure-folder-download action.
       - name: Download provenance
         uses: actions/download-artifact@65a9edc5881444af0b9093a5e628f2fe47ea3b2e # v4.1.7

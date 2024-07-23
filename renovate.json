@@ -9,13 +9,13 @@
   "packageRules": [
     {
       "matchManagers": ["github-actions"],
-      "excludePackageNames": ["slsa-framework/slsa-github-generator"],
+      "excludePackageNames": ["zktx-io/slsa-github-generator"],
       "groupName": "github-actions",
       "pinDigests": true
     },
     {
       "matchManagers": ["github-actions"],
-      "matchPackageNames": ["slsa-framework/slsa-github-generator"],
+      "matchPackageNames": ["zktx-io/slsa-github-generator"],
       "groupName": "github-actions",
       "pinDigests": false
     },

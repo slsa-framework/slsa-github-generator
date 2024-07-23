@@ -150,7 +150,7 @@ async function run(): Promise<void> {
       parseCertificate(bundle);
 
     // Extract the inputs.
-    // See https://github.com/slsa-framework/slsa-github-generator/issues/1737.
+    // See https://github.com/zktx-io/slsa-github-generator/issues/1737.
     const rawFilteredTokenObj = await filterWorkflowInputs(
       rawTokenObj,
       ghToken,

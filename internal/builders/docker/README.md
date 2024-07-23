@@ -16,7 +16,7 @@ build as well as generates the provenance. This workflow uses a distinct build
 type that provides the full details on the build process.
 
 **NOTE**: This workflow is currently in
-[beta testing](https://github.com/slsa-framework/slsa-github-generator/milestone/4).
+[beta testing](https://github.com/zktx-io/slsa-github-generator/milestone/4).
 
 ---
 
@@ -103,7 +103,7 @@ If you do not set this flag then private repositories will generate an error in
 order to prevent leaking repository name information.
 
 Support for private transparency log instances that would not leak repository
-name information is tracked on [issue #372](https://github.com/slsa-framework/slsa-github-generator/issues/372).
+name information is tracked on [issue #372](https://github.com/zktx-io/slsa-github-generator/issues/372).
 
 ### Registry Authentication
 
@@ -132,7 +132,7 @@ container-based build and produce an _unsigned_ DSSE attestation for the
 purposes of testing.
 
 If you have an issue with any other triggers please submit a [new
-issue](https://github.com/slsa-framework/slsa-github-generator/issues/new/choose).
+issue](https://github.com/zktx-io/slsa-github-generator/issues/new/choose).
 
 ### Configuration File
 
@@ -154,7 +154,7 @@ basenames of the matching files.
 ### Workflow Inputs
 
 The [container-based
-workflow](https://github.com/slsa-framework/slsa-github-generator/blob/main/.github/workflows/builder_container-based_slsa3.yml)
+workflow](https://github.com/zktx-io/slsa-github-generator/blob/main/.github/workflows/builder_container-based_slsa3.yml)
 accepts the following inputs:
 
 Inputs:
@@ -204,7 +204,7 @@ jobs:
       contents: write # To upload assets to release.
       actions: read # To read the workflow path.
     needs: args
-    uses: slsa-framework/slsa-github-generator/.github/workflows/builder_container-based_slsa3.yml@v2.0.0
+    uses: zktx-io/slsa-github-generator/.github/workflows/builder_container-based_slsa3.yml@v2.0.0
     with:
       builder-image: "bash"
       builder-digest: "sha256:9e2ba52487d945504d250de186cb4fe2e3ba023ed2921dd6ac8b97ed43e76af9"
@@ -214,7 +214,7 @@ jobs:
 ### Workflow Outputs
 
 The [container-based
-workflow](https://github.com/slsa-framework/slsa-github-generator/blob/main/.github/workflows/builder_container-based_slsa3.yml) produces the following outputs:
+workflow](https://github.com/zktx-io/slsa-github-generator/blob/main/.github/workflows/builder_container-based_slsa3.yml) produces the following outputs:
 
 | Name                         | Description                                                                                                                                                                                                                                             |
 | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -313,7 +313,7 @@ as an [in-toto](https://in-toto.io/) statement with a SLSA predicate.
     },
     "runDetails": {
       "builder": {
-        "id": "https://github.com/slsa-framework/slsa-github-generator/.github/workflows/builder_container-based_slsa3.yml@refs/tags/v1.5.0"
+        "id": "https://github.com/zktx-io/slsa-github-generator/.github/workflows/builder_container-based_slsa3.yml@refs/tags/v1.5.0"
       },
       "metadata": {
         "invocationId": "https://github.com/slsa-framework/example-package/actions/runs/4310284899/attempts/1"
@@ -354,7 +354,7 @@ go run *.go  dry-run \
   --build-config-path internal/builders/docker/testdata/config.toml \
   --builder-image bash@sha256:9e2ba52487d945504d250de186cb4fe2e3ba023ed2921dd6ac8b97ed43e76af9 \
   --git-commit-digest sha1:cf5804b5c6f1a4b2a0b03401a487dfdfbe3a5f00 \
-  --source-repo git+https://github.com/slsa-framework/slsa-github-generator \
+  --source-repo git+https://github.com/zktx-io/slsa-github-generator \
   --build-definition-path bd.json \
   --force-checkout
 ```
@@ -374,7 +374,7 @@ go run *.go build \
   --build-config-path internal/builders/docker/testdata/config.toml \
   --builder-image bash@sha256:9e2ba52487d945504d250de186cb4fe2e3ba023ed2921dd6ac8b97ed43e76af9 \
   --git-commit-digest sha1:cf5804b5c6f1a4b2a0b03401a487dfdfbe3a5f00 \
-  --source-repo git+https://github.com/slsa-framework/slsa-github-generator \
+  --source-repo git+https://github.com/zktx-io/slsa-github-generator \
   --subjects-path subjects.json \
   --output-folder /tmp/build-outputs \
   --force-checkout

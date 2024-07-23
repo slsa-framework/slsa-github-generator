@@ -26,7 +26,7 @@ import (
 	slsa "github.com/in-toto/in-toto-golang/in_toto/slsa_provenance/v0.2"
 	slsa02 "github.com/in-toto/in-toto-golang/in_toto/slsa_provenance/v0.2"
 
-	"github.com/slsa-framework/slsa-github-generator/github"
+	"github.com/zktx-io/slsa-github-generator/github"
 )
 
 // BuildType implements generation of buildType specific elements of SLSA
@@ -154,7 +154,7 @@ func (b *GithubActionsBuild) Invocation(ctx context.Context) (slsa.ProvenanceInv
 	// to reproduce the build.
 	env := map[string]any{}
 
-	// TODO(github.com/slsa-framework/slsa-github-generator/issues/5): set "arch" in environment.
+	// TODO(github.com/zktx-io/slsa-github-generator/issues/5): set "arch" in environment.
 	addEnvKeyString(env, "github_run_number", b.Context.RunNumber)
 	addEnvKeyString(env, "github_run_id", b.Context.RunID)
 	addEnvKeyString(env, "github_run_attempt", b.Context.RunAttempt)

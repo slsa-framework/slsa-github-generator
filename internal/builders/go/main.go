@@ -24,14 +24,14 @@ import (
 	"os"
 	"os/exec"
 
-	"github.com/slsa-framework/slsa-github-generator/github"
-	"github.com/slsa-framework/slsa-github-generator/signing/sigstore"
+	"github.com/zktx-io/slsa-github-generator/github"
+	"github.com/zktx-io/slsa-github-generator/signing/sigstore"
 
 	// Enable the GitHub OIDC auth provider.
 	_ "github.com/sigstore/cosign/v2/pkg/providers/github"
 
-	"github.com/slsa-framework/slsa-github-generator/internal/builders/go/pkg"
-	"github.com/slsa-framework/slsa-github-generator/internal/utils"
+	"github.com/zktx-io/slsa-github-generator/internal/builders/go/pkg"
+	"github.com/zktx-io/slsa-github-generator/internal/utils"
 )
 
 func usage(p string) {

@@ -154,7 +154,7 @@ function run() {
             // Extract certificate information.
             const [toolURI, toolRepository, toolRef, toolSha, toolPath] = (0, utils_1.parseCertificate)(bundle);
             // Extract the inputs.
-            // See https://github.com/slsa-framework/slsa-github-generator/issues/1737.
+            // See https://github.com/zktx-io/slsa-github-generator/issues/1737.
             const rawFilteredTokenObj = yield (0, inputs_1.filterWorkflowInputs)(rawTokenObj, ghToken, toolRepository, toolSha, toolPath);
             core.debug(`workflow inputs: ${JSON.stringify(Object.fromEntries(rawFilteredTokenObj.tool.inputs))}`);
             // Validate the masked inputs and update the token.
@@ -361,7 +361,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.createPredicate = void 0;
 const github = __importStar(__nccwpck_require__(95438));
 const utils_1 = __nccwpck_require__(50918);
-const DELEGATOR_BUILD_TYPE_V0 = "https://github.com/slsa-framework/slsa-github-generator/delegator-generic@v0";
+const DELEGATOR_BUILD_TYPE_V0 = "https://github.com/zktx-io/slsa-github-generator/delegator-generic@v0";
 function createPredicate(rawTokenObj, toolURI, token) {
     return __awaiter(this, void 0, void 0, function* () {
         // Trigger information.
@@ -501,7 +501,7 @@ exports.createPredicate = void 0;
 const github = __importStar(__nccwpck_require__(95438));
 const tscommon = __importStar(__nccwpck_require__(86634));
 const utils_1 = __nccwpck_require__(50918);
-const DELEGATOR_BUILD_TYPE_V0 = "https://github.com/slsa-framework/slsa-github-generator/delegator-generic@v0";
+const DELEGATOR_BUILD_TYPE_V0 = "https://github.com/zktx-io/slsa-github-generator/delegator-generic@v0";
 function createPredicate(rawTokenObj, toolURI, token, isGenerator) {
     return __awaiter(this, void 0, void 0, function* () {
         // Trigger information.
@@ -558,7 +558,7 @@ function createPredicate(rawTokenObj, toolURI, token, isGenerator) {
                 ],
             },
             runDetails: {
-                // TODO(https://github.com/slsa-framework/slsa-github-generator/issues/1504):
+                // TODO(https://github.com/zktx-io/slsa-github-generator/issues/1504):
                 // Record raw token inputs (tool action inputs).
                 builder: {
                     id: toolURI,
@@ -597,7 +597,7 @@ function createPredicate(rawTokenObj, toolURI, token, isGenerator) {
             };
         }
         // Put GitHub event payload into internalParameters.
-        // TODO(github.com/slsa-framework/slsa-github-generator/issues/1575): Redact sensitive information.
+        // TODO(github.com/zktx-io/slsa-github-generator/issues/1575): Redact sensitive information.
         // NOTE: Contents of event_path have been pre-validated.
         predicate.buildDefinition.internalParameters.GITHUB_EVENT_PAYLOAD =
             JSON.parse(tscommon.safeReadFileSync(process.env.GITHUB_EVENT_PATH || "").toString());
@@ -688,7 +688,7 @@ function createSourceURI(rawTokenObj) {
     // TRW may overwrite the commit sha to build.
     // For example, users of JReleaser may push a commit
     // before building. See discussion at
-    // https://github.com/slsa-framework/slsa-github-generator/issues/2043.
+    // https://github.com/zktx-io/slsa-github-generator/issues/2043.
     // If the TRW passed in a sha1, we don't know the ref
     // so we never report it.
     if (rawTokenObj.source.checkout.sha1) {
@@ -730,7 +730,7 @@ function getSourceSha1(rawTokenObj) {
     // TRW may overwrite the commit sha to build.
     // For example, users of JReleaser may push a commit
     // before building. See discussion at
-    // https://github.com/slsa-framework/slsa-github-generator/issues/2043.
+    // https://github.com/zktx-io/slsa-github-generator/issues/2043.
     const sha1 = rawTokenObj.source.checkout.sha1 || rawTokenObj.github.sha;
     validateSha1(sha1);
     return sha1;
@@ -64600,7 +64600,7 @@ function createSourceURI(rawTokenObj) {
     // TRW may overwrite the commit sha to build.
     // For example, users of JReleaser may push a commit
     // before building. See discussion at
-    // https://github.com/slsa-framework/slsa-github-generator/issues/2043.
+    // https://github.com/zktx-io/slsa-github-generator/issues/2043.
     // If the TRW passed in a sha1, we don't know the ref
     // so we never report it.
     if (rawTokenObj.source.checkout.sha1) {
@@ -64642,7 +64642,7 @@ function getSourceSha1(rawTokenObj) {
     // TRW may overwrite the commit sha to build.
     // For example, users of JReleaser may push a commit
     // before building. See discussion at
-    // https://github.com/slsa-framework/slsa-github-generator/issues/2043.
+    // https://github.com/zktx-io/slsa-github-generator/issues/2043.
     const sha1 = rawTokenObj.source.checkout.sha1 || rawTokenObj.github.sha;
     validateSha1(sha1);
     return sha1;

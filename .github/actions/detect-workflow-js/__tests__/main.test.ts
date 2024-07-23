@@ -157,7 +157,7 @@ describe("detectWorkflowFromContext", () => {
               ref: "refs/pull/3669/merge",
             },
             {
-              path: "slsa-framework/slsa-github-generator/.github/workflows/builder_docker-based_slsa3.yml@v1.5.0",
+              path: "zktx-io/slsa-github-generator/.github/workflows/builder_docker-based_slsa3.yml@v1.5.0",
               sha: "7f4fdb871876c23e455853d694197440c5a91506",
               ref: "refs/tags/v1.5.0",
             },
@@ -169,7 +169,7 @@ describe("detectWorkflowFromContext", () => {
       "unused",
       "unused",
     );
-    expect(repo).toBe("slsa-framework/slsa-github-generator");
+    expect(repo).toBe("zktx-io/slsa-github-generator");
     expect(ref).toBe("refs/tags/v1.5.0");
     expect(workflow).toBe(".github/workflows/builder_docker-based_slsa3.yml");
   });
@@ -180,12 +180,12 @@ describe("detectWorkflowFromContext", () => {
         data: {
           referenced_workflows: [
             {
-              path: "slsa-framework/slsa-github-generator/.github/workflows/generic_generator_slsa3.yml@v1.5.0",
+              path: "zktx-io/slsa-github-generator/.github/workflows/generic_generator_slsa3.yml@v1.5.0",
               sha: "7f4fdb871876c23e455853d694197440c5a91506",
               ref: "refs/tags/v1.5.0",
             },
             {
-              path: "slsa-framework/slsa-github-generator/.github/workflows/builder_docker-based_slsa3.yml@v1.5.0",
+              path: "zktx-io/slsa-github-generator/.github/workflows/builder_docker-based_slsa3.yml@v1.5.0",
               sha: "7f4fdb871876c23e455853d694197440c5a91506",
               ref: "refs/tags/v1.5.0",
             },
@@ -197,7 +197,7 @@ describe("detectWorkflowFromContext", () => {
       "unused",
       "unused",
     );
-    expect(repo).toBe("slsa-framework/slsa-github-generator");
+    expect(repo).toBe("zktx-io/slsa-github-generator");
     expect(ref).toBe("refs/tags/v1.5.0");
     expect(workflow).toBe(".github/workflows/builder_docker-based_slsa3.yml");
   });
@@ -208,7 +208,7 @@ describe("detectWorkflowFromContext", () => {
         data: {
           referenced_workflows: [
             {
-              path: "slsa-framework/slsa-github-generator/.github/workflows/generic_generator_slsa3.yml@v1.5.0",
+              path: "zktx-io/slsa-github-generator/.github/workflows/generic_generator_slsa3.yml@v1.5.0",
               sha: "7f4fdb871876c23e455853d694197440c5a91506",
               ref: "refs/tags/v1.5.0",
             },
@@ -235,14 +235,14 @@ describe("detectWorkflowFromContext", () => {
           path: ".github/workflows/pre-submit.e2e.docker-based.default.yml",
           referenced_workflows: [
             {
-              path: "slsa-framework/slsa-github-generator/.github/workflows/builder_docker-based_slsa3.yml@9929152897cce5842f58221572911e18dd937808",
+              path: "zktx-io/slsa-github-generator/.github/workflows/builder_docker-based_slsa3.yml@9929152897cce5842f58221572911e18dd937808",
               sha: "9929152897cce5842f58221572911e18dd937808",
               ref: "refs/pull/3669/merge",
             },
           ],
           repository: {
             name: "slsa-github-generator",
-            full_name: "slsa-framework/slsa-github-generator",
+            full_name: "zktx-io/slsa-github-generator",
           },
           head_repository: {
             name: "slsa-github-generator",

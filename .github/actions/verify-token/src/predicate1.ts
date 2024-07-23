@@ -25,7 +25,7 @@ import {
 import { SLSAPredicate } from "./slsatypes1";
 
 const DELEGATOR_BUILD_TYPE_V0 =
-  "https://github.com/slsa-framework/slsa-github-generator/delegator-generic@v0";
+  "https://github.com/zktx-io/slsa-github-generator/delegator-generic@v0";
 
 export async function createPredicate(
   rawTokenObj: rawTokenInterface,
@@ -90,7 +90,7 @@ export async function createPredicate(
       ],
     },
     runDetails: {
-      // TODO(https://github.com/slsa-framework/slsa-github-generator/issues/1504):
+      // TODO(https://github.com/zktx-io/slsa-github-generator/issues/1504):
       // Record raw token inputs (tool action inputs).
       builder: {
         id: toolURI,
@@ -130,7 +130,7 @@ export async function createPredicate(
   }
 
   // Put GitHub event payload into internalParameters.
-  // TODO(github.com/slsa-framework/slsa-github-generator/issues/1575): Redact sensitive information.
+  // TODO(github.com/zktx-io/slsa-github-generator/issues/1575): Redact sensitive information.
   // NOTE: Contents of event_path have been pre-validated.
   predicate.buildDefinition.internalParameters.GITHUB_EVENT_PAYLOAD =
     JSON.parse(

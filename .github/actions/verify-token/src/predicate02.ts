@@ -24,7 +24,7 @@ import {
 import { SLSAPredicate } from "./slsatypes02";
 
 const DELEGATOR_BUILD_TYPE_V0 =
-  "https://github.com/slsa-framework/slsa-github-generator/delegator-generic@v0";
+  "https://github.com/zktx-io/slsa-github-generator/delegator-generic@v0";
 
 export async function createPredicate(
   rawTokenObj: rawTokenInterface,

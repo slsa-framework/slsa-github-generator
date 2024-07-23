@@ -48,7 +48,7 @@ Set up env variables:
 
 ```shell
 export GITHUB_USERNAME="laurentsimon"
-# This is the existing slsa-verifier version used by the builder. (https://github.com/slsa-framework/slsa-github-generator/blob/main/.github/actions/generate-builder/action.yml#L55)
+# This is the existing slsa-verifier version used by the builder. (https://github.com/zktx-io/slsa-github-generator/blob/main/.github/actions/generate-builder/action.yml#L55)
 export VERIFIER_TAG="v2.1.0"
 export VERIFIER_REPOSITORY="$GITHUB_USERNAME/slsa-verifier"
 # Release tag of the builder we want to release. Release Candidates end with "-rc.#"
@@ -74,12 +74,12 @@ Finalize the [CHANGELOG](./CHANGELOG.md) entry for the release candidate noting 
 ### Update dependencies
 
 In order to minimize vulnerabilities in releases, merge
-[outstanding PRs from Renovate](https://github.com/slsa-framework/slsa-github-generator/pulls/renovate-bot)
+[outstanding PRs from Renovate](https://github.com/zktx-io/slsa-github-generator/pulls/renovate-bot)
 as best as possible. Renovate PRs that update major versions can be skipped.
 
 ### RC tagging
 
-Create a new tag for the Release Candidate via [slsa-framework/slsa-github-generator/releases/new](https://github.com/slsa-framework/slsa-github-generator/releases/new). The tag _MUST_ be a "canonical" [semantic version](https://semver.org/) without metadata (`$BUILDER_TAG`). Shorter versions are not accepted by the builder's and verifier's code.
+Create a new tag for the Release Candidate via [zktx-io/slsa-github-generator/releases/new](https://github.com/zktx-io/slsa-github-generator/releases/new). The tag _MUST_ be a "canonical" [semantic version](https://semver.org/) without metadata (`$BUILDER_TAG`). Shorter versions are not accepted by the builder's and verifier's code.
 
 Release candidates should include a suffix indicating the release candidate number of the form `-rc.#` where `#` is a number starting from `0`.
 
@@ -95,7 +95,7 @@ Release candidates should include a suffix indicating the release candidate numb
 3. Tick the `This is a pre-release` option.
 4. Click `Publish release`.
 
-This will trigger the [release workflow](https://github.com/slsa-framework/slsa-github-generator/actions/workflows/release.yml). Cancel this in the [UI](https://github.com/slsa-framework/slsa-github-generator/actions/workflows/release.yml).
+This will trigger the [release workflow](https://github.com/zktx-io/slsa-github-generator/actions/workflows/release.yml). Cancel this in the [UI](https://github.com/zktx-io/slsa-github-generator/actions/workflows/release.yml).
 
 ### Verify RC version references
 
@@ -119,7 +119,7 @@ git tag $BUILDER_TAG -f
 git push origin $BUILDER_TAG -f
 ```
 
-This will trigger the [release workflow](https://github.com/slsa-framework/slsa-github-generator/actions/workflows/release.yml). Ensure this workflow succeeds and that the release assets are updated.
+This will trigger the [release workflow](https://github.com/zktx-io/slsa-github-generator/actions/workflows/release.yml). Ensure this workflow succeeds and that the release assets are updated.
 
 ### Adversarial verifier tests
 
@@ -299,7 +299,7 @@ End-to-end tests run daily in [github.com/slsa-framework/example-package/.github
 1. Make sure you have downloaded the `$BUILDER_TAG` builder's binary locally `slsa-builder-go-linux-amd64`, either via the web UI or via:
 
    ```shell
-   "$GH" release -R slsa-framework/slsa-github-generator download "$BUILDER_TAG" -p "slsa-builder-go-linux-amd64"
+   "$GH" release -R zktx-io/slsa-github-generator download "$BUILDER_TAG" -p "slsa-builder-go-linux-amd64"
    mv slsa-builder-go-linux-amd64 slsa-builder-go-linux-amd64-"$BUILDER_TAG".original
    ```
 
@@ -307,7 +307,7 @@ End-to-end tests run daily in [github.com/slsa-framework/example-package/.github
 
    ```shell
    echo hello > slsa-builder-go-linux-amd64
-   "$GH" release -R slsa-framework/slsa-github-generator upload "$BUILDER_TAG" slsa-builder-go-linux-amd64  --clobber
+   "$GH" release -R zktx-io/slsa-github-generator upload "$BUILDER_TAG" slsa-builder-go-linux-amd64  --clobber
    ```
 
 3. Update the version of the workflow
@@ -328,10 +328,10 @@ End-to-end tests run daily in [github.com/slsa-framework/example-package/.github
 
    ```shell
    mv slsa-builder-go-linux-amd64-"$BUILDER_TAG".original slsa-builder-go-linux-amd64
-   "$GH" release -R slsa-framework/slsa-github-generator upload "$BUILDER_TAG" slsa-builder-go-linux-amd64  --clobber
+   "$GH" release -R zktx-io/slsa-github-generator upload "$BUILDER_TAG" slsa-builder-go-linux-amd64  --clobber
    ```
 
-6. Re-run the workflow above and verify that it succeeds. (TODO: https://github.com/slsa-framework/slsa-github-generator/issues/116).
+6. Re-run the workflow above and verify that it succeeds. (TODO: https://github.com/zktx-io/slsa-github-generator/issues/116).
 
    If it does not, delete the release, fix the bug and re-start the release process at the top of this page.
 
@@ -340,7 +340,7 @@ End-to-end tests run daily in [github.com/slsa-framework/example-package/.github
 1. Make sure you have downloaded the `$BUILDER_TAG` builder's binary locally `slsa-generator-generic-linux-amd64`, either via the web UI or via:
 
    ```shell
-   "$GH" release -R slsa-framework/slsa-github-generator download "$BUILDER_TAG" -p "slsa-generator-generic-linux-amd64"
+   "$GH" release -R zktx-io/slsa-github-generator download "$BUILDER_TAG" -p "slsa-generator-generic-linux-amd64"
    mv slsa-generator-generic-linux-amd64 slsa-generator-generic-linux-amd64-"$BUILDER_TAG".original
    ```
 
@@ -348,7 +348,7 @@ End-to-end tests run daily in [github.com/slsa-framework/example-package/.github
 
    ```shell
    echo hello > slsa-generator-generic-linux-amd64
-   "$GH" release -R slsa-framework/slsa-github-generator upload "$BUILDER_TAG" slsa-generator-generic-linux-amd64  --clobber
+   "$GH" release -R zktx-io/slsa-github-generator upload "$BUILDER_TAG" slsa-generator-generic-linux-amd64  --clobber
    ```
 
 3. Update the version of the workflow
@@ -371,10 +371,10 @@ End-to-end tests run daily in [github.com/slsa-framework/example-package/.github
 
    ```shell
    mv slsa-generator-generic-linux-amd64-"$BUILDER_TAG".original slsa-generator-generic-linux-amd64
-   "$GH" release -R slsa-framework/slsa-github-generator upload "$BUILDER_TAG" slsa-generator-generic-linux-amd64  --clobber
+   "$GH" release -R zktx-io/slsa-github-generator upload "$BUILDER_TAG" slsa-generator-generic-linux-amd64  --clobber
    ```
 
-6. Re-run the workflow above and verify that it succeeds. (TODO: https://github.com/slsa-framework/slsa-github-generator/issues/116).
+6. Re-run the workflow above and verify that it succeeds. (TODO: https://github.com/zktx-io/slsa-github-generator/issues/116).
 
    If it does not, delete the release, fix the bug and re-start the release process at the top of this page.
 
@@ -383,7 +383,7 @@ End-to-end tests run daily in [github.com/slsa-framework/example-package/.github
 1. Make sure you have downloaded the `$BUILDER_TAG` builder's binary locally `slsa-generator-container-linux-amd64`, either via the web UI or via:
 
    ```shell
-   "$GH" release -R slsa-framework/slsa-github-generator download "$BUILDER_TAG" -p "slsa-generator-container-linux-amd64"
+   "$GH" release -R zktx-io/slsa-github-generator download "$BUILDER_TAG" -p "slsa-generator-container-linux-amd64"
    mv slsa-generator-container-linux-amd64 slsa-generator-container-linux-amd64-"$BUILDER_TAG".original
    ```
 
@@ -391,7 +391,7 @@ End-to-end tests run daily in [github.com/slsa-framework/example-package/.github
 
    ```shell
    echo hello > slsa-generator-container-linux-amd64
-   "$GH" release -R slsa-framework/slsa-github-generator upload "$BUILDER_TAG" slsa-generator-container-linux-amd64  --clobber
+   "$GH" release -R zktx-io/slsa-github-generator upload "$BUILDER_TAG" slsa-generator-container-linux-amd64  --clobber
    ```
 
 3. Update the version of the workflow
@@ -414,10 +414,10 @@ End-to-end tests run daily in [github.com/slsa-framework/example-package/.github
 
    ```shell
    mv slsa-generator-container-linux-amd64-"$BUILDER_TAG".original slsa-generator-container-linux-amd64
-   "$GH" release -R slsa-framework/slsa-github-generator upload "$BUILDER_TAG" slsa-generator-container-linux-amd64  --clobber
+   "$GH" release -R zktx-io/slsa-github-generator upload "$BUILDER_TAG" slsa-generator-container-linux-amd64  --clobber
    ```
 
-6. Re-run the workflow above and verify that it succeeds. (TODO: https://github.com/slsa-framework/slsa-github-generator/issues/116).
+6. Re-run the workflow above and verify that it succeeds. (TODO: https://github.com/zktx-io/slsa-github-generator/issues/116).
 
    If it does not, delete the release, fix the bug and re-start the release process at the top of this page.
 
@@ -426,7 +426,7 @@ End-to-end tests run daily in [github.com/slsa-framework/example-package/.github
 1. Make sure you have downloaded the `$BUILDER_TAG` builder's binary locally `slsa-builder-docker-linux-amd64`, either via the web UI or via:
 
    ```shell
-   "$GH" release -R slsa-framework/slsa-github-generator download "$BUILDER_TAG" -p "slsa-builder-docker-linux-amd64"
+   "$GH" release -R zktx-io/slsa-github-generator download "$BUILDER_TAG" -p "slsa-builder-docker-linux-amd64"
    mv slsa-builder-docker-linux-amd64 slsa-builder-docker-linux-amd64-"$BUILDER_TAG".original
    ```
 
@@ -434,7 +434,7 @@ End-to-end tests run daily in [github.com/slsa-framework/example-package/.github
 
    ```shell
    echo hello > slsa-builder-docker-linux-amd64
-   "$GH" release -R slsa-framework/slsa-github-generator upload "$BUILDER_TAG" slsa-builder-docker-linux-amd64  --clobber
+   "$GH" release -R zktx-io/slsa-github-generator upload "$BUILDER_TAG" slsa-builder-docker-linux-amd64  --clobber
    ```
 
 3. Update the version of the workflow
@@ -457,10 +457,10 @@ End-to-end tests run daily in [github.com/slsa-framework/example-package/.github
 
    ```shell
    mv slsa-builder-docker-linux-amd64-"$BUILDER_TAG".original slsa-builder-docker-linux-amd64
-   "$GH" release -R slsa-framework/slsa-github-generator upload "$BUILDER_TAG" slsa-builder-docker-linux-amd64  --clobber
+   "$GH" release -R zktx-io/slsa-github-generator upload "$BUILDER_TAG" slsa-builder-docker-linux-amd64  --clobber
    ```
 
-6. Re-run the workflow above and verify that it succeeds. (TODO: https://github.com/slsa-framework/slsa-github-generator/issues/116).
+6. Re-run the workflow above and verify that it succeeds. (TODO: https://github.com/zktx-io/slsa-github-generator/issues/116).
 
    If it does not, delete the release, fix the bug and re-start the release process at the top of this page.
 
@@ -492,7 +492,7 @@ Finalize the [CHANGELOG](./CHANGELOG.md) entry for the release candidate noting 
 
 ### Release tagging
 
-Create a new tag for the final release via [slsa-framework/slsa-github-generator/releases/new](https://github.com/slsa-framework/slsa-github-generator/releases/new). The tag _MUST_ be a "canonical" [semantic version](https://semver.org/) without metadata (`$BUILDER_TAG`). Shorter versions are not accepted by the builder's
+Create a new tag for the final release via [zktx-io/slsa-github-generator/releases/new](https://github.com/zktx-io/slsa-github-generator/releases/new). The tag _MUST_ be a "canonical" [semantic version](https://semver.org/) without metadata (`$BUILDER_TAG`). Shorter versions are not accepted by the builder's
 and verifier's code.
 
 1. Set the title to `$BUILDER_TAG`
@@ -507,7 +507,7 @@ and verifier's code.
 3. Tick the `This is a pre-release` option.
 4. Click `Publish release`.
 
-This will trigger the [release workflow](https://github.com/slsa-framework/slsa-github-generator/actions/workflows/release.yml). Cancel this in the [UI](https://github.com/slsa-framework/slsa-github-generator/actions/workflows/release.yml).
+This will trigger the [release workflow](https://github.com/zktx-io/slsa-github-generator/actions/workflows/release.yml). Cancel this in the [UI](https://github.com/zktx-io/slsa-github-generator/actions/workflows/release.yml).
 
 ### Verify final version references
 
@@ -538,7 +538,7 @@ git tag $BUILDER_TAG -f
 git push origin $BUILDER_TAG -f
 ```
 
-This will trigger the [release workflow](https://github.com/slsa-framework/slsa-github-generator/actions/workflows/release.yml). Ensure this workflow succeeds and that the release assets are updated.
+This will trigger the [release workflow](https://github.com/zktx-io/slsa-github-generator/actions/workflows/release.yml). Ensure this workflow succeeds and that the release assets are updated.
 
 ### Final adversarial tests
 
@@ -557,7 +557,7 @@ find actions/maven/ internal/builders/maven/ -name '*.yaml' -o -name '*.yml' -ty
 
 The next step is to update the verifier's GitHub Actions e2e tests. There are GitHub actions Go and generic actions.
 
-<!-- TODO(github.com/slsa-framework/slsa-github-generator/issues/1110): Describe GHA generic container e2e tests. -->
+<!-- TODO(github.com/zktx-io/slsa-github-generator/issues/1110): Describe GHA generic container e2e tests. -->
 
 For the BYOB (a.k.a delegator) workflows, you will need to update the tag of the [slsa-framework/example-trw](https://github.com/slsa-framework/example-trw/) repository:
 
@@ -588,7 +588,7 @@ Then, for each of the GHA builders, you will need to:
    For example:
 
    ```yaml
-   uses: slsa-framework/slsa-github-generator/.github/workflows/builder_go_slsa3.yml@<BUILDER_TAG>
+   uses: zktx-io/slsa-github-generator/.github/workflows/builder_go_slsa3.yml@<BUILDER_TAG>
    ```
 
    Next run the

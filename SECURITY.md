@@ -43,7 +43,7 @@ vulnerabilities to us. All reports are thoroughly investigated by the project
 Vulnerabilities are reported privately via GitHub's
 [Security Advisories](https://docs.github.com/en/code-security/security-advisories)
 feature. Please use the following link to submit your vulnerability:
-[Report a vulnerability](https://github.com/slsa-framework/slsa-github-generator/security/advisories/new)
+[Report a vulnerability](https://github.com/zktx-io/slsa-github-generator/security/advisories/new)
 
 Please see
 [Privately reporting a security vulnerability](https://docs.github.com/en/code-security/security-advisories/guidance-on-reporting-and-writing/privately-reporting-a-security-vulnerability#privately-reporting-a-security-vulnerability)
@@ -94,7 +94,7 @@ that are private from the general public if deemed necessary.
 ### Public Disclosure
 
 Vulnerabilities are disclosed publicly as GitHub [Security
-Advisories](https://github.com/slsa-framework/slsa-github-generator/security/advisories).
+Advisories](https://github.com/zktx-io/slsa-github-generator/security/advisories).
 
 A public disclosure date is negotiated by the [Security Team](#security-team)
 and the bug submitter. We prefer to fully disclose the bug as soon as possible

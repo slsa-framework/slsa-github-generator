@@ -45,7 +45,7 @@ runs:
   using: "composite"
   steps:
     - name: Checkout the project repository
-      uses: slsa-framework/slsa-github-generator/.github/actions/secure-project-checkout@main # needed because we run javadoc and sources.
+      uses: zktx-io/slsa-github-generator/.github/actions/secure-project-checkout@main # needed because we run javadoc and sources.
     - name: Set up Java for publishing to Maven Central Repository
       uses: actions/setup-java@99b8673ff64fbf99d8d325f52d9a5bdedb8483e9 # v4.2.1
       env:
@@ -62,23 +62,23 @@ runs:
         gpg-passphrase: GPG_KEY_PASS
 
     - name: Download the slsa attestation
-      uses: slsa-framework/slsa-github-generator/.github/actions/secure-download-folder@main
+      uses: zktx-io/slsa-github-generator/.github/actions/secure-download-folder@main
       with:
         name: "${{ inputs.provenance-download-name }}"
         path: slsa-attestations
         sha256: "${{ inputs.provenance-download-sha256 }}"
 
     - name: Download the target dir
-      uses: slsa-framework/slsa-github-generator/.github/actions/secure-download-folder@main
+      uses: zktx-io/slsa-github-generator/.github/actions/secure-download-folder@main
       with:
         name: "${{ inputs.target-download-name }}"
         path: ./
         sha256: "${{ inputs.target-download-sha256 }}"
 
     - name: Checkout the framework repository
-      uses: slsa-framework/slsa-github-generator/.github/actions/secure-builder-checkout@main
+      uses: zktx-io/slsa-github-generator/.github/actions/secure-builder-checkout@main
       with:
-        repository: slsa-framework/slsa-github-generator
+        repository: zktx-io/slsa-github-generator
         ref: main
         path: __BUILDER_CHECKOUT_DIR__
 

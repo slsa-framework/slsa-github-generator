@@ -37,7 +37,7 @@ e2e_verify_common_builder() {
 # $1: the attestation content
 e2e_verify_common_invocation() {
   # NOTE: We set GITHUB_WORKFLOW to the entryPoint for pull_requests.
-  # TODO(github.com/slsa-framework/slsa-github-generator/issues/131): support retrieving entryPoint in pull requests.
+  # TODO(github.com/zktx-io/slsa-github-generator/issues/131): support retrieving entryPoint in pull requests.
   e2e_verify_predicate_invocation_configSource "$1" "{\"uri\":\"git+https://github.com/$GITHUB_REPOSITORY@$GITHUB_REF\",\"digest\":{\"sha1\":\"$GITHUB_SHA\"},\"entryPoint\":\"$GITHUB_WORKFLOW\"}"
 
   e2e_verify_predicate_invocation_environment "$1" "github_actor" "$GITHUB_ACTOR"

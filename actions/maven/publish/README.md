@@ -12,7 +12,7 @@ Before you use this publish Action, you will need to configure your Github proje
 
 To use the Maven action you need to add the step in your release workflow that invokes it.
 
-Before using the Maven publish action, you should have a workflow that invokes the [Maven builder](https://github.com/slsa-framework/slsa-github-generator/blob/main/internal/builders/maven/README.md). It will look something like this:
+Before using the Maven publish action, you should have a workflow that invokes the [Maven builder](https://github.com/zktx-io/slsa-github-generator/blob/main/internal/builders/maven/README.md). It will look something like this:
 
 ```yaml
 name: Release Maven project
@@ -27,7 +27,7 @@ jobs:
       id-token: write
       contents: read
       actions: read
-    uses: slsa-framework/slsa-github-generator/.github/workflows/builder_maven_slsa3.yml@v2.0.0
+    uses: zktx-io/slsa-github-generator/.github/workflows/builder_maven_slsa3.yml@v2.0.0
     with:
       rekor-log-public: true
 ```
@@ -45,7 +45,7 @@ publish:
   steps:
     - name: publish
       id: publish
-      uses: slsa-framework/slsa-github-generator/actions/maven/publish@v2.0.0
+      uses: zktx-io/slsa-github-generator/actions/maven/publish@v2.0.0
       with:
         provenance-download-name: "${{ needs.build.outputs.provenance-download-name }}"
         provenance-download-sha256: "${{ needs.build.outputs.provenance-download-sha256 }}"

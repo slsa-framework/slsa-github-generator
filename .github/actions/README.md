@@ -16,7 +16,7 @@ are considered "external" even though they are hosted on the same repository: th
 
 but instead via their "fully-qualified" name:
 
-`slsa-framework/slsa-github-generator/.github/actions/name@vX.Y.Z`.
+`zktx-io/slsa-github-generator/.github/actions/name@vX.Y.Z`.
 
 We do this because the Actions are part of the builder, whereas the workflow runs in the "context" of the calling repository.
 
@@ -46,7 +46,7 @@ To create or update an internal Action, reference them at `@main`. For a release
 2. Update the re-usable workflow / Actions to use them in a follow-up PR:
 
 ```yaml
-uses: slsa-framework/slsa-github-generator/.github/actions/<your-action>@<CH>
+uses: zktx-io/slsa-github-generator/.github/actions/<your-action>@<CH>
 ```
 
 You can update using the following command:

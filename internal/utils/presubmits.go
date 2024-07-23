@@ -19,5 +19,5 @@ import "os"
 // IsPresubmitTests returns true if running in pre-submit tests.
 func IsPresubmitTests() bool {
 	return (os.Getenv("GITHUB_EVENT_NAME") == "pull_request" &&
-		os.Getenv("GITHUB_REPOSITORY") == "slsa-framework/slsa-github-generator")
+		os.Getenv("GITHUB_REPOSITORY") == "zktx-io/slsa-github-generator")
 }

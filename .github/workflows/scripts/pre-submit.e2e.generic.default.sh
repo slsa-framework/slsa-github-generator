@@ -18,11 +18,11 @@ set -euo pipefail
 
 source "./.github/workflows/scripts/e2e-verify.common.sh"
 
-# TODO(github.com/slsa-framework/slsa-github-generator/issues/129): Address base64 output format.
+# TODO(github.com/zktx-io/slsa-github-generator/issues/129): Address base64 output format.
 ATTESTATION=$(cat "$PROVENANCE")
 
 # Verify common provenance fields.
 e2e_verify_common_all "$ATTESTATION"
 
 e2e_verify_predicate_subject_name "$ATTESTATION" "$BINARY"
-e2e_verify_predicate_buildType "$ATTESTATION" "https://github.com/slsa-framework/slsa-github-generator/generic@v1"
+e2e_verify_predicate_buildType "$ATTESTATION" "https://github.com/zktx-io/slsa-github-generator/generic@v1"

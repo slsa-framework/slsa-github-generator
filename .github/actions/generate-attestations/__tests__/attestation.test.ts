@@ -24,9 +24,9 @@ describe("createStatement", () => {
     },
   ];
   const predicate = {
-    buildType: "https://github.com/slsa-framework/slsa-github-generator/go@v1",
+    buildType: "https://github.com/zktx-io/slsa-github-generator/go@v1",
     builder: {
-      id: "https://github.com/slsa-framework/slsa-github-generator/.github/workflows/builder_go_slsa3.yml@refs/tags/v0.0.1",
+      id: "https://github.com/zktx-io/slsa-github-generator/.github/workflows/builder_go_slsa3.yml@refs/tags/v0.0.1",
     },
   };
 
@@ -72,9 +72,9 @@ describe("writeAttestation", () => {
   };
 
   const predicate = {
-    buildType: "https://github.com/slsa-framework/slsa-github-generator/go@v1",
+    buildType: "https://github.com/zktx-io/slsa-github-generator/go@v1",
     builder: {
-      id: "https://github.com/slsa-framework/slsa-github-generator/.github/workflows/builder_go_slsa3.yml@refs/tags/v0.0.1",
+      id: "https://github.com/zktx-io/slsa-github-generator/.github/workflows/builder_go_slsa3.yml@refs/tags/v0.0.1",
     },
   };
 

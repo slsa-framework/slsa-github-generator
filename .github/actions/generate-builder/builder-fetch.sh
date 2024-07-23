@@ -17,7 +17,7 @@
 set -euo pipefail
 
 # Caller sets the following:
-#BUILDER_REPOSITORY="slsa-framework/slsa-github-generator"
+#BUILDER_REPOSITORY="zktx-io/slsa-github-generator"
 #BUILDER_RELEASE_BINARY="builder-linux-amd64"
 #
 #VERIFIER_REPOSITORY="slsa-framework/slsa-verifier"
@@ -67,7 +67,7 @@ fi
 
 if [[ "$builder_tag" != "$(echo -n "$builder_tag" | grep -oe '^v[1-9]\+\.[0-9]\+\.[0-9]\+\(-rc\.[0-9]\+\)\?$')" ]]; then
   echo "Invalid builder version: $builder_tag. Expected version of the form vX.Y.Z(-rc.A)"
-  echo "For details see https://github.com/slsa-framework/slsa-github-generator/blob/main/README.md#referencing-slsa-builders-and-generators"
+  echo "For details see https://github.com/zktx-io/slsa-github-generator/blob/main/README.md#referencing-slsa-builders-and-generators"
   exit 7
 fi
 

@@ -43,7 +43,7 @@ export function createSourceURI(rawTokenObj: rawTokenInterface): string {
   // TRW may overwrite the commit sha to build.
   // For example, users of JReleaser may push a commit
   // before building. See discussion at
-  // https://github.com/slsa-framework/slsa-github-generator/issues/2043.
+  // https://github.com/zktx-io/slsa-github-generator/issues/2043.
   // If the TRW passed in a sha1, we don't know the ref
   // so we never report it.
   if (rawTokenObj.source.checkout.sha1) {
@@ -87,7 +87,7 @@ export function getSourceSha1(rawTokenObj: rawTokenInterface): string {
   // TRW may overwrite the commit sha to build.
   // For example, users of JReleaser may push a commit
   // before building. See discussion at
-  // https://github.com/slsa-framework/slsa-github-generator/issues/2043.
+  // https://github.com/zktx-io/slsa-github-generator/issues/2043.
   const sha1 = rawTokenObj.source.checkout.sha1 || rawTokenObj.github.sha;
   validateSha1(sha1);
   return sha1;

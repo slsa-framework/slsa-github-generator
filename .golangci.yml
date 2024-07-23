@@ -18,7 +18,7 @@ run:
   deadline: 5m
   timeout: 5m
 issues:
-  # TODO(github.com/slsa-framework/slsa-github-generator/issues/450): revive `package-comments` and `exported` rules.
+  # TODO(github.com/zktx-io/slsa-github-generator/issues/450): revive `package-comments` and `exported` rules.
   include:
     - EXC0012
     - EXC0013
@@ -42,11 +42,11 @@ linters:
     - depguard
     - dogsled
     - errcheck
-    # TODO(github.com/slsa-framework/slsa-github-generator/issues/450): enable errorlint
+    # TODO(github.com/zktx-io/slsa-github-generator/issues/450): enable errorlint
     # - errorlint
     - exhaustive
     - exportloopref
-    # TODO(github.com/slsa-framework/slsa-github-generator/issues/450): enable gci
+    # TODO(github.com/zktx-io/slsa-github-generator/issues/450): enable gci
     # - gci
     - gochecknoinits
     - gocognit
@@ -54,9 +54,9 @@ linters:
     - gocritic
     - gocyclo
     - godot
-    # TODO(github.com/slsa-framework/slsa-github-generator/issues/450): enable godox
+    # TODO(github.com/zktx-io/slsa-github-generator/issues/450): enable godox
     # - godox
-    # TODO(github.com/slsa-framework/slsa-github-generator/issues/450): enable goerr113
+    # TODO(github.com/zktx-io/slsa-github-generator/issues/450): enable goerr113
     # - goerr113
     - gofmt
     - gofumpt
@@ -72,23 +72,23 @@ linters:
     - makezero
     - misspell
     - nakedret
-    # TODO(github.com/slsa-framework/slsa-github-generator/issues/450): enable nestif
+    # TODO(github.com/zktx-io/slsa-github-generator/issues/450): enable nestif
     # - nestif
     - nolintlint
-    # TODO(github.com/slsa-framework/slsa-github-generator/issues/450): enable paralleltest
+    # TODO(github.com/zktx-io/slsa-github-generator/issues/450): enable paralleltest
     # - paralleltest
     - predeclared
     - revive
     - staticcheck
-    # TODO(github.com/slsa-framework/slsa-github-generator/issues/450): enable stylecheck
+    # TODO(github.com/zktx-io/slsa-github-generator/issues/450): enable stylecheck
     # - stylecheck
-    # TODO(github.com/slsa-framework/slsa-github-generator/issues/450): enable thelper
+    # TODO(github.com/zktx-io/slsa-github-generator/issues/450): enable thelper
     # - thelper
     - typecheck
     - unconvert
     - unused
     - whitespace
-    # TODO(github.com/slsa-framework/slsa-github-generator/issues/450): enable thelper
+    # TODO(github.com/zktx-io/slsa-github-generator/issues/450): enable thelper
     # - wrapcheck
 linters-settings:
   depguard:
@@ -151,7 +151,7 @@ linters-settings:
     sections:
       - standard
       - default
-      - prefix(github.com/slsa-framework/slsa-github-generator)
+      - prefix(github.com/zktx-io/slsa-github-generator)
   gocritic:
     enabled-checks:
       # Diagnostic

@@ -82,13 +82,13 @@ export async function detectWorkflowFromContext(
   let [repository, ref, workflow] = ["", "", ""];
 
   // If this is a pull request on the main repository
-  // (slsa-framework/slsa-github-generator), then look for the repo and head
+  // (zktx-io/slsa-github-generator), then look for the repo and head
   // SHA from the pull_request event value. Pull requests on forks are not
   // supported.
   if (
     (workflowData.event === "pull_request" ||
       workflowData.event === "merge_group") &&
-    workflowData.repository.full_name === "slsa-framework/slsa-github-generator"
+    workflowData.repository.full_name === "zktx-io/slsa-github-generator"
   ) {
     ref = workflowData.head_sha;
     repository = workflowData.head_repository.full_name;

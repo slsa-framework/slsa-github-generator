@@ -26,7 +26,7 @@ import (
 )
 
 // containerBuildType is the URI for generic container SLSA generation.
-var containerBuildType = "https://github.com/slsa-framework/slsa-github-generator/container@v1"
+var containerBuildType = "https://github.com/zktx-io/slsa-github-generator/container@v1"
 
 func checkExit(err error) {
 	if err != nil {
