@@ -11,7 +11,7 @@
     "@sigstore/cli": "0.8.0",
     "markdown-toc": "1.2.0",
     "markdownlint-cli": "0.40.0",
-    "prettier": "3.2.5",
+    "prettier": "^3.2.5",
     "renovate": "37.371.0",
     "sigstore": "2.3.1"
   }
