@@ -141,7 +141,8 @@ jobs:
           tar xf actionlint.tar.gz
           mv ./actionlint /usr/local/bin
 
-          make actionlint
+          # Run actionlint on the repository
+          actionlint
 
   yamllint:
     runs-on: ubuntu-latest
