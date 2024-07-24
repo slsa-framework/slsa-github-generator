@@ -240,7 +240,7 @@ jobs:
           # NOTE: The attest commmand outputs the provenance-name and provenance-sha256
           output=$("$GITHUB_WORKSPACE/$BUILDER_BINARY" attest --subjects-filename "${SUBJECTS_FILENAME}" -g "$untrusted_prov_name")
           echo "$output"
-          uuid=$(echo "$output" | grep -oP 'UUID \K[0-9a-f]{64}')
+          uuid=$(echo "$output" | grep -oP 'UUID \K[0-9a-f]{80}')
           echo "uuid=$uuid" >> $GITHUB_OUTPUT
 
       - name: Upload the signed provenance
