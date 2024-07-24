@@ -272,13 +272,11 @@ The [generic workflow](https://github.com/slsa-framework/slsa-github-generator/b
 
 ### Workflow Outputs
 
-The [generic workflow](https://github.com/slsa-framework/slsa-github-generator/blob/main/.github/workflows/generator_generic_slsa3.yml) produces the following outputs:
-
-| Name              | Description                                                                                                                           |
-| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| `provenance-name` | The artifact name of the signed provenance.                                                                                           |
-| `provenance-rekor-uuid` | The Rekor UUID is a unique identifier that can be used to search for and view specific log entry details on the Rekor Search UI.|
-| `outcome`         | If `continue-on-error` is `true`, will contain the outcome of the run (`success` or `failure`).                                       |
+| Name                    | Description                                                                                                                      |
+| ----------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| `provenance-name`       | The artifact name of the signed provenance.                                                                                      |
+| `provenance-rekor-uuid` | The Rekor UUID is a unique identifier that can be used to search for and view specific log entry details on the Rekor Search UI. |
+| `outcome`               | If `continue-on-error` is `true`, will contain the outcome of the run (`success` or `failure`).                                  |
 
 ### Provenance Format
 
