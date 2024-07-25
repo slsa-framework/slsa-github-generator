@@ -18,6 +18,9 @@
 vendor/
 node_modules/
 
+# maven
+target/
+
 # Go workspace file
 go.work
 go.work.sum
