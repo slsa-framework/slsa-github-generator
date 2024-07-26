@@ -54,4 +54,6 @@ jobs:
         env:
           PROVENANCE_PATH: ${{ needs.build.outputs.provenance-download-name }}
           TARGET_PATH: ${{ needs.build.outputs.target-download-name }}
-        run: slsa-verifier verify-artifact "$TARGET_PATH" --provenance-path "$PROVENANCE_PATH" --source-uri github.com/slsa-framework/slsa-github-generator
+        run: |
+          ls -lah -R ./
+          slsa-verifier verify-artifact "$TARGET_PATH" --provenance-path "$PROVENANCE_PATH" --source-uri github.com/slsa-framework/slsa-github-generator
