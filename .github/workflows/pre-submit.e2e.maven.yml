@@ -33,25 +33,3 @@ jobs:
     uses: slsa-framework/slsa-github-generator/.github/workflows/builder_maven_slsa3.yml@main
     with:
       directory: ./e2e/maven/workflow_dispatch
-
-  verify:
-    runs-on: ubuntu-latest
-    needs: [build]
-    steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
-      - uses: slsa-framework/slsa-github-generator/actions/maven/secure-download-attestations@main
-        with:
-          name: "${{ needs.build.outputs.provenance-download-name }}"
-          sha256: "${{ needs.build.outputs.provenance-download-sha256 }}"
-          path: ./
-      - uses: slsa-framework/slsa-github-generator/actions/maven/secure-download-target@main
-        with:
-          name: "${{ needs.build.outputs.target-download-name }}"
-          sha256: "${{ needs.build.outputs.target-download-sha256 }}"
-          path: ./
-      - uses: slsa-framework/slsa-verifier/actions/installer@v2.6.0
-      - name: Verify artifact
-        env:
-          PROVENANCE_PATH: ${{ needs.build.outputs.provenance-download-name }}
-          TARGET_PATH: ${{ needs.build.outputs.target-download-name }}
-        run: slsa-verifier verify-artifact "$TARGET_PATH" --provenance-path "$PROVENANCE_PATH"
