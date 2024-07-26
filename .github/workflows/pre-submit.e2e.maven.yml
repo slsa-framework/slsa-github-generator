@@ -51,9 +51,10 @@ jobs:
       - uses: slsa-framework/slsa-verifier/actions/installer@v2.6.0
       - name: Verify artifact
         env:
-          PROVENANCE_PATH: ${{ needs.build.outputs.provenance-download-name }}
-          TARGET_PATH: ${{ needs.build.outputs.target-download-name }}
+          PROVENANCE_PATH: ${{ needs.build.outputs.provenance-download-name }}/test-java-project-1.21.97.jar.build.slsa
+          TARGET_PATH: ./target//test-java-project-1.21.97.jar
+          SOURCE_URI: github.com/slsa-framework/slsa-github-generator
         run: |
           pwd
           ls -lah -R ./
-          slsa-verifier verify-artifact "$TARGET_PATH" --provenance-path "$PROVENANCE_PATH" --source-uri github.com/slsa-framework/slsa-github-generator
+          slsa-verifier verify-artifact "$TARGET_PATH" --provenance-path "$PROVENANCE_PATH" --source-uri $SOURCE_URI
