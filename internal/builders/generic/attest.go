@@ -114,6 +114,11 @@ run in the context of a Github Actions workflow.`,
 				})
 				check(err)
 
+				makeSigstoreBundle(ctx, &intoto.Statement{
+					StatementHeader: p.StatementHeader,
+					Predicate:       p.Predicate,
+				})
+
 				_, err = tlog.Upload(ctx, att)
 				check(err)
 
@@ -141,4 +146,9 @@ run in the context of a Github Actions workflow.`,
 		"Filename containing a formatted list of subjects in the same format as sha256sum (base64 encoded).",
 	)
 	return c
+}
+
+func makeSigstoreBundle(ctx context.Context, statement *intoto.Statement) error {
+	fmt.Println("debug: running makeSigstoreBundle")
+	return nil
 }

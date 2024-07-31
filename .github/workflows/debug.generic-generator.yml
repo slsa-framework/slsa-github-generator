@@ -1,0 +1,38 @@
+# Copyright 2023 SLSA Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# a test workflow for debugging the generic generator
+
+name: debug-generic-generator
+
+on: 
+    push:
+
+permissions: read-all
+
+env:
+  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+jobs:
+  build:
+    permissions:
+      id-token: write # For signing.
+      contents: write # For asset uploads.
+      actions: read # For reading workflow info.
+    uses: ./.github/workflows/generator_generic_slsa3.yml
+    with:
+      # echo "2e0390eb024a52963db7b95e84a9c2b12c004054a7bad9a97ec0c7c89d4681d2    binary-name" | base64 -w0
+      base64-subjects: "MmUwMzkwZWIwMjRhNTI5NjNkYjdiOTVlODRhOWMyYjEyYzAwNDA1NGE3YmFkOWE5N2VjMGM3Yzg5ZDQ2ODFkMiAgICBiaW5hcnktbmFtZQo="
+      compile-generator: true
+      provenance-name: build.intoto.jsonl
