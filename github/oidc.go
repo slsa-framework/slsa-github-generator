@@ -233,6 +233,8 @@ func (c *OIDCClient) Token(ctx context.Context, audience []string) (*OIDCToken, 
 		return nil, err
 	}
 
+	fmt.Println("debug: token payload: %s", tokenPayload)
+
 	t, err := c.verifyToken(ctx, audience, tokenPayload)
 	if err != nil {
 		return nil, err
