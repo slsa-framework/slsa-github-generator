@@ -157,7 +157,7 @@ run in the context of a Github Actions workflow.`,
 
 func makeSigstoreBundleAttestation(ctx context.Context, statement *intoto.Statement) (signing.Attestation, error) {
 	fmt.Println("debug: running makeSigstoreBundle")
-	statementBytes, err := json.Marshal(statement)
+	statementBytes, err := json.Marshal(*statement)
 	if err != nil {
 		return nil, err
 	}
