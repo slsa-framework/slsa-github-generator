@@ -222,7 +222,7 @@ func getDefaultBundleOptsWithIdentityToken(identityToken *string) (*sigstoreSign
 	if err != nil {
 		return nil, err
 	}
-	originalTrustedRoot := trustedRoot
+	// originalTrustedRoot := trustedRoot
 	bundleOpts.TrustedRoot = trustedRoot
 	// bundleOpts.TrustedRoot = originalTrustedRoot
 
