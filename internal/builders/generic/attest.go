@@ -161,13 +161,13 @@ func makeSigstoreBundleAttestation(ctx context.Context, statement *intoto.Statem
 	if err != nil {
 		return nil, err
 	}
-	// content := &sigstoreSign.DSSEData{
-	// 	Data:        statementBytes,
-	// 	PayloadType: "application/vnd.in-toto+json",
-	// }
-	content := &sigstoreSign.PlainData{
-		Data: statementBytes,
+	content := &sigstoreSign.DSSEData{
+		Data:        statementBytes,
+		PayloadType: "application/vnd.in-toto+json",
 	}
+	// content := &sigstoreSign.PlainData{
+	// 	Data: statementBytes,
+	// }
 
 	keypair, err := sigstoreSign.NewEphemeralKeypair(nil)
 	if err != nil {
@@ -228,6 +228,7 @@ func getDefaultBundleOptsWithIdentityToken(identityToken *string) (*sigstoreSign
 	// originalTrustedRoot := trustedRoot
 	bundleOpts.TrustedRoot = trustedRoot
 	// bundleOpts.TrustedRoot = originalTrustedRoot
+	bundleOpts.TrustedRoot = nil
 
 	fulcioOpts := &sigstoreSign.FulcioOptions{
 		BaseURL: "https://fulcio.sigstore.dev",
