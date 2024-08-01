@@ -75,3 +75,29 @@ jobs:
       compile-generator: true
       provenance-name: build.intoto.jsonl
       upload-assets: true
+
+  verify:
+    needs: provenance
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download artifact1
+        uses: actions/download-artifact@c850b930e6ba138125429b7e5c93fc707a7f8427 # v4.1.4
+        with:
+          name: artifact1
+      - name: Download artifact2
+        uses: actions/download-artifact@c850b930e6ba138125429b7e5c93fc707a7f8427 # v4.1.4
+        with:
+          name: artifact2
+      - name: Download provenance
+        uses: actions/download-artifact@c850b930e6ba138125429b7e5c93fc707a7f8427 # v4.1.4
+        with:
+          name: build.intoto.jsonl
+      - name: Setup slsa-verifier
+        uses: slsa-framework/slsa-verifier/actions/installer@v2.6.0
+      - name: Verify
+        run: |
+          slsa-verifier verify-artifact \
+            artifact1 artifact2 \
+            --provenance-path build.intoto.jsonl \
+            --source-uri github.com/slsa-framework/slsa-github-generator \
+            --print-provenance
