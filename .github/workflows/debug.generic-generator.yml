@@ -26,6 +26,43 @@ env:
 
 jobs:
   build:
+    outputs:
+      hashes: ${{ steps.hash.outputs.hashes }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Build artifacts
+        run: |
+          # These are some amazing artifacts.
+          echo "foo" > artifact1
+          echo "bar" > artifact2
+
+      - name: Generate hashes
+        shell: bash
+        id: hash
+        run: |
+          # sha256sum generates sha256 hash for all artifacts.
+          # base64 -w0 encodes to base64 and outputs on a single line.
+          # sha256sum artifact1 artifact2 ... | base64 -w0
+          echo "hashes=$(sha256sum artifact1 artifact2 | base64 -w0)" >> "$GITHUB_OUTPUT"
+
+      - name: Upload artifact1
+        uses: actions/upload-artifact@3cea5372237819ed00197afe530f5a7ea3e805c8 # tag=v3.1.0
+        with:
+          name: artifact1
+          path: artifact1
+          if-no-files-found: error
+          retention-days: 5
+
+      - name: Upload artifact2
+        uses: actions/upload-artifact@3cea5372237819ed00197afe530f5a7ea3e805c8 # tag=v3.1.0
+        with:
+          name: artifact2
+          path: artifact2
+          if-no-files-found: error
+          retention-days: 5
+
+  provenance:
+    needs: build
     permissions:
       id-token: write # For signing.
       contents: write # For asset uploads.
@@ -33,6 +70,8 @@ jobs:
     uses: ./.github/workflows/generator_generic_slsa3.yml
     with:
       # echo "2e0390eb024a52963db7b95e84a9c2b12c004054a7bad9a97ec0c7c89d4681d2    binary-name" | base64 -w0
-      base64-subjects: "MmUwMzkwZWIwMjRhNTI5NjNkYjdiOTVlODRhOWMyYjEyYzAwNDA1NGE3YmFkOWE5N2VjMGM3Yzg5ZDQ2ODFkMiAgICBiaW5hcnktbmFtZQo="
+      # base64-subjects: "MmUwMzkwZWIwMjRhNTI5NjNkYjdiOTVlODRhOWMyYjEyYzAwNDA1NGE3YmFkOWE5N2VjMGM3Yzg5ZDQ2ODFkMiAgICBiaW5hcnktbmFtZQo="
+      base64-subjects: "${{ needs.build.outputs.hashes }}"
       compile-generator: true
       provenance-name: build.intoto.jsonl
+      upload-assets: true
