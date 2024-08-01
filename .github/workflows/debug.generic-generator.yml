@@ -46,7 +46,7 @@ jobs:
           echo "hashes=$(sha256sum artifact1 artifact2 | base64 -w0)" >> "$GITHUB_OUTPUT"
 
       - name: Upload artifact1
-        uses: actions/upload-artifact
+        uses: actions/upload-artifact@v4
         with:
           name: artifact1
           path: artifact1
@@ -54,7 +54,7 @@ jobs:
           retention-days: 5
 
       - name: Upload artifact2
-        uses: actions/upload-artifact
+        uses: actions/upload-artifact@v4
         with:
           name: artifact2
           path: artifact2
@@ -81,15 +81,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Download artifact1
-        uses: actions/download-artifact
+        uses: actions/download-artifact@v4
         with:
           name: artifact1
       - name: Download artifact2
-        uses: actions/download-artifact
+        uses: actions/download-artifact@v4
         with:
           name: artifact2
       - name: Download provenance
-        uses: actions/download-artifact
+        uses: actions/download-artifact@v4
         with:
           name: build.intoto.jsonl
       - name: Setup slsa-verifier
