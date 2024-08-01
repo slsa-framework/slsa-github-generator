@@ -26,6 +26,8 @@ import (
 	intoto "github.com/in-toto/in-toto-golang/in_toto"
 	"github.com/spf13/cobra"
 
+	sigstoreRoot "github.com/sigstore/sigstore-go/pkg/root"
+	sigstoreSign "github.com/sigstore/sigstore-go/pkg/sign"
 	"github.com/slsa-framework/slsa-github-generator/github"
 	"github.com/slsa-framework/slsa-github-generator/internal/builders/common"
 	"github.com/slsa-framework/slsa-github-generator/internal/utils"
@@ -114,7 +116,7 @@ run in the context of a Github Actions workflow.`,
 				})
 				check(err)
 
-				makeSigstoreBundle(ctx, &intoto.Statement{
+				makeSigstoreBundle(ctx, check, &intoto.Statement{
 					StatementHeader: p.StatementHeader,
 					Predicate:       p.Predicate,
 				})
@@ -148,7 +150,67 @@ run in the context of a Github Actions workflow.`,
 	return c
 }
 
-func makeSigstoreBundle(ctx context.Context, statement *intoto.Statement) error {
+func makeSigstoreBundle(ctx context.Context, check func(error), statement *intoto.Statement) error {
 	fmt.Println("debug: running makeSigstoreBundle")
+	statementBytes, err := json.Marshal(statement)
+	check(err)
+	content := &sigstoreSign.DSSEData{
+		Data:        statementBytes,
+		PayloadType: "application/vnd.in-toto+json",
+	}
+
+	keypair, err := sigstoreSign.NewEphemeralKeypair(nil)
+	if err != nil {
+		return err
+	}
+
+	oidcClient, err := github.NewOIDCClient()
+	if err != nil {
+		return err
+	}
+	TokenStruct, err := oidcClient.Token(ctx, []string{"sigstore"})
+	if err != nil {
+		return err
+	}
+	rawToken := TokenStruct.RawToken
+
+	bundleOpts, err := getDefaultBundleOptsWithIdentityToken(&rawToken, check)
+	bundle, err := sigstoreSign.Bundle(content, keypair, *bundleOpts)
+	if err != nil {
+		return err
+	}
+	fmt.Printf("bundle: %v", bundle)
 	return nil
+}
+
+func getDefaultBundleOptsWithIdentityToken(identityToken *string, check func(error)) (*sigstoreSign.BundleOptions, error) {
+	bundleOpts := &sigstoreSign.BundleOptions{}
+	// timeout := time.Duration(60 * time.Second)
+
+	trustedRoot, err := sigstoreRoot.FetchTrustedRoot()
+	check(err)
+	bundleOpts.TrustedRoot = trustedRoot
+
+	fulcioOpts := &sigstoreSign.FulcioOptions{
+		BaseURL: "https://fulcio.sigstore.dev",
+		// Timeout: timeout,
+	}
+	bundleOpts.CertificateProvider = sigstoreSign.NewFulcio(fulcioOpts)
+	bundleOpts.CertificateProviderOptions = &sigstoreSign.CertificateProviderOptions{
+		IDToken: *identityToken,
+	}
+
+	tsaOpts := &sigstoreSign.TimestampAuthorityOptions{
+		URL: "https://timestamp.githubapp.com/api/v1/timestamp",
+		// Timeout: time.Duration(30 * time.Second),
+		// Retries: 1,
+	}
+	bundleOpts.TimestampAuthorities = append(bundleOpts.TimestampAuthorities, sigstoreSign.NewTimestampAuthority(tsaOpts))
+
+	rekorOpts := &sigstoreSign.RekorOptions{
+		BaseURL: "https://rekor.sigstore.dev",
+		// Timeout: timeout,
+	}
+	bundleOpts.TransparencyLogs = append(bundleOpts.TransparencyLogs, sigstoreSign.NewRekor(rekorOpts))
+	return bundleOpts, nil
 }

@@ -59,6 +59,9 @@ type OIDCToken struct {
 
 	// Audience is the audience for which the token was granted.
 	Audience []string
+
+	// RawToken is the unparsed oidc token
+	RawToken string
 }
 
 var (
@@ -233,8 +236,6 @@ func (c *OIDCClient) Token(ctx context.Context, audience []string) (*OIDCToken, 
 		return nil, err
 	}
 
-	fmt.Println("debug: token payload: %s", tokenPayload)
-
 	t, err := c.verifyToken(ctx, audience, tokenPayload)
 	if err != nil {
 		return nil, err
@@ -248,6 +249,8 @@ func (c *OIDCClient) Token(ctx context.Context, audience []string) (*OIDCToken, 
 	if err := c.verifyClaims(token); err != nil {
 		return nil, err
 	}
+
+	token.RawToken = tokenPayload
 
 	return token, nil
 }
