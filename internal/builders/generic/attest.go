@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"time"
 
 	intoto "github.com/in-toto/in-toto-golang/in_toto"
 	"github.com/spf13/cobra"
@@ -204,7 +205,6 @@ func (s *sigstoreBundleAtt) Bytes() []byte {
 
 func getDefaultBundleOptsWithIdentityToken(identityToken *string) (*sigstoreSign.BundleOptions, error) {
 	bundleOpts := &sigstoreSign.BundleOptions{}
-	// timeout := time.Duration(60 * time.Second)
 
 	trustedRoot, err := sigstoreRoot.FetchTrustedRoot()
 	if err != nil {
@@ -214,7 +214,8 @@ func getDefaultBundleOptsWithIdentityToken(identityToken *string) (*sigstoreSign
 
 	fulcioOpts := &sigstoreSign.FulcioOptions{
 		BaseURL: "https://fulcio.sigstore.dev",
-		// Timeout: timeout,
+		Timeout: time.Duration(30 * time.Second),
+		Retries: 1,
 	}
 	bundleOpts.CertificateProvider = sigstoreSign.NewFulcio(fulcioOpts)
 	bundleOpts.CertificateProviderOptions = &sigstoreSign.CertificateProviderOptions{
@@ -222,15 +223,16 @@ func getDefaultBundleOptsWithIdentityToken(identityToken *string) (*sigstoreSign
 	}
 
 	tsaOpts := &sigstoreSign.TimestampAuthorityOptions{
-		URL: "https://timestamp.githubapp.com/api/v1/timestamp",
-		// Timeout: time.Duration(30 * time.Second),
-		// Retries: 1,
+		URL:     "https://timestamp.githubapp.com/api/v1/timestamp",
+		Timeout: time.Duration(30 * time.Second),
+		Retries: 1,
 	}
 	bundleOpts.TimestampAuthorities = append(bundleOpts.TimestampAuthorities, sigstoreSign.NewTimestampAuthority(tsaOpts))
 
 	rekorOpts := &sigstoreSign.RekorOptions{
 		BaseURL: "https://rekor.sigstore.dev",
-		// Timeout: timeout,
+		Timeout: time.Duration(90 * time.Second),
+		Retries: 1,
 	}
 	bundleOpts.TransparencyLogs = append(bundleOpts.TransparencyLogs, sigstoreSign.NewRekor(rekorOpts))
 	return bundleOpts, nil
