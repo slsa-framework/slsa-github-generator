@@ -161,9 +161,12 @@ func makeSigstoreBundleAttestation(ctx context.Context, statement *intoto.Statem
 	if err != nil {
 		return nil, err
 	}
-	content := &sigstoreSign.DSSEData{
-		Data:        statementBytes,
-		PayloadType: "application/vnd.in-toto+json",
+	// content := &sigstoreSign.DSSEData{
+	// 	Data:        statementBytes,
+	// 	PayloadType: "application/vnd.in-toto+json",
+	// }
+	content := &sigstoreSign.PlainData{
+		Data: statementBytes,
 	}
 
 	keypair, err := sigstoreSign.NewEphemeralKeypair(nil)
