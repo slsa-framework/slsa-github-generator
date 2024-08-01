@@ -240,7 +240,9 @@ func getDefaultBundleOptsWithIdentityToken(identityToken *string) (*sigstoreSign
 		Timeout: time.Duration(30 * time.Second),
 		Retries: 1,
 	}
+	originalTSAs := bundleOpts.TimestampAuthorities
 	bundleOpts.TimestampAuthorities = append(bundleOpts.TimestampAuthorities, sigstoreSign.NewTimestampAuthority(tsaOpts))
+	bundleOpts.TimestampAuthorities = originalTSAs
 
 	rekorOpts := &sigstoreSign.RekorOptions{
 		BaseURL: "https://rekor.sigstore.dev",
