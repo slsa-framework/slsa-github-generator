@@ -160,26 +160,18 @@ func makeSigstoreBundle(ctx context.Context, check func(error), statement *intot
 	}
 
 	keypair, err := sigstoreSign.NewEphemeralKeypair(nil)
-	if err != nil {
-		return err
-	}
+	check(err)
 
 	oidcClient, err := github.NewOIDCClient()
-	if err != nil {
-		return err
-	}
+	check(err)
 	TokenStruct, err := oidcClient.Token(ctx, []string{"sigstore"})
-	if err != nil {
-		return err
-	}
+	check(err)
 	rawToken := TokenStruct.RawToken
 
 	bundleOpts, err := getDefaultBundleOptsWithIdentityToken(&rawToken, check)
 	bundle, err := sigstoreSign.Bundle(content, keypair, *bundleOpts)
-	if err != nil {
-		return err
-	}
-	fmt.Printf("bundle: %v", bundle)
+	check(err)
+	fmt.Println("bundle: %v", bundle)
 	return nil
 }
 
