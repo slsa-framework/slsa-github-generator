@@ -211,6 +211,7 @@ func getDefaultBundleOptsWithIdentityToken(identityToken *string) (*sigstoreSign
 		return nil, err
 	}
 	bundleOpts.TrustedRoot = trustedRoot
+	bundleOpts.TrustedRoot = nil
 
 	fulcioOpts := &sigstoreSign.FulcioOptions{
 		BaseURL: "https://fulcio.sigstore.dev",
