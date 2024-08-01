@@ -26,6 +26,7 @@ import (
 	intoto "github.com/in-toto/in-toto-golang/in_toto"
 	"github.com/spf13/cobra"
 
+	sigstoreProtoBundle "github.com/sigstore/protobuf-specs/gen/pb-go/bundle/v1"
 	sigstoreRoot "github.com/sigstore/sigstore-go/pkg/root"
 	sigstoreSign "github.com/sigstore/sigstore-go/pkg/sign"
 	"github.com/slsa-framework/slsa-github-generator/github"
@@ -110,18 +111,21 @@ run in the context of a Github Actions workflow.`,
 				attBytes, err = json.Marshal(p)
 				check(err)
 			} else {
-				att, err := signer.Sign(ctx, &intoto.Statement{
+				// att, err := signer.Sign(ctx, &intoto.Statement{
+				// 	StatementHeader: p.StatementHeader,
+				// 	Predicate:       p.Predicate,
+				// })
+				// check(err)
+
+				// _, err = tlog.Upload(ctx, att)
+				// check(err)
+
+				// attBytes = att.Bytes()
+
+				att, err := makeSigstoreBundleAttestation(ctx, &intoto.Statement{
 					StatementHeader: p.StatementHeader,
 					Predicate:       p.Predicate,
 				})
-				check(err)
-
-				makeSigstoreBundle(ctx, check, &intoto.Statement{
-					StatementHeader: p.StatementHeader,
-					Predicate:       p.Predicate,
-				})
-
-				_, err = tlog.Upload(ctx, att)
 				check(err)
 
 				attBytes = att.Bytes()
@@ -150,37 +154,62 @@ run in the context of a Github Actions workflow.`,
 	return c
 }
 
-func makeSigstoreBundle(ctx context.Context, check func(error), statement *intoto.Statement) error {
+func makeSigstoreBundleAttestation(ctx context.Context, statement *intoto.Statement) (signing.Attestation, error) {
 	fmt.Println("debug: running makeSigstoreBundle")
 	statementBytes, err := json.Marshal(statement)
-	check(err)
+	if err != nil {
+		return nil, err
+	}
 	content := &sigstoreSign.DSSEData{
 		Data:        statementBytes,
 		PayloadType: "application/vnd.in-toto+json",
 	}
 
 	keypair, err := sigstoreSign.NewEphemeralKeypair(nil)
-	check(err)
+	if err != nil {
+		return nil, err
+	}
 
 	oidcClient, err := github.NewOIDCClient()
-	check(err)
+	if err != nil {
+		return nil, err
+	}
 	TokenStruct, err := oidcClient.Token(ctx, []string{"sigstore"})
-	check(err)
+	if err != nil {
+		return nil, err
+	}
 	rawToken := TokenStruct.RawToken
 
-	bundleOpts, err := getDefaultBundleOptsWithIdentityToken(&rawToken, check)
+	bundleOpts, err := getDefaultBundleOptsWithIdentityToken(&rawToken)
 	bundle, err := sigstoreSign.Bundle(content, keypair, *bundleOpts)
-	check(err)
-	fmt.Println("bundle: %v", bundle)
-	return nil
+	if err != nil {
+		return nil, err
+	}
+	bundleAtt := &sigstoreBundleAtt{bundle: bundle}
+
+	fmt.Println(fmt.Sprintf("debug: generated bundle attestation: %s", bundleAtt.Bytes()))
+	return bundleAtt, nil
 }
 
-func getDefaultBundleOptsWithIdentityToken(identityToken *string, check func(error)) (*sigstoreSign.BundleOptions, error) {
+type sigstoreBundleAtt struct {
+	bundle *sigstoreProtoBundle.Bundle
+}
+
+func (s *sigstoreBundleAtt) Cert() []byte {
+	return s.bundle.GetVerificationMaterial().GetCertificate().GetRawBytes()
+}
+func (s *sigstoreBundleAtt) Bytes() []byte {
+	return []byte(s.bundle.String())
+}
+
+func getDefaultBundleOptsWithIdentityToken(identityToken *string) (*sigstoreSign.BundleOptions, error) {
 	bundleOpts := &sigstoreSign.BundleOptions{}
 	// timeout := time.Duration(60 * time.Second)
 
 	trustedRoot, err := sigstoreRoot.FetchTrustedRoot()
-	check(err)
+	if err != nil {
+		return nil, err
+	}
 	bundleOpts.TrustedRoot = trustedRoot
 
 	fulcioOpts := &sigstoreSign.FulcioOptions{
