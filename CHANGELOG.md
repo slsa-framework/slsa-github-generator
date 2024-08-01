@@ -116,7 +116,7 @@ duplication."
 ### Unreleased: Provenance Rekor UUID Output
 
 - **Added**: The workflow now includes the output of `provenance-rekor-uuid` for log lookup purposes.
-  This enhancement ensures that the provenance-rekor-uuid can be used to search for and view specific log entry details on the Rekor Search UI.
+  The provenance-rekor-uuid can be used to search for and view specific log entry details on the Rekor Search UI.
 
 ## v2.0.0
 
