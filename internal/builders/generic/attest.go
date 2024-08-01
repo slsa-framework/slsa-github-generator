@@ -27,7 +27,7 @@ import (
 	intoto "github.com/in-toto/in-toto-golang/in_toto"
 	"github.com/spf13/cobra"
 
-	sigstoreProtoBundle "github.com/sigstore/protobuf-specs/gen/pb-go/bundle/v1"
+	sigstoreBundle "github.com/sigstore/sigstore-go/pkg/bundle"
 	sigstoreRoot "github.com/sigstore/sigstore-go/pkg/root"
 	sigstoreSign "github.com/sigstore/sigstore-go/pkg/sign"
 	"github.com/slsa-framework/slsa-github-generator/github"
@@ -182,25 +182,37 @@ func makeSigstoreBundleAttestation(ctx context.Context, statement *intoto.Statem
 	rawToken := TokenStruct.RawToken
 
 	bundleOpts, err := getDefaultBundleOptsWithIdentityToken(&rawToken)
-	bundle, err := sigstoreSign.Bundle(content, keypair, *bundleOpts)
+	innerBundle, err := sigstoreSign.Bundle(content, keypair, *bundleOpts)
 	if err != nil {
 		return nil, err
 	}
-	bundleAtt := &sigstoreBundleAtt{bundle: bundle}
+	outerBundle := &sigstoreBundle.ProtobufBundle{
+		Bundle: innerBundle,
+	}
+	bundleBytes, err := outerBundle.MarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+
+	bundleAtt := &sigstoreBundleAtt{
+		cert:  innerBundle.GetVerificationMaterial().GetCertificate().GetRawBytes(),
+		bytes: bundleBytes,
+	}
 
 	fmt.Println(fmt.Sprintf("debug: generated bundle attestation: %s", bundleAtt.Bytes()))
 	return bundleAtt, nil
 }
 
 type sigstoreBundleAtt struct {
-	bundle *sigstoreProtoBundle.Bundle
+	cert  []byte
+	bytes []byte
 }
 
 func (s *sigstoreBundleAtt) Cert() []byte {
-	return s.bundle.GetVerificationMaterial().GetCertificate().GetRawBytes()
+	return s.cert
 }
 func (s *sigstoreBundleAtt) Bytes() []byte {
-	return []byte(s.bundle.String())
+	return s.bytes
 }
 
 func getDefaultBundleOptsWithIdentityToken(identityToken *string) (*sigstoreSign.BundleOptions, error) {
