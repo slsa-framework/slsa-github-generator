@@ -96,7 +96,7 @@ jobs:
         uses: slsa-framework/slsa-verifier/actions/installer@v2.6.0
       - name: Verify
         run: |
-          slsa-verifier verify-artifact \
+          SLSA_VERIFIER_TESTING=1 slsa-verifier verify-artifact \
             artifact1 artifact2 \
             --provenance-path build.intoto.jsonl \
             --source-uri github.com/slsa-framework/slsa-github-generator \
