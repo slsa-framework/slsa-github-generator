@@ -104,6 +104,8 @@ jobs:
 
   provenance2:
     needs: build
+    permissions:
+      id-token: write # For signing.
     uses: ./.github/workflows/builder_generic_slsa3.yml
     with:
       base64-subjects: "${{ needs.build.outputs.hashes }}"
