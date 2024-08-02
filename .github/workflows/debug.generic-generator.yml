@@ -106,6 +106,8 @@ jobs:
     needs: build
     permissions:
       id-token: write # For signing.
+      contents: read # For asset uploads.
+      actions: read # For the entrypoint.
     uses: ./.github/workflows/builder_generic_slsa3.yml
     with:
       base64-subjects: "${{ needs.build.outputs.hashes }}"
