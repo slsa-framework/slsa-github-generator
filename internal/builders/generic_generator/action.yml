@@ -52,6 +52,10 @@ runs:
         PROVENANCE_NAME: ${{ fromJson(inputs.slsa-workflow-inputs).provenance-name }}
         OUTPUT_FILE: ${{ inputs.slsa-layout-file }}
       run: |
+        pwd
+        ls -lahR
+        echo ""
+        ls -lahR ./../__TOOL_ACTION_DIR__/
         go run ./../__TOOL_ACTION_DIR__/. \
           --base64-subjects $BASE64_SUBJECTS \
           --base64-subjects-file $BASE64_SUBJECTS_FILE \
