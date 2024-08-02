@@ -209,7 +209,7 @@ jobs:
           allow-private-repository: ${{ inputs.rekor-log-public }}
 
       - name: Upload builder
-        uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808 # v4.3.3
+        uses: actions/upload-artifact@89ef406dd8d7e03cfd12d9e0a4a378f454709029 # v4.3.5
         with:
           name: "${{ env.BUILDER_BINARY }}-${{ needs.rng.outputs.value }}"
           path: "${{ env.BUILDER_BINARY }}"
@@ -462,7 +462,7 @@ jobs:
         # TODO(https://github.com/slsa-framework/slsa-github-generator/issues/1655): Use a
         # secure upload or verify this against the SLSA layout file.
         id: upload-artifacts
-        uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808 # v4.3.3
+        uses: actions/upload-artifact@89ef406dd8d7e03cfd12d9e0a4a378f454709029 # v4.3.5
         with:
           name: ${{ steps.build.outputs.build-outputs-name }}
           path: /tmp/build-outputs-${{ needs.rng.outputs.value }}
@@ -535,7 +535,7 @@ jobs:
       - name: Upload unsigned intoto attestations file for pull request
         if: ${{ github.event_name == 'pull_request' }}
         id: upload-unsigned
-        uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808 # v4.3.3
+        uses: actions/upload-artifact@89ef406dd8d7e03cfd12d9e0a4a378f454709029 # v4.3.5
         with:
           name: "${{ env.OUTPUT_FOLDER }}-${{ needs.rng.outputs.value }}"
           path: "attestations-${{ needs.rng.outputs.value }}"
@@ -556,7 +556,7 @@ jobs:
       - name: Upload the signed attestations
         id: upload-signed
         if: ${{ github.event_name != 'pull_request' }}
-        uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808 # v4.3.3
+        uses: actions/upload-artifact@89ef406dd8d7e03cfd12d9e0a4a378f454709029 # v4.3.5
         with:
           name: "${{ env.OUTPUT_FOLDER }}-${{ needs.rng.outputs.value }}"
           path: "${{ env.OUTPUT_FOLDER }}-${{ needs.rng.outputs.value }}"
@@ -584,7 +584,7 @@ jobs:
       # TODO(https://github.com/slsa-framework/slsa-github-generator/issues/1655): Use the SLSA
       # layout files and their checksums to validate the artifacts.
       - name: Download artifacts
-        uses: actions/download-artifact@65a9edc5881444af0b9093a5e628f2fe47ea3b2e # v4.1.7
+        uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4.1.8
         with:
           name: "${{ needs.build.outputs.build-outputs-name }}"
           path: "${{ needs.build.outputs.build-outputs-name }}"
@@ -592,13 +592,13 @@ jobs:
       # TODO(https://github.com/slsa-framework/slsa-github-generator/issues/1655): Use the
       # secure-folder-download action.
       - name: Download provenance
-        uses: actions/download-artifact@65a9edc5881444af0b9093a5e628f2fe47ea3b2e # v4.1.7
+        uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4.1.8
         with:
           name: "${{ needs.provenance.outputs.provenance-name }}"
           path: "${{ needs.provenance.outputs.provenance-name }}"
 
       - name: Upload provenance new tag
-        uses: softprops/action-gh-release@a74c6b72af54cfa997e81df42d94703d6313a2d0 # v2.0.6
+        uses: softprops/action-gh-release@c062e08bd532815e2082a85e87e3ef29c3e6d191 # v2.0.8
         if: startsWith(github.ref, 'refs/tags/') && inputs.upload-tag-name == ''
         id: release-new-tags
         with:
@@ -609,7 +609,7 @@ jobs:
           draft: ${{ inputs.draft-release }}
 
       - name: Upload provenance tag name
-        uses: softprops/action-gh-release@a74c6b72af54cfa997e81df42d94703d6313a2d0 # v2.0.6
+        uses: softprops/action-gh-release@c062e08bd532815e2082a85e87e3ef29c3e6d191 # v2.0.8
         if: inputs.upload-tag-name != ''
         with:
           prerelease: ${{ inputs.prerelease }}
