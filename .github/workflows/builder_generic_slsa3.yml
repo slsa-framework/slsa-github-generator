@@ -29,6 +29,11 @@ on:
         required: false
         type: string
 
+      provenance-name:
+        description: The artifact name of the signed provenance. The file must have the intoto.jsonl extension. Defaults to <filename>.intoto.jsonl for single artifact or multiple.intoto.jsonl for multiple artifacts.
+        required: false
+        type: string
+
       rekor-log-public:
         description: "Allow publication of your repository name on the public Rekor log"
         required: false
