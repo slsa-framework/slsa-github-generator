@@ -24,9 +24,9 @@ import (
 	"path"
 	"time"
 
-	intoto "github.com/in-toto/in-toto-golang/in_toto"
 	"github.com/spf13/cobra"
 
+	intoto "github.com/in-toto/in-toto-golang/in_toto"
 	sigstoreBundle "github.com/sigstore/sigstore-go/pkg/bundle"
 	sigstoreRoot "github.com/sigstore/sigstore-go/pkg/root"
 	sigstoreSign "github.com/sigstore/sigstore-go/pkg/sign"
@@ -112,18 +112,21 @@ run in the context of a Github Actions workflow.`,
 				attBytes, err = json.Marshal(p)
 				check(err)
 			} else {
-				att, err := signer.Sign(ctx, &intoto.Statement{
-					StatementHeader: p.StatementHeader,
-					Predicate:       p.Predicate,
-				})
-				check(err)
+				// att, err := signer.Sign(ctx, &intoto.Statement{
+				// 	StatementHeader: p.StatementHeader,
+				// 	Predicate:       p.Predicate,
+				// })
+				// check(err)
 
 				// _, err = tlog.Upload(ctx, att)
 				// check(err)
 
 				// attBytes = att.Bytes()
 
-				att, err = makeSigstoreBundleAttestation(ctx, att)
+				att, err := makeSigstoreBundleAttestation(ctx, &intoto.Statement{
+					StatementHeader: p.StatementHeader,
+					Predicate:       p.Predicate,
+				})
 				check(err)
 
 				attBytes = att.Bytes()
@@ -152,14 +155,14 @@ run in the context of a Github Actions workflow.`,
 	return c
 }
 
-func makeSigstoreBundleAttestation(ctx context.Context, att signing.Attestation) (signing.Attestation, error) {
+func makeSigstoreBundleAttestation(ctx context.Context, statement *intoto.Statement) (signing.Attestation, error) {
 	fmt.Println("debug: running makeSigstoreBundle")
-	// statementBytes, err := json.Marshal(*statement)
-	// if err != nil {
-	// 	return nil, err
-	// }
+	statementBytes, err := json.Marshal(*statement)
+	if err != nil {
+		return nil, err
+	}
 	content := &sigstoreSign.DSSEData{
-		Data:        att.Bytes(),
+		Data:        statementBytes,
 		PayloadType: "application/vnd.in-toto+json",
 	}
 	// content := &sigstoreSign.PlainData{
@@ -171,15 +174,17 @@ func makeSigstoreBundleAttestation(ctx context.Context, att signing.Attestation)
 		return nil, err
 	}
 
-	oidcClient, err := github.NewOIDCClient()
-	if err != nil {
-		return nil, err
-	}
-	TokenStruct, err := oidcClient.Token(ctx, []string{"sigstore"})
-	if err != nil {
-		return nil, err
-	}
-	rawToken := TokenStruct.RawToken
+	// oidcClient, err := github.NewOIDCClient()
+	// if err != nil {
+	// 	return nil, err
+	// }
+	// TokenStruct, err := oidcClient.Token(ctx, []string{"sigstore"})
+	// if err != nil {
+	// 	return nil, err
+	// // }
+	// rawToken := TokenStruct.RawToken
+
+	rawToken := ""
 
 	bundleOpts, err := getDefaultBundleOptsWithIdentityToken(&rawToken)
 	innerBundle, err := sigstoreSign.Bundle(content, keypair, *bundleOpts)
