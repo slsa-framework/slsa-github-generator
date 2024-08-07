@@ -143,4 +143,5 @@ jobs:
             artifact1 artifact2 \
             --provenance-path $PROVENANCE_PATH \
             --source-uri github.com/slsa-framework/slsa-github-generator \
+            --source-branch ramonpetgrave64-internal-builder-sigstore-bundle \
             --print-provenance
