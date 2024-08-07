@@ -52,7 +52,6 @@ runs:
         PROVENANCE_NAME: ${{ fromJson(inputs.slsa-workflow-inputs).provenance-name }}
         OUTPUT_FILE: ${{ inputs.slsa-layout-file }}
       run: |
-        pwd
         DIR="$( pwd )"
         (
           cd ./../__TOOL_ACTION_DIR__/ && \
@@ -63,4 +62,4 @@ runs:
             --provenance-name $PROVENANCE_NAME \
             --output-file $DIR/$OUTPUT_FILE
         )
-        ls -lah
+        echo "attestation-name=${PROVENANCE_NAME}.build.slsa" >>"${GITHUB_OUTPUT}"
