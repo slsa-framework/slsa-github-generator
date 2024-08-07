@@ -41,10 +41,15 @@ inputs:
   slsa-workflow-secret14: {}
   slsa-workflow-secret15: {}
 
+outputs:
+  attestation-name:
+    description: "The name of the attestation in the generated layout file."
+    value: ${{ steps.generate-layout.outputs.attestation-name }}
+
 runs:
   using: "composite"
   steps:
-    - id: layout
+    - id: generate-layout
       shell: bash
       env:
         BASE64_SUBJECTS: ${{ fromJson(inputs.slsa-workflow-inputs).base64-subjects }}
