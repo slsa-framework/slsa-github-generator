@@ -134,7 +134,7 @@ jobs:
         uses: slsa-framework/slsa-verifier/actions/installer@v2.6.0
       - name: Verify
         env:
-          PROVENANCE_PATH: ${{ needs.provenance2.outputs.provenance-download-name }}
+          PROVENANCE_PATH: ${{ needs.provenance2.outputs.provenance-name }}
         run: |
           pwd
           ls -lahR
