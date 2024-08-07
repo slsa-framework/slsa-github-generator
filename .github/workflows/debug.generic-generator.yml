@@ -127,9 +127,10 @@ jobs:
         with:
           name: artifact2
       - name: Download provenance
-        uses: actions/download-artifact@v4
+        uses: slsa-framework/slsa-github-generator/actions/nodejs/secure-attestations-download@v2.0.0
         with:
           name: ${{ needs.provenance2.outputs.provenance-download-name }}
+          sha256: ${{ needs.provenance2.outputs.provenance-download-sha256 }}
       - name: Setup slsa-verifier
         uses: slsa-framework/slsa-verifier/actions/installer@v2.6.0
       - name: Verify
