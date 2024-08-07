@@ -133,9 +133,11 @@ jobs:
       - name: Setup slsa-verifier
         uses: slsa-framework/slsa-verifier/actions/installer@v2.6.0
       - name: Verify
+        env:
+          PROVENANCE_PATH: ${{ needs.provenance2.outputs.provenance-download-name }}
         run: |
           SLSA_VERIFIER_TESTING=1 slsa-verifier verify-artifact \
             artifact1 artifact2 \
-            --provenance-path ${{ needs.provenance2.outputs.provenance-name }} \
+            --provenance-path $PROVENANCE_PATH \
             --source-uri github.com/slsa-framework/slsa-github-generator \
             --print-provenance
