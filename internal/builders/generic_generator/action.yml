@@ -53,11 +53,14 @@ runs:
         OUTPUT_FILE: ${{ inputs.slsa-layout-file }}
       run: |
         pwd
-        ls -lahR
-        echo ""
-        ls -lahR ./../__TOOL_ACTION_DIR__/
-        go run ./../__TOOL_ACTION_DIR__/. \
-          --base64-subjects $BASE64_SUBJECTS \
-          --base64-subjects-file $BASE64_SUBJECTS_FILE \
-          --provenance-name $PROVENANCE_NAME \
-          --output-file $OUTPUT_FILE
+        DIR="$( pwd )"
+        (
+          cd ./../__TOOL_ACTION_DIR__/ && \
+          ls -lahR && \
+          go run . \
+            --base64-subjects $BASE64_SUBJECTS \
+            --base64-subjects-file $BASE64_SUBJECTS_FILE \
+            --provenance-name $PROVENANCE_NAME \
+            --output-file $DIR/$OUTPUT_FILE
+        )
+        ls -lah
