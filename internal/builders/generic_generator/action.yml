@@ -67,4 +67,4 @@ runs:
             --provenance-name $PROVENANCE_NAME \
             --output-file $DIR/$OUTPUT_FILE
         )
-        echo "attestation-name=${PROVENANCE_NAME}.build.slsa" >>"${GITHUB_OUTPUT}"
+        echo "attestation-name=${PROVENANCE_NAME}" >>"${GITHUB_OUTPUT}"
