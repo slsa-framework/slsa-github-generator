@@ -45,21 +45,21 @@ jobs:
           # sha256sum artifact1 artifact2 ... | base64 -w0
           echo "hashes=$(sha256sum artifact1 artifact2 | base64 -w0)" >> "$GITHUB_OUTPUT"
 
-      # - name: Upload artifact1
-      #   uses: actions/upload-artifact@v4
-      #   with:
-      #     name: artifact1
-      #     path: artifact1
-      #     if-no-files-found: error
-      #     retention-days: 5
+      - name: Upload artifact1
+        uses: actions/upload-artifact@v4
+        with:
+          name: artifact1
+          path: artifact1
+          if-no-files-found: error
+          retention-days: 5
 
-      # - name: Upload artifact2
-      #   uses: actions/upload-artifact@v4
-      #   with:
-      #     name: artifact2
-      #     path: artifact2
-      #     if-no-files-found: error
-      #     retention-days: 5
+      - name: Upload artifact2
+        uses: actions/upload-artifact@v4
+        with:
+          name: artifact2
+          path: artifact2
+          if-no-files-found: error
+          retention-days: 5
 
   # provenance:
   #   needs: build
