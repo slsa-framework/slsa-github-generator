@@ -30,8 +30,8 @@ on:
         type: string
 
       provenance-name:
-        description: The artifact name of the signed provenance. The file must have the intoto.jsonl extension. Defaults to <filename>.intoto.jsonl for single artifact or multiple.intoto.jsonl for multiple artifacts.
-        required: false
+        description: The artifact name of the signed provenance. The file must have the build.slsa extension.
+        required: true
         type: string
 
       rekor-log-public:

@@ -26,9 +26,13 @@ type Subject struct {
 func main() {
 	base64Subjects := flag.String("base64-subjects", "", "a base64-encoded list of subjects")
 	base64SubjectsFile := flag.String("base64-subjects-file", "", "file with a base64-encoded list of subjects")
-	provenanceName := flag.String("provenance-name", "", "name of the provenance")
+	provenanceName := flag.String("provenance-name", "", "name of the provenance, including the .build.slsa suffix")
 	outputFile := flag.String("output-file", "", "outfile to write the SLSA layout to")
 	flag.Parse()
+
+	if !strings.HasSuffix(*provenanceName, ".build.slsa") {
+		log.Fatalf("provenance name must have the .build.slsa suffix: %s", *provenanceName)
+	}
 
 	var base64Content string
 	if *base64Subjects != "" {
@@ -49,7 +53,7 @@ func main() {
 	}
 
 	attestation := Attestation{
-		Name: strings.TrimSuffix(*provenanceName, ".intoto.jsonl"),
+		Name: strings.TrimSuffix(*provenanceName, ".build.slsa"),
 	}
 	layout := SLSALayout{
 		Version:      1,

@@ -111,7 +111,7 @@ jobs:
     uses: ./.github/workflows/builder_generic_slsa3.yml
     with:
       base64-subjects: "${{ needs.build.outputs.hashes }}"
-      provenance-name: my-debug-prov.intoto.jsonl
+      provenance-name: my-debug-prov.build.slsa
       rekor-log-public: true
 
   verify2:
