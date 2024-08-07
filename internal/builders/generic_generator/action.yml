@@ -59,7 +59,7 @@ runs:
           ls -lahR && \
           go run . \
             --base64-subjects $BASE64_SUBJECTS \
-            --base64-subjects-file $BASE64_SUBJECTS_FILE \
+            --base64-subjects-file $DIR/$BASE64_SUBJECTS_FILE \
             --provenance-name $PROVENANCE_NAME \
             --output-file $DIR/$OUTPUT_FILE
         )
