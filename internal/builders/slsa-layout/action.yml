@@ -34,6 +34,9 @@ outputs:
 runs:
   using: "composite"
   steps:
+    - uses: actions/checkout@v4
+      with:
+        repository: slsa-framework/slsa-github-generator
     - id: generate-layout
       shell: bash
       env:
