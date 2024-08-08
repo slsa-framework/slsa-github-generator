@@ -156,7 +156,7 @@ jobs:
       id-token: write # For signing.
       contents: read # For asset uploads.
       actions: read # For the entrypoint.
-    uses: ./.github/workflows/generic_generator_slsa3_alt.yml
+    uses: ./.github/workflows/generator_generic_slsa3_alt.yml
     with:
       base64-subjects: "${{ needs.build.outputs.hashes }}"
       provenance-name: my-debug-prov.build.slsa
