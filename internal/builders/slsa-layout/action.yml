@@ -41,6 +41,8 @@ runs:
         PROVENANCE_NAME: ${{ inputs.provenance-name }}
         OUTPUT_FILE: ${{ inputs.slsa-layout-file }}
       run: |
+        pwd
+        ls -lahR
         go run . \
           --base64-subjects-file $BASE64_SUBJECTS_FILE \
           --provenance-name $PROVENANCE_NAME \
