@@ -212,7 +212,7 @@ jobs:
 
       - name: Generate slsa layout file
         id: slsa-layout
-        uses: ./internal/builders/slsa-layout
+        uses: slsa-framework/slsa-github-generator/internal/builders/slsa-layout@ramonpetgrave64-internal-builder-sigstore-bundle
         with:
           provenance-name: "${{ inputs.provenance-name }}"
           base64-subjects-file: "${{ env.SUBJECTS_FILENAME }}"
