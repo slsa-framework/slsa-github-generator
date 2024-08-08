@@ -160,7 +160,6 @@ jobs:
     with:
       base64-subjects: "${{ needs.build.outputs.hashes }}"
       provenance-name: my-debug-prov.build.slsa
-      rekor-log-public: true
 
   verify3:
     needs: provenance3
