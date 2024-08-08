@@ -154,7 +154,7 @@ jobs:
     needs: build
     permissions:
       id-token: write # For signing.
-      contents: read # For asset uploads.
+      contents: write # For asset uploads.
       actions: read # For the entrypoint.
     uses: ./.github/workflows/generator_generic_slsa3_alt.yml
     with:
