@@ -131,6 +131,9 @@ jobs:
         with:
           name: ${{ needs.provenance2.outputs.provenance-download-name }}
           sha256: ${{ needs.provenance2.outputs.provenance-download-sha256 }}
+      - uses: actions/setup-go@v5
+        with:
+          go-version: 1.22
       - name: Setup slsa-verifier
         run: go install github.com/slsa-framework/slsa-verifier/v2/cli/slsa-verifier@testing-from-slsa-github-generator-repo-branches
       - name: Verify
