@@ -148,3 +148,51 @@ jobs:
             --source-uri github.com/slsa-framework/slsa-github-generator \
             --source-branch ramonpetgrave64-internal-builder-sigstore-bundle \
             --print-provenance
+
+
+  provenance3:
+    needs: build
+    permissions:
+      id-token: write # For signing.
+      contents: read # For asset uploads.
+      actions: read # For the entrypoint.
+    uses: ./.github/workflows/generic_generator_slsa3_alt.yml
+    with:
+      base64-subjects: "${{ needs.build.outputs.hashes }}"
+      provenance-name: my-debug-prov.build.slsa
+      rekor-log-public: true
+
+  verify3:
+    needs: provenance3
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download artifact1
+        uses: actions/download-artifact@v4
+        with:
+          name: artifact1
+      - name: Download artifact2
+        uses: actions/download-artifact@v4
+        with:
+          name: artifact2
+      - name: Download provenance
+        uses: slsa-framework/slsa-github-generator/actions/nodejs/secure-attestations-download@v2.0.0
+        with:
+          name: ${{ needs.provenance3.outputs.provenance-download-name }}
+          sha256: ${{ needs.provenance3.outputs.provenance-download-sha256 }}
+      - uses: actions/setup-go@v5
+        with:
+          go-version: 1.22
+      - name: Setup slsa-verifier
+        run: go install github.com/slsa-framework/slsa-verifier/v2/cli/slsa-verifier@testing-from-slsa-github-generator-repo-branches
+      - name: Verify
+        env:
+          PROVENANCE_PATH: ${{ needs.provenance3.outputs.provenance-download-name }}/${{ needs.provenance3.outputs.provenance-name }}
+        run: |
+          pwd
+          ls -lahR
+          SLSA_VERIFIER_TESTING=1 slsa-verifier verify-artifact \
+            artifact1 artifact2 \
+            --provenance-path $PROVENANCE_PATH \
+            --source-uri github.com/slsa-framework/slsa-github-generator \
+            --source-branch ramonpetgrave64-internal-builder-sigstore-bundle \
+            --print-provenance
