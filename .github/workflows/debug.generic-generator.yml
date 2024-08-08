@@ -132,7 +132,7 @@ jobs:
           name: ${{ needs.provenance2.outputs.provenance-download-name }}
           sha256: ${{ needs.provenance2.outputs.provenance-download-sha256 }}
       - name: Setup slsa-verifier
-        uses: slsa-framework/slsa-verifier/actions/installer@v2.6.0
+        uses: slsa-framework/slsa-verifier/actions/installer@testing-from-slsa-github-generator-repo-branches
       - name: Verify
         env:
           PROVENANCE_PATH: ${{ needs.provenance2.outputs.provenance-download-name }}/${{ needs.provenance2.outputs.provenance-name }}
