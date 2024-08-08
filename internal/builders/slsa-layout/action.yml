@@ -41,6 +41,8 @@ runs:
         PROVENANCE_NAME: ${{ inputs.provenance-name }}
         OUTPUT_FILE: ${{ inputs.slsa-layout-file }}
       run: |
+        pwd
+        ls -lahR
         DIR="$( pwd )"
         (
           cd ./internal/builders/slsa-layout && \
