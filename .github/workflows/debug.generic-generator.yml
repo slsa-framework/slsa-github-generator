@@ -163,7 +163,7 @@ jobs:
     uses: ./.github/workflows/generator_generic_slsa3_alt.yml
     with:
       base64-subjects: "${{ needs.build.outputs.hashes }}"
-      provenance-name: my-debug-prov.build.slsa
+      provenance-name: my-debug-prov3.build.slsa
 
   verify3:
     needs: provenance3
