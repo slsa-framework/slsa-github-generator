@@ -248,6 +248,7 @@ jobs:
         id: attestations
         uses: slsa-framework/slsa-github-generator/.github/actions/generate-attestations@main
         with:
+          predicate-type: "https://slsa.dev/provenance/v1"
           slsa-layout-file: ${{ env.SLSA_LAYOUT_FILENAME }}
           predicate-file: ${{ env.SLSA_PREDICATE_FILE }}
           output-folder: ${{ env.ATTESTATIONS_FOLDER }}
