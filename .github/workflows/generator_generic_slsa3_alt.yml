@@ -217,7 +217,8 @@ jobs:
           ref: 'ramonpetgrave64-internal-builder-sigstore-bundle'
           path: __TOOL_CHECKOUT_DIR__
 
-      - shell: bash
+      - name: Generate layout file
+        shell: bash
         env:
           BASE64_SUBJECTS_FILE: ${{ env.SUBJECTS_FILENAME }}
           PROVENANCE_NAME: ${{ inputs.provenance-name }}
@@ -228,13 +229,12 @@ jobs:
           DIR="$( pwd )"
           (
             cd __TOOL_CHECKOUT_DIR__/internal/builders/slsa-layout && \
-            ls -lahR && \
             go run . \
               --base64-subjects-file "$DIR"/"$BASE64_SUBJECTS_FILE" \
               --provenance-name $PROVENANCE_NAME \
               --output-file "$DIR"/"$OUTPUT_FILE"
           )
-          echo "attestation-name=${PROVENANCE_NAME}" >>"${GITHUB_OUTPUT}"
+          ls
 
       # - name: Generate slsa layout file
       #   id: slsa-layout
