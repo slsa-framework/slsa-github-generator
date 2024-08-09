@@ -174,17 +174,17 @@ func makeSigstoreBundleAttestation(ctx context.Context, statement *intoto.Statem
 		return nil, err
 	}
 
-	// oidcClient, err := github.NewOIDCClient()
-	// if err != nil {
-	// 	return nil, err
-	// }
-	// TokenStruct, err := oidcClient.Token(ctx, []string{"sigstore"})
-	// if err != nil {
-	// 	return nil, err
-	// // }
-	// rawToken := TokenStruct.RawToken
+	oidcClient, err := github.NewOIDCClient()
+	if err != nil {
+		return nil, err
+	}
+	TokenStruct, err := oidcClient.Token(ctx, []string{"sigstore"})
+	if err != nil {
+		return nil, err
+	}
+	rawToken := TokenStruct.RawToken
 
-	rawToken := ""
+	// rawToken := ""
 
 	bundleOpts, err := getDefaultBundleOptsWithIdentityToken(&rawToken)
 	innerBundle, err := sigstoreSign.Bundle(content, keypair, *bundleOpts)
@@ -230,7 +230,7 @@ func getDefaultBundleOptsWithIdentityToken(identityToken *string) (*sigstoreSign
 	// originalTrustedRoot := trustedRoot
 	bundleOpts.TrustedRoot = trustedRoot
 	// bundleOpts.TrustedRoot = originalTrustedRoot
-	// bundleOpts.TrustedRoot = nil
+	bundleOpts.TrustedRoot = nil
 
 	fulcioOpts := &sigstoreSign.FulcioOptions{
 		BaseURL: "https://fulcio.sigstore.dev",

@@ -61,46 +61,50 @@ jobs:
           if-no-files-found: error
           retention-days: 5
 
-  # provenance:
-  #   needs: build
-  #   permissions:
-  #     id-token: write # For signing.
-  #     contents: write # For asset uploads.
-  #     actions: read # For reading workflow info.
-  #   uses: ./.github/workflows/generator_generic_slsa3.yml
-  #   with:
-  #     # echo "2e0390eb024a52963db7b95e84a9c2b12c004054a7bad9a97ec0c7c89d4681d2    binary-name" | base64 -w0
-  #     # base64-subjects: "MmUwMzkwZWIwMjRhNTI5NjNkYjdiOTVlODRhOWMyYjEyYzAwNDA1NGE3YmFkOWE5N2VjMGM3Yzg5ZDQ2ODFkMiAgICBiaW5hcnktbmFtZQo="
-  #     base64-subjects: "${{ needs.build.outputs.hashes }}"
-  #     compile-generator: true
-  #     provenance-name: build.intoto.jsonl
-  #     upload-assets: true
+  provenance:
+    needs: build
+    permissions:
+      id-token: write # For signing.
+      contents: write # For asset uploads.
+      actions: read # For reading workflow info.
+    uses: ./.github/workflows/generator_generic_slsa3.yml
+    with:
+      # echo "2e0390eb024a52963db7b95e84a9c2b12c004054a7bad9a97ec0c7c89d4681d2    binary-name" | base64 -w0
+      # base64-subjects: "MmUwMzkwZWIwMjRhNTI5NjNkYjdiOTVlODRhOWMyYjEyYzAwNDA1NGE3YmFkOWE5N2VjMGM3Yzg5ZDQ2ODFkMiAgICBiaW5hcnktbmFtZQo="
+      base64-subjects: "${{ needs.build.outputs.hashes }}"
+      compile-generator: true
+      provenance-name: build.intoto.jsonl
+      upload-assets: true
 
-  # verify:
-  #   needs: provenance
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: Download artifact1
-  #       uses: actions/download-artifact@v4
-  #       with:
-  #         name: artifact1
-  #     - name: Download artifact2
-  #       uses: actions/download-artifact@v4
-  #       with:
-  #         name: artifact2
-  #     - name: Download provenance
-  #       uses: actions/download-artifact@v4
-  #       with:
-  #         name: build.intoto.jsonl
-  #     - name: Setup slsa-verifier
-  #       uses: slsa-framework/slsa-verifier/actions/installer@v2.6.0
-  #     - name: Verify
-  #       run: |
-  #         SLSA_VERIFIER_TESTING=1 slsa-verifier verify-artifact \
-  #           artifact1 artifact2 \
-  #           --provenance-path build.intoto.jsonl \
-  #           --source-uri github.com/slsa-framework/slsa-github-generator \
-  #           --print-provenance
+  verify:
+    needs: provenance
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download artifact1
+        uses: actions/download-artifact@v4
+        with:
+          name: artifact1
+      - name: Download artifact2
+        uses: actions/download-artifact@v4
+        with:
+          name: artifact2
+      - name: Download provenance
+        uses: actions/download-artifact@v4
+        with:
+          name: build.intoto.jsonl
+      - uses: actions/setup-go@v5
+        with:
+          go-version: 1.22
+      - name: Setup slsa-verifier
+        run: go install github.com/slsa-framework/slsa-verifier/v2/cli/slsa-verifier@verify-sigstore-go-Bundle
+      - name: Verify
+        run: |
+          SLSA_VERIFIER_TESTING=1 slsa-verifier verify-artifact \
+            artifact1 artifact2 \
+            --provenance-path build.intoto.jsonl \
+            --source-uri github.com/slsa-framework/slsa-github-generator \
+            --source-branch ramonpetgrave64-internal-builder-sigstore-bundle \
+            --print-provenance
 
   provenance2:
     needs: build
