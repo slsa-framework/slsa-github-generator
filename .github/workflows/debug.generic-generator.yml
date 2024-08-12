@@ -111,7 +111,7 @@ jobs:
         with:
           go-version: 1.22
       - name: Setup slsa-verifier
-        run: go install github.com/slsa-framework/slsa-verifier/v2/cli/slsa-verifier@verify-sigstore-go-Bundle
+        run: go install github.com/slsa-framework/slsa-verifier/v2/cli/slsa-verifier@verify-sigstore-go-Bundlev2
       - name: Verify
         run: |
           SLSA_VERIFIER_TESTING=1 slsa-verifier verify-artifact \
