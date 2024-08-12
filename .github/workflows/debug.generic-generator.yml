@@ -17,7 +17,7 @@
 name: debug-generic-generator
 
 on:
-    push:
+  push:
 
 permissions: read-all
 
