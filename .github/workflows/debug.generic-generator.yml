@@ -101,7 +101,7 @@ jobs:
             artifact1 artifact2 \
             --provenance-path generic-build.intoto.jsonl \
             --source-uri github.com/slsa-framework/slsa-github-generator \
-            --source-branch ramonpetgrave64-internal-builder-sigstore-bundle \
+            --source-branch ramonpetgrave64-internal-builder-sigstore-bundlev2 \
             --print-provenance
 
   go-build:
@@ -142,5 +142,5 @@ jobs:
             "$ARTIFACT" \
             --provenance-path "$PROVENANCE" \
             --source-uri github.com/slsa-framework/slsa-github-generator \
-            --source-branch ramonpetgrave64-internal-builder-sigstore-bundle \
+            --source-branch ramonpetgrave64-internal-builder-sigstore-bundlev2 \
             --print-provenance
