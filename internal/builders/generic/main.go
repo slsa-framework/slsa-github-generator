@@ -20,9 +20,8 @@ import (
 	// TODO: Allow use of other OIDC providers?
 	// Enable the github OIDC auth provider.
 	_ "github.com/sigstore/cosign/v2/pkg/providers/github"
-	"github.com/slsa-framework/slsa-github-generator/slsa"
+	"github.com/slsa-framework/slsa-github-generator/signing/sigstore"
 
-	"github.com/slsa-framework/slsa-github-generator/internal/testutil"
 	"github.com/spf13/cobra"
 )
 
@@ -37,8 +36,8 @@ For more information on SLSA, visit https://slsa.dev`,
 		},
 	}
 	c.AddCommand(versionCmd())
-	// c.AddCommand(attestCmd(nil, checkExit, sigstore.NewDefaultFulcio(), sigstore.NewDefaultRekor()))
-	c.AddCommand(attestCmd(&slsa.NilClientProvider{}, checkExit, &testutil.TestSigner{}, &testutil.TestTransparencyLog{}))
+	c.AddCommand(attestCmd(nil, checkExit, sigstore.NewDefaultFulcio(), sigstore.NewDefaultRekor()))
+	// c.AddCommand(attestCmd(&slsa.NilClientProvider{}, checkExit, &testutil.TestSigner{}, &testutil.TestTransparencyLog{}))
 	return c
 }
 
