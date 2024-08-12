@@ -17,7 +17,6 @@ package sigstore
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 
 	intoto "github.com/in-toto/in-toto-golang/in_toto"
 	sigstoreBundle "github.com/sigstore/sigstore-go/pkg/bundle"
@@ -100,8 +99,6 @@ func (s *BundleSigner) Sign(ctx context.Context, statement *intoto.Statement) (s
 		cert: innerBundle.GetVerificationMaterial().GetCertificate().GetRawBytes(),
 		att:  bundleBytes,
 	}
-
-	fmt.Println(fmt.Sprintf("debug: generated bundle attestation: %s", bundleAtt.Bytes()))
 	return bundleAtt, nil
 }
 
