@@ -116,7 +116,7 @@ jobs:
       compile-builder: true
 
   go-verify:
-    needs: generic-provenance
+    needs: [generic-provenance, go-build]
     runs-on: ubuntu-latest
     steps:
       - name: Download artifact
@@ -134,9 +134,10 @@ jobs:
         run: go install github.com/slsa-framework/slsa-verifier/v2/cli/slsa-verifier@verify-sigstore-go-Bundlev2
       - name: Verify
         env:
-          ARTIFACT: "${{ needs.go-build.outputs.go-provenance-name }}"
+          ARTIFACT: "${{ needs.go-build.outputs.go-binary-name }}"
           PROVENANCE: "${{ needs.go-build.outputs.go-provenance-name }}"
         run: |
+          ls -lah
           SLSA_VERIFIER_TESTING=1 slsa-verifier verify-artifact \
             "$ARTIFACT" \
             --provenance-path "$PROVENANCE" \
