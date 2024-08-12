@@ -76,10 +76,9 @@ func runBuild(dry bool, configFile, evalEnvs string) error {
 }
 
 func runProvenanceGeneration(subject, digest, commands, envs, workingDir, rekor string) error {
-	r := sigstore.NewRekor(rekor)
-	s := sigstore.NewDefaultFulcio()
+	s := sigstore.NewDefaultBundleSigner()
 	attBytes, err := pkg.GenerateProvenance(subject, digest,
-		commands, envs, workingDir, s, r, nil)
+		commands, envs, workingDir, s, nil)
 	if err != nil {
 		return err
 	}
