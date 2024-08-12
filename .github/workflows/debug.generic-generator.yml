@@ -105,6 +105,10 @@ jobs:
             --print-provenance
 
   go-build:
+    permissions:
+      id-token: write # To sign the provenance.
+      contents: write # To upload assets to release.
+      actions: read # To read the workflow path.
     uses: ./.github/workflows/builder_go_slsa3.yml
     with:
       go-version: 1.22
