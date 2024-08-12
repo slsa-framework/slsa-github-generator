@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 <!-- toc -->
 
 - [Unreleased](#unreleased)
+  - [Unreleased: Sigstore Bundles for Generic Generators and Go Builder](#unreleased-sigstore-bundles-for-generic-generators-and-go-builder)
   - [Unreleased: Vars context recorded in provenance](#unreleased-vars-context-recorded-in-provenance)
 - [v2.0.0](#v200)
   - [v2.0.0: Breaking Change: upload-artifact and download-artifact](#v200-breaking-change-upload-artifact-and-download-artifact)
@@ -105,6 +106,12 @@ duplication."
 -->
 
 ## Unreleased
+
+### Unreleased: Sigstore Bundles for Generic Generators and Go Builder
+
+The workflows `generator_generic_slsa3.yml`, `generator_container_slsa3.yml`, and `builder_go_slsa3.yml`
+have been updated to produce signed Sigstore Bundles, just like all the other builders
+that use the BYOB framework.
 
 ### Unreleased: Vars context recorded in provenance
 
