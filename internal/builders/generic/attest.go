@@ -22,14 +22,10 @@ import (
 	"fmt"
 	"os"
 	"path"
-	"time"
 
 	"github.com/spf13/cobra"
 
 	intoto "github.com/in-toto/in-toto-golang/in_toto"
-	sigstoreBundle "github.com/sigstore/sigstore-go/pkg/bundle"
-	sigstoreRoot "github.com/sigstore/sigstore-go/pkg/root"
-	sigstoreSign "github.com/sigstore/sigstore-go/pkg/sign"
 	"github.com/slsa-framework/slsa-github-generator/github"
 	"github.com/slsa-framework/slsa-github-generator/internal/builders/common"
 	"github.com/slsa-framework/slsa-github-generator/internal/utils"
@@ -39,7 +35,7 @@ import (
 
 // attestCmd returns the 'attest' command.
 func attestCmd(provider slsa.ClientProvider, check func(error),
-	signer signing.Signer, tlog signing.TransparencyLog,
+	signer signing.Signer,
 ) *cobra.Command {
 	var attPath string
 	var subjectsFilename string
@@ -112,18 +108,7 @@ run in the context of a Github Actions workflow.`,
 				attBytes, err = json.Marshal(p)
 				check(err)
 			} else {
-				// att, err := signer.Sign(ctx, &intoto.Statement{
-				// 	StatementHeader: p.StatementHeader,
-				// 	Predicate:       p.Predicate,
-				// })
-				// check(err)
-
-				// _, err = tlog.Upload(ctx, att)
-				// check(err)
-
-				// attBytes = att.Bytes()
-
-				att, err := makeSigstoreBundleAttestation(ctx, &intoto.Statement{
+				att, err := signer.Sign(ctx, &intoto.Statement{
 					StatementHeader: p.StatementHeader,
 					Predicate:       p.Predicate,
 				})
@@ -153,109 +138,4 @@ run in the context of a Github Actions workflow.`,
 		"Filename containing a formatted list of subjects in the same format as sha256sum (base64 encoded).",
 	)
 	return c
-}
-
-func makeSigstoreBundleAttestation(ctx context.Context, statement *intoto.Statement) (signing.Attestation, error) {
-	fmt.Println("debug: running makeSigstoreBundle")
-	statementBytes, err := json.Marshal(*statement)
-	if err != nil {
-		return nil, err
-	}
-	content := &sigstoreSign.DSSEData{
-		Data:        statementBytes,
-		PayloadType: "application/vnd.in-toto+json",
-	}
-	// content := &sigstoreSign.PlainData{
-	// 	Data: statementBytes,
-	// }
-
-	keypair, err := sigstoreSign.NewEphemeralKeypair(nil)
-	if err != nil {
-		return nil, err
-	}
-
-	oidcClient, err := github.NewOIDCClient()
-	if err != nil {
-		return nil, err
-	}
-	TokenStruct, err := oidcClient.Token(ctx, []string{"sigstore"})
-	if err != nil {
-		return nil, err
-	}
-	rawToken := TokenStruct.RawToken
-
-	// rawToken := ""
-
-	bundleOpts, err := getDefaultBundleOptsWithIdentityToken(&rawToken)
-	innerBundle, err := sigstoreSign.Bundle(content, keypair, *bundleOpts)
-	if err != nil {
-		return nil, err
-	}
-	outerBundle := &sigstoreBundle.ProtobufBundle{
-		Bundle: innerBundle,
-	}
-	bundleBytes, err := outerBundle.MarshalJSON()
-	if err != nil {
-		return nil, err
-	}
-
-	bundleAtt := &sigstoreBundleAtt{
-		cert:  innerBundle.GetVerificationMaterial().GetCertificate().GetRawBytes(),
-		bytes: bundleBytes,
-	}
-
-	fmt.Println(fmt.Sprintf("debug: generated bundle attestation: %s", bundleAtt.Bytes()))
-	return bundleAtt, nil
-}
-
-type sigstoreBundleAtt struct {
-	cert  []byte
-	bytes []byte
-}
-
-func (s *sigstoreBundleAtt) Cert() []byte {
-	return s.cert
-}
-func (s *sigstoreBundleAtt) Bytes() []byte {
-	return s.bytes
-}
-
-func getDefaultBundleOptsWithIdentityToken(identityToken *string) (*sigstoreSign.BundleOptions, error) {
-	bundleOpts := &sigstoreSign.BundleOptions{}
-
-	trustedRoot, err := sigstoreRoot.FetchTrustedRoot()
-	if err != nil {
-		return nil, err
-	}
-	// originalTrustedRoot := trustedRoot
-	bundleOpts.TrustedRoot = trustedRoot
-	// bundleOpts.TrustedRoot = originalTrustedRoot
-	bundleOpts.TrustedRoot = nil
-
-	fulcioOpts := &sigstoreSign.FulcioOptions{
-		BaseURL: "https://fulcio.sigstore.dev",
-		Timeout: time.Duration(30 * time.Second),
-		Retries: 1,
-	}
-	bundleOpts.CertificateProvider = sigstoreSign.NewFulcio(fulcioOpts)
-	bundleOpts.CertificateProviderOptions = &sigstoreSign.CertificateProviderOptions{
-		IDToken: *identityToken,
-	}
-
-	tsaOpts := &sigstoreSign.TimestampAuthorityOptions{
-		URL:     "https://timestamp.githubapp.com/api/v1/timestamp",
-		Timeout: time.Duration(30 * time.Second),
-		Retries: 1,
-	}
-	originalTSAs := bundleOpts.TimestampAuthorities
-	bundleOpts.TimestampAuthorities = append(bundleOpts.TimestampAuthorities, sigstoreSign.NewTimestampAuthority(tsaOpts))
-	bundleOpts.TimestampAuthorities = originalTSAs
-
-	rekorOpts := &sigstoreSign.RekorOptions{
-		BaseURL: "https://rekor.sigstore.dev",
-		Timeout: time.Duration(90 * time.Second),
-		Retries: 1,
-	}
-	bundleOpts.TransparencyLogs = append(bundleOpts.TransparencyLogs, sigstoreSign.NewRekor(rekorOpts))
-	return bundleOpts, nil
 }
