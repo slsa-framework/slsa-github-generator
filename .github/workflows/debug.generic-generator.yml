@@ -94,7 +94,7 @@ jobs:
         with:
           go-version: 1.22
       - name: Setup slsa-verifier
-        run: go install github.com/slsa-framework/slsa-verifier/v2/cli/slsa-verifier@verify-sigstore-go-Bundlev2
+        run: go install github.com/slsa-framework/slsa-verifier/v2/cli/slsa-verifier@verify-sigstore-go-Bundlev3
       - name: Verify
         run: |
           SLSA_VERIFIER_TESTING=1 slsa-verifier verify-artifact \
@@ -131,7 +131,7 @@ jobs:
         with:
           go-version: 1.22
       - name: Setup slsa-verifier
-        run: go install github.com/slsa-framework/slsa-verifier/v2/cli/slsa-verifier@verify-sigstore-go-Bundlev2
+        run: go install github.com/slsa-framework/slsa-verifier/v2/cli/slsa-verifier@verify-sigstore-go-Bundlev3
       - name: Verify
         env:
           ARTIFACT: "${{ needs.go-build.outputs.go-binary-name }}"
