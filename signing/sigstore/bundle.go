@@ -26,7 +26,10 @@ import (
 )
 
 // BundleSigner is used to produce Sigstore Bundles from provenance statements.
-type BundleSigner struct{}
+type BundleSigner struct {
+	fulcioAddr string
+	rekorAddr  string
+}
 
 type sigstoreBundleAtt struct {
 	cert []byte
@@ -45,7 +48,14 @@ func (s *sigstoreBundleAtt) Bytes() []byte {
 
 // NewDefaultBundleSigner creates a new BundleSigner instance.
 func NewDefaultBundleSigner() *BundleSigner {
-	return &BundleSigner{}
+	return NewBundleSigner(DefaultFulcioAddr, DefaultRekorAddr)
+}
+
+func NewBundleSigner(fulcioAddr string, rekorAddr string) *BundleSigner {
+	return &BundleSigner{
+		fulcioAddr: fulcioAddr,
+		rekorAddr:  rekorAddr,
+	}
 }
 
 // Sign signs the given provenance statement and returns the signed Sigstore Bundle.
@@ -78,7 +88,11 @@ func (s *BundleSigner) Sign(ctx context.Context, statement *intoto.Statement) (s
 	rawToken := TokenStruct.RawToken
 
 	// signing opts.
-	bundleOpts, err := getDefaultBundleOptsWithIdentityToken(&rawToken)
+	bundleOpts, err := getBundleOpts(
+		&s.fulcioAddr,
+		&s.rekorAddr,
+		&rawToken,
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -104,12 +118,16 @@ func (s *BundleSigner) Sign(ctx context.Context, statement *intoto.Statement) (s
 	return bundleAtt, nil
 }
 
-// getDefaultBundleOptsWithIdentityToken provides the default opts for sigstoreSign.Bundle().
-func getDefaultBundleOptsWithIdentityToken(identityToken *string) (*sigstoreSign.BundleOptions, error) {
+// getBundleOpts provides the opts for sigstoreSign.Bundle().
+func getBundleOpts(
+	fulcioAddr *string,
+	rekorAddr *string,
+	identityToken *string,
+) (*sigstoreSign.BundleOptions, error) {
 	bundleOpts := &sigstoreSign.BundleOptions{}
 
 	fulcioOpts := &sigstoreSign.FulcioOptions{
-		BaseURL: "https://fulcio.sigstore.dev",
+		BaseURL: *fulcioAddr,
 	}
 	bundleOpts.CertificateProvider = sigstoreSign.NewFulcio(fulcioOpts)
 	bundleOpts.CertificateProviderOptions = &sigstoreSign.CertificateProviderOptions{
@@ -117,7 +135,7 @@ func getDefaultBundleOptsWithIdentityToken(identityToken *string) (*sigstoreSign
 	}
 
 	rekorOpts := &sigstoreSign.RekorOptions{
-		BaseURL: "https://rekor.sigstore.dev",
+		BaseURL: *rekorAddr,
 	}
 	bundleOpts.TransparencyLogs = append(bundleOpts.TransparencyLogs, sigstoreSign.NewRekor(rekorOpts))
 	return bundleOpts, nil

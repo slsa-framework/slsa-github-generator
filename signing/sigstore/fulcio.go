@@ -32,7 +32,7 @@ import (
 )
 
 const (
-	defaultFulcioAddr   = options.DefaultFulcioURL
+	DefaultFulcioAddr   = options.DefaultFulcioURL
 	defaultOIDCIssuer   = options.DefaultOIDCIssuerURL
 	defaultOIDCClientID = "sigstore"
 )
@@ -63,7 +63,7 @@ func (a *attestation) Cert() []byte {
 // NewDefaultFulcio creates a new Fulcio instance using the public Fulcio
 // server and public sigstore OIDC issuer.
 func NewDefaultFulcio() *Fulcio {
-	return NewFulcio(defaultFulcioAddr, defaultOIDCIssuer, defaultOIDCClientID)
+	return NewFulcio(DefaultFulcioAddr, defaultOIDCIssuer, defaultOIDCClientID)
 }
 
 // NewFulcio creates a new Fulcio instance.
