@@ -26,8 +26,7 @@ import (
 )
 
 // BundleSigner is used to produce Sigstore Bundles from provenance statements.
-type BundleSigner struct {
-}
+type BundleSigner struct{}
 
 type sigstoreBundleAtt struct {
 	cert []byte
@@ -80,6 +79,9 @@ func (s *BundleSigner) Sign(ctx context.Context, statement *intoto.Statement) (s
 
 	// signing opts.
 	bundleOpts, err := getDefaultBundleOptsWithIdentityToken(&rawToken)
+	if err != nil {
+		return nil, err
+	}
 
 	// sign.
 	innerBundle, err := sigstoreSign.Bundle(content, keypair, *bundleOpts)
