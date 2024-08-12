@@ -57,7 +57,7 @@ type OIDCToken struct {
 	// ActorID is the unique ID of the actor who triggered the build.
 	ActorID string `json:"actor_id"`
 
-	// RawToken is the unparsed oidc token
+	// RawToken is the unparsed oidc token.
 	RawToken string
 
 	// Audience is the audience for which the token was granted.
