@@ -112,6 +112,7 @@ jobs:
     uses: ./.github/workflows/builder_go_slsa3.yml
     with:
       go-version: 1.22
+      config-file: .github/workflows/configs-container/config-release.yml
       compile-builder: true
 
   go-verify:
