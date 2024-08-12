@@ -319,18 +319,20 @@ jobs:
       go-provenance-name: ${{ steps.sign-prov.outputs.signed-provenance-name }}
       go-provenance-sha256: ${{ steps.sign-prov.outputs.signed-provenance-sha256 }}
     steps:
-      - name: Generate builder
-        id: generate-builder
-        continue-on-error: true
-        uses: slsa-framework/slsa-github-generator/.github/actions/generate-builder@main
+      - name: Checkout builder repository
+        uses: slsa-framework/slsa-github-generator/.github/actions/secure-builder-checkout@main
         with:
           repository: "${{ needs.detect-env.outputs.repository }}"
           ref: "${{ needs.detect-env.outputs.ref }}"
-          go-version: "1.22"
-          binary: "${{ env.BUILDER_BINARY }}"
-          compile-builder: "true"
-          directory: "${{ env.BUILDER_DIR }}"
-          allow-private-repository: ${{ inputs.private-repository }}
+          path: __BUILDER_CHECKOUT_DIR__
+
+      - name: Download builder
+        uses: ./__BUILDER_CHECKOUT_DIR__/.github/actions/secure-download-artifact
+        with:
+          name: "${{ env.BUILDER_BINARY }}-${{ needs.rng.outputs.value }}"
+          path: "${{ env.BUILDER_BINARY }}"
+          sha256: "${{ needs.builder.outputs.go-builder-sha256 }}"
+          set-executable: true
 
       - name: Create and sign provenance
         id: sign-prov
