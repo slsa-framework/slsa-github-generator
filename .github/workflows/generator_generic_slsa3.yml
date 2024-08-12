@@ -96,7 +96,7 @@ on:
         value: ${{ jobs.upload-assets.outputs.release-id }}
       provenance-name:
         description: "The artifact name of the signed provenance. (A file with the intoto.jsonl extension)."
-        value: provenance-name
+        value: ${{ jobs.generator.outputs.provenance-name }}
       # Note: we use this output because there is no buildt-in `outcome` and `result` is always `success`
       # if `continue-on-error` is set to `true`.
       outcome:
