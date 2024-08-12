@@ -25,7 +25,7 @@ env:
   GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 jobs:
-  build:
+  generic-build:
     outputs:
       hashes: ${{ steps.hash.outputs.hashes }}
     runs-on: ubuntu-latest
@@ -61,21 +61,21 @@ jobs:
           if-no-files-found: error
           retention-days: 5
 
-  provenance:
-    needs: build
+  generic-provenance:
+    needs: generic-build
     permissions:
       id-token: write # For signing.
       contents: write # For asset uploads.
       actions: read # For reading workflow info.
     uses: ./.github/workflows/generator_generic_slsa3.yml
     with:
-      base64-subjects: "${{ needs.build.outputs.hashes }}"
+      base64-subjects: "${{ needs.generic-build.outputs.hashes }}"
       compile-generator: true
-      provenance-name: build.intoto.jsonl
+      provenance-name: generic-build.intoto.jsonl
       upload-assets: true
 
-  verify:
-    needs: provenance
+  generic-verify:
+    needs: generic-provenance
     runs-on: ubuntu-latest
     steps:
       - name: Download artifact1
@@ -89,7 +89,7 @@ jobs:
       - name: Download provenance
         uses: actions/download-artifact@v4
         with:
-          name: build.intoto.jsonl
+          name: "${{ needs.generic-provenance.outputs.provenance-name }}"
       - uses: actions/setup-go@v5
         with:
           go-version: 1.22
@@ -99,7 +99,41 @@ jobs:
         run: |
           SLSA_VERIFIER_TESTING=1 slsa-verifier verify-artifact \
             artifact1 artifact2 \
-            --provenance-path build.intoto.jsonl \
+            --provenance-path generic-build.intoto.jsonl \
+            --source-uri github.com/slsa-framework/slsa-github-generator \
+            --source-branch ramonpetgrave64-internal-builder-sigstore-bundle \
+            --print-provenance
+
+  go-build:
+    uses: ./.github/workflows/builder_go_slsa3.yml
+    with:
+      go-version: 1.22
+
+  go-verify:
+    needs: generic-provenance
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: "${{ needs.go-build.outputs.go-binary-name }}"
+      - name: Download provenance
+        uses: actions/download-artifact@v4
+        with:
+          name: "${{ needs.go-build.outputs.go-provenance-name }}"
+      - uses: actions/setup-go@v5
+        with:
+          go-version: 1.22
+      - name: Setup slsa-verifier
+        run: go install github.com/slsa-framework/slsa-verifier/v2/cli/slsa-verifier@verify-sigstore-go-Bundlev2
+      - name: Verify
+        env:
+          ARTIFACT: "${{ needs.go-build.outputs.go-provenance-name }}"
+          PROVENANCE: "${{ needs.go-build.outputs.go-provenance-name }}"
+        run: |
+          SLSA_VERIFIER_TESTING=1 slsa-verifier verify-artifact \
+            "$ARTIFACT" \
+            --provenance-path "$PROVENANCE" \
             --source-uri github.com/slsa-framework/slsa-github-generator \
             --source-branch ramonpetgrave64-internal-builder-sigstore-bundle \
             --print-provenance
