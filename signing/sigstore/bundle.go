@@ -52,6 +52,7 @@ func NewDefaultBundleSigner() *BundleSigner {
 	return NewBundleSigner(DefaultFulcioAddr, DefaultRekorAddr)
 }
 
+// NewBundleSigner creates a new BundleSigner instance.
 func NewBundleSigner(fulcioAddr, rekorAddr string) *BundleSigner {
 	return &BundleSigner{
 		fulcioAddr: fulcioAddr,
