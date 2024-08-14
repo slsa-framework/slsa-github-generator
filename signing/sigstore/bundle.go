@@ -51,7 +51,7 @@ func NewDefaultBundleSigner() *BundleSigner {
 	return NewBundleSigner(DefaultFulcioAddr, DefaultRekorAddr)
 }
 
-func NewBundleSigner(fulcioAddr string, rekorAddr string) *BundleSigner {
+func NewBundleSigner(fulcioAddr, rekorAddr string) *BundleSigner {
 	return &BundleSigner{
 		fulcioAddr: fulcioAddr,
 		rekorAddr:  rekorAddr,

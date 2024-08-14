@@ -32,6 +32,7 @@ import (
 )
 
 const (
+	// DefaultFulcioAddr is the default Sigstore Fulcio URL.
 	DefaultFulcioAddr   = options.DefaultFulcioURL
 	defaultOIDCIssuer   = options.DefaultOIDCIssuerURL
 	defaultOIDCClientID = "sigstore"
