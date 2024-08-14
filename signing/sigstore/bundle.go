@@ -17,6 +17,7 @@ package sigstore
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 
 	intoto "github.com/in-toto/in-toto-golang/in_toto"
 	sigstoreBundle "github.com/sigstore/sigstore-go/pkg/bundle"
@@ -89,6 +90,7 @@ func (s *BundleSigner) Sign(ctx context.Context, statement *intoto.Statement) (s
 
 	// signing opts.
 	bundleOpts, err := getBundleOpts(
+		ctx,
 		&s.fulcioAddr,
 		&s.rekorAddr,
 		&rawToken,
@@ -102,6 +104,15 @@ func (s *BundleSigner) Sign(ctx context.Context, statement *intoto.Statement) (s
 	if err != nil {
 		return nil, err
 	}
+
+	// print the logIndex.
+	// Bundle will have already verified that the TLog entries are signed.
+	logIndex := innerBundle.GetVerificationMaterial().GetTlogEntries()[0].GetLogIndex()
+	fmt.Printf("Signed attestation is in rekor with UUID %d.\n", logIndex)
+	fmt.Printf("You could use rekor-cli to view the log entry details:\n\n"+
+		"  $ rekor-cli get --log-index %[1]d\n\n"+
+		"In addition to that, you could also use the Rekor Search UI:\n\n"+
+		"  https://search.sigstore.dev/?logIndex=%[1]d", logIndex)
 
 	// marshall to json.
 	bundleWrapper := &sigstoreBundle.ProtobufBundle{
@@ -120,11 +131,14 @@ func (s *BundleSigner) Sign(ctx context.Context, statement *intoto.Statement) (s
 
 // getBundleOpts provides the opts for sigstoreSign.Bundle().
 func getBundleOpts(
+	ctx context.Context,
 	fulcioAddr *string,
 	rekorAddr *string,
 	identityToken *string,
 ) (*sigstoreSign.BundleOptions, error) {
-	bundleOpts := &sigstoreSign.BundleOptions{}
+	bundleOpts := &sigstoreSign.BundleOptions{
+		Context: ctx,
+	}
 
 	fulcioOpts := &sigstoreSign.FulcioOptions{
 		BaseURL: *fulcioAddr,

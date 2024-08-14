@@ -113,6 +113,9 @@ The workflows `generator_generic_slsa3.yml` and `builder_go_slsa3.yml`
 have been updated to produce signed Sigstore Bundles, just like all the other builders
 that use the BYOB framework.
 
+The workflow logs will now print a LogIndex, rather than a LogUUID. Both are equally searchanble on
+https://search.sigstore.dev/.
+
 ### Unreleased: Vars context recorded in provenance
 
 - **Updated**: GitHub `vars` context is now recorded in provenance for the generic and
