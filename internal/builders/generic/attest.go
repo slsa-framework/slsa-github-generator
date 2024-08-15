@@ -44,7 +44,7 @@ func attestCmd(provider slsa.ClientProvider, check func(error),
 		Use:   "attest",
 		Short: "Create a signed SLSA provenance attestation from a Github Action",
 		Long: `Generate and sign SLSA provenance from a Github Action to form an attestation
-and upload to a Rekor transparency log. This command assumes that it is being
+and create a Sigstore Bundle. This command assumes that it is being
 run in the context of a Github Actions workflow.`,
 
 		Run: func(_ *cobra.Command, _ []string) {
