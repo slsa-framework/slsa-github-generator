@@ -1,0 +1,146 @@
+# Copyright 2023 SLSA Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# a test workflow for debugging the generic generator
+
+name: debug-generic-generator
+
+on:
+  push:
+
+permissions: read-all
+
+env:
+  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+jobs:
+  generic-build:
+    outputs:
+      hashes: ${{ steps.hash.outputs.hashes }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Build artifacts
+        run: |
+          # These are some amazing artifacts.
+          echo "foo" > artifact1
+          echo "bar" > artifact2
+
+      - name: Generate hashes
+        shell: bash
+        id: hash
+        run: |
+          # sha256sum generates sha256 hash for all artifacts.
+          # base64 -w0 encodes to base64 and outputs on a single line.
+          # sha256sum artifact1 artifact2 ... | base64 -w0
+          echo "hashes=$(sha256sum artifact1 artifact2 | base64 -w0)" >> "$GITHUB_OUTPUT"
+
+      - name: Upload artifact1
+        uses: actions/upload-artifact@v4
+        with:
+          name: artifact1
+          path: artifact1
+          if-no-files-found: error
+          retention-days: 5
+
+      - name: Upload artifact2
+        uses: actions/upload-artifact@v4
+        with:
+          name: artifact2
+          path: artifact2
+          if-no-files-found: error
+          retention-days: 5
+
+  generic-provenance:
+    needs: generic-build
+    permissions:
+      id-token: write # For signing.
+      contents: write # For asset uploads.
+      actions: read # For reading workflow info.
+    uses: ./.github/workflows/generator_generic_slsa3.yml
+    with:
+      base64-subjects: "${{ needs.generic-build.outputs.hashes }}"
+      compile-generator: true
+      provenance-name: generic-build.intoto.jsonl
+      upload-assets: true
+
+  generic-verify:
+    needs: generic-provenance
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download artifact1
+        uses: actions/download-artifact@v4
+        with:
+          name: artifact1
+      - name: Download artifact2
+        uses: actions/download-artifact@v4
+        with:
+          name: artifact2
+      - name: Download provenance
+        uses: actions/download-artifact@v4
+        with:
+          name: "${{ needs.generic-provenance.outputs.provenance-name }}"
+      - uses: actions/setup-go@v5
+        with:
+          go-version: 1.22
+      - name: Setup slsa-verifier
+        run: go install github.com/slsa-framework/slsa-verifier/v2/cli/slsa-verifier@verify-sigstore-go-Bundlev3
+      - name: Verify
+        run: |
+          SLSA_VERIFIER_TESTING=1 slsa-verifier verify-artifact \
+            artifact1 artifact2 \
+            --provenance-path generic-build.intoto.jsonl \
+            --source-uri github.com/slsa-framework/slsa-github-generator \
+            --source-branch ramonpetgrave64-internal-builder-sigstore-bundlev2 \
+            --print-provenance
+
+  go-build:
+    permissions:
+      id-token: write # To sign the provenance.
+      contents: write # To upload assets to release.
+      actions: read # To read the workflow path.
+    uses: ./.github/workflows/builder_go_slsa3.yml
+    with:
+      go-version: 1.22
+      config-file: .github/workflows/configs-container/config-release.yml
+      compile-builder: true
+
+  go-verify:
+    needs: [generic-provenance, go-build]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: "${{ needs.go-build.outputs.go-binary-name }}"
+      - name: Download provenance
+        uses: actions/download-artifact@v4
+        with:
+          name: "${{ needs.go-build.outputs.go-provenance-name }}"
+      - uses: actions/setup-go@v5
+        with:
+          go-version: 1.22
+      - name: Setup slsa-verifier
+        run: go install github.com/slsa-framework/slsa-verifier/v2/cli/slsa-verifier@verify-sigstore-go-Bundlev3
+      - name: Verify
+        env:
+          ARTIFACT: "${{ needs.go-build.outputs.go-binary-name }}"
+          PROVENANCE: "${{ needs.go-build.outputs.go-provenance-name }}"
+        run: |
+          ls -lah
+          SLSA_VERIFIER_TESTING=1 slsa-verifier verify-artifact \
+            "$ARTIFACT" \
+            --provenance-path "$PROVENANCE" \
+            --source-uri github.com/slsa-framework/slsa-github-generator \
+            --source-branch ramonpetgrave64-internal-builder-sigstore-bundlev2 \
+            --print-provenance
