@@ -21,6 +21,7 @@ import (
 
 	intoto "github.com/in-toto/in-toto-golang/in_toto"
 	sigstoreBundle "github.com/sigstore/sigstore-go/pkg/bundle"
+	sigstoreRoot "github.com/sigstore/sigstore-go/pkg/root"
 	sigstoreSign "github.com/sigstore/sigstore-go/pkg/sign"
 	"github.com/slsa-framework/slsa-github-generator/github"
 	"github.com/slsa-framework/slsa-github-generator/signing"
@@ -49,15 +50,7 @@ func (s *sigstoreBundleAtt) Bytes() []byte {
 
 // NewDefaultBundleSigner creates a new BundleSigner instance.
 func NewDefaultBundleSigner() *BundleSigner {
-	return NewBundleSigner(DefaultFulcioAddr, DefaultRekorAddr)
-}
-
-// NewBundleSigner creates a new BundleSigner instance.
-func NewBundleSigner(fulcioAddr, rekorAddr string) *BundleSigner {
-	return &BundleSigner{
-		fulcioAddr: fulcioAddr,
-		rekorAddr:  rekorAddr,
-	}
+	return &BundleSigner{}
 }
 
 // Sign signs the given provenance statement and returns the signed Sigstore Bundle.
@@ -90,12 +83,7 @@ func (s *BundleSigner) Sign(ctx context.Context, statement *intoto.Statement) (s
 	rawToken := TokenStruct.RawToken
 
 	// signing opts.
-	bundleOpts, err := getBundleOpts(
-		ctx,
-		&s.fulcioAddr,
-		&s.rekorAddr,
-		&rawToken,
-	)
+	bundleOpts, err := getBundleOpts(ctx, &rawToken)
 	if err != nil {
 		return nil, err
 	}
@@ -133,16 +121,20 @@ func (s *BundleSigner) Sign(ctx context.Context, statement *intoto.Statement) (s
 // getBundleOpts provides the opts for sigstoreSign.Bundle().
 func getBundleOpts(
 	ctx context.Context,
-	fulcioAddr *string,
-	rekorAddr *string,
 	identityToken *string,
 ) (*sigstoreSign.BundleOptions, error) {
 	bundleOpts := &sigstoreSign.BundleOptions{
 		Context: ctx,
 	}
 
+	trustedRoot, err := sigstoreRoot.FetchTrustedRoot()
+	if err != nil {
+		return nil, err
+	}
+	bundleOpts.TrustedRoot = trustedRoot
+
 	fulcioOpts := &sigstoreSign.FulcioOptions{
-		BaseURL: *fulcioAddr,
+		BaseURL: defaultFulcioAddr,
 	}
 	bundleOpts.CertificateProvider = sigstoreSign.NewFulcio(fulcioOpts)
 	bundleOpts.CertificateProviderOptions = &sigstoreSign.CertificateProviderOptions{
@@ -150,7 +142,7 @@ func getBundleOpts(
 	}
 
 	rekorOpts := &sigstoreSign.RekorOptions{
-		BaseURL: *rekorAddr,
+		BaseURL: DefaultRekorAddr,
 	}
 	bundleOpts.TransparencyLogs = append(bundleOpts.TransparencyLogs, sigstoreSign.NewRekor(rekorOpts))
 	return bundleOpts, nil
