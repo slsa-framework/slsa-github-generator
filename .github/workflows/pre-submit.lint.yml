@@ -80,6 +80,8 @@ jobs:
       - run: make markdownlint
 
   golangci-lint:
+    permissions:
+        checks: write # allow annotations in PRs.
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
@@ -93,7 +95,7 @@ jobs:
         name: golangci-lint
         with:
           install-mode: goinstall
-          version: v1.59.1
+          version: v1.60.3
 
   shellcheck:
     runs-on: ubuntu-latest
