@@ -28,10 +28,7 @@ import (
 )
 
 // BundleSigner is used to produce Sigstore Bundles from provenance statements.
-type BundleSigner struct {
-	fulcioAddr string
-	rekorAddr  string
-}
+type BundleSigner struct{}
 
 type sigstoreBundleAtt struct {
 	cert []byte
@@ -104,7 +101,7 @@ func (s *BundleSigner) Sign(ctx context.Context, statement *intoto.Statement) (s
 		"  https://search.sigstore.dev/?logIndex=%[1]d", logIndex)
 
 	// marshall to json.
-	bundleWrapper := &sigstoreBundle.ProtobufBundle{
+	bundleWrapper := &sigstoreBundle.Bundle{
 		Bundle: innerBundle,
 	}
 	bundleBytes, err := bundleWrapper.MarshalJSON()

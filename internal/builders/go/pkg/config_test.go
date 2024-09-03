@@ -199,7 +199,7 @@ func Test_ConfigFromFile(t *testing.T) {
 			}
 
 			if !cmp.Equal(*cfg, tt.config) {
-				t.Errorf(cmp.Diff(*cfg, tt.config))
+				t.Error(cmp.Diff(*cfg, tt.config))
 			}
 		})
 	}
