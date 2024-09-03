@@ -80,22 +80,28 @@ jobs:
       - run: make markdownlint
 
   golangci-lint:
-    permissions:
-        checks: write # allow annotations in PRs.
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
       - uses: actions/setup-go@0a12ed9d6a96ab950c8f026ed9f722fe0da7ef32 # v5.0.2
         with:
-          # go-version-file: "go.mod"
-          go-version: 1.22
-          # not needed but gets rid of warnings
-          cache: false
-      - uses: golangci/golangci-lint-action@a4f60bb28d35aeee14e6880718e0c85ff1882e64 # v6.0.1
-        name: golangci-lint
-        with:
-          install-mode: goinstall
-          version: v1.60.3
+          go-version-file: "go.mod"
+      - env:
+          GOLANGCI_LINT_VERSION: "1.60.3"
+          GOLANGCI_LINT_CHECKSUM: "4037af8122871f401ed874852a471e54f147ff8ce80f5a304e020503bdb806ef"
+        run: |
+          set -euo pipefail
+
+          #Install golangci-lint
+          curl -sSLo golangci-lint.tar.gz "https://github.com/golangci/golangci-lint/releases/download/v${GOLANGCI_LINT_VERSION}/golangci-lint-${GOLANGCI_LINT_VERSION}-linux-amd64.tar.gz"
+          echo "golangci-lint checksum is $(sha256sum golangci-lint.tar.gz | awk '{ print $1 }')"
+          echo "expected checksum is $GOLANGCI_LINT_CHECKSUM"
+          echo "$GOLANGCI_LINT_CHECKSUM  golangci-lint.tar.gz" | sha256sum --strict --check --status || exit 1
+          tar xf golangci-lint.tar.gz
+          mv "golangci-lint-${GOLANGCI_LINT_VERSION}-linux-amd64/golangci-lint" /usr/local/bin
+
+          # Run golangci-lint
+          make golangci-lint
 
   shellcheck:
     runs-on: ubuntu-latest
