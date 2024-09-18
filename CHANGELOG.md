@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - [Unreleased](#unreleased)
   - [Unreleased: Vars context recorded in provenance](#unreleased-vars-context-recorded-in-provenance)
+    - [Container generator](#container-generator)
+      - [New Features](#new-features)
 - [v2.0.0](#v200)
   - [v2.0.0: Breaking Change: upload-artifact and download-artifact](#v200-breaking-change-upload-artifact-and-download-artifact)
   - [v2.0.0: Breaking Change: attestation-name Workflow Input and Output](#v200-breaking-change-attestation-name-workflow-input-and-output)
@@ -33,19 +35,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [v1.6.0](#v160)
   - [Summary of changes](#summary-of-changes)
     - [Go builder](#go-builder)
-      - [New Features](#new-features)
-    - [Generic generator](#generic-generator)
       - [New Features](#new-features-1)
-    - [Container generator](#container-generator)
+    - [Generic generator](#generic-generator)
+      - [New Features](#new-features-2)
+    - [Container generator](#container-generator-1)
   - [Changelog since v1.5.0](#changelog-since-v150)
 - [v1.5.0](#v150)
   - [Summary of changes](#summary-of-changes-1)
     - [Go builder](#go-builder-1)
-      - [New Features](#new-features-2)
-    - [Generic generator](#generic-generator-1)
       - [New Features](#new-features-3)
-    - [Container generator](#container-generator-1)
+    - [Generic generator](#generic-generator-1)
       - [New Features](#new-features-4)
+    - [Container generator](#container-generator-2)
+      - [New Features](#new-features-5)
   - [Changelog since v1.4.0](#changelog-since-v140)
 - [v1.4.0](#v140)
   - [What's Changed](#whats-changed)
@@ -111,6 +113,12 @@ duplication."
 - **Updated**: GitHub `vars` context is now recorded in provenance for the generic and
   container generators. The `vars` context cannot affect the build in the Go
   builder so it is not recorded.
+
+#### Container generator
+
+##### New Features
+
+- A new [`recursive`](https://github.com/slsa-framework/slsa-github-generator/blob/v1.5.0/internal/builders/container/README.md#workflow-inputs) input was added to allow users to pass `--recursive` option to the provenance attestation, usefull when signing `multi-arch` images.
 
 ## v2.0.0
 
