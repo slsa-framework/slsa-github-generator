@@ -60,7 +60,7 @@
          <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-javadoc-plugin</artifactId>
-            <version>3.6.3</version>
+            <version>3.10.1</version>
             <configuration>
                <javadocExecutable>${java.home}/bin/javadoc</javadocExecutable>
             </configuration>
@@ -127,7 +127,7 @@
          <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-deploy-plugin</artifactId>
-            <version>3.1.2</version>
+            <version>3.1.3</version>
             <executions>
               <execution>
                   <id>deploy-file</id>
