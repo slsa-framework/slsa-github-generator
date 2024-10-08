@@ -94,7 +94,7 @@ func (s *BundleSigner) Sign(ctx context.Context, statement *intoto.Statement) (s
 	// print the logIndex.
 	// Bundle will have already verified that the TLog entries are signed.
 	logIndex := innerBundle.GetVerificationMaterial().GetTlogEntries()[0].GetLogIndex()
-	fmt.Printf("Signed attestation is in rekor with UUID %d.\n", logIndex)
+	fmt.Printf("Signed attestation is in rekor with Log Index %d.\n", logIndex)
 	fmt.Printf("You could use rekor-cli to view the log entry details:\n\n"+
 		"  $ rekor-cli get --log-index %[1]d\n\n"+
 		"In addition to that, you could also use the Rekor Search UI:\n\n"+
