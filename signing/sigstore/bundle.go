@@ -73,11 +73,11 @@ func (s *BundleSigner) Sign(ctx context.Context, statement *intoto.Statement) (s
 	if err != nil {
 		return nil, err
 	}
-	TokenStruct, err := oidcClient.Token(ctx, []string{"sigstore"})
+	tokenStruct, err := oidcClient.Token(ctx, []string{"sigstore"})
 	if err != nil {
 		return nil, err
 	}
-	rawToken := TokenStruct.RawToken
+	rawToken := tokenStruct.RawToken
 
 	// signing opts.
 	bundleOpts, err := getBundleOpts(ctx, &rawToken)
