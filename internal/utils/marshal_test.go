@@ -54,7 +54,7 @@ func Test_MarshalToString(t *testing.T) {
 				t.Errorf("MarshalToString: %v", err)
 			}
 			if !cmp.Equal(r, tt.expected) {
-				t.Errorf(cmp.Diff(r, tt.expected))
+				t.Error(cmp.Diff(r, tt.expected))
 			}
 		})
 	}
@@ -99,7 +99,7 @@ func Test_UnmarshalList(t *testing.T) {
 			}
 
 			if !cmp.Equal(r, tt.expected) {
-				t.Errorf(cmp.Diff(r, tt.expected))
+				t.Error(cmp.Diff(r, tt.expected))
 			}
 		})
 	}

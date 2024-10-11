@@ -53,7 +53,7 @@ func Test_CreateBuildDefinition(t *testing.T) {
 	}
 
 	if diff := cmp.Diff(got, want); diff != "" {
-		t.Errorf(diff)
+		t.Error(diff)
 	}
 }
 
@@ -206,7 +206,7 @@ func Test_inspectArtifacts(t *testing.T) {
 	want := []intoto.Subject{s1, s2, s3, s4}
 
 	if diff := cmp.Diff(got, want); diff != "" {
-		t.Errorf(diff)
+		t.Error(diff)
 	}
 }
 
@@ -256,7 +256,7 @@ func Test_inspectArtifactsNoRoot(t *testing.T) {
 	want := []intoto.Subject{s1, s2, s3, s4}
 
 	if diff := cmp.Diff(got, want); diff != "" {
-		t.Errorf(diff)
+		t.Error(diff)
 	}
 }
 
@@ -317,7 +317,7 @@ func Test_ParseProvenance(t *testing.T) {
 	}
 
 	if diff := cmp.Diff(got, want); diff != "" {
-		t.Errorf(diff)
+		t.Error(diff)
 	}
 }
 
@@ -345,7 +345,7 @@ func Test_ProvenanceStatementSLSA1_ToDockerBuildConfig(t *testing.T) {
 		ForceCheckout:   true,
 	}
 	if diff := cmp.Diff(got, want); diff != "" {
-		t.Errorf(diff)
+		t.Error(diff)
 	}
 }
 
