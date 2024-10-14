@@ -1,6 +1,6 @@
 module github.com/slsa-framework/slsa-github-generator
 
-go 1.21
+go 1.23.1
 
 require (
 	github.com/coreos/go-oidc/v3 v3.10.0
