@@ -90,7 +90,6 @@ func Test_isAllowedEnvVariable(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		tt := tt // Re-initializing variable so it is not changed while executing the closure below
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -126,7 +125,6 @@ func Test_getOutputBinaryPath(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		tt := tt // Re-initializing variable so it is not changed while executing the closure below
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -177,7 +175,6 @@ func Test_isAllowedArg(t *testing.T) {
 		})
 	}
 	for _, tt := range tests {
-		tt := tt // Re-initializing variable so it is not changed while executing the closure below
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -442,7 +439,6 @@ func Test_generateOutputFilename(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt // Re-initializing variable so it is not changed while executing the closure below
 		t.Run(tt.name, func(t *testing.T) {
 			// Note: disable parallelism to avoid env variable clobbering between tests.
 			// t.Parallel()
@@ -595,7 +591,6 @@ func Test_SetArgEnvVariables(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt // Re-initializing variable so it is not changed while executing the closure below
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -704,7 +699,6 @@ func Test_generateEnvVariables(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt // Re-initializing variable so it is not changed while executing the closure below
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -862,7 +856,6 @@ func Test_generateLdflags(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt // Re-initializing variable so it is not changed while executing the closure below
 		t.Run(tt.name, func(t *testing.T) {
 			// Disable to avoid env clobbering between tests.
 			// t.Parallel()
@@ -954,7 +947,6 @@ func Test_generateFlags(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt // Re-initializing variable so it is not changed while executing the closure below
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -1024,7 +1016,6 @@ func Test_generateCommand(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt // Re-initializing variable so it is not changed while executing the closure below
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 

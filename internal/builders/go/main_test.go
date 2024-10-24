@@ -298,7 +298,6 @@ func Test_runBuild(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt // Re-initializing variable so it is not changed while executing the closure below
 		t.Run(tt.name, func(t *testing.T) {
 			// *** WARNING: do not enable t.Parallel(), because we're writing to environment variables ***.
 			file, err := os.CreateTemp("", "")
