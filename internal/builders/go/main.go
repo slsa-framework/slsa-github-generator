@@ -75,11 +75,11 @@ func runBuild(dry bool, configFile, evalEnvs string) error {
 	return nil
 }
 
-func runProvenanceGeneration(subject, digest, commands, envs, workingDir string) error {
-	s := sigstore.NewDefaultBundleSigner()
-
+func runProvenanceGeneration(subject, digest, commands, envs, workingDir, rekor string) error {
+	r := sigstore.NewRekor(rekor)
+	s := sigstore.NewDefaultFulcio()
 	attBytes, err := pkg.GenerateProvenance(subject, digest,
-		commands, envs, workingDir, s, nil)
+		commands, envs, workingDir, s, r, nil)
 	if err != nil {
 		return err
 	}
@@ -118,6 +118,7 @@ func main() {
 	provenanceCommand := provenanceCmd.String("command", "", "command used to compile the binary")
 	provenanceEnv := provenanceCmd.String("env", "", "env variables used to compile the binary")
 	provenanceWorkingDir := provenanceCmd.String("workingDir", "", "working directory used to issue compilation commands")
+	provenanceRekor := provenanceCmd.String("rekor", sigstore.DefaultRekorAddr, "rekor server to use for provenance")
 
 	// Expect a sub-command.
 	if len(os.Args) < 2 {
@@ -144,7 +145,7 @@ func main() {
 		}
 
 		err := runProvenanceGeneration(*provenanceName, *provenanceDigest,
-			*provenanceCommand, *provenanceEnv, *provenanceWorkingDir)
+			*provenanceCommand, *provenanceEnv, *provenanceWorkingDir, *provenanceRekor)
 		check(err)
 
 	default:

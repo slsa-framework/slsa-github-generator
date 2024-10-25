@@ -39,9 +39,6 @@ const (
 
 // OIDCToken represents the contents of a GitHub OIDC JWT token.
 type OIDCToken struct {
-	// Expiry is the expiration date of the token.
-	Expiry time.Time
-
 	// Issuer is the token issuer.
 	Issuer string
 
@@ -57,8 +54,8 @@ type OIDCToken struct {
 	// ActorID is the unique ID of the actor who triggered the build.
 	ActorID string `json:"actor_id"`
 
-	// RawToken is the unparsed oidc token.
-	RawToken string
+	// Expiry is the expiration date of the token.
+	Expiry time.Time
 
 	// Audience is the audience for which the token was granted.
 	Audience []string
@@ -249,8 +246,6 @@ func (c *OIDCClient) Token(ctx context.Context, audience []string) (*OIDCToken, 
 	if err := c.verifyClaims(token); err != nil {
 		return nil, err
 	}
-
-	token.RawToken = tokenPayload
 
 	return token, nil
 }
