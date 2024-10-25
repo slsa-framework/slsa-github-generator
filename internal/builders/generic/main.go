@@ -36,7 +36,7 @@ For more information on SLSA, visit https://slsa.dev`,
 		},
 	}
 	c.AddCommand(versionCmd())
-	c.AddCommand(attestCmd(nil, checkExit, sigstore.NewDefaultBundleSigner()))
+	c.AddCommand(attestCmd(nil, checkExit, sigstore.NewDefaultFulcio(), sigstore.NewDefaultRekor()))
 	return c
 }
 
