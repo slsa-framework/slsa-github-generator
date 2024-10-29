@@ -1,51 +1,99 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": ["config:best-practices", "schedule:monthly", ":gitSignOff"],
+  "extends": [
+    "config:best-practices",
+    "schedule:monthly",
+    ":gitSignOff"
+  ],
   "vulnerabilityAlerts": {
     "schedule": "* 0-4 * * *"
   },
   "configWarningReuseIssue": false,
-  "postUpdateOptions": ["gomodTidy", "gomodUpdateImportPaths"],
+  "postUpdateOptions": [
+    "gomodTidy",
+    "gomodUpdateImportPaths"
+  ],
   "packageRules": [
     {
-      "matchManagers": ["github-actions"],
-      "excludePackageNames": ["slsa-framework/slsa-github-generator"],
+      "matchManagers": [
+        "github-actions"
+      ],
       "groupName": "github-actions",
-      "pinDigests": true
+      "pinDigests": true,
+      "matchPackageNames": [
+        "!slsa-framework/slsa-github-generator"
+      ]
     },
     {
-      "matchManagers": ["github-actions"],
-      "matchPackageNames": ["slsa-framework/slsa-github-generator"],
+      "matchManagers": [
+        "github-actions"
+      ],
+      "matchPackageNames": [
+        "slsa-framework/slsa-github-generator"
+      ],
       "groupName": "github-actions",
       "pinDigests": false
     },
     {
-      "matchManagers": ["dockerfile"],
-      "matchPackageNames": ["golang"],
-      "matchUpdateTypes": ["minor", "patch"],
+      "matchManagers": [
+        "dockerfile"
+      ],
+      "matchPackageNames": [
+        "golang"
+      ],
+      "matchUpdateTypes": [
+        "minor",
+        "patch"
+      ],
       "groupName": "golang"
     },
     {
-      "matchManagers": ["gomod"],
-      "matchPackageNames": ["go"],
-      "matchUpdateTypes": ["minor", "patch"],
+      "matchManagers": [
+        "gomod"
+      ],
+      "matchPackageNames": [
+        "go"
+      ],
+      "matchUpdateTypes": [
+        "minor",
+        "patch"
+      ],
       "groupName": "golang"
     },
     {
-      "matchManagers": ["gomod"],
-      "excludePackageNames": ["go", "github.com/in-toto/in-toto-golang"],
-      "matchUpdateTypes": ["minor", "patch"],
-      "groupName": "go"
+      "matchManagers": [
+        "gomod"
+      ],
+      "matchUpdateTypes": [
+        "minor",
+        "patch"
+      ],
+      "groupName": "go",
+      "matchPackageNames": [
+        "!go",
+        "!github.com/in-toto/in-toto-golang"
+      ]
     },
     {
-      "matchManagers": ["npm"],
-      "matchDepTypes": ["dependencies"],
-      "matchUpdateTypes": ["minor", "patch"],
+      "matchManagers": [
+        "npm"
+      ],
+      "matchDepTypes": [
+        "dependencies"
+      ],
+      "matchUpdateTypes": [
+        "minor",
+        "patch"
+      ],
       "groupName": "npm"
     },
     {
-      "matchManagers": ["npm"],
-      "matchDepTypes": ["devDependencies"],
+      "matchManagers": [
+        "npm"
+      ],
+      "matchDepTypes": [
+        "devDependencies"
+      ],
       "groupName": "npm dev"
     }
   ]

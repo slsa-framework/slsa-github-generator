@@ -52,7 +52,7 @@ func Test_LoadBuildConfigFromFile(t *testing.T) {
 	}
 
 	if diff := cmp.Diff(got, want); diff != "" {
-		t.Errorf(diff)
+		t.Error(diff)
 	}
 }
 
@@ -85,6 +85,6 @@ func Test_NewDockerBuildConfig(t *testing.T) {
 	}
 
 	if diff := cmp.Diff(got, want); diff != "" {
-		t.Errorf(diff)
+		t.Error(diff)
 	}
 }

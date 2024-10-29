@@ -1,6 +1,6 @@
 module slsa-framework/example-package
 
-go 1.21
+go 1.23.1
 
 require github.com/pborman/uuid v1.2.1
 
