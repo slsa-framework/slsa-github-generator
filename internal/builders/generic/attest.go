@@ -23,9 +23,9 @@ import (
 	"os"
 	"path"
 
-	intoto "github.com/in-toto/in-toto-golang/in_toto"
 	"github.com/spf13/cobra"
 
+	intoto "github.com/in-toto/in-toto-golang/in_toto"
 	"github.com/slsa-framework/slsa-github-generator/github"
 	"github.com/slsa-framework/slsa-github-generator/internal/builders/common"
 	"github.com/slsa-framework/slsa-github-generator/internal/utils"
@@ -35,7 +35,7 @@ import (
 
 // attestCmd returns the 'attest' command.
 func attestCmd(provider slsa.ClientProvider, check func(error),
-	signer signing.Signer, tlog signing.TransparencyLog,
+	signer signing.Signer,
 ) *cobra.Command {
 	var attPath string
 	var subjectsFilename string
@@ -44,7 +44,7 @@ func attestCmd(provider slsa.ClientProvider, check func(error),
 		Use:   "attest",
 		Short: "Create a signed SLSA provenance attestation from a Github Action",
 		Long: `Generate and sign SLSA provenance from a Github Action to form an attestation
-and upload to a Rekor transparency log. This command assumes that it is being
+and create a Sigstore Bundle. This command assumes that it is being
 run in the context of a Github Actions workflow.`,
 
 		Run: func(_ *cobra.Command, _ []string) {
@@ -112,9 +112,6 @@ run in the context of a Github Actions workflow.`,
 					StatementHeader: p.StatementHeader,
 					Predicate:       p.Predicate,
 				})
-				check(err)
-
-				_, err = tlog.Upload(ctx, att)
 				check(err)
 
 				attBytes = att.Bytes()
