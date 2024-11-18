@@ -47,7 +47,7 @@ jobs:
         env:
           FILE: ${{ env.BUILD_ARTIFACT }}
         run: |
-          echo "hashes=$(sha256sum $FILE | base64 -w0)" >> "$GITHUB_OUTPUT"
+          echo "hashes=$(sha256sum "${FILE}" | base64 -w0)" >> "${GITHUB_OUTPUT}"
 
   attest:
     needs: [build]
