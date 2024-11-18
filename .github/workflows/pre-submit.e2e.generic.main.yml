@@ -75,6 +75,7 @@ jobs:
           ARTIFACT: ./${{ env.BUILD_ARTIFACT }}
           PROVENANCE: ./${{ needs.attest.outputs.provenance-name }}
           SOURCE: github.com/${{ github.repository }}
-        run: slsa-verifier verify-artifact "$ARTIFACT" \
-              --provenance-path "$PROVENANCE" \
-              --source-uri "$SOURCE"
+        run: |
+          slsa-verifier verify-artifact --provenance-path "$PROVENANCE" \
+                                        --source-uri "$SOURCE" \
+                                        "$ARTIFACT"
