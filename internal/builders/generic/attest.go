@@ -88,7 +88,7 @@ run in the context of a Github Actions workflow.`,
 				b.WithClients(provider)
 			} else if utils.IsPresubmitTests() {
 				// TODO(github.com/slsa-framework/slsa-github-generator/issues/124): Remove
-				b.WithClients(&slsa.NilClientProvider{})
+				b.WithClients(&slsa.DefaultClientProvider{})
 			}
 
 			g := slsa.NewHostedActionsGenerator(&b)
@@ -96,7 +96,7 @@ run in the context of a Github Actions workflow.`,
 				g.WithClients(provider)
 			} else if utils.IsPresubmitTests() {
 				// TODO(github.com/slsa-framework/slsa-github-generator/issues/124): Remove
-				g.WithClients(&slsa.NilClientProvider{})
+				g.WithClients(&slsa.DefaultClientProvider{})
 			}
 
 			p, err := g.Generate(ctx)
