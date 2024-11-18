@@ -17,7 +17,6 @@ package main
 import (
 	"context"
 	"crypto/sha256"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
@@ -104,18 +103,25 @@ run in the context of a Github Actions workflow.`,
 
 			// Note: the path is validated within CreateNewFileUnderCurrentDirectory().
 			var attBytes []byte
-			if utils.IsPresubmitTests() {
-				attBytes, err = json.Marshal(p)
-				check(err)
-			} else {
-				att, err := signer.Sign(ctx, &intoto.Statement{
-					StatementHeader: p.StatementHeader,
-					Predicate:       p.Predicate,
-				})
-				check(err)
+			// if utils.IsPresubmitTests() {
+			// 	attBytes, err = json.Marshal(p)
+			// 	check(err)
+			// } else {
+			// 	att, err := signer.Sign(ctx, &intoto.Statement{
+			// 		StatementHeader: p.StatementHeader,
+			// 		Predicate:       p.Predicate,
+			// 	})
+			// 	check(err)
 
-				attBytes = att.Bytes()
-			}
+			// 	attBytes = att.Bytes()
+			// }
+			att, err := signer.Sign(ctx, &intoto.Statement{
+				StatementHeader: p.StatementHeader,
+				Predicate:       p.Predicate,
+			})
+			check(err)
+
+			attBytes = att.Bytes()
 
 			f, err := utils.CreateNewFileUnderCurrentDirectory(attPath, os.O_WRONLY)
 			check(err)
