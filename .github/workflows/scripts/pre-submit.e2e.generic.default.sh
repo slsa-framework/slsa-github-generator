@@ -19,7 +19,8 @@ set -euo pipefail
 source "./.github/workflows/scripts/e2e-verify.common.sh"
 
 # TODO(github.com/slsa-framework/slsa-github-generator/issues/129): Address base64 output format.
-ATTESTATION=$(cat "$PROVENANCE")
+# ATTESTATION=$(cat "$PROVENANCE")
+ATTESTATION=$(cat "$PROVENANCE" | jq -r '.dsseEnvelope.payload' | base64 -d | jq)
 
 # Verify common provenance fields.
 e2e_verify_common_all "$ATTESTATION"
