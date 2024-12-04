@@ -87,6 +87,11 @@ on:
         description: "If set, provenance is pushed to this registry instead of image registry."
         required: false
         type: string
+      recursive:
+        description: "If set, for the specified multi-arch image, additionally sign each discrete image."
+        required: false
+        type: boolean
+        default: false
     outputs:
       # Note: we use this output because there is no buildt-in `outcome` and `result` is always `success`
       # if `continue-on-error` is set to `true`.
@@ -268,6 +273,7 @@ jobs:
           GITHUB_CONTEXT: "${{ toJSON(github) }}"
           VARS_CONTEXT: "${{ toJSON(vars) }}"
           UNTRUSTED_PROVENANCE_REPOSITORY: "${{ inputs.provenance-repository }}"
+          RECURSIVE: "${{ inputs.recursive }}"
         run: |
           set -euo pipefail
 
@@ -283,6 +289,7 @@ jobs:
           cosign attest --predicate="$predicate_name" \
             --type slsaprovenance \
             --yes \
+            --recursive="${RECURSIVE}" \
             "${UNTRUSTED_IMAGE}@${UNTRUSTED_DIGEST}"
 
       - name: Final outcome
