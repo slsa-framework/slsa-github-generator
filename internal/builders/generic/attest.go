@@ -17,15 +17,14 @@ package main
 import (
 	"context"
 	"crypto/sha256"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
 	"path"
 
-	intoto "github.com/in-toto/in-toto-golang/in_toto"
 	"github.com/spf13/cobra"
 
+	intoto "github.com/in-toto/in-toto-golang/in_toto"
 	"github.com/slsa-framework/slsa-github-generator/github"
 	"github.com/slsa-framework/slsa-github-generator/internal/builders/common"
 	"github.com/slsa-framework/slsa-github-generator/internal/utils"
@@ -35,7 +34,7 @@ import (
 
 // attestCmd returns the 'attest' command.
 func attestCmd(provider slsa.ClientProvider, check func(error),
-	signer signing.Signer, tlog signing.TransparencyLog,
+	signer signing.Signer,
 ) *cobra.Command {
 	var attPath string
 	var subjectsFilename string
@@ -44,7 +43,7 @@ func attestCmd(provider slsa.ClientProvider, check func(error),
 		Use:   "attest",
 		Short: "Create a signed SLSA provenance attestation from a Github Action",
 		Long: `Generate and sign SLSA provenance from a Github Action to form an attestation
-and upload to a Rekor transparency log. This command assumes that it is being
+and create a Sigstore Bundle. This command assumes that it is being
 run in the context of a Github Actions workflow.`,
 
 		Run: func(_ *cobra.Command, _ []string) {
@@ -88,7 +87,7 @@ run in the context of a Github Actions workflow.`,
 				b.WithClients(provider)
 			} else if utils.IsPresubmitTests() {
 				// TODO(github.com/slsa-framework/slsa-github-generator/issues/124): Remove
-				b.WithClients(&slsa.NilClientProvider{})
+				b.WithClients(&slsa.DefaultClientProvider{})
 			}
 
 			g := slsa.NewHostedActionsGenerator(&b)
@@ -96,7 +95,7 @@ run in the context of a Github Actions workflow.`,
 				g.WithClients(provider)
 			} else if utils.IsPresubmitTests() {
 				// TODO(github.com/slsa-framework/slsa-github-generator/issues/124): Remove
-				g.WithClients(&slsa.NilClientProvider{})
+				g.WithClients(&slsa.DefaultClientProvider{})
 			}
 
 			p, err := g.Generate(ctx)
@@ -104,21 +103,25 @@ run in the context of a Github Actions workflow.`,
 
 			// Note: the path is validated within CreateNewFileUnderCurrentDirectory().
 			var attBytes []byte
-			if utils.IsPresubmitTests() {
-				attBytes, err = json.Marshal(p)
-				check(err)
-			} else {
-				att, err := signer.Sign(ctx, &intoto.Statement{
-					StatementHeader: p.StatementHeader,
-					Predicate:       p.Predicate,
-				})
-				check(err)
+			// if utils.IsPresubmitTests() {
+			// 	attBytes, err = json.Marshal(p)
+			// 	check(err)
+			// } else {
+			// 	att, err := signer.Sign(ctx, &intoto.Statement{
+			// 		StatementHeader: p.StatementHeader,
+			// 		Predicate:       p.Predicate,
+			// 	})
+			// 	check(err)
 
-				_, err = tlog.Upload(ctx, att)
-				check(err)
+			// 	attBytes = att.Bytes()
+			// }
+			att, err := signer.Sign(ctx, &intoto.Statement{
+				StatementHeader: p.StatementHeader,
+				Predicate:       p.Predicate,
+			})
+			check(err)
 
-				attBytes = att.Bytes()
-			}
+			attBytes = att.Bytes()
 
 			f, err := utils.CreateNewFileUnderCurrentDirectory(attPath, os.O_WRONLY)
 			check(err)

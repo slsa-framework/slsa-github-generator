@@ -21,7 +21,7 @@ import (
 	"github.com/slsa-framework/slsa-github-generator/slsa"
 )
 
-func TestGenerateProvenance_withErr(t *testing.T) {
+func TestGenerateProvenance(t *testing.T) {
 	// Disable pre-submit detection.
 	// TODO(github.com/slsa-framework/slsa-github-generator/issues/124): Remove
 	t.Setenv("GITHUB_EVENT_NAME", "non_event")
@@ -30,10 +30,13 @@ func TestGenerateProvenance_withErr(t *testing.T) {
 	sha256 := "2e0390eb024a52963db7b95e84a9c2b12c004054a7bad9a97ec0c7c89d4681d2"
 	_, err := GenerateProvenance(
 		"foo", sha256, "", "", "/home/foo",
-		&testutil.TestSigner{}, &testutil.TransparencyLogWithErr{},
+		&testutil.TestSigner{},
 		&slsa.NilClientProvider{},
 	)
-	if want, got := testutil.ErrTransparencyLog, err; want != got {
-		t.Errorf("expected error, want: %v, got: %v", want, got)
+
+	var want error
+	got := err
+	if want != got {
+		t.Errorf("unexpected error, want: %v, got: %v", want, got)
 	}
 }
