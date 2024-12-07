@@ -37,7 +37,7 @@ jobs:
       sha256: ${{ steps.upload.outputs.sha256 }}
       sha256-noroot: ${{ steps.upload-noroot.outputs.sha256 }}
     steps:
-      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
       - name: Create folder
         run: |
           set -euo pipefail
@@ -100,7 +100,7 @@ jobs:
     needs: [secure-upload-folder]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Download in new folder
         uses: ./.github/actions/secure-download-folder
@@ -180,7 +180,7 @@ jobs:
       contents: read
       issues: write
     steps:
-      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           repository: slsa-framework/example-package
           ref: main
@@ -194,7 +194,7 @@ jobs:
       contents: read
       issues: write
     steps:
-      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           repository: slsa-framework/example-package
           ref: main

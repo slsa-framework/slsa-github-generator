@@ -39,7 +39,7 @@ jobs:
     permissions:
       id-token: write # Needed to detect the current reusable repository and ref.
     steps:
-      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
       - name: Detect the builder ref
         id: detect
         uses: slsa-framework/slsa-github-generator/.github/actions/detect-workflow-js@main
@@ -71,7 +71,7 @@ jobs:
       contents: read
       issues: write
     steps:
-      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           repository: slsa-framework/example-package
           ref: main
@@ -85,7 +85,7 @@ jobs:
       contents: read
       issues: write
     steps:
-      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           repository: slsa-framework/example-package
           ref: main
