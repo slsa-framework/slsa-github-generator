@@ -37,7 +37,7 @@ runs:
         path: "${{ inputs.path }}"
 
     - name: Upload the artifact
-      uses: actions/upload-artifact@89ef406dd8d7e03cfd12d9e0a4a378f454709029 # v4.3.5
+      uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4.4.3
       with:
         name: "${{ inputs.name }}"
         path: "${{ inputs.path }}"
