@@ -27,6 +27,6 @@ jobs:
     permissions:
       issues: write
     steps:
-      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
       - name: Issue Reopener
-        uses: ianlewis/todo-issue-reopener@339a05bfcc934adf6aa425b968a2d2f2af4f12ad # v1.2.1
+        uses: ianlewis/todo-issue-reopener@1a99cfd93fb95eb4f212a1ebaf3e9ef8ba4c46f8 # v1.4.0

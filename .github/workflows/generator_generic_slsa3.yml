@@ -239,7 +239,7 @@ jobs:
       - name: Upload the signed provenance
         id: upload-prov
         continue-on-error: true
-        uses: actions/upload-artifact@89ef406dd8d7e03cfd12d9e0a4a378f454709029 # v4.3.5
+        uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4.4.3
         with:
           name: "${{ steps.sign-prov.outputs.provenance-name }}"
           path: "${{ steps.sign-prov.outputs.provenance-name }}"
@@ -285,7 +285,7 @@ jobs:
           sha256: "${{ needs.generator.outputs.provenance-sha256 }}"
 
       - name: Upload provenance
-        uses: softprops/action-gh-release@c062e08bd532815e2082a85e87e3ef29c3e6d191 # v2.0.8
+        uses: softprops/action-gh-release@7b4da11513bf3f43f9999e90eabced41ab8bb048 # v2.2.0
         id: release
         with:
           draft: ${{ inputs.draft-release }}
