@@ -47,7 +47,7 @@ runs:
     - name: Checkout the project repository
       uses: slsa-framework/slsa-github-generator/.github/actions/secure-project-checkout@main # needed because we run javadoc and sources.
     - name: Set up Java for publishing to Maven Central Repository
-      uses: actions/setup-java@99b8673ff64fbf99d8d325f52d9a5bdedb8483e9 # v4.2.1
+      uses: actions/setup-java@8df1039502a15bceb9433410b1a100fbe190c53b # v4.5.0
       env:
         MAVEN_USERNAME: ${{ inputs.maven-username }}
         MAVEN_PASSWORD: ${{ inputs.maven-password }}
