@@ -22,14 +22,14 @@
     "tscommon": "file:../tscommon/tscommon-0.0.0.tgz"
   },
   "devDependencies": {
-    "@types/node": "20.12.12",
+    "@types/node": "20.17.10",
     "@typescript-eslint/eslint-plugin": "6.21.0",
     "@typescript-eslint/parser": "6.21.0",
-    "@vercel/ncc": "0.38.1",
-    "eslint": "8.57.0",
+    "@vercel/ncc": "0.38.3",
+    "eslint": "8.57.1",
     "eslint-plugin-github": "4.10.2",
-    "eslint-plugin-prettier": "5.1.3",
-    "prettier": "3.2.5",
-    "typescript": "5.4.5"
+    "eslint-plugin-prettier": "5.2.1",
+    "prettier": "3.4.2",
+    "typescript": "5.7.2"
   }
 }
