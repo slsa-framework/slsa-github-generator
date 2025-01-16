@@ -249,7 +249,7 @@ func Test_attestCmd_default_single_artifact(t *testing.T) {
 		t.Errorf("unexpected failure: %v", err)
 	}
 	defer os.Remove(fn)
-	c := attestCmd(&slsa.NilClientProvider{}, checkTest(t), &testutil.TestSigner{}, &testutil.TestTransparencyLog{})
+	c := attestCmd(&slsa.NilClientProvider{}, checkTest(t), &testutil.TestSigner{})
 	c.SetOut(new(bytes.Buffer))
 	c.SetArgs([]string{
 		"--subjects-filename", fn,
@@ -294,7 +294,7 @@ b5bb9d8014a0f9b1d61e21e796d78dccdf1352f23cd32812f4850b878ae4944c  artifact2`)))
 		t.Errorf("unexpected failure: %v", err)
 	}
 	defer os.Remove(fn)
-	c := attestCmd(&slsa.NilClientProvider{}, checkTest(t), &testutil.TestSigner{}, &testutil.TestTransparencyLog{})
+	c := attestCmd(&slsa.NilClientProvider{}, checkTest(t), &testutil.TestSigner{})
 	c.SetOut(new(bytes.Buffer))
 	c.SetArgs([]string{
 		"--subjects-filename", fn,
@@ -337,7 +337,7 @@ func Test_attestCmd_custom_provenance_name(t *testing.T) {
 		t.Errorf("unexpected failure: %v", err)
 	}
 	defer os.Remove(fn)
-	c := attestCmd(&slsa.NilClientProvider{}, checkTest(t), &testutil.TestSigner{}, &testutil.TestTransparencyLog{})
+	c := attestCmd(&slsa.NilClientProvider{}, checkTest(t), &testutil.TestSigner{})
 	c.SetOut(new(bytes.Buffer))
 	c.SetArgs([]string{
 		"--subjects-filename", fn,
@@ -393,7 +393,7 @@ func Test_attestCmd_invalid_extension(t *testing.T) {
 		t.Errorf("unexpected failure: %v", err)
 	}
 	defer os.Remove(fn)
-	c := attestCmd(&slsa.NilClientProvider{}, check, &testutil.TestSigner{}, &testutil.TestTransparencyLog{})
+	c := attestCmd(&slsa.NilClientProvider{}, check, &testutil.TestSigner{})
 	c.SetOut(new(bytes.Buffer))
 	c.SetArgs([]string{
 		"--subjects-filename", fn,
@@ -447,7 +447,7 @@ func Test_attestCmd_invalid_path(t *testing.T) {
 		t.Errorf("unexpected failure: %v", err)
 	}
 	defer os.Remove(fn)
-	c := attestCmd(&slsa.NilClientProvider{}, check, &testutil.TestSigner{}, &testutil.TestTransparencyLog{})
+	c := attestCmd(&slsa.NilClientProvider{}, check, &testutil.TestSigner{})
 	c.SetOut(new(bytes.Buffer))
 	c.SetArgs([]string{
 		"--subjects-filename", fn,
@@ -491,7 +491,7 @@ func Test_attestCmd_subdirectory_artifact(t *testing.T) {
 		t.Errorf("unexpected failure: %v", err)
 	}
 	defer os.Remove(fn)
-	c := attestCmd(&slsa.NilClientProvider{}, checkTest(t), &testutil.TestSigner{}, &testutil.TestTransparencyLog{})
+	c := attestCmd(&slsa.NilClientProvider{}, checkTest(t), &testutil.TestSigner{})
 	c.SetOut(new(bytes.Buffer))
 	c.SetArgs([]string{
 		"--subjects-filename", fn,

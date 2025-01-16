@@ -65,7 +65,7 @@ func (b *goProvenanceBuild) BuildConfig(context.Context) (interface{}, error) {
 // attestation.
 // Spec: https://slsa.dev/provenance/v0.2
 func GenerateProvenance(name, digest, command, envs, workingDir string,
-	s signing.Signer, r signing.TransparencyLog, provider slsa.ClientProvider,
+	s signing.Signer, provider slsa.ClientProvider,
 ) ([]byte, error) {
 	gh, err := github.GetWorkflowContext()
 	if err != nil {
@@ -180,14 +180,5 @@ func GenerateProvenance(name, digest, command, envs, workingDir string,
 	if err != nil {
 		return nil, err
 	}
-
-	// Upload the signed attestation to rekor.
-	logEntry, err := r.Upload(ctx, att)
-	if err != nil {
-		return nil, err
-	}
-
-	fmt.Printf("Uploaded signed attestation to rekor with UUID %s.\n", logEntry.UUID())
-
 	return att.Bytes(), nil
 }
