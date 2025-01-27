@@ -42,10 +42,10 @@ jobs:
         with:
           go-version-file: "go.mod"
 
-      - name: Set Node.js 16
+      - name: Set Node.js 20
         uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af # v4.1.0
         with:
-          node-version: 16
+          node-version: 20
 
       - name: unit tests
         run: |
