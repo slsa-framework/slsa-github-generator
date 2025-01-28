@@ -77,10 +77,10 @@ jobs:
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
-      - name: Set Node.js 18
-        uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af # v4.1.0
+      - name: Set Node.js 22
+        uses: actions/setup-node@1d0ff469b7ec7b3cb9d8673fde0c81c44821de2a # v4.2.0
         with:
-          node-version: 18
+          node-version: 22
 
       - name: Rebuild the dist/ directory
         working-directory: ${{ matrix.action }}
@@ -98,7 +98,7 @@ jobs:
           fi
 
       # If index.js was different from expected, upload the expected version as an artifact
-      - uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4.4.3
+      - uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4.6.0
         if: ${{ failure() && steps.diff.conclusion == 'failure' }}
         with:
           name: dist
@@ -197,7 +197,7 @@ jobs:
         uses: ./__BUILDER_CHECKOUT_DIR__/.github/actions/secure-project-checkout-node
         with:
           path: __PROJECT_CHECKOUT_DIR__
-          node-version: 16
+          node-version: 22
 
   secure-upload-folder:
     runs-on: ubuntu-latest
