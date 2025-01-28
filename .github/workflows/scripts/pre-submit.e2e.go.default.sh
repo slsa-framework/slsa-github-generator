@@ -41,7 +41,7 @@ LDFLAGS=$(e2e_this_file | cut -d '.' -f4 | grep -v noldflags)
 e2e_verify_common_all "$ATTESTATION"
 
 # Verify Go specific environment vars are set
-e2e_verify_predicate_invocation_environment "$ATTESTATION" "os" "ubuntu22"
+e2e_verify_predicate_invocation_environment "$ATTESTATION" "os" "ubuntu24"
 e2e_verify_predicate_invocation_environment "$ATTESTATION" "arch" "X64"
 
 # Verify the subject and build type
