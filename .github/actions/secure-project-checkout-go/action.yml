@@ -65,7 +65,7 @@ runs:
         fi
 
     - name: Set up Go environment
-      uses: actions/setup-go@0a12ed9d6a96ab950c8f026ed9f722fe0da7ef32 # v5.0.2
+      uses: actions/setup-go@f111f3307d8850f501ac008e886eec1fd1932a34 # v5.3.0
       with:
         go-version: ${{ steps.validate.outputs.go_version }}
         go-version-file: ${{ steps.validate.outputs.go_version_file }}
