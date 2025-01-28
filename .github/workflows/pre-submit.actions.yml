@@ -77,10 +77,10 @@ jobs:
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
-      - name: Set Node.js 20
+      - name: Set Node.js 22
         uses: actions/setup-node@1d0ff469b7ec7b3cb9d8673fde0c81c44821de2a # v4.2.0
         with:
-          node-version: 20
+          node-version: 22
 
       - name: Rebuild the dist/ directory
         working-directory: ${{ matrix.action }}
@@ -197,7 +197,7 @@ jobs:
         uses: ./__BUILDER_CHECKOUT_DIR__/.github/actions/secure-project-checkout-node
         with:
           path: __PROJECT_CHECKOUT_DIR__
-          node-version: 16
+          node-version: 22
 
   secure-upload-folder:
     runs-on: ubuntu-latest
