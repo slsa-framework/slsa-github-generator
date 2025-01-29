@@ -31,6 +31,7 @@
     "yaml": "2.5.1"
   },
   "devDependencies": {
+    "@types/node": "20.17.16",
     "@types/jest": "29.5.14",
     "@types/make-fetch-happen": "10.0.4",
     "@typescript-eslint/eslint-plugin": "6.21.0",
