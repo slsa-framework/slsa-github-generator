@@ -216,6 +216,7 @@ Inputs:
 | `gcp-service-account`            | Email address or unique identifier of the Google Cloud service account for which to generate credentials. For example:<br>`my-service-account@my-project.iam.gserviceaccount.com`                                                                                                       |
 | `provenance-registry-username`   | Username when publishing to provenance registry (option 'provenance-registry') instead of image registry. Either `provenance-registry-username` input or `provenance-registry-username` secret is required.                                                                             |
 | `provenance-registry`            | If set, provenance is pushed to this registry instead of image registry. (e.g. `gcr.io/my-new-repo`)                                                                                                                                                                                    |
+| `recursive`                      | If set, attestation is performed recursively on the image. Usefull when a multi-arch image is used.                                                                                                                                                                                     |
 
 Secrets:
 
