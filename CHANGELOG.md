@@ -9,9 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- toc -->
 
-- [Unreleased](#unreleased)
-  - [Unreleased: Sigstore Bundles for Generic Generator and Go Builder](#unreleased-sigstore-bundles-for-generic-generator-and-go-builder)
-  - [Unreleased: Vars context recorded in provenance](#unreleased-vars-context-recorded-in-provenance)
+- [v2.1.0](#v210)
+  - [v2.1.0: Sigstore Bundles for Generic Generator and Go Builder](#unreleased-sigstore-bundles-for-generic-generator-and-go-builder)
+  - [v2.1.0: Vars context recorded in provenance](#unreleased-vars-context-recorded-in-provenance)
 - [v2.0.0](#v200)
   - [v2.0.0: Breaking Change: upload-artifact and download-artifact](#v200-breaking-change-upload-artifact-and-download-artifact)
   - [v2.0.0: Breaking Change: attestation-name Workflow Input and Output](#v200-breaking-change-attestation-name-workflow-input-and-output)
@@ -105,9 +105,9 @@ Use the format "X.Y.Z: Go builder" etc. for format headers to avoid header name
 duplication."
 -->
 
-## Unreleased
+## v2.1.0
 
-### Unreleased: Sigstore Bundles for Generic Generator and Go Builder
+### v2.1.0: Sigstore Bundles for Generic Generator and Go Builder
 
 The workflows `generator_generic_slsa3.yml` and `builder_go_slsa3.yml`
 have been updated to produce signed Sigstore Bundles, just like all the other builders
@@ -116,7 +116,7 @@ that use the BYOB framework.
 The workflow logs will now print a LogIndex, rather than a LogUUID. Both are equally searchanble on
 https://search.sigstore.dev/.
 
-### Unreleased: Vars context recorded in provenance
+### v2.1.0: Vars context recorded in provenance
 
 - **Updated**: GitHub `vars` context is now recorded in provenance for the generic and
   container generators. The `vars` context cannot affect the build in the Go
