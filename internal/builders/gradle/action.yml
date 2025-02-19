@@ -101,7 +101,7 @@ runs:
     # when multiple workflows run concurrently.
     - name: Generate random 16-byte value (32-char hex encoded)
       id: rng
-      uses: slsa-framework/slsa-github-generator/.github/actions/rng@v2.1.0-rc.1
+      uses: slsa-framework/slsa-github-generator/.github/actions/rng@v2.1.0-rc.2
 
     - name: Put release artifacts in one directory
       shell: bash
@@ -128,7 +128,7 @@ runs:
         [[ "${PROJECT_ROOT}" -ef "${GITHUB_WORKSPACE}" ]] || mv "${PROJECT_ROOT}"/build "${GITHUB_WORKSPACE}"/
     - name: Upload build dir
       id: upload-build-dir
-      uses: slsa-framework/slsa-github-generator/.github/actions/secure-upload-folder@v2.1.0-rc.1
+      uses: slsa-framework/slsa-github-generator/.github/actions/secure-upload-folder@v2.1.0-rc.2
       with:
         name: "${{ steps.rng.outputs.random }}-build"
         path: build
