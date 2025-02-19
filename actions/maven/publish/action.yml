@@ -79,7 +79,7 @@ runs:
       uses: slsa-framework/slsa-github-generator/.github/actions/secure-builder-checkout@v2.1.0-rc.0
       with:
         repository: slsa-framework/slsa-github-generator
-        ref: v2.0.0-rc.0
+        ref: v2.1.0-rc.0
         path: __BUILDER_CHECKOUT_DIR__
 
     - name: Publish to the Maven Central Repository
