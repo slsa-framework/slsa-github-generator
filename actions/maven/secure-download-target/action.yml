@@ -29,7 +29,7 @@ runs:
   using: "composite"
   steps:
     - name: Download the target directory
-      uses: slsa-framework/slsa-github-generator/.github/actions/secure-download-folder@v2.1.0-rc0
+      uses: slsa-framework/slsa-github-generator/.github/actions/secure-download-folder@v2.1.0-rc.0
       with:
         name: ${{ inputs.name }}
         path: ${{ inputs.path }}
