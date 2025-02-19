@@ -62,7 +62,7 @@ jobs:
       id-token: write # For signing.
       contents: write # For asset uploads.
       actions: read # For the entrypoint.
-    uses: slsa-framework/slsa-github-generator/.github/workflows/builder_go_slsa3.yml@v2.1.0-rc.0
+    uses: slsa-framework/slsa-github-generator/.github/workflows/builder_go_slsa3.yml@v2.1.0-rc.1
     with:
       go-version: "1.21"
       config-file: .github/workflows/configs-container/config-release.yml
@@ -75,7 +75,7 @@ jobs:
       id-token: write # For signing.
       contents: write # For asset uploads.
       actions: read # For the entrypoint.
-    uses: slsa-framework/slsa-github-generator/.github/workflows/builder_go_slsa3.yml@v2.1.0-rc.0
+    uses: slsa-framework/slsa-github-generator/.github/workflows/builder_go_slsa3.yml@v2.1.0-rc.1
     with:
       go-version: "1.21"
       config-file: .github/workflows/configs-generic/config-release.yml
@@ -88,7 +88,7 @@ jobs:
       id-token: write # For signing.
       contents: write # For asset uploads.
       actions: read # For the entrypoint.
-    uses: slsa-framework/slsa-github-generator/.github/workflows/builder_go_slsa3.yml@v2.1.0-rc.0
+    uses: slsa-framework/slsa-github-generator/.github/workflows/builder_go_slsa3.yml@v2.1.0-rc.1
     with:
       go-version: "1.21"
       config-file: .github/workflows/configs-go/config-release.yml
@@ -101,7 +101,7 @@ jobs:
       id-token: write # For signing.
       contents: write # For asset uploads.
       actions: read # For the entrypoint.
-    uses: slsa-framework/slsa-github-generator/.github/workflows/builder_go_slsa3.yml@v2.1.0-rc.0
+    uses: slsa-framework/slsa-github-generator/.github/workflows/builder_go_slsa3.yml@v2.1.0-rc.1
     with:
       go-version: "1.21"
       config-file: .github/workflows/configs-docker/config-release.yml
