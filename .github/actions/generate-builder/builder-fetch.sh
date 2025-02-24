@@ -101,7 +101,7 @@ chmod a+x "$VERIFIER_RELEASE_BINARY"
   "$BUILDER_RELEASE_BINARY" || exit 6
 
 builder_commit=$(gh api /repos/"$BUILDER_REPOSITORY"/git/ref/tags/"$builder_tag" | jq -r '.object.sha')
-provenance_commit=$(jq -r '.payload' <"$BUILDER_RELEASE_BINARY.intoto.jsonl" | base64 -d | jq -r '.predicate.materials[0].digest.sha1')
+provenance_commit=$(jq -r '.dsseEnvelope.payload' <"$BUILDER_RELEASE_BINARY.intoto.jsonl" | base64 -d | jq -r '.predicate.materials[0].digest.sha1')
 if [[ "$builder_commit" != "$provenance_commit" ]]; then
   echo "Builder commit sha $builder_commit != provenance material $provenance_commit"
   exit 5
