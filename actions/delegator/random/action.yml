@@ -31,4 +31,4 @@ runs:
   steps:
     - name: Generate random value
       id: rng
-      uses: slsa-framework/slsa-github-generator/.github/actions/rng@v2.1.0
+      uses: slsa-framework/slsa-github-generator/.github/actions/rng@main
