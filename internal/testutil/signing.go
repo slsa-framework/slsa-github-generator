@@ -19,7 +19,7 @@ import (
 	"errors"
 
 	intoto "github.com/in-toto/in-toto-golang/in_toto"
-	"github.com/slsa-framework/slsa-github-generator/signing"
+	"github.com/slsa-framework/slsa-github-generator/v2/signing"
 )
 
 // TestAttestation is a basic Attestation implementation.

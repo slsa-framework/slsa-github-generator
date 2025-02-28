@@ -23,7 +23,7 @@ import (
 	"strings"
 
 	toml "github.com/pelletier/go-toml"
-	"github.com/slsa-framework/slsa-github-generator/internal/utils"
+	"github.com/slsa-framework/slsa-github-generator/v2/internal/utils"
 )
 
 // BuildConfig is a collection of parameters to use for building the artifact.
