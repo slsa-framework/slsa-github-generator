@@ -209,7 +209,7 @@ jobs:
           allow-private-repository: ${{ inputs.rekor-log-public }}
 
       - name: Upload builder
-        uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4.6.0
+        uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1 # v4.6.1
         with:
           name: "${{ env.BUILDER_BINARY }}-${{ needs.rng.outputs.value }}"
           path: "${{ env.BUILDER_BINARY }}"
@@ -306,7 +306,7 @@ jobs:
       - id: auth
         name: Authenticate to Google Cloud
         if: inputs.gcp-workload-identity-provider != ''
-        uses: google-github-actions/auth@6fc4af4b145ae7821d527454aa9bd537d1f2dc5f # v2.1.7
+        uses: google-github-actions/auth@71f986410dfbc7added4569d411d040a91dc6935 # v2.1.8
         with:
           token_format: "access_token"
           workload_identity_provider: ${{ inputs.gcp-workload-identity-provider }}
@@ -462,7 +462,7 @@ jobs:
         # TODO(https://github.com/slsa-framework/slsa-github-generator/issues/1655): Use a
         # secure upload or verify this against the SLSA layout file.
         id: upload-artifacts
-        uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4.6.0
+        uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1 # v4.6.1
         with:
           name: ${{ steps.build.outputs.build-outputs-name }}
           path: /tmp/build-outputs-${{ needs.rng.outputs.value }}
@@ -535,7 +535,7 @@ jobs:
       - name: Upload unsigned intoto attestations file for pull request
         if: ${{ github.event_name == 'pull_request' }}
         id: upload-unsigned
-        uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4.6.0
+        uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1 # v4.6.1
         with:
           name: "${{ env.OUTPUT_FOLDER }}-${{ needs.rng.outputs.value }}"
           path: "attestations-${{ needs.rng.outputs.value }}"
@@ -556,7 +556,7 @@ jobs:
       - name: Upload the signed attestations
         id: upload-signed
         if: ${{ github.event_name != 'pull_request' }}
-        uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4.6.0
+        uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1 # v4.6.1
         with:
           name: "${{ env.OUTPUT_FOLDER }}-${{ needs.rng.outputs.value }}"
           path: "${{ env.OUTPUT_FOLDER }}-${{ needs.rng.outputs.value }}"
@@ -584,7 +584,7 @@ jobs:
       # TODO(https://github.com/slsa-framework/slsa-github-generator/issues/1655): Use the SLSA
       # layout files and their checksums to validate the artifacts.
       - name: Download artifacts
-        uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4.1.8
+        uses: actions/download-artifact@cc203385981b70ca67e1cc392babf9cc229d5806 # v4.1.9
         with:
           name: "${{ needs.build.outputs.build-outputs-name }}"
           path: "${{ needs.build.outputs.build-outputs-name }}"
@@ -592,7 +592,7 @@ jobs:
       # TODO(https://github.com/slsa-framework/slsa-github-generator/issues/1655): Use the
       # secure-folder-download action.
       - name: Download provenance
-        uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4.1.8
+        uses: actions/download-artifact@cc203385981b70ca67e1cc392babf9cc229d5806 # v4.1.9
         with:
           name: "${{ needs.provenance.outputs.provenance-name }}"
           path: "${{ needs.provenance.outputs.provenance-name }}"
