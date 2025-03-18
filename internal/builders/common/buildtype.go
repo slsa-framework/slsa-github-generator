@@ -14,7 +14,7 @@
 
 package common
 
-import "github.com/slsa-framework/slsa-github-generator/slsa"
+import "github.com/slsa-framework/slsa-github-generator/v2/slsa"
 
 // GenericBuild is a very generic build type where build type can be specified.
 type GenericBuild struct {
