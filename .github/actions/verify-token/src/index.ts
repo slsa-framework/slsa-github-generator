@@ -141,9 +141,8 @@ async function run(): Promise<void> {
       rawTokenObj.tool.actions.build_artifacts.path,
     );
 
-    // No validation needed for the builder inputs,
+    // NOTE: No validation needed for the builder inputs,
     // they may be empty.
-    // TODO(#1780): test empty inputs.
 
     // Extract certificate information.
     const [toolURI, toolRepository, toolRef, toolSha, toolPath] =
