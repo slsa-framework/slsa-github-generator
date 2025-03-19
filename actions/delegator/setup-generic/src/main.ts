@@ -14,24 +14,11 @@ limitations under the License.
 import * as github from "@actions/github";
 import * as core from "@actions/core";
 import * as process from "process";
-import { sign } from "sigstore";
+import { sign, verify } from "sigstore";
 import * as tscommon from "tscommon";
 
 async function run(): Promise<void> {
   try {
-    /* Test locally:
-        $ env INPUT_SLSA-WORKFLOW-RECIPIENT="laurentsimon/slsa-delegated-tool" \
-        INPUT_SLSA-REKOR-LOG-PUBLIC=true \
-        INPUT_SLSA-RUNNER-LABEL="ubuntu-latest" \
-        INPUT_SLSA-BUILD-ACTION-PATH="./actions/build-artifacts-composite" \
-        INPUT_SLSA-WORKFLOW-INPUTS="{\"name1\":\"value1\",\"name2\":\"value2\",\"name3\":\"value3\",\"name4\":\"value4\"}" \
-        INPUT_SLSA-WORKFLOW-INPUTS-MASK="name2, name4" \
-        INPUT_SLSA-CHECKOUT-FETCH-DEPTH="2" \
-        INPUT_SLSA-CHECKOUT-REPOSITORY-SHA1="abcdef" \
-        INPUT_SLSA-VERSION="v1" \
-        nodejs ./dist/index.js
-    */
-
     const slsaVersion = core.getInput("slsa-version");
     if (!["v1.0", "v0.2"].includes(slsaVersion)) {
       throw new Error(`Unsupported slsa-version: ${slsaVersion}`);
@@ -132,8 +119,7 @@ async function run(): Promise<void> {
 
     // Verify just to double check.
     // NOTE: this is an offline verification.
-    // TODO(#1668): re-enable verification.
-    // await sigstore.verify(bundle, Buffer.from(unsignedB64Token));
+    await verify(bundle, Buffer.from(unsignedB64Token));
     const bundleStr = JSON.stringify(bundle);
 
     const bundleB64 = Buffer.from(bundleStr).toString("base64");
