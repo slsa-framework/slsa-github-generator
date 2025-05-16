@@ -29,8 +29,8 @@ import (
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/spf13/cobra"
 
-	"github.com/slsa-framework/slsa-github-generator/internal/builders/docker/pkg"
-	"github.com/slsa-framework/slsa-github-generator/internal/utils"
+	"github.com/slsa-framework/slsa-github-generator/v2/internal/builders/docker/pkg"
+	"github.com/slsa-framework/slsa-github-generator/v2/internal/utils"
 )
 
 // DryRunCmd returns a new *cobra.Command that validates the input flags, and
