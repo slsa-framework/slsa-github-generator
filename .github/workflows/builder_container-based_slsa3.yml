@@ -209,7 +209,7 @@ jobs:
           allow-private-repository: ${{ inputs.rekor-log-public }}
 
       - name: Upload builder
-        uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1 # v4.6.1
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: "${{ env.BUILDER_BINARY }}-${{ needs.rng.outputs.value }}"
           path: "${{ env.BUILDER_BINARY }}"
@@ -306,7 +306,7 @@ jobs:
       - id: auth
         name: Authenticate to Google Cloud
         if: inputs.gcp-workload-identity-provider != ''
-        uses: google-github-actions/auth@71f986410dfbc7added4569d411d040a91dc6935 # v2.1.8
+        uses: google-github-actions/auth@ba79af03959ebeac9769e648f473a284504d9193 # v2.1.10
         with:
           token_format: "access_token"
           workload_identity_provider: ${{ inputs.gcp-workload-identity-provider }}
@@ -462,7 +462,7 @@ jobs:
         # TODO(https://github.com/slsa-framework/slsa-github-generator/issues/1655): Use a
         # secure upload or verify this against the SLSA layout file.
         id: upload-artifacts
-        uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1 # v4.6.1
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: ${{ steps.build.outputs.build-outputs-name }}
           path: /tmp/build-outputs-${{ needs.rng.outputs.value }}
@@ -535,7 +535,7 @@ jobs:
       - name: Upload unsigned intoto attestations file for pull request
         if: ${{ github.event_name == 'pull_request' }}
         id: upload-unsigned
-        uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1 # v4.6.1
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: "${{ env.OUTPUT_FOLDER }}-${{ needs.rng.outputs.value }}"
           path: "attestations-${{ needs.rng.outputs.value }}"
@@ -556,7 +556,7 @@ jobs:
       - name: Upload the signed attestations
         id: upload-signed
         if: ${{ github.event_name != 'pull_request' }}
-        uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1 # v4.6.1
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: "${{ env.OUTPUT_FOLDER }}-${{ needs.rng.outputs.value }}"
           path: "${{ env.OUTPUT_FOLDER }}-${{ needs.rng.outputs.value }}"
@@ -584,7 +584,7 @@ jobs:
       # TODO(https://github.com/slsa-framework/slsa-github-generator/issues/1655): Use the SLSA
       # layout files and their checksums to validate the artifacts.
       - name: Download artifacts
-        uses: actions/download-artifact@b14cf4c92620c250e1c074ab0a5800e37df86765 # v4.2.0
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           name: "${{ needs.build.outputs.build-outputs-name }}"
           path: "${{ needs.build.outputs.build-outputs-name }}"
@@ -592,13 +592,13 @@ jobs:
       # TODO(https://github.com/slsa-framework/slsa-github-generator/issues/1655): Use the
       # secure-folder-download action.
       - name: Download provenance
-        uses: actions/download-artifact@b14cf4c92620c250e1c074ab0a5800e37df86765 # v4.2.0
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           name: "${{ needs.provenance.outputs.provenance-name }}"
           path: "${{ needs.provenance.outputs.provenance-name }}"
 
       - name: Upload provenance new tag
-        uses: softprops/action-gh-release@c95fe1489396fe8a9eb87c0abf8aa5b2ef267fda # v2.2.1
+        uses: softprops/action-gh-release@da05d552573ad5aba039eaac05058a918a7bf631 # v2.2.2
         if: startsWith(github.ref, 'refs/tags/') && inputs.upload-tag-name == ''
         id: release-new-tags
         with:
@@ -609,7 +609,7 @@ jobs:
           draft: ${{ inputs.draft-release }}
 
       - name: Upload provenance tag name
-        uses: softprops/action-gh-release@c95fe1489396fe8a9eb87c0abf8aa5b2ef267fda # v2.2.1
+        uses: softprops/action-gh-release@da05d552573ad5aba039eaac05058a918a7bf631 # v2.2.2
         if: inputs.upload-tag-name != ''
         with:
           prerelease: ${{ inputs.prerelease }}
