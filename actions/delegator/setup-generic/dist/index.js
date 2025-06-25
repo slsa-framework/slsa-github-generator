@@ -69,18 +69,6 @@ const tscommon = __importStar(__nccwpck_require__(3945));
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            /* Test locally:
-                $ env INPUT_SLSA-WORKFLOW-RECIPIENT="laurentsimon/slsa-delegated-tool" \
-                INPUT_SLSA-REKOR-LOG-PUBLIC=true \
-                INPUT_SLSA-RUNNER-LABEL="ubuntu-latest" \
-                INPUT_SLSA-BUILD-ACTION-PATH="./actions/build-artifacts-composite" \
-                INPUT_SLSA-WORKFLOW-INPUTS="{\"name1\":\"value1\",\"name2\":\"value2\",\"name3\":\"value3\",\"name4\":\"value4\"}" \
-                INPUT_SLSA-WORKFLOW-INPUTS-MASK="name2, name4" \
-                INPUT_SLSA-CHECKOUT-FETCH-DEPTH="2" \
-                INPUT_SLSA-CHECKOUT-REPOSITORY-SHA1="abcdef" \
-                INPUT_SLSA-VERSION="v1" \
-                nodejs ./dist/index.js
-            */
             const slsaVersion = core.getInput("slsa-version");
             if (!["v1.0", "v0.2"].includes(slsaVersion)) {
                 throw new Error(`Unsupported slsa-version: ${slsaVersion}`);
@@ -172,8 +160,7 @@ function run() {
             const bundle = yield (0, sigstore_1.sign)(Buffer.from(unsignedB64Token));
             // Verify just to double check.
             // NOTE: this is an offline verification.
-            // TODO(#1668): re-enable verification.
-            // await sigstore.verify(bundle, Buffer.from(unsignedB64Token));
+            yield (0, sigstore_1.verify)(bundle, Buffer.from(unsignedB64Token));
             const bundleStr = JSON.stringify(bundle);
             const bundleB64 = Buffer.from(bundleStr).toString("base64");
             core.info(`bundleStr: ${bundleStr}`);
