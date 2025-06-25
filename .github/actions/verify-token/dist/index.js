@@ -158,9 +158,8 @@ function run() {
             (0, validate_1.validateGitHubFields)(rawTokenObj.github);
             // Validate the build Action is not empty.
             (0, validate_1.validateFieldNonEmpty)("tool.actions.build_artifacts.path", rawTokenObj.tool.actions.build_artifacts.path);
-            // No validation needed for the builder inputs,
+            // NOTE: No validation needed for the builder inputs,
             // they may be empty.
-            // TODO(#1780): test empty inputs.
             // Extract certificate information.
             const [toolURI, toolRepository, toolRef, toolSha, toolPath] = (0, utils_1.parseCertificate)(bundle);
             // Extract the inputs.
