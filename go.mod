@@ -3,20 +3,20 @@ module github.com/slsa-framework/slsa-github-generator
 go 1.23.1
 
 require (
-	github.com/coreos/go-oidc/v3 v3.11.0
+	github.com/coreos/go-oidc/v3 v3.14.1
 	github.com/go-openapi/strfmt v0.23.0
-	github.com/go-openapi/swag v0.23.0
-	github.com/google/go-cmp v0.6.0
+	github.com/go-openapi/swag v0.23.1
+	github.com/google/go-cmp v0.7.0
 	github.com/google/go-github/v57 v57.0.0
 	github.com/in-toto/in-toto-golang v0.9.0
 	github.com/pelletier/go-toml v1.9.5
-	github.com/secure-systems-lab/go-securesystemslib v0.8.0
-	github.com/sigstore/cosign/v2 v2.4.1
-	github.com/sigstore/rekor v1.3.6
-	github.com/sigstore/sigstore v1.8.10
-	github.com/sigstore/sigstore-go v0.6.1
-	github.com/spf13/cobra v1.8.1
-	golang.org/x/oauth2 v0.23.0
+	github.com/secure-systems-lab/go-securesystemslib v0.9.0
+	github.com/sigstore/cosign/v2 v2.5.2
+	github.com/sigstore/rekor v1.3.10
+	github.com/sigstore/sigstore v1.9.5
+	github.com/sigstore/sigstore-go v0.7.3
+	github.com/spf13/cobra v1.9.1
+	golang.org/x/oauth2 v0.30.0
 	gopkg.in/square/go-jose.v2 v2.6.0
 	gopkg.in/yaml.v3 v3.0.1
 )
