@@ -8,11 +8,11 @@
     "renovate-config-validator": "renovate-config-validator --strict"
   },
   "devDependencies": {
-    "@sigstore/cli": "0.8.1",
+    "@sigstore/cli": "0.8.2",
     "markdown-toc": "1.2.0",
-    "markdownlint-cli": "0.44.0",
-    "prettier": "3.5.1",
-    "renovate": "39.174.3",
+    "markdownlint-cli": "0.45.0",
+    "prettier": "3.6.2",
+    "renovate": "39.264.1",
     "sigstore": "2.3.1"
   }
 }
