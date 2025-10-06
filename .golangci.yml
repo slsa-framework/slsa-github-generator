@@ -110,6 +110,7 @@ linters-settings:
           # Approved packages.
           - "github.com/spf13/cobra" # For CLI
           - "github.com/coreos/go-oidc" # For verifying OIDC tokens.
+          - "github.com/go-jose/go-jose/v4" # For testing OIDC tokens
 
           # Allowed packages in container-based builder.
           - "github.com/pelletier/go-toml" # For container-based builder config.
