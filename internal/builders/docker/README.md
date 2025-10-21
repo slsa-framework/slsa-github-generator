@@ -401,7 +401,7 @@ go run *.go verify --provenance-path testdata/slsa1-provenance.json
 
 The following project currently use the container-based workflow:
 
-- [Oak](https://github.com/project-oak/oak); See [the workflow file](https://github.com/project-oak/oak/blob/main/.github/workflows/provenance.yaml)
+- [Oak](https://github.com/project-oak/oak); See [the workflow file](https://github.com/project-oak/oak/blob/main/.github/workflows/mnist_eval.yaml)
 
 We welcome any success stories. Please create a PR to add your project to the
 list, if you are using the container-based workflow.
