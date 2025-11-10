@@ -21,10 +21,10 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/slsa-framework/slsa-github-generator/github"
-	"github.com/slsa-framework/slsa-github-generator/internal/builders/common"
-	"github.com/slsa-framework/slsa-github-generator/internal/utils"
-	"github.com/slsa-framework/slsa-github-generator/slsa"
+	"github.com/slsa-framework/slsa-github-generator/v2/github"
+	"github.com/slsa-framework/slsa-github-generator/v2/internal/builders/common"
+	"github.com/slsa-framework/slsa-github-generator/v2/internal/utils"
+	"github.com/slsa-framework/slsa-github-generator/v2/slsa"
 )
 
 // generateCmd returns the 'generate' command.
