@@ -23,7 +23,7 @@ import (
 
 	"gopkg.in/yaml.v3"
 
-	"github.com/slsa-framework/slsa-github-generator/internal/utils"
+	"github.com/slsa-framework/slsa-github-generator/v2/internal/utils"
 )
 
 var supportedVersions = map[int]bool{

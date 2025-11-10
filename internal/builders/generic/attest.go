@@ -26,11 +26,11 @@ import (
 	"github.com/spf13/cobra"
 
 	intoto "github.com/in-toto/in-toto-golang/in_toto"
-	"github.com/slsa-framework/slsa-github-generator/github"
-	"github.com/slsa-framework/slsa-github-generator/internal/builders/common"
-	"github.com/slsa-framework/slsa-github-generator/internal/utils"
-	"github.com/slsa-framework/slsa-github-generator/signing"
-	"github.com/slsa-framework/slsa-github-generator/slsa"
+	"github.com/slsa-framework/slsa-github-generator/v2/github"
+	"github.com/slsa-framework/slsa-github-generator/v2/internal/builders/common"
+	"github.com/slsa-framework/slsa-github-generator/v2/internal/utils"
+	"github.com/slsa-framework/slsa-github-generator/v2/signing"
+	"github.com/slsa-framework/slsa-github-generator/v2/slsa"
 )
 
 // attestCmd returns the 'attest' command.
