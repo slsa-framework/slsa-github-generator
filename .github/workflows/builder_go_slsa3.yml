@@ -399,7 +399,7 @@ jobs:
           sha256: "${{ needs.provenance.outputs.go-provenance-sha256 }}"
 
       - name: Upload provenance
-        uses: softprops/action-gh-release@72f2c25fcb47643c292f7107632f7a47c1df5cd8 # v2.3.2
+        uses: softprops/action-gh-release@5be0e66d93ac7ed76da52eca8bb058f665c3a5fe # v2.4.2
         with:
           tag_name: ${{ inputs.upload-tag-name }}
           prerelease: ${{ inputs.prerelease }}

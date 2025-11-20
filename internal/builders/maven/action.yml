@@ -56,7 +56,7 @@ on:
 runs:
   using: "composite"
   steps:
-    - uses: actions/checkout@09d2acae674a48949e3602304ab46fd20ae0c42f # v 3.5.2
+    - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v 3.5.2
     - name: Set up JDK
       uses: actions/setup-java@c5195efecf7bdfc987ee8bae7a71cb8b11521c00 # v4.7.1
       with:
