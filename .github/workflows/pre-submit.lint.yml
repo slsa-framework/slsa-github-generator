@@ -50,10 +50,10 @@ jobs:
           set -euo pipefail
 
           #Install golangci-lint
-          curl -sSLo shfmt "https://github.com/mvdan/sh/releases/download/v${SHFMT_VERSION}/shfmt_v${SHFMT_VERSION}_linux_amd64"
-          echo "shfmt checksum is $(sha256sum shfmt | awk '{ print $1 }')"
+          curl -sSLo "shfmt" "https://github.com/mvdan/sh/releases/download/v${SHFMT_VERSION}/shfmt_v${SHFMT_VERSION}_linux_amd64"
+          echo "shfmt checksum is $(sha256sum "shfmt" | awk '{ print $1 }')"
           echo "expected checksum is ${SHFMT_CHECKSUM}"
-          echo "${SHFMT_CHECKSUM}  shfmt" | sha256sum --strict --check --status || exit 1
+          printf '%s  %s\n' "${SHFMT_CHECKSUM}" "shfmt" | sha256sum --strict --check --status || exit 1
           chmod +x shfmt
           mv shfmt /usr/local/bin
 
@@ -93,11 +93,11 @@ jobs:
           set -euo pipefail
 
           #Install golangci-lint
-          curl -sSLo golangci-lint.tar.gz "https://github.com/golangci/golangci-lint/releases/download/v${GOLANGCI_LINT_VERSION}/golangci-lint-${GOLANGCI_LINT_VERSION}-linux-amd64.tar.gz"
-          echo "golangci-lint checksum is $(sha256sum golangci-lint.tar.gz | awk '{ print $1 }')"
+          curl -sSLo "golangci-lint.tar.gz" "https://github.com/golangci/golangci-lint/releases/download/v${GOLANGCI_LINT_VERSION}/golangci-lint-${GOLANGCI_LINT_VERSION}-linux-amd64.tar.gz"
+          echo "golangci-lint checksum is $(sha256sum "golangci-lint.tar.gz" | awk '{ print $1 }')"
           echo "expected checksum is $GOLANGCI_LINT_CHECKSUM"
-          echo "$GOLANGCI_LINT_CHECKSUM  golangci-lint.tar.gz" | sha256sum --strict --check --status || exit 1
-          tar xf golangci-lint.tar.gz
+          printf '%s  %s\n' "$GOLANGCI_LINT_CHECKSUM" "golangci-lint.tar.gz" | sha256sum --strict --check --status || exit 1
+          tar xf "golangci-lint.tar.gz"
           mv "golangci-lint-${GOLANGCI_LINT_VERSION}-linux-amd64/golangci-lint" /usr/local/bin
 
           # Run golangci-lint
@@ -115,12 +115,12 @@ jobs:
           set -euo pipefail
 
           # Install shellcheck
-          curl -sSLo shellcheck.tar.gz "https://github.com/koalaman/shellcheck/releases/download/v${SHELLCHECK_VERSION}/shellcheck-v${SHELLCHECK_VERSION}.linux.x86_64.tar.xz"
-          echo "shellcheck checksum is $(sha256sum shellcheck.tar.gz | awk '{ print $1 }')"
+          curl -sSLo "shellcheck.tar.gz" "https://github.com/koalaman/shellcheck/releases/download/v${SHELLCHECK_VERSION}/shellcheck-v${SHELLCHECK_VERSION}.linux.x86_64.tar.xz"
+          echo "shellcheck checksum is $(sha256sum "shellcheck.tar.gz" | awk '{ print $1 }')"
           echo "expected checksum is $SHELLCHECK_CHECKSUM"
-          echo "$SHELLCHECK_CHECKSUM  shellcheck.tar.gz" | sha256sum --strict --check --status || exit 1
+          printf '%s  %s\n' "$SHELLCHECK_CHECKSUM" "shellcheck.tar.gz" | sha256sum --strict --check --status || exit 1
 
-          tar xf shellcheck.tar.gz
+          tar xf "shellcheck.tar.gz"
           mv "shellcheck-v${SHELLCHECK_VERSION}/shellcheck" /usr/local/bin
 
           make shellcheck
@@ -133,12 +133,12 @@ jobs:
           set -euo pipefail
 
           # Install actionlint
-          curl -sSLo actionlint.tar.gz "https://github.com/rhysd/actionlint/releases/download/v${ACTIONLINT_VERSION}/actionlint_${ACTIONLINT_VERSION}_linux_amd64.tar.gz"
-          echo "actionlint checksum is $(sha256sum actionlint.tar.gz | awk '{ print $1 }')"
+          curl -sSLo "actionlint.tar.gz" "https://github.com/rhysd/actionlint/releases/download/v${ACTIONLINT_VERSION}/actionlint_${ACTIONLINT_VERSION}_linux_amd64.tar.gz"
+          echo "actionlint checksum is $(sha256sum "actionlint.tar.gz" | awk '{ print $1 }')"
           echo "expected checksum is $ACTIONLINT_CHECKSUM"
-          echo "$ACTIONLINT_CHECKSUM  actionlint.tar.gz" | sha256sum --strict --check --status || exit 1
+          printf '%s  %s\n' "$ACTIONLINT_CHECKSUM" "actionlint.tar.gz" | sha256sum --strict --check --status || exit 1
 
-          tar xf actionlint.tar.gz
+          tar xf "actionlint.tar.gz"
           mv ./actionlint /usr/local/bin
 
           make actionlint
