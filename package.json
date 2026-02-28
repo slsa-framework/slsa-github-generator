@@ -12,7 +12,7 @@
     "markdown-toc": "1.2.0",
     "markdownlint-cli": "0.44.0",
     "prettier": "3.5.1",
-    "renovate": "39.174.3",
+    "renovate": "43.46.0",
     "sigstore": "2.3.1"
   }
 }
