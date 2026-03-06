@@ -243,7 +243,7 @@ This issue is tracked by [issue #3350](https://github.com/slsa-framework/slsa-gi
 
 Use the [BYOB framework](BYOB.md) to create your own SLSA builder on GitHub. If you have an existing GitHub Action, you can use the BYOB framework to wrap it into a SLSA builder.
 This will harden the build process by running the Action in an isolated environment. Generated artifacts will meet Build Level 3 expectations and produce Build Level 3 provenance.
-To verify the provenance, your users can use the [slsa-verifier](#verification-of-provenance).
+To verify the provenance, your users can use the [slsa-verifier](#verify-provenance).
 
 ## Project Roadmap
 
