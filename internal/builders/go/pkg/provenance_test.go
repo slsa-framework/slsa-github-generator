@@ -17,8 +17,8 @@ package pkg
 import (
 	"testing"
 
-	"github.com/slsa-framework/slsa-github-generator/internal/testutil"
-	"github.com/slsa-framework/slsa-github-generator/slsa"
+	"github.com/slsa-framework/slsa-github-generator/v2/internal/testutil"
+	"github.com/slsa-framework/slsa-github-generator/v2/slsa"
 )
 
 func TestGenerateProvenance(t *testing.T) {

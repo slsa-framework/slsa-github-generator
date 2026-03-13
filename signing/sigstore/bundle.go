@@ -23,8 +23,8 @@ import (
 	sigstoreBundle "github.com/sigstore/sigstore-go/pkg/bundle"
 	sigstoreRoot "github.com/sigstore/sigstore-go/pkg/root"
 	sigstoreSign "github.com/sigstore/sigstore-go/pkg/sign"
-	"github.com/slsa-framework/slsa-github-generator/github"
-	"github.com/slsa-framework/slsa-github-generator/signing"
+	"github.com/slsa-framework/slsa-github-generator/v2/github"
+	"github.com/slsa-framework/slsa-github-generator/v2/signing"
 )
 
 // BundleSigner is used to produce Sigstore Bundles from provenance statements.

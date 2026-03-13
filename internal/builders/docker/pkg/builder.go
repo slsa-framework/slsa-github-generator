@@ -42,7 +42,7 @@ import (
 	intoto "github.com/in-toto/in-toto-golang/in_toto"
 	slsa1 "github.com/in-toto/in-toto-golang/in_toto/slsa_provenance/v1"
 
-	"github.com/slsa-framework/slsa-github-generator/internal/utils"
+	"github.com/slsa-framework/slsa-github-generator/v2/internal/utils"
 )
 
 var (
