@@ -285,7 +285,7 @@ jobs:
           sha256: "${{ needs.generator.outputs.provenance-sha256 }}"
 
       - name: Upload provenance
-        uses: softprops/action-gh-release@72f2c25fcb47643c292f7107632f7a47c1df5cd8 # v2.3.2
+        uses: softprops/action-gh-release@26e8ad27a09a225049a7075d7ec1caa2df6ff332 # v2.6.0
         id: release
         with:
           draft: ${{ inputs.draft-release }}
