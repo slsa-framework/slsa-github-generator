@@ -1,6 +1,6 @@
 queue_rules:
-  - name: Cue
-    queue_branch_merge_method: Merge original pr
+  - name: 'fast-forward'
+    queue_branch_merge_method: merge original pr
 scopes:
-  source:
+  source: 
     files: {}
