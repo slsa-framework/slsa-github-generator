@@ -1,6 +1,3 @@
 queue_rules:
-  - name: 'fast-forward'
-    queue_branch_merge_method: merge original pr
-scopes:
-  source: 
-    files: {}
+  - name: 'default'
+    queue_branch_merge_method: fast-forward
