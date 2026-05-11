@@ -23,7 +23,7 @@ jobs:
       digests: ${{ steps.hash.outputs.digests }}
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       # ========================================================
       #
@@ -50,17 +50,26 @@ jobs:
           set -euo pipefail
 
           # List the artifacts the provenance will refer to.
-          files=$(ls artifact*)
+          files=$(ls artifact* 2>/dev/null || echo "")
+          if [ -z "$files" ]; then
+            echo "Error: No artifacts found matching 'artifact*'" >&2
+            exit 1
+          fi
           # Generate the subjects (base64 encoded).
           echo "hashes=$(sha256sum $files | base64 -w0)" >> "${GITHUB_OUTPUT}"
 
-      - name: Upload a Build Artifact
-        uses: actions/upload-artifact@v4.0.0
+      # ========================================================
+      #
+      # Step 3: Upload build artifacts for verification
+      #
+      # ========================================================
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
         with:
           name: artifacts
           path: artifact*
-          if-no-files-found: error
           retention-days: 90
+          if-no-files-found: error
           compression-level: 6
 
   provenance:
