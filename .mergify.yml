@@ -1,0 +1,6 @@
+queue_rules:
+  - name: Cue
+    queue_branch_merge_method: Merge original pr
+scopes:
+  source:
+    files: {}
