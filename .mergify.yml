@@ -1,3 +1,5 @@
 queue_rules:
   - name: 'default'
-    queue_branch_merge_method: fast-forward
+    merge_method: fast-forward
+merge_protections_settings:
+  reporting_method: check-runs
