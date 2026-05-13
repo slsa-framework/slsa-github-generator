@@ -90,13 +90,12 @@ func Test_isAllowedEnvVariable(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		tt := tt // Re-initializing variable so it is not changed while executing the closure below
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
 			r := isAllowedEnvVariable(tt.variable)
 			if !cmp.Equal(r, tt.expected) {
-				t.Errorf(cmp.Diff(r, tt.expected))
+				t.Error(cmp.Diff(r, tt.expected))
 			}
 		})
 	}
@@ -126,7 +125,6 @@ func Test_getOutputBinaryPath(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		tt := tt // Re-initializing variable so it is not changed while executing the closure below
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -140,7 +138,7 @@ func Test_getOutputBinaryPath(t *testing.T) {
 			}
 
 			if !cmp.Equal(r, tt.path) {
-				t.Errorf(cmp.Diff(r, tt.path))
+				t.Error(cmp.Diff(r, tt.path))
 			}
 		})
 	}
@@ -177,13 +175,12 @@ func Test_isAllowedArg(t *testing.T) {
 		})
 	}
 	for _, tt := range tests {
-		tt := tt // Re-initializing variable so it is not changed while executing the closure below
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
 			r := isAllowedArg(tt.argument)
 			if !cmp.Equal(r, tt.expected) {
-				t.Errorf(cmp.Diff(r, tt.expected))
+				t.Error(cmp.Diff(r, tt.expected))
 			}
 		})
 	}
@@ -442,7 +439,6 @@ func Test_generateOutputFilename(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt // Re-initializing variable so it is not changed while executing the closure below
 		t.Run(tt.name, func(t *testing.T) {
 			// Note: disable parallelism to avoid env variable clobbering between tests.
 			// t.Parallel()
@@ -491,7 +487,7 @@ func Test_generateOutputFilename(t *testing.T) {
 			}
 
 			if fn != tt.expected.fn {
-				t.Errorf(cmp.Diff(fn, tt.expected.fn))
+				t.Error(cmp.Diff(fn, tt.expected.fn))
 			}
 		})
 	}
@@ -595,7 +591,6 @@ func Test_SetArgEnvVariables(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt // Re-initializing variable so it is not changed while executing the closure below
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -619,7 +614,7 @@ func Test_SetArgEnvVariables(t *testing.T) {
 
 			sorted := cmpopts.SortSlices(func(a, b string) bool { return a < b })
 			if !cmp.Equal(b.argEnv, tt.expected.env, sorted) {
-				t.Errorf(cmp.Diff(b.argEnv, tt.expected.env))
+				t.Error(cmp.Diff(b.argEnv, tt.expected.env))
 			}
 		})
 	}
@@ -704,7 +699,6 @@ func Test_generateEnvVariables(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt // Re-initializing variable so it is not changed while executing the closure below
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -731,7 +725,7 @@ func Test_generateEnvVariables(t *testing.T) {
 			expectedFlags := tt.expected.flags
 			sorted := cmpopts.SortSlices(func(a, b string) bool { return a < b })
 			if !cmp.Equal(flags, expectedFlags, sorted) {
-				t.Errorf(cmp.Diff(flags, expectedFlags))
+				t.Error(cmp.Diff(flags, expectedFlags))
 			}
 		})
 	}
@@ -862,7 +856,6 @@ func Test_generateLdflags(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt // Re-initializing variable so it is not changed while executing the closure below
 		t.Run(tt.name, func(t *testing.T) {
 			// Disable to avoid env clobbering between tests.
 			// t.Parallel()
@@ -905,7 +898,7 @@ func Test_generateLdflags(t *testing.T) {
 			}
 			// Note: generated env variables contain the process's env variables too.
 			if !cmp.Equal(ldflags, tt.outldflags) {
-				t.Errorf(cmp.Diff(ldflags, tt.outldflags))
+				t.Error(cmp.Diff(ldflags, tt.outldflags))
 			}
 		})
 	}
@@ -954,7 +947,6 @@ func Test_generateFlags(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt // Re-initializing variable so it is not changed while executing the closure below
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -980,7 +972,7 @@ func Test_generateFlags(t *testing.T) {
 			// Note: generated env variables contain the process's env variables too.
 			sorted := cmpopts.SortSlices(func(a, b string) bool { return a < b })
 			if !cmp.Equal(flags, expectedFlags, sorted) {
-				t.Errorf(cmp.Diff(flags, expectedFlags))
+				t.Error(cmp.Diff(flags, expectedFlags))
 			}
 		})
 	}
@@ -1024,7 +1016,6 @@ func Test_generateCommand(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt // Re-initializing variable so it is not changed while executing the closure below
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -1056,7 +1047,7 @@ func Test_generateCommand(t *testing.T) {
 
 				sorted := cmpopts.SortSlices(func(a, b string) bool { return a < b })
 				if !cmp.Equal(command, expectedCommand, sorted) {
-					t.Errorf(cmp.Diff(command, expectedCommand))
+					t.Error(cmp.Diff(command, expectedCommand))
 				}
 			}
 		})

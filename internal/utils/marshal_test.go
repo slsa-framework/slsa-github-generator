@@ -46,7 +46,6 @@ func Test_MarshalToString(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		tt := tt // Re-initializing variable so it is not changed while executing the closure below
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -55,7 +54,7 @@ func Test_MarshalToString(t *testing.T) {
 				t.Errorf("MarshalToString: %v", err)
 			}
 			if !cmp.Equal(r, tt.expected) {
-				t.Errorf(cmp.Diff(r, tt.expected))
+				t.Error(cmp.Diff(r, tt.expected))
 			}
 		})
 	}
@@ -91,7 +90,6 @@ func Test_UnmarshalList(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		tt := tt // Re-initializing variable so it is not changed while executing the closure below
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -101,7 +99,7 @@ func Test_UnmarshalList(t *testing.T) {
 			}
 
 			if !cmp.Equal(r, tt.expected) {
-				t.Errorf(cmp.Diff(r, tt.expected))
+				t.Error(cmp.Diff(r, tt.expected))
 			}
 		})
 	}

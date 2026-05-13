@@ -163,7 +163,7 @@ There is one integration test we cannot easily test "live", so we need to simula
    using this command:
 
    ```shell
-   sed -i "s/uses: slsa-framework\/slsa-github-generator\/\.github\/actions\/generate-builder@\(main\|v[0-9]\+\.[0-9]\+\.[0-9]\+\(-rc\.[0-9]\+\)\?\)/uses: ${BUILDER_REPOSITORY/\//\\\/}\/.github\/actions\/generate-builder@${BUILDER_TAG}/" .github/workflows/builder_go_slsa3.yml
+   sed -i "s/uses: slsa-framework\/slsa-github-generator\/\.github\/actions\/generate-builder@\(main\|v[0-9]\+\.[0-9]\+\.[0-9]\+\(-rc\.[0-9]\+\)\?\)/uses: ${BUILDER_REPOSITORY/\//\/}\/.github\/actions\/generate-builder@${BUILDER_TAG}/" .github/workflows/builder_go_slsa3.yml
    ```
 
    Add `testing: true` as an input.
@@ -177,7 +177,7 @@ There is one integration test we cannot easily test "live", so we need to simula
    using this command:
 
    ```shell
-   sed -i "s/uses: slsa-framework\/slsa-github-generator\/\.github\/actions\/generate-builder@\(main\|v[0-9]\+\.[0-9]\+\.[0-9]\+\(-rc\.[0-9]\+\)\?\)/uses: ${BUILDER_REPOSITORY/\//\\\/}\/.github\/actions\/generate-builder@${BUILDER_TAG}/" .github/workflows/generator_generic_slsa3.yml
+   sed -i "s/uses: slsa-framework\/slsa-github-generator\/\.github\/actions\/generate-builder@\(main\|v[0-9]\+\.[0-9]\+\.[0-9]\+\(-rc\.[0-9]\+\)\?\)/uses: ${BUILDER_REPOSITORY/\//\/}\/.github\/actions\/generate-builder@${BUILDER_TAG}/" .github/workflows/generator_generic_slsa3.yml
    ```
 
    Add `testing: true` as an input.
@@ -191,7 +191,7 @@ There is one integration test we cannot easily test "live", so we need to simula
    using this command:
 
    ```shell
-   sed -i "s/uses: slsa-framework\/slsa-github-generator\/\.github\/actions\/generate-builder@\(main\|v[0-9]\+\.[0-9]\+\.[0-9]\+\(-rc\.[0-9]\+\)\?\)/uses: ${BUILDER_REPOSITORY/\//\\\/}\/.github\/actions\/generate-builder@${BUILDER_TAG}/" .github/workflows/generator_container_slsa3.yml
+   sed -i "s/uses: slsa-framework\/slsa-github-generator\/\.github\/actions\/generate-builder@\(main\|v[0-9]\+\.[0-9]\+\.[0-9]\+\(-rc\.[0-9]\+\)\?\)/uses: ${BUILDER_REPOSITORY/\//\/}\/.github\/actions\/generate-builder@${BUILDER_TAG}/" .github/workflows/generator_container_slsa3.yml
    ```
 
    Add `testing: true` as an input.
@@ -205,7 +205,7 @@ There is one integration test we cannot easily test "live", so we need to simula
    using this command:
 
    ```shell
-   sed -i "s/uses: slsa-framework\/slsa-github-generator\/\.github\/actions\/generate-builder@\(main\|v[0-9]\+\.[0-9]\+\.[0-9]\+\(-rc\.[0-9]\+\)\?\)/uses: ${BUILDER_REPOSITORY/\//\\\/}\/.github\/actions\/generate-builder@${BUILDER_TAG}/" .github/workflows/builder_container-based_slsa3.yml
+   sed -i "s/uses: slsa-framework\/slsa-github-generator\/\.github\/actions\/generate-builder@\(main\|v[0-9]\+\.[0-9]\+\.[0-9]\+\(-rc\.[0-9]\+\)\?\)/uses: ${BUILDER_REPOSITORY/\//\/}\/.github\/actions\/generate-builder@${BUILDER_TAG}/" .github/workflows/builder_container-based_slsa3.yml
    ```
 
    Add `testing: true` as an input.
@@ -549,7 +549,7 @@ Re-run the [adversarial builder tests](#adversarial-builder-tests) using the fin
 Send a PR to reference the Actions at `@main`. You can use:
 
 ```shell
-find .github/workflows/ .github/actions/ actions/ -name '*.yaml' -o -name '*.yml' -type f | xargs sed -i "s/uses: slsa-framework\/slsa-github-generator\/\(.*\)@${BUILDER_TAG}/uses: slsa-framework\/slsa-github-generator\/\1@main/"
+find .github/workflows/ .github/actions/ actions/ internal/builders/ -name '*.yaml' -o -name '*.yml' -type f | xargs sed -i "s/uses: slsa-framework\/slsa-github-generator\/\(.*\)@${BUILDER_TAG}/uses: slsa-framework\/slsa-github-generator\/\1@main/"
 find actions/maven/ internal/builders/maven/ -name '*.yaml' -o -name '*.yml' -type f | xargs sed -i "s/\(ref:[ ]*\)$BUILDER_TAG/\1main/"
 ```
 
@@ -612,11 +612,20 @@ Then, for each of the GHA builders, you will need to:
 
 4. Determine the digest that was uploaded by the build to the
    [example-package.verifier-e2e.all.tag.main.default.slsa3](https://github.com/slsa-framework/example-package/pkgs/container/example-package.verifier-e2e.all.tag.main.default.slsa3)
-   package.
+   package. Create the file `./cli/slsa-verifier/testdata/gha_generic_container/$BUILDER_TAG/container_workflow_dispatch.digest` with the content `sha256:digest` (no new line).
 
 5. Export the image to the
    `./cli/slsa-verifier/testdata/gha_generic_container/$BUILDER_TAG/` directory
    in the slsa-verifier repository.
+
+   Make sure you are authenticated to GitHub's Container registry:
+
+   ```shell
+   gh auth login --scopes=read:packages
+   echo `gh auth token` | docker login ghcr.io -u $GITHUB_USERNAME --password-stdin
+   ```
+
+   Export the image:
 
    ```shell
    cosign save \
@@ -643,7 +652,7 @@ Update the `Supported Versions` section in [SECURITY.md](./SECURITY.md).
 Update:
 
 1. [Go builder's workflow](https://github.com/actions/starter-workflows/blob/main/ci/go-ossf-slsa3-publish.yml)
-2. [Generic generator's workflow](https://github.com/actions/starter-workflows/blob/main/ci/generic-generator-ossf-slsa3-publish.yml)
+2. [Generic generator's workflow](https://github.com/actions/starter-workflows/blob/main/ci/generator-generic-ossf-slsa3-publish.yml)
 
 ### Announce
 

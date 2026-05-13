@@ -46,7 +46,7 @@ func checkWorkingDir(t *testing.T, wd, expected string) {
 	}
 
 	if expectedWd != wd {
-		t.Errorf(cmp.Diff(wd, expectedWd))
+		t.Error(cmp.Diff(wd, expectedWd))
 	}
 }
 
@@ -298,7 +298,6 @@ func Test_runBuild(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt // Re-initializing variable so it is not changed while executing the closure below
 		t.Run(tt.name, func(t *testing.T) {
 			// *** WARNING: do not enable t.Parallel(), because we're writing to environment variables ***.
 			file, err := os.CreateTemp("", "")
@@ -336,19 +335,19 @@ func Test_runBuild(t *testing.T) {
 			}
 
 			if !cmp.Equal(subject, tt.subject) {
-				t.Errorf(cmp.Diff(subject, tt.subject))
+				t.Error(cmp.Diff(subject, tt.subject))
 			}
 
 			commands := append([]string{goc, "build", "-mod=vendor"}, tt.commands...)
 			if !cmp.Equal(cmd, commands) {
-				t.Errorf(cmp.Diff(cmd, commands))
+				t.Error(cmp.Diff(cmd, commands))
 			}
 
 			checkWorkingDir(t, wd, tt.workingDir)
 
 			sorted := cmpopts.SortSlices(func(a, b string) bool { return a < b })
 			if !cmp.Equal(env, tt.envs, sorted) {
-				t.Errorf(cmp.Diff(env, tt.envs))
+				t.Error(cmp.Diff(env, tt.envs))
 			}
 		})
 	}

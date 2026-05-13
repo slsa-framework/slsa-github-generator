@@ -42,7 +42,7 @@ func DryRunCmd(check func(error)) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "dry-run [FLAGS]",
 		Short: "Generates and stores a JSON-formatted BuildDefinition based on the input arguments.",
-		Run: func(cmd *cobra.Command, args []string) {
+		Run: func(_ *cobra.Command, _ []string) {
 			w, err := utils.CreateNewFileUnderCurrentDirectory(buildDefinitionPath, os.O_WRONLY)
 			check(err)
 
@@ -78,7 +78,7 @@ func BuildCmd(check func(error)) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "build [FLAGS]",
 		Short: "Builds the artifacts using the build config, source repo, and the builder image.",
-		Run: func(cmd *cobra.Command, args []string) {
+		Run: func(_ *cobra.Command, _ []string) {
 			// Validate that the output folder is a /tmp subfolder.
 			absoluteOutputFolder, err := filepath.Abs(outputFolder)
 			check(err)
@@ -126,7 +126,7 @@ func VerifyCmd(check func(error)) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "verify [FLAGS]",
 		Short: "Verifies as SLSLv1.0 provenance.",
-		Run: func(cmd *cobra.Command, args []string) {
+		Run: func(_ *cobra.Command, _ []string) {
 			err := verifyProvenance(provenancePath)
 			check(err)
 		},

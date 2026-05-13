@@ -25,17 +25,17 @@ set -euo pipefail
 # TODO(github.com/slsa-framework/slsa-github-generator/issues/626): Check workflows as well and not just actions.
 # TODO(github.com/slsa-framework/slsa-github-generator/issues/626): Disallow checkouts for repos other than the repo that triggered the action(i.e. github.repository).
 results=$(
-    grep -r \
-        --include='*.yml' \
-        --include='*.yaml' \
-        --exclude-dir='node_modules' \
-        --exclude-dir='secure-project-checkout' \
-        --exclude-dir='secure-builder-checkout' \
-        -e 'uses: *actions/checkout' \
-        .github/actions/* || true
+  grep -r \
+    --include='*.yml' \
+    --include='*.yaml' \
+    --exclude-dir='node_modules' \
+    --exclude-dir='secure-project-checkout' \
+    --exclude-dir='secure-builder-checkout' \
+    -e 'uses: *actions/checkout' \
+    .github/actions/* || true
 )
 if [[ "$results" != "" ]]; then
-    echo "Some Actions are using 'actions/checkout'"
-    echo "$results"
-    exit 1
+  echo "Some Actions are using 'actions/checkout'"
+  echo "$results"
+  exit 1
 fi

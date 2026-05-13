@@ -37,9 +37,9 @@ set -euo pipefail
 raw_package_scope=$(echo "${PACKAGE_NAME:-}" | cut -s -d'/' -f1)
 raw_package_name=$(echo "${PACKAGE_NAME:-}" | cut -s -d'/' -f2)
 if [ "${raw_package_name}" == "" ]; then
-    # This is a non-scoped package.
-    raw_package_name="${PACKAGE_NAME:-}"
-    raw_package_scope=""
+  # This is a non-scoped package.
+  raw_package_name="${PACKAGE_NAME:-}"
+  raw_package_scope=""
 fi
 # package scope (namespace) is URL(percent) encoded.
 package_scope=$(echo "\"${raw_package_scope}\"" | jq -r '. | @uri')
@@ -52,7 +52,7 @@ package_version=$(echo "\"${PACKAGE_VERSION:-}\"" | jq -r '. | @uri')
 
 package_id="${package_name}@${package_version}"
 if [ "${package_scope}" != "" ]; then
-    package_id="${package_scope}/${package_id}"
+  package_id="${package_scope}/${package_id}"
 fi
 subject_name="pkg:npm/${package_id}"
 

@@ -50,7 +50,7 @@ jobs:
       actions: read # For the entry point.
     uses: ./.github/workflows/builder_go_slsa3.yml
     with:
-      go-version: "1.20"
+      go-version: "1.21"
       config-file: .github/workflows/configs-go/config-ldflags-main-dir.yml
       evaluated-envs: "VERSION:${{needs.args.outputs.version}},COMMIT:${{needs.args.outputs.commit}},BRANCH:${{needs.args.outputs.branch}}"
       compile-builder: true
@@ -64,11 +64,11 @@ jobs:
     needs: [build]
     if: ${{ always() }}
     steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
-      - uses: actions/download-artifact@c850b930e6ba138125429b7e5c93fc707a7f8427 # v4.1.4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           name: ${{ needs.build.outputs.go-binary-name }}
-      - uses: actions/download-artifact@c850b930e6ba138125429b7e5c93fc707a7f8427 # v4.1.4
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           name: ${{ needs.build.outputs.go-provenance-name }}
       - env:

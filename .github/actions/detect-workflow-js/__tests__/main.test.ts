@@ -52,9 +52,8 @@ describe("detectWorkflowFromOIDC", () => {
     core.getIDToken.mockClear();
     core.getIDToken.mockReturnValueOnce(jwt);
 
-    const [repo, ref, workflow] = await detect.detectWorkflowFromOIDC(
-      "some/audience",
-    );
+    const [repo, ref, workflow] =
+      await detect.detectWorkflowFromOIDC("some/audience");
     expect(repo).toBe("octo-org/octo-automation");
     expect(ref).toBe("refs/heads/main");
     expect(workflow).toBe(".github/workflows/oidc.yml");
@@ -72,9 +71,8 @@ describe("detectWorkflowFromOIDC", () => {
     core.getIDToken.mockClear();
     core.getIDToken.mockReturnValueOnce(jwt);
 
-    const [repo, ref, workflow] = await detect.detectWorkflowFromOIDC(
-      "some/audience",
-    );
+    const [repo, ref, workflow] =
+      await detect.detectWorkflowFromOIDC("some/audience");
     expect(repo).toBe("vitejs/vite");
     expect(ref).toBe("refs/tags/create-vite@5.0.0-beta.0");
     expect(workflow).toBe(".github/workflows/publish.yml");

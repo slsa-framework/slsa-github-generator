@@ -101,7 +101,7 @@ func (b *GoBuild) Run(dry bool) error {
 	}
 
 	// Add ldflags.
-	if len(ldflags) > 0 {
+	if ldflags != "" {
 		flags = append(flags, fmt.Sprintf("-ldflags=%s", ldflags))
 	}
 

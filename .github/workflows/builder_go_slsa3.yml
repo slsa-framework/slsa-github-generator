@@ -161,7 +161,7 @@ jobs:
         with:
           repository: "${{ needs.detect-env.outputs.repository }}"
           ref: "${{ needs.detect-env.outputs.ref }}"
-          go-version: "1.20"
+          go-version: "1.21"
           # Note: This must be the non-randomized binary name, so that it can be downloaded from the release assets.
           binary: "${{ env.BUILDER_BINARY }}"
           compile-builder: "${{ inputs.compile-builder }}"
@@ -169,7 +169,7 @@ jobs:
           allow-private-repository: ${{ inputs.private-repository }}
 
       - name: Upload builder
-        uses: actions/upload-artifact@5d5d22a31266ced268874388b861e4b58bb5c2f3 # v4.3.1
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: "${{ env.BUILDER_BINARY }}-${{ needs.rng.outputs.value }}"
           path: "${{ env.BUILDER_BINARY }}"
@@ -358,7 +358,7 @@ jobs:
             --workingDir "$UNTRUSTED_WORKING_DIR"
 
       - name: Upload the signed provenance
-        uses: actions/upload-artifact@5d5d22a31266ced268874388b861e4b58bb5c2f3 # v4.3.1
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: "${{ steps.sign-prov.outputs.signed-provenance-name }}"
           path: "${{ steps.sign-prov.outputs.signed-provenance-name }}"
@@ -399,7 +399,7 @@ jobs:
           sha256: "${{ needs.provenance.outputs.go-provenance-sha256 }}"
 
       - name: Upload provenance
-        uses: softprops/action-gh-release@de2c0eb89ae2a093876385947365aca7b0e5f844 # v0.1.15
+        uses: softprops/action-gh-release@72f2c25fcb47643c292f7107632f7a47c1df5cd8 # v2.3.2
         with:
           tag_name: ${{ inputs.upload-tag-name }}
           prerelease: ${{ inputs.prerelease }}

@@ -80,7 +80,7 @@ func (r *Rekor) Upload(ctx context.Context, att signing.Attestation) (signing.Lo
 		return nil, fmt.Errorf("creating rekor client: %w", err)
 	}
 	// TODO: Is it a bug that we need []byte(string(k.Cert)) or else we hit invalid PEM?
-	logEntry, err := cosign.TLogUploadInTotoAttestation(ctx, rekorClient, att.Bytes(), []byte(string(att.Cert())))
+	logEntry, err := cosign.TLogUploadDSSEEnvelope(ctx, rekorClient, att.Bytes(), []byte(string(att.Cert())))
 	if err != nil {
 		return nil, fmt.Errorf("uploading attestation: %w", err)
 	}
@@ -99,8 +99,6 @@ func (r *Rekor) Upload(ctx context.Context, att signing.Attestation) (signing.Lo
 
 	var uuid string
 	for ix, entry := range resp.Payload {
-		entry := entry
-
 		if err := cosign.VerifyTLogEntryOffline(ctx, &entry, pubs); err != nil {
 			return nil, fmt.Errorf("validating log entry: %w", err)
 		}

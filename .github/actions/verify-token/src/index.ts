@@ -12,7 +12,7 @@ limitations under the License.
 */
 
 import * as core from "@actions/core";
-import { sigstore } from "sigstore";
+import { verify } from "sigstore";
 import {
   validateField,
   validateFieldAnyOf,
@@ -97,7 +97,7 @@ async function run(): Promise<void> {
 
     // First, verify the signature, i.e., that it is signed by a certificate that
     // chains up to Fulcio.
-    await sigstore.verify(bundle, Buffer.from(b64Token));
+    await verify(bundle, Buffer.from(b64Token));
 
     const rawToken = Buffer.from(b64Token, "base64");
     core.debug(`bundle: ${bundleStr}`);
@@ -141,9 +141,8 @@ async function run(): Promise<void> {
       rawTokenObj.tool.actions.build_artifacts.path,
     );
 
-    // No validation needed for the builder inputs,
+    // NOTE: No validation needed for the builder inputs,
     // they may be empty.
-    // TODO(#1780): test empty inputs.
 
     // Extract certificate information.
     const [toolURI, toolRepository, toolRef, toolSha, toolPath] =

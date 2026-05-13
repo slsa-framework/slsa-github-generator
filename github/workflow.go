@@ -23,7 +23,25 @@ import (
 
 const (
 	githubContextEnvKey = "GITHUB_CONTEXT"
+	varsContextEnvKey   = "VARS_CONTEXT"
 )
+
+// VarsContext is the `vars` context.
+//
+// See: https://docs.github.com/en/actions/learn-github-actions/contexts#vars-context
+type VarsContext map[string]string
+
+// GetVarsContext returns the current GitHub Actions 'vars' context.
+func GetVarsContext() (VarsContext, error) {
+	v := VarsContext(make(map[string]string))
+	varsContext, ok := os.LookupEnv(varsContextEnvKey)
+	if !ok {
+		return v, fmt.Errorf("%s environment variable not set", varsContextEnvKey)
+	}
+
+	err := json.Unmarshal([]byte(varsContext), &v)
+	return v, err
+}
 
 // WorkflowContext is the `github` context given to workflows that contains
 // information about the GitHub Actions workflow run.
@@ -70,7 +88,7 @@ func GetWorkflowContext() (WorkflowContext, error) {
 	w := WorkflowContext{}
 	ghContext, ok := os.LookupEnv(githubContextEnvKey)
 	if !ok {
-		return w, errors.New("GITHUB_CONTEXT environment variable not set")
+		return w, fmt.Errorf("%s environment variable not set", githubContextEnvKey)
 	}
 
 	err := json.Unmarshal([]byte(ghContext), &w)

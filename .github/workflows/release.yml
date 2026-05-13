@@ -34,21 +34,23 @@ jobs:
     name: pre release refs verification
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           path: __THIS_REPO__
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           repository: slsa-framework/example-package
           ref: main
           path: __EXAMPLE_PACKAGE__
       - name: manual release ref
         env:
+          GH_TOKEN: ${{ github.token }}
           RELEASE_TAG: "${{ inputs.release-tag }}"
         if: github.ref_type != 'tag'
         run: ./__THIS_REPO__/.github/workflows/scripts/pre-release/references.sh
       - name: new tag release ref
         env:
+          GH_TOKEN: ${{ github.token }}
           RELEASE_TAG: "${{ github.ref_name }}"
         if: github.ref_type == 'tag'
         run: ./__THIS_REPO__/.github/workflows/scripts/pre-release/references.sh
@@ -62,7 +64,7 @@ jobs:
       actions: read # For the entrypoint.
     uses: slsa-framework/slsa-github-generator/.github/workflows/builder_go_slsa3.yml@main
     with:
-      go-version: "1.20"
+      go-version: "1.21"
       config-file: .github/workflows/configs-container/config-release.yml
       compile-builder: true
 
@@ -75,7 +77,7 @@ jobs:
       actions: read # For the entrypoint.
     uses: slsa-framework/slsa-github-generator/.github/workflows/builder_go_slsa3.yml@main
     with:
-      go-version: "1.20"
+      go-version: "1.21"
       config-file: .github/workflows/configs-generic/config-release.yml
       compile-builder: true
 
@@ -88,7 +90,7 @@ jobs:
       actions: read # For the entrypoint.
     uses: slsa-framework/slsa-github-generator/.github/workflows/builder_go_slsa3.yml@main
     with:
-      go-version: "1.20"
+      go-version: "1.21"
       config-file: .github/workflows/configs-go/config-release.yml
       compile-builder: true
 
@@ -101,6 +103,6 @@ jobs:
       actions: read # For the entrypoint.
     uses: slsa-framework/slsa-github-generator/.github/workflows/builder_go_slsa3.yml@main
     with:
-      go-version: "1.20"
+      go-version: "1.21"
       config-file: .github/workflows/configs-docker/config-release.yml
       compile-builder: true

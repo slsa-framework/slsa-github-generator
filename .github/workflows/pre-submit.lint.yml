@@ -28,38 +28,67 @@ permissions:
   contents: read
 
 jobs:
+  formatting:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5 # v5.5.0
+        with:
+          go-version: "1.22.3"
+      - uses: actions/setup-node@3235b876344d2a9aa001b8d1453c930bba69e610 # v3.9.1
+        with:
+          node-version: 22
+
+      - name: Install gofumpt
+        run: go install mvdan.cc/gofumpt@v0.6.0
+
+      - name: Install shfmt
+        env:
+          SHFMT_VERSION: "3.8.0"
+          SHFMT_CHECKSUM: "27b3c6f9d9592fc5b4856c341d1ff2c88856709b9e76469313642a1d7b558fe0"
+        run: |
+          set -euo pipefail
+
+          #Install golangci-lint
+          curl -sSLo shfmt "https://github.com/mvdan/sh/releases/download/v${SHFMT_VERSION}/shfmt_v${SHFMT_VERSION}_linux_amd64"
+          echo "shfmt checksum is $(sha256sum shfmt | awk '{ print $1 }')"
+          echo "expected checksum is ${SHFMT_CHECKSUM}"
+          echo "${SHFMT_CHECKSUM}  shfmt" | sha256sum --strict --check --status || exit 1
+          chmod +x shfmt
+          mv shfmt /usr/local/bin
+
+      - run: make format
+      - name: Check for unformatted files
+        id: diff
+        run: |
+          set -euo pipefail
+          if [ "$(git diff --ignore-space-at-eol . | wc -l)" -gt "0" ]; then
+            echo "Detected uncommitted changes after formatting."
+            echo "Run 'make format' to format files in your PR."
+            echo "See status below:"
+            git diff
+            exit 1
+          fi
+
   markdownlint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
-      - uses: actions/setup-node@5e21ff4d9bc1a8cf6de233a3057d20ec6b3fb69d # v3.8.1
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
-          node-version: 16
+          node-version: 22
       - run: make markdownlint
-
-  markdown-toc:
-    name: markdown-toc
-    runs-on: ubuntu-latest
-    steps:
-      - name: Setup Node.js 16
-        uses: actions/setup-node@5e21ff4d9bc1a8cf6de233a3057d20ec6b3fb69d # v3.8.1
-        with:
-          node-version: 16
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
-      - run: make markdown-toc
-      - name: markdown-toc
-        run: ./.github/workflows/scripts/pre-submit.markdown/markdown-toc.sh
 
   golangci-lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
-      - uses: actions/setup-go@93397bea11091df50f3d7e59dc26a7711a8bcfbe # v4.1.0
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5 # v5.5.0
         with:
           go-version-file: "go.mod"
       - env:
-          GOLANGCI_LINT_VERSION: "1.53.2"
-          GOLANGCI_LINT_CHECKSUM: "2298f73b9bc03b88b91fee06c5d519fc7f9d7f328e2c388615bbd7e85a9d6cae"
+          GOLANGCI_LINT_VERSION: "1.61.0"
+          GOLANGCI_LINT_CHECKSUM: "77cb0af99379d9a21d5dc8c38364d060e864a01bd2f3e30b5e8cc550c3a54111"
         run: |
           set -euo pipefail
 
@@ -77,11 +106,11 @@ jobs:
   shellcheck:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
       - name: shellcheck
         env:
-          SHELLCHECK_VERSION: "0.8.0"
-          SHELLCHECK_CHECKSUM: "ab6ee1b178f014d1b86d1e24da20d1139656c8b0ed34d2867fbb834dad02bf0a"
+          SHELLCHECK_VERSION: "0.10.0"
+          SHELLCHECK_CHECKSUM: "6c881ab0698e4e6ea235245f22832860544f17ba386442fe7e9d629f8cbedf87"
         run: |
           set -euo pipefail
 
@@ -98,8 +127,8 @@ jobs:
 
       - name: actionlint
         env:
-          ACTIONLINT_VERSION: "1.6.24"
-          ACTIONLINT_CHECKSUM: "3c5818744143a5d6754edd3dcc4c2b32c9dfcdd3bb30e0e108fb5e5c505262d4"
+          ACTIONLINT_VERSION: "1.7.0"
+          ACTIONLINT_CHECKSUM: "8aae9148f61952d11a97651852fdc7dffd2b762ed3cdd28b3c2232ae5f55d4db"
         run: |
           set -euo pipefail
 
@@ -117,10 +146,8 @@ jobs:
   yamllint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
-      - env:
-          YAMLLINT_VERSION: "1.26.3"
-        run: |
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - run: |
           set -euo pipefail
 
           # Install yamllint
@@ -132,29 +159,17 @@ jobs:
   eslint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
-      - uses: actions/setup-node@5e21ff4d9bc1a8cf6de233a3057d20ec6b3fb69d # v3.8.1
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
-          node-version: 16
+          node-version: 22
       - run: make eslint
 
-  autogen:
+  renovate-config-validator:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
-          repository: mbrukman/autogen
-          ref: 9026b78e17573b5dda4bff79033c352443551dc5
-          path: autogen
-      - run: |
-          echo "${GITHUB_WORKSPACE}/autogen" >> "${GITHUB_PATH}"
-      - run: make autogen
-      - name: check diff
-        run: |
-          set -euo pipefail
-          if [ "$(GIT_PAGER="cat" git diff --ignore-space-at-eol | wc -l)" -gt "0" ]; then
-              echo "Detected license header changes.  See status below:"
-              GIT_PAGER="cat" git diff
-              exit 1
-          fi
+          node-version: 22
+      - run: make renovate-config-validator
