@@ -22,6 +22,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"strings"
 	"testing"
 	"time"
 
@@ -122,6 +123,19 @@ func TestToken(t *testing.T) {
 			name:     "basic token",
 			audience: []string{"hoge"},
 			token: &OIDCToken{
+				Audience:          []string{"hoge"},
+				Expiry:            now.Add(1 * time.Hour),
+				JobWorkflowRef:    "pico",
+				RepositoryID:      "1234",
+				RepositoryOwnerID: "4321",
+				ActorID:           "4567",
+			},
+		},
+		{
+			name:     "enterprise issuer slug",
+			audience: []string{"hoge"},
+			token: &OIDCToken{
+				Issuer:            "/octocat-inc",
 				Audience:          []string{"hoge"},
 				Expiry:            now.Add(1 * time.Hour),
 				JobWorkflowRef:    "pico",
@@ -285,10 +299,88 @@ func TestToken(t *testing.T) {
 					tc.err(err)
 				} else {
 					// Successful response, as expected. Check token.
-					if want, got := tc.token, token; !tokenEqual(s.URL, want, got) {
+					expectedIssuer := s.URL
+					if strings.HasPrefix(tc.token.Issuer, "/") {
+						expectedIssuer += tc.token.Issuer
+					}
+					if want, got := tc.token, token; !tokenEqual(expectedIssuer, want, got) {
 						t.Errorf("unexpected workflow ref\nwant: %#v\ngot:  %#v\ndiff:\n%v", want, got, cmp.Diff(want, got))
 					}
 				}
+			}
+		})
+	}
+}
+
+func Test_validActionsIssuer(t *testing.T) {
+	testCases := []struct {
+		name        string
+		issuer      string
+		providerURL string
+		wantErr     bool
+	}{
+		{
+			name:        "default issuer",
+			issuer:      "https://token.actions.githubusercontent.com",
+			providerURL: defaultActionsProviderURL,
+		},
+		{
+			name:        "enterprise slug issuer",
+			issuer:      "https://token.actions.githubusercontent.com/octocat-inc",
+			providerURL: defaultActionsProviderURL,
+		},
+		{
+			name:        "wrong host",
+			issuer:      "https://token.actions.githubusercontent.com.evil/octocat-inc",
+			providerURL: defaultActionsProviderURL,
+			wantErr:     true,
+		},
+		{
+			name:        "userinfo",
+			issuer:      "https://user:pass@token.actions.githubusercontent.com/octocat-inc",
+			providerURL: defaultActionsProviderURL,
+			wantErr:     true,
+		},
+		{
+			name:        "query string",
+			issuer:      "https://token.actions.githubusercontent.com/octocat-inc?foo=bar",
+			providerURL: defaultActionsProviderURL,
+			wantErr:     true,
+		},
+		{
+			name:        "multiple path segments",
+			issuer:      "https://token.actions.githubusercontent.com/octocat-inc/extra",
+			providerURL: defaultActionsProviderURL,
+			wantErr:     true,
+		},
+		{
+			name:        "encoded slash",
+			issuer:      "https://token.actions.githubusercontent.com/octocat-inc%2Fextra",
+			providerURL: defaultActionsProviderURL,
+			wantErr:     true,
+		},
+		{
+			name:        "empty path segment",
+			issuer:      "https://token.actions.githubusercontent.com/",
+			providerURL: defaultActionsProviderURL,
+			wantErr:     true,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			got, err := validActionsIssuer(tc.issuer, tc.providerURL)
+			if err != nil {
+				if !tc.wantErr {
+					t.Fatalf("unexpected error: %v", err)
+				}
+				return
+			}
+			if tc.wantErr {
+				t.Fatal("expected error")
+			}
+			if got != tc.issuer {
+				t.Fatalf("unexpected issuer, got: %q, want: %q", got, tc.issuer)
 			}
 		})
 	}

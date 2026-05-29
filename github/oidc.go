@@ -17,6 +17,7 @@ package github
 import (
 	"bytes"
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -25,6 +26,7 @@ import (
 	"net/url"
 	"os"
 	"sort"
+	"strings"
 	"time"
 
 	"github.com/coreos/go-oidc/v3/oidc"
@@ -86,9 +88,12 @@ type OIDCClient struct {
 	// requestURL is the GitHub URL to request a OIDC token.
 	requestURL *url.URL
 
+	// actionsProviderURL is the expected GitHub Actions OIDC issuer base URL.
+	actionsProviderURL string
+
 	// verifierFunc is a factory to generate an oidc.IDTokenVerifier for token verification.
 	// This is used for tests.
-	verifierFunc func(context.Context) (*oidc.IDTokenVerifier, error)
+	verifierFunc func(context.Context, string) (*oidc.IDTokenVerifier, error)
 
 	// bearerToken is used to request an ID token.
 	bearerToken string
@@ -107,11 +112,12 @@ func NewOIDCClient() (*OIDCClient, error) {
 	}
 
 	c := OIDCClient{
-		requestURL:  parsedURL,
-		bearerToken: os.Getenv(requestTokenEnvKey),
+		requestURL:         parsedURL,
+		actionsProviderURL: defaultActionsProviderURL,
+		bearerToken:        os.Getenv(requestTokenEnvKey),
 	}
-	c.verifierFunc = func(ctx context.Context) (*oidc.IDTokenVerifier, error) {
-		provider, err := oidc.NewProvider(ctx, defaultActionsProviderURL)
+	c.verifierFunc = func(ctx context.Context, issuer string) (*oidc.IDTokenVerifier, error) {
+		provider, err := oidc.NewProvider(ctx, issuer)
 		if err != nil {
 			return nil, err
 		}
@@ -172,10 +178,74 @@ func (c *OIDCClient) decodePayload(b []byte) (string, error) {
 	return payload.Value, nil
 }
 
+func tokenIssuer(payload string) (string, error) {
+	parts := strings.Split(payload, ".")
+	if len(parts) < 2 {
+		return "", fmt.Errorf("jwt parts: %d", len(parts))
+	}
+
+	b, err := base64.RawURLEncoding.DecodeString(parts[1])
+	if err != nil {
+		return "", fmt.Errorf("jwt payload: %w", err)
+	}
+
+	var claims struct {
+		Issuer string `json:"iss"`
+	}
+	if err := json.Unmarshal(b, &claims); err != nil {
+		return "", fmt.Errorf("jwt payload claims: %w", err)
+	}
+	if claims.Issuer == "" {
+		return "", errors.New("issuer is empty")
+	}
+
+	return claims.Issuer, nil
+}
+
+func validActionsIssuer(issuer, providerURL string) (string, error) {
+	parsedIssuer, err := url.Parse(issuer)
+	if err != nil {
+		return "", fmt.Errorf("parse issuer %q: %w", issuer, err)
+	}
+	parsedProvider, err := url.Parse(providerURL)
+	if err != nil {
+		return "", fmt.Errorf("parse provider %q: %w", providerURL, err)
+	}
+
+	if parsedIssuer.Scheme != parsedProvider.Scheme || parsedIssuer.Host != parsedProvider.Host {
+		return "", fmt.Errorf("issuer %q does not match provider %q", issuer, providerURL)
+	}
+	if parsedIssuer.User != nil || parsedIssuer.RawQuery != "" || parsedIssuer.Fragment != "" {
+		return "", fmt.Errorf("issuer %q contains unsupported URL components", issuer)
+	}
+
+	issuerPath := parsedIssuer.Path
+	providerPath := strings.TrimSuffix(parsedProvider.Path, "/")
+	if issuerPath == providerPath || issuerPath == "" && providerPath == "" {
+		return issuer, nil
+	}
+
+	suffix, ok := strings.CutPrefix(issuerPath, providerPath+"/")
+	if !ok || suffix == "" || strings.Contains(suffix, "/") {
+		return "", fmt.Errorf("issuer %q is not a supported GitHub Actions issuer", issuer)
+	}
+
+	return issuer, nil
+}
+
 // verifyToken verifies the token contents and signature.
 func (c *OIDCClient) verifyToken(ctx context.Context, audience []string, payload string) (*oidc.IDToken, error) {
+	issuer, err := tokenIssuer(payload)
+	if err != nil {
+		return nil, fmt.Errorf("%w: extracting issuer: %w", errVerify, err)
+	}
+	issuer, err = validActionsIssuer(issuer, c.actionsProviderURL)
+	if err != nil {
+		return nil, fmt.Errorf("%w: validating issuer: %w", errVerify, err)
+	}
+
 	// Verify the token.
-	verifier, err := c.verifierFunc(ctx)
+	verifier, err := c.verifierFunc(ctx, issuer)
 	if err != nil {
 		return nil, fmt.Errorf("%w: creating verifier: %w", errVerify, err)
 	}
