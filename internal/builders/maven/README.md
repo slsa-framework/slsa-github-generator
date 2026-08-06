@@ -1,5 +1,9 @@
 # Generation of SLSA3+ provenance for `.jar` artifacts built with Maven
 
+> This project is no longer actively maintained.
+> For new integrations we suggest [GitHub artifact attestations](https://docs.github.com/en/actions/concepts/security/artifact-attestations).
+> See the [repository README](../../../README.md) for details.
+
 This document explains how to generate SLSA provenance for `.jar` artifacts built with Maven.
 
 This can be done by adding a step to your Github Actions workflow to call a

@@ -1,5 +1,9 @@
 # Generation of SLSA3+ provenance for arbitrary projects
 
+> This project is no longer actively maintained.
+> For new integrations we suggest [GitHub artifact attestations](https://docs.github.com/en/actions/concepts/security/artifact-attestations).
+> See the [repository README](../../../README.md) for details.
+
 This document explains how to generate SLSA provenance for projects for which
 there is no language or ecosystem specific builder available.
 

@@ -8,6 +8,16 @@
 
 <img alt="SLSA logo" align="right" src="https://slsa.dev/images/logo-mono.svg" width="140" height="140">
 
+> This project is **no longer actively maintained**.
+> We are working on guidance and simpler tooling to replace it.
+> In the meantime, we suggest [GitHub artifact attestations](https://docs.github.com/en/actions/concepts/security/artifact-attestations), a built-in solution for generating SLSA provenance on GitHub.
+>
+> **If you already use this project:** provenance that has already been generated remains valid, and the reusable workflows here continue to work.
+> They should not be assumed to receive updates, including for GitHub Actions runtime deprecations.
+> The most recent release is [v2.1.0](https://github.com/slsa-framework/slsa-github-generator/releases/tag/v2.1.0) from February 2025.
+>
+> Note that GitHub artifact attestations are verified with [`gh attestation verify`](https://cli.github.com/manual/gh_attestation_verify) rather than with [slsa-verifier](https://github.com/slsa-framework/slsa-verifier), so migrating changes how your consumers verify.
+
 <!-- markdown-toc --bullets="-" -i README.md -->
 
 <!-- toc -->

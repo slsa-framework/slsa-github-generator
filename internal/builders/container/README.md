@@ -1,5 +1,9 @@
 # Generation of SLSA3+ provenance for container images
 
+> This project is no longer actively maintained.
+> For new integrations we suggest [GitHub artifact attestations](https://docs.github.com/en/actions/concepts/security/artifact-attestations).
+> See the [repository README](../../../README.md) for details.
+
 This document explains how to generate SLSA provenance for container images.
 
 This can be done by adding an additional step to your existing Github Actions
