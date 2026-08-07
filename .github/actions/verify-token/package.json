@@ -26,7 +26,7 @@
     "@actions/github": "6.0.0",
     "@octokit/webhooks-types": "7.6.1",
     "@sigstore/rekor-types": "2.0.0",
-    "sigstore": "2.3.1",
+    "sigstore": "4.1.0",
     "tscommon": "file:../tscommon/tscommon-0.0.0.tgz",
     "yaml": "2.5.1"
   },
