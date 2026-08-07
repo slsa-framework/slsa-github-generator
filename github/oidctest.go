@@ -80,7 +80,11 @@ func NewTestOIDCServer(t *testing.T, now time.Time, token *OIDCToken) (*httptest
 		// Allow the token to override the issuer for verification testing.
 		issuer := issuerURL
 		if token.Issuer != "" {
-			issuer = token.Issuer
+			if strings.HasPrefix(token.Issuer, "/") {
+				issuer += token.Issuer
+			} else {
+				issuer = token.Issuer
+			}
 		}
 
 		b, err := json.Marshal(jsonToken{
@@ -143,9 +147,10 @@ func newTestOIDCServer(t *testing.T, now time.Time, f http.HandlerFunc) (*httpte
 		t.Fatalf("unexpected error: %v", err)
 	}
 	c := OIDCClient{
-		requestURL: requestURL,
-		verifierFunc: func(_ context.Context) (*oidc.IDTokenVerifier, error) {
-			return oidc.NewVerifier(s.URL, &testKeySet{}, &oidc.Config{
+		requestURL:         requestURL,
+		actionsProviderURL: issuerURL,
+		verifierFunc: func(_ context.Context, issuer string) (*oidc.IDTokenVerifier, error) {
+			return oidc.NewVerifier(issuer, &testKeySet{}, &oidc.Config{
 				Now:               func() time.Time { return now },
 				SkipClientIDCheck: true,
 			}), nil
