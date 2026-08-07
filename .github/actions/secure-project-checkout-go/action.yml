@@ -62,6 +62,7 @@ runs:
         if [ "${GO_VERSION_FILE}" != "" ]; then
           # NOTE: We use realpath to remove the trailing '/' if present.
           echo "go_version_file=${INPUT_PATH%%/}/${GO_VERSION_FILE}" >> "$GITHUB_OUTPUT"
+          echo "cache_dependency_path=${INPUT_PATH%%/}/go.sum" >> "$GITHUB_OUTPUT"
         fi
 
     - name: Set up Go environment
@@ -69,3 +70,4 @@ runs:
       with:
         go-version: ${{ steps.validate.outputs.go_version }}
         go-version-file: ${{ steps.validate.outputs.go_version_file }}
+        cache-dependency-path: ${{ steps.validate.outputs.cache_dependency_path }}
