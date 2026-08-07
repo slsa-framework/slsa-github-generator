@@ -28,6 +28,13 @@ set -euo pipefail
 PREFIX="refs/tags/"
 
 # Extract version.
+# detect-workflow-js emits a bare 40-char SHA when the caller pins the
+# reusable workflow with @<sha>.  Normalise that to the refs/tags/ form
+# so the SHA-resolution path below can resolve it to a release tag.
+if [[ "$BUILDER_REF" =~ ^[a-f0-9]{40}$ ]]; then
+  BUILDER_REF="${PREFIX}${BUILDER_REF}"
+fi
+
 if [[ "$BUILDER_REF" != "$PREFIX"* ]]; then
   echo "Invalid ref: $BUILDER_REF. Expected ref of the form refs/tags/vX.Y.Z"
   exit 2
