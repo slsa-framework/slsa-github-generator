@@ -19,7 +19,7 @@ import (
 
 	githubapi "github.com/google/go-github/v57/github"
 
-	"github.com/slsa-framework/slsa-github-generator/github"
+	"github.com/slsa-framework/slsa-github-generator/v2/github"
 )
 
 // ClientProvider creates Github API clients.
