@@ -331,7 +331,9 @@ End-to-end tests run daily in [github.com/slsa-framework/example-package/.github
    "$GH" release -R slsa-framework/slsa-github-generator upload "$BUILDER_TAG" slsa-builder-go-linux-amd64  --clobber
    ```
 
-6. Re-run the workflow above and verify that it succeeds. (TODO: https://github.com/slsa-framework/slsa-github-generator/issues/116).
+6. Re-run the workflow above and verify that it succeeds.
+
+   <!-- TODO(#116): Automate pre-release steps. -->
 
    If it does not, delete the release, fix the bug and re-start the release process at the top of this page.
 
@@ -374,7 +376,9 @@ End-to-end tests run daily in [github.com/slsa-framework/example-package/.github
    "$GH" release -R slsa-framework/slsa-github-generator upload "$BUILDER_TAG" slsa-generator-generic-linux-amd64  --clobber
    ```
 
-6. Re-run the workflow above and verify that it succeeds. (TODO: https://github.com/slsa-framework/slsa-github-generator/issues/116).
+6. Re-run the workflow above and verify that it succeeds.
+
+   <!-- TODO(#116): Automate pre-release steps. -->
 
    If it does not, delete the release, fix the bug and re-start the release process at the top of this page.
 
@@ -417,7 +421,9 @@ End-to-end tests run daily in [github.com/slsa-framework/example-package/.github
    "$GH" release -R slsa-framework/slsa-github-generator upload "$BUILDER_TAG" slsa-generator-container-linux-amd64  --clobber
    ```
 
-6. Re-run the workflow above and verify that it succeeds. (TODO: https://github.com/slsa-framework/slsa-github-generator/issues/116).
+6. Re-run the workflow above and verify that it succeeds.
+
+   <!-- TODO(#116): Automate pre-release steps. -->
 
    If it does not, delete the release, fix the bug and re-start the release process at the top of this page.
 
@@ -460,7 +466,9 @@ End-to-end tests run daily in [github.com/slsa-framework/example-package/.github
    "$GH" release -R slsa-framework/slsa-github-generator upload "$BUILDER_TAG" slsa-builder-docker-linux-amd64  --clobber
    ```
 
-6. Re-run the workflow above and verify that it succeeds. (TODO: https://github.com/slsa-framework/slsa-github-generator/issues/116).
+6. Re-run the workflow above and verify that it succeeds.
+
+   <!-- TODO(#116): Automate pre-release steps. -->
 
    If it does not, delete the release, fix the bug and re-start the release process at the top of this page.
 
@@ -556,8 +564,6 @@ find actions/maven/ internal/builders/maven/ -name '*.yaml' -o -name '*.yml' -ty
 ### Update verifier
 
 The next step is to update the verifier's GitHub Actions e2e tests. There are GitHub actions Go and generic actions.
-
-<!-- TODO(github.com/slsa-framework/slsa-github-generator/issues/1110): Describe GHA generic container e2e tests. -->
 
 For the BYOB (a.k.a delegator) workflows, you will need to update the tag of the [slsa-framework/example-trw](https://github.com/slsa-framework/example-trw/) repository:
 
