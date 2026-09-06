@@ -1,10 +1,10 @@
 module github.com/slsa-framework/slsa-github-generator
 
-go 1.23.1
+go 1.24.0
 
 require (
 	github.com/coreos/go-oidc/v3 v3.11.0
-	github.com/go-jose/go-jose/v4 v4.0.4
+	github.com/go-jose/go-jose/v4 v4.1.4
 	github.com/go-openapi/strfmt v0.23.0
 	github.com/go-openapi/swag v0.23.0
 	github.com/google/go-cmp v0.6.0
